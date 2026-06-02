@@ -1,0 +1,345 @@
+<template>
+  <div class="data-sync-export">
+    <el-card class="page-header">
+      <div class="header-content">
+        <h2>数据导出</h2>
+        <p class="description">导出数据包用于多台电脑间的数据同步和备份</p>
+      </div>
+    </el-card>
+
+    <!-- 导出配置 -->
+    <el-card class="export-config">
+      <h3 class="section-title">导出配置</h3>
+      <el-form :model="exportForm" label-width="120px">
+        <el-form-item label="导出类型">
+          <el-radio-group v-model="exportForm.exportType">
+            <el-radio value="full">完整导出</el-radio>
+            <el-radio value="selective">选择性导出</el-radio>
+            <el-radio value="incremental">增量导出（旧版）</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item
+          v-if="exportForm.exportType === 'incremental'"
+          label="起始时间"
+        >
+          <el-date-picker
+            v-model="exportForm.since"
+            type="datetime"
+            placeholder="选择起始时间"
+            style="width: 100%"
+            :clearable="true"
+          />
+          <div class="form-tip">留空则导出所有数据</div>
+        </el-form-item>
+
+        <el-form-item v-if="exportForm.exportType !== 'full'" label="导出模块">
+          <el-checkbox-group v-model="exportForm.modules">
+            <el-checkbox value="supported_villages">帮扶村</el-checkbox>
+            <el-checkbox value="village_populations">人口数据</el-checkbox>
+            <el-checkbox value="village_incomes">收入数据</el-checkbox>
+            <el-checkbox value="organizations">组织</el-checkbox>
+            <el-checkbox value="policies">政策</el-checkbox>
+            <el-checkbox value="force_investments">部队投入</el-checkbox>
+            <el-checkbox value="industry_supports">产业帮扶</el-checkbox>
+            <el-checkbox value="infrastructure_improvements"
+              >基础设施</el-checkbox
+            >
+            <el-checkbox value="party_building_supports">党建帮扶</el-checkbox>
+            <el-checkbox value="medical_supports">医疗帮扶</el-checkbox>
+            <el-checkbox value="consumption_supports">消费帮扶</el-checkbox>
+            <el-checkbox value="employment_supports">就业帮扶</el-checkbox>
+            <el-checkbox value="education_supports">教育帮扶</el-checkbox>
+          </el-checkbox-group>
+          <div class="form-tip">
+            <el-button type="text" size="small" @click="selectAllModules"
+              >全选</el-button
+            >
+            <el-button type="text" size="small" @click="clearModules"
+              >清空</el-button
+            >
+          </div>
+        </el-form-item>
+
+        <el-form-item
+          v-if="exportForm.exportType === 'incremental'"
+          label="包含上传文件"
+        >
+          <el-switch v-model="exportForm.includeFiles" />
+          <div class="form-tip">
+            包含上传的图片、文档等文件(会增加数据包大小)
+          </div>
+        </el-form-item>
+
+        <el-form-item label="加密保护">
+          <el-switch v-model="exportForm.encrypted" />
+          <div class="form-tip">
+            启用加密后，导出的数据包将使用密码保护（推荐）
+          </div>
+        </el-form-item>
+
+        <el-form-item v-if="exportForm.encrypted" label="加密密码" required>
+          <el-input
+            v-model="exportForm.password"
+            type="password"
+            placeholder="至少 8 位"
+            show-password
+          />
+        </el-form-item>
+
+        <el-form-item v-if="exportForm.encrypted" label="确认密码" required>
+          <el-input
+            v-model="exportForm.confirmPassword"
+            type="password"
+            placeholder="再次输入密码"
+            show-password
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" :loading="exporting" @click="handleExport">
+            开始导出
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 导出历史 -->
+    <el-card class="export-history">
+      <h3 class="section-title">导出历史</h3>
+      <el-table :data="exportHistory" style="width: 100%">
+        <el-table-column prop="package_name" label="数据包名称" />
+        <el-table-column prop="total_records" label="记录数" width="100" />
+        <el-table-column label="大小" width="120">
+          <template #default="{ row }">
+            {{ formatSize(row.size) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="created_at" label="导出时间" width="180">
+          <template #default="{ row }">
+            {{ formatDate(row.created_at) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="user_name" label="操作人" width="120" />
+        <el-table-column label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" size="small" @click="handleDownload(row)">
+              下载
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { ElMessage } from "element-plus";
+import {
+  exportData,
+  exportEncryptedData,
+  downloadExportPackage,
+  getSyncLogs,
+  type ExportEncryptedParams,
+} from "@/api/dataSync";
+import type { SyncLog } from "@/api/dataSync";
+
+const exportForm = ref({
+  exportType: "full" as "full" | "selective" | "incremental",
+  since: null as Date | null,
+  modules: [] as string[],
+  includeFiles: false,
+  encrypted: true,
+  password: "",
+  confirmPassword: "",
+});
+
+const exporting = ref(false);
+const exportHistory = ref<SyncLog[]>([]);
+
+const allModules = [
+  "supported_villages",
+  "village_populations",
+  "village_incomes",
+  "organizations",
+  "policies",
+  "force_investments",
+  "industry_supports",
+  "infrastructure_improvements",
+  "party_building_supports",
+  "medical_supports",
+  "consumption_supports",
+  "employment_supports",
+  "education_supports",
+];
+
+const selectAllModules = () => {
+  exportForm.value.modules = [...allModules];
+};
+
+const clearModules = () => {
+  exportForm.value.modules = [];
+};
+
+const handleExport = async () => {
+  // 验证
+  if (
+    exportForm.value.exportType !== "full" &&
+    exportForm.value.modules.length === 0
+  ) {
+    ElMessage.warning("请至少选择一个导出模块");
+    return;
+  }
+
+  if (exportForm.value.encrypted) {
+    if (!exportForm.value.password) {
+      ElMessage.warning("请输入加密密码");
+      return;
+    }
+    if (exportForm.value.password.length < 8) {
+      ElMessage.warning("密码长度至少为 8 位");
+      return;
+    }
+    if (exportForm.value.password !== exportForm.value.confirmPassword) {
+      ElMessage.warning("两次输入的密码不一致");
+      return;
+    }
+  }
+
+  exporting.value = true;
+  try {
+    let response;
+
+    if (exportForm.value.encrypted) {
+      // 加密导出
+      const params: ExportEncryptedParams = {
+        export_type: (exportForm.value.exportType === "full"
+          ? "full"
+          : "selective") as "full" | "selective",
+        tables:
+          exportForm.value.exportType === "full"
+            ? undefined
+            : exportForm.value.modules,
+        password: exportForm.value.password,
+        since: exportForm.value.since?.toISOString(),
+      };
+      response = await exportEncryptedData(params);
+    } else {
+      // 旧版增量导出（无加密）
+      const params = {
+        since: exportForm.value.since?.toISOString(),
+        modules: exportForm.value.modules,
+        include_files: exportForm.value.includeFiles,
+      };
+      response = await exportData(params);
+    }
+
+    if (response.data.success) {
+      ElMessage.success(`导出成功! 共 ${response.data.total_records} 条记录`);
+      // 自动下载
+      await handleDownloadByName(response.data.package_name);
+      // 刷新历史
+      await loadExportHistory();
+      // 清空密码
+      exportForm.value.password = "";
+      exportForm.value.confirmPassword = "";
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || "导出失败");
+  } finally {
+    exporting.value = false;
+  }
+};
+
+const handleDownload = async (row: SyncLog) => {
+  await handleDownloadByName(row.package_name);
+};
+
+const handleDownloadByName = async (packageName: string) => {
+  try {
+    const response = await downloadExportPackage(packageName);
+    const blob = new Blob([response as any]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    // 根据文件名判断扩展名
+    const extension = packageName.includes(".") ? "" : ".rrs";
+    link.download = `${packageName}${extension}`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error: any) {
+    ElMessage.error(error.message || "下载失败");
+  }
+};
+
+const loadExportHistory = async () => {
+  try {
+    const response = await getSyncLogs("export", 20);
+    if (response.data.success) {
+      exportHistory.value = response.data.data;
+    }
+  } catch (error) {
+    console.error("加载导出历史失败:", error);
+  }
+};
+
+const formatSize = (bytes: number) => {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+};
+
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleString("zh-CN");
+};
+
+onMounted(() => {
+  loadExportHistory();
+  // 默认选择所有模块
+  selectAllModules();
+});
+</script>
+
+<style scoped lang="scss">
+.data-sync-export {
+  padding: 20px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+
+  .header-content {
+    h2 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      color: #303133;
+    }
+
+    .description {
+      margin: 0;
+      color: #909399;
+      font-size: 14px;
+    }
+  }
+}
+
+.export-config,
+.export-history {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  color: #303133;
+  border-bottom: 2px solid #409eff;
+  padding-bottom: 10px;
+}
+
+.form-tip {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #909399;
+}
+</style>

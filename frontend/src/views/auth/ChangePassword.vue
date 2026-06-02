@@ -1,0 +1,662 @@
+<template>
+  <div class="change-password-container">
+    <div class="page-header">
+      <h1 class="page-title">修改密码</h1>
+      <p class="page-description">请设置新的账户密码，确保密码安全且易于记忆</p>
+    </div>
+
+    <div class="password-card">
+      <el-form
+        ref="passwordFormRef"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-position="top"
+        label-width="100px"
+        size="default"
+        class="password-form"
+      >
+        <!-- 原密码 -->
+        <el-form-item label="当前密码" prop="oldPassword">
+          <el-input
+            v-model="passwordForm.oldPassword"
+            type="password"
+            placeholder="请输入当前密码"
+            prefix-icon="el-icon-lock"
+            show-password
+            :disabled="loading"
+          />
+        </el-form-item>
+
+        <!-- 新密码 -->
+        <el-form-item
+          label="新密码"
+          prop="newPassword"
+          :error="newPasswordError"
+          :validate-event="false"
+        >
+          <el-input
+            v-model="passwordForm.newPassword"
+            type="password"
+            placeholder="请输入新密码"
+            prefix-icon="el-icon-lock"
+            show-password
+            :disabled="loading"
+            @input="validatePassword"
+          />
+          <div
+            v-if="showPasswordHint"
+            class="password-hint"
+            :class="{ active: showPasswordHint }"
+          >
+            <!-- 密码规则提示 -->
+            <ul class="hint-list">
+              <li :class="{ valid: passwordStrengthData.length >= 8 }">
+                <span v-if="passwordStrengthData.length >= 8">✓ </span>
+                密码长度至少8个字符
+              </li>
+              <li :class="{ valid: passwordStrengthData.hasUppercase }">
+                <span v-if="passwordStrengthData.hasUppercase">✓ </span>
+                包含至少一个大写字母
+              </li>
+              <li :class="{ valid: passwordStrengthData.hasLowercase }">
+                <span v-if="passwordStrengthData.hasLowercase">✓ </span>
+                包含至少一个小写字母
+              </li>
+              <li :class="{ valid: passwordStrengthData.hasNumber }">
+                <span v-if="passwordStrengthData.hasNumber">✓ </span>
+                包含至少一个数字
+              </li>
+              <li :class="{ valid: passwordStrengthData.hasSpecial }">
+                <span v-if="passwordStrengthData.hasSpecial">✓ </span>
+                包含至少一个特殊字符(!@#$%^&*)
+              </li>
+            </ul>
+            <!-- 密码强度指示器 -->
+            <div class="strength-indicator">
+              <span class="strength-label">密码强度:</span>
+              <div class="strength-bar">
+                <div
+                  class="strength-level"
+                  :class="[
+                    'level-' + passwordStrengthData.level,
+                    'level-count-' + passwordStrengthData.validCount,
+                  ]"
+                ></div>
+              </div>
+              <span
+                class="strength-text"
+                :class="['text-' + passwordStrengthData.level]"
+                >{{ passwordStrengthData.text }}</span
+              >
+            </div>
+          </div>
+        </el-form-item>
+
+        <!-- 确认新密码 -->
+        <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-input
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            placeholder="请再次输入新密码"
+            prefix-icon="el-icon-lock"
+            show-password
+            :disabled="loading"
+          />
+        </el-form-item>
+
+        <!-- 操作按钮 -->
+        <el-form-item class="form-actions">
+          <el-button
+            type="primary"
+            :loading="loading"
+            :disabled="loading || !isPasswordValid"
+            size="large"
+            class="submit-button"
+            @click="handleChangePassword"
+          >
+            <span v-if="!loading">确认修改</span>
+            <span v-else>修改中...</span>
+          </el-button>
+          <el-button
+            v-if="!isForceChange"
+            :loading="loading"
+            :disabled="loading"
+            size="large"
+            @click="handleCancel"
+          >
+            取消
+          </el-button>
+          <span v-if="isForceChange" class="force-change-hint">
+            ⚠️ 首次登录或密码已过期，必须修改密码后才能使用系统
+          </span>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <!-- 安全提示卡片 -->
+    <div class="security-tips-card">
+      <el-card shadow="hover" :body-style="{ padding: '20px' }">
+        <template #header>
+          <div class="tips-header">
+            <el-icon :size="20"><WarningFilled /></el-icon>
+            <span class="tips-title">安全提示</span>
+          </div>
+        </template>
+        <ul class="security-tips">
+          <li>请定期更换密码，建议每90天更新一次</li>
+          <li>请勿使用与其他网站相同的密码</li>
+          <li>避免使用生日、手机号等容易被猜测的信息作为密码</li>
+          <li>密码修改成功后，您需要重新登录系统</li>
+        </ul>
+      </el-card>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, watch, computed } from "vue";
+import { ElMessage, ElMessageBox, ElForm } from "element-plus";
+import { useRouter } from "vue-router";
+import { useRouterSafe } from "@/composables/useRouterSafe";
+import { WarningFilled } from "@element-plus/icons-vue";
+import { useUserStore } from "@/stores/user";
+import { useAuthStore } from "@/stores/auth";
+
+const router = useRouter();
+const { pushSafe } = useRouterSafe();
+const userStore = useUserStore();
+const authStore = useAuthStore();
+
+// 是否为强制改密模式
+const isForceChange = computed(() => authStore.mustChangePassword === true);
+
+// 表单引用
+const passwordFormRef = ref<InstanceType<typeof ElForm> | null>(null);
+
+// 表单数据
+const passwordForm = reactive({
+  oldPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+});
+
+// 状态变量
+const loading = ref(false);
+const newPasswordError = ref("");
+const showPasswordHint = ref(false);
+
+// 密码强度检查结果
+const passwordStrengthData = reactive({
+  length: 0,
+  hasUppercase: false,
+  hasLowercase: false,
+  hasNumber: false,
+  hasSpecial: false,
+  validCount: 0,
+  level: 0 as 0 | 1 | 2 | 3,
+  text: "未设置",
+});
+
+// 表单验证规则
+const passwordRules: Record<string, any[]> = reactive({
+  oldPassword: [
+    { required: true, message: "请输入当前密码", trigger: "blur" },
+    { min: 6, max: 20, message: "密码长度应在6-20个字符之间", trigger: "blur" },
+  ],
+  newPassword: [
+    { required: true, message: "请输入新密码", trigger: "blur" },
+    {
+      message: "密码验证失败",
+      validator: (
+        _rule: any,
+        value: string,
+        callback: (error?: Error) => void,
+      ) => {
+        if (!value) {
+          callback(new Error("请输入新密码"));
+        } else if (value === passwordForm.oldPassword) {
+          callback(new Error("新密码不能与当前密码相同"));
+        } else if (passwordStrengthData.validCount < 3) {
+          callback(new Error("密码强度不足，请满足至少3项密码规则"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur",
+    },
+  ],
+  confirmPassword: [
+    { required: true, message: "请再次输入新密码", trigger: "blur" },
+    {
+      message: "密码确认失败",
+      validator: (
+        _rule: any,
+        value: string,
+        callback: (error?: Error) => void,
+      ) => {
+        if (!value) {
+          callback(new Error("请再次输入新密码"));
+        } else if (value !== passwordForm.newPassword) {
+          callback(new Error("两次输入的密码不一致"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur",
+    },
+  ],
+});
+
+// 计算密码是否有效
+const isPasswordValid = computed((): boolean => {
+  return (
+    passwordStrengthData.validCount >= 3 &&
+    passwordForm.newPassword !== "" &&
+    passwordForm.newPassword === passwordForm.confirmPassword
+  );
+});
+
+// 验证密码强度
+const validatePassword = (value: string) => {
+  showPasswordHint.value = !!value;
+
+  // 重置验证结果
+  passwordStrengthData.length = value.length;
+  passwordStrengthData.hasUppercase = /[A-Z]/.test(value);
+  passwordStrengthData.hasLowercase = /[a-z]/.test(value);
+  passwordStrengthData.hasNumber = /\d/.test(value);
+  passwordStrengthData.hasSpecial = /[!@#$%^&*]/.test(value);
+
+  // 计算符合规则的数量
+  const validCount = [
+    passwordStrengthData.length >= 8,
+    passwordStrengthData.hasUppercase,
+    passwordStrengthData.hasLowercase,
+    passwordStrengthData.hasNumber,
+    passwordStrengthData.hasSpecial,
+  ].filter(Boolean).length;
+
+  passwordStrengthData.validCount = validCount;
+
+  // 设置强度等级
+  if (validCount === 0) {
+    passwordStrengthData.level = 0;
+    passwordStrengthData.text = "未设置";
+  } else if (validCount <= 2) {
+    passwordStrengthData.level = 1;
+    passwordStrengthData.text = "弱";
+  } else if (validCount <= 4) {
+    passwordStrengthData.level = 2;
+    passwordStrengthData.text = "中";
+  } else {
+    passwordStrengthData.level = 3;
+    passwordStrengthData.text = "强";
+  }
+
+  // 清除错误提示
+  if (validCount >= 3) {
+    newPasswordError.value = "";
+  }
+};
+
+// 处理密码修改
+const handleChangePassword = async () => {
+  if (!passwordFormRef.value) return;
+
+  try {
+    const valid = await new Promise<boolean>((resolve) => {
+      passwordFormRef.value!.validate((valid: boolean) => {
+        resolve(valid);
+      });
+    });
+
+    if (!valid) {
+      ElMessage.warning("请检查输入信息");
+      return;
+    }
+
+    // 二次确认
+    await ElMessageBox.confirm(
+      "确定要修改密码吗？修改成功后需要重新登录。",
+      "确认修改",
+      {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      },
+    );
+
+    loading.value = true;
+    await userStore.changePassword(
+      passwordForm.oldPassword,
+      passwordForm.newPassword,
+    );
+
+    ElMessage.success("密码修改成功，即将跳转到登录页");
+
+    // 密码修改成功后，立即退出登录并跳转到登录页，确保新密码立即生效
+    setTimeout(async () => {
+      try {
+        // 优先使用 authStore 退出（清除 token）
+        if (authStore && typeof authStore.logout === "function") {
+          await authStore.logout();
+        } else {
+          await userStore.logout();
+        }
+      } catch (_) {
+        // 即使退出失败也要跳转登录页
+      }
+      await pushSafe({ path: "/login" });
+    }, 1000);
+  } catch (error) {
+    if (error instanceof Error && error.name !== "Cancel") {
+      const errorMessage = error.message || "密码修改失败，请重试";
+      ElMessage.error(errorMessage);
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 处理取消
+const handleCancel = async () => {
+  if (
+    passwordForm.oldPassword ||
+    passwordForm.newPassword ||
+    passwordForm.confirmPassword
+  ) {
+    try {
+      await ElMessageBox.confirm(
+        "确定要取消修改吗？当前输入将不会保存。",
+        "确认取消",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "info",
+        },
+      );
+      router.back();
+    } catch {
+      // 继续留在当前页面
+    }
+  } else {
+    router.back();
+  }
+};
+
+// 监听新密码变化，自动验证确认密码
+watch(
+  () => passwordForm.newPassword,
+  () => {
+    if (
+      passwordForm.confirmPassword &&
+      passwordForm.confirmPassword !== passwordForm.newPassword
+    ) {
+      if (passwordFormRef.value) {
+        passwordFormRef.value.validateField("confirmPassword");
+      }
+    }
+  },
+);
+</script>
+
+<style scoped>
+.change-password-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 30px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 8px;
+}
+
+.page-description {
+  font-size: 14px;
+  color: #606266;
+  margin: 0;
+}
+
+.force-change-hint {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 13px;
+  color: #e6a23c;
+  line-height: 40px;
+}
+
+.password-card,
+.security-tips-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.password-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.password-hint {
+  margin-top: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #e6f7ff;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.password-hint.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hint-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+
+.hint-list li {
+  font-size: 12px;
+  color: #606266;
+  margin-bottom: 6px;
+  transition: color 0.3s;
+  line-height: 1.5;
+}
+
+.hint-list li:last-child {
+  margin-bottom: 0;
+}
+
+.hint-list li.valid {
+  color: #67c23a;
+}
+
+.hint-list li.valid span {
+  color: #67c23a;
+  font-weight: bold;
+}
+
+.strength-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #ebeef5;
+}
+
+.strength-label {
+  font-size: 12px;
+  color: #606266;
+  flex-shrink: 0;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 6px;
+  background-color: #ebeef5;
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.strength-level {
+  height: 100%;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  width: 0;
+}
+
+.level-0 {
+  width: 0;
+  background-color: #ebeef5;
+}
+
+.level-1 {
+  background-color: #f56c6c;
+}
+
+.level-2 {
+  background-color: #e6a23c;
+}
+
+.level-3 {
+  background-color: #67c23a;
+}
+
+.level-count-0 {
+  width: 0;
+}
+
+.level-count-1 {
+  width: 20%;
+}
+
+.level-count-2 {
+  width: 40%;
+}
+
+.level-count-3 {
+  width: 60%;
+}
+
+.level-count-4 {
+  width: 80%;
+}
+
+.level-count-5 {
+  width: 100%;
+}
+
+.strength-text {
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
+  min-width: 30px;
+}
+
+.text-0 {
+  color: #909399;
+}
+
+.text-1 {
+  color: #f56c6c;
+}
+
+.text-2 {
+  color: #e6a23c;
+}
+
+.text-3 {
+  color: #67c23a;
+}
+
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.submit-button {
+  min-width: 120px;
+}
+
+.tips-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tips-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.security-tips {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0 0;
+}
+
+.security-tips li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #606266;
+  line-height: 1.6;
+}
+
+.security-tips li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #f56c6c;
+  font-size: 16px;
+}
+
+.security-tips li:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .change-password-container {
+    padding: 10px;
+  }
+
+  .password-card,
+  .security-tips-card {
+    padding: 16px;
+  }
+
+  .strength-indicator {
+    flex-wrap: wrap;
+  }
+
+  .strength-bar {
+    min-width: 100px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .submit-button {
+    width: 100%;
+  }
+}
+</style>

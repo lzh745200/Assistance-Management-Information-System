@@ -1,0 +1,49 @@
+[Unit]
+Description=军队乡村振兴管理系统
+Documentation=file:///opt/military-rural-system/README.md
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=military-rural
+Group=military-rural
+WorkingDirectory=/opt/military-rural-system
+
+# 环境变量
+EnvironmentFile=/opt/military-rural-system/config/kylin.env
+
+# 启动命令
+ExecStart=/opt/military-rural-system/backend/military-rural-backend
+ExecReload=/bin/kill -HUP $MAINPID
+
+# 进程管理
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+TimeoutStartSec=60
+TimeoutStopSec=15
+
+# 日志
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=military-rural-system
+
+# 安全加固
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/military-rural-system
+ReadWritePaths=/var/log/military-rural-system
+
+# 资源限制
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# OOM 保护（避免被系统误杀）
+OOMScoreAdjust=-500
+
+[Install]
+WantedBy=multi-user.target

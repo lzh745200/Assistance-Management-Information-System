@@ -1,0 +1,82 @@
+/**
+ * 全局打印样式
+ * 通过 @media print 控制打印时隐藏/显示的元素
+ */
+@media print {
+  /* 隐藏导航、侧边栏、工具栏 */
+  .sidebar,
+  .el-aside,
+  .el-header,
+  .el-menu,
+  .page-header,
+  .toolbar,
+  .el-pagination,
+  .el-dialog__wrapper,
+  .el-message,
+  .el-notification,
+  .el-loading-mask,
+  .no-print {
+    display: none !important;
+  }
+
+  /* 主内容区全宽 */
+  .el-main,
+  .main-content,
+  .app-main {
+    margin: 0 !important;
+    padding: 10mm !important;
+    width: 100% !important;
+  }
+
+  /* 表格优化 */
+  .el-table {
+    border: 1px solid #333 !important;
+  }
+  .el-table th.el-table__cell {
+    background: #f0f0f0 !important;
+    border: 1px solid #333 !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .el-table td.el-table__cell {
+    border: 1px solid #333 !important;
+    color: #000 !important;
+  }
+
+  /* 隐藏操作列 */
+  .el-table .el-button,
+  .el-table .el-tag {
+    /* 保留 tag 展示 */
+  }
+  .el-table .el-button {
+    display: none !important;
+  }
+
+  /* 页面控制 */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* 防止元素被分页截断 */
+  .el-card,
+  .section-card {
+    page-break-inside: avoid;
+  }
+
+  /* 链接显示 URL */
+  a[href]:after {
+    content: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+    color: #000;
+    background: white;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+}

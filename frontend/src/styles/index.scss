@@ -1,0 +1,360 @@
+/* 使用 @use 替代已弃用的 @import */
+@use "./tokens.scss" as *;
+@use "./responsive.scss" as *;
+@use "./components/enhanced.scss" as *;
+@use "./components/layout.scss" as *;
+@use "./components/table.scss" as *;
+@use "./components/form.scss" as *;
+
+/* 兜底：保证根节点可见，避免空白页（CSS 变量未加载时仍能显示） */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: #f5f7fa;
+  color: #303133;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#app {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  color: #303133;
+}
+
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: var(--font-family-base, inherit);
+  font-size: var(--font-size-md, 14px);
+  line-height: var(--line-height-normal, 1.5);
+  color: var(--color-text-primary, #303133);
+  background-color: var(--color-bg-page, #ffffff);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-secondary);
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-bg-hover);
+}
+
+/* 通用类 */
+.clearfix::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Element Plus 消息提示样式 */
+.el-message {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.el-message--success {
+  background-color: var(--color-success-light);
+  border-color: var(--color-success);
+}
+
+.el-message--error {
+  background-color: var(--color-danger-light);
+  border-color: var(--color-danger);
+}
+
+.el-message--warning {
+  background-color: var(--color-warning-light);
+  border-color: var(--color-warning);
+}
+
+.el-message--info {
+  background-color: var(--color-info-light);
+  border-color: var(--color-info);
+}
+
+.el-message__content {
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+
+/* ====== Element Plus 组件精美化 ====== */
+
+/* 卡片组件——白色背景下用边框+微影区分 */
+.el-card {
+  border: 1px solid var(--color-border-lighter, #ebeef5);
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.25s ease;
+}
+.el-card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+.el-card__header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border-lighter, #ebeef5);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-text-primary, #303133);
+}
+.el-card__body {
+  padding: 20px;
+}
+
+/* 对话框——白色背景，去除灰色 */
+.el-dialog {
+  border-radius: var(--radius-lg, 8px);
+  /* 从 overflow:hidden 改为 visible，避免裁剪内部 el-select 等弹出层。
+     使用 clip-path 保持圆角裁剪效果（Electron 28 / Chromium 120 完全支持）。
+     teleported popper 挂载在 body 上，但某些边界计算仍受 overflow 影响。 */
+  overflow: visible;
+  clip-path: inset(0 round var(--radius-lg, 8px));
+}
+.el-dialog__header {
+  padding: 16px 20px;
+  margin-right: 0;
+  border-bottom: 1px solid var(--color-border-lighter, #ebeef5);
+  background-color: #ffffff;
+}
+.el-dialog__body {
+  padding: 24px 20px;
+  background-color: #ffffff;
+}
+.el-dialog__footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border-lighter, #ebeef5);
+  background-color: #ffffff;
+}
+
+/* 表格组件精美化 */
+.el-table {
+  border-radius: var(--radius-md, 4px);
+}
+.el-table th.el-table__cell {
+  background-color: var(--color-military-header, #1a3c2a);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: 2px solid var(--color-accent-gold, #d4af37);
+}
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+  background-color: var(--color-bg-content, #f0f4f0);
+}
+.el-pagination.is-background .el-pager li.is-active {
+  background-color: var(--color-military-header, #1a3c2a);
+  color: #ffffff;
+}
+
+/* 表单组件精美化 */
+.el-form-item__label {
+  font-weight: 500;
+  color: var(--color-text-regular, #606266);
+}
+
+/* 分页组件精美化 */
+.el-pagination {
+  padding: 8px 0;
+}
+
+/* ====== 响应式对话框样式 ====== */
+
+/* 小屏幕对话框自适应 */
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 95% !important;
+    max-width: 100%;
+    margin: 10px auto !important;
+  }
+
+  .el-dialog__body {
+    padding: 16px;
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+  }
+
+  .el-dialog__header {
+    padding: 12px 16px;
+  }
+
+  .el-dialog__footer {
+    padding: 10px 16px;
+  }
+}
+
+/* 平板对话框适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .el-dialog {
+    max-width: 90%;
+  }
+}
+
+/* ====== 响应式表格容器 ====== */
+.table-responsive-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 3px;
+  }
+
+  .el-table {
+    min-width: 600px;
+  }
+}
+
+/* 移动端表格卡片式替代 */
+@media (max-width: 768px) {
+  .mobile-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-lighter);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border-lighter);
+
+      .title {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--color-text-primary);
+      }
+    }
+
+    .card-body {
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 13px;
+
+        .label {
+          color: var(--color-text-secondary);
+        }
+
+        .value {
+          color: var(--color-text-primary);
+          font-weight: 500;
+        }
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border-lighter);
+    }
+  }
+}
+
+/* ============================================
+   全局修复 el-select 等弹出层显示不全问题
+   根因：.el-dialog 使用 clip-path 替代 overflow:hidden 后，
+   仍需要确保 popper 层 z-index 高于 modal (1050)，且下拉框
+   自身高度不受限，选项文字不被截断。
+   ============================================ */
+
+.el-select-dropdown__wrap {
+  max-height: 400px;
+}
+
+.el-popper,
+.el-popper.el-select-dropdown,
+.el-tree-select__popper.el-popper,
+.el-cascader__dropdown.el-popper,
+.el-picker__popper.el-popper,
+.el-time-panel.el-popper,
+.el-date-picker.el-popper,
+.el-dropdown__popper.el-popper {
+  z-index: 2000;
+}
+
+.el-select-dropdown,
+.el-tree-select__popper.el-popper,
+.el-cascader__dropdown.el-popper {
+  max-height: 420px;
+}
+
+.el-select-dropdown__item {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  min-width: max-content;
+}
+
+.el-select__tags {
+  max-width: 100%;
+}

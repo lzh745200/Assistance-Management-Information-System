@@ -1,0 +1,439 @@
+/**
+ * 响应式适配样式
+ * 
+ * 定义响应式断点和平板适配样式
+ * 
+ * _需求: 5.8_
+ */
+
+@use "./tokens.scss" as *;
+
+// ==================== 断点定义 ====================
+
+$breakpoints: (
+  "xs": 0,
+  "sm": 640px,
+  "md": 768px,
+  "lg": 1024px,
+  "xl": 1280px,
+  "xxl": 1536px,
+);
+
+// ==================== 媒体查询 Mixins ====================
+
+/// 最小宽度媒体查询
+/// @param {String} $breakpoint - 断点名称
+@mixin min-width($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @media (min-width: $breakpoint) {
+      @content;
+    }
+  }
+}
+
+/// 最大宽度媒体查询
+/// @param {String} $breakpoint - 断点名称
+@mixin max-width($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (max-width: map-get($breakpoints, $breakpoint) - 1px) {
+      @content;
+    }
+  } @else {
+    @media (max-width: $breakpoint) {
+      @content;
+    }
+  }
+}
+
+/// 范围媒体查询
+/// @param {String} $min - 最小断点
+/// @param {String} $max - 最大断点
+@mixin between($min, $max) {
+  $min-width: if(
+    map-has-key($breakpoints, $min),
+    map-get($breakpoints, $min),
+    $min
+  );
+  $max-width: if(
+    map-has-key($breakpoints, $max),
+    map-get($breakpoints, $max) - 1px,
+    $max
+  );
+
+  @media (min-width: $min-width) and (max-width: $max-width) {
+    @content;
+  }
+}
+
+/// 仅移动端
+@mixin mobile-only {
+  @include max-width("md") {
+    @content;
+  }
+}
+
+/// 仅平板
+@mixin tablet-only {
+  @include between("md", "lg") {
+    @content;
+  }
+}
+
+/// 平板及以上
+@mixin tablet-up {
+  @include min-width("md") {
+    @content;
+  }
+}
+
+/// 仅桌面端
+@mixin desktop-only {
+  @include min-width("lg") {
+    @content;
+  }
+}
+
+/// 大屏幕
+@mixin large-screen {
+  @include min-width("xl") {
+    @content;
+  }
+}
+
+// ==================== 响应式容器 ====================
+
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-md, 16px);
+  padding-right: var(--spacing-md, 16px);
+
+  @include min-width("sm") {
+    max-width: 640px;
+  }
+
+  @include min-width("md") {
+    max-width: 768px;
+  }
+
+  @include min-width("lg") {
+    max-width: 1024px;
+  }
+
+  @include min-width("xl") {
+    max-width: 1280px;
+  }
+
+  @include min-width("xxl") {
+    max-width: 1536px;
+  }
+}
+
+.container-fluid {
+  width: 100%;
+  padding-left: var(--spacing-md, 16px);
+  padding-right: var(--spacing-md, 16px);
+}
+
+// ==================== 响应式栅格 ====================
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: calc(var(--spacing-md, 16px) * -0.5);
+  margin-right: calc(var(--spacing-md, 16px) * -0.5);
+}
+
+.col {
+  flex: 1 0 0%;
+  padding-left: calc(var(--spacing-md, 16px) * 0.5);
+  padding-right: calc(var(--spacing-md, 16px) * 0.5);
+}
+
+// 生成列宽类
+@for $i from 1 through 12 {
+  .col-#{$i} {
+    flex: 0 0 auto;
+    width: calc(100% / 12 * $i);
+    padding-left: calc(var(--spacing-md, 16px) * 0.5);
+    padding-right: calc(var(--spacing-md, 16px) * 0.5);
+  }
+}
+
+// 响应式列宽
+@each $breakpoint, $width in $breakpoints {
+  @if $breakpoint != "xs" {
+    @include min-width($breakpoint) {
+      @for $i from 1 through 12 {
+        .col-#{$breakpoint}-#{$i} {
+          flex: 0 0 auto;
+          width: calc(100% / 12 * $i);
+        }
+      }
+    }
+  }
+}
+
+// ==================== 响应式显示/隐藏 ====================
+
+// 隐藏类
+.hidden {
+  display: none !important;
+}
+
+.hidden-xs {
+  @include max-width("sm") {
+    display: none !important;
+  }
+}
+
+.hidden-sm {
+  @include between("sm", "md") {
+    display: none !important;
+  }
+}
+
+.hidden-md {
+  @include between("md", "lg") {
+    display: none !important;
+  }
+}
+
+.hidden-lg {
+  @include between("lg", "xl") {
+    display: none !important;
+  }
+}
+
+.hidden-xl {
+  @include min-width("xl") {
+    display: none !important;
+  }
+}
+
+// 仅显示类
+.visible-xs-only {
+  @include min-width("sm") {
+    display: none !important;
+  }
+}
+
+.visible-sm-only {
+  @include max-width("sm") {
+    display: none !important;
+  }
+  @include min-width("md") {
+    display: none !important;
+  }
+}
+
+.visible-md-only {
+  @include max-width("md") {
+    display: none !important;
+  }
+  @include min-width("lg") {
+    display: none !important;
+  }
+}
+
+.visible-lg-only {
+  @include max-width("lg") {
+    display: none !important;
+  }
+  @include min-width("xl") {
+    display: none !important;
+  }
+}
+
+.visible-xl-only {
+  @include max-width("xl") {
+    display: none !important;
+  }
+}
+
+// ==================== 响应式间距 ====================
+
+// 响应式 padding
+.p-responsive {
+  padding: var(--spacing-sm, 8px);
+
+  @include tablet-up {
+    padding: var(--spacing-md, 16px);
+  }
+
+  @include desktop-only {
+    padding: var(--spacing-lg, 24px);
+  }
+}
+
+// 响应式 margin
+.m-responsive {
+  margin: var(--spacing-sm, 8px);
+
+  @include tablet-up {
+    margin: var(--spacing-md, 16px);
+  }
+
+  @include desktop-only {
+    margin: var(--spacing-lg, 24px);
+  }
+}
+
+// ==================== 响应式文字 ====================
+
+.text-responsive {
+  font-size: var(--font-size-sm, 13px);
+
+  @include tablet-up {
+    font-size: var(--font-size-md, 14px);
+  }
+
+  @include desktop-only {
+    font-size: var(--font-size-lg, 16px);
+  }
+}
+
+.heading-responsive {
+  font-size: var(--font-size-lg, 16px);
+
+  @include tablet-up {
+    font-size: var(--font-size-xl, 18px);
+  }
+
+  @include desktop-only {
+    font-size: var(--font-size-xxl, 20px);
+  }
+}
+
+// ==================== 平板适配 ====================
+
+// 平板端侧边栏
+.sidebar {
+  @include tablet-only {
+    width: 200px;
+
+    &.collapsed {
+      width: 64px;
+    }
+  }
+}
+
+// 平板端表格
+.table-responsive {
+  @include tablet-only {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    table {
+      min-width: 600px;
+    }
+  }
+}
+
+// 平板端表单
+.form-responsive {
+  @include tablet-only {
+    .el-form-item {
+      margin-bottom: var(--spacing-md, 16px);
+    }
+
+    .el-form-item__label {
+      padding-bottom: var(--spacing-xs, 4px);
+    }
+  }
+}
+
+// 平板端卡片
+.card-responsive {
+  @include tablet-only {
+    padding: var(--spacing-md, 16px);
+
+    .card-header {
+      padding-bottom: var(--spacing-sm, 8px);
+    }
+  }
+}
+
+// ==================== 移动端适配 ====================
+
+@include mobile-only {
+  // 移动端全宽按钮
+  .btn-mobile-full {
+    width: 100%;
+  }
+
+  // 移动端堆叠布局
+  .stack-mobile {
+    flex-direction: column;
+
+    > * {
+      width: 100%;
+    }
+  }
+
+  // 移动端隐藏侧边栏
+  .sidebar-mobile-hidden {
+    display: none;
+  }
+
+  // 移动端底部固定
+  .fixed-bottom-mobile {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--color-bg-card, #ffffff);
+    box-shadow: var(--shadow-lg, 0 10px 15px rgba(0, 0, 0, 0.1));
+    padding: var(--spacing-md, 16px);
+  }
+}
+
+// ==================== Flex 响应式工具 ====================
+
+.flex-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 8px);
+
+  @include tablet-up {
+    flex-direction: row;
+    gap: var(--spacing-md, 16px);
+  }
+}
+
+.flex-wrap-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm, 8px);
+
+  @include tablet-up {
+    gap: var(--spacing-md, 16px);
+  }
+}
+
+// ==================== 打印样式 ====================
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .sidebar {
+    display: none;
+  }
+}

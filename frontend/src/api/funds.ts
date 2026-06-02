@@ -1,0 +1,210 @@
+/**
+ * 经费管理 API
+ */
+import request from "./request";
+import type { PaginatedResponse } from "@/types/api";
+
+/** 经费记录 */
+export interface Fund {
+  id: number;
+  name?: string;
+  date?: string;
+  type?: string;
+  code?: string;
+  fund_type?: string;
+  fund_source?: string;
+  amount: number;
+  planned_amount?: number;
+  approved_amount?: number;
+  allocated_amount?: number;
+  used_amount?: number;
+  remaining_amount?: number;
+  project_id?: number;
+  project_name?: string;
+  village_id?: number;
+  school_id?: number;
+  purpose?: string;
+  source?: string;
+  operator?: string;
+  applicant?: string;
+  application_date?: string;
+  approved_by?: string;
+  approval_date?: string;
+  allocation_date?: string;
+  allocation_method?: string;
+  receiver?: string;
+  usage_description?: string;
+  start_date?: string;
+  end_date?: string;
+  audit_date?: string;
+  audit_result?: string;
+  audit_opinion?: string;
+  status?: string;
+  remarks?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** 经费列表查询参数 */
+export interface FundListParams {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  type?: string;
+  status?: string;
+}
+
+/** 工作流操作请求 */
+export interface WorkflowRequest {
+  opinion?: string;
+  allocated_amount?: number;
+  allocation_method?: string;
+  audit_result?: string;
+}
+
+const FUNDS_BASE = "/funds";
+const BUDGETS_BASE = "/fund-budgets";
+
+export const fundApi = {
+  /** 获取经费列表 */
+  async list(params?: FundListParams): Promise<PaginatedResponse<Fund>> {
+    const response = await request.get(FUNDS_BASE, { params });
+    return response.data;
+  },
+
+  /** 获取经费详情 */
+  async getById(id: number): Promise<Fund> {
+    const response = await request.get(`${FUNDS_BASE}/${id}`);
+    return response.data;
+  },
+
+  /** 创建经费记录 */
+  async create(data: Partial<Fund>): Promise<Fund> {
+    const response = await request.post(FUNDS_BASE, data);
+    return response.data;
+  },
+
+  /** 更新经费记录 */
+  async update(id: number, data: Partial<Fund>): Promise<Fund> {
+    const response = await request.put(`${FUNDS_BASE}/${id}`, data);
+    return response.data;
+  },
+
+  /** 删除经费记录 */
+  async delete(id: number): Promise<{ message: string }> {
+    const response = await request.delete(`${FUNDS_BASE}/${id}`);
+    return response.data;
+  },
+
+  // ========== 工作流 ==========
+  async approve(id: number, data?: WorkflowRequest) {
+    const response = await request.post(`${FUNDS_BASE}/${id}/approve`, data || {});
+    return response.data;
+  },
+  async reject(id: number, data?: WorkflowRequest) {
+    const response = await request.post(`${FUNDS_BASE}/${id}/reject`, data || {});
+    return response.data;
+  },
+  async allocate(id: number, data?: WorkflowRequest) {
+    const response = await request.post(`${FUNDS_BASE}/${id}/allocate`, data || {});
+    return response.data;
+  },
+  async startUse(id: number, data?: WorkflowRequest) {
+    const response = await request.post(`${FUNDS_BASE}/${id}/start-use`, data || {});
+    return response.data;
+  },
+  async complete(id: number, data?: WorkflowRequest) {
+    const response = await request.post(`${FUNDS_BASE}/${id}/complete`, data || {});
+    return response.data;
+  },
+  async audit(id: number, data?: WorkflowRequest) {
+    const response = await request.post(`${FUNDS_BASE}/${id}/audit`, data || {});
+    return response.data;
+  },
+
+  // ========== 统计 ==========
+  async statisticsOverview() {
+    const response = await request.get(`${FUNDS_BASE}/statistics/overview`);
+    return response.data;
+  },
+  async statisticsMultiDimension(
+    params?: Record<string, string | number | boolean>,
+  ) {
+    const response = await request.get(`${FUNDS_BASE}/statistics/multi-dimension`, {
+      params,
+    });
+    return response.data;
+  },
+
+  // ========== 导出 ==========
+  async exportList(params?: {
+    search?: string;
+    type?: string;
+    status?: string;
+  }) {
+    const response = await request.get(`${FUNDS_BASE}/export`, {
+      params,
+      responseType: "blob",
+    });
+    const url = window.URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `经费列表_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  },
+
+  // ========== 附件 ==========
+  async listAttachments(fundId: number) {
+    const response = await request.get(`${FUNDS_BASE}/${fundId}/attachments`);
+    const d = response.data;
+    return (d.data || d) as { items: unknown[]; total: number };
+  },
+  async deleteAttachment(attachmentId: number) {
+    const response = await request.delete(`${FUNDS_BASE}/attachments/${attachmentId}`);
+    return response.data;
+  },
+  getPreviewUrl(attachmentId: number) {
+    return `/api/v1${FUNDS_BASE}/attachments/${attachmentId}/preview`;
+  },
+  getDownloadUrl(attachmentId: number) {
+    return `/api/v1${FUNDS_BASE}/attachments/${attachmentId}/download`;
+  },
+
+  // ========== 预算 ==========
+  async listBudgets(year?: number) {
+    const response = await request.get(`${BUDGETS_BASE}`, { params: { year } });
+    const d = response.data;
+    return (d.data || d) as { items: unknown[]; total: number };
+  },
+  async createBudget(data: {
+    year: number;
+    category: string;
+    budget_amount: number;
+    used_amount: number;
+    remaining_reason?: string;
+    remarks?: string;
+  }) {
+    const response = await request.post(BUDGETS_BASE, data);
+    return response.data;
+  },
+  async updateBudget(
+    budgetId: number,
+    data: Partial<{
+      year: number;
+      category: string;
+      budget_amount: number;
+      used_amount: number;
+      remaining_reason?: string;
+      remarks?: string;
+    }>,
+  ) {
+    const response = await request.put(`${BUDGETS_BASE}/${budgetId}`, data);
+    return response.data;
+  },
+  async deleteBudget(budgetId: number) {
+    const response = await request.delete(`${BUDGETS_BASE}/${budgetId}`);
+    return response.data;
+  },
+};
+

@@ -1,0 +1,54 @@
+# ============================================================
+# 军队乡村振兴管理系统 — Docker Compose CI/CD 构建
+# 用途: 在 CI/CD 环境中使用 Docker 构建全平台安装包
+# 不是生产运行配置（系统是离线桌面应用，不需要常驻容器）
+# ============================================================
+
+version: "3.8"
+
+services:
+  # x86_64 Linux 构建 (DEB + AppImage)
+  build-linux-amd64:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VERSION: "1.2.0"
+        ARCH: "x64"
+    volumes:
+      - ./dist/electron:/project/dist/electron
+    platform: linux/amd64
+
+  # ARM64 Linux 构建 (DEB + AppImage)
+  # 使用麒麟 V10 ARM64 专用 Dockerfile
+  build-linux-arm64:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.kylin-arm64
+    volumes:
+      - ./dist/electron:/project/dist/electron
+    platform: linux/arm64
+
+  # 仅 DEB 构建（快速构建，跳过 AppImage）
+  build-deb-amd64:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.deb-complete
+      args:
+        VERSION: "1.2.0"
+        ARCH: "x64"
+    volumes:
+      - ./dist/electron:/project/dist/electron
+    platform: linux/amd64
+
+  # 仅 DEB 构建 ARM64 版
+  build-deb-arm64:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.deb-complete
+      args:
+        VERSION: "1.2.0"
+        ARCH: "arm64"
+    volumes:
+      - ./dist/electron:/project/dist/electron
+    platform: linux/arm64

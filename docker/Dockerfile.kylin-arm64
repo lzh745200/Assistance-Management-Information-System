@@ -1,0 +1,62 @@
+# ============================================================
+# 军队乡村振兴管理系统 - 麒麟 V10 ARM64 DEB 包构建镜像
+# 使用 Docker buildx 进行跨平台 ARM64 构建
+# ============================================================
+FROM --platform=linux/arm64 node:20-bookworm
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# 安装构建依赖
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-venv \
+    python3-pip \
+    build-essential \
+    dpkg-dev \
+    apt-utils \
+    fakeroot \
+    curl \
+    git \
+    libmagic1 \
+    libgtk-3-0 \
+    libnotify4 \
+    libnss3 \
+    libxss1 \
+    libxtst6 \
+    xdg-utils \
+    libatspi2.0-0 \
+    libuuid1 \
+    libsecret-1-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /project
+
+# 先复制依赖配置文件（利用 Docker 层缓存）
+COPY package.json package-lock.json* ./
+COPY frontend/package.json frontend/package-lock.json* ./frontend/
+COPY backend/requirements.txt ./backend/
+COPY backend/military-rural-backend.spec ./backend/
+
+# 配置 npm 镜像源 + Electron 二进制镜像（提高 QEMU 网络稳定性）
+ENV ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+ENV ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
+RUN npm config set registry https://registry.npmmirror.com
+
+# 安装 npm 依赖（项目根目录 + 前端）
+RUN npm install --registry=https://registry.npmmirror.com
+RUN cd frontend && npm install --registry=https://registry.npmmirror.com
+
+# 创建 Python 虚拟环境并安装依赖（使用国内镜像加速）
+RUN cd backend && python3 -m venv .venv && \
+    .venv/bin/pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple && \
+    .venv/bin/pip install -r requirements.txt pyinstaller -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 复制完整项目代码
+COPY . .
+
+# 执行 ARM64 完整构建脚本
+# 在 ARM64 容器内运行时，脚本会直接走原生构建流程
+RUN bash scripts/build/build-kylin-arm64-full.sh
+
+# 保留产物（构建脚本已输出到 /project/dist/electron/）

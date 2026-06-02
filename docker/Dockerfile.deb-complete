@@ -1,0 +1,57 @@
+# ============================================================
+# 军队乡村振兴管理系统 — DEB 专用 Docker 构建
+# 被 scripts/build-deb.sh 引用
+# 仅生成 DEB 包（不生成 AppImage），节省构建时间和体积
+# ============================================================
+
+FROM node:18-bookworm
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-venv python3-pip \
+    build-essential \
+    libmagic1 \
+    libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 \
+    xdg-utils libatspi2.0-0 libuuid1 libsecret-1-0 \
+    libasound2 libgbm1 \
+    fakeroot dpkg-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /project
+
+# 安装 Node 依赖
+COPY package.json package-lock.json* ./
+RUN npm ci 2>/dev/null || npm install
+
+# 安装前端依赖并构建
+COPY frontend/package.json frontend/package-lock.json* frontend/
+RUN cd frontend && npm ci 2>/dev/null || npm install
+COPY frontend/ frontend/
+RUN cd frontend && npm run build
+
+# 安装 Python 依赖并 PyInstaller 打包
+COPY backend/requirements.txt backend/
+RUN python3 -m venv backend/.venv && \
+    backend/.venv/bin/pip install --upgrade pip && \
+    backend/.venv/bin/pip install -r backend/requirements.txt pyinstaller
+
+COPY backend/ backend/
+COPY resources/ resources/
+COPY .env.example ./
+
+RUN cd backend && .venv/bin/pyinstaller military-rural-backend.spec --clean --noconfirm && \
+    mkdir -p /project/dist/backend/linux && \
+    cp backend/dist/military-rural-backend /project/dist/backend/linux/military-rural-backend
+
+# 复制 Electron 和构建资源
+COPY electron/ electron/
+COPY build/ build/
+
+ARG VERSION=1.2.0
+ARG ARCH=x64
+
+# 仅生成 DEB
+RUN npx electron-builder --linux deb --${ARCH}
