@@ -199,6 +199,8 @@ config/.env
 # Root-level temporary Python scripts
 /fix_*.py
 /temp_*.py
+# Temporary geo/region data files
+/temp_*.json
 
 # Corrupted resources + old git backup
 resources/frontend_corrupted/
