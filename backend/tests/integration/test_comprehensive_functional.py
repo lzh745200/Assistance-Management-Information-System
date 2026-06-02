@@ -576,17 +576,17 @@ class TestVillagesEdgeCases:
         vid = (create_resp.json().get("data", {}) or {}).get("id") or create_resp.json().get("id")
 
         update_resp = client.put(f"/api/v1/supported-villages/{vid}",
-                                 json={"village_name": "更新后的村名"},
+                                 json={"villageName": "更新后的村名"},
                                  headers=admin_headers)
         assert update_resp.status_code == 200
         # API returns {message: '更新成功'} without data
         assert update_resp.json().get("message") == "更新成功"
-        # 通过 GET 验证更新
+        # 通过 GET 验证更新 (to_dict() now uses camelCase per commit 6a60886)
         detail_resp = client.get(f"/api/v1/supported-villages/{vid}", headers=admin_headers)
         assert detail_resp.status_code == 200
         detail = detail_resp.json()
         inner = detail.get("data", detail)
-        assert inner.get("village_name") == "更新后的村名"
+        assert inner.get("villageName") == "更新后的村名"
 
     def test_delete_nonexistent_village(self, client, admin_headers):
         """删除不存在的帮扶村"""
