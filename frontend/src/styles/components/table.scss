@@ -1,0 +1,176 @@
+/**
+ * 表格布局标准样式
+ * 统一表格列宽、操作按钮等样式规范
+ */
+
+// ========== 表格操作按钮容器 ==========
+.operation-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+
+  .el-button {
+    padding: 4px 8px;
+    height: auto;
+
+    & + .el-button {
+      margin-left: 0;
+    }
+  }
+}
+
+// ========== 表格列宽标准 ==========
+// 使用 CSS 变量便于主题定制
+:root {
+  --table-col-width-xs: 60px; // 序号、选择框
+  --table-col-width-sm: 80px; // 状态、优先级
+  --table-col-width-md: 100px; // 角色、类型
+  --table-col-width-lg: 120px; // 项目编号、日期
+  --table-col-width-xl: 160px; // 负责人、部门
+  --table-col-width-xxl: 200px; // 名称（短）
+
+  // 操作列宽度标准
+  --table-action-width-sm: 180px; // 2个操作按钮
+  --table-action-width-md: 220px; // 3个操作按钮
+  --table-action-width-lg: 280px; // 4个操作按钮
+  --table-action-width-xl: 320px; // 5个及以上操作
+}
+
+// 表格列宽工具类
+.table-col {
+  &-xs {
+    width: var(--table-col-width-xs);
+  }
+  &-sm {
+    width: var(--table-col-width-sm);
+  }
+  &-md {
+    width: var(--table-col-width-md);
+  }
+  &-lg {
+    width: var(--table-col-width-lg);
+  }
+  &-xl {
+    width: var(--table-col-width-xl);
+  }
+  &-xxl {
+    width: var(--table-col-width-xxl);
+  }
+}
+
+// 操作列宽度工具类
+.table-action {
+  &-sm {
+    width: var(--table-action-width-sm);
+  }
+  &-md {
+    width: var(--table-action-width-md);
+  }
+  &-lg {
+    width: var(--table-action-width-lg);
+  }
+  &-xl {
+    width: var(--table-action-width-xl);
+  }
+}
+
+// ========== 表格溢出处理 ==========
+// 自动添加省略号和 tooltip
+.table-cell-ellipsis {
+  .cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// ========== 响应式表格 ==========
+.table-responsive {
+  // 移动端优化
+  @media (max-width: 768px) {
+    .el-table {
+      font-size: 12px;
+
+      .el-table__header th,
+      .el-table__cell {
+        padding: 8px 4px;
+      }
+    }
+  }
+}
+
+// 表格横向滚动容器
+.table-scroll-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  // 自定义滚动条样式
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--el-border-color);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: var(--el-fill-color-light);
+  }
+}
+
+// ========== 移动端隐藏列 ==========
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+// ========== 表格卡片式布局（移动端替代方案）==========
+.mobile-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .mobile-card {
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+
+      .title {
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--el-text-color-primary);
+      }
+    }
+
+    .card-body {
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        font-size: 13px;
+
+        .label {
+          color: var(--el-text-color-secondary);
+        }
+
+        .value {
+          color: var(--el-text-color-primary);
+        }
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--el-border-color-lighter);
+    }
+  }
+}

@@ -1,0 +1,322 @@
+"""
+趋势预测服务
+使用时间序列分析预测未来趋势
+"""
+
+import logging
+from typing import Any, Dict, List
+
+import numpy as np
+import pandas as pd
+from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
+
+# 尝试导入Prophet
+try:
+    from prophet import Prophet
+
+    PROPHET_AVAILABLE = True
+    logger.info("Prophet 已加载，趋势预测功能可用")
+except ImportError as e:  # pragma: no cover
+    PROPHET_AVAILABLE = False  # pragma: no cover
+    logger.warning(f"Prophet未安装,趋势预测功能将受限: {e}")  # pragma: no cover
+
+
+class TrendPredictionService:
+    """趋势预测服务"""
+
+    @staticmethod
+    def predict_time_series(
+        historical_data: List[Dict[str, Any]],
+        periods: int = 12,
+        date_field: str = "date",
+        value_field: str = "value",
+        method: str = "prophet",
+    ) -> Dict[str, Any]:
+        """
+        时间序列预测
+
+        Args:
+            historical_data: 历史数据列表
+            periods: 预测周期数
+            date_field: 日期字段名
+            value_field: 值字段名
+            method: 预测方法(prophet/moving_average/linear)
+
+        Returns:
+            预测结果字典
+        """
+        if not historical_data:
+            return {
+                "predictions": [],
+                "confidence_intervals": [],
+                "method": method,
+                "error": "历史数据为空",
+            }
+
+        try:
+            if method == "prophet" and PROPHET_AVAILABLE:
+                return TrendPredictionService._predict_with_prophet(historical_data, periods, date_field, value_field)
+            elif method == "moving_average":
+                return TrendPredictionService._predict_with_moving_average(
+                    historical_data, periods, date_field, value_field
+                )
+            else:
+                return TrendPredictionService._predict_with_linear(historical_data, periods, date_field, value_field)
+        except Exception as e:
+            logger.error(f"趋势预测失败: {e}")
+            return {
+                "predictions": [],
+                "confidence_intervals": [],
+                "method": method,
+                "error": str(e),
+            }
+
+    @staticmethod
+    def _predict_with_prophet(
+        historical_data: List[Dict[str, Any]],
+        periods: int,
+        date_field: str,
+        value_field: str,
+    ) -> Dict[str, Any]:
+        """使用Prophet进行预测"""
+        # 准备数据
+        df = pd.DataFrame(historical_data)
+        df = df.rename(columns={date_field: "ds", value_field: "y"})
+
+        # 确保日期格式正确
+        df["ds"] = pd.to_datetime(df["ds"])
+        df = df.sort_values("ds")
+
+        # 创建并训练模型
+        model = Prophet(
+            yearly_seasonality=True,
+            weekly_seasonality=False,
+            daily_seasonality=False,
+            interval_width=0.95,
+        )
+        model.fit(df)
+
+        # 生成未来日期
+        future = model.make_future_dataframe(periods=periods, freq="ME")
+        forecast = model.predict(future)
+
+        # 提取预测结果
+        predictions = []
+        confidence_intervals = []
+
+        for idx in range(len(df), len(forecast)):
+            row = forecast.iloc[idx]
+            predictions.append(
+                {
+                    "date": row["ds"].strftime("%Y-%m-%d"),
+                    "value": round(float(row["yhat"]), 2),
+                }
+            )
+            confidence_intervals.append(
+                {
+                    "date": row["ds"].strftime("%Y-%m-%d"),
+                    "lower": round(float(row["yhat_lower"]), 2),
+                    "upper": round(float(row["yhat_upper"]), 2),
+                }
+            )
+
+        return {
+            "predictions": predictions,
+            "confidence_intervals": confidence_intervals,
+            "method": "prophet",
+            "model_params": {"yearly_seasonality": True, "interval_width": 0.95},
+        }
+
+    @staticmethod
+    def _predict_with_moving_average(
+        historical_data: List[Dict[str, Any]],
+        periods: int,
+        date_field: str,
+        value_field: str,
+        window: int = 3,
+    ) -> Dict[str, Any]:
+        """使用移动平均进行预测"""
+        df = pd.DataFrame(historical_data)
+        df = df.sort_values(date_field)
+
+        values = df[value_field].values
+
+        # 计算移动平均
+        if len(values) < window:
+            window = len(values)
+
+        predictions = []
+        last_date = pd.to_datetime(df[date_field].iloc[-1])
+
+        # 使用最后window个值的平均值作为预测
+        avg_value = np.mean(values[-window:])
+
+        for i in range(1, periods + 1):
+            pred_date = last_date + pd.DateOffset(months=i)
+            predictions.append(
+                {
+                    "date": pred_date.strftime("%Y-%m-%d"),
+                    "value": round(float(avg_value), 2),
+                }
+            )
+
+        return {
+            "predictions": predictions,
+            "confidence_intervals": [],
+            "method": "moving_average",
+            "model_params": {"window": window},
+        }
+
+    @staticmethod
+    def _predict_with_linear(
+        historical_data: List[Dict[str, Any]],
+        periods: int,
+        date_field: str,
+        value_field: str,
+    ) -> Dict[str, Any]:
+        """使用线性回归进行预测"""
+        df = pd.DataFrame(historical_data)
+        df = df.sort_values(date_field)
+        df["timestamp"] = pd.to_datetime(df[date_field]).astype(np.int64) // 10**9
+
+        X = df["timestamp"].values.reshape(-1, 1)
+        y = df[value_field].values
+
+        # 简单线性回归
+        from sklearn.linear_model import LinearRegression
+
+        model = LinearRegression()
+        model.fit(X, y)
+
+        # 预测
+        last_date = pd.to_datetime(df[date_field].iloc[-1])
+        predictions = []
+
+        for i in range(1, periods + 1):
+            pred_date = last_date + pd.DateOffset(months=i)
+            pred_timestamp = pred_date.timestamp()
+            pred_value = model.predict([[pred_timestamp]])[0]
+
+            predictions.append(
+                {
+                    "date": pred_date.strftime("%Y-%m-%d"),
+                    "value": round(float(pred_value), 2),
+                }
+            )
+
+        return {
+            "predictions": predictions,
+            "confidence_intervals": [],
+            "method": "linear_regression",
+            "model_params": {
+                "coefficient": float(model.coef_[0]),
+                "intercept": float(model.intercept_),
+            },
+        }
+
+    @staticmethod
+    def predict_income_trend(historical_data: List[Dict[str, Any]], years_ahead: int = 3) -> Dict[str, Any]:
+        """
+        预测收入趋势 (兼容测试API)
+
+        Args:
+            historical_data: 历史数据列表，每项包含year和income
+            years_ahead: 预测年数
+
+        Returns:
+            预测结果
+        """
+        if not historical_data:
+            return {"predictions": [], "error": "至少需要2个数据点"}
+
+        # 单次遍历：转换数据格式并计数
+        formatted_data = [
+            {"date": f"{item['year']}-01-01", "value": item["income"]}
+            for item in historical_data
+            if item.get("year") and item.get("income") is not None
+        ]
+
+        if len(formatted_data) < 2:
+            return {"predictions": [], "error": "有效数据点不足"}
+
+        # 预测
+        return TrendPredictionService.predict_time_series(
+            historical_data=formatted_data,
+            periods=years_ahead,
+            method="linear",  # 使用线性回归，不依赖prophet
+        )
+
+    @staticmethod
+    def predict_village_income(db: Session, village_id: int, periods: int = 12) -> Dict[str, Any]:
+        """
+        预测村庄收入趋势
+
+        Args:
+            db: 数据库会话
+            village_id: 村庄ID
+            periods: 预测周期数(月)
+
+        Returns:
+            预测结果
+        """
+        from app.models.annual_income import AnnualIncome
+
+        # 查询历史收入数据
+        income_records = (
+            db.query(AnnualIncome).filter(AnnualIncome.village_id == village_id).order_by(AnnualIncome.year).all()
+        )
+
+        if not income_records:
+            return {"predictions": [], "error": "无历史收入数据"}
+
+        # 准备数据
+        historical_data = []
+        for record in income_records:
+            historical_data.append({"date": f"{record.year}-01-01", "value": record.per_capita_income or 0})
+
+        # 预测
+        return TrendPredictionService.predict_time_series(
+            historical_data=historical_data,
+            periods=periods,
+            method="prophet" if PROPHET_AVAILABLE else "linear",
+        )
+
+    @staticmethod
+    def predict_village_population(db: Session, village_id: int, periods: int = 12) -> Dict[str, Any]:
+        """
+        预测村庄人口趋势
+
+        Args:
+            db: 数据库会话
+            village_id: 村庄ID
+            periods: 预测周期数(月)
+
+        Returns:
+            预测结果
+        """
+        from app.models.annual_population import AnnualPopulation
+
+        # 查询历史人口数据
+        population_records = (
+            db.query(AnnualPopulation)
+            .filter(AnnualPopulation.village_id == village_id)
+            .order_by(AnnualPopulation.year)
+            .all()
+        )
+
+        if not population_records:
+            return {"predictions": [], "error": "无历史人口数据"}
+
+        # 准备数据
+        historical_data = []
+        for record in population_records:
+            historical_data.append({"date": f"{record.year}-01-01", "value": record.total_population or 0})
+
+        # 预测
+        return TrendPredictionService.predict_time_series(
+            historical_data=historical_data,
+            periods=periods,
+            method="prophet" if PROPHET_AVAILABLE else "linear",
+        )

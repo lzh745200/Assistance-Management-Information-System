@@ -1,0 +1,60 @@
+# ─── Docker build context: exclude everything, then whitelist needed files ───
+# 此策略确保 Docker 镜像只包含构建所需文件，避免意外包含敏感数据
+*
+
+# ─── Whitelist: backend sources ───
+!backend/
+!backend/*.spec
+!backend/requirements.txt
+!backend/start.py
+!backend/init_db.py
+!backend/app/
+!backend/alembic/
+!backend/alembic.ini
+!backend/.env.example
+!.env.example
+
+# ─── Whitelist: frontend sources (multi-stage build) ───
+!frontend/**
+# 排除前端构建缓存和依赖（由 Docker 内 npm install 处理）
+frontend/node_modules/
+frontend/dist/
+
+# ─── Whitelist: Electron ───
+!electron/
+
+# ─── Whitelist: build config & resources ───
+!package.json
+!package-lock.json
+!resources/
+!build/**
+!docker/**
+!scripts/build/**
+!scripts/build-*/
+!dist/windows/package/
+!docker-compose.yml
+
+# ─── Whitelist: Docker context files ───
+!.dockerignore
+!Dockerfile
+!docker/Dockerfile*
+
+# ─── Re-exclude: generated/junk files under whitelisted directories ───
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/node_modules/
+**/.git/
+**/.venv*/
+**/.venv-build-*/
+**/.pytest_cache/
+**/.mypy_cache/
+backend/build/
+backend/dist/
+backend/data/test_*.db*
+backend/data/token_blacklist.db
+backend/data/cache/
+backend/data/checkpoints/
+backend/logs/
+dist/
+*.log

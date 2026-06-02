@@ -1,0 +1,194 @@
+/**
+ * 打印预览样式
+ * 确保报表在 A4 纸张上正确排版
+ * 使用 window.print() 时，@media print 规则会自动生效
+ */
+
+@media print {
+  /* 隐藏非打印内容 */
+  .el-aside,
+  .sidebar,
+  .page-header,
+  .el-header,
+  .el-footer,
+  .header-actions,
+  .no-print,
+  .el-dialog__wrapper,
+  .el-message,
+  .el-notification {
+    display: none !important;
+  }
+
+  /* A4 页面设置 */
+  @page {
+    size: A4;
+    margin: 15mm 20mm;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #000;
+    background: #fff;
+  }
+
+  /* 页眉 */
+  .print-header {
+    text-align: center;
+    border-bottom: 2px solid #1b4332;
+    padding-bottom: 8pt;
+    margin-bottom: 16pt;
+
+    .print-header-title {
+      font-size: 16pt;
+      font-weight: bold;
+      color: #1b4332;
+    }
+
+    .print-header-subtitle {
+      font-size: 10pt;
+      color: #666;
+      margin-top: 4pt;
+    }
+  }
+
+  /* 页脚 */
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9pt;
+    color: #999;
+    border-top: 1px solid #ddd;
+    padding-top: 4pt;
+  }
+
+  /* 表格样式 */
+  table,
+  .el-table {
+    width: 100% !important;
+    border-collapse: collapse;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th,
+  td {
+    border: 1px solid #333 !important;
+    padding: 4pt 6pt !important;
+    font-size: 10pt !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    font-weight: bold !important;
+  }
+
+  /* 标题 */
+  .report-title {
+    font-size: 18pt;
+    font-weight: bold;
+    text-align: center;
+    color: #1b4332;
+    margin-bottom: 12pt;
+  }
+
+  .report-subtitle {
+    font-size: 11pt;
+    text-align: center;
+    color: #666;
+    margin-bottom: 20pt;
+  }
+
+  /* 分页控制 */
+  .page-break {
+    page-break-before: always;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+  }
+
+  /* 图表（打印时隐藏交互式图表，显示静态截图） */
+  .echarts-container,
+  canvas {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* 链接不显示URL */
+  a[href]:after {
+    content: none !important;
+  }
+
+  /* 军队风格封面 */
+  .print-cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    page-break-after: always;
+
+    .cover-title {
+      font-size: 28pt;
+      font-weight: bold;
+      color: #1b4332;
+      margin-bottom: 20pt;
+    }
+
+    .cover-subtitle {
+      font-size: 14pt;
+      color: #40916c;
+      margin-bottom: 40pt;
+    }
+
+    .cover-info {
+      font-size: 12pt;
+      color: #333;
+      line-height: 2;
+    }
+  }
+
+  /* 目录 */
+  .print-toc {
+    page-break-after: always;
+
+    .toc-title {
+      font-size: 16pt;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 20pt;
+      color: #1b4332;
+    }
+
+    .toc-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 4pt 0;
+      border-bottom: 1px dotted #ccc;
+      font-size: 11pt;
+    }
+  }
+}
+
+/* 打印预览模式（屏幕上模拟 A4 排版） */
+.print-preview-mode {
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 20mm;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  min-height: 297mm;
+}

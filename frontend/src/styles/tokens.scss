@@ -1,0 +1,568 @@
+/**
+ * 设计Token系统
+ * 
+ * 定义统一的设计变量，确保整个应用的视觉一致性
+ * 包含：颜色、间距、圆角、阴影、字体、断点等Token
+ * 
+ * 需求: 2.6
+ */
+
+// ==================== 颜色Token ====================
+
+:root {
+  // 主色调
+  --color-primary: #409eff;
+  --color-primary-light-1: #53a8ff;
+  --color-primary-light-2: #66b1ff;
+  --color-primary-light-3: #79bbff;
+  --color-primary-light-4: #8cc5ff;
+  --color-primary-light-5: #a0cfff;
+  --color-primary-light-6: #b3d8ff;
+  --color-primary-light-7: #c6e2ff;
+  --color-primary-light-8: #d9ecff;
+  --color-primary-light-9: #ecf5ff;
+  --color-primary-dark-1: #3a8ee6;
+  --color-primary-dark-2: #337ecc;
+
+  // 语义色 - 成功
+  --color-success: #67c23a;
+  --color-success-light: #85ce61;
+  --color-success-lighter: #b3e19d;
+  --color-success-lightest: #f0f9eb;
+  --color-success-dark: #5daf34;
+
+  // 语义色 - 警告
+  --color-warning: #e6a23c;
+  --color-warning-light: #ebb563;
+  --color-warning-lighter: #f3d19e;
+  --color-warning-lightest: #fdf6ec;
+  --color-warning-dark: #cf9236;
+
+  // 语义色 - 危险
+  --color-danger: #f56c6c;
+  --color-danger-light: #f78989;
+  --color-danger-lighter: #fab6b6;
+  --color-danger-lightest: #fef0f0;
+  --color-danger-dark: #dd6161;
+
+  // 语义色 - 信息
+  --color-info: #909399;
+  --color-info-light: #a6a9ad;
+  --color-info-lighter: #c8c9cc;
+  --color-info-lightest: #f4f4f5;
+  --color-info-dark: #82848a;
+
+  // 文字色
+  --color-text-primary: #303133;
+  --color-text-regular: #606266;
+  --color-text-secondary: #909399;
+  --color-text-placeholder: #c0c4cc;
+  --color-text-disabled: #c0c4cc;
+
+  // 背景色
+  --color-bg-page: #f5f7fa;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #f5f7fa;
+  --color-bg-active: #ecf5ff;
+  --color-bg-overlay: rgba(0, 0, 0, 0.5);
+  --color-bg-mask: rgba(0, 0, 0, 0.8);
+
+  // 边框色
+  --color-border: #dcdfe6;
+  --color-border-light: #e4e7ed;
+  --color-border-lighter: #ebeef5;
+  --color-border-extra-light: #f2f6fc;
+  --color-border-dark: #d4d7de;
+}
+
+// ==================== 间距Token ====================
+
+:root {
+  --spacing-none: 0;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-xxxl: 64px;
+}
+
+// ==================== 圆角Token ====================
+
+:root {
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-xxl: 16px;
+  --radius-round: 9999px;
+  --radius-circle: 50%;
+}
+
+// ==================== 阴影Token ====================
+
+:root {
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-xxl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+
+  // 组件特定阴影
+  --shadow-card: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  --shadow-dropdown: 0 2px 12px 0 rgba(0, 0, 0, 0.12);
+  --shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-popover: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+// ==================== 过渡Token ====================
+
+:root {
+  --transition-duration-fast: 150ms;
+  --transition-duration-normal: 250ms;
+  --transition-duration-slow: 350ms;
+
+  --transition-timing-ease: ease;
+  --transition-timing-ease-in: ease-in;
+  --transition-timing-ease-out: ease-out;
+  --transition-timing-ease-in-out: ease-in-out;
+  --transition-timing-linear: linear;
+
+  // 预设过渡
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+  --transition-fade: 200ms ease-in-out;
+  --transition-slide: 300ms ease-out;
+  --transition-bounce: 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+// ==================== 字体Token ====================
+
+:root {
+  // 字体族
+  --font-family-base:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-family-mono:
+    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+
+  // 字体大小
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-xxl: 20px;
+  --font-size-xxxl: 24px;
+  --font-size-display: 32px;
+
+  // 字体粗细
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  // 行高
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+}
+
+// ==================== 断点Token ====================
+
+:root {
+  --breakpoint-xs: 0;
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-xxl: 1400px;
+}
+
+// ==================== 层级Token (z-index) ====================
+
+:root {
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+  --z-index-loading: 1090;
+}
+
+// ==================== 布局Token ====================
+
+:root {
+  --layout-header-height: 60px;
+  --layout-sidebar-width: 200px;
+  --layout-sidebar-collapsed-width: 64px;
+  --layout-footer-height: 48px;
+  --layout-content-max-width: 1400px;
+  --layout-content-padding: 24px;
+}
+
+// ==================== 组件尺寸Token ====================
+
+:root {
+  // 按钮尺寸
+  --button-height-sm: 24px;
+  --button-height-md: 32px;
+  --button-height-lg: 40px;
+
+  // 输入框尺寸
+  --input-height-sm: 24px;
+  --input-height-md: 32px;
+  --input-height-lg: 40px;
+
+  // 图标尺寸
+  --icon-size-xs: 12px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 20px;
+  --icon-size-xl: 24px;
+
+  // 头像尺寸
+  --avatar-size-sm: 24px;
+  --avatar-size-md: 32px;
+  --avatar-size-lg: 40px;
+  --avatar-size-xl: 64px;
+}
+
+// ==================== 暗色主题Token ====================
+
+[data-theme="dark"] {
+  // 主色调（暗色模式下稍微调亮）
+  --color-primary: #409eff;
+  --color-primary-light-1: #3375b9;
+  --color-primary-light-2: #2a598a;
+
+  // 文字色
+  --color-text-primary: #e5eaf3;
+  --color-text-regular: #cfd3dc;
+  --color-text-secondary: #a3a6ad;
+  --color-text-placeholder: #8d9095;
+  --color-text-disabled: #6c6e72;
+
+  // 背景色
+  --color-bg-page: #0a0a0a;
+  --color-bg-card: #141414;
+  --color-bg-hover: #262727;
+  --color-bg-active: #1d3043;
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+
+  // 边框色
+  --color-border: #4c4d4f;
+  --color-border-light: #414243;
+  --color-border-lighter: #363637;
+  --color-border-extra-light: #2b2b2c;
+
+  // 阴影（暗色模式下更深）
+  --shadow-card: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+  --shadow-dropdown: 0 2px 12px 0 rgba(0, 0, 0, 0.36);
+  --shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+// ==================== 军事主题Token ====================
+// Requirements: 2.1 - 军事主题设计令牌
+
+[data-theme="military"] {
+  // 军绿色系主色调 - 深邃军绿渐变
+  --color-military-darkest: #081c15;
+  --color-military-dark: #1b4332;
+  --color-military-medium: #2d6a4f;
+  --color-military-light: #40916c;
+  --color-military-lighter: #52b788;
+  --color-military-lightest: #74c69d;
+
+  // 金色系点缀色 - 军徽金色
+  --color-badge-gold: #d4af37;
+  --color-badge-gold-light: #e6c158;
+  --color-badge-gold-lighter: #f0e68c;
+  --color-badge-gold-dark: #b8960c;
+
+  // 主色调映射
+  --color-primary: #2d6a4f;
+  --color-primary-light-1: #40916c;
+  --color-primary-light-2: #52b788;
+  --color-primary-light-3: #74c69d;
+  --color-primary-dark-1: #1b4332;
+  --color-primary-dark-2: #081c15;
+
+  // 语义色调整
+  --color-success: #2ecc71;
+  --color-warning: #f39c12;
+  --color-danger: #e63946;
+  --color-info: #3498db;
+
+  // 文字色
+  --color-text-primary: #ffffff;
+  --color-text-regular: #e5e5e5;
+  --color-text-secondary: #a8dadc;
+  --color-text-placeholder: rgba(255, 255, 255, 0.4);
+  --color-text-muted: #95a5a6;
+
+  // 背景色
+  --color-bg-page: linear-gradient(135deg, #081c15, #1b4332);
+  --color-bg-card: rgba(10, 30, 20, 0.95);
+  --color-bg-card-header: rgba(27, 67, 50, 0.85);
+  --color-bg-hover: rgba(64, 145, 108, 0.3);
+  --color-bg-active: rgba(212, 175, 55, 0.2);
+  --color-bg-input: rgba(255, 255, 255, 0.05);
+  --color-bg-overlay: rgba(0, 0, 0, 0.5);
+  --color-bg-mask: rgba(0, 0, 0, 0.8);
+
+  // 边框色
+  --color-border: rgba(64, 145, 108, 0.2);
+  --color-border-light: rgba(64, 145, 108, 0.3);
+  --color-border-focus: #40916c;
+  --color-border-gold: rgba(212, 175, 55, 0.5);
+
+  // 阴影
+  --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.7);
+  --shadow-card-hover:
+    0 25px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(64, 145, 108, 0.4);
+  --shadow-badge: 0 12px 35px rgba(0, 0, 0, 0.7);
+  --shadow-badge-glow: 0 0 40px #d4af37;
+  --shadow-button: 0 6px 20px rgba(0, 0, 0, 0.7);
+  --shadow-button-hover:
+    0 8px 25px rgba(0, 0, 0, 0.6), 0 0 20px rgba(64, 145, 108, 0.4);
+
+  // 发光效果
+  --glow-color: rgba(64, 145, 108, 0.4);
+  --glow-gold: rgba(212, 175, 55, 0.7);
+}
+
+// ==================== 户外/长辈模式Token ====================
+// 高对比度主题，适用于户外强光环境和老年用户
+
+[data-theme="outdoor"] {
+  // 高对比度主色调 - 深蓝+亮黄
+  --color-primary: #1a237e;
+  --color-primary-light-1: #283593;
+  --color-primary-light-2: #3949ab;
+  --color-primary-light-3: #5c6bc0;
+  --color-primary-dark-1: #0d1b5e;
+  --color-primary-dark-2: #000051;
+
+  // 高对比度语义色
+  --color-success: #1b5e20;
+  --color-warning: #f57f17;
+  --color-danger: #b71c1c;
+  --color-info: #01579b;
+
+  // 高对比度文字色 - 亮黄+白色
+  --color-text-primary: #ffff00;
+  --color-text-regular: #ffd600;
+  --color-text-secondary: #ffeb3b;
+  --color-text-placeholder: #fff176;
+  --color-text-disabled: #9e9e9e;
+
+  // 高对比度背景色 - 深蓝底色
+  --color-bg-page: #0d1b5e;
+  --color-bg-card: #1a237e;
+  --color-bg-hover: #283593;
+  --color-bg-active: #3949ab;
+  --color-bg-overlay: rgba(0, 0, 0, 0.8);
+  --color-bg-mask: rgba(0, 0, 0, 0.9);
+
+  // 高对比度边框色
+  --color-border: #ffd600;
+  --color-border-light: #ffeb3b;
+  --color-border-lighter: #fff176;
+  --color-border-extra-light: #fff9c4;
+
+  // 高对比度阴影
+  --shadow-card: 0 4px 16px 0 rgba(255, 214, 0, 0.3);
+  --shadow-dropdown: 0 4px 16px 0 rgba(255, 214, 0, 0.4);
+  --shadow-dialog: 0 8px 32px rgba(255, 214, 0, 0.5);
+
+  // 字体放大 1.5 倍
+  --font-size-xs: 18px;
+  --font-size-sm: 20px;
+  --font-size-md: 21px;
+  --font-size-lg: 24px;
+  --font-size-xl: 27px;
+  --font-size-xxl: 30px;
+  --font-size-xxxl: 36px;
+  --font-size-display: 48px;
+
+  // 按钮和输入框尺寸加大
+  --button-height-sm: 36px;
+  --button-height-md: 48px;
+  --button-height-lg: 60px;
+  --input-height-sm: 36px;
+  --input-height-md: 48px;
+  --input-height-lg: 60px;
+
+  // 图标尺寸加大
+  --icon-size-xs: 18px;
+  --icon-size-sm: 21px;
+  --icon-size-md: 24px;
+  --icon-size-lg: 30px;
+  --icon-size-xl: 36px;
+}
+
+// ==================== 军事主题动画Token ====================
+
+:root {
+  // 动画时长
+  --animation-duration-fast: 0.3s;
+  --animation-duration-normal: 0.5s;
+  --animation-duration-slow: 0.8s;
+  --animation-duration-very-slow: 1.2s;
+
+  // 动画缓动函数
+  --animation-ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.2);
+  --animation-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  // 背景动画时长
+  --animation-grid-move: 60s;
+  --animation-float: 30s;
+  --animation-scan: 25s;
+  --animation-badge-rotate: 15s;
+  --animation-badge-pulse: 4s;
+  --animation-indicator-pulse: 2s;
+}
+
+// ==================== SCSS变量映射 ====================
+// 为了兼容现有代码，提供SCSS变量
+
+// 颜色变量
+$color-primary: var(--color-primary);
+$color-success: var(--color-success);
+$color-warning: var(--color-warning);
+$color-danger: var(--color-danger);
+$color-info: var(--color-info);
+
+$color-text-primary: var(--color-text-primary);
+$color-text-regular: var(--color-text-regular);
+$color-text-secondary: var(--color-text-secondary);
+$color-text-placeholder: var(--color-text-placeholder);
+
+$color-bg-page: var(--color-bg-page);
+$color-bg-card: var(--color-bg-card);
+$color-bg-hover: var(--color-bg-hover);
+
+$color-border: var(--color-border);
+$color-border-light: var(--color-border-light);
+
+// 间距变量
+$spacing-xs: var(--spacing-xs);
+$spacing-sm: var(--spacing-sm);
+$spacing-md: var(--spacing-md);
+$spacing-lg: var(--spacing-lg);
+$spacing-xl: var(--spacing-xl);
+$spacing-xxl: var(--spacing-xxl);
+
+// 圆角变量
+$radius-sm: var(--radius-sm);
+$radius-md: var(--radius-md);
+$radius-lg: var(--radius-lg);
+$radius-xl: var(--radius-xl);
+$radius-round: var(--radius-round);
+
+// 阴影变量
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+$shadow-lg: var(--shadow-lg);
+$shadow-xl: var(--shadow-xl);
+$shadow-card: var(--shadow-card);
+
+// 过渡变量
+$transition-fast: var(--transition-fast);
+$transition-normal: var(--transition-normal);
+$transition-slow: var(--transition-slow);
+
+// 字体变量
+$font-family-base: var(--font-family-base);
+$font-family-mono: var(--font-family-mono);
+
+$font-size-xs: var(--font-size-xs);
+$font-size-sm: var(--font-size-sm);
+$font-size-md: var(--font-size-md);
+$font-size-lg: var(--font-size-lg);
+$font-size-xl: var(--font-size-xl);
+
+$font-weight-normal: var(--font-weight-normal);
+$font-weight-medium: var(--font-weight-medium);
+$font-weight-bold: var(--font-weight-bold);
+
+$line-height-tight: var(--line-height-tight);
+$line-height-normal: var(--line-height-normal);
+$line-height-relaxed: var(--line-height-relaxed);
+
+// 布局变量
+$layout-header-height: var(--layout-header-height);
+$layout-sidebar-width: var(--layout-sidebar-width);
+$layout-sidebar-collapsed-width: var(--layout-sidebar-collapsed-width);
+
+// ==================== 军事主题SCSS变量 ====================
+// 为了方便在组件中使用，提供SCSS变量
+
+// 军绿色系
+$military-darkest: #081c15;
+$military-dark: #1b4332;
+$military-medium: #2d6a4f;
+$military-light: #40916c;
+$military-lighter: #52b788;
+$military-lightest: #74c69d;
+
+// 金色系
+$badge-gold: #d4af37;
+$badge-gold-light: #e6c158;
+$badge-gold-lighter: #f0e68c;
+$badge-gold-dark: #b8960c;
+
+// 语义色
+$alert-red: #e63946;
+$success-green: #2ecc71;
+$warning-orange: #f39c12;
+$info-blue: #3498db;
+
+// 文字色
+$text-white: #ffffff;
+$text-gray: #95a5a6;
+$text-light-gray: #bdc3c7;
+$text-muted: #a8dadc;
+
+// 背景色
+$card-bg: rgba(10, 30, 20, 0.95);
+$card-header-bg: rgba(27, 67, 50, 0.85);
+$input-bg: rgba(255, 255, 255, 0.05);
+
+// 边框色
+$border-military: rgba(64, 145, 108, 0.2);
+$border-military-light: rgba(64, 145, 108, 0.3);
+
+// 阴影
+$shadow-dark: rgba(0, 0, 0, 0.7);
+$glow-military: rgba(64, 145, 108, 0.4);
+$glow-gold: rgba(212, 175, 55, 0.7);
+
+// 渐变
+$gradient-military: linear-gradient(135deg, $military-dark, $military-medium);
+$gradient-military-dark: linear-gradient(
+  135deg,
+  $military-darkest,
+  $military-dark
+);
+$gradient-badge: linear-gradient(135deg, $badge-gold, $badge-gold-light);
+$gradient-title: linear-gradient(45deg, $badge-gold, $text-white);

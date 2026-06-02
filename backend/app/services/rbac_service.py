@@ -1,0 +1,571 @@
+"""
+RBAC权限管理服务
+
+所有 ORM 模型已迁移到 models/rbac.py，本文件只包含业务逻辑。
+"""
+
+import logging
+from contextvars import ContextVar
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
+
+from sqlalchemy import func as sa_func
+from sqlalchemy.orm import Session
+
+from app.core.error_handler import NotFoundError
+from app.models.base import _utcnow
+from app.models.rbac import (
+    AccessLog,
+    RbacRole,
+    ResourceAccessControl,
+    RolePermission,
+    UserPermission,
+    UserRole,
+)
+from app.models.user import User
+from app.services.machine_code_permission_service import MachineCodePermissionService
+
+logger = logging.getLogger(__name__)
+
+# 请求级权限缓存（避免单次请求中重复查询）
+_restricted_perms_cache: ContextVar[Optional[Dict[int, Set[str]]]] = ContextVar("restricted_perms_cache", default=None)
+
+
+# ==================== 权限枚举 ====================
+
+
+class Permission(str, Enum):
+    """权限枚举"""
+
+    # 用户管理
+    USER_READ = "user:read"
+    USER_WRITE = "user:write"
+    USER_DELETE = "user:delete"
+    USER_MANAGE_ROLES = "user:manage_roles"
+
+    # 组织管理
+    ORG_READ = "org:read"
+    ORG_WRITE = "org:write"
+    ORG_DELETE = "org:delete"
+
+    # 帮扶村管理
+    VILLAGE_READ = "village:read"
+    VILLAGE_WRITE = "village:write"
+    VILLAGE_DELETE = "village:delete"
+    VILLAGE_EXPORT = "village:export"
+
+    # 政策管理
+    POLICY_READ = "policy:read"
+    POLICY_WRITE = "policy:write"
+    POLICY_DELETE = "policy:delete"
+    POLICY_PUBLISH = "policy:publish"
+
+    # 备份管理
+    BACKUP_CREATE = "backup:create"
+    BACKUP_RESTORE = "backup:restore"
+    BACKUP_DELETE = "backup:delete"
+    BACKUP_DOWNLOAD = "backup:download"
+
+    # 系统管理
+    SYSTEM_CONFIG = "system:config"
+    SYSTEM_MONITOR = "system:monitor"
+    SYSTEM_LOGS = "system:logs"
+
+    # 审计管理
+    AUDIT_READ = "audit:read"
+    AUDIT_EXPORT = "audit:export"
+
+    # 数据分析
+    ANALYTICS_READ = "analytics:read"
+    ANALYTICS_EXPORT = "analytics:export"
+
+    # 管理员权限
+    ADMIN_ALL = "admin:all"
+
+
+# ==================== 权限服务 ====================
+
+
+class RBACService:
+    """RBAC权限服务（全部使用 ORM 操作）"""
+
+    def __init__(self):
+        self.default_permissions = {
+            Permission.USER_READ,
+            Permission.ORG_READ,
+            Permission.VILLAGE_READ,
+            Permission.POLICY_READ,
+            Permission.BACKUP_CREATE,
+            Permission.ANALYTICS_READ,
+        }
+
+        self.role_permissions_map = {
+            "admin": [Permission.ADMIN_ALL],
+            "manager": [
+                Permission.USER_READ,
+                Permission.USER_WRITE,
+                Permission.USER_MANAGE_ROLES,
+                Permission.ORG_READ,
+                Permission.ORG_WRITE,
+                Permission.ORG_DELETE,
+                Permission.VILLAGE_READ,
+                Permission.VILLAGE_WRITE,
+                Permission.VILLAGE_DELETE,
+                Permission.VILLAGE_EXPORT,
+                Permission.POLICY_READ,
+                Permission.POLICY_WRITE,
+                Permission.POLICY_PUBLISH,
+                Permission.BACKUP_CREATE,
+                Permission.BACKUP_RESTORE,
+                Permission.BACKUP_DELETE,
+                Permission.BACKUP_DOWNLOAD,
+                Permission.SYSTEM_CONFIG,
+                Permission.SYSTEM_MONITOR,
+                Permission.AUDIT_READ,
+                Permission.AUDIT_EXPORT,
+                Permission.ANALYTICS_READ,
+                Permission.ANALYTICS_EXPORT,
+            ],
+            "user": [
+                Permission.USER_READ,
+                Permission.ORG_READ,
+                Permission.VILLAGE_READ,
+                Permission.POLICY_READ,
+                Permission.BACKUP_CREATE,
+                Permission.ANALYTICS_READ,
+            ],
+        }
+
+    # ------------------------------------------------------------------
+    # 公开 API
+    # ------------------------------------------------------------------
+
+    async def check_permission(
+        self,
+        user_id: str,
+        permission: str,
+        resource_type: str = None,
+        resource_id: str = None,
+        db: Session = None,
+    ) -> bool:
+        """检查用户权限"""
+        if db is None:
+            return False
+
+        # 检查机器码权限限制（带缓存）
+        restricted_perms = self._get_cached_restricted_permissions(int(user_id), db)
+        if permission in restricted_perms:
+            self._log_access(
+                db,
+                user_id,
+                "permission_check",
+                resource_type,
+                resource_id,
+                False,
+                "机器码限制权限",
+            )
+            return False
+
+        # 管理员权限检查
+        if self._has_admin_role(user_id, db):
+            self._log_access(
+                db,
+                user_id,
+                "permission_check",
+                resource_type,
+                resource_id,
+                True,
+                "管理员权限",
+            )
+            return True
+
+        # 检查直接权限
+        if self._has_direct_permission(user_id, permission, db):
+            self._log_access(
+                db,
+                user_id,
+                "permission_check",
+                resource_type,
+                resource_id,
+                True,
+                "直接权限",
+            )
+            return True
+
+        # 检查角色权限
+        if self._has_role_permission(user_id, permission, db):
+            self._log_access(
+                db,
+                user_id,
+                "permission_check",
+                resource_type,
+                resource_id,
+                True,
+                "角色权限",
+            )
+            return True
+
+        # 检查资源权限
+        if resource_type and resource_id:
+            if self._has_resource_access(user_id, resource_type, resource_id, "write", db):
+                self._log_access(
+                    db,
+                    user_id,
+                    "permission_check",
+                    resource_type,
+                    resource_id,
+                    True,
+                    "资源权限",
+                )
+                return True
+
+        # 权限不足
+        self._log_access(
+            db,
+            user_id,
+            "permission_check",
+            resource_type,
+            resource_id,
+            False,
+            "权限不足",
+        )
+        return False
+
+    def _get_cached_restricted_permissions(self, user_id: int, db: Session) -> Set[str]:
+        """获取用户机器码限制权限（带请求级缓存）"""
+        cache = _restricted_perms_cache.get()
+        if cache is None:
+            cache = {}
+            _restricted_perms_cache.set(cache)
+
+        if user_id not in cache:
+            mcp_service = MachineCodePermissionService(db)
+            cache[user_id] = mcp_service.get_user_restricted_permissions(user_id)
+
+        return cache[user_id]
+
+    async def get_user_permissions(self, user_id: str, db: Session) -> Set[str]:
+        """获取用户所有权限（含机器码限制）
+
+        权限计算逻辑：
+        1. 获取用户角色默认权限 + 直接权限
+        2. 如果用户设置了白名单(allowed_permissions)，取交集
+        3. 减去机器码限制的权限
+        """
+        effective, _ = await self._compute_user_permissions_with_restrictions(user_id, db)
+        return effective
+
+    async def get_user_permissions_with_restrictions(self, user_id: str, db: Session) -> tuple[Set[str], Set[str]]:
+        """获取用户权限及限制信息（单次查询）
+
+        Returns:
+            tuple: (effective_permissions, restricted_permissions)
+        """
+        return await self._compute_user_permissions_with_restrictions(user_id, db)
+
+    async def _compute_user_permissions_with_restrictions(self, user_id: str, db: Session) -> tuple[Set[str], Set[str]]:
+        """内部方法：计算用户权限及限制（只查询一次机器码权限）
+
+        Returns:
+            tuple: (effective_permissions, restricted_permissions)
+        """
+        permissions: Set[str] = set()
+
+        now = _utcnow()
+
+        # 获取直接权限
+        direct_rows = (
+            db.query(UserPermission.permission)
+            .filter(
+                UserPermission.user_id == int(user_id),
+                (UserPermission.expires_at.is_(None) | (UserPermission.expires_at > now)),
+            )
+            .all()
+        )
+        for (perm,) in direct_rows:
+            permissions.add(perm)
+
+        # 获取角色权限
+        role_perm_rows = (
+            db.query(RolePermission.permission)
+            .join(UserRole, RolePermission.role_id == UserRole.role_id)
+            .join(RbacRole, UserRole.role_id == RbacRole.id)
+            .filter(
+                UserRole.user_id == int(user_id),
+                RbacRole.is_active.is_(True),
+                (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
+            )
+            .distinct()
+            .all()
+        )
+        for (perm,) in role_perm_rows:
+            permissions.add(perm)
+
+        # 如果有管理员权限，返回所有权限
+        if Permission.ADMIN_ALL.value in permissions:
+            return ({p.value for p in Permission}, set())
+
+        # 检查用户白名单权限
+        user_allowed = None
+        if user_id:
+            user = db.query(User).filter(User.id == int(user_id)).first()
+            if user:
+                user_allowed = user.allowed_permissions_list
+
+        if user_allowed:
+            # 取白名单与当前权限的交集
+            permissions = permissions.intersection(set(user_allowed))
+
+        # 获取并减去机器码限制的权限（使用缓存）
+        restricted_perms = self._get_cached_restricted_permissions(int(user_id), db)
+        if restricted_perms:
+            permissions = permissions - restricted_perms
+            logger.info(
+                "用户权限受机器码限制: user_id=%s, restricted=%s, remaining=%s",
+                user_id,
+                restricted_perms,
+                permissions,
+            )
+
+        return permissions, restricted_perms
+
+    async def assign_role(
+        self,
+        user_id: str,
+        role_id: str,
+        granted_by: str,
+        expires_at: str = None,
+        db: Session = None,
+    ) -> bool:
+        """分配角色给用户"""
+        # 检查角色是否存在且激活
+        role = db.query(RbacRole).filter(RbacRole.id == role_id, RbacRole.is_active.is_(True)).first()
+        if not role:
+            raise NotFoundError("角色", role_id)
+
+        now = _utcnow()
+        # 检查是否已有该角色
+        existing = (
+            db.query(UserRole)
+            .filter(
+                UserRole.user_id == int(user_id),
+                UserRole.role_id == role_id,
+                (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
+            )
+            .first()
+        )
+        if existing:
+            return True
+
+        # 分配角色
+        user_role = UserRole(
+            user_id=int(user_id),
+            role_id=role_id,
+            granted_by=int(granted_by) if granted_by else None,
+            expires_at=datetime.fromisoformat(expires_at) if expires_at else None,
+        )
+        db.add(user_role)
+        db.commit()
+        return True
+
+    async def revoke_role(self, user_id: str, role_id: str, db: Session = None) -> bool:
+        """撤销用户角色"""
+        rows = (
+            db.query(UserRole)
+            .filter(UserRole.user_id == int(user_id), UserRole.role_id == role_id)
+            .delete(synchronize_session=False)
+        )
+        db.commit()
+        return rows > 0
+
+    async def grant_permission(
+        self,
+        user_id: str,
+        permission: str,
+        granted_by: str,
+        expires_at: str = None,
+        db: Session = None,
+    ) -> bool:
+        """直接授予权限给用户"""
+        now = _utcnow()
+        existing = (
+            db.query(UserPermission)
+            .filter(
+                UserPermission.user_id == int(user_id),
+                UserPermission.permission == permission,
+                (UserPermission.expires_at.is_(None) | (UserPermission.expires_at > now)),
+            )
+            .first()
+        )
+        if existing:
+            return True
+
+        up = UserPermission(
+            user_id=int(user_id),
+            permission=permission,
+            granted_by=int(granted_by) if granted_by else None,
+            expires_at=datetime.fromisoformat(expires_at) if expires_at else None,
+        )
+        db.add(up)
+        db.commit()
+        return True
+
+    async def create_role(
+        self,
+        name: str,
+        description: str,
+        permissions: List[str],
+        is_system: bool = False,
+        db: Session = None,
+    ) -> str:
+        """创建角色"""
+        role = RbacRole(name=name, description=description, is_system=is_system)
+        db.add(role)
+        db.flush()  # 获取生成的 id
+
+        for perm in permissions:
+            rp = RolePermission(role_id=role.id, permission=perm)
+            db.add(rp)
+
+        db.commit()
+        return role.id
+
+    async def get_user_roles(self, user_id: str, db: Session) -> List[Dict[str, Any]]:
+        """获取用户角色列表"""
+        now = _utcnow()
+        rows = (
+            db.query(
+                RbacRole.id,
+                RbacRole.name,
+                RbacRole.description,
+                RbacRole.is_system,
+                UserRole.granted_by,
+                UserRole.expires_at,
+            )
+            .join(UserRole, RbacRole.id == UserRole.role_id)
+            .filter(
+                UserRole.user_id == int(user_id),
+                RbacRole.is_active.is_(True),
+                (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
+            )
+            .order_by(RbacRole.priority.asc())
+            .all()
+        )
+
+        return [
+            {
+                "id": r.id,
+                "name": r.name,
+                "description": r.description,
+                "is_system": r.is_system,
+                "granted_by": r.granted_by,
+                "expires_at": r.expires_at.isoformat() if r.expires_at else None,
+            }
+            for r in rows
+        ]
+
+    # ------------------------------------------------------------------
+    # 内部方法（同步，无需 await）
+    # ------------------------------------------------------------------
+
+    def _has_admin_role(self, user_id: str, db: Session) -> bool:
+        """检查是否有管理员角色"""
+        now = _utcnow()
+        count = (
+            db.query(sa_func.count(RbacRole.id))
+            .join(UserRole, RbacRole.id == UserRole.role_id)
+            .filter(
+                UserRole.user_id == int(user_id),
+                RbacRole.name == "admin",
+                RbacRole.is_active.is_(True),
+                (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
+            )
+            .scalar()
+        )
+        return (count or 0) > 0
+
+    def _has_direct_permission(self, user_id: str, permission: str, db: Session) -> bool:
+        """检查是否有直接权限"""
+        now = _utcnow()
+        count = (
+            db.query(sa_func.count(UserPermission.id))
+            .filter(
+                UserPermission.user_id == int(user_id),
+                UserPermission.permission == permission,
+                (UserPermission.expires_at.is_(None) | (UserPermission.expires_at > now)),
+            )
+            .scalar()
+        )
+        return (count or 0) > 0
+
+    def _has_role_permission(self, user_id: str, permission: str, db: Session) -> bool:
+        """检查是否有角色权限"""
+        now = _utcnow()
+        count = (
+            db.query(sa_func.count(RolePermission.id))
+            .join(UserRole, RolePermission.role_id == UserRole.role_id)
+            .join(RbacRole, UserRole.role_id == RbacRole.id)
+            .filter(
+                UserRole.user_id == int(user_id),
+                RolePermission.permission == permission,
+                RbacRole.is_active.is_(True),
+                (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
+            )
+            .scalar()
+        )
+        return (count or 0) > 0
+
+    def _has_resource_access(
+        self,
+        user_id: str,
+        resource_type: str,
+        resource_id: str,
+        access_level: str,
+        db: Session,
+    ) -> bool:
+        """检查是否有资源访问权限"""
+        now = _utcnow()
+        count = (
+            db.query(sa_func.count(ResourceAccessControl.id))
+            .filter(
+                ResourceAccessControl.user_id == int(user_id),
+                ResourceAccessControl.resource_type == resource_type,
+                ResourceAccessControl.resource_id == resource_id,
+                ResourceAccessControl.access_level == access_level,
+                (ResourceAccessControl.expires_at.is_(None) | (ResourceAccessControl.expires_at > now)),
+            )
+            .scalar()
+        )
+        return (count or 0) > 0
+
+    def _log_access(
+        self,
+        db: Session,
+        user_id: str,
+        action: str,
+        resource_type: str,
+        resource_id: str,
+        access_granted: bool,
+        reason: str,
+    ):
+        """记录访问日志"""
+        try:
+            log = AccessLog(
+                user_id=str(user_id),
+                action=action,
+                resource_type=resource_type or "",
+                resource_id=resource_id or "",
+                access_granted=access_granted,
+                reason=reason,
+                ip_address="unknown",
+                user_agent="unknown",
+            )
+            db.add(log)
+            db.flush()
+        except Exception as e:
+            logger.warning("记录访问日志失败: %s", e)
+
+
+# 创建全局 RBAC 服务实例
+rbac_service = RBACService()

@@ -1,0 +1,55 @@
+{
+  "name": "bumofu-assistance-system",
+  "version": "1.2.0",
+  "private": true,
+  "description": "帮扶管理系统 - 贵州省版 Standalone桌面应用",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win --mac --linux",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "electron-log": "^4.4.8"
+  },
+  "devDependencies": {
+    "electron": "^33.4.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.bumofu.assistance",
+    "productName": "帮扶管理系统",
+    "directories": {
+      "output": "dist/electron"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*",
+      "backend/dist/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "resources/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "resources/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "resources/icon.png",
+      "category": "Office"
+    }
+  }
+}

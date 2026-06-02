@@ -1,0 +1,802 @@
+// 军事风格主题样式 - 通用组件样式
+
+// 颜色变量定义 - 军绿色调
+$primary-color: #1b4332 !default;
+$secondary-color: #2d6a4f !default;
+$primary-lighter: #40916c !default;
+$primary-dark: #081c15 !default;
+$accent-color: #d4af37 !default;
+$accent-light: #e6c75a !default;
+$success-color: #40916c !default;
+$warning-color: #e6a23c !default;
+$danger-color: #c0392b !default;
+$info-color: #4a7c6f !default;
+$text-primary: #1a1a1a !default;
+$text-regular: #4a5568 !default;
+$text-secondary: #8c9196 !default;
+$text-placeholder: #c0c4cc !default;
+$border-color: #d4d9d0 !default;
+$border-light: #e8ece4 !default;
+$bg-color: #f5f7f0 !default;
+$card-bg: #ffffff !default;
+$shadow-color: rgba(27, 67, 50, 0.15) !default;
+
+// CSS 自定义属性（供非SCSS上下文使用）
+:root {
+  --military-primary: #{$primary-color};
+  --military-primary-light: #{$secondary-color};
+  --military-primary-lighter: #{$primary-lighter};
+  --military-primary-dark: #{$primary-dark};
+  --military-accent: #{$accent-color};
+  --military-accent-light: #{$accent-light};
+  --military-bg: #{$bg-color};
+  --military-bg-card: #{$card-bg};
+  --military-bg-header: linear-gradient(
+    135deg,
+    #{$primary-dark} 0%,
+    #{$primary-color} 100%
+  );
+  --military-text-primary: #{$text-primary};
+  --military-text-secondary: #{$text-regular};
+  --military-border: #{$border-color};
+  --military-success: #{$success-color};
+  --military-warning: #{$warning-color};
+  --military-danger: #{$danger-color};
+}
+
+// 字体和排版
+$font-family:
+  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+  Arial, sans-serif;
+$font-size-base: 14px !default;
+$font-size-large: 16px !default;
+$font-size-xl: 18px !default;
+$font-size-xxl: 20px !default;
+$font-size-medium: 14px !default;
+$font-size-small: 13px !default;
+$font-size-extra-small: 12px !default;
+$line-height-base: 1.5 !default;
+$border-radius: 4px !default;
+$border-radius-small: 2px !default;
+$border-radius-medium: 6px !default;
+$border-radius-large: 8px !default;
+
+// 间距变量
+$margin-small: 8px !default;
+$margin-medium: 16px !default;
+$margin-large: 24px !default;
+$padding-small: 8px !default;
+$padding-medium: 16px !default;
+$padding-large: 24px !default;
+
+// 断点变量
+$breakpoint-mobile: 767.98px !default;
+$breakpoint-tablet-min: 768px !default;
+$breakpoint-tablet-max: 1199.98px !default;
+$breakpoint-desktop: 1200px !default;
+
+// 响应式 mixin
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == "mobile" {
+    @media screen and (max-width: $breakpoint-mobile) {
+      @content;
+    }
+  } @else if $breakpoint == "tablet" {
+    @media screen and (min-width: $breakpoint-tablet-min) and (max-width: $breakpoint-tablet-max) {
+      @content;
+    }
+  } @else if $breakpoint == "desktop" {
+    @media screen and (min-width: $breakpoint-desktop) {
+      @content;
+    }
+  }
+}
+
+// 通用军事风格类
+.military-container {
+  padding: 20px;
+  background-color: $bg-color;
+  min-height: 100vh;
+  position: relative;
+  font-family: $font-family;
+  color: $text-primary;
+
+  // 军事风格装饰
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(
+      90deg,
+      $primary-color,
+      $secondary-color,
+      $primary-color
+    );
+  }
+
+  // 军事风格背景纹理
+  &::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+      linear-gradient(90deg, rgba($primary-color, 0.02) 1px, transparent 1px),
+      linear-gradient(rgba($primary-color, 0.02) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+// 军事风格卡片
+.military-card {
+  background: $card-bg;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: 20px;
+  margin-bottom: 20px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  overflow: hidden;
+
+  // 左侧装饰条
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, $primary-color, $secondary-color);
+  }
+
+  // 顶部装饰条
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 4px;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, $secondary-color, transparent);
+  }
+
+  // 悬停效果
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// 军事风格标题
+.military-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: $primary-color;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid $secondary-color;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 60px;
+    height: 2px;
+    background-color: $primary-color;
+    transition: width 0.3s ease;
+  }
+
+  &:hover::after {
+    width: 120px;
+  }
+}
+
+// 军事风格按钮
+.military-button {
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  padding: 8px 16px;
+  font-size: $font-size-medium;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background-color: $secondary-color;
+    box-shadow: 0 2px 8px rgba(0, 51, 102, 0.25);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 51, 102, 0.2);
+  }
+
+  &:disabled {
+    background-color: $text-secondary;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  // 次要按钮
+  &.secondary {
+    background-color: white;
+    color: $primary-color;
+    border: 1px solid $primary-color;
+
+    &:hover {
+      background-color: rgba(0, 51, 102, 0.05);
+    }
+  }
+
+  // 成功按钮
+  &.success {
+    background-color: $success-color;
+
+    &:hover {
+      background-color: darken($success-color, 10%);
+    }
+  }
+
+  // 警告按钮
+  &.warning {
+    background-color: $warning-color;
+
+    &:hover {
+      background-color: darken($warning-color, 10%);
+    }
+  }
+}
+
+// 军事风格输入框
+.military-input {
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: 8px 12px;
+  font-size: $font-size-medium;
+  transition: all 0.3s ease;
+  background-color: white;
+  color: $text-primary;
+
+  &:focus {
+    outline: none;
+    border-color: $secondary-color;
+    box-shadow: 0 0 0 2px rgba(0, 85, 170, 0.1);
+  }
+
+  &:hover {
+    border-color: $secondary-color;
+  }
+
+  &:disabled {
+    background-color: #f5f7fa;
+    cursor: not-allowed;
+  }
+}
+
+// 军事风格边框
+.military-border {
+  border: 1px solid $primary-color;
+  border-radius: $border-radius;
+  box-shadow: 0 2px 8px $shadow-color;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 51, 102, 0.25);
+  }
+}
+
+// 军事风格装饰元素
+.military-decoration {
+  // 四角星装饰
+  &.star {
+    position: relative;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid $primary-color;
+    }
+
+    &::before {
+      top: -6px;
+      left: -6px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    &::after {
+      bottom: -6px;
+      right: -6px;
+      border-left: none;
+      border-top: none;
+    }
+  }
+
+  // 顶部装饰线
+  &.top-line {
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(
+        90deg,
+        $primary-color,
+        $secondary-color,
+        $primary-color
+      );
+    }
+  }
+}
+
+// 军事风格表格
+.military-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  thead {
+    background-color: $primary-color;
+    color: white;
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid $secondary-color;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid $border-color;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: rgba(0, 85, 170, 0.05);
+      }
+
+      &:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.02);
+      }
+    }
+
+    td {
+      padding: 12px;
+      color: $text-regular;
+    }
+  }
+}
+
+// 军事风格标签
+.military-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: $border-radius;
+  font-size: $font-size-small;
+  font-weight: 500;
+
+  // 不同类型的标签
+  &.primary {
+    background-color: rgba($primary-color, 0.1);
+    color: $primary-color;
+    border: 1px solid rgba($primary-color, 0.3);
+  }
+
+  &.success {
+    background-color: rgba($success-color, 0.1);
+    color: $success-color;
+    border: 1px solid rgba($success-color, 0.3);
+  }
+
+  &.warning {
+    background-color: rgba($warning-color, 0.1);
+    color: $warning-color;
+    border: 1px solid rgba($warning-color, 0.3);
+  }
+
+  &.danger {
+    background-color: rgba($danger-color, 0.1);
+    color: $danger-color;
+    border: 1px solid rgba($danger-color, 0.3);
+  }
+}
+
+// 军事风格进度条
+.military-progress {
+  height: 8px;
+  background-color: $border-light;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, $secondary-color, $primary-color);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.15) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0.15) 75%,
+        transparent 75%,
+        transparent
+      );
+      background-size: 1rem 1rem;
+      animation: progress-bar-stripes 1s linear infinite;
+    }
+  }
+}
+
+@keyframes progress-bar-stripes {
+  0% {
+    background-position: 1rem 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+// 军事风格加载动画
+.military-loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba($primary-color, 0.1);
+  border-radius: 50%;
+  border-top-color: $primary-color;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// 离线模式提示
+.offline-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  background-color: rgba($warning-color, 0.9);
+  color: white;
+  border-radius: $border-radius;
+  font-size: $font-size-small;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+
+  i {
+    margin-right: 5px;
+  }
+}
+
+// 响应式设计 - 全面优化移动端适配
+
+// 移动设备（小于768px）
+@media screen and (max-width: 767.98px) {
+  .military-container {
+    padding: 10px;
+  }
+
+  .military-card {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: $border-radius-medium;
+  }
+
+  .military-title {
+    font-size: 18px;
+    line-height: 1.4;
+  }
+
+  .military-subtitle {
+    font-size: 14px;
+  }
+
+  .military-table {
+    font-size: $font-size-small;
+
+    // 表格在移动端的优化
+    &:not(.no-responsive) {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    thead th,
+    tbody td {
+      padding: 8px;
+      font-size: $font-size-small;
+    }
+  }
+
+  // 表单元素在移动端的优化
+  .military-form {
+    .el-form-item {
+      margin-right: 0 !important;
+      margin-bottom: 15px !important;
+      width: 100% !important;
+    }
+
+    .el-input,
+    .el-select,
+    .el-date-editor {
+      width: 100% !important;
+    }
+  }
+
+  // 按钮在移动端的优化
+  .military-button {
+    padding: 8px 16px;
+    font-size: $font-size-small;
+    min-width: 80px;
+  }
+
+  // 网格布局在移动端的优化
+  .military-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  // 统计卡片在移动端的优化
+  .stats-card {
+    margin-bottom: 15px;
+  }
+
+  // 工具栏在移动端的优化
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  // 分页在移动端的优化
+  .pagination-container {
+    justify-content: center !important;
+    margin-top: 15px;
+  }
+
+  // 详情页面布局优化
+  .detail-section {
+    margin-bottom: 20px;
+  }
+
+  // 隐藏移动端不需要的装饰元素
+  .military-decoration-large {
+    display: none;
+  }
+
+  // 导航栏优化
+  .nav-menu {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+// 小屏手机（小于480px）
+@media screen and (max-width: 479.98px) {
+  .military-container {
+    padding: 5px;
+  }
+
+  .military-card {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .military-title {
+    font-size: 16px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+  }
+
+  .military-subtitle {
+    font-size: 13px;
+  }
+
+  .military-button {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 70px;
+  }
+
+  .military-input {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  // 表格在小屏手机上的进一步优化
+  .military-table {
+    font-size: 11px;
+
+    thead th,
+    tbody td {
+      padding: 6px 4px;
+    }
+  }
+
+  // 统计卡片在小屏手机上的优化
+  .stats-card {
+    padding: 10px;
+  }
+
+  .stats-value {
+    font-size: 20px;
+  }
+
+  .stats-label {
+    font-size: 12px;
+  }
+
+  // 详情页面在小屏手机上的优化
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-item {
+    padding: 8px 0;
+  }
+}
+
+// 平板设备（768px-1199px）
+@media screen and (min-width: 768px) and (max-width: 1199.98px) {
+  .military-container {
+    padding: 20px;
+  }
+
+  .military-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// 响应式辅助类
+.responsive-hidden-mobile {
+  @include respond-to("mobile") {
+    display: none !important;
+  }
+}
+
+.responsive-hidden-tablet {
+  @include respond-to("tablet") {
+    display: none !important;
+  }
+}
+
+.responsive-hidden-desktop {
+  @include respond-to("desktop") {
+    display: none !important;
+  }
+}
+
+// 移动端优先的弹性布局辅助类
+.flex-mobile-column {
+  @include respond-to("mobile") {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+// 移动端优先的居中布局
+.center-mobile {
+  @include respond-to("mobile") {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+// 响应式边距
+.responsive-margin {
+  margin: $margin-large;
+
+  @include respond-to("mobile") {
+    margin: $margin-small;
+  }
+
+  @include respond-to("tablet") {
+    margin: $margin-medium;
+  }
+}
+
+// 响应式内边距
+.responsive-padding {
+  padding: $padding-large;
+
+  @include respond-to("mobile") {
+    padding: $padding-small;
+  }
+
+  @include respond-to("tablet") {
+    padding: $padding-medium;
+  }
+}
+
+// 响应式字体大小 - 使用clamp函数实现流畅的字体大小变化
+.responsive-text {
+  @include respond-to("mobile") {
+    font-size: clamp($font-size-small, 3vw, $font-size-base);
+  }
+
+  @include respond-to("tablet") {
+    font-size: clamp($font-size-base, 2vw, $font-size-large);
+  }
+
+  @include respond-to("desktop") {
+    font-size: clamp($font-size-large, 1.5vw, $font-size-xl);
+  }
+}
+
+// 军事风格工具类
+.text-military {
+  color: $primary-color !important;
+}
+
+.bg-military {
+  background-color: $primary-color !important;
+}
+
+.border-military {
+  border-color: $primary-color !important;
+}
+
+.text-secondary-military {
+  color: $secondary-color !important;
+}
+
+.bg-secondary-military {
+  background-color: $secondary-color !important;
+}
+
+.border-secondary-military {
+  border-color: $secondary-color !important;
+}

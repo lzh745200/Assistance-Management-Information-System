@@ -1,0 +1,1440 @@
+<template>
+  <div class="fund-detail-page">
+    <div class="page-header">
+      <div class="header-left">
+        <el-button :icon="ArrowLeft" @click="goBack">返回列表</el-button>
+        <h2 class="page-title">
+          {{ isCreate ? "新增经费记录" : isEdit ? "编辑经费记录" : "经费详情" }}
+        </h2>
+      </div>
+      <div v-if="!isEdit && !isCreate && canEditFund" class="header-actions">
+        <el-button type="primary" @click="handleEdit"
+          ><el-icon><Edit /></el-icon>编辑</el-button
+        >
+        <el-button v-if="isManager" type="danger" @click="handleDelete"
+          ><el-icon><Delete /></el-icon>删除</el-button
+        >
+      </div>
+    </div>
+    <div v-if="loading" class="loading-container">
+      <el-icon class="loading-icon"><Loading /></el-icon><span>加载中...</span>
+    </div>
+    <template v-else>
+      <!-- 查看模式 -->
+      <template v-if="!isEdit">
+        <!-- 工作流操作栏 -->
+        <div v-if="isManager && fundData.id" class="workflow-bar">
+          <div class="workflow-status">
+            当前状态：<el-tag
+              :type="getStatusType(fundData.status)"
+              size="large"
+              >{{ getStatusText(fundData.status) }}</el-tag
+            >
+          </div>
+          <div class="workflow-actions">
+            <el-button
+              v-if="fundData.status === 'pending'"
+              type="success"
+              @click="doWorkflow('approve')"
+              >审批通过</el-button
+            >
+            <el-button
+              v-if="fundData.status === 'pending'"
+              type="danger"
+              @click="doWorkflow('reject')"
+              >驳回</el-button
+            >
+            <el-button
+              v-if="fundData.status === 'approved'"
+              type="primary"
+              @click="doWorkflow('allocate')"
+              >拨付</el-button
+            >
+            <el-button
+              v-if="fundData.status === 'allocated'"
+              type="warning"
+              @click="doWorkflow('start_use')"
+              >开始使用</el-button
+            >
+            <el-button
+              v-if="fundData.status === 'in_use'"
+              type="success"
+              @click="doWorkflow('complete')"
+              >完成使用</el-button
+            >
+            <el-button
+              v-if="fundData.status === 'completed'"
+              type="primary"
+              @click="doWorkflow('audit')"
+              >审计</el-button
+            >
+          </div>
+        </div>
+
+        <!-- 标签页 -->
+        <el-tabs v-model="activeTab" type="border-card">
+          <!-- 基本信息标签页 -->
+          <el-tab-pane label="基本信息" name="basic">
+            <div class="detail-card" style="margin-bottom: 0">
+              <div class="card-header"><h3>基本信息</h3></div>
+              <div class="card-body">
+                <el-descriptions :column="3" border>
+                  <el-descriptions-item label="经费编号">{{
+                    fundData.code || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="名称">{{
+                    fundData.name || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="经费类型"
+                    ><el-tag>{{
+                      getTypeName(fundData.type)
+                    }}</el-tag></el-descriptions-item
+                  >
+                  <el-descriptions-item label="经费来源">{{
+                    getSourceName(fundData.fund_source || fundData.source)
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="关联项目">{{
+                    fundData.project_name || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="日期">{{
+                    fundData.date || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="申请人">{{
+                    fundData.applicant || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="经办人">{{
+                    fundData.operator || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="接收人">{{
+                    fundData.receiver || "-"
+                  }}</el-descriptions-item>
+                </el-descriptions>
+              </div>
+            </div>
+            <div class="detail-card" style="margin-bottom: 0; margin-top: 20px">
+              <div class="card-header"><h3>经费信息</h3></div>
+              <div class="card-body">
+                <el-descriptions :column="3" border>
+                  <el-descriptions-item label="申请金额"
+                    ><span class="amount-text"
+                      >{{ formatMoney(fundData.amount) }} 万元</span
+                    ></el-descriptions-item
+                  >
+                  <el-descriptions-item label="计划金额"
+                    ><span class="amount-text"
+                      >{{ formatMoney(fundData.planned_amount) }} 万元</span
+                    ></el-descriptions-item
+                  >
+                  <el-descriptions-item label="批准金额"
+                    ><span class="amount-text"
+                      >{{ formatMoney(fundData.approved_amount) }} 万元</span
+                    ></el-descriptions-item
+                  >
+                  <el-descriptions-item label="拨付金额"
+                    ><span class="amount-text"
+                      >{{ formatMoney(fundData.allocated_amount) }} 万元</span
+                    ></el-descriptions-item
+                  >
+                  <el-descriptions-item label="已使用金额"
+                    ><span class="amount-text"
+                      >{{ formatMoney(fundData.used_amount) }} 万元</span
+                    ></el-descriptions-item
+                  >
+                  <el-descriptions-item label="剩余金额"
+                    ><span class="amount-text"
+                      >{{ formatMoney(fundData.remaining_amount) }} 万元</span
+                    ></el-descriptions-item
+                  >
+                  <el-descriptions-item label="用途" :span="3">{{
+                    fundData.purpose || "无"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="使用说明" :span="3">{{
+                    fundData.usage_description || "无"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="备注" :span="3">{{
+                    fundData.remarks || "无"
+                  }}</el-descriptions-item>
+                </el-descriptions>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 审批流程标签页 -->
+          <el-tab-pane label="审批流程" name="approval">
+            <div class="detail-card" style="margin-bottom: 0">
+              <div class="card-header"><h3>审批信息</h3></div>
+              <div class="card-body">
+                <el-descriptions :column="3" border>
+                  <el-descriptions-item label="审批人">{{
+                    fundData.approved_by || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="审批日期">{{
+                    formatDateTime(fundData.approval_date)
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="拨付日期">{{
+                    formatDateTime(fundData.allocation_date)
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="拨付方式">{{
+                    fundData.allocation_method || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="开始日期">{{
+                    formatDateTime(fundData.start_date)
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="结束日期">{{
+                    formatDateTime(fundData.end_date)
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="审计日期">{{
+                    formatDateTime(fundData.audit_date)
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="审计结果">{{
+                    fundData.audit_result || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="审计意见">{{
+                    fundData.audit_opinion || "-"
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="创建时间">{{
+                    formatDateTime(fundData.created_at)
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="更新时间" :span="2">{{
+                    formatDateTime(fundData.updated_at)
+                  }}</el-descriptions-item>
+                </el-descriptions>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 相关附件标签页 -->
+          <el-tab-pane label="相关附件" name="attachments">
+            <div class="detail-card" style="margin-bottom: 0">
+              <div class="card-header"><h3>附件列表</h3></div>
+              <div class="card-body">
+                <div v-if="attachments.length">
+                  <div
+                    v-for="att in attachments"
+                    :key="att.id"
+                    class="attachment-item"
+                  >
+                    <el-tag
+                      size="small"
+                      :type="getCategoryTagType(att.category)"
+                      >{{ getCategoryLabel(att.category) }}</el-tag
+                    >
+                    <span class="att-name">{{ att.file_name }}</span>
+                    <span class="att-size">{{
+                      formatFileSize(att.file_size)
+                    }}</span>
+                    <el-button
+                      v-if="canPreview(att)"
+                      type="primary"
+                      link
+                      size="small"
+                      @click="previewAtt(att)"
+                      >预览</el-button
+                    >
+                    <el-button
+                      type="primary"
+                      link
+                      size="small"
+                      @click="downloadAtt(att)"
+                      >下载</el-button
+                    >
+                  </div>
+                </div>
+                <div v-else style="font-size: 13px; color: #999">暂无附件</div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 状态日志标签页 -->
+          <el-tab-pane label="状态日志" name="statusHistory">
+            <div class="detail-card" style="margin-bottom: 0">
+              <div class="card-header"><h3>状态变更历史</h3></div>
+              <div class="card-body">
+                <el-timeline v-if="statusHistory.length">
+                  <el-timeline-item
+                    v-for="item in statusHistory"
+                    :key="item.id"
+                    :type="getStatusType(item.to_status)"
+                    :timestamp="formatDateTime(item.operation_time)"
+                  >
+                    <div class="timeline-content">
+                      <div class="timeline-title">
+                        <el-tag
+                          :type="getStatusType(item.from_status)"
+                          size="small"
+                          >{{
+                            getStatusText(item.from_status) || "新建"
+                          }}</el-tag
+                        >
+                        <span style="margin: 0 8px">→</span>
+                        <el-tag
+                          :type="getStatusType(item.to_status)"
+                          size="small"
+                          >{{ getStatusText(item.to_status) }}</el-tag
+                        >
+                      </div>
+                      <div class="timeline-info">
+                        操作人: {{ item.operator_name || "-" }}
+                        <span v-if="item.remark" style="margin-left: 16px"
+                          >备注: {{ item.remark }}</span
+                        >
+                      </div>
+                    </div>
+                  </el-timeline-item>
+                </el-timeline>
+                <div v-else style="font-size: 13px; color: #999">
+                  暂无状态变更记录
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 字段变更标签页 -->
+          <el-tab-pane label="修改记录" name="fieldChanges">
+            <div class="detail-card" style="margin-bottom: 0">
+              <div class="card-header"><h3>字段修改历史</h3></div>
+              <div class="card-body">
+                <el-table
+                  v-if="fieldChanges.length"
+                  :data="fieldChanges"
+                  stripe
+                >
+                  <el-table-column prop="field_name" label="字段" width="120" />
+                  <el-table-column
+                    prop="old_value"
+                    label="旧值"
+                    show-overflow-tooltip
+                  >
+                    <template #default="{ row }">
+                      <span class="text-muted">{{ row.old_value || "-" }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="new_value"
+                    label="新值"
+                    show-overflow-tooltip
+                  >
+                    <template #default="{ row }">
+                      <span class="text-primary">{{
+                        row.new_value || "-"
+                      }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="changed_by_name"
+                    label="修改人"
+                    width="120"
+                  />
+                  <el-table-column
+                    prop="changed_at"
+                    label="修改时间"
+                    width="180"
+                  >
+                    <template #default="{ row }">
+                      {{ formatDateTime(row.changed_at) }}
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <div v-else style="font-size: 13px; color: #999">
+                  暂无字段修改记录
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 操作日志标签页 -->
+          <el-tab-pane label="操作日志" name="operationLogs">
+            <div class="detail-card" style="margin-bottom: 0">
+              <div class="card-header"><h3>操作日志</h3></div>
+              <div class="card-body">
+                <el-table
+                  v-if="operationLogs.length"
+                  :data="operationLogs"
+                  stripe
+                >
+                  <el-table-column
+                    prop="operation_type"
+                    label="操作类型"
+                    width="150"
+                  >
+                    <template #default="{ row }">
+                      <el-tag size="small">{{
+                        getOperationTypeLabel(row.operation_type)
+                      }}</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="operation_detail"
+                    label="详情"
+                    show-overflow-tooltip
+                  >
+                    <template #default="{ row }">
+                      {{ formatOperationDetail(row.operation_detail) }}
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    prop="operator_name"
+                    label="操作人"
+                    width="120"
+                  />
+                  <el-table-column
+                    prop="created_at"
+                    label="操作时间"
+                    width="180"
+                  >
+                    <template #default="{ row }">
+                      {{ formatDateTime(row.created_at) }}
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <div v-else style="font-size: 13px; color: #999">
+                  暂无操作日志
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </template>
+      <!-- 编辑/创建模式 -->
+      <template v-else>
+        <div class="detail-card">
+          <div class="card-header">
+            <h3>{{ isCreate ? "填写经费信息" : "编辑经费信息" }}</h3>
+          </div>
+          <div class="card-body">
+            <el-form
+              ref="formRef"
+              :model="formData"
+              :rules="rules"
+              label-width="120px"
+            >
+              <el-row :gutter="24">
+                <el-col :span="12"
+                  ><el-form-item label="经费编号"
+                    ><el-input
+                      v-model="formData.code"
+                      placeholder="选填" /></el-form-item
+                ></el-col>
+                <el-col :span="12"
+                  ><el-form-item label="名称" prop="name"
+                    ><el-input
+                      v-model="formData.name"
+                      placeholder="请输入经费名称" /></el-form-item
+                ></el-col>
+              </el-row>
+              <el-row :gutter="24">
+                <el-col :span="12">
+                  <el-form-item label="经费类型" prop="type">
+                    <el-select
+                      v-model="formData.type"
+                      placeholder="请选择类型"
+                      style="width: 100%"
+                    >
+                      <el-option label="项目经费" value="project" /><el-option
+                        label="运营经费"
+                        value="operation"
+                      />
+                      <el-option label="教育帮扶" value="education" /><el-option
+                        label="基础设施"
+                        value="infrastructure"
+                      />
+                      <el-option label="应急经费" value="emergency" /><el-option
+                        label="其他"
+                        value="other"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="经费来源">
+                    <el-select
+                      v-model="formData.fund_source"
+                      placeholder="请选择来源"
+                      clearable
+                      style="width: 100%"
+                    >
+                      <el-option label="军队" value="military" /><el-option
+                        label="政府"
+                        value="government"
+                      />
+                      <el-option label="捐赠" value="donation" /><el-option
+                        label="企业"
+                        value="enterprise"
+                      />
+                      <el-option label="其他" value="other" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="24">
+                <el-col :span="12"
+                  ><el-form-item label="日期"
+                    ><el-date-picker
+                      v-model="formData.date"
+                      type="date"
+                      placeholder="选择日期"
+                      value-format="YYYY-MM-DD"
+                      style="width: 100%" /></el-form-item
+                ></el-col>
+                <el-col :span="12">
+                  <el-form-item label="状态">
+                    <el-select
+                      v-model="formData.status"
+                      placeholder="请选择状态"
+                      clearable
+                      style="width: 100%"
+                    >
+                      <el-option label="待审批" value="pending" /><el-option
+                        label="已计划"
+                        value="planned"
+                      />
+                      <el-option label="已批准" value="approved" /><el-option
+                        label="已拨付"
+                        value="allocated"
+                      />
+                      <el-option label="使用中" value="in_use" /><el-option
+                        label="已完成"
+                        value="completed"
+                      />
+                      <el-option label="已审计" value="audited" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="24">
+                <el-col :span="8"
+                  ><el-form-item label="金额(万元)" prop="amount"
+                    ><el-input-number
+                      v-model="formData.amount"
+                      :min="0"
+                      :precision="2"
+                      style="width: 100%" /></el-form-item
+                ></el-col>
+                <el-col :span="8"
+                  ><el-form-item label="计划金额"
+                    ><el-input-number
+                      v-model="formData.planned_amount"
+                      :min="0"
+                      :precision="2"
+                      style="width: 100%" /></el-form-item
+                ></el-col>
+                <el-col :span="8"
+                  ><el-form-item label="批准金额"
+                    ><el-input-number
+                      v-model="formData.approved_amount"
+                      :min="0"
+                      :precision="2"
+                      style="width: 100%" /></el-form-item
+                ></el-col>
+              </el-row>
+              <el-row :gutter="24">
+                <el-col :span="8"
+                  ><el-form-item label="拨付金额"
+                    ><el-input-number
+                      v-model="formData.allocated_amount"
+                      :min="0"
+                      :precision="2"
+                      style="width: 100%" /></el-form-item
+                ></el-col>
+                <el-col :span="8"
+                  ><el-form-item label="已用金额"
+                    ><el-input-number
+                      v-model="formData.used_amount"
+                      :min="0"
+                      :precision="2"
+                      style="width: 100%" /></el-form-item
+                ></el-col>
+                <el-col :span="8"
+                  ><el-form-item label="剩余金额"
+                    ><el-input-number
+                      v-model="formData.remaining_amount"
+                      :min="0"
+                      :precision="2"
+                      style="width: 100%" /></el-form-item
+                ></el-col>
+              </el-row>
+              <el-row :gutter="24">
+                <el-col :span="12"
+                  ><el-form-item label="关联项目"
+                    ><el-input
+                      v-model="formData.project_name"
+                      placeholder="请输入关联项目名称" /></el-form-item
+                ></el-col>
+                <el-col :span="12"
+                  ><el-form-item label="经办人"
+                    ><el-input
+                      v-model="formData.operator"
+                      placeholder="请输入经办人" /></el-form-item
+                ></el-col>
+              </el-row>
+              <el-row :gutter="24">
+                <el-col :span="12"
+                  ><el-form-item label="接收人"
+                    ><el-input
+                      v-model="formData.receiver"
+                      placeholder="请输入接收人/单位" /></el-form-item
+                ></el-col>
+                <el-col :span="12"
+                  ><el-form-item label="起止日期"
+                    ><el-date-picker
+                      v-model="formData.dateRange"
+                      type="daterange"
+                      range-separator="至"
+                      start-placeholder="开始"
+                      end-placeholder="结束"
+                      value-format="YYYY-MM-DD"
+                      style="width: 100%" /></el-form-item
+                ></el-col>
+              </el-row>
+              <el-form-item label="用途"
+                ><el-input
+                  v-model="formData.purpose"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入经费用途"
+              /></el-form-item>
+              <el-form-item label="使用说明"
+                ><el-input
+                  v-model="formData.usage_description"
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入使用说明"
+              /></el-form-item>
+              <el-form-item label="备注"
+                ><el-input
+                  v-model="formData.remarks"
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入备注信息"
+              /></el-form-item>
+              <el-form-item v-if="!isCreate && fundData.id" label="相关附件">
+                <div style="width: 100%">
+                  <div style="display: flex; gap: 12px; margin-bottom: 8px">
+                    <el-select
+                      v-model="uploadCategory"
+                      style="width: 140px"
+                      size="small"
+                    >
+                      <el-option label="合同" value="contract" /><el-option
+                        label="发票"
+                        value="invoice"
+                      />
+                      <el-option label="报销凭证" value="receipt" /><el-option
+                        label="审计报告"
+                        value="report"
+                      />
+                      <el-option label="其他" value="other" />
+                    </el-select>
+                    <el-upload
+                      :action="`${apiBase}/funds/${fundData.id}/attachments`"
+                      :headers="uploadHeaders"
+                      :data="{ category: uploadCategory }"
+                      :on-success="onAttachmentUploaded"
+                      :on-error="() => ElMessage.error('上传失败')"
+                      :show-file-list="false"
+                      multiple
+                    >
+                      <el-button size="small" type="primary" plain
+                        >上传文件</el-button
+                      >
+                    </el-upload>
+                  </div>
+                  <div v-if="attachments.length" style="margin-top: 8px">
+                    <div
+                      v-for="att in attachments"
+                      :key="att.id"
+                      class="attachment-item"
+                    >
+                      <el-tag
+                        size="small"
+                        :type="getCategoryTagType(att.category)"
+                        >{{ getCategoryLabel(att.category) }}</el-tag
+                      >
+                      <span class="att-name">{{ att.file_name }}</span>
+                      <el-button
+                        type="primary"
+                        link
+                        size="small"
+                        @click="downloadAtt(att)"
+                        >下载</el-button
+                      >
+                      <el-button
+                        type="danger"
+                        link
+                        size="small"
+                        @click="deleteAtt(att)"
+                        >删除</el-button
+                      >
+                    </div>
+                  </div>
+                  <div v-else style="font-size: 12px; color: #999">
+                    暂无附件
+                  </div>
+                </div>
+              </el-form-item>
+              <el-form-item>
+                <el-button
+                  type="primary"
+                  :loading="submitting"
+                  @click="handleSubmit"
+                  >{{ isCreate ? "创建" : "保存" }}</el-button
+                >
+                <el-button @click="isCreate ? goBack() : cancelEdit()"
+                  >取消</el-button
+                >
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+      </template>
+    </template>
+    <!-- 附件预览弹窗 -->
+    <el-dialog
+      v-model="previewVisible"
+      title="附件预览"
+      width="80%"
+      :destroy-on-close="true"
+    >
+      <div style="text-align: center">
+        <img :src="previewUrl" style="max-width: 100%; max-height: 70vh" />
+      </div>
+    </el-dialog>
+    <!-- 工作流操作对话框 -->
+    <el-dialog
+      v-model="wfDialogVisible"
+      :title="wfDialogTitle"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <el-form label-width="100px">
+        <el-form-item v-if="wfAction === 'allocate'" label="拨付金额(万元)"
+          ><el-input-number
+            v-model="wfForm.allocated_amount"
+            :min="0"
+            :precision="2"
+            style="width: 100%"
+        /></el-form-item>
+        <el-form-item v-if="wfAction === 'allocate'" label="拨付方式"
+          ><el-input
+            v-model="wfForm.allocation_method"
+            placeholder="如：银行转账"
+        /></el-form-item>
+        <el-form-item v-if="wfAction === 'audit'" label="审计结果">
+          <el-select
+            v-model="wfForm.audit_result"
+            placeholder="请选择审计结果"
+            clearable
+            style="width: 100%"
+          >
+            <el-option label="通过" value="通过" /><el-option
+              label="不通过"
+              value="不通过"
+            /><el-option label="有保留意见" value="有保留意见" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="意见/备注"
+          ><el-input
+            v-model="wfForm.opinion"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入意见或备注"
+        /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="wfDialogVisible = false">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="wfSubmitting"
+          @click="submitWorkflow"
+          >确认</el-button
+        >
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { logger } from "@/utils/logger";
+import { AuthStorage } from "@/utils/authStorage";
+import { useAuthStore } from "@/stores/auth";
+
+import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { useRoute } from "vue-router";
+import { useRouterSafe } from "@/composables/useRouterSafe";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { ArrowLeft, Edit, Delete, Loading } from "@element-plus/icons-vue";
+import request from "@/api/request";
+import { fundApi } from "@/api/funds";
+
+const { pushSafe } = useRouterSafe();
+const route = useRoute();
+const authStore = useAuthStore();
+const loading = ref(true);
+const submitting = ref(false);
+const isEdit = ref(false);
+const isCreate = ref(false);
+const formRef = ref();
+
+const isManager = computed(() => {
+  const role = authStore.user?.role || "";
+  return ["admin", "super_admin", "manager"].includes(role);
+});
+
+// 判断当前用户是否可以编辑此经费
+const canEditFund = computed(() => {
+  if (isManager.value) return true;
+  // 普通用户：只能编辑自己创建的草稿/驳回状态经费
+  const editableStatuses = ["draft", "rejected"];
+  return (
+    fundData.created_by === authStore.user?.id &&
+    editableStatuses.includes(fundData.status)
+  );
+});
+
+// 历史记录数据
+const activeTab = ref("basic");
+const statusHistory = ref<any[]>([]);
+const fieldChanges = ref<any[]>([]);
+const operationLogs = ref<any[]>([]);
+
+// 加载历史记录
+async function loadStatusHistory() {
+  if (!fundData.id) return;
+  try {
+    const res = await request.get(`/funds/${fundData.id}/history/status`);
+    statusHistory.value = res.data?.items || [];
+  } catch (error) {
+    console.error("加载状态历史失败:", error);
+  }
+}
+
+async function loadFieldChanges() {
+  if (!fundData.id) return;
+  try {
+    const res = await request.get(`/funds/${fundData.id}/history/fields`);
+    fieldChanges.value = res.data?.items || [];
+  } catch (error) {
+    console.error("加载字段变更历史失败:", error);
+  }
+}
+
+async function loadOperationLogs() {
+  if (!fundData.id) return;
+  try {
+    const res = await request.get(`/funds/${fundData.id}/history/operations`);
+    operationLogs.value = res.data?.items || [];
+  } catch (error) {
+    console.error("加载操作日志失败:", error);
+  }
+}
+
+// 加载所有历史记录（并行执行）
+async function loadAllHistory() {
+  await Promise.all([
+    loadStatusHistory(),
+    loadFieldChanges(),
+    loadOperationLogs(),
+  ]);
+}
+
+const fundData = reactive<any>({
+  id: null,
+  name: "",
+  date: null,
+  type: "",
+  code: "",
+  fund_type: "",
+  fund_source: "",
+  amount: 0,
+  planned_amount: 0,
+  approved_amount: null,
+  allocated_amount: 0,
+  used_amount: 0,
+  remaining_amount: 0,
+  project_id: "",
+  project_name: "",
+  village_id: null,
+  school_id: null,
+  purpose: "",
+  source: "",
+  operator: "",
+  applicant: "",
+  application_date: null,
+  approved_by: "",
+  approval_date: null,
+  allocation_date: null,
+  allocation_method: "",
+  receiver: "",
+  usage_description: "",
+  start_date: null,
+  end_date: null,
+  audit_date: null,
+  audit_result: "",
+  audit_opinion: "",
+  status: "pending",
+  remarks: "",
+  created_at: "",
+  updated_at: "",
+});
+
+const formData = reactive({
+  code: "",
+  name: "",
+  date: null as string | null,
+  type: "project",
+  fund_source: "",
+  amount: 0,
+  planned_amount: 0,
+  approved_amount: null as number | null,
+  allocated_amount: 0,
+  used_amount: 0,
+  remaining_amount: 0,
+  project_name: "",
+  village_id: null as number | null,
+  purpose: "",
+  source: "",
+  operator: "",
+  receiver: "",
+  usage_description: "",
+  status: "pending",
+  remarks: "",
+  dateRange: null as string[] | null,
+});
+
+const rules = {
+  name: [{ required: true, message: "请输入经费名称", trigger: "blur" }],
+  amount: [{ required: true, message: "请输入金额", trigger: "blur" }],
+};
+
+const getTypeName = (t: string) =>
+  ({
+    project: "项目经费",
+    operation: "运营经费",
+    education: "教育帮扶",
+    infrastructure: "基础设施",
+    emergency: "应急经费",
+    other: "其他",
+  })[t] ||
+  t ||
+  "-";
+const getSourceName = (s: string) =>
+  ({
+    military: "军队",
+    government: "政府",
+    donation: "捐赠",
+    enterprise: "企业",
+    other: "其他",
+  })[s] ||
+  s ||
+  "-";
+const getStatusType = (s: string): any =>
+  ({
+    pending: "warning",
+    planned: "info",
+    approved: "primary",
+    allocated: "info",
+    in_use: "primary",
+    completed: "success",
+    audited: "success",
+    rejected: "danger",
+  })[s] || "info";
+const getStatusText = (s: string) =>
+  ({
+    pending: "待审批",
+    planned: "已计划",
+    approved: "已批准",
+    allocated: "已拨付",
+    in_use: "使用中",
+    completed: "已完成",
+    audited: "已审计",
+    rejected: "已驳回",
+  })[s] ||
+  s ||
+  "-";
+const formatMoney = (v: any) =>
+  v == null
+    ? "0.00"
+    : Number(v).toLocaleString("zh-CN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+const formatDateTime = (d?: string | null) => {
+  if (!d) return "-";
+  try {
+    return String(d).split("T")[0];
+  } catch {
+    return String(d);
+  }
+};
+
+// 操作日志辅助函数
+const getOperationTypeLabel = (type: string): string => {
+  const labels: Record<string, string> = {
+    attachment_upload: "附件上传",
+    attachment_delete: "附件删除",
+    status_change: "状态变更",
+    field_update: "字段更新",
+    create: "创建",
+    delete: "删除",
+  };
+  return labels[type] || type;
+};
+
+const formatOperationDetail = (detail: string | object): string => {
+  if (!detail) return "-";
+  try {
+    const obj = typeof detail === "string" ? JSON.parse(detail) : detail;
+    const parts: string[] = [];
+    if (obj.file_name) parts.push(`文件: ${obj.file_name}`);
+    if (obj.file_size) parts.push(`大小: ${formatFileSize(obj.file_size)}`);
+    if (obj.category) parts.push(`类型: ${getCategoryLabel(obj.category)}`);
+    if (obj.attachment_id) parts.push(`附件ID: ${obj.attachment_id}`);
+    return parts.join(" | ") || JSON.stringify(obj);
+  } catch {
+    return String(detail);
+  }
+};
+
+// 附件
+const attachments = ref<any[]>([]);
+const uploadCategory = ref("other");
+const apiBase = (import.meta as any).env?.VITE_API_BASE_URL || "/api/v1";
+const uploadHeaders = computed(() => {
+  const t = AuthStorage.getToken();
+  return { Authorization: t ? `Bearer ${t}` : "" };
+});
+const getCategoryLabel = (c: string) =>
+  ({
+    contract: "合同",
+    invoice: "发票",
+    receipt: "报销凭证",
+    report: "审计报告",
+    other: "其他",
+  })[c] || "其他";
+const getCategoryTagType = (c: string): any =>
+  ({
+    contract: "primary",
+    invoice: "warning",
+    receipt: "success",
+    report: "info",
+    other: "",
+  })[c] || "";
+const canPreview = (a: any) => {
+  const m = a.file_type || "";
+  return m.startsWith("image/") || m === "application/pdf";
+};
+async function loadAttachments() {
+  if (!fundData.id) return;
+  try {
+    const r = await fundApi.listAttachments(fundData.id);
+    attachments.value = r.items || [];
+  } catch (error) {
+    console.error("加载附件失败:", error);
+  }
+}
+function onAttachmentUploaded() {
+  ElMessage.success("上传成功");
+  loadAttachments();
+}
+function downloadAtt(att: any) {
+  const url = `${apiBase}/funds/attachments/${att.id}/download`;
+  const token = AuthStorage.getToken();
+  fetch(url, { headers: { Authorization: token ? `Bearer ${token}` : "" } })
+    .then((r) => r.blob())
+    .then((blob) => {
+      const link = document.createElement("a");
+      const objectUrl = URL.createObjectURL(blob);
+      link.href = objectUrl;
+      link.download = att.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      // 释放 Blob URL，避免内存泄漏
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+    })
+    .catch(() => ElMessage.error("下载失败"));
+}
+async function deleteAtt(att: any) {
+  try {
+    await fundApi.deleteAttachment(att.id);
+    ElMessage.success("删除成功");
+    loadAttachments();
+  } catch (error) {
+    console.error("删除附件失败:", error);
+  }
+}
+function formatFileSize(b: number) {
+  if (!b) return "0B";
+  if (b < 1024) return b + "B";
+  if (b < 1048576) return (b / 1024).toFixed(1) + "KB";
+  return (b / 1048576).toFixed(1) + "MB";
+}
+
+const previewVisible = ref(false);
+const previewUrl = ref("");
+
+// 清理预览 URL，避免内存泄漏
+function cleanupPreviewUrl() {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value);
+    previewUrl.value = "";
+  }
+}
+
+function previewAtt(att: any) {
+  const url = `${apiBase}/funds/attachments/${att.id}/preview`;
+  const token = AuthStorage.getToken();
+  if ((att.file_type || "") === "application/pdf") {
+    window.open(url, "_blank");
+    return;
+  }
+  fetch(url, { headers: { Authorization: token ? `Bearer ${token}` : "" } })
+    .then((r) => r.blob())
+    .then((blob) => {
+      cleanupPreviewUrl(); // 清理之前的 URL
+      previewUrl.value = URL.createObjectURL(blob);
+      previewVisible.value = true;
+    })
+    .catch(() => ElMessage.error("预览失败"));
+}
+
+// 工作流
+const wfDialogVisible = ref(false);
+const wfDialogTitle = ref("");
+const wfAction = ref("");
+const wfSubmitting = ref(false);
+const wfForm = reactive({
+  opinion: "",
+  allocated_amount: 0,
+  allocation_method: "",
+  audit_result: "通过",
+});
+const wfLabels: Record<string, string> = {
+  approve: "审批通过",
+  reject: "驳回",
+  allocate: "拨付",
+  start_use: "开始使用",
+  complete: "完成使用",
+  audit: "审计",
+};
+function doWorkflow(action: string) {
+  wfAction.value = action;
+  wfDialogTitle.value = wfLabels[action] || action;
+  wfForm.opinion = "";
+  wfForm.allocated_amount = fundData.approved_amount || fundData.amount || 0;
+  wfForm.allocation_method = "";
+  wfForm.audit_result = "通过";
+  wfDialogVisible.value = true;
+}
+async function submitWorkflow() {
+  wfSubmitting.value = true;
+  try {
+    const apiMap: Record<string, Function> = {
+      approve: fundApi.approve,
+      reject: fundApi.reject,
+      allocate: fundApi.allocate,
+      start_use: fundApi.startUse,
+      complete: fundApi.complete,
+      audit: fundApi.audit,
+    };
+    const fn = apiMap[wfAction.value];
+    if (!fn) return;
+    await fn(fundData.id, {
+      opinion: wfForm.opinion || undefined,
+      allocated_amount:
+        wfAction.value === "allocate" ? wfForm.allocated_amount : undefined,
+      allocation_method:
+        wfAction.value === "allocate" ? wfForm.allocation_method : undefined,
+      audit_result:
+        wfAction.value === "audit" ? wfForm.audit_result : undefined,
+    });
+    ElMessage.success(`${wfDialogTitle.value}操作成功`);
+    wfDialogVisible.value = false;
+    await loadFundDetail();
+  } catch (e: any) {
+    const d = e?.response?.data?.detail;
+    ElMessage.error(typeof d === "string" ? d : "操作失败");
+  } finally {
+    wfSubmitting.value = false;
+  }
+}
+
+// CRUD
+const loadFundDetail = async () => {
+  if (isCreate.value) {
+    loading.value = false;
+    return;
+  }
+  const id = route.params.id as string;
+  if (!id) {
+    ElMessage.error("无效的经费记录ID");
+    pushSafe("/funds");
+    return;
+  }
+  loading.value = true;
+  try {
+    const res = await request.get(`/funds/${id}`);
+    Object.assign(fundData, res.data);
+    syncFormData(res.data);
+  } catch {
+    ElMessage.error("加载经费详情失败");
+    pushSafe("/funds");
+  } finally {
+    loading.value = false;
+  }
+};
+function syncFormData(d: any) {
+  Object.assign(formData, {
+    code: d.code || "",
+    name: d.name || "",
+    date: d.date || null,
+    type: d.type || "project",
+    fund_source: d.fund_source || "",
+    amount: d.amount || 0,
+    planned_amount: d.planned_amount || 0,
+    approved_amount: d.approved_amount,
+    allocated_amount: d.allocated_amount || 0,
+    used_amount: d.used_amount || 0,
+    remaining_amount: d.remaining_amount || 0,
+    project_name: d.project_name || "",
+    village_id: d.village_id || null,
+    purpose: d.purpose || "",
+    source: d.source || "",
+    operator: d.operator || "",
+    receiver: d.receiver || "",
+    usage_description: d.usage_description || "",
+    status: d.status || "pending",
+    remarks: d.remarks || "",
+    dateRange:
+      d.start_date && d.end_date
+        ? [String(d.start_date).split("T")[0], String(d.end_date).split("T")[0]]
+        : null,
+  });
+}
+const goBack = () => pushSafe("/funds");
+const handleEdit = () => {
+  isEdit.value = true;
+};
+const cancelEdit = () => {
+  isEdit.value = false;
+  syncFormData(fundData);
+};
+const handleSubmit = async () => {
+  if (!formRef.value) return;
+  try {
+    await formRef.value.validate();
+    submitting.value = true;
+    const payload: any = { ...formData };
+    if (!payload.date) delete payload.date;
+    if (!payload.village_id) delete payload.village_id;
+    if (payload.dateRange?.length === 2) {
+      payload.start_date = payload.dateRange[0];
+      payload.end_date = payload.dateRange[1];
+    }
+    delete payload.dateRange;
+    Object.keys(payload).forEach((k) => {
+      if (payload[k] === null || payload[k] === "") delete payload[k];
+    });
+    if (isCreate.value) {
+      await request.post("/funds", payload);
+      ElMessage.success("创建成功");
+      pushSafe("/funds");
+    } else {
+      await request.put(`/funds/${fundData.id}`, payload);
+      ElMessage.success("保存成功");
+      isEdit.value = false;
+      await loadFundDetail();
+    }
+  } catch (error: any) {
+    if (!error?.fields) ElMessage.error("保存失败，请检查输入");
+  } finally {
+    submitting.value = false;
+  }
+};
+const handleDelete = async () => {
+  try {
+    await ElMessageBox.confirm("确定要删除这条经费记录吗？", "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+    await request.delete(`/funds/${fundData.id}`);
+    ElMessage.success("删除成功");
+    pushSafe("/funds");
+  } catch (e: any) {
+    if (e !== "cancel") logger.error("删除失败", e);
+  }
+};
+const checkPageMode = () => {
+  if (route.path.endsWith("/create")) {
+    isCreate.value = true;
+    isEdit.value = true;
+  } else if (route.path.endsWith("/edit")) {
+    isEdit.value = true;
+  }
+};
+onMounted(async () => {
+  checkPageMode();
+  // 并行加载数据，提高页面加载性能
+  await loadFundDetail();
+  await Promise.all([loadAttachments(), loadAllHistory()]);
+});
+onUnmounted(() => {
+  // 清理预览 URL，避免内存泄漏
+  cleanupPreviewUrl();
+});
+</script>
+
+<style scoped>
+.fund-detail-page {
+  padding: 20px;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1b4332;
+}
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 0;
+  color: #666;
+}
+.loading-icon {
+  font-size: 32px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.detail-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.card-header {
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+}
+.card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+}
+.card-body {
+  padding: 24px;
+}
+.amount-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1b4332;
+}
+.workflow-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0f9eb;
+  border: 1px solid #b3e19d;
+  border-radius: 8px;
+  padding: 16px 24px;
+  margin-bottom: 20px;
+}
+.workflow-status {
+  font-size: 15px;
+  font-weight: 500;
+}
+.workflow-actions {
+  display: flex;
+  gap: 10px;
+}
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+.attachment-item:hover {
+  background: #f5f7fa;
+}
+.att-name {
+  font-size: 13px;
+  flex: 1;
+}
+.att-size {
+  font-size: 12px;
+  color: #999;
+}
+:deep(.el-descriptions__label) {
+  font-weight: 500;
+  background-color: #f5f7fa;
+}
+:deep(.el-descriptions__content) {
+  color: #303133;
+}
+
+/* 时间线样式 */
+.timeline-content {
+  padding: 8px 0;
+}
+.timeline-title {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.timeline-info {
+  font-size: 13px;
+  color: #666;
+}
+
+/* 标签页样式 */
+:deep(.el-tabs--border-card) {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+:deep(.el-tabs--border-card > .el-tabs__header) {
+  background: #f5f7fa;
+  border-radius: 8px 8px 0 0;
+}
+:deep(.el-tabs--border-card > .el-tabs__header .el-tabs__item.is-active) {
+  background: white;
+  color: #1b4332;
+}
+
+/* 文本样式 */
+.text-muted {
+  color: #909399;
+}
+.text-primary {
+  color: #1b4332;
+  font-weight: 500;
+}
+</style>

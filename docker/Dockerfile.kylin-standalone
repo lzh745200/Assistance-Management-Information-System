@@ -1,0 +1,145 @@
+# ============================================================
+# 军队乡村振兴管理系统 - 麒麟 V10 ARM64 一体化单机版
+# 无 Electron，纯 FastAPI 后端 + 系统浏览器
+# ============================================================
+# 构建方式:
+#   docker buildx build --platform linux/arm64 \
+#     --build-arg VERSION=1.1.0 \
+#     -t military-rural-kylin:1.1.0 \
+#     -f docker/Dockerfile.kylin-standalone \
+#     --output type=local,dest=dist/deb/kylin .
+# ============================================================
+
+# ── Stage 1: 构建前端 (Vue 3 + Vite) ──
+FROM --platform=linux/arm64 node:20-bookworm AS frontend-builder
+
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+WORKDIR /build
+
+# 先复制依赖文件（利用 Docker 层缓存）
+COPY frontend/package.json frontend/package-lock.json* ./frontend/
+RUN cd frontend && npm ci --registry=https://registry.npmmirror.com --legacy-peer-deps 2>&1 | tail -5
+
+# 复制前端源码并构建
+COPY frontend/ ./frontend/
+RUN cd frontend && npm run build 2>&1 | tail -10
+
+# 验证构建产物
+RUN test -f frontend/dist/index.html || (echo "ERROR: 前端构建失败，index.html 不存在" && exit 1)
+
+
+# ── Stage 2: 构建后端 (PyInstaller ARM64) ──
+FROM --platform=linux/arm64 python:3.11-slim-bookworm AS backend-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+
+# 安装编译依赖（ARM64 原生编译需要）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-dev \
+    libffi-dev \
+    libssl-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    libmagic1 \
+    file \
+    patchelf \
+    binutils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# 生成 ARM64 专用 requirements（排除无 ARM64 wheel 或单机版不需要的包）
+COPY backend/requirements.txt .
+RUN grep -v -E '^(prophet|cmdstanpy|stanio|scikit-learn|scipy|Scrapy|Twisted|matplotlib|redis|hiredis|selenium|python-magic-bin|pywin32-ctypes|Automat|constantly|hyperlink|incremental|itemadapter|itemloaders|parsel|Protego|PyDispatcher|queuelib|service-identity|sgmllib3k|tldextract|w3lib|zope|cssselect)' \
+    requirements.txt > requirements-arm64.txt && \
+    echo "python-magic==0.4.27" >> requirements-arm64.txt && \
+    echo "--- ARM64 requirements ---" && \
+    wc -l requirements-arm64.txt
+
+# 安装 Python 依赖（使用清华镜像加速）
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    -r requirements-arm64.txt pyinstaller 2>&1 | tail -10
+
+# 复制后端源码
+COPY backend/ .
+
+# PyInstaller 打包
+RUN pyinstaller --clean --noconfirm backend_linux_arm64_standalone.spec 2>&1 | tail -20
+
+# 验证打包产物
+RUN test -d dist/military-rural-backend || (echo "ERROR: PyInstaller 打包失败" && exit 1) && \
+    du -sh dist/military-rural-backend && \
+    echo "后端打包成功"
+
+
+# ── Stage 3: 组装 DEB 包 ──
+FROM --platform=linux/arm64 debian:bookworm-slim AS deb-package
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dpkg-dev \
+    fakeroot \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG VERSION=1.1.0
+WORKDIR /package
+
+# 创建目录结构
+RUN mkdir -p \
+    opt/military-rural-system/backend \
+    opt/military-rural-system/frontend \
+    opt/military-rural-system/config \
+    opt/military-rural-system/scripts \
+    opt/military-rural-system/systemd \
+    opt/military-rural-system/desktop \
+    var/lib/military-rural-system/database \
+    var/lib/military-rural-system/uploads \
+    var/lib/military-rural-system/exports \
+    var/lib/military-rural-system/cache \
+    var/lib/military-rural-system/backups \
+    var/log/military-rural-system \
+    DEBIAN
+
+# 复制构建产物
+COPY --from=frontend-builder /build/frontend/dist/ ./opt/military-rural-system/frontend/
+COPY --from=backend-builder /build/dist/military-rural-backend/ ./opt/military-rural-system/backend/
+
+# 复制部署配置
+COPY deploy/kylin/config/kylin.env ./opt/military-rural-system/config/
+COPY deploy/kylin/scripts/start-kylin.sh ./opt/military-rural-system/scripts/
+COPY deploy/kylin/systemd/military-rural.service ./opt/military-rural-system/systemd/
+COPY deploy/kylin/desktop/military-rural-system.desktop ./opt/military-rural-system/desktop/
+
+# 复制 DEBIAN 控制脚本
+COPY deploy/kylin/DEBIAN/postinst ./DEBIAN/
+COPY deploy/kylin/DEBIAN/prerm ./DEBIAN/
+COPY deploy/kylin/DEBIAN/postrm ./DEBIAN/
+
+# 设置权限
+RUN chmod 755 DEBIAN/postinst DEBIAN/prerm DEBIAN/postrm && \
+    chmod 755 opt/military-rural-system/scripts/start-kylin.sh && \
+    chmod 755 opt/military-rural-system/backend/military-rural-backend 2>/dev/null || true
+
+# 生成 DEBIAN/control
+RUN echo "Package: military-rural-system" > DEBIAN/control && \
+    echo "Version: ${VERSION}" >> DEBIAN/control && \
+    echo "Architecture: arm64" >> DEBIAN/control && \
+    echo "Maintainer: Military Rural Revitalization Team" >> DEBIAN/control && \
+    echo "Section: admin" >> DEBIAN/control && \
+    echo "Priority: optional" >> DEBIAN/control && \
+    echo "Installed-Size: $(du -sk opt/ | cut -f1)" >> DEBIAN/control && \
+    echo "Depends: libmagic1 (>= 1:5.35), libsqlite3-0 (>= 3.34), ca-certificates, curl" >> DEBIAN/control && \
+    echo "Recommends: firefox-esr | chromium | chromium-browser" >> DEBIAN/control && \
+    echo "Description: 军队全面推进乡村振兴工作综合管理平台" >> DEBIAN/control && \
+    echo " 完全单机版，适用于麒麟 V10 ARM64 系统。" >> DEBIAN/control && \
+    echo " 集成村庄管理、项目跟踪、资金监管、数据分析等功能。" >> DEBIAN/control
+
+# 构建 DEB 包
+RUN mkdir -p /output && \
+    dpkg-deb --build --root-owner-group . /output/military-rural-system_${VERSION}_arm64.deb && \
+    echo "=== DEB 包构建完成 ===" && \
+    ls -lh /output/*.deb

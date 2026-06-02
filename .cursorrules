@@ -1,0 +1,299 @@
+# 军队乡村振兴管理系统 — AI 开发指令（单机版）
+
+> 适用于 Cursor、Copilot、Claude Code 等 AI 编码助手。
+> 保存为项目根目录的 `.cursorrules` 或 `.github/copilot-instructions.md`。
+
+---
+
+## 1. 项目核心身份
+
+| 属性 | 值 |
+|------|-----|
+| **项目名称** | 军队乡村振兴管理系统 (Military Rural Revitalization System) |
+| **部署形态** | 纯单机 Electron 桌面应用 |
+| **技术栈** | FastAPI + Vue3 + Electron + SQLite |
+| **当前版本** | v1.2.0 |
+| **访问地址** | 前端 `http://localhost:5173` / 后端 `http://localhost:8000` |
+| **默认账号** | `admin` / `admin123` |
+| **核心约束** | 完全离线、数据本地存储、国产信创兼容（麒麟V10 ARM64） |
+| **当前规模** | 后端 40+ 路由模块 / 前端 85 条路由 / 19 个 Pinia Store |
+
+---
+
+## 2. 技术栈规范（严格）
+
+### 后端
+
+| 层级 | 技术 | 说明 |
+|------|------|------|
+| 框架 | FastAPI (Python 3.11) | 同步模式为主 |
+| ORM | SQLAlchemy 2.0 | `sessionmaker` + `Session`，非 AsyncSession |
+| 数据库 | SQLite (WAL 模式) | 单文件 `data/rural_revitalization.db` |
+| 迁移 | Alembic + 运行时 `_migrate_missing_columns` | alembic 目录存在但启动时也自动补齐列 |
+| 缓存 | 内存 + `diskcache` | **禁止使用 Redis** |
+| 认证 | JWT (HS256) + 本地密码 bcrypt | 离线无 OAuth |
+| 安全 | `EncryptionService` + `DataMaskingService` + `SecurityHeadersMiddleware` |
+| 任务调度 | 内置 `APScheduler` | 异步后台任务 |
+
+### 前端
+
+| 层级 | 技术 | 说明 |
+|------|------|------|
+| 框架 | Vue 3.4+ Composition API | `<script setup lang="ts">` |
+| 状态管理 | Pinia | 持久化到 `AuthStorage` (sessionStorage + localStorage 回退) |
+| 路由 | Vue Router 4 | 懒加载 `() => import(...)`，85 条路由 |
+| UI 库 | Element Plus | 按需自动导入 (`unplugin-vue-components`) |
+| 桌面壳 | Electron | `nodeIntegration: false`, `contextIsolation: true` |
+| 构建 | Vite + Terser | Gzip + Brotli 压缩 |
+| HTTP | Axios (`@/api/request.ts`) | 自动携带 JWT，401 拦截，请求去重 |
+
+---
+
+## 3. 项目目录结构（实际）
+
+```
+project/
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # FastAPI 入口，中间件注册，SPA fallback
+│   │   ├── api/v1/              # API 路由（40+ 模块）
+│   │   │   ├── __init__.py      # 路由自动加载（_BUSINESS_MODULES 列表）
+│   │   │   ├── auth/            # 认证（login, users, rbac, user_management）
+│   │   │   ├── supported_village.py  # 帮扶村（含导入导出、年度数据）
+│   │   │   ├── funds.py         # 经费管理（CRUD + 统计 + 审批 + 导出）
+│   │   │   ├── projects.py      # 帮扶项目
+│   │   │   ├── school.py        # 帮扶学校
+│   │   │   ├── approval.py      # 审批工作流
+│   │   │   ├── data/            # 数据子模块（dashboard, statistics, data_packages）
+│   │   │   └── system/          # 系统管理（backup, health, admin）
+│   │   ├── models/              # SQLAlchemy 模型（54 个）
+│   │   ├── schemas/             # Pydantic 校验
+│   │   ├── services/            # 业务逻辑（50+ 服务）
+│   │   ├── core/                # 基础设施
+│   │   │   ├── config.py        # Settings（PROJECT_VERSION, API_PREFIX 等）
+│   │   │   ├── database.py      # engine + SessionLocal
+│   │   │   ├── security.py      # JWT + bcrypt + 密码生成
+│   │   │   ├── exceptions.py    # 全局异常处理
+│   │   │   ├── static_files.py  # 前端静态资源发现
+│   │   │   └── data_permission.py  # 数据权限过滤
+│   │   ├── middleware/           # 中间件（audit, csrf, camel_to_snake, metrics, request_id）
+│   │   └── utils/               # 工具（authStorage 参考, paths, security_enhanced）
+│   ├── tests/                   # 测试（840 passed / 0 failed）
+│   ├── alembic/                 # 数据库迁移
+│   ├── data/                    # SQLite 数据库文件
+│   └── start.py                 # 启动入口
+├── frontend/
+│   ├── src/
+│   │   ├── views/               # 27 个视图目录（按业务模块）
+│   │   ├── components/          # 通用组件（common/business/charts/layout/map）
+│   │   ├── stores/              # 19 个 Pinia Store
+│   │   ├── router/              # index.ts (85 routes) + guards.ts + permissions.ts
+│   │   ├── api/                 # request.ts (axios 封装) + queries/
+│   │   ├── composables/         # 组合式函数（useErrorHandler, useAccessibility, useApiCache）
+│   │   ├── utils/               # authStorage.ts, offline.ts, LocalDatabase.ts
+│   │   ├── types/               # TypeScript 类型定义
+│   │   ├── styles/              # tokens.scss, responsive.scss
+│   │   ├── data/                # guizhouRegion.ts（贵州省 9 市州 88 县区）
+│   │   └── layouts/             # DefaultLayoutSafe.vue（主布局）
+│   ├── electron/                # Electron 主进程
+│   ├── tests/unit/              # 前端测试（403 passed）
+│   ├── tests/e2e/               # Playwright E2E
+│   └── vitest.config.ts         # 覆盖率阈值 40-50%
+├── resources/frontend/          # 前端构建产物（后端 SPA 服务）
+├── docs/                        # 完整文档（01-快速开始 ~ 08-项目管理）
+├── scripts/                     # 运维脚本
+├── build-scripts/               # 构建打包
+└── database/init.sql            # 参考 Schema（非权威来源）
+```
+
+---
+
+## 4. 数据库与业务规则
+
+### 4.1 数据隔离
+
+- `organization_id` 是数据隔离核心字段
+- 查询必须通过 `filter_by_data_scope(query, model, user, db=db)` 过滤
+- `User.organization_id` 为主归属
+
+### 4.2 帮扶村 (SupportedVillage) — 聚合根
+
+- 核心表 + 9 个年度快照子表：`VillagePopulation`, `VillageIncome`, `ForceInvestment`, `IndustrySupport`, `InfrastructureImprovement`, `PartyBuildingSupport`, `MedicalSupport`, `ConsumptionSupport`, `EmploymentSupport`, `EducationSupport`
+- 年度数据端点：`GET /{village_id}/yearly/{year}` / `POST /{village_id}/yearly/{year}/{section}` / `POST /{village_id}/yearly/copy`
+
+### 4.3 经费 (Fund) — 全生命周期
+
+- 状态机：`pending → approved → allocated → in_use → completed → audited`
+- 关联链：`Fund → FundBudget / FundStatusHistory / FundAllocationOrder`
+- 统计端点：`GET /funds/statistics/overview`
+
+### 4.4 审批流 (Approval)
+
+- 通用引擎，通过 `entity_type + entity_id` 多态关联
+- 提交审批 = 创建 `ApprovalTask` + 业务实体状态变更（事务性）
+
+### 4.5 数据包 (DataPackage) 与同步
+
+- 单机版数据交换：`DataPackage → PackageVersion → DataReport`
+- 导入导出必须通过 `DataSyncService`，自动检测冲突
+- `.rrs` 加密格式用于跨机同步
+
+---
+
+### 4.6 军队安全审计要求（⚠️ 强制）
+
+本系统属军事管理用途，以下审计要求为**强制性**，代码审查未通过审计检查不得合并：
+
+| 类别 | 要求 | 实现机制 |
+|------|------|----------|
+| **操作留痕** | 所有 CUD 操作必须记录到 `WorkLog`，含操作人、时间、实体类型、实体ID、变更内容 | `AuditMiddleware` + `write_work_log()` |
+| **登录审计** | 每次登录成功/失败记录 IP、时间、用户名 | `AuditMiddleware` 自动拦截 `/auth/login` |
+| **权限变更审计** | 角色分配、权限修改必须记录操作人和变更前后内容 | `UserPermissionService` |
+| **数据导出审计** | 所有数据导出操作记录导出人、导出范围、时间、文件名 | `DataSyncService.export_incremental()` |
+| **敏感数据访问** | 查看加密字段（脱敏前）需记录访问日志 | `EncryptionService.decrypt()` 自动记录 |
+| **审计日志保护** | 审计日志本身不可被删除或修改（仅追加） | `AuditLog` 表无 UPDATE/DELETE 端点 |
+| **日志完整性** | 系统启动/关闭、配置变更、数据库迁移全部记录 | `UpdateLogService` + `VersionService` |
+
+**审计查询接口**：
+- `GET /system/audit` — 审计管理页面（仅 admin/super_admin）
+- `GET /work-logs` — 工作日志查询（含操作审计）
+- `GET /data-management/logs` — 操作日志页面
+
+**安全检查清单**（新增功能必查）：
+1. ☐ 写操作是否调用 `write_work_log()`？
+2. ☐ 数据查询是否正确应用 `filter_by_data_scope()`？
+3. ☐ 敏感字段是否通过 `EncryptionService` 加密存储？
+4. ☐ 前端展示是否通过 `DataMaskingService` 脱敏？
+5. ☐ 异常是否被正确记录（`logger.error` + 审计日志）？
+
+---
+
+## 5. 编码红线
+
+### 🔴 绝对禁止
+
+- ❌ Redis / Memcached / RabbitMQ / Kafka（单机离线系统）
+- ❌ 硬编码密码、密钥、路径
+- ❌ 绕过 Service 层直接操作 `Session`
+- ❌ `SELECT *` 或无 `organization_id` 过滤的查询
+- ❌ 前端存储加密密钥或完整敏感字段
+
+### ✅ 必须执行
+
+- ✅ 所有 API 返回标准格式：`{code: int, data: Any, message: str}` 或 `{items, total, page, page_size}`
+- ✅ 前端请求通过 `@/api/request.ts` 的 `get/post/put/del` 封装
+- ✅ 数据库写操作在事务内完成
+- ✅ 敏感字段使用 `EncryptionService`
+- ✅ 新增路由在 `__init__.py` 的 `_BUSINESS_MODULES` 中注册
+- ✅ 前端新页面使用懒加载 `() => import(...)`
+- ✅ 生产环境 `settings.DEBUG = False` 时禁用 `/docs`
+
+---
+
+## 6. API 响应格式（重要）
+
+系统存在两种 API 响应格式，开发时需注意：
+
+| 格式 | 示例 | 使用端点 |
+|------|------|----------|
+| **裸格式** | `{total, page, page_size, items}` | `/supported-villages`, `/funds`, `/work-logs` 等列表 |
+| **信封格式** | `{code:200, data:{...}, message:"成功"}` | `/auth/login`, `/users`, `/rbac` 等 |
+| **创建/更新** | `{data:{id:N}, message:"创建成功"}` 或 `{message:"更新成功"}` | POST/PUT 端点 |
+
+前端 Store 通过 `_unwrapList()` / `_unwrapSingle()` 兼容两种格式。
+
+---
+
+## 7. 关键设计令牌
+
+| 令牌 | 值 | 用途 |
+|------|-----|------|
+| `--color-badge-gold` / `$badge-gold` | `#d4af37` | 金色强调色 |
+| 侧边栏背景 | `#1a3c2a` | 军绿深色 |
+| 标题栏背景 | `linear-gradient(135deg, #1b4332, #2d6a4f, #40916c)` | 军绿渐变 |
+| 贵州省 | 9 市州 88 县区 | `src/data/guizhouRegion.ts` |
+
+---
+
+## 8. 常用命令速查
+
+```bash
+# 启动后端
+cd backend && .venv/Scripts/python start.py
+
+# 启动前端开发服务器
+cd frontend && npm run dev
+
+# 构建前端
+cd frontend && npm run build
+
+# 部署前端到后端
+cp -r frontend/dist/* resources/frontend/
+
+# 后端测试
+cd backend && python -m pytest tests/ -q
+
+# 前端测试
+cd frontend && npx vitest run
+
+# 全模块 API 测试
+cd backend && python test_system_api.py
+
+# 类型检查
+cd frontend && npx vue-tsc --noEmit
+```
+
+## 8.5 任务速查表（加速 AI 理解业务上下文）
+
+> 当用户提出需求时，AI 应先查阅此表快速定位关键文件。
+
+| 任务类型 | 关键文件 | 注意事项 |
+|----------|----------|----------|
+| **新增 CRUD 接口** | `api/v1/xxx.py` + `services/xxx_service.py` + `schemas/xxx.py` | 在 `__init__.py` 的 `_BUSINESS_MODULES` 中注册 |
+| **新增前端页面** | `views/xxx/List.vue` + `router/index.ts` + `stores/xxx.ts` | 懒加载 `() => import(...)`，添加 `meta.title` |
+| **新增数据库字段** | `models/xxx.py` → `alembic revision --autogenerate` | 同时更新对应 Pydantic Schema |
+| **新增审批流** | `services/approval_service.py` + `api/v1/approval.py` | 配置 `ApprovalWorkflow` 节点规则 |
+| **数据导入导出** | `services/data_sync_service.py` + `services/data_package_service.py` | 自动冲突检测，`.rrs` 加密格式 |
+| **前端调用新 API** | `api/request.ts` → `stores/xxx.ts` → `views/xxx/Detail.vue` | 使用 `get/post/put/del` 封装 |
+| **修改经费状态** | `api/v1/funds.py` + `services/fund_service.py` | 状态变更必须写 `FundStatusHistory` |
+| **修改帮扶村年度数据** | `api/v1/supported_village.py` → `POST /{id}/yearly/{year}/{section}` | 10 个 section：population/income/force-investment/industry/... |
+| **添加贵州省地域选择** | `data/guizhouRegion.ts` + `components/common/GuizhouRegionSelector.vue` | 9 市州 88 县区，级联下拉 |
+| **修改侧边栏菜单** | `layouts/DefaultLayoutSafe.vue` + `router/index.ts` | `el-menu-item index` 必须匹配路由 `path` |
+| **数据库性能优化** | `core/database_indexes.py` + `services/database_health_service.py` | WAL checkpoint 每小时自动执行 |
+| **前端样式调整** | `styles/tokens.scss` | 金色 `#d4af37` (`--color-badge-gold`)，军绿 `#1a3c2a` |
+| **安全加密** | `services/password_encryption_service.py` + `utils/security_enhanced.py` | `EncryptionService.encrypt()` / `decrypt()` |
+| **数据脱敏** | `utils/desensitize.ts` + `services/data_masking_service.py` | 前端展示前脱敏，后端日志脱敏 |
+| **Electron 主进程** | `electron/main.js` | 生命周期管理、托盘、自动备份、崩溃恢复 |
+
+**数据流参考**（用户操作 → 数据库）：
+```
+View 点击保存 → Store.fetchXxx() → api/request.ts (axios) → 网络
+→ api/v1/xxx.py (路由) → services/xxx_service.py (业务) → models/xxx.py (ORM) → SQLite
+```
+
+---
+
+## 9. AI 交互协议
+
+当用户提出需求时，AI 应：
+
+1. **确认影响范围**：列出涉及的 Model / Service / Route / Store / View
+2. **检查数据权限**：是否需要 `filter_by_data_scope`？是否跨组织？
+3. **检查审批流**：是否需要接入 Approval？
+4. **给出代码时**：
+   - 后端：完整类型注解 + 异常处理
+   - 前端：`v-loading` 加载状态 + Element Plus 组件
+   - 数据库变更：同时提供 Alembic 命令
+5. **主动提醒风险**：N+1 查询、未脱敏数据、缺少事务、单机约束违反
+6. **安全检查**（军队系统强制）：确认操作留痕、数据权限过滤、敏感字段加密、审计日志不可篡改
+7. **新增 API 路由**：在 `__init__.py` 中注册模块名
+8. **新增前端路由**：使用懒加载，路径对齐 `src/views/` 目录结构
+
+---
+
+## 10. 版本与维护
+
+- 版本号权威来源：`backend/app/core/config.py` → `Settings.PROJECT_VERSION`
+- Schema 权威来源：`backend/app/models/` + Alembic 迁移
+- 当前版本：**v1.2.0**
+- 最后更新：2026-05-31

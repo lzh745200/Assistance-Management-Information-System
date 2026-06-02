@@ -1,0 +1,20 @@
+{
+  "app": {
+    "name": "军队乡村振兴管理系统",
+    "version": "1.2.0"
+  },
+  "backend": {
+    "host": "127.0.0.1",
+    "port": 8000
+  },
+  "database": {
+    "type": "sqlite",
+    "filename": "rural_revitalization.db"
+  },
+  "window": {
+    "width": 1400,
+    "height": 900,
+    "minWidth": 1024,
+    "minHeight": 768
+  }
+}

@@ -1,0 +1,531 @@
+<template>
+  <div class="message-center">
+    <!-- 页面标题 -->
+    <el-card class="header-card">
+      <template #header>
+        <div class="card-header">
+          <span class="title">
+            消息中心
+            <el-badge
+              v-if="unreadCount > 0"
+              :value="unreadCount"
+              class="unread-badge"
+            />
+          </span>
+          <div class="actions">
+            <el-button :disabled="unreadCount === 0" @click="handleMarkAllRead">
+              <el-icon><Check /></el-icon>
+              全部已读
+            </el-button>
+            <el-button
+              type="danger"
+              :disabled="selectedMessages.length === 0"
+              @click="handleBatchDelete"
+            >
+              <el-icon><Delete /></el-icon>
+              删除选中 ({{ selectedMessages.length }})
+            </el-button>
+            <el-button :loading="loading" @click="loadMessages">
+              <el-icon><Refresh /></el-icon>
+              刷新
+            </el-button>
+          </div>
+        </div>
+      </template>
+
+      <!-- 筛选条件 -->
+      <el-form :model="filterForm" inline>
+        <el-form-item label="消息类型">
+          <el-select
+            v-model="filterForm.message_type"
+            placeholder="全部"
+            clearable
+            @change="handleSearch"
+          >
+            <el-option label="系统通知" value="system" />
+            <el-option label="审批通知" value="approval" />
+            <el-option label="任务提醒" value="task" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select
+            v-model="filterForm.is_read"
+            placeholder="全部"
+            clearable
+            @change="handleSearch"
+          >
+            <el-option label="未读" :value="0" />
+            <el-option label="已读" :value="1" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 消息列表 -->
+    <el-card class="list-card">
+      <el-table
+        ref="tableRef"
+        v-loading="loading"
+        :data="messages"
+        :row-class-name="getRowClassName"
+        stripe
+        @selection-change="handleSelectionChange"
+        @row-click="handleRowClick"
+      >
+        <el-table-column type="selection" width="55" />
+        <el-table-column label="类型" width="120">
+          <template #default="{ row }">
+            <el-tag
+              :type="formatMessageType(row.message_type).type as any"
+              size="small"
+            >
+              {{ formatMessageType(row.message_type).text }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="title" label="标题" min-width="200">
+          <template #default="{ row }">
+            <div class="message-title">
+              <el-badge v-if="!row.is_read" is-dot class="unread-dot" />
+              <span :class="{ unread: !row.is_read }">{{ row.title }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="content"
+          label="内容"
+          min-width="300"
+          show-overflow-tooltip
+        >
+          <template #default="{ row }">
+            <span class="message-content">{{ row.content }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="时间" width="150">
+          <template #default="{ row }">
+            {{ formatRelativeTime(row.created_at) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="150" fixed="right">
+          <template #default="{ row }">
+            <el-button-group>
+              <el-button
+                size="small"
+                :disabled="row.is_read"
+                @click.stop="handleMarkRead(row)"
+              >
+                <el-icon><Check /></el-icon>
+              </el-button>
+              <el-button
+                size="small"
+                type="danger"
+                @click.stop="handleDelete(row)"
+              >
+                <el-icon><Delete /></el-icon>
+              </el-button>
+              <el-button
+                v-if="row.link"
+                size="small"
+                type="primary"
+                @click.stop="handleGoToLink(row)"
+              >
+                <el-icon><Link /></el-icon>
+              </el-button>
+            </el-button-group>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <el-pagination
+        v-if="total > 0"
+        v-model:current-page="page"
+        v-model:page-size="pageSize"
+        class="pagination"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="loadMessages"
+        @current-change="loadMessages"
+      />
+    </el-card>
+
+    <!-- 消息详情对话框 -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      :title="currentMessage?.title"
+      width="600px"
+    >
+      <div v-if="currentMessage" class="message-detail">
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="类型">
+            <el-tag
+              :type="formatMessageType(currentMessage.message_type).type as any"
+              size="small"
+            >
+              {{ formatMessageType(currentMessage.message_type).text }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="时间">
+            {{ formatDateTime(currentMessage.created_at) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="内容">
+            <div class="detail-content">{{ currentMessage.content }}</div>
+          </el-descriptions-item>
+        </el-descriptions>
+
+        <div v-if="currentMessage.link" class="detail-link">
+          <el-button type="primary" @click="handleGoToLink(currentMessage)">
+            <el-icon><Link /></el-icon>
+            查看详情
+          </el-button>
+        </div>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { logger } from "@/utils/logger";
+
+import { ref, onMounted, onUnmounted } from "vue";
+import { useRouterSafe } from "@/composables/useRouterSafe";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Refresh, Check, Delete, Link } from "@element-plus/icons-vue";
+import {
+  getMessages,
+  markAsRead,
+  markAllAsRead,
+  deleteMessages,
+  formatMessageType,
+  formatRelativeTime,
+  type Message,
+  type MessageType,
+} from "@/api/message";
+
+const { pushSafe } = useRouterSafe();
+
+// ==================== 状态 ====================
+
+const loading = ref(false);
+const messages = ref<Message[]>([]);
+const selectedMessages = ref<Message[]>([]);
+const total = ref(0);
+const page = ref(1);
+const pageSize = ref(20);
+const unreadCount = ref(0);
+
+const filterForm = ref({
+  message_type: undefined as MessageType | undefined,
+  is_read: undefined as number | undefined,
+});
+
+// 详情对话框
+const detailDialogVisible = ref(false);
+const currentMessage = ref<Message | null>(null);
+
+// WebSocket
+let ws: WebSocket | null = null;
+let wsReconnectCount = 0;
+const WS_MAX_RECONNECT = 5;
+let reconnectTimer: number | null = null;
+
+// ==================== 方法 ====================
+
+/**
+ * 加载消息列表
+ */
+async function loadMessages() {
+  loading.value = true;
+  try {
+    const response = await getMessages({
+      page: page.value,
+      page_size: pageSize.value,
+      message_type: filterForm.value.message_type,
+      is_read:
+        filterForm.value.is_read === 1
+          ? true
+          : filterForm.value.is_read === 0
+            ? false
+            : undefined,
+    });
+    messages.value = response.items;
+    total.value = response.total;
+    unreadCount.value = response.unread_count;
+  } catch (error) {
+    ElMessage.error("加载消息列表失败");
+  } finally {
+    loading.value = false;
+  }
+}
+
+/**
+ * 搜索
+ */
+function handleSearch() {
+  page.value = 1;
+  loadMessages();
+}
+
+/**
+ * 选择变化
+ */
+function handleSelectionChange(selection: Message[]) {
+  selectedMessages.value = selection;
+}
+
+/**
+ * 行点击
+ */
+function handleRowClick(row: Message) {
+  currentMessage.value = row;
+  detailDialogVisible.value = true;
+
+  // 标记为已读
+  if (!row.is_read) {
+    handleMarkRead(row);
+  }
+}
+
+/**
+ * 获取行样式
+ */
+function getRowClassName({ row }: { row: Message }) {
+  return row.is_read ? "" : "unread-row";
+}
+
+/**
+ * 标记单条已读
+ */
+async function handleMarkRead(message: Message) {
+  try {
+    await markAsRead([message.id]);
+    message.is_read = true;
+    unreadCount.value = Math.max(0, unreadCount.value - 1);
+  } catch {
+    // 静默失败
+  }
+}
+
+/**
+ * 全部标记已读
+ */
+async function handleMarkAllRead() {
+  try {
+    await markAllAsRead();
+    messages.value.forEach((m) => (m.is_read = true));
+    unreadCount.value = 0;
+    ElMessage.success("已全部标记为已读");
+  } catch (error) {
+    ElMessage.error("操作失败");
+  }
+}
+
+/**
+ * 删除单条
+ */
+async function handleDelete(message: Message) {
+  try {
+    await ElMessageBox.confirm("确定要删除这条消息吗？", "删除确认", {
+      type: "warning",
+    });
+    await deleteMessages([message.id]);
+    ElMessage.success("删除成功");
+    loadMessages();
+  } catch {
+    // 用户取消
+  }
+}
+
+/**
+ * 批量删除
+ */
+async function handleBatchDelete() {
+  if (selectedMessages.value.length === 0) return;
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedMessages.value.length} 条消息吗？`,
+      "批量删除确认",
+      { type: "warning" },
+    );
+
+    const ids = selectedMessages.value.map((m) => m.id);
+    await deleteMessages(ids);
+    ElMessage.success("删除成功");
+    loadMessages();
+  } catch {
+    // 用户取消
+  }
+}
+
+/**
+ * 跳转链接
+ */
+function handleGoToLink(message: Message) {
+  if (message.link) {
+    if (message.link.startsWith("http")) {
+      window.open(message.link, "_blank");
+    } else {
+      pushSafe(message.link);
+    }
+  }
+}
+
+/**
+ * 格式化日期时间
+ */
+function formatDateTime(dateStr: string): string {
+  if (!dateStr) return "-";
+  return new Date(dateStr).toLocaleString("zh-CN");
+}
+
+/**
+ * 初始化WebSocket
+ */
+function initWebSocket() {
+  const wsUrl = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws/messages`;
+
+  try {
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      logger.info("WebSocket connected");
+      wsReconnectCount = 0; // 连接成功后重置计数，允许后续断线重连
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "new_message") {
+          // 收到新消息，刷新列表
+          loadMessages();
+          ElMessage.info({
+            message: `新消息: ${data.title}`,
+            duration: 3000,
+          });
+        }
+      } catch {
+        // 解析失败
+      }
+    };
+
+    ws.onclose = () => {
+      logger.info("WebSocket disconnected");
+      // 超过最大重连次数后停止，避免无限循环
+      if (wsReconnectCount < WS_MAX_RECONNECT) {
+        wsReconnectCount++;
+        // 存储 timer 以便清理
+        reconnectTimer = window.setTimeout(initWebSocket, 5000);
+      }
+    };
+
+    ws.onerror = () => {
+      logger.info("WebSocket error");
+    };
+  } catch {
+    // WebSocket不可用
+  }
+}
+
+/**
+ * 关闭WebSocket
+ */
+function closeWebSocket() {
+  // 清理待执行的重连定时器
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  if (ws) {
+    // 先将重连计数置为上限，防止 onclose 触发重连
+    wsReconnectCount = WS_MAX_RECONNECT;
+    ws.close();
+    ws = null;
+  }
+}
+
+// ==================== 生命周期 ====================
+
+onMounted(() => {
+  loadMessages();
+  initWebSocket();
+});
+
+onUnmounted(() => {
+  closeWebSocket();
+});
+</script>
+
+<style scoped lang="scss">
+.message-center {
+  padding: 20px;
+}
+
+.header-card {
+  margin-bottom: 20px;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+  }
+}
+
+.list-card {
+  .pagination {
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+
+  :deep(.unread-row) {
+    background-color: #f0f9ff;
+  }
+}
+
+.message-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .unread {
+    font-weight: 600;
+  }
+
+  .unread-dot {
+    :deep(.el-badge__content) {
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+}
+
+.message-content {
+  color: #606266;
+}
+
+.message-detail {
+  .detail-content {
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  .detail-link {
+    margin-top: 20px;
+    text-align: center;
+  }
+}
+</style>

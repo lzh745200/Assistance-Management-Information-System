@@ -1,0 +1,279 @@
+"""
+集成测试共享夹具
+使用 SQLite in-memory 数据库 + FastAPI TestClient
+"""
+import os
+import sys
+import pytest
+
+# 确保 backend 目录在 sys.path 中
+backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+# 设置测试环境变量（在导入 app 之前）
+os.environ["ENVIRONMENT"] = "test"
+os.environ["DATABASE_URL"] = "sqlite:///./test_integration.db"
+os.environ["SECRET_KEY"] = "test-secret-key-for-integration-tests"
+os.environ["CSRF_SECRET_KEY"] = "test-csrf-secret-key"
+os.environ["CSRF_ENABLED"] = "false"  # 测试环境禁用 CSRF
+os.environ["DEBUG"] = "true"
+
+from datetime import datetime, timezone
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+from fastapi.testclient import TestClient
+
+from app.models.base import Base
+from app.core.database import get_db
+from app.core.security import hash_password, security_scheme, decode_token
+from app.main import app as fastapi_app
+
+# ==================== 测试数据库引擎 ====================
+
+TEST_DATABASE_URL = "sqlite://"  # in-memory
+
+engine = create_engine(
+    TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def override_get_db():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+async def override_get_current_user(
+    credentials=None,
+):
+    """Override get_current_user to use the test in-memory database.
+
+    The real get_current_user calls SessionLocal() directly, which bypasses
+    the FastAPI dependency-override for get_db.  This override uses the
+    testing session factory so that test users are found.
+    """
+    from fastapi import HTTPException
+    from starlette import status
+    from app.models.user import User
+
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="未提供认证凭证",
+        )
+    payload = decode_token(credentials.credentials)
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效或过期的令牌",
+        )
+    username = payload.get("sub")
+    if username is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的令牌内容",
+        )
+    db = TestingSessionLocal()
+    try:
+        user = db.query(User).filter(User.username == username).first()
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="用户不存在",
+            )
+        return user
+    finally:
+        db.close()
+
+
+# ==================== 夹具 ====================
+
+@pytest.fixture(autouse=True)
+def setup_database():
+    """每个测试前创建所有表，测试后清除"""
+
+    # 清理全局状态
+    from app.core.security import token_blacklist, _rate_limit_store
+    if hasattr(token_blacklist, 'clear'):
+        token_blacklist.clear()
+    _rate_limit_store.clear()
+
+    # 清理 token_manager 缓存，避免跨测试污染
+    try:
+        from app.core.token_manager import _token_cache, _blacklist_cache
+        _token_cache.clear()
+        _blacklist_cache.clear()
+    except ImportError:
+        pass
+
+    # 设置数据库依赖覆盖（在每个测试前确保生效）
+    from unittest.mock import Mock
+    from app.core.security import get_current_user as _orig_get_current_user
+    from app.core.security import get_current_active_user as _orig_get_current_active_user
+    fastapi_app.dependency_overrides[get_db] = override_get_db
+
+    # Create a mock admin user for dependency override
+    _test_auth_user = Mock()
+    _test_auth_user.id = 1
+    _test_auth_user.username = "testadmin"
+    _test_auth_user.role = "admin"
+    _test_auth_user.is_superuser = True
+    _test_auth_user.is_active = True
+    _test_auth_user.organization_id = 1
+    _test_auth_user.email = "testadmin@example.com"
+    _test_auth_user.full_name = "测试管理员"
+    _test_auth_user.failed_login_count = 0
+    _test_auth_user.locked_until = None
+    _test_auth_user.department = "系统管理部"
+    _test_auth_user.permissions_list = ["*"]
+
+    # Bypass auth by always returning the mock user (credentials argument is ignored)
+    fastapi_app.dependency_overrides[_orig_get_current_user] = lambda credentials=None: _test_auth_user
+    fastapi_app.dependency_overrides[_orig_get_current_active_user] = lambda current_user=None: _test_auth_user
+
+    # Also override the dep from deps module
+    try:
+        from app.api.v1.deps import get_current_active_user as _deps_active_user
+        fastapi_app.dependency_overrides[_deps_active_user] = lambda: _test_auth_user
+    except ImportError:
+        pass
+
+    # Patch SessionLocal and db_manager so that code using SessionLocal()
+    # directly (outside of FastAPI Depends) also uses the test database.
+    import app.core.database as _db_mod
+    _db_mod.SessionLocal = TestingSessionLocal
+    _db_mod.engine = engine
+    if hasattr(_db_mod, 'db_manager') and _db_mod.db_manager is not None:
+        _db_mod.db_manager.SessionLocal = TestingSessionLocal
+        _db_mod.db_manager.engine = engine
+
+    # 导入所有模型以确保表定义已注册
+    import app.models  # noqa: F401
+    Base.metadata.create_all(bind=engine)
+    yield
+    Base.metadata.drop_all(bind=engine)
+    fastapi_app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def db():
+    """提供测试数据库会话"""
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+@pytest.fixture
+def client():
+    """提供 FastAPI TestClient"""
+    return TestClient(fastapi_app)
+
+
+@pytest.fixture
+def admin_user(db):
+    """创建管理员用户并返回 (user, password)"""
+    from app.models.user import User
+    password = "Admin@123456"
+    now = datetime.now(timezone.utc)
+    user = User(
+        username="testadmin",
+        email="testadmin@example.com",
+        hashed_password=hash_password(password),
+        full_name="测试管理员",
+        role="admin",
+        is_active=True,
+        is_superuser=True,
+        department="系统管理部",
+        failed_login_count=0,
+        locked_until=None,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user, password
+
+
+@pytest.fixture
+def normal_user(db):
+    """创建普通用户并返回 (user, password)"""
+    from app.models.user import User
+    password = "User@123456"
+    now = datetime.now(timezone.utc)
+    user = User(
+        username="testuser",
+        email="testuser@example.com",
+        hashed_password=hash_password(password),
+        full_name="测试用户",
+        role="user",
+        is_active=True,
+        is_superuser=False,
+        department="测试部",
+        failed_login_count=0,
+        locked_until=None,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user, password
+
+
+@pytest.fixture
+def admin_token(client, admin_user):
+    """获取管理员 JWT access_token"""
+    user, password = admin_user
+    resp = client.post("/api/v1/auth/login", json={
+        "username": user.username,
+        "password": password,
+    })
+    assert resp.status_code == 200
+    return resp.json()["data"]["access_token"]
+
+
+@pytest.fixture
+def admin_refresh_token(client, admin_user):
+    """获取管理员 JWT refresh_token"""
+    user, password = admin_user
+    resp = client.post("/api/v1/auth/login", json={
+        "username": user.username,
+        "password": password,
+    })
+    assert resp.status_code == 200
+    return resp.json()["refresh_token"]
+
+
+@pytest.fixture
+def user_token(client, normal_user):
+    """获取普通用户 JWT token"""
+    user, password = normal_user
+    resp = client.post("/api/v1/auth/login", json={
+        "username": user.username,
+        "password": password,
+    })
+    assert resp.status_code == 200
+    return resp.json()["data"]["access_token"]
+
+
+@pytest.fixture
+def admin_headers(admin_token):
+    """管理员请求头"""
+    return {"Authorization": f"Bearer {admin_token}"}
+
+
+@pytest.fixture
+def user_headers(user_token):
+    """普通用户请求头"""
+    return {"Authorization": f"Bearer {user_token}"}

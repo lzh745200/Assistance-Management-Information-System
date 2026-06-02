@@ -1,0 +1,165 @@
+/**
+ * 表单布局标准样式
+ * 统一表单标签宽度、布局等样式规范
+ */
+
+// ========== 表单标签宽度标准 ==========
+:root {
+  --form-label-width-sm: 80px; // 简单表单（登录、搜索）
+  --form-label-width-md: 100px; // 标准表单（用户、配置）
+  --form-label-width-lg: 120px; // 复杂表单（项目、村庄）
+  --form-label-width-xl: 140px; // 超长标签表单
+}
+
+// 表单标签宽度工具类
+.form-label {
+  &-sm {
+    :deep(.el-form-item__label) {
+      width: var(--form-label-width-sm) !important;
+    }
+    :deep(.el-form-item__content) {
+      margin-left: var(--form-label-width-sm) !important;
+    }
+  }
+
+  &-md {
+    :deep(.el-form-item__label) {
+      width: var(--form-label-width-md) !important;
+    }
+    :deep(.el-form-item__content) {
+      margin-left: var(--form-label-width-md) !important;
+    }
+  }
+
+  &-lg {
+    :deep(.el-form-item__label) {
+      width: var(--form-label-width-lg) !important;
+    }
+    :deep(.el-form-item__content) {
+      margin-left: var(--form-label-width-lg) !important;
+    }
+  }
+
+  &-xl {
+    :deep(.el-form-item__label) {
+      width: var(--form-label-width-xl) !important;
+    }
+    :deep(.el-form-item__content) {
+      margin-left: var(--form-label-width-xl) !important;
+    }
+  }
+}
+
+// ========== 标准表单布局 ==========
+.standard-form {
+  // 默认使用 md 宽度
+  --form-label-width: var(--form-label-width-md);
+
+  .el-form-item__label {
+    font-weight: 500;
+    color: var(--el-text-color-regular);
+  }
+
+  // 栅格间距
+  .el-row {
+    margin-bottom: 0;
+
+    .el-col {
+      margin-bottom: 18px;
+    }
+  }
+}
+
+// ========== 紧凑表单布局 ==========
+.compact-form {
+  .el-form-item {
+    margin-bottom: 12px;
+  }
+
+  .el-row .el-col {
+    margin-bottom: 12px;
+  }
+}
+
+// ========== 表单分组样式 ==========
+.form-section {
+  margin-bottom: 24px;
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+  }
+}
+
+// ========== 移动端表单优化 ==========
+@media (max-width: 768px) {
+  .el-form {
+    .el-form-item {
+      margin-bottom: 16px;
+
+      &__label {
+        float: none;
+        display: block;
+        text-align: left;
+        padding: 0 0 8px;
+        line-height: 1.4;
+      }
+
+      &__content {
+        margin-left: 0 !important;
+      }
+    }
+
+    // 内联表单在移动端改为块级
+    &--inline {
+      .el-form-item {
+        display: block;
+        margin-right: 0;
+
+        &__content {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  // 栅格表单在移动端单列显示
+  .standard-form,
+  .compact-form {
+    .el-row {
+      .el-col {
+        width: 100% !important;
+        margin-bottom: 16px;
+      }
+    }
+  }
+}
+
+// ========== 表单输入框宽度 ==========
+.input-full-width {
+  width: 100%;
+}
+
+.input-medium-width {
+  width: 240px;
+}
+
+.input-short-width {
+  width: 120px;
+}
+
+// ========== 搜索表单样式 ==========
+.search-form {
+  padding: 16px;
+  background-color: var(--el-fill-color-light);
+  border-radius: var(--el-border-radius-base);
+
+  .el-form-item {
+    margin-bottom: 0;
+    margin-right: 12px;
+  }
+}

@@ -1,0 +1,115 @@
+/* ═══════════════════════════════════════════════════════════════
+   WCAG 2.1 AA 无障碍样式增强
+   满足军用系统信息无障碍要求
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 焦点指示器增强 ── */
+:focus-visible {
+  outline: 3px solid var(--el-color-primary) !important;
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── 跳过导航链接 ── */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--el-color-primary);
+  color: #fff;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* ── 屏幕阅读器专用（视觉隐藏但可被屏幕阅读器读取） ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── 减少动画（尊重用户系统偏好） ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── 高对比度模式 ── */
+[data-theme="high-contrast"] {
+  --el-color-primary: #0000cc;
+  --el-color-text-primary: #000000;
+  --el-color-text-regular: #000000;
+  --el-bg-color: #ffffff;
+  --el-border-color: #000000;
+  --el-border-color-light: #333333;
+}
+[data-theme="high-contrast"] .el-card {
+  border: 2px solid #000;
+}
+[data-theme="high-contrast"] .el-button {
+  border: 2px solid #000;
+}
+[data-theme="high-contrast"] a,
+[data-theme="high-contrast"] .el-link {
+  text-decoration: underline;
+}
+
+/* ── 大字体模式（户外/老年用户） ── */
+[data-theme="outdoor"] {
+  font-size: 1.15em;
+}
+[data-theme="outdoor"] .el-button {
+  min-height: 44px;
+  min-width: 44px;
+}
+[data-theme="outdoor"] input,
+[data-theme="outdoor"] select,
+[data-theme="outdoor"] textarea {
+  font-size: 16px; /* 防止 iOS 缩放 */
+}
+
+/* ── 色彩对比度增强（军用主题适配） ── */
+[data-theme="military"] {
+  --wcag-text-on-bg: 7.2; /* 军绿背景上的白色文字对比度 */
+}
+[data-theme="military"] .el-menu-item.is-active {
+  font-weight: 700; /* 增强视觉区分度 */
+  text-decoration: underline;
+}
+
+/* ── 可点击区域最小尺寸（WCAG 2.5.5） ── */
+.el-button--small {
+  min-height: 32px;
+  min-width: 32px;
+}
+.el-icon {
+  min-width: 24px;
+  min-height: 24px;
+}
+
+/* ── 表单错误提示关联 ── */
+[aria-invalid="true"] {
+  border-color: var(--el-color-danger) !important;
+}

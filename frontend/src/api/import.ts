@@ -1,0 +1,121 @@
+/**
+ * 数据导入API模块
+ *
+ * 提供数据导入相关的API调用，包括：
+ * - 下载导入模板
+ * - 导入帮扶村数据
+ * - 查询导入历史
+ */
+
+import request from "@/api/request";
+
+// ==================== 类型定义 ====================
+
+/** 导入模式 */
+export type ImportMode = "incremental" | "overwrite";
+
+/** 导入结果 */
+export interface ImportResult {
+  success: boolean;
+  total_rows: number;
+  success_rows: number;
+  failed_rows: number;
+  skipped_rows: number;
+  errors?: ImportError[];
+}
+
+/** 导入错误 */
+export interface ImportError {
+  row_number: number;
+  field_name: string;
+  message: string;
+}
+
+/** 导入历史记录 */
+export interface ImportHistory {
+  id: number;
+  file_name: string;
+  status: string;
+  total_rows: number;
+  success_rows: number;
+  failed_rows: number;
+  skipped_rows: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 导入历史列表响应 */
+interface ImportHistoryResponse {
+  items: ImportHistory[];
+  total: number;
+}
+
+// ==================== API函数 ====================
+
+/**
+ * 下载导入模板
+ * @param type 模板类型
+ * @returns Blob文件数据
+ */
+export async function downloadImportTemplate(type: string): Promise<Blob> {
+  const response = await request.get(`/import/template`, {
+    params: { entity_type: type },
+    responseType: "blob",
+  });
+  return response.data;
+}
+
+/**
+ * 导入帮扶村数据
+ * @param file 上传文件
+ * @param mode 导入模式
+ * @returns 导入结果
+ */
+export async function importVillages(
+  file: File,
+  mode: ImportMode = "incremental",
+): Promise<ImportResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("mode", mode);
+
+  const response = await request.post("/import/villages", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 120000,
+  });
+  return response.data;
+}
+
+/**
+ * 获取导入历史
+ * @param page 页码
+ * @param pageSize 每页数量
+ * @returns 导入历史列表
+ */
+export async function getImportHistory(
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<ImportHistoryResponse> {
+  const response = await request.get("/import/history", {
+    params: { page, page_size: pageSize },
+  });
+  return response.data;
+}
+
+/**
+ * 格式化导入状态
+ * @param status 状态值
+ * @returns 格式化后的状态信息
+ */
+export function formatImportStatus(status: string): {
+  text: string;
+  type: string;
+} {
+  const statusMap: Record<string, { text: string; type: string }> = {
+    pending: { text: "等待中", type: "info" },
+    processing: { text: "处理中", type: "warning" },
+    completed: { text: "已完成", type: "success" },
+    failed: { text: "失败", type: "danger" },
+  };
+  return statusMap[status] || { text: status, type: "info" };
+}

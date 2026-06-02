@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=军队乡村振兴管理系统
+Name[en]=Military Rural Revitalization System
+Comment=军队全面推进乡村振兴工作综合管理平台
+Comment[en]=Comprehensive management platform for military rural revitalization
+Exec=/opt/military-rural-system/scripts/start-kylin.sh
+Icon=/opt/military-rural-system/frontend/favicon.ico
+Terminal=false
+Categories=Office;Management;
+Keywords=military;rural;management;军队;乡村振兴;管理;
+StartupNotify=true
+X-KDE-StartupNotify=true
+X-GNOME-UsesNotifications=true

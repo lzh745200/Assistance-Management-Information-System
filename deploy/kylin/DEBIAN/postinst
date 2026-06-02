@@ -1,0 +1,128 @@
+#!/bin/bash
+# ═══════════════════════════════════════════════════════════════
+#  军队乡村振兴管理系统 - DEB 安装后脚本 (postinst)
+#  在 dpkg -i 安装完成后自动执行
+# ═══════════════════════════════════════════════════════════════
+set -e
+
+APP_NAME="military-rural-system"
+INSTALL_DIR="/opt/${APP_NAME}"
+DATA_DIR="/var/lib/${APP_NAME}"
+LOG_DIR="/var/log/${APP_NAME}"
+
+echo ""
+echo "======================================================"
+echo "  军队乡村振兴管理系统 - 安装配置"
+echo "======================================================"
+echo ""
+
+# ── 1. 创建系统用户和组 ──
+echo "[1/6] 创建系统用户..."
+if ! getent group ${APP_NAME} > /dev/null 2>&1; then
+    groupadd --system ${APP_NAME}
+    echo "  已创建系统组: ${APP_NAME}"
+else
+    echo "  系统组已存在: ${APP_NAME}"
+fi
+
+if ! getent passwd ${APP_NAME} > /dev/null 2>&1; then
+    useradd --system \
+            --gid ${APP_NAME} \
+            --home-dir ${INSTALL_DIR} \
+            --shell /bin/false \
+            --no-create-home \
+            --comment "军队乡村振兴管理系统" \
+            ${APP_NAME}
+    echo "  已创建系统用户: ${APP_NAME}"
+else
+    echo "  系统用户已存在: ${APP_NAME}"
+fi
+
+# ── 2. 创建数据目录 ──
+echo "[2/6] 创建数据目录..."
+mkdir -p "${DATA_DIR}"/{database,uploads,exports,cache,backups}
+mkdir -p "${LOG_DIR}"
+
+# 如果数据库目录为空且存在初始数据库，复制过去
+if [ ! -f "${DATA_DIR}/database/rural_revitalization.db" ]; then
+    if [ -f "${INSTALL_DIR}/backend/database/rural_revitalization.db" ]; then
+        cp "${INSTALL_DIR}/backend/database/rural_revitalization.db" \
+           "${DATA_DIR}/database/rural_revitalization.db"
+        echo "  初始数据库已复制"
+    fi
+fi
+
+# ── 3. 设置权限 ──
+echo "[3/6] 设置权限..."
+chown -R ${APP_NAME}:${APP_NAME} "${DATA_DIR}"
+chown -R ${APP_NAME}:${APP_NAME} "${LOG_DIR}"
+chmod 750 "${DATA_DIR}"
+chmod 750 "${LOG_DIR}"
+
+# 后端可执行权限
+if [ -f "${INSTALL_DIR}/backend/military-rural-backend" ]; then
+    chmod +x "${INSTALL_DIR}/backend/military-rural-backend"
+fi
+
+# 启动脚本权限
+if [ -f "${INSTALL_DIR}/scripts/start-kylin.sh" ]; then
+    chmod 755 "${INSTALL_DIR}/scripts/start-kylin.sh"
+fi
+
+# ── 4. 安装 systemd 服务 ──
+echo "[4/6] 配置系统服务..."
+if [ -f "${INSTALL_DIR}/systemd/military-rural.service" ]; then
+    cp "${INSTALL_DIR}/systemd/military-rural.service" /etc/systemd/system/${APP_NAME}.service
+    systemctl daemon-reload
+    systemctl enable ${APP_NAME}.service 2>/dev/null || true
+    echo "  系统服务已安装并启用"
+else
+    echo "  警告: systemd 服务文件不存在，跳过"
+fi
+
+# ── 5. 安装桌面快捷方式 ──
+echo "[5/6] 安装桌面快捷方式..."
+if [ -f "${INSTALL_DIR}/desktop/military-rural-system.desktop" ]; then
+    cp "${INSTALL_DIR}/desktop/military-rural-system.desktop" \
+       /usr/share/applications/${APP_NAME}.desktop
+    chmod 644 /usr/share/applications/${APP_NAME}.desktop
+    update-desktop-database /usr/share/applications/ 2>/dev/null || true
+    gtk-update-icon-cache /usr/share/icons/hicolor/ 2>/dev/null || true
+    echo "  桌面快捷方式已安装"
+else
+    echo "  警告: .desktop 文件不存在，跳过"
+fi
+
+# ── 6. 安装启动命令 ──
+echo "[6/6] 安装启动命令..."
+if [ -f "${INSTALL_DIR}/scripts/start-kylin.sh" ]; then
+    ln -sf "${INSTALL_DIR}/scripts/start-kylin.sh" /usr/bin/${APP_NAME}
+    echo "  启动命令已安装: /usr/bin/${APP_NAME}"
+fi
+
+echo ""
+echo "======================================================"
+echo "  安装完成！"
+echo "======================================================"
+echo ""
+echo "  启动方式:"
+echo "    1. 在应用菜单中搜索 '军队乡村振兴'"
+echo "    2. 命令行运行: ${APP_NAME}"
+echo "    3. 服务管理:   sudo systemctl start ${APP_NAME}"
+echo ""
+echo "  访问地址: http://127.0.0.1:8000"
+echo "  数据目录: ${DATA_DIR}"
+echo "  日志目录: ${LOG_DIR}"
+echo ""
+echo "  默认管理员用户名: admin"
+echo "  首次启动时密码将自动生成并记录在日志中"
+echo "  查看密码: sudo journalctl -u ${APP_NAME} -n 30 | grep 密码"
+echo ""
+echo "  常用命令:"
+echo "    启动服务: sudo systemctl start ${APP_NAME}"
+echo "    停止服务: sudo systemctl stop ${APP_NAME}"
+echo "    查看状态: sudo systemctl status ${APP_NAME}"
+echo "    查看日志: sudo journalctl -u ${APP_NAME} -f"
+echo ""
+
+exit 0

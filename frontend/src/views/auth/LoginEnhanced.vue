@@ -1,0 +1,644 @@
+<template>
+  <div class="login-page">
+    <!-- 背景轮播 -->
+    <div class="background-carousel">
+      <div
+        v-for="(bg, index) in backgroundImages"
+        :key="index"
+        class="bg-slide"
+        :class="{ active: currentBgIndex === index }"
+        :style="shouldLoadBg(index) ? { backgroundImage: `url(${bg})` } : {}"
+      ></div>
+      <div class="bg-overlay"></div>
+    </div>
+
+    <div class="login-container">
+      <!-- 左侧品牌区 -->
+      <div class="brand-section">
+        <div class="logo-wrapper">
+          <img src="/images/badges/badge.png" alt="徽章" class="badge-image" />
+        </div>
+        <h1 class="brand-title">帮扶管理信息系统</h1>
+        <p class="brand-subtitle">地方所需 群众所盼 部队所能</p>
+      </div>
+
+      <!-- 右侧登录卡片 -->
+      <div class="login-card">
+        <div class="card-header">
+          <h2>用户登录</h2>
+          <p>请输入您的账号和密码</p>
+        </div>
+
+        <form class="login-form" @submit.prevent="handleLogin">
+          <div class="form-group">
+            <label>账号</label>
+            <div class="input-wrapper">
+              <span class="input-icon">👤</span>
+              <input
+                v-model="username"
+                type="text"
+                placeholder="请输入用户名"
+                class="custom-input"
+                autocomplete="username"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>密码</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="请输入密码"
+                class="custom-input"
+                autocomplete="current-password"
+              />
+              <span
+                class="toggle-password"
+                @click="showPassword = !showPassword"
+              >
+                {{ showPassword ? "👁️" : "🙈" }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 机器码验证（可选） -->
+          <div v-if="showMachineCodeInput" class="form-group">
+            <label>机器码验证</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔑</span>
+              <input
+                v-model="verificationCode"
+                type="text"
+                placeholder="请输入4位校验码"
+                class="custom-input"
+                maxlength="4"
+              />
+            </div>
+            <p class="hint-text">
+              首次登录需要验证机器码，请联系管理员获取校验码
+            </p>
+          </div>
+
+          <button type="submit" class="login-btn" :disabled="loading">
+            <span v-if="!loading">立即登录</span>
+            <span v-else>登录中...</span>
+          </button>
+        </form>
+
+        <!-- 忘记密码链接 -->
+        <div class="extra-actions">
+          <a href="#" class="forgot-link" @click.prevent="goToForgotPassword">
+            忘记密码？
+          </a>
+          <a href="#" class="register-link" @click.prevent="goToRegister">
+            注册账户
+          </a>
+          <a
+            href="/get-machine-code"
+            class="machine-code-link"
+            @click.prevent="goToMachineCode"
+          >
+            获取机器码
+          </a>
+        </div>
+
+        <div class="card-footer">
+          <div v-if="errorMsg" class="error-banner">
+            {{ errorMsg }}
+          </div>
+          <p class="copyright">
+            © 2026 V{{ systemVersion }} {{ copyrightOwner }}版权所有
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { SYSTEM_VERSION, COPYRIGHT_OWNER } from "@/config/constants";
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+const username = ref("");
+const password = ref("");
+const verificationCode = ref("");
+const loading = ref(false);
+const errorMsg = ref("");
+const showPassword = ref(false);
+const showMachineCodeInput = ref(false);
+const systemVersion = SYSTEM_VERSION;
+const copyrightOwner = COPYRIGHT_OWNER;
+
+// 背景图片列表
+const backgroundImages = [
+  "/images/login-bg/bg1.jpg",
+  "/images/login-bg/bg2.jpg",
+  "/images/login-bg/bg3.jpg",
+  "/images/login-bg/bg4.jpg",
+  "/images/login-bg/bg5.jpg",
+  "/images/login-bg/bg6.jpg",
+  "/images/login-bg/bg7.jpg",
+  "/images/login-bg/bg8.jpg",
+  "/images/login-bg/bg9.jpg",
+  "/images/login-bg/bg10.jpg",
+  "/images/login-bg/bg11.jpg",
+  "/images/login-bg/bg12.jpg",
+];
+
+const currentBgIndex = ref(0);
+let carouselInterval: number | null = null;
+
+const shouldLoadBg = (index: number): boolean => {
+  const total = backgroundImages.length;
+  const prev = (currentBgIndex.value - 1 + total) % total;
+  const next = (currentBgIndex.value + 1) % total;
+  return index === currentBgIndex.value || index === prev || index === next;
+};
+
+const startCarousel = () => {
+  carouselInterval = window.setInterval(() => {
+    currentBgIndex.value = (currentBgIndex.value + 1) % backgroundImages.length;
+  }, 5000);
+};
+
+onMounted(() => {
+  startCarousel();
+});
+
+onUnmounted(() => {
+  if (carouselInterval) {
+    clearInterval(carouselInterval);
+  }
+});
+
+const handleLogin = async () => {
+  if (!username.value || !password.value) {
+    errorMsg.value = "请输入用户名和密码";
+    return;
+  }
+
+  loading.value = true;
+  errorMsg.value = "";
+
+  try {
+    const success = await authStore.login(username.value, password.value);
+    if (success) {
+      const redirect = router.currentRoute.value.query.redirect;
+
+      // 首次登录 → 跳转修改密码页（保留原始重定向目标）
+      if (authStore.mustChangePassword) {
+        const target = typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+          ? `/change-password?redirect=${encodeURIComponent(redirect)}`
+          : '/change-password'
+        router.push(target)
+        return
+      }
+
+      // 安全校验：仅允许站内相对路径跳转
+      if (
+        typeof redirect === "string" &&
+        redirect.startsWith("/") &&
+        !redirect.startsWith("//")
+      ) {
+        router.push(redirect);
+        return;
+      }
+
+      router.push("/dashboard");
+      return;
+    }
+
+    errorMsg.value = authStore.error || "登录失败";
+  } catch (err: any) {
+    errorMsg.value = "登录系统异常: " + (err.message || "未知错误");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const goToForgotPassword = () => {
+  router.push("/forgot-password");
+};
+
+const goToRegister = () => {
+  router.push("/register");
+};
+
+const goToMachineCode = () => {
+  router.push("/get-machine-code").catch(() => {
+    window.location.href = "/get-machine-code";
+  });
+};
+</script>
+
+<style scoped>
+/* 定义变量 */
+.login-page {
+  --military-dark: #081c15;
+  --military-green: #1b4332;
+  --military-gold: #d4af37;
+  --military-gold-light: #f0e68c;
+  --text-white: #ffffff;
+  --text-gray: #a8dadc;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--military-dark);
+  position: relative;
+  overflow: hidden;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+/* 背景轮播 */
+.background-carousel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+}
+
+.bg-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.bg-slide.active {
+  opacity: 1;
+}
+
+.bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(8, 28, 21, 0.85) 0%,
+    rgba(27, 67, 50, 0.7) 100%
+  );
+}
+
+.login-container {
+  display: flex;
+  width: 950px;
+  max-width: 95vw;
+  max-height: 95vh;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  overflow: hidden auto;
+}
+
+/* 左侧品牌区 */
+.brand-section {
+  flex: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(27, 67, 50, 0.95) 0%,
+    rgba(8, 28, 21, 0.98) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-white);
+  padding: 50px 40px;
+  position: relative;
+}
+
+.logo-wrapper {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.badge-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.brand-title {
+  font-size: 34px;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 20px 0;
+  line-height: 1.4;
+  letter-spacing: 3px;
+  color: var(--military-gold);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.brand-subtitle {
+  color: var(--military-gold-light);
+  font-size: 16px;
+  letter-spacing: 4px;
+  text-align: center;
+  margin: 0;
+  padding: 12px 20px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  background: rgba(212, 175, 55, 0.1);
+}
+
+/* 右侧登录卡片 */
+.login-card {
+  flex: 1;
+  padding: 50px 60px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.card-header h2 {
+  font-size: 28px;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card-header p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  margin: 0;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+  z-index: 1;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 14px 45px 14px 45px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  font-size: 15px;
+  transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.custom-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.custom-input:focus {
+  outline: none;
+  border-color: var(--military-gold);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+}
+
+.toggle-password {
+  position: absolute;
+  right: 14px;
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s;
+  filter: brightness(1.2);
+}
+
+.toggle-password:hover {
+  transform: scale(1.1);
+}
+
+.hint-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 6px 0 0 0;
+  line-height: 1.4;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--military-gold), #c9a227);
+  color: var(--military-dark);
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  margin-top: 10px;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+}
+
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+  background: linear-gradient(135deg, #e0c048, var(--military-gold));
+}
+
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.extra-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 16px;
+  padding: 0 4px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.forgot-link,
+.register-link,
+.machine-code-link {
+  font-size: 14px;
+  color: var(--military-gold-light);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.forgot-link:hover,
+.register-link:hover,
+.machine-code-link:hover {
+  color: var(--military-gold);
+  text-decoration: underline;
+}
+
+.card-footer {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.error-banner {
+  background: rgba(254, 215, 215, 0.2);
+  color: #fca5a5;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(254, 215, 215, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.copyright {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+/* 响应式 */
+@media (max-height: 750px) {
+  .login-container {
+    width: 860px;
+  }
+
+  .brand-section {
+    padding: 30px 30px;
+  }
+
+  .logo-wrapper {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 16px;
+  }
+
+  .brand-title {
+    font-size: 26px;
+    margin-bottom: 14px;
+  }
+
+  .brand-subtitle {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  .login-card {
+    padding: 30px 40px;
+  }
+
+  .card-header {
+    margin-bottom: 20px;
+  }
+
+  .card-header h2 {
+    font-size: 22px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .custom-input {
+    padding: 10px 40px 10px 40px;
+  }
+
+  .login-btn {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .card-footer {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 900px) {
+  .login-container {
+    flex-direction: column;
+    width: 95%;
+    max-width: 500px;
+    max-height: none;
+  }
+
+  .brand-section {
+    padding: 30px 24px;
+  }
+
+  .brand-title {
+    font-size: 24px;
+  }
+
+  .logo-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+
+  .login-card {
+    padding: 30px 24px;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+@media (max-width: 600px) {
+  .extra-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+}
+</style>

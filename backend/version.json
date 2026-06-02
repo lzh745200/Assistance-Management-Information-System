@@ -1,0 +1,15 @@
+{
+  "version": "1.2.0",
+  "build": "20260529",
+  "release_date": "2026-05-29",
+  "description": "项目全面清理与结构优化版本",
+  "features": [
+    "项目文件全面清理（移除冗余/损坏/临时文件）",
+    "CLAUDE.md 与 database/init.sql 重新生成",
+    ".gitignore 和 .dockerignore 模式优化去重",
+    "数据库参考 Schema 完善（索引补充、类型修正）",
+    "跨文件硬编码版本号消除",
+    "文档一致性修复（README、CLAUDE.md 去重）",
+    "Git 仓库重新初始化"
+  ]
+}
