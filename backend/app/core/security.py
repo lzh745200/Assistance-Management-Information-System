@@ -233,6 +233,50 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
+def create_access_token_with_machine_code(
+    data: dict,
+    machine_code: str,
+    expires_delta: Optional[timedelta] = None,
+) -> str:
+    """创建绑定机器码的 JWT access token（零信任安全）."""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    to_encode.update({
+        "exp": expire,
+        "type": "access",
+        "machine_code": machine_code,
+    })
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_token_with_machine_code(
+    token: str,
+    expected_machine_code: Optional[str] = None,
+) -> dict:
+    """解码 JWT 并可选验证机器码绑定.
+
+    Args:
+        token: JWT 字符串
+        expected_machine_code: 期望的机器码，None 则跳过校验（向后兼容）
+
+    Raises:
+        ValueError: 机器码不匹配（跨设备盗用检测）
+        jwt.JWTError: Token 无效或过期
+    """
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    if expected_machine_code is not None:
+        token_mc = payload.get("machine_code")
+        if token_mc and token_mc != expected_machine_code:
+            raise ValueError(
+                f"Token 设备绑定校验失败: "
+                f"期望 {expected_machine_code[:12]}..., "
+                f"实际 {token_mc[:12]}..."
+            )
+    return payload
+
+
 def create_refresh_token(data: dict) -> str:
     """创建 JWT refresh token"""
     to_encode = data.copy()
@@ -371,6 +415,7 @@ def require_roles(*allowed_roles):
 
 class RateLimitExceeded(Exception):
     """速率限制超出异常"""
+
     def __init__(self, message: str = "请求过于频繁，请稍后再试"):
         self.message = message
         super().__init__(self.message)

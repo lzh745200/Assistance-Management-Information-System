@@ -156,9 +156,11 @@ async def get_resource_usage(current_user=Depends(get_current_user)):
         # 健康评估
         issues = []
         if resources["cpu"]["percent"] > 90:
-            issues.append({"component": "CPU", "severity": "warning", "message": f"CPU使用率过高: {resources['cpu']['percent']}%"})
+            issues.append({"component": "CPU", "severity": "warning",
+                          "message": f"CPU使用率过高: {resources['cpu']['percent']}%"})
         if resources["memory"]["percent"] > 85:
-            issues.append({"component": "内存", "severity": "warning", "message": f"内存使用率过高: {resources['memory']['percent']}%"})
+            issues.append({"component": "内存", "severity": "warning",
+                          "message": f"内存使用率过高: {resources['memory']['percent']}%"})
         if disks and disks[0]["percent"] > 85:
             issues.append({"component": "磁盘", "severity": "warning", "message": f"磁盘使用率过高: {disks[0]['percent']}%"})
 
@@ -201,12 +203,31 @@ async def get_alert_rules(
 
     # 如果没有数据库中的告警规则，返回默认规则
     if not rules:
-        rules = [
-            {"id": "default-1", "name": "CPU使用率告警", "metric_type": "cpu_usage", "threshold": 90.0, "duration_seconds": 60, "enabled": True},
-            {"id": "default-2", "name": "内存使用率告警", "metric_type": "memory_usage", "threshold": 85.0, "duration_seconds": 60, "enabled": True},
-            {"id": "default-3", "name": "磁盘使用率告警", "metric_type": "disk_usage", "threshold": 85.0, "duration_seconds": 120, "enabled": True},
-            {"id": "default-4", "name": "错误率告警", "metric_type": "error_rate", "threshold": 5.0, "duration_seconds": 300, "enabled": False},
-        ]
+        rules = [{"id": "default-1",
+                  "name": "CPU使用率告警",
+                  "metric_type": "cpu_usage",
+                  "threshold": 90.0,
+                  "duration_seconds": 60,
+                  "enabled": True},
+                 {"id": "default-2",
+                  "name": "内存使用率告警",
+                  "metric_type": "memory_usage",
+                  "threshold": 85.0,
+                  "duration_seconds": 60,
+                  "enabled": True},
+                 {"id": "default-3",
+                  "name": "磁盘使用率告警",
+                  "metric_type": "disk_usage",
+                  "threshold": 85.0,
+                  "duration_seconds": 120,
+                  "enabled": True},
+                 {"id": "default-4",
+                  "name": "错误率告警",
+                  "metric_type": "error_rate",
+                  "threshold": 5.0,
+                  "duration_seconds": 300,
+                  "enabled": False},
+                 ]
 
     return {"success": True, "data": {"rules": rules, "total": len(rules)}}
 

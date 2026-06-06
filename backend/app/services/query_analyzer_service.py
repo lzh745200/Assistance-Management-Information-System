@@ -42,7 +42,7 @@ class QueryAnalyzer:
 
         # 限制列表大小
         if len(self._slow_queries) > self._max_slow_queries:
-            self._slow_queries = self._slow_queries[-self._max_slow_queries :]
+            self._slow_queries = self._slow_queries[-self._max_slow_queries:]
 
         logger.warning(f"慢查询检测: {duration_ms:.2f}ms - {query[:100]}")
 

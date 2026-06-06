@@ -5,6 +5,7 @@ slow queries, detecting N+1 query patterns, and applying common
 optimisations (eager loading, indexing hints, etc.).
 """
 
+import threading as _threading
 import functools
 import logging
 import time
@@ -70,7 +71,6 @@ def paginate(
 # Slow query monitoring
 # ---------------------------------------------------------------------------
 
-import threading as _threading
 
 _slow_query_log: List[dict] = []
 _slow_query_lock = _threading.Lock()
@@ -147,7 +147,6 @@ def clear_slow_query_log() -> None:
 
 # Thread-local query counter (incremented by the query_counter middleware or
 # manually via ``increment_query_count``).
-import threading as _threading
 
 _query_counter = _threading.local()
 

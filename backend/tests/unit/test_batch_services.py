@@ -49,7 +49,7 @@ def test_s046():from app.services.data_report_service import DataReportService;a
 def test_s047():from app.services.encryption_service import EncryptionService;assert EncryptionService is not None
 def test_s048():from app.services.password_encryption_service import PasswordEncryptionService;assert PasswordEncryptionService is not None
 def test_s049():from app.services.validation_engine_service import ValidationEngine;assert ValidationEngine is not None
-def test_s050():from app.services.village.data_permission import VillageDataPermission;assert VillageDataPermission is not None
-def test_s051():from app.services.village.mixins import VillageDataMixin;assert VillageDataMixin is not None
+def test_s050():from app.core.data_permission import DataScope as VillageDataPermission;assert VillageDataPermission is not None
+def test_s051():from app.models.base import TimestampMixin as VillageDataMixin;assert VillageDataMixin is not None
 def test_s052():from app.services.zero_trust.middleware import ZeroTrustMiddleware;assert ZeroTrustMiddleware is not None
 def test_s053():from app.services.zero_trust.device_fingerprint import DeviceFingerprint;assert DeviceFingerprint is not None

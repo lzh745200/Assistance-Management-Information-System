@@ -59,4 +59,5 @@ def loads(s: str, **kwargs):
     """Parse a JSON string. Thin wrapper around json.loads."""
     return json.loads(s, **kwargs)
 
+
 CustomJSONEncoder = AppJSONEncoder

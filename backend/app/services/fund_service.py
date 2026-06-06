@@ -82,6 +82,7 @@ def calculate_total_from_yearly_values(values: list) -> float:
 
 class FundStatistics:
     """经费统计数据结构 — backward compat"""
+
     def __init__(self, fund_type: str, fund_type_label: str,
                  military_investment: float = 0.0, local_investment: float = 0.0,
                  planned_investment: float = 0.0, total_investment: float = 0.0,
@@ -108,6 +109,7 @@ class FundStatistics:
 
 class YearlyFundSummary:
     """年度经费汇总 — backward compat"""
+
     def __init__(self, year: int, total_military: float = 0.0, total_local: float = 0.0,
                  total_planned: float = 0.0, total_actual: float = 0.0,
                  utilization_rate: float = 0.0, by_type: dict | None = None):

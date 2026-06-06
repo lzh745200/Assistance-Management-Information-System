@@ -228,7 +228,7 @@ class BatchProcessor:
         total_batches = (len(items) + self.batch_size - 1) // self.batch_size
 
         for i in range(0, len(items), self.batch_size):
-            batch = items[i : i + self.batch_size]
+            batch = items[i: i + self.batch_size]
             batch_num = i // self.batch_size + 1
 
             logger.debug(f"Processing batch {batch_num}/{total_batches}")

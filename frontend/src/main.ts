@@ -11,6 +11,10 @@ import router from "./router";
 import "./router/guards";
 import { AuthStorage } from "@/utils/authStorage";
 
+// 全局样式（设计 Token + Dashboard 深度视觉主题）
+import "@/styles/tokens.scss";
+import "@/styles/dashboard-theme.scss";
+
 // 一次性将旧版 localStorage token 迁移到 sessionStorage
 AuthStorage.migrateFromLocalStorage();
 

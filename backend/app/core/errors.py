@@ -153,8 +153,10 @@ def get_error_message(code: ErrorCode) -> str:
     """
     return ERROR_MESSAGES.get(code.value, f"错误码 {code}")
 
+
 class AppError(Exception):
     """Application error with factory methods (delegates to canonical exceptions.AppError)."""
+
     def __init__(self, message: str = "", status_code: int = 400, code=None, details=None, **kwargs):
         self.message = message
         self.status_code = status_code
@@ -190,6 +192,7 @@ class AppError(Exception):
 
 class ValidationError(AppError):
     """Validation error."""
+
     def __init__(self, message: str = "数据验证失败", field: str = "", **kwargs):
         super().__init__(message, status_code=422, code=ErrorCode.VALIDATION_ERROR, **kwargs)
         self.field = field

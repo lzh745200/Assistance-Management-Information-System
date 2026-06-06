@@ -122,23 +122,23 @@ class DataSyncEncryptionService:
         offset = 0
 
         # 验证魔数
-        magic = package_bytes[offset : offset + 4]
+        magic = package_bytes[offset: offset + 4]
         if magic != self.MAGIC_NUMBER:
             raise ValueError("文件格式错误: 不是有效的 .rrs 文件")
         offset += 4
 
         # 验证版本
-        version = package_bytes[offset : offset + 3]
+        version = package_bytes[offset: offset + 3]
         if version != self.VERSION:
             raise ValueError(f"文件版本不支持: {version.decode('utf-8', errors='ignore')}")
         offset += 3
 
         # 提取盐值
-        salt = package_bytes[offset : offset + 16]
+        salt = package_bytes[offset: offset + 16]
         offset += 16
 
         # 提取元数据长度
-        metadata_length = struct.unpack(">I", package_bytes[offset : offset + 4])[0]
+        metadata_length = struct.unpack(">I", package_bytes[offset: offset + 4])[0]
         offset += 4
 
         # 验证校验和
@@ -151,7 +151,7 @@ class DataSyncEncryptionService:
             raise ValueError("文件完整性校验失败")
 
         # 提取加密的元数据和数据
-        encrypted_metadata = package_bytes[offset : offset + metadata_length]
+        encrypted_metadata = package_bytes[offset: offset + metadata_length]
         offset += metadata_length
         encrypted_data = package_bytes[offset:checksum_start]
 

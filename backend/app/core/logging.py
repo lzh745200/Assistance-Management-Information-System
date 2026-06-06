@@ -49,5 +49,5 @@ class SafeLogger:
     def debug(self, msg, *args, **kwargs):
         self.logger.debug(msg, *args, **kwargs)
 
-import logging
+
 logger = logging.getLogger("military_rural")

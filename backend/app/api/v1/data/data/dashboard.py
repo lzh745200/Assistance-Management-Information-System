@@ -445,7 +445,7 @@ async def get_recent_activities(
                     if (a.updated_at or a.created_at)
                     else "",
                 }
-            )
+                )
         except Exception as e:
             logger.warning("获取审批动态失败: %s", e)
         finally:

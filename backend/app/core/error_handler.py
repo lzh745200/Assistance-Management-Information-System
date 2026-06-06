@@ -141,6 +141,7 @@ def register_handlers(
     except ImportError:
         logger.debug("app.core.exceptions not found; skipping default handlers")
         # Register a minimal fallback
+
         @app.exception_handler(Exception)
         async def _global_handler(request: Request, exc: Exception) -> JSONResponse:
             logger.error("Unhandled exception: %s", exc, exc_info=True)
@@ -172,6 +173,7 @@ def http_status_to_message(status_code: int) -> str:
         503: "服务不可用",
     }
     return messages.get(status_code, f"HTTP {status_code}")
+
 
 class BusinessLogicError(AppError):
     status_code = 400

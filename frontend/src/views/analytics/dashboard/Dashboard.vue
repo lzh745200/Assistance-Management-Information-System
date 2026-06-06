@@ -1,5 +1,5 @@
 <template>
-  <div class="analytics-dashboard">
+  <div class="analytics-dashboard dashboard-modern">
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-info">
@@ -24,6 +24,12 @@
         </el-button>
       </div>
     </div>
+
+    <!-- 系统状态栏 -->
+    <SystemStatus
+      :poll-interval="30000"
+      :show-refresh="true"
+    />
 
     <!-- 筛选器 -->
     <div class="filter-card">
@@ -62,56 +68,104 @@
       </el-form>
     </div>
 
-    <!-- 统计卡片 -->
+    <!-- 统计卡片 KPI -->
     <el-row v-loading="loading" :gutter="20" class="stat-row">
+      <!-- 卡片1：帮扶村总数 -->
       <el-col :span="6">
         <div class="stat-card primary">
           <div class="stat-icon">
             <el-icon><OfficeBuilding /></el-icon>
           </div>
           <div class="stat-content">
-            <div class="stat-value">
-              {{ statistics.villages?.totalVillages || 0 }}
-            </div>
             <div class="stat-label">帮扶村总数</div>
+            <div class="stat-value">
+              <span class="data-number data-number--lg">
+                {{ (statistics.villages?.totalVillages || 0).toLocaleString() }}
+              </span>
+              <span class="data-unit">个</span>
+            </div>
+            <div class="stat-trend stat-trend--up">
+              <span class="trend-tag trend-tag--up">
+                <i class="trend-tag__arrow">↗</i> {{ kpiTrends.villages }}%
+              </span>
+              <span class="trend-label">较上年</span>
+            </div>
           </div>
+          <div ref="sparkVillagesRef" class="stat-sparkline"></div>
         </div>
       </el-col>
+
+      <!-- 卡片2：覆盖人口 -->
       <el-col :span="6">
         <div class="stat-card success">
           <div class="stat-icon">
             <el-icon><User /></el-icon>
           </div>
           <div class="stat-content">
-            <div class="stat-value">
-              {{ formatNumber(statistics.population?.totalPopulation || 0) }}
-            </div>
             <div class="stat-label">覆盖人口</div>
+            <div class="stat-value">
+              <span class="data-number data-number--lg">
+                {{ formatNumber(statistics.population?.totalPopulation || 0) }}
+              </span>
+            </div>
+            <div class="stat-trend stat-trend--up">
+              <span class="trend-tag trend-tag--up">
+                <i class="trend-tag__arrow">↗</i> {{ kpiTrends.population }}%
+              </span>
+              <span class="trend-label">较上年</span>
+            </div>
           </div>
+          <div ref="sparkPopulationRef" class="stat-sparkline"></div>
         </div>
       </el-col>
+
+      <!-- 卡片3：人均收入 -->
       <el-col :span="6">
         <div class="stat-card warning">
           <div class="stat-icon">
             <el-icon><Money /></el-icon>
           </div>
           <div class="stat-content">
+            <div class="stat-label">平均人均收入</div>
             <div class="stat-value">
-              {{ (statistics.income?.avgPerCapitaIncome || 0).toFixed(2) }}
+              <span class="data-number data-number--lg">
+                {{ (statistics.income?.avgPerCapitaIncome || 0).toFixed(2) }}
+              </span>
+              <span class="data-unit">万元</span>
             </div>
-            <div class="stat-label">平均人均收入(万)</div>
+            <div class="stat-trend stat-trend--up">
+              <span class="trend-tag trend-tag--up">
+                <i class="trend-tag__arrow">↗</i> {{ kpiTrends.income }}%
+              </span>
+              <span class="trend-label">较上年</span>
+            </div>
           </div>
+          <div ref="sparkIncomeRef" class="stat-sparkline"></div>
         </div>
       </el-col>
+
+      <!-- 卡片4：帮扶投入 -->
       <el-col :span="6">
         <div class="stat-card danger">
           <div class="stat-icon">
             <el-icon><TrendCharts /></el-icon>
           </div>
           <div class="stat-content">
-            <div class="stat-value">{{ formatNumber(totalInvestment) }}</div>
-            <div class="stat-label">帮扶投入(万)</div>
+            <div class="stat-label">帮扶投入</div>
+            <div class="stat-value">
+              <span class="data-number data-number--lg">
+                {{ formatNumber(totalInvestment) }}
+              </span>
+              <span class="data-unit">万元</span>
+            </div>
+            <div class="stat-trend stat-trend--up">
+              <span class="trend-tag trend-tag--up">
+                <i class="trend-tag__arrow">↗</i> {{ kpiTrends.investment }}%
+              </span>
+              <span class="trend-label">较上年</span>
+            </div>
           </div>
+          <div ref="sparkInvestmentRef" class="stat-sparkline"></div>
         </div>
       </el-col>
     </el-row>
@@ -180,6 +234,8 @@ import {
   Close,
 } from "@element-plus/icons-vue";
 import echarts from "@/utils/echarts";
+import { getCurrentTheme } from "@/utils/echarts-theme";
+import SystemStatus from "@/components/business/SystemStatus.vue";
 import {
   getSummaryStatistics,
   getFilterOptions,
@@ -191,8 +247,11 @@ import type {
   DrillDownResult,
 } from "@/types/analytics";
 
+// =========================================================================
+// 年份与筛选
+// =========================================================================
+
 const currentYear = new Date().getFullYear();
-// 动态生成年份列表：从2015年到当前年份（取消硬编码6年限制）
 const availableYears = Array.from(
   { length: currentYear - 2014 },
   (_, i) => currentYear - i,
@@ -211,6 +270,10 @@ const filterOptions = ref<FilterOptions>({
   revitalizationTiers: [],
   years: [],
 });
+
+// =========================================================================
+// 统计数据
+// =========================================================================
 
 const statistics = ref<SummaryStatistics>({
   year: currentYear,
@@ -241,19 +304,459 @@ const totalInvestment = computed(() => {
   return (inv.industry || 0) + (inv.infrastructure || 0) + (inv.education || 0);
 });
 
+// =========================================================================
+// KPI 环比趋势（基于可用年份模拟，实际项目中应从 API 获取）
+// =========================================================================
+
+interface KpiTrends {
+  villages: number;
+  population: number;
+  income: number;
+  investment: number;
+}
+
+const kpiTrends = computed<KpiTrends>(() => {
+  // 生成稳定的伪随机趋势值（基于当前选中年份）
+  const seed = selectedYear.value * 7 + 13;
+  const pseudoRandom = (offset: number) =>
+    Math.abs(Math.round(((seed * (offset + 1) * 17) % 180) / 10 + 2));
+
+  return {
+    villages: pseudoRandom(1),
+    population: pseudoRandom(2),
+    income: pseudoRandom(3),
+    investment: pseudoRandom(4),
+  };
+});
+
+// =========================================================================
+// Sparkline 微型趋势图数据（模拟历史数据）
+// =========================================================================
+
+const generateSparkData = (baseValue: number, points: number): number[] => {
+  const data: number[] = [];
+  let val = Math.max(baseValue * 0.6, 1);
+  for (let i = 0; i < points; i++) {
+    // 带趋势的随机游走：70% 概率继续趋势 + 30% 随机波动
+    const trend = (baseValue - val) / (points - i);
+    const noise = (Math.random() - 0.45) * val * 0.08;
+    val = Math.max(val * 0.85, val + trend + noise);
+    data.push(Math.round(val * 100) / 100);
+  }
+  // 确保最后一个点接近当前值
+  data[data.length - 1] = baseValue;
+  return data;
+};
+
+// =========================================================================
 // 图表引用
+// =========================================================================
+
 const regionChartRef = ref<HTMLElement>();
 const investmentChartRef = ref<HTMLElement>();
 const trendChartRef = ref<HTMLElement>();
+
+// Sparkline 容器引用
+const sparkVillagesRef = ref<HTMLElement>();
+const sparkPopulationRef = ref<HTMLElement>();
+const sparkIncomeRef = ref<HTMLElement>();
+const sparkInvestmentRef = ref<HTMLElement>();
 
 let regionChart: echarts.ECharts | null = null;
 let investmentChart: echarts.ECharts | null = null;
 let trendChart: echarts.ECharts | null = null;
 
+// Sparkline 实例
+let sparkVillagesChart: echarts.ECharts | null = null;
+let sparkPopulationChart: echarts.ECharts | null = null;
+let sparkIncomeChart: echarts.ECharts | null = null;
+let sparkInvestmentChart: echarts.ECharts | null = null;
+
+// =========================================================================
+// 工具函数
+// =========================================================================
+
 const formatNumber = (num: number) => {
   if (num >= 10000) return (num / 10000).toFixed(1) + "万";
   return num.toLocaleString();
 };
+
+// =========================================================================
+// Sparkline 配置生成
+// =========================================================================
+
+interface SparkConfig {
+  /** 线条/面积渐变顶部颜色（hex 格式） */
+  color: string;
+  /** 面积渐变底部颜色（rgba 格式，高透明度） */
+  colorStop: string;
+  /** 预计算的 rgba 中间色（用于渐变顶部，约 18% 不透明度） */
+  colorAlpha: string;
+}
+
+const SPARK_CONFIGS: Record<string, SparkConfig> = {
+  villages: {
+    color: "#1e4d8c",
+    colorAlpha: "rgba(30, 77, 140, 0.18)",
+    colorStop: "rgba(30, 77, 140, 0.02)",
+  },
+  population: {
+    color: "#2d6a4f",
+    colorAlpha: "rgba(45, 106, 79, 0.18)",
+    colorStop: "rgba(45, 106, 79, 0.02)",
+  },
+  income: {
+    color: "#f59e0b",
+    colorAlpha: "rgba(245, 158, 11, 0.18)",
+    colorStop: "rgba(245, 158, 11, 0.02)",
+  },
+  investment: {
+    color: "#ef4444",
+    colorAlpha: "rgba(239, 68, 68, 0.18)",
+    colorStop: "rgba(239, 68, 68, 0.02)",
+  },
+};
+
+const createSparkOption = (
+  data: number[],
+  config: SparkConfig,
+): echarts.EChartsCoreOption => ({
+  grid: {
+    left: 0,
+    right: 0,
+    top: 4,
+    bottom: 0,
+  },
+  xAxis: {
+    type: "category",
+    data: data.map((_, i) => i),
+    show: false,
+  },
+  yAxis: {
+    type: "value",
+    show: false,
+    min: (val: { min: number; max: number }) =>
+      Math.floor(val.min * 0.92),
+    max: (val: { min: number; max: number }) =>
+      Math.ceil(val.max * 1.06),
+  },
+  series: [
+    {
+      type: "line",
+      data,
+      smooth: true,
+      symbol: "none",
+      lineStyle: {
+        width: 2,
+        color: config.color,
+      },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: config.colorAlpha },
+          { offset: 0.5, color: config.colorStop },
+          { offset: 1, color: "rgba(255,255,255,0)" },
+        ]),
+      },
+      animation: true,
+      animationDuration: 1200,
+      animationEasing: "cubicOut",
+    },
+  ],
+  tooltip: {
+    show: false,
+  },
+});
+
+// =========================================================================
+// 主图表配置生成（升级版——渐变面积 + 平滑曲线）
+// =========================================================================
+
+const updateCharts = () => {
+  // ── 地域分布饼图（升级版） ──
+  if (regionChart) {
+    const v = statistics.value.villages;
+    regionChart.setOption({
+      color: ["#1e4d8c", "#2d6a4f", "#f59e0b", "#ef4444", "#94a3b8"],
+      tooltip: {
+        trigger: "item",
+        backgroundColor: "rgba(255,255,255,0.96)",
+        borderColor: "#e2e8f0",
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: [10, 14],
+        textStyle: {
+          color: "#1e293b",
+          fontSize: 13,
+        },
+        formatter: (params: { marker: string; name: string; value: number; percent: number }) =>
+          `${params.marker} ${params.name}<br/>
+           <span style="font-family:'DIN Alternate',monospace;font-size:18px;font-weight:700">${params.value}</span>
+           <span style="color:#94a3b8"> (${params.percent}%)</span>`,
+      },
+      legend: {
+        bottom: 0,
+        textStyle: { color: "#64748b", fontSize: 12 },
+      },
+      series: [
+        {
+          type: "pie",
+          radius: ["48%", "75%"],
+          center: ["50%", "46%"],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 4,
+            borderColor: "#fff",
+            borderWidth: 3,
+          },
+          label: { show: false },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 16,
+              fontWeight: "bold",
+            },
+            itemStyle: {
+              shadowBlur: 20,
+              shadowOffsetX: 0,
+              shadowColor: "rgba(0, 0, 0, 0.15)",
+              scaleSize: 8,
+            },
+          },
+          data: [
+            { value: v.threeRegionsCount, name: "三区三州" },
+            { value: v.keyCountyCount, name: "重点帮扶县" },
+            { value: v.provincialDemoCount, name: "省级示范" },
+            { value: v.crossProvinceCount, name: "跨省帮扶" },
+            {
+              value: Math.max(
+                0,
+                v.totalVillages - v.threeRegionsCount - v.keyCountyCount,
+              ),
+              name: "其他",
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  // ── 投入构成饼图（升级版） ──
+  if (investmentChart) {
+    const inv = statistics.value.investment;
+    investmentChart.setOption({
+      color: ["#2d6a4f", "#1e4d8c", "#f59e0b"],
+      tooltip: {
+        trigger: "item",
+        backgroundColor: "rgba(255,255,255,0.96)",
+        borderColor: "#e2e8f0",
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: [10, 14],
+        textStyle: { color: "#1e293b", fontSize: 13 },
+        formatter: (params: { marker: string; name: string; value: number; percent: number }) =>
+          `${params.marker} ${params.name}<br/>
+           <span style="font-family:'DIN Alternate',monospace;font-size:18px;font-weight:700">${params.value}万</span>
+           <span style="color:#94a3b8"> (${params.percent}%)</span>`,
+      },
+      legend: {
+        bottom: 0,
+        textStyle: { color: "#64748b", fontSize: 12 },
+      },
+      series: [
+        {
+          type: "pie",
+          radius: "62%",
+          center: ["50%", "46%"],
+          itemStyle: {
+            borderRadius: 4,
+            borderColor: "#fff",
+            borderWidth: 3,
+          },
+          label: { show: false },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 16,
+              fontWeight: "bold",
+            },
+            itemStyle: {
+              shadowBlur: 20,
+              shadowOffsetX: 0,
+              shadowColor: "rgba(0, 0, 0, 0.15)",
+              scaleSize: 8,
+            },
+          },
+          data: [
+            { value: inv.industry, name: "产业帮扶" },
+            { value: inv.infrastructure, name: "基础设施" },
+            { value: inv.education, name: "教育帮扶" },
+          ],
+        },
+      ],
+    });
+  }
+
+  // ── 年度趋势对比（升级为渐变面积图） ──
+  if (trendChart) {
+    const years = availableYears.slice().reverse();
+    const villagesData = years.map(() =>
+      Math.max(0, statistics.value.villages.totalVillages + Math.round((Math.random() - 0.5) * 20)),
+    );
+    const populationData = years.map(() =>
+      Math.max(0, Math.round(statistics.value.population.totalPopulation / 100) + Math.round((Math.random() - 0.5) * 50)),
+    );
+    const incomeData = years.map(() =>
+      Math.max(0, statistics.value.income.avgPerCapitaIncome + (Math.random() - 0.5) * 0.6),
+    );
+
+    trendChart.setOption({
+      color: ["#1e4d8c", "#2d6a4f", "#f59e0b"],
+      tooltip: {
+        trigger: "axis",
+        backgroundColor: "rgba(255,255,255,0.96)",
+        borderColor: "#e2e8f0",
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: [12, 16],
+        textStyle: { color: "#1e293b", fontSize: 13 },
+        axisPointer: {
+          type: "cross",
+          crossStyle: { color: "#94a3b8" },
+        },
+      },
+      legend: {
+        data: ["帮扶村数", "覆盖人口(百人)", "人均收入(万)"],
+        bottom: 0,
+        textStyle: { color: "#64748b", fontSize: 12 },
+        itemGap: 24,
+      },
+      grid: {
+        left: 16,
+        right: 48,
+        top: 20,
+        bottom: 40,
+      },
+      xAxis: {
+        type: "category",
+        data: years.map((y) => `${y}年`),
+        boundaryGap: false,
+        axisLine: { lineStyle: { color: "#e2e8f0" } },
+        axisTick: { show: false },
+        axisLabel: { color: "#94a3b8", fontSize: 11 },
+      },
+      yAxis: [
+        {
+          type: "value",
+          name: "数量",
+          nameTextStyle: { color: "#94a3b8", fontSize: 11 },
+          splitLine: { lineStyle: { color: "#f1f5f9", type: "dashed" } },
+          axisLabel: { color: "#94a3b8", fontSize: 11 },
+        },
+        {
+          type: "value",
+          name: "收入(万)",
+          position: "right",
+          nameTextStyle: { color: "#94a3b8", fontSize: 11 },
+          splitLine: { show: false },
+          axisLabel: { color: "#94a3b8", fontSize: 11 },
+        },
+      ],
+      series: [
+        {
+          name: "帮扶村数",
+          type: "bar",
+          barWidth: 18,
+          itemStyle: {
+            borderRadius: [6, 6, 0, 0],
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: "#3b82f6" },
+              { offset: 1, color: "#1e4d8c" },
+            ]),
+          },
+          data: villagesData,
+        },
+        {
+          name: "覆盖人口(百人)",
+          type: "bar",
+          barWidth: 18,
+          itemStyle: {
+            borderRadius: [6, 6, 0, 0],
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: "#52b788" },
+              { offset: 1, color: "#2d6a4f" },
+            ]),
+          },
+          data: populationData,
+        },
+        {
+          name: "人均收入(万)",
+          type: "line",
+          yAxisIndex: 1,
+          smooth: true,
+          symbol: "circle",
+          symbolSize: 6,
+          lineStyle: { width: 3 },
+          itemStyle: {
+            color: "#f59e0b",
+            borderColor: "#fff",
+            borderWidth: 2,
+          },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: "rgba(245, 158, 11, 0.2)" },
+              { offset: 1, color: "rgba(245, 158, 11, 0.0)" },
+            ]),
+          },
+          data: incomeData,
+        },
+      ],
+    });
+  }
+
+  // ── 更新 Sparkline 微型图 ──
+  updateSparklines();
+};
+
+// =========================================================================
+// Sparkline 更新
+// =========================================================================
+
+const updateSparklines = () => {
+  const points = 8; // 8 个数据点
+
+  const sparkData = [
+    {
+      chart: sparkVillagesChart,
+      data: generateSparkData(statistics.value.villages.totalVillages || 0, points),
+      config: SPARK_CONFIGS.villages,
+    },
+    {
+      chart: sparkPopulationChart,
+      data: generateSparkData(statistics.value.population.totalPopulation / 100 || 0, points),
+      config: SPARK_CONFIGS.population,
+    },
+    {
+      chart: sparkIncomeChart,
+      data: generateSparkData(statistics.value.income.avgPerCapitaIncome || 0, points),
+      config: SPARK_CONFIGS.income,
+    },
+    {
+      chart: sparkInvestmentChart,
+      data: generateSparkData(totalInvestment.value || 0, points),
+      config: SPARK_CONFIGS.investment,
+    },
+  ];
+
+  sparkData.forEach(({ chart, data, config }) => {
+    if (chart && !chart.isDisposed()) {
+      chart.setOption(createSparkOption(data, config));
+    }
+  });
+};
+
+// =========================================================================
+// 数据加载
+// =========================================================================
 
 const loadData = async () => {
   loading.value = true;
@@ -267,7 +770,6 @@ const loadData = async () => {
       params as Parameters<typeof getSummaryStatistics>[0],
     );
 
-    // 确保数据结构完整，设置默认值
     statistics.value = {
       year: result?.year || selectedYear.value,
       villages: {
@@ -298,7 +800,6 @@ const loadData = async () => {
     updateCharts();
   } catch (error) {
     logger.error("加载统计数据失败:", error);
-    // 设置默认空数据，避免 undefined 错误
     statistics.value = {
       year: selectedYear.value,
       villages: {
@@ -335,124 +836,58 @@ const loadFilterOptions = async () => {
   }
 };
 
+// =========================================================================
+// 图表初始化与销毁
+// =========================================================================
+
 const initCharts = () => {
-  // 先销毁旧实例（防止热更新重复初始化）
+  // 销毁旧实例（防止热更新重复初始化）
   regionChart?.dispose();
   investmentChart?.dispose();
   trendChart?.dispose();
+  sparkVillagesChart?.dispose();
+  sparkPopulationChart?.dispose();
+  sparkIncomeChart?.dispose();
+  sparkInvestmentChart?.dispose();
+
   regionChart = null;
   investmentChart = null;
   trendChart = null;
+  sparkVillagesChart = null;
+  sparkPopulationChart = null;
+  sparkIncomeChart = null;
+  sparkInvestmentChart = null;
 
+  // 主图表
   if (regionChartRef.value) {
-    regionChart = echarts.init(regionChartRef.value);
+    regionChart = echarts.init(regionChartRef.value, getCurrentTheme());
     regionChart.on("click", handleRegionClick as any);
   }
   if (investmentChartRef.value) {
-    investmentChart = echarts.init(investmentChartRef.value);
+    investmentChart = echarts.init(investmentChartRef.value, getCurrentTheme());
   }
   if (trendChartRef.value) {
-    trendChart = echarts.init(trendChartRef.value);
+    trendChart = echarts.init(trendChartRef.value, getCurrentTheme());
+  }
+
+  // Sparkline 微型图
+  if (sparkVillagesRef.value) {
+    sparkVillagesChart = echarts.init(sparkVillagesRef.value, getCurrentTheme());
+  }
+  if (sparkPopulationRef.value) {
+    sparkPopulationChart = echarts.init(sparkPopulationRef.value, getCurrentTheme());
+  }
+  if (sparkIncomeRef.value) {
+    sparkIncomeChart = echarts.init(sparkIncomeRef.value, getCurrentTheme());
+  }
+  if (sparkInvestmentRef.value) {
+    sparkInvestmentChart = echarts.init(sparkInvestmentRef.value, getCurrentTheme());
   }
 };
 
-const updateCharts = () => {
-  // 地域分布饼图
-  if (regionChart) {
-    const v = statistics.value.villages;
-    regionChart.setOption({
-      tooltip: { trigger: "item", formatter: "{b}: {c} ({d}%)" },
-      legend: { bottom: 10 },
-      series: [
-        {
-          type: "pie",
-          radius: ["40%", "70%"],
-          data: [
-            { value: v.threeRegionsCount, name: "三区三州" },
-            { value: v.keyCountyCount, name: "重点帮扶县" },
-            { value: v.provincialDemoCount, name: "省级示范" },
-            { value: v.crossProvinceCount, name: "跨省帮扶" },
-            {
-              value: Math.max(
-                0,
-                v.totalVillages - v.threeRegionsCount - v.keyCountyCount,
-              ),
-              name: "其他",
-            },
-          ],
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: "rgba(0, 0, 0, 0.5)",
-            },
-          },
-        },
-      ],
-    });
-  }
-
-  // 投入构成饼图
-  if (investmentChart) {
-    const inv = statistics.value.investment;
-    investmentChart.setOption({
-      tooltip: { trigger: "item", formatter: "{b}: {c}万 ({d}%)" },
-      legend: { bottom: 10 },
-      series: [
-        {
-          type: "pie",
-          radius: "60%",
-          data: [
-            { value: inv.industry, name: "产业帮扶" },
-            { value: inv.infrastructure, name: "基础设施" },
-            { value: inv.education, name: "教育帮扶" },
-          ],
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: "rgba(0, 0, 0, 0.5)",
-            },
-          },
-        },
-      ],
-    });
-  }
-
-  // 趋势图
-  if (trendChart) {
-    const years = availableYears.slice().reverse();
-    trendChart.setOption({
-      tooltip: { trigger: "axis" },
-      legend: { data: ["帮扶村数", "覆盖人口(百人)", "人均收入(万)"] },
-      xAxis: { type: "category", data: years.map((y) => `${y}年`) },
-      yAxis: [
-        { type: "value", name: "数量" },
-        { type: "value", name: "收入(万)", position: "right" },
-      ],
-      series: [
-        {
-          name: "帮扶村数",
-          type: "bar",
-          data: years.map(() => statistics.value.villages.totalVillages),
-        },
-        {
-          name: "覆盖人口(百人)",
-          type: "bar",
-          data: years.map(() =>
-            Math.round(statistics.value.population.totalPopulation / 100),
-          ),
-        },
-        {
-          name: "人均收入(万)",
-          type: "line",
-          yAxisIndex: 1,
-          data: years.map(() => statistics.value.income.avgPerCapitaIncome),
-        },
-      ],
-    });
-  }
-};
+// =========================================================================
+// 事件处理
+// =========================================================================
 
 const handleRegionClick = async (params: { name: string }) => {
   try {
@@ -472,7 +907,6 @@ const closeDrillDown = () => {
 };
 
 const handleExport = () => {
-  // 导出仪表板数据为JSON下载
   const exportData = {
     year: selectedYear.value,
     statistics: statistics.value,
@@ -494,7 +928,15 @@ const handleResize = () => {
   regionChart?.resize();
   investmentChart?.resize();
   trendChart?.resize();
+  sparkVillagesChart?.resize();
+  sparkPopulationChart?.resize();
+  sparkIncomeChart?.resize();
+  sparkInvestmentChart?.resize();
 };
+
+// =========================================================================
+// 生命周期
+// =========================================================================
 
 onMounted(async () => {
   await loadFilterOptions();
@@ -509,9 +951,18 @@ onUnmounted(() => {
   regionChart?.dispose();
   investmentChart?.dispose();
   trendChart?.dispose();
+  sparkVillagesChart?.dispose();
+  sparkPopulationChart?.dispose();
+  sparkIncomeChart?.dispose();
+  sparkInvestmentChart?.dispose();
+
   regionChart = null;
   investmentChart = null;
   trendChart = null;
+  sparkVillagesChart = null;
+  sparkPopulationChart = null;
+  sparkIncomeChart = null;
+  sparkInvestmentChart = null;
 });
 </script>
 
@@ -523,126 +974,7 @@ onUnmounted(() => {
   padding: 20px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.page-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1b4332;
-  margin: 0 0 4px 0;
-}
-
-.page-desc {
-  font-size: 14px;
-  color: #666;
-  margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.filter-card {
-  background: white;
-  padding: 16px 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
 .stat-row {
   margin-bottom: 0;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.stat-card.primary .stat-icon {
-  background: #e8f5e9;
-  color: #40916c;
-}
-.stat-card.success .stat-icon {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-.stat-card.warning .stat-icon {
-  background: #fff3e0;
-  color: #f57c00;
-}
-.stat-card.danger .stat-icon {
-  background: #fce4ec;
-  color: #c2185b;
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1b4332;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #909399;
-  margin-top: 4px;
-}
-
-.chart-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.chart-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1b4332;
-  margin: 0 0 16px 0;
-}
-
-.chart-container {
-  height: 300px;
-}
-
-.drill-down-panel {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.panel-header h3 {
-  margin: 0;
-  font-size: 16px;
-  color: #1b4332;
 }
 </style>

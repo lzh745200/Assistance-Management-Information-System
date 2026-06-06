@@ -254,7 +254,7 @@ class MachineCodeService:
         pass_code = hashlib.sha256(combined.encode()).hexdigest()[:32]
 
         # 格式化为易读格式：XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX
-        formatted = "-".join([pass_code[i : i + 4] for i in range(0, 32, 4)])
+        formatted = "-".join([pass_code[i: i + 4] for i in range(0, 32, 4)])
 
         return formatted
 

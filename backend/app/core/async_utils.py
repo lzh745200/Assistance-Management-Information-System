@@ -119,6 +119,7 @@ def fire_and_forget(coro: Coroutine) -> None:
         except Exception:
             logger.warning("Background task (sync fallback) failed", exc_info=True)
 
+
 _cached_loop: Optional[asyncio.AbstractEventLoop] = None
 
 
