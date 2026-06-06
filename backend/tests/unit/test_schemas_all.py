@@ -12,8 +12,9 @@ class TestAllSchemasImport:
         """测试导入所有schema模块"""
         import os
         import importlib
+        from pathlib import Path
 
-        schemas_dir = 'app/schemas'
+        schemas_dir = Path(__file__).resolve().parents[2] / 'app' / 'schemas'
         imported = 0
         failed = []
 
