@@ -22,7 +22,7 @@ EXTRA_INDEXES = [
     ("fund_transactions", "ix_fund_transactions_created_by", ["created_by"]),
     ("approval_workflows", "ix_approval_workflows_created_by", ["created_by"]),
     ("approval_nodes", "ix_approval_nodes_workflow_id", ["workflow_id"]),
-    ("approval_tasks", "ix_approval_tasks_submitted_by", ["submitted_by"]),
+    ("approval_tasks", "ix_approval_tasks_submitter_id", ["submitter_id"]),
     ("approval_records", "ix_approval_records_task_id", ["task_id"]),
     ("project_files", "ix_project_files_uploaded_by", ["uploaded_by"]),
     ("village_attachments", "ix_village_attachments_created_by", ["created_by"]),
