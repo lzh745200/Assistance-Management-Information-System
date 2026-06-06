@@ -16,7 +16,9 @@ const props = defineProps<{
   model: Record<string, any>;
   fields: { key: string; label: string; type?: string; options?: any[] }[];
 }>();
-const emit = defineEmits<{ (e: "update:model", value: Record<string, any>): void }>();
+const emit = defineEmits<{
+  (e: "update:model", value: Record<string, any>): void;
+}>();
 
 const localModel = ref({ ...props.model });
 watch(localModel, (v) => emit("update:model", v), { deep: true });
