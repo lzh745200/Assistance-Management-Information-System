@@ -373,7 +373,7 @@ function handleExportStats() {
 }
 
 onMounted(() => {
-  fundsStore.loadFunds();
+  fundsStore.fetchFunds();
   loadDimensionStats();
   loadFundStatsByType();
 });

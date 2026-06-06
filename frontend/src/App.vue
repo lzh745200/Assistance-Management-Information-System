@@ -56,6 +56,28 @@ function handleRetry() {
 html,
 body,
 #app {
+
+/* === 全部提示/通知强制页面居中 === */
+.el-message {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+.el-notification {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+.el-notification__group {
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
   height: 100%;
   margin: 0;
   padding: 0;
