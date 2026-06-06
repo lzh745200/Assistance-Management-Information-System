@@ -171,7 +171,7 @@ function resetFilters() {
   loadData();
 }
 
-async function handleWithdraw(row: ApprovalTask) {
+async function handleWithdraw(row: any) {
   try {
     await ElMessageBox.confirm(
       `确认撤回「${row.title || "该申请"}」？撤回后审批流程将终止。`,
@@ -186,7 +186,7 @@ async function handleWithdraw(row: ApprovalTask) {
   }
 }
 
-async function handleResubmit(row: ApprovalTask) {
+async function handleResubmit(row: any) {
   try {
     await ElMessageBox.confirm(
       `确认重新提交「${row.title || "该申请"}」？`,

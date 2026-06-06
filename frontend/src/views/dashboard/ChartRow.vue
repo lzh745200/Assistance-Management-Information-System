@@ -45,7 +45,7 @@ async function fetchData() {
 
 function buildBarOption(projects: any[]): echarts.EChartsCoreOption {
   const names = projects.map((p: any) => p.name || p.project_name || "");
-  const values = projects.map((p: any) => p.progress ?? p.completion_rate ?? Math.round(Math.random() * 60 + 30));
+  const values = projects.map((p: any) => p.progress ?? p.completion_rate ?? 0);
   return {
     tooltip: {
       trigger: "axis",
