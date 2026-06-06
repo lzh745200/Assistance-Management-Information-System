@@ -174,7 +174,7 @@ import { useRoute } from "vue-router";
 import { ElMessage, type FormInstance } from "element-plus";
 import { fundLifecycleApi } from "@/api/fundLifecycle";
 import { parseError } from "@/utils/errorHandler";
-import { safeRouteParam } from '@/composables/useRouterSafe';
+import { safeRouteParam } from "@/composables/useRouterSafe";
 
 interface BudgetSummary {
   total_budget?: number;

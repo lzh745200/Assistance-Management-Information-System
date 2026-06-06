@@ -12,10 +12,7 @@ function getPathString(path: string | RouteLocationRaw): string | undefined {
  * @param value - 路由参数值（string | string[] | undefined）
  * @param fallback - 参数无效时的回退值，默认 0
  */
-export function safeRouteParam(
-  value: unknown,
-  fallback = 0,
-): number {
+export function safeRouteParam(value: unknown, fallback = 0): number {
   if (value === undefined || value === null) return fallback;
   if (Array.isArray(value)) value = value[0];
   if (value === null || value === undefined) return fallback;

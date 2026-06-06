@@ -86,7 +86,7 @@
 
 <script setup lang="ts">
 import { logger } from "@/utils/logger";
-import { safeRouteParam } from '@/composables/useRouterSafe';
+import { safeRouteParam } from "@/composables/useRouterSafe";
 
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";

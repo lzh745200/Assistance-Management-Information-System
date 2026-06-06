@@ -28,7 +28,9 @@
     <div class="status-item" title="本地数据库文件大小">
       <el-icon class="status-icon-db"><Coin /></el-icon>
       <span class="status-label">数据库</span>
-      <span class="status-value data-number data-number--sm">{{ dbSizeText }}</span>
+      <span class="status-value data-number data-number--sm">{{
+        dbSizeText
+      }}</span>
     </div>
 
     <div class="status-divider"></div>
@@ -37,7 +39,9 @@
     <div class="status-item" title="CPU 使用率">
       <el-icon class="status-icon-cpu"><Monitor /></el-icon>
       <span class="status-label">CPU</span>
-      <span class="status-value data-number data-number--sm">{{ cpuPercent }}%</span>
+      <span class="status-value data-number data-number--sm"
+        >{{ cpuPercent }}%</span
+      >
       <div class="status-bar">
         <div
           class="status-bar__fill status-bar__fill--cpu"
@@ -56,7 +60,9 @@
     <div class="status-item" title="内存使用率">
       <el-icon class="status-icon-mem"><Files /></el-icon>
       <span class="status-label">内存</span>
-      <span class="status-value data-number data-number--sm">{{ memPercent }}%</span>
+      <span class="status-value data-number data-number--sm"
+        >{{ memPercent }}%</span
+      >
       <div class="status-bar">
         <div
           class="status-bar__fill status-bar__fill--mem"
@@ -86,8 +92,8 @@
       size="small"
       class="refresh-btn"
       :loading="isRefreshing"
-      @click="refresh"
       title="刷新系统状态"
+      @click="refresh"
     >
       <el-icon><Refresh /></el-icon>
     </el-button>
@@ -313,8 +319,13 @@ onUnmounted(() => {
 }
 
 @keyframes status-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 // ── 图标颜色 ──

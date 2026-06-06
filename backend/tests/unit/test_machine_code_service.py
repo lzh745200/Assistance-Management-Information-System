@@ -4,11 +4,11 @@
 """
 import pytest
 from unittest.mock import MagicMock, patch
+from app.services.machine_code_service import MachineCodeService
 
 
 @pytest.fixture
 def mcs():
-    from app.services.machine_code_service import MachineCodeService
     return MachineCodeService()
 
 
@@ -60,7 +60,8 @@ class TestVerifyMachineCode:
 class TestGenerateInitialPassword:
     def test_password_format(self, mcs):
         pwd = MachineCodeService.generate_initial_password("admin", "1234")
-        assert pwd == "ADMIN1234@RRS"
+        # username[:4].upper() = "ADMI"
+        assert pwd == "ADMI1234@RRS"
 
     def test_short_username(self, mcs):
         pwd = MachineCodeService.generate_initial_password("ab", "5678")
@@ -121,8 +122,8 @@ class TestGeneratePassCode:
     def test_returns_formatted_string(self, mcs):
         code = MachineCodeService.generate_pass_code("test-machine")
         assert isinstance(code, str)
-        # Format: XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX = 47 chars
-        assert len(code) == 47
+        # 32 hex chars + 7 hyphens = 39 chars
+        assert len(code) == 39
         assert code.count("-") == 7
 
     def test_not_deterministic(self, mcs):
