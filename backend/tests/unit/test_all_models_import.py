@@ -11,8 +11,9 @@ class TestAllModelsImport:
         """测试导入所有模型模块"""
         import os
         import importlib
+        from pathlib import Path
 
-        models_dir = 'app/models'
+        models_dir = Path(__file__).resolve().parents[2] / 'app' / 'models'
         imported = 0
         failed = []
 

@@ -206,6 +206,9 @@ config/.env
 #   python scripts/maintenance/audit_padding_tests.py backend/tests/unit/test_xxx.py
 backend/tests/unit/test_bulk_*.py
 backend/tests/unit/test_coverage_deep*.py
+backend/tests/unit/test_cover_*.py
+backend/tests/unit/test_target_*.py
+backend/tests/unit/test_zero_*.py
 backend/tests/unit/test_exec_batch*.py
 backend/tests/unit/test_quality_coverage_*.py
 backend/tests/unit/test_services_*.py
