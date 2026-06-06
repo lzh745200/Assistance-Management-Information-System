@@ -15,6 +15,8 @@ import { AuthStorage } from "@/utils/authStorage";
 import "@/styles/index.scss";
 // Dashboard 深度视觉主题（注：tokens.scss 通过 vite additionalData 自动注入组件 SCSS 块）
 import "@/styles/dashboard-theme.scss";
+// 列表页统一规范化 (Phase 2)
+import "@/styles/components/list-page.scss";
 
 // 一次性将旧版 localStorage token 迁移到 sessionStorage
 AuthStorage.migrateFromLocalStorage();
