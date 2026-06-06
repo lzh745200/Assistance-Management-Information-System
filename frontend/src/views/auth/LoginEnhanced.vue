@@ -1,13 +1,10 @@
 <template>
   <div class="login-page">
-    <!-- 背景轮播 -->
+    <!-- 背景轮播（仅渲染当前图，避免12张同时加载） -->
     <div class="background-carousel">
       <div
-        v-for="(bg, index) in backgroundImages"
-        :key="index"
-        class="bg-slide"
-        :class="{ active: currentBgIndex === index }"
-        :style="{ backgroundImage: `url(${bg})` }"
+        class="bg-slide active"
+        :style="{ backgroundImage: `url(${currentBg})` }"
       ></div>
       <div class="bg-overlay"></div>
     </div>
@@ -119,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { SYSTEM_VERSION, COPYRIGHT_OWNER } from "@/config/constants";
@@ -136,6 +133,9 @@ const showPassword = ref(false);
 const showMachineCodeInput = ref(false);
 const systemVersion = SYSTEM_VERSION;
 const copyrightOwner = COPYRIGHT_OWNER;
+
+// 当前背景图（只加载一张，避免12张同时请求）
+const currentBg = computed(() => backgroundImages[currentBgIndex.value]);
 
 // 背景图片列表
 const backgroundImages = [
