@@ -189,34 +189,52 @@ class SupportedVillage(Base, TimestampMixin):
     )
 
     def to_dict(self) -> dict:
-        """序列化为前端期望的 camelCase 格式"""
+        """序列化为前端期望的 camelCase 格式，同时返回 snake_case 别名以兼容历史前端代码"""
         return {
             "id": self.id,
             "sequenceNo": self.sequence_no,
+            "sequence_no": self.sequence_no,
             "department": self.department,
             "supportUnit": self.support_unit,
+            "support_unit": self.support_unit,
             "villageName": self.village_name,
+            "village_name": self.village_name,
             "province": self.province,
             "city": self.city,
             "county": self.county,
             "township": self.township,
             "regionScope": self.region_scope,
+            "region_scope": self.region_scope,
             "latitude": self.latitude,
             "longitude": self.longitude,
             "isThreeRegions": self.is_three_regions or False,
+            "is_three_regions": self.is_three_regions or False,
             "isBorderArea": self.is_border_area or False,
+            "is_border_area": self.is_border_area or False,
             "isEthnicArea": self.is_ethnic_area or False,
+            "is_ethnic_area": self.is_ethnic_area or False,
             "isRevolutionaryArea": self.is_revolutionary_area or False,
+            "is_revolutionary_area": self.is_revolutionary_area or False,
             "isKeyCounty": self.is_key_county or False,
+            "is_key_county": self.is_key_county or False,
             "revitalizationTier": self.revitalization_tier,
+            "revitalization_tier": self.revitalization_tier,
             "isProvincialDemo": self.is_provincial_demo or False,
+            "is_provincial_demo": self.is_provincial_demo or False,
             "isHundredVillageDemo": self.is_hundred_village_demo or False,
+            "is_hundred_village_demo": self.is_hundred_village_demo or False,
             "isTieredDevelopment": self.is_tiered_development or False,
+            "is_tiered_development": self.is_tiered_development or False,
             "tieredDevelopmentLevel": self.tiered_development_level,
+            "tiered_development_level": self.tiered_development_level,
             "organizationId": self.organization_id,
+            "organization_id": self.organization_id,
             "createdBy": self.created_by,
+            "created_by": self.created_by,
             "createdAt": self.created_at.isoformat() if self.created_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
             "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
     def __repr__(self):
