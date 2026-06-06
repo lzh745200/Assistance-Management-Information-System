@@ -35,10 +35,16 @@ function mockHashResponse() {
   mockDigest.mockResolvedValueOnce(new Uint8Array([0xde, 0xad, 0xbe, 0xef]).buffer)
 }
 
+const okJsonResponse = (data: any = {}) => ({
+  ok: true,
+  statusText: 'OK',
+  json: () => Promise.resolve(data),
+})
+
 describe('utils/chunkUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockFetch.mockResolvedValue({ ok: true, statusText: 'OK' })
+    mockFetch.mockResolvedValue(okJsonResponse())
     mockHashResponse()
   })
 
