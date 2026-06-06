@@ -2,16 +2,6 @@
 import pytest
 
 
-class TestSM4Cipher:
-    @pytest.mark.skip(reason="SM4 pure-Python roundtrip WIP")
-    def test_encrypt_decrypt_roundtrip(self):
-        pass
-
-    @pytest.mark.skip(reason="SM4 pure-Python roundtrip WIP")
-    def test_different_keys_produce_different_outputs(self):
-        pass
-
-
 class TestAuditChain:
     def test_chain_hash_linking(self):
         from app.services.sm_crypto import AuditChain

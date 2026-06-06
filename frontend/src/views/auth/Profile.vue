@@ -443,6 +443,7 @@ const passwordStrength = computed((): string => {
 const fetchUserProfile = async () => {
   try {
     const profile = await userStore.getUserProfile();
+    if (!profile) return;
     Object.assign(userInfo, profile);
     // 初始化表单数据
     Object.assign(profileForm, {
