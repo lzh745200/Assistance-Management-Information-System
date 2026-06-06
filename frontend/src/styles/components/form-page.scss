@@ -1,0 +1,71 @@
+/**
+ * 表单/详情页统一升级 (Phase 3)
+ * 覆盖所有 el-form, el-descriptions, el-dialog, detail-card 等
+ */
+
+/* ── 表单容器 ── */
+.form-card {
+  background: var(--color-bg-card); border-radius: 10px; padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  max-width: 900px;
+
+  .el-form-item__label { font-weight: 600; color: var(--color-text-primary); font-size: 13px; }
+  .el-input__wrapper { border-radius: 8px; box-shadow: 0 0 0 1px var(--color-border-light) inset; transition: box-shadow .2s; }
+  .el-input__wrapper:hover { box-shadow: 0 0 0 1px var(--color-primary-light-3) inset; }
+  .el-input.is-focus .el-input__wrapper { box-shadow: 0 0 0 2px rgba(45,106,79,.2) inset !important; }
+  .el-textarea__inner { border-radius: 8px; }
+  .el-select .el-input__wrapper { border-radius: 8px; }
+}
+
+/* ── 详情卡片 ── */
+.detail-card {
+  background: var(--color-bg-card); border-radius: 10px; padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04); margin-bottom: 16px;
+
+  .detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-border-lighter); }
+  .detail-title { font-size: 18px; font-weight: 700; color: var(--color-text-primary); }
+}
+
+/* ── 描述列表 ── */
+.el-descriptions {
+  .el-descriptions__label { font-weight: 600; color: var(--color-text-secondary); }
+  .el-descriptions__content { color: var(--color-text-primary); }
+}
+
+/* ── 表单验证反馈 ── */
+.el-form-item.is-error {
+  .el-input__wrapper { box-shadow: 0 0 0 1px var(--color-danger) inset; }
+  .el-form-item__error { font-size: 12px; padding-top: 4px; }
+}
+
+/* ── 提交按钮区 ── */
+.form-actions {
+  display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px;
+  border-top: 1px solid var(--color-border-lighter);
+}
+
+/* ── 信息网格（详情页常用） ── */
+.info-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;
+  .info-item { display: flex; gap: 8px; }
+  .info-label { color: var(--color-text-secondary); font-size: 13px; min-width: 80px; flex-shrink: 0; }
+  .info-value { color: var(--color-text-primary); font-size: 14px; font-weight: 500; }
+}
+
+/* ── 对话框表单 ── */
+.el-dialog {
+  .el-form-item { margin-bottom: 18px; }
+}
+
+/* ── 文件上传 ── */
+.el-upload-dragger {
+  border-radius: 10px; border: 2px dashed var(--color-border);
+  transition: border-color .2s, background .2s;
+  &:hover { border-color: var(--color-primary); background: var(--color-primary-light-9); }
+}
+
+@media (max-width: 768px) {
+  .form-card { padding: 16px; }
+  .detail-card { padding: 16px; }
+  .form-actions { flex-direction: column; }
+}

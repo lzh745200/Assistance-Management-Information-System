@@ -17,6 +17,8 @@ import "@/styles/index.scss";
 import "@/styles/dashboard-theme.scss";
 // 列表页统一规范化 (Phase 2)
 import "@/styles/components/list-page.scss";
+// 表单/详情页统一升级 (Phase 3)
+import "@/styles/components/form-page.scss";
 
 // 一次性将旧版 localStorage token 迁移到 sessionStorage
 AuthStorage.migrateFromLocalStorage();
