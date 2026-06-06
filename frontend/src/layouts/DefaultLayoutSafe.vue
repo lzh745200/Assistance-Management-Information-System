@@ -418,10 +418,17 @@ function handleCommand(command: string) {
   background-color: rgba(255, 255, 255, 0.22);
 }
 
-/* ── 菜单根 ── */
+/* ── 菜单根：强制亮色文字（覆盖 Element Plus 默认暗色）── */
 .aside-menu {
   border-right: none !important;
   padding: 8px 0;
+
+  /* 直接设置 Element Plus CSS 变量，从根源解决黑色文字 */
+  --el-menu-text-color: rgba(255, 255, 255, 0.82) !important;
+  --el-menu-hover-text-color: #ffffff !important;
+  --el-menu-active-color: #d4af37 !important;
+  --el-menu-bg-color: transparent !important;
+  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* ── 菜单分区标签 ── */
@@ -436,8 +443,16 @@ function handleCommand(command: string) {
 }
 
 /* ===================================================================
-   菜单项 — 全局精调
+   菜单项 — 全局精调（强制覆盖所有状态文字颜色）
    =================================================================== */
+
+/* 无条件强制：所有菜单文字必须为亮色 */
+.aside-menu :deep(.el-menu-item),
+.aside-menu :deep(.el-sub-menu__title),
+.aside-menu :deep(.el-menu-item) *,
+.aside-menu :deep(.el-sub-menu__title) * {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
 
 /* 取消 Element Plus 默认左侧栏 — 改用自定义 ::before 指示器 */
 .aside-menu :deep(.el-menu-item),
@@ -453,17 +468,21 @@ function handleCommand(command: string) {
     color 0.22s ease,
     padding 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  background-color: transparent !important;
 }
 
 /* Hover 态 — 柔和亮起 */
 .aside-menu :deep(.el-menu-item:hover),
-.aside-menu :deep(.el-sub-menu__title:hover) {
+.aside-menu :deep(.el-sub-menu__title:hover),
+.aside-menu :deep(.el-menu-item:hover) *,
+.aside-menu :deep(.el-sub-menu__title:hover) * {
   background-color: rgba(255, 255, 255, 0.07) !important;
-  color: #fff !important;
+  color: #ffffff !important;
 }
 
 /* Active 态 — 金色文字 + 左侧金色指示条 + 微妙背景 */
-.aside-menu :deep(.el-menu-item.is-active) {
+.aside-menu :deep(.el-menu-item.is-active),
+.aside-menu :deep(.el-menu-item.is-active) * {
   background: linear-gradient(
     90deg,
     rgba(212, 175, 55, 0.16) 0%,
@@ -475,7 +494,8 @@ function handleCommand(command: string) {
 }
 
 /* 子菜单打开的父级 — 文字高亮 */
-.aside-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
+.aside-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title),
+.aside-menu :deep(.el-sub-menu.is-active > .el-sub-menu__title) * {
   color: #d4af37 !important;
   font-weight: 600;
 }
@@ -513,17 +533,25 @@ function handleCommand(command: string) {
   line-height: 38px;
   padding-left: 52px !important;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.68);
   border-radius: 6px;
   margin: 1px 4px;
+  color: rgba(255, 255, 255, 0.72) !important;
+  background-color: transparent !important;
 }
 
-.aside-menu :deep(.el-menu--inline .el-menu-item:hover) {
-  color: rgba(255, 255, 255, 0.9) !important;
+.aside-menu :deep(.el-menu--inline .el-menu-item) *,
+.aside-menu :deep(.el-menu--inline .el-menu-item span) {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.aside-menu :deep(.el-menu--inline .el-menu-item:hover),
+.aside-menu :deep(.el-menu--inline .el-menu-item:hover) * {
+  color: #ffffff !important;
   background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
-.aside-menu :deep(.el-menu--inline .el-menu-item.is-active) {
+.aside-menu :deep(.el-menu--inline .el-menu-item.is-active),
+.aside-menu :deep(.el-menu--inline .el-menu-item.is-active) * {
   color: #d4af37 !important;
   background: rgba(212, 175, 55, 0.1) !important;
   box-shadow: inset 3px 0 0 #d4af37;
@@ -588,25 +616,37 @@ function handleCommand(command: string) {
   border-radius: 10px !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
   padding: 6px 0 !important;
+
+  /* 弹出菜单 CSS 变量覆盖 */
+  --el-menu-text-color: rgba(255, 255, 255, 0.85) !important;
+  --el-menu-hover-text-color: #ffffff !important;
+  --el-menu-active-color: #d4af37 !important;
+  --el-menu-bg-color: transparent !important;
+  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 :deep(.aside-popper .el-menu--popup) {
   background: transparent !important;
 }
 
-:deep(.aside-popper .el-menu-item) {
-  color: rgba(255, 255, 255, 0.8) !important;
+/* 弹出菜单每一项 —— 强制白色 */
+:deep(.aside-popper .el-menu-item),
+:deep(.aside-popper .el-menu-item) *,
+:deep(.aside-popper .el-menu-item span) {
+  color: rgba(255, 255, 255, 0.85) !important;
   height: 40px;
   line-height: 40px;
   font-size: 13px;
   border-radius: 6px;
   margin: 2px 6px;
   padding: 0 14px !important;
+  background-color: transparent !important;
 }
 
-:deep(.aside-popper .el-menu-item:hover) {
+:deep(.aside-popper .el-menu-item:hover),
+:deep(.aside-popper .el-menu-item:hover) * {
   background-color: rgba(255, 255, 255, 0.07) !important;
-  color: #fff !important;
+  color: #ffffff !important;
 }
 
 /* ===================================================================
@@ -767,5 +807,56 @@ function handleCommand(command: string) {
 }
 .skip-link:focus {
   top: 0;
+}
+</style>
+
+<!-- 全局非 scoped 样式：彻底消灭 Element Plus 菜单中的黑色文字 -->
+<style>
+/* === 侧边栏菜单：全局强制白色文字 === */
+.layout-aside .el-menu-item,
+.layout-aside .el-sub-menu__title,
+.layout-aside .el-menu-item span,
+.layout-aside .el-sub-menu__title span,
+.layout-aside .el-menu-item i,
+.layout-aside .el-sub-menu__title i {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.layout-aside .el-menu-item:hover,
+.layout-aside .el-sub-menu__title:hover,
+.layout-aside .el-menu-item:hover span,
+.layout-aside .el-sub-menu__title:hover span {
+  color: #ffffff !important;
+}
+
+.layout-aside .el-menu-item.is-active,
+.layout-aside .el-menu-item.is-active span,
+.layout-aside .el-sub-menu.is-active > .el-sub-menu__title,
+.layout-aside .el-sub-menu.is-active > .el-sub-menu__title span {
+  color: #d4af37 !important;
+}
+
+/* 内联展开子菜单 */
+.layout-aside .el-menu--inline .el-menu-item,
+.layout-aside .el-menu--inline .el-menu-item span {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+.layout-aside .el-menu--inline .el-menu-item:hover,
+.layout-aside .el-menu--inline .el-menu-item:hover span {
+  color: #ffffff !important;
+}
+.layout-aside .el-menu--inline .el-menu-item.is-active,
+.layout-aside .el-menu--inline .el-menu-item.is-active span {
+  color: #d4af37 !important;
+}
+
+/* 弹出层子菜单 */
+.aside-popper .el-menu-item,
+.aside-popper .el-menu-item span {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.aside-popper .el-menu-item:hover,
+.aside-popper .el-menu-item:hover span {
+  color: #ffffff !important;
 }
 </style>

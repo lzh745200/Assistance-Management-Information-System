@@ -86,6 +86,7 @@
 
 <script setup lang="ts">
 import { logger } from "@/utils/logger";
+import { safeRouteParam } from '@/composables/useRouterSafe';
 
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -97,7 +98,7 @@ import request from "@/utils/request";
 const route = useRoute();
 const router = useRouter();
 
-const projectId = ref(Number(route.params.id));
+const projectId = ref(safeRouteParam(route.params.id));
 const viewDialogVisible = ref(false);
 const isFullscreen = ref(false);
 const currentViewType = ref<"comparison" | "image">("image");

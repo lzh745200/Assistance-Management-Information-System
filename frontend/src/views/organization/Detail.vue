@@ -54,7 +54,7 @@ import { logger } from "@/utils/logger";
 
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
 import { ElMessage } from "element-plus";
 import { getOrganization } from "@/api/organization";
 
@@ -82,7 +82,7 @@ const formatDate = (dateStr?: string) => {
 };
 
 const loadData = async () => {
-  const id = Number(route.params.id);
+  const id = safeRouteParam(route.params.id);
   if (!id) return;
 
   loading.value = true;

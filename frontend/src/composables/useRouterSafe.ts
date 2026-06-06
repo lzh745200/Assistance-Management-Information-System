@@ -6,6 +6,24 @@ function getPathString(path: string | RouteLocationRaw): string | undefined {
 }
 
 /**
+ * 安全解析路由参数为数字。
+ * 解决 `Number(undefined)` → `NaN` 导致 API 请求 `/api/xxx/NaN` 的问题。
+ *
+ * @param value - 路由参数值（string | string[] | undefined）
+ * @param fallback - 参数无效时的回退值，默认 0
+ */
+export function safeRouteParam(
+  value: unknown,
+  fallback = 0,
+): number {
+  if (value === undefined || value === null) return fallback;
+  if (Array.isArray(value)) value = value[0];
+  if (value === null || value === undefined) return fallback;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+/**
  * 安全的路由导航工具
  * 提供带错误处理和回退机制的路由跳转功能
  */
