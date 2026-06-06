@@ -1,0 +1,5 @@
+﻿Test Files: ['\x1b[2m Test Files \x1b[22m \x1b[1m\x1b[32m57 passed\x1b[39m\x1b[22m\x1b[90m (57)\x1b[39m\r']
+Tests: []
+---FAIL---
+[Projects] loadData failed: Error: ????????    at [90mC:\military-Rural Revitalization-system\frontend\[39msrc\views\
+
