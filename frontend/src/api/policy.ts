@@ -14,7 +14,11 @@ function triggerDownload(blob: Blob, filename: string) {
 // ── Types ──
 export type PolicyCategory = string;
 export type PolicyStatus = "draft" | "active" | "archived" | "expired";
-export type LevelConfig = { value: string; label: string; description?: string };
+export type LevelConfig = {
+  value: string;
+  label: string;
+  description?: string;
+};
 export type CategoriesConfig = Record<PolicyCategory, string>;
 export type Policy = {
   id: number;

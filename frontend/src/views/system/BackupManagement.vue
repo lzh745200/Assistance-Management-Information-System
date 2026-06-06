@@ -123,7 +123,7 @@ function notify(
   message: string,
   type: "success" | "error" | "warning" | "info" = "success",
 ) {
-  ElNotification({
+  (ElNotification as any)({
     title,
     message,
     type,

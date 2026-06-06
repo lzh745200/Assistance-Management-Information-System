@@ -11,8 +11,8 @@ import router from "./router";
 import "./router/guards";
 import { AuthStorage } from "@/utils/authStorage";
 
-// 全局样式（设计 Token + Dashboard 深度视觉主题）
-import "@/styles/tokens.scss";
+// Dashboard 深度视觉主题
+// 注：tokens.scss 通过 vite.config.ts additionalData 自动注入所有 SCSS 块
 import "@/styles/dashboard-theme.scss";
 
 // 一次性将旧版 localStorage token 迁移到 sessionStorage

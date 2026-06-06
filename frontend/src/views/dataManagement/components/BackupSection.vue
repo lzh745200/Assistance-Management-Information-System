@@ -9,16 +9,17 @@
         <el-col :span="5">
           <el-statistic
             title="总大小 (MB)"
-            :value="stats.total_size_mb"
-            :precision="2"
+            :value="stats.total_size"
+            :formatter="(v: number) => (v / 1024 / 1024).toFixed(2)"
           />
         </el-col>
         <el-col :span="5">
-          <el-statistic
-            title="保留天数"
-            :value="stats.retention_days"
-            suffix="天"
-          />
+          <div style="text-align:center">
+            <div style="font-size:12px;color:#909399">自动备份</div>
+            <el-tag :type="stats.auto_backup_enabled ? 'success' : 'info'" size="small">
+              {{ stats.auto_backup_enabled ? '已启用' : '未启用' }}
+            </el-tag>
+          </div>
         </el-col>
         <el-col :span="9">
           <div class="action-buttons">
@@ -123,7 +124,7 @@
         />
         <el-table-column label="大小" width="100">
           <template #default="{ row }">
-            {{ formatFileSize(row.size_bytes) }}
+            {{ formatFileSize(row.file_size) }}
           </template>
         </el-table-column>
         <el-table-column label="创建时间" width="180">
@@ -145,25 +146,25 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" width="260" fixed="right">
-          <template #default="{ row }">
+          <template #default="{ row }: { row: any }">
             <el-button
               size="small"
               :loading="previewing === row.id"
-              @click="handlePreview(row)"
+              @click="handlePreview(row as BackupItem)"
             >
               预览
             </el-button>
             <el-button
               size="small"
               :loading="verifying === row.id"
-              @click="handleVerify(row)"
+              @click="handleVerify(row as BackupItem)"
             >
               验证
             </el-button>
-            <el-button size="small" type="primary" @click="handleRestore(row)">
+            <el-button size="small" type="primary" @click="handleRestore(row as BackupItem)">
               恢复
             </el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">
+            <el-button size="small" type="danger" @click="handleDelete(row as BackupItem)">
               删除
             </el-button>
           </template>
@@ -285,7 +286,7 @@
         </p>
         <p>
           <strong>文件大小：</strong
-          >{{ formatFileSize(selectedBackup.size_bytes) }}
+          >{{ formatFileSize(selectedBackup.file_size) }}
         </p>
       </div>
       <template #footer>
@@ -307,7 +308,6 @@ import { Plus, Refresh } from "@element-plus/icons-vue";
 import request from "@/api/request";
 import {
   getBackupList,
-  createBackup,
   restoreBackup,
   deleteBackup,
   verifyBackup,
@@ -328,14 +328,12 @@ const loading = ref(false);
 const creating = ref(false);
 const cleaning = ref(false);
 const restoring = ref(false);
-const verifying = ref<string | null>(null);
+const verifying = ref<number | null>(null);
 const backups = ref<BackupItem[]>([]);
 const stats = reactive<BackupStats>({
   total_backups: 0,
-  total_size_mb: 0,
-  retention_days: 30,
-  oldest_backup: null,
-  newest_backup: null,
+  total_size: 0,
+  auto_backup_enabled: false,
 });
 const showRestoreDialog = ref(false);
 const selectedBackup = ref<BackupItem | null>(null);
@@ -358,8 +356,8 @@ async function loadBackups() {
       getBackupList(),
       getBackupStats(),
     ]);
-    backups.value = listRes.data.items;
-    Object.assign(stats, statsRes.data);
+    backups.value = listRes.items ?? [];
+    Object.assign(stats, statsRes);
   } catch (error) {
     logger.error("加载备份列表失败:", error);
   } finally {
@@ -390,7 +388,7 @@ async function handleCreateBackup() {
   creating.value = true;
   showCreateDialog.value = false;
   try {
-    const res = await createBackup({
+    const res: any = await request.post("/system/backup", {
       description: createForm.description || "",
       compress: true,
       include_uploads: createForm.include_uploads,
@@ -420,7 +418,7 @@ const previewData = ref<{
   files: any[];
   meta: any;
 }>({ filename: "", size: 0, files: [], meta: {} });
-const previewing = ref<string | null>(null);
+const previewing = ref<number | null>(null);
 
 async function handlePreview(row: BackupItem) {
   previewing.value = row.id;

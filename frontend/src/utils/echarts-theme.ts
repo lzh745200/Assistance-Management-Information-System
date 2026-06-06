@@ -442,8 +442,14 @@ let isThemeRegistered = false;
 export function registerMilitaryTheme(): void {
   if (isThemeRegistered) return;
 
-  echarts.registerTheme("militaryTech", militaryTechTheme as unknown as EChartsCoreOption);
-  echarts.registerTheme("militaryTechDark", militaryTechDarkTheme as unknown as EChartsCoreOption);
+  echarts.registerTheme(
+    "militaryTech",
+    militaryTechTheme as unknown as EChartsCoreOption,
+  );
+  echarts.registerTheme(
+    "militaryTechDark",
+    militaryTechDarkTheme as unknown as EChartsCoreOption,
+  );
 
   isThemeRegistered = true;
 }

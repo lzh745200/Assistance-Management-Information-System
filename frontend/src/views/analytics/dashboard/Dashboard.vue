@@ -26,10 +26,7 @@
     </div>
 
     <!-- 系统状态栏 -->
-    <SystemStatus
-      :poll-interval="30000"
-      :show-refresh="true"
-    />
+    <SystemStatus :poll-interval="30000" :show-refresh="true" />
 
     <!-- 筛选器 -->
     <div class="filter-card">
@@ -435,10 +432,8 @@ const createSparkOption = (
   yAxis: {
     type: "value",
     show: false,
-    min: (val: { min: number; max: number }) =>
-      Math.floor(val.min * 0.92),
-    max: (val: { min: number; max: number }) =>
-      Math.ceil(val.max * 1.06),
+    min: (val: { min: number; max: number }) => Math.floor(val.min * 0.92),
+    max: (val: { min: number; max: number }) => Math.ceil(val.max * 1.06),
   },
   series: [
     {
@@ -488,7 +483,12 @@ const updateCharts = () => {
           color: "#1e293b",
           fontSize: 13,
         },
-        formatter: (params: { marker: string; name: string; value: number; percent: number }) =>
+        formatter: (params: {
+          marker: string;
+          name: string;
+          value: number;
+          percent: number;
+        }) =>
           `${params.marker} ${params.name}<br/>
            <span style="font-family:'DIN Alternate',monospace;font-size:18px;font-weight:700">${params.value}</span>
            <span style="color:#94a3b8"> (${params.percent}%)</span>`,
@@ -553,7 +553,12 @@ const updateCharts = () => {
         borderRadius: 8,
         padding: [10, 14],
         textStyle: { color: "#1e293b", fontSize: 13 },
-        formatter: (params: { marker: string; name: string; value: number; percent: number }) =>
+        formatter: (params: {
+          marker: string;
+          name: string;
+          value: number;
+          percent: number;
+        }) =>
           `${params.marker} ${params.name}<br/>
            <span style="font-family:'DIN Alternate',monospace;font-size:18px;font-weight:700">${params.value}万</span>
            <span style="color:#94a3b8"> (${params.percent}%)</span>`,
@@ -600,13 +605,25 @@ const updateCharts = () => {
   if (trendChart) {
     const years = availableYears.slice().reverse();
     const villagesData = years.map(() =>
-      Math.max(0, statistics.value.villages.totalVillages + Math.round((Math.random() - 0.5) * 20)),
+      Math.max(
+        0,
+        statistics.value.villages.totalVillages +
+          Math.round((Math.random() - 0.5) * 20),
+      ),
     );
     const populationData = years.map(() =>
-      Math.max(0, Math.round(statistics.value.population.totalPopulation / 100) + Math.round((Math.random() - 0.5) * 50)),
+      Math.max(
+        0,
+        Math.round(statistics.value.population.totalPopulation / 100) +
+          Math.round((Math.random() - 0.5) * 50),
+      ),
     );
     const incomeData = years.map(() =>
-      Math.max(0, statistics.value.income.avgPerCapitaIncome + (Math.random() - 0.5) * 0.6),
+      Math.max(
+        0,
+        statistics.value.income.avgPerCapitaIncome +
+          (Math.random() - 0.5) * 0.6,
+      ),
     );
 
     trendChart.setOption({
@@ -727,17 +744,26 @@ const updateSparklines = () => {
   const sparkData = [
     {
       chart: sparkVillagesChart,
-      data: generateSparkData(statistics.value.villages.totalVillages || 0, points),
+      data: generateSparkData(
+        statistics.value.villages.totalVillages || 0,
+        points,
+      ),
       config: SPARK_CONFIGS.villages,
     },
     {
       chart: sparkPopulationChart,
-      data: generateSparkData(statistics.value.population.totalPopulation / 100 || 0, points),
+      data: generateSparkData(
+        statistics.value.population.totalPopulation / 100 || 0,
+        points,
+      ),
       config: SPARK_CONFIGS.population,
     },
     {
       chart: sparkIncomeChart,
-      data: generateSparkData(statistics.value.income.avgPerCapitaIncome || 0, points),
+      data: generateSparkData(
+        statistics.value.income.avgPerCapitaIncome || 0,
+        points,
+      ),
       config: SPARK_CONFIGS.income,
     },
     {
@@ -872,16 +898,25 @@ const initCharts = () => {
 
   // Sparkline 微型图
   if (sparkVillagesRef.value) {
-    sparkVillagesChart = echarts.init(sparkVillagesRef.value, getCurrentTheme());
+    sparkVillagesChart = echarts.init(
+      sparkVillagesRef.value,
+      getCurrentTheme(),
+    );
   }
   if (sparkPopulationRef.value) {
-    sparkPopulationChart = echarts.init(sparkPopulationRef.value, getCurrentTheme());
+    sparkPopulationChart = echarts.init(
+      sparkPopulationRef.value,
+      getCurrentTheme(),
+    );
   }
   if (sparkIncomeRef.value) {
     sparkIncomeChart = echarts.init(sparkIncomeRef.value, getCurrentTheme());
   }
   if (sparkInvestmentRef.value) {
-    sparkInvestmentChart = echarts.init(sparkInvestmentRef.value, getCurrentTheme());
+    sparkInvestmentChart = echarts.init(
+      sparkInvestmentRef.value,
+      getCurrentTheme(),
+    );
   }
 };
 

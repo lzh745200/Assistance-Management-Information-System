@@ -2,16 +2,20 @@
   <div class="data-import-page">
     <div class="page-header">
       <h2>数据导入</h2>
-      <p class="page-desc">下载模板填写数据后上传，支持帮扶村、项目、资金、学校四种类型</p>
+      <p class="page-desc">
+        下载模板填写数据后上传，支持帮扶村、项目、资金、学校四种类型
+      </p>
     </div>
 
     <!-- 模板下载区 -->
     <el-card class="template-section" shadow="never">
       <template #header>
-        <span><el-icon><Download /></el-icon> 第一步：下载导入模板</span>
+        <span
+          ><el-icon><Download /></el-icon> 第一步：下载导入模板</span
+        >
       </template>
       <el-row :gutter="16">
-        <el-col :span="6" v-for="tpl in templates" :key="tpl.type">
+        <el-col v-for="tpl in templates" :key="tpl.type" :span="6">
           <el-card
             shadow="hover"
             :body-style="{ padding: '20px', textAlign: 'center' }"
@@ -37,7 +41,9 @@
     <!-- 上传区 -->
     <el-card class="upload-section" shadow="never">
       <template #header>
-        <span><el-icon><Upload /></el-icon> 第二步：上传数据文件</span>
+        <span
+          ><el-icon><Upload /></el-icon> 第二步：上传数据文件</span
+        >
       </template>
       <el-form :model="importForm" label-width="100px">
         <el-form-item label="导入类型">
@@ -69,7 +75,9 @@
             <el-icon :size="48"><Upload /></el-icon>
             <div class="upload-text">
               <p>拖拽文件到此处或<em>点击上传</em></p>
-              <p class="upload-hint">仅支持 .xlsx / .xls 格式，单次最多 1000 条</p>
+              <p class="upload-hint">
+                仅支持 .xlsx / .xls 格式，单次最多 1000 条
+              </p>
             </div>
           </el-upload>
         </el-form-item>
@@ -96,12 +104,21 @@
         style="margin-top: 16px"
       >
         <template v-if="importResult.success">
-          总 {{ importResult.total_rows }} 条，成功 {{ importResult.success_rows }} 条
-          <span v-if="importResult.skipped_rows">，跳过 {{ importResult.skipped_rows }} 条</span>
-          <span v-if="importResult.failed_rows">，失败 {{ importResult.failed_rows }} 条</span>
+          总 {{ importResult.total_rows }} 条，成功
+          {{ importResult.success_rows }} 条
+          <span v-if="importResult.skipped_rows"
+            >，跳过 {{ importResult.skipped_rows }} 条</span
+          >
+          <span v-if="importResult.failed_rows"
+            >，失败 {{ importResult.failed_rows }} 条</span
+          >
         </template>
         <div v-if="importResult.errors?.length" style="margin-top: 8px">
-          <p v-for="(e, i) in importResult.errors.slice(0, 10)" :key="i" style="margin: 0; font-size: 12px">
+          <p
+            v-for="(e, i) in importResult.errors.slice(0, 10)"
+            :key="i"
+            style="margin: 0; font-size: 12px"
+          >
             行{{ e.row_number }}: {{ e.message || e.field_name }}
           </p>
         </div>
@@ -111,14 +128,18 @@
     <!-- 导入历史 -->
     <el-card class="history-section" shadow="never">
       <template #header>
-        <span><el-icon><Clock /></el-icon> 导入历史</span>
+        <span
+          ><el-icon><Clock /></el-icon> 导入历史</span
+        >
       </template>
-      <el-table :data="history" v-loading="historyLoading" stripe>
+      <el-table v-loading="historyLoading" :data="history" stripe>
         <el-table-column prop="id" label="编号" width="70" />
         <el-table-column prop="file_name" label="文件名" min-width="180" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
+            <el-tag :type="statusTagType(row.status)">{{
+              statusLabel(row.status)
+            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="total_rows" label="总行数" width="80" />
@@ -126,7 +147,7 @@
         <el-table-column prop="failed_rows" label="失败" width="70" />
         <el-table-column prop="created_at" label="导入时间" width="170">
           <template #default="{ row }">
-            {{ row.created_at?.slice(0, 19) || '-' }}
+            {{ row.created_at?.slice(0, 19) || "-" }}
           </template>
         </el-table-column>
       </el-table>
@@ -136,8 +157,8 @@
         :page-size="10"
         :total="historyTotal"
         layout="prev, pager, next"
-        @current-change="loadHistory"
         style="margin-top: 16px; justify-content: center"
+        @current-change="loadHistory"
       />
     </el-card>
   </div>
@@ -158,7 +179,11 @@ import {
 } from "@/api/import";
 
 const templates = [
-  { type: "supported_village", label: "帮扶村", desc: "村名、县市、帮扶单位等字段" },
+  {
+    type: "supported_village",
+    label: "帮扶村",
+    desc: "村名、县市、帮扶单位等字段",
+  },
   { type: "project", label: "项目", desc: "项目名称、类型、预算、日期等" },
   { type: "fund", label: "资金", desc: "经费名称、金额、来源、用途等" },
   { type: "school", label: "学校", desc: "学校名称、类型、学生数等" },
@@ -218,7 +243,10 @@ async function handleImport() {
   importing.value = true;
   importResult.value = null;
   try {
-    const result = await importVillages(selectedFile.value, importForm.value.mode);
+    const result = await importVillages(
+      selectedFile.value,
+      importForm.value.mode,
+    );
     importResult.value = result;
     if (result.success) {
       ElMessage.success(`导入完成：${result.success_rows} 条成功`);
@@ -265,15 +293,38 @@ onMounted(loadHistory);
 </script>
 
 <style scoped>
-.data-import-page { padding: 16px; }
-.page-header { margin-bottom: 16px; }
-.page-header h2 { margin: 0 0 4px; font-size: 20px; }
-.page-desc { color: #909399; font-size: 13px; margin: 0; }
+.data-import-page {
+  padding: 16px;
+}
+.page-header {
+  margin-bottom: 16px;
+}
+.page-header h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.page-desc {
+  color: #909399;
+  font-size: 13px;
+  margin: 0;
+}
 .template-section,
 .upload-section,
-.history-section { margin-bottom: 16px; }
-.template-card { cursor: pointer; transition: transform 0.2s; }
-.template-card:hover { transform: translateY(-2px); }
-.upload-text p { margin: 4px 0; }
-.upload-hint { color: #909399; font-size: 12px; }
+.history-section {
+  margin-bottom: 16px;
+}
+.template-card {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.template-card:hover {
+  transform: translateY(-2px);
+}
+.upload-text p {
+  margin: 4px 0;
+}
+.upload-hint {
+  color: #909399;
+  font-size: 12px;
+}
 </style>

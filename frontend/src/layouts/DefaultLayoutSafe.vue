@@ -47,7 +47,7 @@
           </el-menu-item>
 
           <!-- ════ 核心业务 ════ -->
-          <div class="menu-section-label" v-show="!isCollapsed">
+          <div v-show="!isCollapsed" class="menu-section-label">
             <span>核心业务</span>
           </div>
 
@@ -73,8 +73,12 @@
               <span class="menu-title-text">帮扶项目</span>
             </template>
             <el-menu-item index="/projects"><span>项目列表</span></el-menu-item>
-            <el-menu-item index="/projects/management"><span>项目管控</span></el-menu-item>
-            <el-menu-item index="/projects/import"><span>项目导入</span></el-menu-item>
+            <el-menu-item index="/projects/management"
+              ><span>项目管控</span></el-menu-item
+            >
+            <el-menu-item index="/projects/import"
+              ><span>项目导入</span></el-menu-item
+            >
           </el-sub-menu>
 
           <el-sub-menu index="fund-group" popper-class="aside-popper">
@@ -83,12 +87,24 @@
               <span class="menu-title-text">经费管理</span>
             </template>
             <el-menu-item index="/funds"><span>经费总览</span></el-menu-item>
-            <el-menu-item index="/funds/analysis"><span>经费分析</span></el-menu-item>
-            <el-menu-item index="/funds/budget"><span>预算管理</span></el-menu-item>
-            <el-menu-item index="/funds/contract"><span>合同管理</span></el-menu-item>
-            <el-menu-item index="/funds/anomaly"><span>异常资金</span></el-menu-item>
-            <el-menu-item index="/funds/lifecycle"><span>资金周期</span></el-menu-item>
-            <el-menu-item index="/funds/apply"><span>经费申请</span></el-menu-item>
+            <el-menu-item index="/funds/analysis"
+              ><span>经费分析</span></el-menu-item
+            >
+            <el-menu-item index="/funds/budget"
+              ><span>预算管理</span></el-menu-item
+            >
+            <el-menu-item index="/funds/contract"
+              ><span>合同管理</span></el-menu-item
+            >
+            <el-menu-item index="/funds/anomaly"
+              ><span>异常资金</span></el-menu-item
+            >
+            <el-menu-item index="/funds/lifecycle"
+              ><span>资金周期</span></el-menu-item
+            >
+            <el-menu-item index="/funds/apply"
+              ><span>经费申请</span></el-menu-item
+            >
           </el-sub-menu>
 
           <el-sub-menu index="school-group" popper-class="aside-popper">
@@ -97,7 +113,9 @@
               <span class="menu-title-text">帮扶学校</span>
             </template>
             <el-menu-item index="/schools"><span>学校列表</span></el-menu-item>
-            <el-menu-item index="/schools/analysis"><span>学校分析</span></el-menu-item>
+            <el-menu-item index="/schools/analysis"
+              ><span>学校分析</span></el-menu-item
+            >
           </el-sub-menu>
 
           <el-menu-item index="/policies">
@@ -108,7 +126,7 @@
           </el-menu-item>
 
           <!-- ════ 乡村振兴 ════ -->
-          <div class="menu-section-label" v-show="!isCollapsed">
+          <div v-show="!isCollapsed" class="menu-section-label">
             <span>乡村振兴</span>
           </div>
 
@@ -117,12 +135,16 @@
               <el-icon><Stamp /></el-icon>
               <span class="menu-title-text">乡村振兴</span>
             </template>
-            <el-menu-item index="/rural-works"><span>工作首页</span></el-menu-item>
-            <el-menu-item index="/rural-works/list"><span>工作列表</span></el-menu-item>
+            <el-menu-item index="/rural-works"
+              ><span>工作首页</span></el-menu-item
+            >
+            <el-menu-item index="/rural-works/list"
+              ><span>工作列表</span></el-menu-item
+            >
           </el-sub-menu>
 
           <!-- ════ 工作流 ════ -->
-          <div class="menu-section-label" v-show="!isCollapsed">
+          <div v-show="!isCollapsed" class="menu-section-label">
             <span>工作流</span>
           </div>
 
@@ -132,9 +154,15 @@
               <span class="menu-title-text">审批管理</span>
             </template>
             <el-menu-item index="/approval"><span>审批概览</span></el-menu-item>
-            <el-menu-item index="/approval/pending"><span>待审批</span></el-menu-item>
-            <el-menu-item index="/approval/my"><span>我的申请</span></el-menu-item>
-            <el-menu-item index="/approval/history"><span>审批历史</span></el-menu-item>
+            <el-menu-item index="/approval/pending"
+              ><span>待审批</span></el-menu-item
+            >
+            <el-menu-item index="/approval/my"
+              ><span>我的申请</span></el-menu-item
+            >
+            <el-menu-item index="/approval/history"
+              ><span>审批历史</span></el-menu-item
+            >
           </el-sub-menu>
 
           <el-menu-item index="/work-calendar">
@@ -145,7 +173,7 @@
           </el-menu-item>
 
           <!-- ════ 数据分析 ════ -->
-          <div class="menu-section-label" v-show="!isCollapsed">
+          <div v-show="!isCollapsed" class="menu-section-label">
             <span>数据分析</span>
           </div>
 
@@ -154,14 +182,22 @@
               <el-icon><DataAnalysis /></el-icon>
               <span class="menu-title-text">数据分析</span>
             </template>
-            <el-menu-item index="/data-analysis"><span>分析首页</span></el-menu-item>
-            <el-menu-item index="/data-analysis/dashboard"><span>分析仪表板</span></el-menu-item>
-            <el-menu-item index="/data-analysis/map"><span>地图可视化</span></el-menu-item>
-            <el-menu-item index="/data-analysis/assessment"><span>成效评估</span></el-menu-item>
+            <el-menu-item index="/data-analysis"
+              ><span>分析首页</span></el-menu-item
+            >
+            <el-menu-item index="/data-analysis/dashboard"
+              ><span>分析仪表板</span></el-menu-item
+            >
+            <el-menu-item index="/data-analysis/map"
+              ><span>地图可视化</span></el-menu-item
+            >
+            <el-menu-item index="/data-analysis/assessment"
+              ><span>成效评估</span></el-menu-item
+            >
           </el-sub-menu>
 
           <!-- ════ 数据管理 ════ -->
-          <div class="menu-section-label" v-show="!isCollapsed">
+          <div v-show="!isCollapsed" class="menu-section-label">
             <span>数据管理</span>
           </div>
 
@@ -170,16 +206,28 @@
               <el-icon><Connection /></el-icon>
               <span class="menu-title-text">数据管理</span>
             </template>
-            <el-menu-item index="/data-management"><span>数据概览</span></el-menu-item>
-            <el-menu-item index="/data-management/backup"><span>数据备份</span></el-menu-item>
-            <el-menu-item index="/data-management/logs"><span>操作日志</span></el-menu-item>
-            <el-menu-item index="/data-sync/export"><span>数据导出</span></el-menu-item>
-            <el-menu-item index="/data-sync/import"><span>数据导入</span></el-menu-item>
-            <el-menu-item index="/data-package"><span>数据包管理</span></el-menu-item>
+            <el-menu-item index="/data-management"
+              ><span>数据概览</span></el-menu-item
+            >
+            <el-menu-item index="/data-management/backup"
+              ><span>数据备份</span></el-menu-item
+            >
+            <el-menu-item index="/data-management/logs"
+              ><span>操作日志</span></el-menu-item
+            >
+            <el-menu-item index="/data-sync/export"
+              ><span>数据导出</span></el-menu-item
+            >
+            <el-menu-item index="/data-sync/import"
+              ><span>数据导入</span></el-menu-item
+            >
+            <el-menu-item index="/data-package"
+              ><span>数据包管理</span></el-menu-item
+            >
           </el-sub-menu>
 
           <!-- ════ 系统 ════ -->
-          <div class="menu-section-label" v-show="!isCollapsed">
+          <div v-show="!isCollapsed" class="menu-section-label">
             <span>系统管理</span>
           </div>
 
@@ -195,14 +243,30 @@
               <el-icon><Setting /></el-icon>
               <span class="menu-title-text">系统管理</span>
             </template>
-            <el-menu-item index="/system/users"><span>用户管理</span></el-menu-item>
-            <el-menu-item index="/system/roles"><span>角色管理</span></el-menu-item>
-            <el-menu-item index="/system/audit"><span>审计管理</span></el-menu-item>
-            <el-menu-item index="/system/backup"><span>备份管理</span></el-menu-item>
-            <el-menu-item index="/system/config"><span>系统配置</span></el-menu-item>
-            <el-menu-item index="/system/monitoring"><span>系统监控</span></el-menu-item>
-            <el-menu-item index="/system/health"><span>系统健康</span></el-menu-item>
-            <el-menu-item index="/admin/machine-code"><span>机器码管理</span></el-menu-item>
+            <el-menu-item index="/system/users"
+              ><span>用户管理</span></el-menu-item
+            >
+            <el-menu-item index="/system/roles"
+              ><span>角色管理</span></el-menu-item
+            >
+            <el-menu-item index="/system/audit"
+              ><span>审计管理</span></el-menu-item
+            >
+            <el-menu-item index="/system/backup"
+              ><span>备份管理</span></el-menu-item
+            >
+            <el-menu-item index="/system/config"
+              ><span>系统配置</span></el-menu-item
+            >
+            <el-menu-item index="/system/monitoring"
+              ><span>系统监控</span></el-menu-item
+            >
+            <el-menu-item index="/system/health"
+              ><span>系统健康</span></el-menu-item
+            >
+            <el-menu-item index="/admin/machine-code"
+              ><span>机器码管理</span></el-menu-item
+            >
           </el-sub-menu>
 
           <el-menu-item index="/message">
@@ -215,7 +279,7 @@
       </el-scrollbar>
 
       <!-- 侧边栏底部：用户信息 + 折叠按钮 -->
-      <div class="aside-footer" v-show="!isCollapsed">
+      <div v-show="!isCollapsed" class="aside-footer">
         <div class="aside-footer-user">
           <el-avatar :size="32" class="footer-avatar">
             <el-icon><User /></el-icon>
@@ -250,7 +314,7 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-dropdown @command="handleCommand" trigger="click">
+          <el-dropdown trigger="click" @command="handleCommand">
             <span class="user-info">
               <el-avatar :size="30" class="header-avatar">
                 <el-icon><User /></el-icon>

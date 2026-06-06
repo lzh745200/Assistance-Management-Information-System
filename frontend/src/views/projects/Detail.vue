@@ -12,7 +12,7 @@ import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { projectsApi } from "@/api/projects";
-import { safeRouteParam } from '@/composables/useRouterSafe';
+import { safeRouteParam } from "@/composables/useRouterSafe";
 const route = useRoute();
 const loading = ref(true);
 const project = ref(null);
