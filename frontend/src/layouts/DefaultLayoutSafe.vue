@@ -30,6 +30,13 @@
           background-color="transparent"
           text-color="rgba(255,255,255,0.78)"
           active-text-color="#d4af37"
+          :style="{
+            '--el-menu-text-color': 'rgba(255,255,255,0.85)',
+            '--el-menu-hover-text-color': '#ffffff',
+            '--el-menu-active-color': '#d4af37',
+            '--el-menu-bg-color': 'transparent',
+            '--el-menu-hover-bg-color': 'rgba(255,255,255,0.08)',
+          }"
         >
           <!-- ════ 首页 ════ -->
           <el-menu-item index="/dashboard" class="menu-item-dashboard">

@@ -71,6 +71,15 @@ export const useOrganizationStore = defineStore("organization", () => {
     return res;
   }
 
+  async function fetchMyOrganization() {
+    try {
+      const res = await get<ApiResponse<any>>("/organizations/my");
+      if (res.code === 200 && res.data) current.value = res.data;
+    } catch {
+      /* silent — my org not configured */
+    }
+  }
+
   async function fetchSubordinateOrganizations() {
     try {
       const res = await apiRequest<any>({
@@ -92,6 +101,7 @@ export const useOrganizationStore = defineStore("organization", () => {
     subordinateOrganizations,
     fetchOrganizations,
     fetchOrganization,
+    fetchMyOrganization,
     fetchTree,
     createOrganization,
     updateOrganization,
