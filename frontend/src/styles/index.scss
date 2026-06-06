@@ -100,12 +100,32 @@ body {
   justify-content: space-between;
 }
 
-/* Element Plus 消息提示样式 */
+/* Element Plus 消息提示 — 全部页面中央显示 */
 .el-message {
   top: 50% !important;
-  transform: translateY(-50%) !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+}
+
+/* Element Plus 通知提示 — 页面中央 */
+.el-notification {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+
+/* 通知容器 — 确保全屏覆盖不偏移 */
+.el-notification__group {
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .el-message--success {
