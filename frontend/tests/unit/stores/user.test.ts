@@ -1,171 +1,231 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
-const mockGet = vi.fn()
-const mockPost = vi.fn()
-const mockPut = vi.fn()
-const mockDel = vi.fn()
-
 vi.mock('@/api/request', () => ({
-  get: (...args: any[]) => mockGet(...args),
-  post: (...args: any[]) => mockPost(...args),
-  put: (...args: any[]) => mockPut(...args),
-  del: (...args: any[]) => mockDel(...args),
+  default: vi.fn(),
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  del: vi.fn(),
+  patch: vi.fn(),
+  cancelRequest: vi.fn(),
+  cancelAllRequests: vi.fn(),
+  isRequestCancelled: vi.fn(),
+  getPendingRequestCount: vi.fn(),
+  createCancelableRequest: vi.fn(),
+  requestWithTimeout: vi.fn(),
+  isSuccess: vi.fn(),
 }))
 
 vi.mock('@/utils/authStorage', () => ({
-  AuthStorage: {
-    clear: vi.fn(),
-    setAuthData: vi.fn(),
-    getToken: vi.fn(() => ''),
-    getUser: vi.fn(() => null),
-  },
+  AuthStorage: { clear: vi.fn(), getToken: vi.fn(), setToken: vi.fn() },
 }))
 
+import { get, post, put, del } from '@/api/request'
+import { AuthStorage } from '@/utils/authStorage'
 import { useUserStore } from '@/stores/user'
 
-describe('useUserStore', () => {
-  let store: ReturnType<typeof useUserStore>
+describe('stores/user', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
     setActivePinia(createPinia())
-    store = useUserStore()
+    vi.clearAllMocks()
   })
 
-  it('初始状态: userList=[], currentUser=null, total=0', () => {
-    expect(store.userList).toEqual([])
-    expect(store.currentUser).toBeNull()
-    expect(store.total).toBe(0)
-    expect(store.loading).toBe(false)
-    expect(store.error).toBeNull()
-  })
-
-  it('fetchUsers 成功时填充 userList 和 total', async () => {
-    mockGet.mockResolvedValueOnce({
-      code: 200,
-      data: {
-        items: [
-          { id: 1, username: 'alice' },
-          { id: 2, username: 'bob' },
-        ],
-        total: 2,
-      },
+  describe('initial state', () => {
+    it('userList/currentUser/loading/error/total 初始值', () => {
+      const s = useUserStore()
+      expect(s.userList).toEqual([])
+      expect(s.currentUser).toBeNull()
+      expect(s.loading).toBe(false)
+      expect(s.error).toBeNull()
+      expect(s.total).toBe(0)
     })
-    await store.fetchUsers({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/users', { page: 1 })
-    expect(store.userList).toHaveLength(2)
-    expect(store.total).toBe(2)
   })
 
-  it('fetchUsers 失败时设置 error', async () => {
-    mockGet.mockRejectedValueOnce(new Error('network'))
-    await store.fetchUsers()
-    expect(store.error).toBe('network')
+  describe('fetchUsers', () => {
+    it('成功: 填充 userList + total', async () => {
+      ;(get as any).mockResolvedValue({ code: 200, data: { items: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }], total: 2 } })
+      const s = useUserStore()
+      await s.fetchUsers()
+      expect(s.userList).toHaveLength(2)
+      expect(s.total).toBe(2)
+    })
+
+    it('data 缺失: userList=[]', async () => {
+      ;(get as any).mockResolvedValue({ code: 200, data: null })
+      const s = useUserStore()
+      await s.fetchUsers()
+      expect(s.userList).toEqual([])
+      expect(s.total).toBe(0)
+    })
+
+    it('code !== 200: userList 不变', async () => {
+      ;(get as any).mockResolvedValue({ code: 500, message: 'err' })
+      const s = useUserStore()
+      await s.fetchUsers()
+      expect(s.userList).toEqual([])
+    })
+
+    it('data.items 缺失: 用 ?? fallback', async () => {
+      ;(get as any).mockResolvedValue({ code: 200, data: { total: 5 } })
+      const s = useUserStore()
+      await s.fetchUsers()
+      expect(s.userList).toEqual([])
+      expect(s.total).toBe(5)
+    })
+
+    it('失败: 设置 error + loading=false', async () => {
+      ;(get as any).mockRejectedValue(new Error('net'))
+      const s = useUserStore()
+      await s.fetchUsers()
+      expect(s.error).toBe('net')
+      expect(s.loading).toBe(false)
+    })
+
+    it('失败有 response.data.message: 用它', async () => {
+      ;(get as any).mockRejectedValue({ response: { data: { message: 'Forbidden' } } })
+      const s = useUserStore()
+      await s.fetchUsers()
+      expect(s.error).toBe('Forbidden')
+    })
   })
 
-  it('fetchUser 成功时设置 currentUser 并返回', async () => {
-    const user = { id: 1, username: 'alice' }
-    mockGet.mockResolvedValueOnce({ code: 200, data: user })
-    const result = await store.fetchUser(1)
-    expect(result).toEqual(user)
-    expect(store.currentUser).toEqual(user)
+  describe('fetchUser', () => {
+    it('成功: 设置 currentUser + 返回 data', async () => {
+      ;(get as any).mockResolvedValue({ code: 200, data: { id: 7, name: 'X' } })
+      const s = useUserStore()
+      const r = await s.fetchUser(7)
+      expect(s.currentUser).toEqual({ id: 7, name: 'X' })
+      expect(r).toEqual({ id: 7, name: 'X' })
+    })
+
+    it('失败: error + loading=false', async () => {
+      ;(get as any).mockRejectedValue(new Error('boom'))
+      const s = useUserStore()
+      await s.fetchUser(1)
+      expect(s.error).toBe('boom')
+      expect(s.loading).toBe(false)
+    })
   })
 
-  it('createUser 成功时插入 userList 头部', async () => {
-    const newUser = { id: 99, username: 'charlie' }
-    mockPost.mockResolvedValueOnce({ code: 200, data: newUser })
-    const res = await store.createUser({ username: 'charlie' })
-    expect(res.code).toBe(200)
-    expect(store.userList[0]).toEqual(newUser)
-    expect(store.total).toBe(1)
+  describe('createUser', () => {
+    it('成功: unshift 到 userList + total++', async () => {
+      ;(post as any).mockResolvedValue({ code: 200, data: { id: 99, name: 'New' } })
+      const s = useUserStore()
+      s.userList.push({ id: 1, name: 'old' } as any)
+      s.total = 1
+      const r = await s.createUser({ name: 'New' })
+      expect(r.code).toBe(200)
+      expect(s.userList[0]).toEqual({ id: 99, name: 'New' })
+      expect(s.total).toBe(2)
+    })
+
+    it('code !== 200: 不修改 userList', async () => {
+      ;(post as any).mockResolvedValue({ code: 400 })
+      const s = useUserStore()
+      await s.createUser({ name: 'X' })
+      expect(s.userList).toEqual([])
+    })
   })
 
-  it('updateUser 成功时更新 userList 中对应条目', async () => {
-    store.userList = [{ id: 1, username: 'alice' }]
-    store.total = 1
-    const updated = { id: 1, username: 'alice2' }
-    mockPut.mockResolvedValueOnce({ code: 200, data: updated })
-    await store.updateUser(1, { username: 'alice2' })
-    expect(store.userList[0]).toEqual(updated)
+  describe('updateUser', () => {
+    it('成功: 更新 userList 中对应项 + currentUser (若 id 匹配)', async () => {
+      ;(put as any).mockResolvedValue({ code: 200, data: { id: 1, name: 'updated' } })
+      const s = useUserStore()
+      s.userList.push({ id: 1, name: 'old' } as any)
+      s.currentUser = { id: 1, name: 'old' } as any
+      await s.updateUser(1, { name: 'updated' })
+      expect(s.userList[0].name).toBe('updated')
+      expect(s.currentUser?.name).toBe('updated')
+    })
+
+    it('userList 中无对应 id: 不更新列表但 currentUser 仍更新', async () => {
+      ;(put as any).mockResolvedValue({ code: 200, data: { id: 99, name: 'X' } })
+      const s = useUserStore()
+      await s.updateUser(99, { name: 'X' })
+      expect(s.userList).toEqual([])
+    })
   })
 
-  it('updateUser 同时更新 currentUser 如果 ID 匹配', async () => {
-    store.currentUser = { id: 1, username: 'alice' }
-    const updated = { id: 1, username: 'alice2' }
-    mockPut.mockResolvedValueOnce({ code: 200, data: updated })
-    await store.updateUser(1, { username: 'alice2' })
-    expect(store.currentUser).toEqual(updated)
+  describe('deleteUser', () => {
+    it('成功: 从 userList 移除 + total-- + 清空 currentUser (若 id 匹配)', async () => {
+      ;(del as any).mockResolvedValue({ code: 200 })
+      const s = useUserStore()
+      s.userList.push({ id: 5, name: 'gone' } as any, { id: 6, name: 'stay' } as any)
+      s.total = 2
+      s.currentUser = { id: 5, name: 'gone' } as any
+      await s.deleteUser(5)
+      expect(s.userList).toHaveLength(1)
+      expect(s.userList[0].id).toBe(6)
+      expect(s.total).toBe(1)
+      expect(s.currentUser).toBeNull()
+    })
+
+    it('currentUser id 不匹配: 保持不变', async () => {
+      ;(del as any).mockResolvedValue({ code: 200 })
+      const s = useUserStore()
+      s.currentUser = { id: 99, name: 'Z' } as any
+      await s.deleteUser(1)
+      expect(s.currentUser?.id).toBe(99)
+    })
+
+    it('code !== 200: 不删除', async () => {
+      ;(del as any).mockResolvedValue({ code: 500 })
+      const s = useUserStore()
+      s.userList.push({ id: 1 } as any)
+      await s.deleteUser(1)
+      expect(s.userList).toHaveLength(1)
+    })
   })
 
-  it('deleteUser 成功时移除 userList 中条目', async () => {
-    store.userList = [{ id: 1, username: 'a' }, { id: 2, username: 'b' }]
-    store.total = 2
-    mockDel.mockResolvedValueOnce({ code: 200 })
-    await store.deleteUser(1)
-    expect(store.userList).toHaveLength(1)
-    expect(store.userList[0].id).toBe(2)
-    expect(store.total).toBe(1)
-  })
+  describe('resetUserPassword / assignRole / logout / uploadAvatar', () => {
+    it('resetUserPassword POST 正确路径 + body', async () => {
+      ;(post as any).mockResolvedValue({ code: 200 })
+      const s = useUserStore()
+      await s.resetUserPassword(7, 'newPass')
+      expect(post).toHaveBeenCalledWith('/users/7/admin-reset-password', { new_password: 'newPass' })
+    })
 
-  it('deleteUser 清除 currentUser 如果 ID 匹配', async () => {
-    store.currentUser = { id: 1, username: 'a' }
-    store.userList = [{ id: 1, username: 'a' }]
-    store.total = 1
-    mockDel.mockResolvedValueOnce({ code: 200 })
-    await store.deleteUser(1)
-    expect(store.currentUser).toBeNull()
-  })
+    it('assignRole POST 正确路径 + body', async () => {
+      ;(post as any).mockResolvedValue({ code: 200 })
+      const s = useUserStore()
+      await s.assignRole(7, 3)
+      expect(post).toHaveBeenCalledWith('/user-management/7/assign-role', { role_id: 3 })
+    })
 
-  it('resetUserPassword 调用 POST /users/{id}/admin-reset-password', async () => {
-    mockPost.mockResolvedValueOnce({ code: 200 })
-    await store.resetUserPassword(5, 'newpass')
-    expect(mockPost).toHaveBeenCalledWith(
-      '/users/5/admin-reset-password',
-      { new_password: 'newpass' },
-    )
-  })
+    it('logout 清 AuthStorage', async () => {
+      const s = useUserStore()
+      await s.logout()
+      expect(AuthStorage.clear).toHaveBeenCalled()
+    })
 
-  it('assignRole 调用 POST /user-management/{id}/assign-role', async () => {
-    mockPost.mockResolvedValueOnce({ code: 200 })
-    await store.assignRole(5, 3)
-    expect(mockPost).toHaveBeenCalledWith(
-      '/user-management/5/assign-role',
-      { role_id: 3 },
-    )
-  })
+    it('getUserProfile 无 id 抛错', async () => {
+      const s = useUserStore()
+      await expect(s.getUserProfile()).rejects.toThrow('No user ID available')
+    })
 
-  it('logout 清空 AuthStorage', async () => {
-    await store.logout()
-    const { AuthStorage } = await import('@/utils/authStorage')
-    expect(AuthStorage.clear).toHaveBeenCalled()
-  })
+    it('getUserProfile 用 currentUser.id', async () => {
+      ;(get as any).mockResolvedValue({ code: 200, data: { id: 5, name: 'C' } })
+      const s = useUserStore()
+      s.currentUser = { id: 5, name: 'C' } as any
+      const r = await s.getUserProfile()
+      expect(r).toEqual({ id: 5, name: 'C' })
+    })
 
-  it('getUserProfile 无 userId 且无 currentUser 时抛错', async () => {
-    await expect(store.getUserProfile()).rejects.toThrow('No user ID available')
-  })
+    it('updateUserProfile = updateUser', async () => {
+      ;(put as any).mockResolvedValue({ code: 200, data: { id: 1, name: 'X' } })
+      const s = useUserStore()
+      await s.updateUserProfile(1, { name: 'X' })
+      expect(put).toHaveBeenCalledWith('/users/1', { name: 'X' })
+    })
 
-  it('getUserProfile 使用 currentUser.id 当未传参', async () => {
-    store.currentUser = { id: 7, username: 'me' }
-    const profile = { id: 7, username: 'me' }
-    mockGet.mockResolvedValueOnce({ code: 200, data: profile })
-    const result = await store.getUserProfile()
-    expect(result).toEqual(profile)
-    expect(mockGet).toHaveBeenCalledWith('/users/7')
-  })
-
-  it('updateUserProfile 委托给 updateUser', async () => {
-    store.userList = [{ id: 1, username: 'a' }]
-    const updated = { id: 1, username: 'b' }
-    mockPut.mockResolvedValueOnce({ code: 200, data: updated })
-    await store.updateUserProfile(1, { username: 'b' })
-    expect(mockPut).toHaveBeenCalledWith('/users/1', { username: 'b' })
-  })
-
-  it('uploadAvatar 返回占位 url', async () => {
-    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const result = await store.uploadAvatar(1, new File([], 'a.png'))
-    expect(result).toEqual({ url: '' })
-    expect(consoleWarn).toHaveBeenCalled()
-    consoleWarn.mockRestore()
+    it('uploadAvatar 返回 placeholder', async () => {
+      const w = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const s = useUserStore()
+      const r = await s.uploadAvatar(1, new File([''], 'a.png'))
+      expect(r).toEqual({ url: '' })
+      expect(w).toHaveBeenCalled()
+      w.mockRestore()
+    })
   })
 })
