@@ -69,11 +69,14 @@ npm run dev
 ### 测试与质量检查
 
 ```bash
-# 后端测试（2067 passed, 0 skipped, 0 failed）
+# 后端测试（1,597 passed: 1,385 unit + 194 integration + 18 security）
 cd backend && python -m pytest tests/ -v
 
-# 前端测试（403 passed）
+# 前端测试（711 passed, 1 skipped, all coverage thresholds pass）
 cd frontend && npm test -- --run
+
+# 前端测试 + 覆盖率报告
+cd frontend && npm test -- --run --coverage
 
 # 代码质量
 cd backend && python -m flake8 app/ --max-line-length=120
