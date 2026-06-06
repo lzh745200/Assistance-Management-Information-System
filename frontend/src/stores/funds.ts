@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { post, put, del, apiRequest } from "@/api/request";
 import { unwrapList } from "@/utils/unwrapList";
 
@@ -8,6 +8,21 @@ export const useFundsStore = defineStore("funds", () => {
   const current = ref<any>(null);
   const loading = ref(false);
   const total = ref(0);
+
+  /** 经费总额（万元） */
+  const totalFunds = computed(() =>
+    fundList.value.reduce((sum, f) => sum + (Number(f.amount) || 0), 0),
+  );
+
+  /** 已使用经费（万元） */
+  const usedFunds = computed(() =>
+    fundList.value.reduce((sum, f) => sum + (Number(f.used_amount) || 0), 0),
+  );
+
+  /** 剩余经费（万元） */
+  const remainFunds = computed(() =>
+    totalFunds.value - usedFunds.value,
+  );
 
   async function fetchFunds(params?: any) {
     loading.value = true;
@@ -75,6 +90,9 @@ export const useFundsStore = defineStore("funds", () => {
     current,
     loading,
     total,
+    totalFunds,
+    usedFunds,
+    remainFunds,
     fetchFunds,
     createFund,
     updateFund,

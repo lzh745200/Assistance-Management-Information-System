@@ -435,6 +435,7 @@ function handleView(row: any) {
   pushSafe(`/schools/${row.id}`);
 }
 function handleEdit(row: any) {
+  if (!row?.id) return;
   pushSafe(`/schools/${row.id}/edit`);
 }
 async function handleDelete(row: any) {
