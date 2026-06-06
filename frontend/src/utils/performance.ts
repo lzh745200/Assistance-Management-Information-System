@@ -466,68 +466,80 @@ export default {
  * 用于验证首屏加载优化效果
  */
 export function reportWebVitals(): void {
-  if (!("PerformanceObserver" in window)) return
+  if (!("PerformanceObserver" in window)) return;
 
   // FCP (First Contentful Paint)
   try {
     const fcpObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntriesByName("first-contentful-paint")) {
-        const fcp = entry.startTime
-        console.debug(`[WebVital] FCP: ${fcp.toFixed(0)}ms`)
-        performanceMonitor.recordMetric("FCP", fcp, { unit: "ms" })
+        const fcp = entry.startTime;
+        console.debug(`[WebVital] FCP: ${fcp.toFixed(0)}ms`);
+        performanceMonitor.recordMetric("FCP", fcp, { unit: "ms" });
       }
-    })
-    fcpObserver.observe({ type: "paint", buffered: true })
-  } catch { /* ignore */ }
+    });
+    fcpObserver.observe({ type: "paint", buffered: true });
+  } catch {
+    /* ignore */
+  }
 
   // LCP (Largest Contentful Paint)
   try {
     const lcpObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries()
-      const lastEntry = entries[entries.length - 1]
+      const entries = list.getEntries();
+      const lastEntry = entries[entries.length - 1];
       if (lastEntry) {
-        const lcp = lastEntry.startTime
-        console.debug(`[WebVital] LCP: ${lcp.toFixed(0)}ms`)
-        performanceMonitor.recordMetric("LCP", lcp, { unit: "ms" })
+        const lcp = lastEntry.startTime;
+        console.debug(`[WebVital] LCP: ${lcp.toFixed(0)}ms`);
+        performanceMonitor.recordMetric("LCP", lcp, { unit: "ms" });
       }
-    })
-    lcpObserver.observe({ type: "largest-contentful-paint", buffered: true })
-  } catch { /* ignore */ }
+    });
+    lcpObserver.observe({ type: "largest-contentful-paint", buffered: true });
+  } catch {
+    /* ignore */
+  }
 
   // CLS (Cumulative Layout Shift)
-  let clsValue = 0
+  let clsValue = 0;
   try {
     const clsObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         if (!(entry as any).hadRecentInput) {
-          clsValue += (entry as any).value
-          performanceMonitor.recordMetric("CLS", clsValue, { unit: "score" })
+          clsValue += (entry as any).value;
+          performanceMonitor.recordMetric("CLS", clsValue, { unit: "score" });
         }
       }
-    })
-    clsObserver.observe({ type: "layout-shift", buffered: true })
-  } catch { /* ignore */ }
+    });
+    clsObserver.observe({ type: "layout-shift", buffered: true });
+  } catch {
+    /* ignore */
+  }
 
   // FID (First Input Delay) / INP (Interaction to Next Paint)
   try {
     const fidObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const fid = entry.duration
-        console.debug(`[WebVital] FID: ${fid.toFixed(0)}ms`)
-        performanceMonitor.recordMetric("FID", fid, { unit: "ms" })
+        const fid = entry.duration;
+        console.debug(`[WebVital] FID: ${fid.toFixed(0)}ms`);
+        performanceMonitor.recordMetric("FID", fid, { unit: "ms" });
       }
-    })
-    fidObserver.observe({ type: "first-input", buffered: true })
-  } catch { /* ignore */ }
+    });
+    fidObserver.observe({ type: "first-input", buffered: true });
+  } catch {
+    /* ignore */
+  }
 
   // TTFB (Time to First Byte) — for API calls
   try {
-    const navEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[]
+    const navEntries = performance.getEntriesByType(
+      "navigation",
+    ) as PerformanceNavigationTiming[];
     if (navEntries.length > 0) {
-      const ttfb = navEntries[0].responseStart - navEntries[0].requestStart
-      performanceMonitor.recordMetric("TTFB", ttfb, { unit: "ms" })
+      const ttfb = navEntries[0].responseStart - navEntries[0].requestStart;
+      performanceMonitor.recordMetric("TTFB", ttfb, { unit: "ms" });
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 // ============================================================================

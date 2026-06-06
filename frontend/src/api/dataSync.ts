@@ -3,9 +3,12 @@ import api from "./request";
 function triggerDownload(blob, filename) {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.href = url; link.download = filename;
-  document.body.appendChild(link); link.click();
-  document.body.removeChild(link); window.URL.revokeObjectURL(url);
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 }
 
 // Types
@@ -64,13 +67,14 @@ export const exportEncryptedData = (params: ExportEncryptedParams) =>
   api.post("/data-sync/export-encrypted", params);
 
 export const downloadExportPackage = (packageId: string) =>
-  api.get("/data-sync/download/" + packageId, { responseType: "blob" }).then(r => triggerDownload(r.data, "data_export_" + packageId + ".zip"));
+  api
+    .get("/data-sync/download/" + packageId, { responseType: "blob" })
+    .then((r) => triggerDownload(r.data, "data_export_" + packageId + ".zip"));
 
 export const getSyncLogs = (params?: any) =>
   api.get("/data-sync/logs", { params });
 
-export const getConflicts = () =>
-  api.get("/data-sync/conflicts");
+export const getConflicts = () => api.get("/data-sync/conflicts");
 
 export const resolveConflict = (id: string, resolution: string) =>
   api.post("/data-sync/conflicts/" + id + "/resolve", { resolution });
@@ -88,9 +92,6 @@ export const dataSyncApi = {
   getConflicts,
   resolveConflict,
 };
-
-
-
 
 export const ImportDataResponse = () => Promise.resolve({});
 

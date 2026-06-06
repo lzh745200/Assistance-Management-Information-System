@@ -19,21 +19,25 @@
       type="error"
       show-icon
       :closable="false"
-      style="margin-bottom:16px"
+      style="margin-bottom: 16px"
     />
 
     <template v-else>
       <!-- 统计卡片 -->
       <el-row :gutter="16">
-        <el-col :span="6" v-for="c in cards" :key="c.label">
+        <el-col v-for="c in cards" :key="c.label" :span="6">
           <el-card shadow="hover" class="stat-card">
-            <el-statistic :title="c.label" :value="c.value" :suffix="c.suffix" />
+            <el-statistic
+              :title="c.label"
+              :value="c.value"
+              :suffix="c.suffix"
+            />
           </el-card>
         </el-col>
       </el-row>
 
       <!-- 图表行 -->
-      <el-row :gutter="16" style="margin-top:16px">
+      <el-row :gutter="16" style="margin-top: 16px">
         <el-col :span="12">
           <el-card>
             <template #header>各村总分概览</template>
@@ -49,27 +53,40 @@
       </el-row>
 
       <!-- 明细表 -->
-      <el-card style="margin-top:16px">
+      <el-card style="margin-top: 16px">
         <template #header>评估指标明细</template>
-        <el-table :data="scores" v-loading="loading" border stripe>
+        <el-table v-loading="loading" :data="scores" border stripe>
           <el-table-column prop="rank" label="排名" width="70" />
           <el-table-column prop="village_name" label="帮扶村" min-width="140" />
-          <el-table-column prop="support_unit" label="帮扶单位" min-width="140" />
+          <el-table-column
+            prop="support_unit"
+            label="帮扶单位"
+            min-width="140"
+          />
           <el-table-column label="经济效益" width="90">
-            <template #default="{row}">{{ row.scores.economic }}</template>
+            <template #default="{ row }">{{ row.scores.economic }}</template>
           </el-table-column>
           <el-table-column label="社会效益" width="90">
-            <template #default="{row}">{{ row.scores.social }}</template>
+            <template #default="{ row }">{{ row.scores.social }}</template>
           </el-table-column>
           <el-table-column label="项目完成" width="90">
-            <template #default="{row}">{{ row.scores.project_completion }}</template>
+            <template #default="{ row }">{{
+              row.scores.project_completion
+            }}</template>
           </el-table-column>
           <el-table-column label="经费执行" width="90">
-            <template #default="{row}">{{ row.scores.fund_execution }}</template>
+            <template #default="{ row }">{{
+              row.scores.fund_execution
+            }}</template>
           </el-table-column>
-          <el-table-column prop="total_score" label="总分" width="80" sortable />
+          <el-table-column
+            prop="total_score"
+            label="总分"
+            width="80"
+            sortable
+          />
           <el-table-column label="等级" width="90">
-            <template #default="{row}">
+            <template #default="{ row }">
               <el-tag :type="levelTag(row.level)">{{ row.level }}</el-tag>
             </template>
           </el-table-column>
@@ -108,7 +125,9 @@ const cards = computed(() => {
   const total = scores.value.length;
   const excellent = scores.value.filter((s) => s.level === "优秀").length;
   const avgScore = total
-    ? Math.round(scores.value.reduce((sum, s) => sum + s.total_score, 0) / total)
+    ? Math.round(
+        scores.value.reduce((sum, s) => sum + s.total_score, 0) / total,
+      )
     : 0;
   const needsImprove = scores.value.filter((s) => s.total_score < 60).length;
   return [
@@ -183,13 +202,19 @@ onMounted(async () => {
   try {
     const res = await get<{
       code: number;
-      data: { items: VillageScoreItem[]; total: number; year: number; weights: Record<string, number> };
+      data: {
+        items: VillageScoreItem[];
+        total: number;
+        year: number;
+        weights: Record<string, number>;
+      };
     }>("/assessment/village-scores");
     if (res.code === 200 && res.data?.items) {
       scores.value = res.data.items;
     }
   } catch (e: any) {
-    error.value = e?.response?.data?.message || e?.message || "获取评估数据失败";
+    error.value =
+      e?.response?.data?.message || e?.message || "获取评估数据失败";
   } finally {
     loading.value = false;
   }
@@ -197,8 +222,21 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.page-header { margin-bottom: 20px; }
-.page-header h2 { font-size: 24px; font-weight: 700; color: #1a3c2a; margin: 0; }
-.page-desc { color: #606266; font-size: 14px; margin: 4px 0 0; }
-.stat-card { text-align: center; }
+.page-header {
+  margin-bottom: 20px;
+}
+.page-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a3c2a;
+  margin: 0;
+}
+.page-desc {
+  color: #606266;
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+.stat-card {
+  text-align: center;
+}
 </style>

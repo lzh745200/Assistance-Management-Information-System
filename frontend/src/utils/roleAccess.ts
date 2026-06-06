@@ -105,10 +105,7 @@ export function getRoleFromLocalStorage(defaultRole = "viewer"): string {
     const role = user.role || defaultRole;
 
     // 如果 is_superuser 为 true，但 role 不是管理员角色，则返回 super_admin
-    if (
-      user.is_superuser === true &&
-      !ADMIN_ROLES.includes(role)
-    ) {
+    if (user.is_superuser === true && !ADMIN_ROLES.includes(role)) {
       return "super_admin";
     }
 

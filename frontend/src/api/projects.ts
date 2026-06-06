@@ -3,9 +3,12 @@ import api from "./request";
 function triggerDownload(blob, filename) {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.href = url; link.download = filename;
-  document.body.appendChild(link); link.click();
-  document.body.removeChild(link); window.URL.revokeObjectURL(url);
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 }
 
 // Types
@@ -41,7 +44,10 @@ export const projectsApi = {
   delete: (id: number) => api.delete("/projects/" + id),
   getById: (id: number) => api.get("/projects/" + id),
   getStats: () => api.get("/projects/stats"),
-  exportList: (params?: any) => api.get("/projects/export", { params, responseType: "blob" }).then(r => triggerDownload(r.data, "帮扶项目导出.xlsx")),
+  exportList: (params?: any) =>
+    api
+      .get("/projects/export", { params, responseType: "blob" })
+      .then((r) => triggerDownload(r.data, "帮扶项目导出.xlsx")),
   importData: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);

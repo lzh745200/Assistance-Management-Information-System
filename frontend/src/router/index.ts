@@ -42,510 +42,525 @@ export const routes: RouteRecordRaw[] = [
     path: "/",
     component: () => import("@/layouts/DefaultLayoutSafe.vue"),
     children: [
-  {
-    path: "/profile",
-    name: "Profile",
-    component: () => import("@/views/auth/Profile.vue"),
-    meta: { title: "个人中心" },
-  },
-  // ── 工作台 ──
-  {
-    path: "/dashboard",
-    name: "Dashboard",
-    component: () => import("@/views/HomeSafe.vue"),
-    meta: { title: "工作台" },
-  },
-  // ── 帮扶学校 ──
-  {
-    path: "/schools",
-    name: "Schools",
-    component: () => import("@/views/schools/List.vue"),
-    meta: { title: "帮扶学校管理" },
-  },
-  {
-    path: "/schools/:id",
-    name: "SchoolDetail",
-    component: () => import("@/views/schools/Detail.vue"),
-    meta: { title: "学校详情" },
-  },
-  {
-    path: "/schools/:id/edit",
-    name: "SchoolEdit",
-    component: () => import("@/views/schools/Edit.vue"),
-    meta: { title: "编辑学校" },
-  },
-  {
-    path: "/schools/analysis",
-    name: "SchoolAnalysis",
-    component: () => import("@/views/schools/Analysis.vue"),
-    meta: { title: "学校分析" },
-  },
-  // ── 帮扶项目 ──
-  {
-    path: "/projects",
-    name: "Projects",
-    component: () => import("@/views/projects/List.vue"),
-    meta: { title: "帮扶项目管理" },
-  },
-  {
-    path: "/projects/:id",
-    name: "ProjectDetail",
-    component: () => import("@/views/projects/Detail.vue"),
-    meta: { title: "项目详情" },
-  },
-  {
-    path: "/projects/:id/edit",
-    name: "ProjectEdit",
-    component: () => import("@/views/projects/Edit.vue"),
-    meta: { title: "编辑项目" },
-  },
-  {
-    path: "/projects/import",
-    name: "ProjectImport",
-    component: () => import("@/views/projects/Import.vue"),
-    meta: { title: "导入项目" },
-  },
-  {
-    path: "/projects/:id/progress",
-    name: "ProjectProgress",
-    component: () => import("@/views/projects/ProgressGallery.vue"),
-    meta: { title: "项目进度" },
-  },
-  {
-    path: "/projects/management",
-    name: "ProjectManagement",
-    component: () => import("@/views/projects/ProjectManagement.vue"),
-    meta: { title: "项目管控" },
-  },
-  // ── 帮扶村 ── （含旧路径重定向）
-  { path: "/villages", redirect: "/supported-villages" },
-  { path: "/supported-villages/yearly", redirect: "/supported-villages" },
-  { path: "/villages/:id", redirect: (to: any) => `/supported-villages/${to.params.id}` },
-  { path: "/villages/:id/yearly-data", redirect: (to: any) => `/supported-villages/${to.params.id}/yearly` },
-  { path: "/villages/:id/yearly", redirect: (to: any) => `/supported-villages/${to.params.id}/yearly` },
-  { path: "/villages/:id/edit", redirect: (to: any) => `/supported-villages/${to.params.id}?mode=edit` },
-  {
-    path: "/supported-villages",
-    name: "SupportedVillages",
-    component: () => import("@/views/analytics/supported-villages/List.vue"),
-    meta: { title: "帮扶村管理" },
-  },
-  {
-    path: "/supported-villages/:id",
-    name: "SupportedVillageDetail",
-    component: () => import("@/views/analytics/supported-villages/Detail.vue"),
-    meta: { title: "帮扶村详情" },
-  },
-  {
-    path: "/supported-villages/:id/yearly",
-    name: "SupportedVillagesYearly",
-    component: () => import("@/views/analytics/supported-villages/YearlyOverview.vue"),
-    meta: { title: "年度概览" },
-  },
-  // ── 帮扶资金 ──
-  {
-    path: "/funds",
-    name: "Funds",
-    component: () => import("@/views/funds/Detail.vue"),
-    meta: { title: "经费管理" },
-  },
-  {
-    path: "/funds/analysis",
-    name: "FundAnalysis",
-    component: () => import("@/views/funds/Analysis.vue"),
-    meta: { title: "经费分析" },
-  },
-  {
-    path: "/funds/budget",
-    name: "FundBudget",
-    component: () => import("@/views/funds/Budget.vue"),
-    meta: { title: "预算管理" },
-  },
-  {
-    path: "/funds/contract",
-    name: "FundContract",
-    component: () => import("@/views/funds/ContractManage.vue"),
-    meta: { title: "合同管理" },
-  },
-  {
-    path: "/funds/anomaly",
-    name: "FundAnomaly",
-    component: () => import("@/views/funds/AnomalyList.vue"),
-    meta: { title: "异常资金" },
-  },
-  {
-    path: "/funds/lifecycle",
-    name: "FundLifecycle",
-    component: () => import("@/views/funds/Lifecycle.vue"),
-    meta: { title: "资金周期" },
-  },
-  {
-    path: "/funds/report",
-    name: "FundReport",
-    component: () => import("@/views/funds/Report.vue"),
-    meta: { title: "资金报告" },
-  },
-  {
-    path: "/funds/apply",
-    name: "FundApply",
-    component: () => import("@/views/funds/FundApply.vue"),
-    meta: { title: "经费申请" },
-  },
-  {
-    path: "/funds/transfer",
-    name: "FundTransfer",
-    component: () => import("@/views/funds/TransferVoucher.vue"),
-    meta: { title: "转账凭证" },
-  },
-  {
-    path: "/funds/settlement",
-    name: "FundSettlement",
-    component: () => import("@/views/funds/Settlement.vue"),
-    meta: { title: "结算管理" },
-  },
-  {
-    path: "/funds/enhanced",
-    name: "FundsEnhanced",
-    component: () => import("@/views/funds/EnhancedList.vue"),
-    meta: { title: "资金总览" },
-  },
-  // ── 帮扶政策 ──
-  {
-    path: "/policies",
-    name: "Policies",
-    component: () => import("@/views/policies/List.vue"),
-    meta: { title: "帮扶政策" },
-  },
-  {
-    path: "/policies/:id",
-    name: "PolicyDetail",
-    component: () => import("@/views/policies/Detail.vue"),
-    meta: { title: "政策详情" },
-  },
-  {
-    path: "/policies/:id/edit",
-    name: "PolicyEdit",
-    component: () => import("@/views/policies/Edit.vue"),
-    meta: { title: "编辑政策" },
-  },
-  // ── 审批工作流 ──
-  {
-    path: "/approval",
-    name: "Approval",
-    component: () => import("@/views/approval/Overview.vue"),
-    meta: { title: "审批管理" },
-  },
-  {
-    path: "/approval/pending",
-    name: "ApprovalPending",
-    component: () => import("@/views/approval/PendingList.vue"),
-    meta: { title: "待审批" },
-  },
-  {
-    path: "/approval/my",
-    name: "ApprovalMy",
-    component: () => import("@/views/approval/MyApplications.vue"),
-    meta: { title: "我的申请" },
-  },
-  {
-    path: "/approval/history",
-    name: "ApprovalHistory",
-    component: () => import("@/views/approval/History.vue"),
-    meta: { title: "审批历史" },
-  },
-  // ── 乡村振兴工作 ──
-  {
-    path: "/rural-works",
-    name: "RuralWorks",
-    component: () => import("@/views/ruralWorks/Index.vue"),
-    meta: { title: "乡村振兴" },
-  },
-  {
-    path: "/rural-works/list",
-    name: "RuralWorksList",
-    component: () => import("@/views/ruralWorks/List.vue"),
-    meta: { title: "乡村工作列表" },
-  },
-  {
-    path: "/rural-works/analysis",
-    name: "RuralWorksAnalysis",
-    component: () => import("@/views/ruralWorks/Analysis.vue"),
-    meta: { title: "乡村工作分析" },
-  },
-  {
-    path: "/work-calendar",
-    name: "WorkCalendar",
-    component: () => import("@/views/work-calendar/Index.vue"),
-    meta: { title: "工作日历" },
-  },
-  // ── 组织机构 ──
-  {
-    path: "/organization",
-    name: "Organization",
-    component: () => import("@/views/organization/List.vue"),
-    meta: { title: "组织机构" },
-  },
-  {
-    path: "/organization/:id",
-    name: "OrganizationDetail",
-    component: () => import("@/views/organization/Detail.vue"),
-    meta: { title: "机构详情" },
-  },
-  {
-    path: "/organization/:id/edit",
-    name: "OrganizationEdit",
-    component: () => import("@/views/organization/Edit.vue"),
-    meta: { title: "编辑机构" },
-  },
-  // ── 数据同步 ──
-  {
-    path: "/data-sync",
-    name: "DataSync",
-    redirect: "/data-sync/export",
-    meta: { title: "数据同步" },
-  },
-  {
-    path: "/data-sync/export",
-    name: "DataSyncExport",
-    component: () => import("@/views/dataSync/Export.vue"),
-    meta: { title: "数据导出" },
-  },
-  {
-    path: "/data-sync/import",
-    name: "DataSyncImport",
-    component: () => import("@/views/dataSync/Import.vue"),
-    meta: { title: "数据导入" },
-  },
-  {
-    path: "/data-sync/conflicts",
-    name: "DataSyncConflicts",
-    component: () => import("@/views/dataSync/ConflictResolution.vue"),
-    meta: { title: "冲突解决" },
-  },
-  // ── 数据包管理 ──
-  {
-    path: "/data-package",
-    name: "DataPackage",
-    component: () => import("@/views/dataPackage/List.vue"),
-    meta: { title: "数据包管理" },
-  },
-  {
-    path: "/data-package/version",
-    name: "DataPackageVersion",
-    component: () => import("@/views/dataPackage/PackageVersion.vue"),
-    meta: { title: "版本管理" },
-  },
-  {
-    path: "/data-package/update",
-    name: "DataPackageUpdate",
-    component: () => import("@/views/dataPackage/IncrementalUpdate.vue"),
-    meta: { title: "增量更新" },
-  },
-  // ── 数据管理 ──
-  {
-    path: "/data-management",
-    name: "DataManagement",
-    component: () => import("@/views/dataManagement/Index.vue"),
-    meta: { title: "数据管理" },
-  },
-  {
-    path: "/data-management/backup",
-    name: "DataBackup",
-    component: () => import("@/views/dataManagement/Backup.vue"),
-    meta: { title: "数据备份" },
-  },
-  {
-    path: "/data-management/logs",
-    name: "DataLogs",
-    component: () => import("@/views/dataManagement/Logs.vue"),
-    meta: { title: "操作日志" },
-  },
-  // ── 数据分析 ──
-  {
-    path: "/data-analysis",
-    name: "DataAnalysis",
-    component: () => import("@/views/dataAnalysis/Index.vue"),
-    meta: { title: "数据分析" },
-  },
-  {
-    path: "/data-analysis/dashboard",
-    name: "DataDashboard",
-    component: () => import("@/views/analytics/dashboard/Dashboard.vue"),
-    meta: { title: "分析仪表板" },
-  },
-  {
-    path: "/data-analysis/map",
-    name: "DataMap",
-    component: () => import("@/views/analytics/map/index.vue"),
-    meta: { title: "地图可视化" },
-  },
-  {
-    path: "/data-analysis/assessment",
-    name: "DataAssessment",
-    component: () => import("@/views/analytics/Assessment.vue"),
-    meta: { title: "成效评估" },
-  },
-  {
-    path: "/data-analysis/reports",
-    name: "DataReports",
-    component: () => import("@/views/analytics/reports/WorkAnalysis.vue"),
-    meta: { title: "工作分析报告" },
-  },
-  // ── 旧版路径兼容重定向 ──
-  { path: "/analytics/map", redirect: "/data-analysis/map" },
-  { path: "/analytics/dashboard", redirect: "/data-analysis/dashboard" },
-  { path: "/analytics/work-analysis", redirect: "/data-analysis/reports" },
-  { path: "/analytics/assessment", redirect: "/data-analysis/assessment" },
-  { path: "/data-entry/comprehensive", redirect: "/data-entry" },
-  { path: "/report-export", redirect: "/export/report" },
-  { path: "/data-import/batch", redirect: "/import/data" },
-  { path: "/data-package/receive", redirect: "/data-package" },
-  { path: "/system/config-package", redirect: "/system/config" },
-  // ── 数据录入 ──
-  {
-    path: "/data-entry",
-    name: "DataEntry",
-    component: () => import("@/views/dataEntry/ComprehensiveEntry.vue"),
-    meta: { title: "数据录入" },
-  },
-  // ── 系统管理 ──
-  {
-    path: "/system/users",
-    name: "SystemUsers",
-    component: () => import("@/views/system/UserManagement.vue"),
-    meta: { title: "用户管理", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/roles",
-    name: "SystemRoles",
-    component: () => import("@/views/system/Role.vue"),
-    meta: { title: "角色管理", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/menus",
-    name: "SystemMenus",
-    component: () => import("@/views/system/Menu.vue"),
-    meta: { title: "菜单管理", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/menu-permissions",
-    name: "SystemMenuPermissions",
-    component: () => import("@/views/system/MenuPermission.vue"),
-    meta: { title: "菜单权限", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/audit",
-    name: "SystemAudit",
-    component: () => import("@/views/system/AuditManagement.vue"),
-    meta: { title: "审计管理", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/backup",
-    name: "SystemBackup",
-    component: () => import("@/views/system/BackupManagement.vue"),
-    meta: { title: "备份管理", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/cache",
-    name: "SystemCache",
-    component: () => import("@/views/system/CacheManagement.vue"),
-    meta: { title: "缓存管理", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/config",
-    name: "SystemConfig",
-    component: () => import("@/views/system/ConfigPackage.vue"),
-    meta: { title: "系统配置", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/email",
-    name: "SystemEmail",
-    component: () => import("@/views/system/EmailSettings.vue"),
-    meta: { title: "邮件设置", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/monitoring",
-    name: "SystemMonitoring",
-    component: () => import("@/views/system/MonitoringDashboard.vue"),
-    meta: { title: "系统监控", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/health",
-    name: "SystemHealth",
-    component: () => import("@/views/system/SystemHealth.vue"),
-    meta: { title: "系统健康", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/encryption",
-    name: "SystemEncryption",
-    component: () => import("@/views/system/EncryptionSettings.vue"),
-    meta: { title: "加密设置", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/system/feedback",
-    name: "SystemFeedback",
-    component: () => import("@/views/system/Feedback.vue"),
-    meta: { title: "反馈管理" },
-  },
-  // ── 管理面板 ──
-  {
-    path: "/admin/dashboard",
-    name: "AdminDashboard",
-    component: () => import("@/views/admin/AdminDashboard.vue"),
-    meta: { title: "管理面板", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/admin/machine-code",
-    name: "AdminMachineCode",
-    component: () => import("@/views/admin/MachineCode.vue"),
-    meta: { title: "机器码管理", roles: ["admin", "super_admin"] },
-  },
-  {
-    path: "/admin/machine-code/management",
-    name: "AdminMachineCodeManagement",
-    component: () => import("@/views/admin/MachineCodeManagement.vue"),
-    meta: { title: "机器码设置", roles: ["admin", "super_admin"] },
-  },
-  // ── 消息中心 ──
-  {
-    path: "/message",
-    name: "MessageCenter",
-    component: () => import("@/views/message/MessageCenter.vue"),
-    meta: { title: "消息中心" },
-  },
-  // ── 帮助 ──
-  {
-    path: "/help",
-    name: "HelpCenter",
-    component: () => import("@/views/help/HelpCenter.vue"),
-    meta: { title: "帮助中心" },
-  },
-  // ── AI ──
-  {
-    path: "/ai/interactive",
-    name: "AIInteractive",
-    component: () => import("@/views/ai/InteractiveResult.vue"),
-    meta: { title: "AI分析" },
-  },
-  // ── 导入导出 ──
-  {
-    path: "/export/report",
-    name: "ExportReport",
-    component: () => import("@/views/export/ReportExport.vue"),
-    meta: { title: "报告导出" },
-  },
-  {
-    path: "/import/data",
-    name: "ImportData",
-    component: () => import("@/views/import/DataImport.vue"),
-    meta: { title: "数据导入" },
-  },
-  {
-    path: "/report/templates",
-    name: "ReportTemplates",
-    component: () => import("@/views/reportTemplates/Index.vue"),
-    meta: { title: "报告模板" },
-  },
+      {
+        path: "/profile",
+        name: "Profile",
+        component: () => import("@/views/auth/Profile.vue"),
+        meta: { title: "个人中心" },
+      },
+      // ── 工作台 ──
+      {
+        path: "/dashboard",
+        name: "Dashboard",
+        component: () => import("@/views/HomeSafe.vue"),
+        meta: { title: "工作台" },
+      },
+      // ── 帮扶学校 ──
+      {
+        path: "/schools",
+        name: "Schools",
+        component: () => import("@/views/schools/List.vue"),
+        meta: { title: "帮扶学校管理" },
+      },
+      {
+        path: "/schools/:id",
+        name: "SchoolDetail",
+        component: () => import("@/views/schools/Detail.vue"),
+        meta: { title: "学校详情" },
+      },
+      {
+        path: "/schools/:id/edit",
+        name: "SchoolEdit",
+        component: () => import("@/views/schools/Edit.vue"),
+        meta: { title: "编辑学校" },
+      },
+      {
+        path: "/schools/analysis",
+        name: "SchoolAnalysis",
+        component: () => import("@/views/schools/Analysis.vue"),
+        meta: { title: "学校分析" },
+      },
+      // ── 帮扶项目 ──
+      {
+        path: "/projects",
+        name: "Projects",
+        component: () => import("@/views/projects/List.vue"),
+        meta: { title: "帮扶项目管理" },
+      },
+      {
+        path: "/projects/:id",
+        name: "ProjectDetail",
+        component: () => import("@/views/projects/Detail.vue"),
+        meta: { title: "项目详情" },
+      },
+      {
+        path: "/projects/:id/edit",
+        name: "ProjectEdit",
+        component: () => import("@/views/projects/Edit.vue"),
+        meta: { title: "编辑项目" },
+      },
+      {
+        path: "/projects/import",
+        name: "ProjectImport",
+        component: () => import("@/views/projects/Import.vue"),
+        meta: { title: "导入项目" },
+      },
+      {
+        path: "/projects/:id/progress",
+        name: "ProjectProgress",
+        component: () => import("@/views/projects/ProgressGallery.vue"),
+        meta: { title: "项目进度" },
+      },
+      {
+        path: "/projects/management",
+        name: "ProjectManagement",
+        component: () => import("@/views/projects/ProjectManagement.vue"),
+        meta: { title: "项目管控" },
+      },
+      // ── 帮扶村 ── （含旧路径重定向）
+      { path: "/villages", redirect: "/supported-villages" },
+      { path: "/supported-villages/yearly", redirect: "/supported-villages" },
+      {
+        path: "/villages/:id",
+        redirect: (to: any) => `/supported-villages/${to.params.id}`,
+      },
+      {
+        path: "/villages/:id/yearly-data",
+        redirect: (to: any) => `/supported-villages/${to.params.id}/yearly`,
+      },
+      {
+        path: "/villages/:id/yearly",
+        redirect: (to: any) => `/supported-villages/${to.params.id}/yearly`,
+      },
+      {
+        path: "/villages/:id/edit",
+        redirect: (to: any) => `/supported-villages/${to.params.id}?mode=edit`,
+      },
+      {
+        path: "/supported-villages",
+        name: "SupportedVillages",
+        component: () =>
+          import("@/views/analytics/supported-villages/List.vue"),
+        meta: { title: "帮扶村管理" },
+      },
+      {
+        path: "/supported-villages/:id",
+        name: "SupportedVillageDetail",
+        component: () =>
+          import("@/views/analytics/supported-villages/Detail.vue"),
+        meta: { title: "帮扶村详情" },
+      },
+      {
+        path: "/supported-villages/:id/yearly",
+        name: "SupportedVillagesYearly",
+        component: () =>
+          import("@/views/analytics/supported-villages/YearlyOverview.vue"),
+        meta: { title: "年度概览" },
+      },
+      // ── 帮扶资金 ──
+      {
+        path: "/funds",
+        name: "Funds",
+        component: () => import("@/views/funds/Detail.vue"),
+        meta: { title: "经费管理" },
+      },
+      {
+        path: "/funds/analysis",
+        name: "FundAnalysis",
+        component: () => import("@/views/funds/Analysis.vue"),
+        meta: { title: "经费分析" },
+      },
+      {
+        path: "/funds/budget",
+        name: "FundBudget",
+        component: () => import("@/views/funds/Budget.vue"),
+        meta: { title: "预算管理" },
+      },
+      {
+        path: "/funds/contract",
+        name: "FundContract",
+        component: () => import("@/views/funds/ContractManage.vue"),
+        meta: { title: "合同管理" },
+      },
+      {
+        path: "/funds/anomaly",
+        name: "FundAnomaly",
+        component: () => import("@/views/funds/AnomalyList.vue"),
+        meta: { title: "异常资金" },
+      },
+      {
+        path: "/funds/lifecycle",
+        name: "FundLifecycle",
+        component: () => import("@/views/funds/Lifecycle.vue"),
+        meta: { title: "资金周期" },
+      },
+      {
+        path: "/funds/report",
+        name: "FundReport",
+        component: () => import("@/views/funds/Report.vue"),
+        meta: { title: "资金报告" },
+      },
+      {
+        path: "/funds/apply",
+        name: "FundApply",
+        component: () => import("@/views/funds/FundApply.vue"),
+        meta: { title: "经费申请" },
+      },
+      {
+        path: "/funds/transfer",
+        name: "FundTransfer",
+        component: () => import("@/views/funds/TransferVoucher.vue"),
+        meta: { title: "转账凭证" },
+      },
+      {
+        path: "/funds/settlement",
+        name: "FundSettlement",
+        component: () => import("@/views/funds/Settlement.vue"),
+        meta: { title: "结算管理" },
+      },
+      {
+        path: "/funds/enhanced",
+        name: "FundsEnhanced",
+        component: () => import("@/views/funds/EnhancedList.vue"),
+        meta: { title: "资金总览" },
+      },
+      // ── 帮扶政策 ──
+      {
+        path: "/policies",
+        name: "Policies",
+        component: () => import("@/views/policies/List.vue"),
+        meta: { title: "帮扶政策" },
+      },
+      {
+        path: "/policies/:id",
+        name: "PolicyDetail",
+        component: () => import("@/views/policies/Detail.vue"),
+        meta: { title: "政策详情" },
+      },
+      {
+        path: "/policies/:id/edit",
+        name: "PolicyEdit",
+        component: () => import("@/views/policies/Edit.vue"),
+        meta: { title: "编辑政策" },
+      },
+      // ── 审批工作流 ──
+      {
+        path: "/approval",
+        name: "Approval",
+        component: () => import("@/views/approval/Overview.vue"),
+        meta: { title: "审批管理" },
+      },
+      {
+        path: "/approval/pending",
+        name: "ApprovalPending",
+        component: () => import("@/views/approval/PendingList.vue"),
+        meta: { title: "待审批" },
+      },
+      {
+        path: "/approval/my",
+        name: "ApprovalMy",
+        component: () => import("@/views/approval/MyApplications.vue"),
+        meta: { title: "我的申请" },
+      },
+      {
+        path: "/approval/history",
+        name: "ApprovalHistory",
+        component: () => import("@/views/approval/History.vue"),
+        meta: { title: "审批历史" },
+      },
+      // ── 乡村振兴工作 ──
+      {
+        path: "/rural-works",
+        name: "RuralWorks",
+        component: () => import("@/views/ruralWorks/Index.vue"),
+        meta: { title: "乡村振兴" },
+      },
+      {
+        path: "/rural-works/list",
+        name: "RuralWorksList",
+        component: () => import("@/views/ruralWorks/List.vue"),
+        meta: { title: "乡村工作列表" },
+      },
+      {
+        path: "/rural-works/analysis",
+        name: "RuralWorksAnalysis",
+        component: () => import("@/views/ruralWorks/Analysis.vue"),
+        meta: { title: "乡村工作分析" },
+      },
+      {
+        path: "/work-calendar",
+        name: "WorkCalendar",
+        component: () => import("@/views/work-calendar/Index.vue"),
+        meta: { title: "工作日历" },
+      },
+      // ── 组织机构 ──
+      {
+        path: "/organization",
+        name: "Organization",
+        component: () => import("@/views/organization/List.vue"),
+        meta: { title: "组织机构" },
+      },
+      {
+        path: "/organization/:id",
+        name: "OrganizationDetail",
+        component: () => import("@/views/organization/Detail.vue"),
+        meta: { title: "机构详情" },
+      },
+      {
+        path: "/organization/:id/edit",
+        name: "OrganizationEdit",
+        component: () => import("@/views/organization/Edit.vue"),
+        meta: { title: "编辑机构" },
+      },
+      // ── 数据同步 ──
+      {
+        path: "/data-sync",
+        name: "DataSync",
+        redirect: "/data-sync/export",
+        meta: { title: "数据同步" },
+      },
+      {
+        path: "/data-sync/export",
+        name: "DataSyncExport",
+        component: () => import("@/views/dataSync/Export.vue"),
+        meta: { title: "数据导出" },
+      },
+      {
+        path: "/data-sync/import",
+        name: "DataSyncImport",
+        component: () => import("@/views/dataSync/Import.vue"),
+        meta: { title: "数据导入" },
+      },
+      {
+        path: "/data-sync/conflicts",
+        name: "DataSyncConflicts",
+        component: () => import("@/views/dataSync/ConflictResolution.vue"),
+        meta: { title: "冲突解决" },
+      },
+      // ── 数据包管理 ──
+      {
+        path: "/data-package",
+        name: "DataPackage",
+        component: () => import("@/views/dataPackage/List.vue"),
+        meta: { title: "数据包管理" },
+      },
+      {
+        path: "/data-package/version",
+        name: "DataPackageVersion",
+        component: () => import("@/views/dataPackage/PackageVersion.vue"),
+        meta: { title: "版本管理" },
+      },
+      {
+        path: "/data-package/update",
+        name: "DataPackageUpdate",
+        component: () => import("@/views/dataPackage/IncrementalUpdate.vue"),
+        meta: { title: "增量更新" },
+      },
+      // ── 数据管理 ──
+      {
+        path: "/data-management",
+        name: "DataManagement",
+        component: () => import("@/views/dataManagement/Index.vue"),
+        meta: { title: "数据管理" },
+      },
+      {
+        path: "/data-management/backup",
+        name: "DataBackup",
+        component: () => import("@/views/dataManagement/Backup.vue"),
+        meta: { title: "数据备份" },
+      },
+      {
+        path: "/data-management/logs",
+        name: "DataLogs",
+        component: () => import("@/views/dataManagement/Logs.vue"),
+        meta: { title: "操作日志" },
+      },
+      // ── 数据分析 ──
+      {
+        path: "/data-analysis",
+        name: "DataAnalysis",
+        component: () => import("@/views/dataAnalysis/Index.vue"),
+        meta: { title: "数据分析" },
+      },
+      {
+        path: "/data-analysis/dashboard",
+        name: "DataDashboard",
+        component: () => import("@/views/analytics/dashboard/Dashboard.vue"),
+        meta: { title: "分析仪表板" },
+      },
+      {
+        path: "/data-analysis/map",
+        name: "DataMap",
+        component: () => import("@/views/analytics/map/index.vue"),
+        meta: { title: "地图可视化" },
+      },
+      {
+        path: "/data-analysis/assessment",
+        name: "DataAssessment",
+        component: () => import("@/views/analytics/Assessment.vue"),
+        meta: { title: "成效评估" },
+      },
+      {
+        path: "/data-analysis/reports",
+        name: "DataReports",
+        component: () => import("@/views/analytics/reports/WorkAnalysis.vue"),
+        meta: { title: "工作分析报告" },
+      },
+      // ── 旧版路径兼容重定向 ──
+      { path: "/analytics/map", redirect: "/data-analysis/map" },
+      { path: "/analytics/dashboard", redirect: "/data-analysis/dashboard" },
+      { path: "/analytics/work-analysis", redirect: "/data-analysis/reports" },
+      { path: "/analytics/assessment", redirect: "/data-analysis/assessment" },
+      { path: "/data-entry/comprehensive", redirect: "/data-entry" },
+      { path: "/report-export", redirect: "/export/report" },
+      { path: "/data-import/batch", redirect: "/import/data" },
+      { path: "/data-package/receive", redirect: "/data-package" },
+      { path: "/system/config-package", redirect: "/system/config" },
+      // ── 数据录入 ──
+      {
+        path: "/data-entry",
+        name: "DataEntry",
+        component: () => import("@/views/dataEntry/ComprehensiveEntry.vue"),
+        meta: { title: "数据录入" },
+      },
+      // ── 系统管理 ──
+      {
+        path: "/system/users",
+        name: "SystemUsers",
+        component: () => import("@/views/system/UserManagement.vue"),
+        meta: { title: "用户管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/roles",
+        name: "SystemRoles",
+        component: () => import("@/views/system/Role.vue"),
+        meta: { title: "角色管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/menus",
+        name: "SystemMenus",
+        component: () => import("@/views/system/Menu.vue"),
+        meta: { title: "菜单管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/menu-permissions",
+        name: "SystemMenuPermissions",
+        component: () => import("@/views/system/MenuPermission.vue"),
+        meta: { title: "菜单权限", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/audit",
+        name: "SystemAudit",
+        component: () => import("@/views/system/AuditManagement.vue"),
+        meta: { title: "审计管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/backup",
+        name: "SystemBackup",
+        component: () => import("@/views/system/BackupManagement.vue"),
+        meta: { title: "备份管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/cache",
+        name: "SystemCache",
+        component: () => import("@/views/system/CacheManagement.vue"),
+        meta: { title: "缓存管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/config",
+        name: "SystemConfig",
+        component: () => import("@/views/system/ConfigPackage.vue"),
+        meta: { title: "系统配置", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/email",
+        name: "SystemEmail",
+        component: () => import("@/views/system/EmailSettings.vue"),
+        meta: { title: "邮件设置", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/monitoring",
+        name: "SystemMonitoring",
+        component: () => import("@/views/system/MonitoringDashboard.vue"),
+        meta: { title: "系统监控", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/health",
+        name: "SystemHealth",
+        component: () => import("@/views/system/SystemHealth.vue"),
+        meta: { title: "系统健康", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/encryption",
+        name: "SystemEncryption",
+        component: () => import("@/views/system/EncryptionSettings.vue"),
+        meta: { title: "加密设置", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/feedback",
+        name: "SystemFeedback",
+        component: () => import("@/views/system/Feedback.vue"),
+        meta: { title: "反馈管理" },
+      },
+      // ── 管理面板 ──
+      {
+        path: "/admin/dashboard",
+        name: "AdminDashboard",
+        component: () => import("@/views/admin/AdminDashboard.vue"),
+        meta: { title: "管理面板", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/admin/machine-code",
+        name: "AdminMachineCode",
+        component: () => import("@/views/admin/MachineCode.vue"),
+        meta: { title: "机器码管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/admin/machine-code/management",
+        name: "AdminMachineCodeManagement",
+        component: () => import("@/views/admin/MachineCodeManagement.vue"),
+        meta: { title: "机器码设置", roles: ["admin", "super_admin"] },
+      },
+      // ── 消息中心 ──
+      {
+        path: "/message",
+        name: "MessageCenter",
+        component: () => import("@/views/message/MessageCenter.vue"),
+        meta: { title: "消息中心" },
+      },
+      // ── 帮助 ──
+      {
+        path: "/help",
+        name: "HelpCenter",
+        component: () => import("@/views/help/HelpCenter.vue"),
+        meta: { title: "帮助中心" },
+      },
+      // ── AI ──
+      {
+        path: "/ai/interactive",
+        name: "AIInteractive",
+        component: () => import("@/views/ai/InteractiveResult.vue"),
+        meta: { title: "AI分析" },
+      },
+      // ── 导入导出 ──
+      {
+        path: "/export/report",
+        name: "ExportReport",
+        component: () => import("@/views/export/ReportExport.vue"),
+        meta: { title: "报告导出" },
+      },
+      {
+        path: "/import/data",
+        name: "ImportData",
+        component: () => import("@/views/import/DataImport.vue"),
+        meta: { title: "数据导入" },
+      },
+      {
+        path: "/report/templates",
+        name: "ReportTemplates",
+        component: () => import("@/views/reportTemplates/Index.vue"),
+        meta: { title: "报告模板" },
+      },
     ],
   },
   // ── 错误页（无导航栏）──
@@ -581,11 +596,15 @@ router.beforeEach((to, _from, next) => {
   // 捕获 /xxx/undefined 或 /xxx/null 等无效路由
   if (path.includes("/undefined") || path.includes("/null")) {
     // 重定向到安全的列表页
-    const fallback = path.startsWith("/supported-villages") ? "/supported-villages"
-      : path.startsWith("/schools") ? "/schools"
-      : path.startsWith("/projects") ? "/projects"
-      : path.startsWith("/funds") ? "/funds"
-      : "/dashboard";
+    const fallback = path.startsWith("/supported-villages")
+      ? "/supported-villages"
+      : path.startsWith("/schools")
+        ? "/schools"
+        : path.startsWith("/projects")
+          ? "/projects"
+          : path.startsWith("/funds")
+            ? "/funds"
+            : "/dashboard";
     return next({ path: fallback, replace: true });
   }
   next();

@@ -36,32 +36,37 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from "vue";
 
 interface ProjectItem {
-  id: number | string
-  name: string
-  progress: number
-  statusClass: string
-  statusText: string
-  startDate: string
+  id: number | string;
+  name: string;
+  progress: number;
+  statusClass: string;
+  statusText: string;
+  startDate: string;
 }
 
-const props = withDefaults(defineProps<{
-  visible?: boolean
-  projects?: ProjectItem[]
-  maxDisplay?: number
-}>(), {
-  visible: true,
-  projects: () => [],
-  maxDisplay: 5,
-})
+const props = withDefaults(
+  defineProps<{
+    visible?: boolean;
+    projects?: ProjectItem[];
+    maxDisplay?: number;
+  }>(),
+  {
+    visible: true,
+    projects: () => [],
+    maxDisplay: 5,
+  },
+);
 
 defineEmits<{
-  (e: 'viewAll'): void
-}>()
+  (e: "viewAll"): void;
+}>();
 
-const displayProjects = computed(() => props.projects.slice(0, props.maxDisplay))
+const displayProjects = computed(() =>
+  props.projects.slice(0, props.maxDisplay),
+);
 </script>
 
 <style scoped>

@@ -41,7 +41,10 @@ interface SecurityEvent {
 }
 
 const securityEvents = ref<SecurityEvent[]>([]);
-const securityStatus = ref<{ type: 'info' | 'primary' | 'success' | 'warning' | 'danger'; text: string }>({
+const securityStatus = ref<{
+  type: "info" | "primary" | "success" | "warning" | "danger";
+  text: string;
+}>({
   type: "success",
   text: "安全状态正常",
 });

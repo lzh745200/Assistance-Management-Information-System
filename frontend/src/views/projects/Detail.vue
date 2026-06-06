@@ -21,7 +21,8 @@ onMounted(async () => {
   } catch (e) {
     console.error("加载项目详情失败:", e);
     ElMessage.error("项目详情加载失败，请返回重试");
+  } finally {
+    loading.value = false;
   }
-  finally { loading.value = false; }
 });
 </script>

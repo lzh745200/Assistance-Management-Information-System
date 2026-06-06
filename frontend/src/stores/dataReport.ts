@@ -106,10 +106,18 @@ export const useDataReportStore = defineStore("dataReport", () => {
   }
 
   return {
-    reports, currentReport, loading, error,
-    receivedReports, receivedTotal,
-    fetchReports, fetchReceivedReports,
-    previewReport, receiveReport, rejectReport, downloadReport,
+    reports,
+    currentReport,
+    loading,
+    error,
+    receivedReports,
+    receivedTotal,
+    fetchReports,
+    fetchReceivedReports,
+    previewReport,
+    receiveReport,
+    rejectReport,
+    downloadReport,
     submitReport,
   };
 });

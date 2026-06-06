@@ -10,8 +10,4 @@ export { DataTable };
 export default DataTable;
 
 // 导出类型
-export type {
-  Column,
-  DataTableProps,
-  DataTableEmits,
-} from "./types";
+export type { Column, DataTableProps, DataTableEmits } from "./types";

@@ -1,3 +1,4 @@
-<template><div class="layout-editor"><p>Layout Editor</p></div></template>
-<script setup lang="ts">
-</script>
+<template>
+  <div class="layout-editor"><p>Layout Editor</p></div>
+</template>
+<script setup lang="ts"></script>

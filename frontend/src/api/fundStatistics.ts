@@ -143,5 +143,3 @@ export function getFundSummary(params?: FundQueryParams) {
     data: FundSummaryData;
   }>("/funds/supported-village/statistics/summary", { params });
 }
-
-

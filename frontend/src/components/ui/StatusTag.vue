@@ -32,7 +32,7 @@ import { ref, onMounted } from "vue";
 import { ElMessageBox } from "element-plus";
 import { SecurityLevel } from "@/utils/security";
 
-type TagType = 'success' | 'info' | 'warning' | 'danger' | 'primary';
+type TagType = "success" | "info" | "warning" | "danger" | "primary";
 
 interface SecurityEvent {
   time: string;

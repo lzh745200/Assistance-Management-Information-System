@@ -63,7 +63,11 @@ export const useAuthStore = defineStore("auth", () => {
       });
 
       if (res.code === 200 && res.data) {
-        persistAuth(res.data.access_token, res.data.user, res.data.refresh_token);
+        persistAuth(
+          res.data.access_token,
+          res.data.user,
+          res.data.refresh_token,
+        );
         return true;
       }
 

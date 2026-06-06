@@ -65,7 +65,13 @@
         </div>
       </template>
 
-      <el-table :data="fundList" v-loading="loading" border style="width: 100%" empty-text="暂无经费数据">
+      <el-table
+        v-loading="loading"
+        :data="fundList"
+        border
+        style="width: 100%"
+        empty-text="暂无经费数据"
+      >
         <el-table-column prop="voucher_number" label="凭证号" width="120" />
         <el-table-column prop="project_name" label="项目名称" min-width="180" />
         <el-table-column prop="type" label="经费类型" width="120">

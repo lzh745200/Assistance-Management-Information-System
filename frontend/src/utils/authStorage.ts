@@ -76,7 +76,11 @@ export class AuthStorage {
   static getUser(): AuthData["user"] | null {
     const sessionUser = sessionStorage.getItem(STORAGE_KEYS.USER);
     if (sessionUser) {
-      try { return JSON.parse(sessionUser); } catch { return null; }
+      try {
+        return JSON.parse(sessionUser);
+      } catch {
+        return null;
+      }
     }
     return null;
   }

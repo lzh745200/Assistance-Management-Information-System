@@ -25,5 +25,13 @@ export const useDataStore = defineStore("data", () => {
     currentData.value = data;
   }
 
-  return { dataList, currentData, loading, error, total, fetchData, setCurrentData };
+  return {
+    dataList,
+    currentData,
+    loading,
+    error,
+    total,
+    fetchData,
+    setCurrentData,
+  };
 });

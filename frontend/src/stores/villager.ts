@@ -8,11 +8,31 @@ export const useVillagerStore = defineStore("villager", () => {
   const loading = ref(false);
   const total = ref(0);
 
-  async function fetchVillagers(_params?: any) { loading.value = false; }
-  async function fetchVillager(_id: number) { loading.value = false; }
-  async function createVillager(_data: any) { return { code: 200 }; }
-  async function updateVillager(_id: number, _data: any) { return { code: 200 }; }
-  async function deleteVillager(_id: number) { return { code: 200 }; }
+  async function fetchVillagers(_params?: any) {
+    loading.value = false;
+  }
+  async function fetchVillager(_id: number) {
+    loading.value = false;
+  }
+  async function createVillager(_data: any) {
+    return { code: 200 };
+  }
+  async function updateVillager(_id: number, _data: any) {
+    return { code: 200 };
+  }
+  async function deleteVillager(_id: number) {
+    return { code: 200 };
+  }
 
-  return { villagerList, current, loading, total, fetchVillagers, fetchVillager, createVillager, updateVillager, deleteVillager };
+  return {
+    villagerList,
+    current,
+    loading,
+    total,
+    fetchVillagers,
+    fetchVillager,
+    createVillager,
+    updateVillager,
+    deleteVillager,
+  };
 });

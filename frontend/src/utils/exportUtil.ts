@@ -82,7 +82,9 @@ function exportToPDF(
   if (!data.length) return;
   const keys = Object.keys(headers || data[0]);
   const headerRow = keys.map((k) => headers?.[k] || k);
-  const rows = data.map((row) => keys.map((k) => escapeHtml(String(row[k] ?? ""))));
+  const rows = data.map((row) =>
+    keys.map((k) => escapeHtml(String(row[k] ?? ""))),
+  );
   const html = `<html><head><title>${escapeHtml(title)}</title><style>table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f2f2f2}</style></head><body><h1>${escapeHtml(title)}</h1><table><tr>${headerRow.map((h) => `<th>${escapeHtml(h)}</th>`).join("")}</tr>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
   const w = window.open("", "_blank");
   if (w) {

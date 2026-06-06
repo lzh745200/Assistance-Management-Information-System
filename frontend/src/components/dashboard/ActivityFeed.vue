@@ -26,7 +26,9 @@
           />
         </div>
         <div class="activity-form-actions">
-          <el-button size="small" type="primary" @click="addActivity">发布</el-button>
+          <el-button size="small" type="primary" @click="addActivity"
+            >发布</el-button
+          >
           <el-button size="small" @click="resetForm">重置</el-button>
         </div>
       </div>
@@ -55,57 +57,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive } from "vue";
+import { ElMessage } from "element-plus";
 
 interface Activity {
-  id: number | string
-  type: string
-  content: string
-  time: string
+  id: number | string;
+  type: string;
+  content: string;
+  time: string;
 }
 
-withDefaults(defineProps<{
-  visible?: boolean
-  activities?: Activity[]
-}>(), {
-  visible: true,
-  activities: () => [],
-})
+withDefaults(
+  defineProps<{
+    visible?: boolean;
+    activities?: Activity[];
+  }>(),
+  {
+    visible: true,
+    activities: () => [],
+  },
+);
 
 const emit = defineEmits<{
-  (e: 'add', activity: Omit<Activity, 'id' | 'time'>): void
-}>()
+  (e: "add", activity: Omit<Activity, "id" | "time">): void;
+}>();
 
-const showForm = ref(false)
+const showForm = ref(false);
 const newActivity = reactive({
-  type: 'project',
-  content: '',
-})
+  type: "project",
+  content: "",
+});
 
 function getTypeIcon(type: string): string {
   const icons: Record<string, string> = {
-    project: '📋',
-    fund: '💰',
-    village: '🏘️',
-    system: '⚙️',
-  }
-  return icons[type] || '📌'
+    project: "📋",
+    fund: "💰",
+    village: "🏘️",
+    system: "⚙️",
+  };
+  return icons[type] || "📌";
 }
 
 function addActivity() {
   if (!newActivity.content.trim()) {
-    ElMessage.warning('请输入动态内容')
-    return
+    ElMessage.warning("请输入动态内容");
+    return;
   }
-  emit('add', { type: newActivity.type, content: newActivity.content })
-  resetForm()
-  showForm.value = false
+  emit("add", { type: newActivity.type, content: newActivity.content });
+  resetForm();
+  showForm.value = false;
 }
 
 function resetForm() {
-  newActivity.type = 'project'
-  newActivity.content = ''
+  newActivity.type = "project";
+  newActivity.content = "";
 }
 </script>
 

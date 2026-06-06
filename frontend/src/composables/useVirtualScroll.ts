@@ -15,32 +15,34 @@
  * })
  */
 
-import { ref, computed, onMounted, onUnmounted, type Ref } from "vue"
+import { ref, computed, onMounted, onUnmounted, type Ref } from "vue";
 
 export interface VirtualScrollOptions<T = any> {
   /** 数据源 */
-  items: Ref<T[]> | T[]
+  items: Ref<T[]> | T[];
   /** 每项高度 (px)，固定高度场景 */
-  itemHeight?: number
+  itemHeight?: number;
   /** 预渲染行数（可视区域外），提升滚动流畅度 */
-  overscan?: number
+  overscan?: number;
   /** 容器元素（如果传入则不再自动检测 scroll 容器） */
-  containerRef?: Ref<HTMLElement | null>
+  containerRef?: Ref<HTMLElement | null>;
 }
 
 export interface VirtualScrollReturn<T = any> {
   /** 容器模板引用（绑定到滚动容器） */
-  containerRef: Ref<HTMLElement | null>
+  containerRef: Ref<HTMLElement | null>;
   /** 总高度 (px) */
-  totalHeight: Ref<number>
+  totalHeight: Ref<number>;
   /** Y 轴偏移 (px) */
-  offsetY: Ref<number>
+  offsetY: Ref<number>;
   /** 当前可见（含 overscan）的数据项 */
-  visibleItems: Ref<Array<{ item: T; index: number; style: Record<string, string> }>>
+  visibleItems: Ref<
+    Array<{ item: T; index: number; style: Record<string, string> }>
+  >;
   /** 滚动到指定位置 */
-  scrollTo: (top: number) => void
+  scrollTo: (top: number) => void;
   /** 滚动到指定索引 */
-  scrollToIndex: (index: number) => void
+  scrollToIndex: (index: number) => void;
 }
 
 export function useVirtualScroll<T = any>(
@@ -51,35 +53,42 @@ export function useVirtualScroll<T = any>(
     itemHeight = 48,
     overscan = 5,
     containerRef: externalContainerRef,
-  } = options
+  } = options;
 
   // ── 响应式状态 ──
-  const containerRef = externalContainerRef ?? ref<HTMLElement | null>(null)
-  const scrollTop = ref(0)
-  const containerHeight = ref(0)
+  const containerRef = externalContainerRef ?? ref<HTMLElement | null>(null);
+  const scrollTop = ref(0);
+  const containerHeight = ref(0);
 
   // 规一化 items 为 Ref
   const items = computed<T[]>(() => {
-    if (Array.isArray(rawItems)) return rawItems
-    return rawItems.value
-  })
+    if (Array.isArray(rawItems)) return rawItems;
+    return rawItems.value;
+  });
 
   // ── 可视范围计算 ──
   const visibleRange = computed(() => {
-    const count = items.value.length
-    if (count === 0) return { start: 0, end: 0 }
+    const count = items.value.length;
+    if (count === 0) return { start: 0, end: 0 };
 
-    const start = Math.max(0, Math.floor(scrollTop.value / itemHeight) - overscan)
-    const visibleCount = Math.ceil(containerHeight.value / itemHeight)
-    const end = Math.min(count, start + visibleCount + overscan * 2)
+    const start = Math.max(
+      0,
+      Math.floor(scrollTop.value / itemHeight) - overscan,
+    );
+    const visibleCount = Math.ceil(containerHeight.value / itemHeight);
+    const end = Math.min(count, start + visibleCount + overscan * 2);
 
-    return { start, end }
-  })
+    return { start, end };
+  });
 
   // ── 可见项 ──
   const visibleItems = computed(() => {
-    const { start, end } = visibleRange.value
-    const result: Array<{ item: T; index: number; style: Record<string, string> }> = []
+    const { start, end } = visibleRange.value;
+    const result: Array<{
+      item: T;
+      index: number;
+      style: Record<string, string>;
+    }> = [];
 
     for (let i = start; i < end; i++) {
       result.push({
@@ -92,48 +101,48 @@ export function useVirtualScroll<T = any>(
           right: "0",
           height: `${itemHeight}px`,
         },
-      })
+      });
     }
-    return result
-  })
+    return result;
+  });
 
   // ── 总高度 ──
-  const totalHeight = computed(() => items.value.length * itemHeight)
+  const totalHeight = computed(() => items.value.length * itemHeight);
 
   // ── Y 偏移 ──
-  const offsetY = computed(() => visibleRange.value.start * itemHeight)
+  const offsetY = computed(() => visibleRange.value.start * itemHeight);
 
   // ── 滚动处理 ──
-  let scrollElement: HTMLElement | null = null
+  let scrollElement: HTMLElement | null = null;
 
   function onScroll(e: Event) {
-    const target = e.target as HTMLElement
-    scrollTop.value = target.scrollTop
-    containerHeight.value = target.clientHeight
+    const target = e.target as HTMLElement;
+    scrollTop.value = target.scrollTop;
+    containerHeight.value = target.clientHeight;
   }
 
   onMounted(() => {
-    scrollElement = containerRef.value
+    scrollElement = containerRef.value;
     if (scrollElement) {
-      scrollElement.addEventListener("scroll", onScroll, { passive: true })
-      containerHeight.value = scrollElement.clientHeight
+      scrollElement.addEventListener("scroll", onScroll, { passive: true });
+      containerHeight.value = scrollElement.clientHeight;
     }
-  })
+  });
 
   onUnmounted(() => {
     if (scrollElement) {
-      scrollElement.removeEventListener("scroll", onScroll)
+      scrollElement.removeEventListener("scroll", onScroll);
     }
-  })
+  });
 
   // ── 方法 ──
   function scrollTo(top: number) {
-    scrollElement?.scrollTo({ top })
+    scrollElement?.scrollTo({ top });
   }
 
   function scrollToIndex(index: number) {
-    const top = Math.max(0, index * itemHeight)
-    scrollElement?.scrollTo({ top, behavior: "smooth" })
+    const top = Math.max(0, index * itemHeight);
+    scrollElement?.scrollTo({ top, behavior: "smooth" });
   }
 
   return {
@@ -143,5 +152,5 @@ export function useVirtualScroll<T = any>(
     visibleItems,
     scrollTo,
     scrollToIndex,
-  }
+  };
 }

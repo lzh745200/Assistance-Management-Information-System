@@ -2,7 +2,7 @@
   <div class="monitoring-dashboard">
     <div class="page-header">
       <h2>系统监控面板</h2>
-      <el-button :icon="Refresh" @click="refreshData" :loading="loading"
+      <el-button :icon="Refresh" :loading="loading" @click="refreshData"
         >刷新</el-button
       >
     </div>

@@ -18,10 +18,7 @@
         </p>
       </div>
       <div class="quick-actions">
-        <button
-          class="action-btn primary"
-          @click="pushSafe('/projects')"
-        >
+        <button class="action-btn primary" @click="pushSafe('/projects')">
           <span class="btn-icon">+</span> 新建项目
         </button>
         <button
@@ -190,10 +187,7 @@
         <div class="empty-icon">📊</div>
         <div class="empty-text">暂无统计数据</div>
         <div class="empty-hint">请先添加帮扶项目、村庄或学校数据</div>
-        <button
-          class="action-btn primary"
-          @click="pushSafe('/projects')"
-        >
+        <button class="action-btn primary" @click="pushSafe('/projects')">
           <span class="btn-icon">+</span> 创建第一个项目
         </button>
       </div>
@@ -306,10 +300,7 @@
         <div v-show="cardVisibility.funds" class="section-card">
           <div class="section-header">
             <h3>💰 经费概况</h3>
-            <button
-              class="text-btn"
-              @click="pushSafe('/funds')"
-            >
+            <button class="text-btn" @click="pushSafe('/funds')">
               查看全部 ›
             </button>
           </div>
@@ -952,7 +943,12 @@ const commonNavItems: NavItem[] = [
   { icon: "🌾", label: "乡村工作", path: "/rural-works", roles: [] },
   { icon: "📊", label: "统计分析", path: "/data-analysis", roles: [] },
   { icon: "🗺️", label: "地图可视化", path: "/data-analysis/map", roles: [] },
-  { icon: "🎯", label: "考核评估", path: "/data-analysis/assessment", roles: [] },
+  {
+    icon: "🎯",
+    label: "考核评估",
+    path: "/data-analysis/assessment",
+    roles: [],
+  },
   { icon: "📅", label: "工作日历", path: "/work-calendar", roles: [] },
 ];
 

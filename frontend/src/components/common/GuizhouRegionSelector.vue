@@ -31,7 +31,7 @@
         />
       </el-select>
     </el-form-item>
-    <el-form-item label="乡镇" v-if="showTownship">
+    <el-form-item v-if="showTownship" label="乡镇">
       <el-input
         :model-value="modelValue?.township"
         placeholder="输入乡镇名称"

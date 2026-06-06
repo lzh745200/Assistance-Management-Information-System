@@ -19,8 +19,15 @@ const pendingRequests = new Map<string, Canceler>();
 let _cachedToken: string | null = null;
 
 /** 生成稳定排序的请求标识 key */
-function _makeRequestKey(method: string | undefined, url: string | undefined, params: any): string {
-  const serialized = JSON.stringify(params || {}, Object.keys(params || {}).sort());
+function _makeRequestKey(
+  method: string | undefined,
+  url: string | undefined,
+  params: any,
+): string {
+  const serialized = JSON.stringify(
+    params || {},
+    Object.keys(params || {}).sort(),
+  );
   return `${method}:${url}:${serialized}`;
 }
 
@@ -43,7 +50,11 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
   (response) => {
-    const requestKey = _makeRequestKey(response.config.method, response.config.url, response.config.params);
+    const requestKey = _makeRequestKey(
+      response.config.method,
+      response.config.url,
+      response.config.params,
+    );
     pendingRequests.delete(requestKey);
     return response;
   },
@@ -64,7 +75,9 @@ export function _setCachedToken(t: string | null) {
 
 // ── 泛型核心请求函数 ──
 
-export async function apiRequest<T = any>(config: AxiosRequestConfig): Promise<T> {
+export async function apiRequest<T = any>(
+  config: AxiosRequestConfig,
+): Promise<T> {
   const res = await request.request<T>(config);
   return res.data;
 }

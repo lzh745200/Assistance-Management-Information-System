@@ -31,14 +31,12 @@ export interface WorkReportData {
 export const getRuralWorks = (params?: any) =>
   api.get("/rural-works", { params });
 
-export const createRuralWork = (data: any) =>
-  api.post("/rural-works", data);
+export const createRuralWork = (data: any) => api.post("/rural-works", data);
 
 export const updateRuralWork = (id: number, data: any) =>
   api.put("/rural-works/" + id, data);
 
-export const deleteRuralWork = (id: number) =>
-  api.delete("/rural-works/" + id);
+export const deleteRuralWork = (id: number) => api.delete("/rural-works/" + id);
 
 export const generateWorkReport = (params?: any) =>
   api.get("/rural-works/report", { params });

@@ -10,10 +10,19 @@
         </template>
       </el-result>
     </div>
-    <div v-else-if="stats.totalVillages === 0 && stats.totalSchools === 0" class="map-empty">
-      <el-result icon="info" title="暂无帮扶点数据" sub-title="请先录入帮扶村或学校信息">
+    <div
+      v-else-if="stats.totalVillages === 0 && stats.totalSchools === 0"
+      class="map-empty"
+    >
+      <el-result
+        icon="info"
+        title="暂无帮扶点数据"
+        sub-title="请先录入帮扶村或学校信息"
+      >
         <template #extra>
-          <el-button type="primary" @click="$router.push('/supported-villages')">前往录入帮扶村</el-button>
+          <el-button type="primary" @click="$router.push('/supported-villages')"
+            >前往录入帮扶村</el-button
+          >
         </template>
       </el-result>
     </div>
@@ -35,7 +44,9 @@
             @keyup.enter="handleLocate"
           >
             <template #append>
-              <el-button size="small" @click="handleLocate" :loading="locating">定位</el-button>
+              <el-button size="small" :loading="locating" @click="handleLocate"
+                >定位</el-button
+              >
             </template>
           </el-input>
 
@@ -45,8 +56,8 @@
             size="small"
             type="warning"
             :loading="routeLoading"
-            @click="handleCalcRoutes"
             style="margin-left: 8px"
+            @click="handleCalcRoutes"
           >
             🚗 计算到全部帮扶点的路线
           </el-button>
@@ -54,16 +65,20 @@
           <el-button
             v-if="routeResults.length"
             size="small"
-            @click="routeResults = []"
             style="margin-left: 8px"
+            @click="routeResults = []"
           >
             清除路线
           </el-button>
         </template>
 
         <span class="map-stats">
-          <el-tag size="small" type="success">村庄 {{ stats.totalVillages }}</el-tag>
-          <el-tag size="small" type="warning">学校 {{ stats.totalSchools }}</el-tag>
+          <el-tag size="small" type="success"
+            >村庄 {{ stats.totalVillages }}</el-tag
+          >
+          <el-tag size="small" type="warning"
+            >学校 {{ stats.totalSchools }}</el-tag
+          >
         </span>
       </div>
 
@@ -71,14 +86,14 @@
       <div v-if="routeResults.length" class="route-summary">
         <span>出发点: {{ coordInput }}</span>
         <span style="margin-left: 24px">
-          最近: {{ nearestResult?.destinationName }}
-          ({{ nearestResult?.straightDistanceKm }}km /
-          {{ nearestResult?.formattedTime }})
+          最近: {{ nearestResult?.destinationName }} ({{
+            nearestResult?.straightDistanceKm
+          }}km / {{ nearestResult?.formattedTime }})
         </span>
         <span style="margin-left: 16px">
-          最远: {{ farthestResult?.destinationName }}
-          ({{ farthestResult?.straightDistanceKm }}km /
-          {{ farthestResult?.formattedTime }})
+          最远: {{ farthestResult?.destinationName }} ({{
+            farthestResult?.straightDistanceKm
+          }}km / {{ farthestResult?.formattedTime }})
         </span>
       </div>
 
@@ -114,7 +129,12 @@
 import { ref, computed, shallowRef, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { getMapMarkers, getRegions } from "@/api/map";
-import { parseCoordinate, calculateRoute, type LatLng, type RouteResult } from "@/utils/geo";
+import {
+  parseCoordinate,
+  calculateRoute,
+  type LatLng,
+  type RouteResult,
+} from "@/utils/geo";
 import OfflineMap from "@/components/map/OfflineMap.vue";
 import MapVisualization from "./MapVisualization.vue";
 
@@ -146,25 +166,43 @@ const routeLines = computed(() => {
         [originCoord.value!.lng, originCoord.value!.lat],
         [r.destination.lng, r.destination.lat],
       ] as [number, number][],
-      label: `${r.destinationName || '目标'} | ${r.formattedTime}`,
+      label: `${r.destinationName || "目标"} | ${r.formattedTime}`,
     }));
 });
 
-const nearestResult = computed(() =>
-  [...routeResults.value].sort((a, b) => a.straightDistanceKm - b.straightDistanceKm)[0]
+const nearestResult = computed(
+  () =>
+    [...routeResults.value].sort(
+      (a, b) => a.straightDistanceKm - b.straightDistanceKm,
+    )[0],
 );
-const farthestResult = computed(() =>
-  [...routeResults.value].sort((a, b) => b.straightDistanceKm - a.straightDistanceKm)[0]
+const farthestResult = computed(
+  () =>
+    [...routeResults.value].sort(
+      (a, b) => b.straightDistanceKm - a.straightDistanceKm,
+    )[0],
 );
 
 /** Geographic: {lng, lat, name, type} format for ECharts scatter map */
 const geographicMarkers = computed(() => [
   ...rawVillages.value
     .filter((v: any) => v.lng != null && v.lat != null)
-    .map((v: any) => ({ lng: v.lng, lat: v.lat, name: v.name, type: "village" as const, value: 1 })),
+    .map((v: any) => ({
+      lng: v.lng,
+      lat: v.lat,
+      name: v.name,
+      type: "village" as const,
+      value: 1,
+    })),
   ...rawSchools.value
     .filter((s: any) => s.lng != null && s.lat != null)
-    .map((s: any) => ({ lng: s.lng, lat: s.lat, name: s.name, type: "school" as const, value: 1 })),
+    .map((s: any) => ({
+      lng: s.lng,
+      lat: s.lat,
+      name: s.name,
+      type: "school" as const,
+      value: 1,
+    })),
 ]);
 
 /** Geographic: county-level village count for choropleth */
@@ -179,15 +217,28 @@ const geographicRegionData = computed(() => {
 /** Statistical: full-attribute marker list (derived from same raw data) */
 const markers = computed(() => [
   ...rawVillages.value.map((v: any) => ({
-    id: v.id, name: v.name, lng: v.lng, lat: v.lat, type: "village" as const,
-    county: v.county, department: v.department, supportUnit: v.supportUnit,
+    id: v.id,
+    name: v.name,
+    lng: v.lng,
+    lat: v.lat,
+    type: "village" as const,
+    county: v.county,
+    department: v.department,
+    supportUnit: v.supportUnit,
     tieredDevelopmentLevel: v.tieredDevelopmentLevel,
-    isThreeRegions: v.isThreeRegions, isKeyCounty: v.isKeyCounty,
+    isThreeRegions: v.isThreeRegions,
+    isKeyCounty: v.isKeyCounty,
     isProvincialDemo: v.isProvincialDemo,
   })),
   ...rawSchools.value.map((s: any) => ({
-    id: s.id, name: s.name, lng: s.lng, lat: s.lat, type: "school" as const,
-    district: s.district, schoolType: s.type, supportStatus: s.supportStatus,
+    id: s.id,
+    name: s.name,
+    lng: s.lng,
+    lat: s.lat,
+    type: "school" as const,
+    district: s.district,
+    schoolType: s.type,
+    supportStatus: s.supportStatus,
   })),
 ]);
 
@@ -202,14 +253,22 @@ async function loadData() {
       getMapMarkers("all"),
       getRegions("county"),
     ]);
-    const markerData = markerResult.status === "fulfilled" ? markerResult.value : { villages: [], schools: [] };
-    const regionResp = regionResult.status === "fulfilled" ? regionResult.value : { total: 0, items: [] };
+    const markerData =
+      markerResult.status === "fulfilled"
+        ? markerResult.value
+        : { villages: [], schools: [] };
+    const regionResp =
+      regionResult.status === "fulfilled"
+        ? regionResult.value
+        : { total: 0, items: [] };
 
     rawVillages.value = markerData?.villages || [];
     rawSchools.value = markerData?.schools || [];
     regionData.value = (regionResp.items || []).map((r: any) => ({
-      code: r.code, name: r.name,
-      centerLng: r.centerLng, centerLat: r.centerLat,
+      code: r.code,
+      name: r.name,
+      centerLng: r.centerLng,
+      centerLat: r.centerLat,
       geometry: r.geometry,
     }));
 
@@ -253,10 +312,20 @@ function handleCalcRoutes() {
   const allTargets = [
     ...rawVillages.value
       .filter((v: any) => v.lng != null && v.lat != null)
-      .map((v: any) => ({ lng: v.lng, lat: v.lat, name: v.name, type: "village" as const })),
+      .map((v: any) => ({
+        lng: v.lng,
+        lat: v.lat,
+        name: v.name,
+        type: "village" as const,
+      })),
     ...rawSchools.value
       .filter((s: any) => s.lng != null && s.lat != null)
-      .map((s: any) => ({ lng: s.lng, lat: s.lat, name: s.name, type: "school" as const })),
+      .map((s: any) => ({
+        lng: s.lng,
+        lat: s.lat,
+        name: s.name,
+        type: "school" as const,
+      })),
   ];
 
   const results: RouteResult[] = allTargets.map((t) => {

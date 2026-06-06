@@ -39,7 +39,8 @@ export const useUserStore = defineStore("user", () => {
         total.value = res.data.total ?? 0;
       }
     } catch (e: any) {
-      error.value = e?.response?.data?.message || e?.message || "获取用户列表失败";
+      error.value =
+        e?.response?.data?.message || e?.message || "获取用户列表失败";
     } finally {
       loading.value = false;
     }
@@ -55,7 +56,8 @@ export const useUserStore = defineStore("user", () => {
         return res.data;
       }
     } catch (e: any) {
-      error.value = e?.response?.data?.message || e?.message || "获取用户详情失败";
+      error.value =
+        e?.response?.data?.message || e?.message || "获取用户详情失败";
     } finally {
       loading.value = false;
     }

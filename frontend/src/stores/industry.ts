@@ -6,7 +6,7 @@ export const useIndustryStore = defineStore("industry", () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  async function fetchIndustries(params?: any) {
+  async function fetchIndustries(_params?: any) {
     loading.value = true;
     error.value = null;
     try {

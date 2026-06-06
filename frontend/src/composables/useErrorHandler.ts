@@ -23,7 +23,11 @@ export function useErrorHandler() {
    * @param context - 操作上下文描述（如"加载预算数据"）
    * @param showNotification - 是否展示用户通知（默认 true）
    */
-  function handleError(err: any, context?: string, showNotification: boolean = true) {
+  function handleError(
+    err: any,
+    context?: string,
+    showNotification: boolean = true,
+  ) {
     const message =
       err?.response?.data?.message ||
       err?.response?.data?.detail ||
@@ -42,7 +46,11 @@ export function useErrorHandler() {
     };
 
     // 控制台日志（用于调试）
-    console.error("[ErrorHandler]", context || "unknown context", errorState.value);
+    console.error(
+      "[ErrorHandler]",
+      context || "unknown context",
+      errorState.value,
+    );
 
     // 用户可见通知（Element Plus ElMessage）
     if (showNotification) {

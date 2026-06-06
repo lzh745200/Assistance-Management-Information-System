@@ -21,7 +21,10 @@ export interface BackupStats {
 
 const BASE = "/system/backup";
 
-export async function getBackupList(params?: { page?: number; page_size?: number }) {
+export async function getBackupList(params?: {
+  page?: number;
+  page_size?: number;
+}) {
   const res = await request.get(BASE, { params });
   return res.data;
 }

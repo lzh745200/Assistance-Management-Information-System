@@ -195,11 +195,14 @@ const handleLogin = async () => {
 
       // 首次登录 → 跳转修改密码页（保留原始重定向目标）
       if (authStore.mustChangePassword) {
-        const target = typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
-          ? `/change-password?redirect=${encodeURIComponent(redirect)}`
-          : '/change-password'
-        router.push(target)
-        return
+        const target =
+          typeof redirect === "string" &&
+          redirect.startsWith("/") &&
+          !redirect.startsWith("//")
+            ? `/change-password?redirect=${encodeURIComponent(redirect)}`
+            : "/change-password";
+        router.push(target);
+        return;
       }
 
       // 安全校验：仅允许站内相对路径跳转
@@ -439,7 +442,10 @@ const goToMachineCode = () => {
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 10px;
   font-size: 15px;
-  transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
   box-sizing: border-box;
@@ -487,7 +493,10 @@ const goToMachineCode = () => {
   font-size: 17px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    background 0.3s ease;
   margin-top: 10px;
   box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
 }

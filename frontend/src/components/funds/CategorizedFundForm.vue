@@ -79,55 +79,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
+import { ref, reactive, computed, watch } from "vue";
+import type { FormInstance, FormRules } from "element-plus";
 
 const props = defineProps<{
-  initialData?: Record<string, any>
-}>()
+  initialData?: Record<string, any>;
+}>();
 
 const emit = defineEmits<{
-  (e: 'submit', data: Record<string, any>): void
-}>()
+  (e: "submit", data: Record<string, any>): void;
+}>();
 
-const formRef = ref<FormInstance>()
-const currentYear = new Date().getFullYear()
+const formRef = ref<FormInstance>();
+const currentYear = new Date().getFullYear();
 const yearOptions = computed(() => {
-  const years: number[] = []
+  const years: number[] = [];
   for (let y = currentYear; y >= currentYear - 10; y--) {
-    years.push(y)
+    years.push(y);
   }
-  return years
-})
+  return years;
+});
 
 const formData = reactive({
   year: props.initialData?.year ?? currentYear,
   totalAmount: props.initialData?.totalAmount ?? 0,
   usedAmount: props.initialData?.usedAmount ?? 0,
-  remainingAmount: computed(() => formData.totalAmount - formData.usedAmount) as unknown as number,
-  remark: props.initialData?.remark ?? '',
-})
+  remainingAmount: computed(
+    () => formData.totalAmount - formData.usedAmount,
+  ) as unknown as number,
+  remark: props.initialData?.remark ?? "",
+});
 
-watch(() => [formData.totalAmount, formData.usedAmount], () => {
-  formData.remainingAmount = formData.totalAmount - formData.usedAmount
-})
+watch(
+  () => [formData.totalAmount, formData.usedAmount],
+  () => {
+    formData.remainingAmount = formData.totalAmount - formData.usedAmount;
+  },
+);
 
 const rules: FormRules = {
-  year: [{ required: true, message: '请选择年份', trigger: 'change' }],
-  totalAmount: [{ required: true, message: '请输入资金总额', trigger: 'blur' }],
-}
+  year: [{ required: true, message: "请选择年份", trigger: "change" }],
+  totalAmount: [{ required: true, message: "请输入资金总额", trigger: "blur" }],
+};
 
 async function handleSubmit() {
-  if (!formRef.value) return
+  if (!formRef.value) return;
   await formRef.value.validate((valid) => {
     if (valid) {
-      emit('submit', { ...formData })
+      emit("submit", { ...formData });
     }
-  })
+  });
 }
 
 function handleReset() {
-  formRef.value?.resetFields()
+  formRef.value?.resetFields();
 }
 </script>
 
