@@ -5,4 +5,6 @@
  */
 
 export { exportUtil, exportUtil as default } from "./exportUtil";
-export { exportToExcel, exportToCSV, exportToPDF } from "./exportUtil";
+export const exportToExcel = exportUtil.exportToExcel;
+export const exportToCSV = exportUtil.exportToCSV;
+export const exportToPDF = exportUtil.exportToPDF;

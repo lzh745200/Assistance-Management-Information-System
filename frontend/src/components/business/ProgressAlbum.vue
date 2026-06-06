@@ -74,8 +74,8 @@ withDefaults(
 
 function getStatusType(
   status: string,
-): "success" | "warning" | "danger" | "info" | "" {
-  const map: Record<string, "success" | "warning" | "danger" | "info" | ""> = {
+): "success" | "warning" | "danger" | "info" | "primary" | "" {
+  const map: Record<string, "success" | "warning" | "danger" | "info" | "primary" | ""> = {
     completed: "success",
     in_progress: "warning",
     进行中: "warning",
