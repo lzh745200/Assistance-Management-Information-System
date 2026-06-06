@@ -1,4 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+// Mock dynamic import of HomeSafe.vue in performance.ts
+vi.mock('@/views/HomeSafe.vue', () => ({ default: {} }))
+
 import {
   preloadResource,
   prefetchResource,
