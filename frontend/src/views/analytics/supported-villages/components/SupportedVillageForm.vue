@@ -291,7 +291,10 @@ import type {
 import GuizhouRegionSelector from "@/components/common/GuizhouRegionSelector.vue";
 import type { RegionValue } from "@/components/common/GuizhouRegionSelector.vue";
 import MapPicker from "@/components/MapPicker.vue";
-import { DEFAULT_CITY, DEFAULT_PROVINCE } from "@/components/common/qiannanRegion";
+import {
+  DEFAULT_CITY,
+  DEFAULT_PROVINCE,
+} from "@/components/common/qiannanRegion";
 import {
   getTransitionFunding,
   saveTransitionFunding,

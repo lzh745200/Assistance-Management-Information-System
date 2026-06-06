@@ -13,6 +13,6 @@ defineProps<{
   province?: string;
   county?: string;
   tier?: string;
-  revitalization_tier?: string;
+  revitalizationTier?: string;
 }>();
 </script>

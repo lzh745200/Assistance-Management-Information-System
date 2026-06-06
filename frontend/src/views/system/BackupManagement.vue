@@ -118,8 +118,19 @@ import { UploadFilled } from "@element-plus/icons-vue";
 import request from "@/utils/request";
 
 /** 统一消息通知 — 页面正中显示 */
-function notify(title: string, message: string, type: "success" | "error" | "warning" | "info" = "success") {
-  ElNotification({ title, message, type, position: "top-center", duration: 3000, showClose: true });
+function notify(
+  title: string,
+  message: string,
+  type: "success" | "error" | "warning" | "info" = "success",
+) {
+  ElNotification({
+    title,
+    message,
+    type,
+    position: "top-center",
+    duration: 3000,
+    showClose: true,
+  });
 }
 
 const backupList = ref([]);

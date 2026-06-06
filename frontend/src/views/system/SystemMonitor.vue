@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2>系统健康检查</h2>
       <el-button-group>
-        <el-button :icon="Refresh" @click="runHealthCheck" :loading="checking">
+        <el-button :icon="Refresh" :loading="checking" @click="runHealthCheck">
           运行检查
         </el-button>
         <el-button @click="exportReport">导出报告</el-button>

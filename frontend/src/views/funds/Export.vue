@@ -1,2 +1,21 @@
-<template><div class="fund-export"><el-card><el-form><el-form-item label="导出格式"><el-select v-model="format"><el-option label="Excel" value="xlsx"/><el-option label="PDF" value="pdf"/></el-select></el-form-item><el-button type="primary" @click="handleExport">导出</el-button></el-form></el-card></div></template>
-<script setup lang="ts">import {ref} from "vue";const format=ref("xlsx");function handleExport(){}</script>
+<template>
+  <div class="fund-export">
+    <el-card
+      ><el-form
+        ><el-form-item label="导出格式"
+          ><el-select v-model="format"
+            ><el-option label="Excel" value="xlsx" /><el-option
+              label="PDF"
+              value="pdf" /></el-select></el-form-item
+        ><el-button type="primary" @click="handleExport"
+          >导出</el-button
+        ></el-form
+      ></el-card
+    >
+  </div>
+</template>
+<script setup lang="ts">
+import { ref } from "vue";
+const format = ref("xlsx");
+function handleExport() {}
+</script>

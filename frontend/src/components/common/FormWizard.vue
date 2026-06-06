@@ -18,110 +18,112 @@
     </el-steps>
 
     <!-- 步骤内容 -->
-    <div class="step-content" role="region" :aria-label="`步骤 ${currentStep + 1}: ${steps[currentStep]?.title}`">
-      <slot :name="`step-${currentStep}`" :step="currentStep" :data="formData" />
+    <div
+      class="step-content"
+      role="region"
+      :aria-label="`步骤 ${currentStep + 1}: ${steps[currentStep]?.title}`"
+    >
+      <slot
+        :name="`step-${currentStep}`"
+        :step="currentStep"
+        :data="formData"
+      />
     </div>
 
     <!-- 操作按钮 -->
     <div class="step-actions">
-      <el-button v-if="currentStep > 0" @click="prevStep" :disabled="isPending">
+      <el-button v-if="currentStep > 0" :disabled="isPending" @click="prevStep">
         上一步
       </el-button>
       <el-button
         v-if="currentStep < steps.length - 1"
         type="primary"
-        @click="nextStep"
         :loading="isPending"
+        @click="nextStep"
       >
         下一步
       </el-button>
-      <el-button
-        v-else
-        type="primary"
-        @click="finish"
-        :loading="isPending"
-      >
+      <el-button v-else type="primary" :loading="isPending" @click="finish">
         {{ finishText }}
       </el-button>
       <el-button @click="reset">重置</el-button>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref } from "vue";
 
 export interface WizardStep {
-  title: string
-  description?: string
+  title: string;
+  description?: string;
   /** 步骤验证函数，返回 true 方可进入下一步 */
-  validate?: (data: Record<string, any>) => boolean | Promise<boolean>
+  validate?: (data: Record<string, any>) => boolean | Promise<boolean>;
 }
 
 const props = defineProps<{
-  steps: WizardStep[]
-  title?: string
-  finishText?: string
-}>()
+  steps: WizardStep[];
+  title?: string;
+  finishText?: string;
+}>();
 
 const emit = defineEmits<{
-  (e: "finish", data: Record<string, any>): void
-  (e: "step-change", step: number): void
-}>()
+  (e: "finish", data: Record<string, any>): void;
+  (e: "step-change", step: number): void;
+}>();
 
-const currentStep = ref(0)
-const isPending = ref(false)
-const formData = ref<Record<string, any>>({})
+const currentStep = ref(0);
+const isPending = ref(false);
+const formData = ref<Record<string, any>>({});
 
-const stepErrors = ref<Record<number, boolean>>({})
+const stepErrors = ref<Record<number, boolean>>({});
 
-type StepStatus = "success" | "error" | "process" | "wait" | "finish"
+type StepStatus = "success" | "error" | "process" | "wait" | "finish";
 
 function stepStatus(index: number): StepStatus {
-  if (index < currentStep.value) return "success"
-  if (index === currentStep.value && stepErrors.value[index]) return "error"
-  if (index === currentStep.value) return "process"
-  return "wait"
+  if (index < currentStep.value) return "success";
+  if (index === currentStep.value && stepErrors.value[index]) return "error";
+  if (index === currentStep.value) return "process";
+  return "wait";
 }
 
 /** Shared validation — returns true if the current step passes (or has no validator). */
 async function validateCurrentStep(): Promise<boolean> {
-  const step = props.steps[currentStep.value]
-  if (!step?.validate) return true
-  isPending.value = true
+  const step = props.steps[currentStep.value];
+  if (!step?.validate) return true;
+  isPending.value = true;
   try {
-    const valid = await step.validate(formData.value)
-    if (!valid) stepErrors.value[currentStep.value] = true
-    return valid
+    const valid = await step.validate(formData.value);
+    if (!valid) stepErrors.value[currentStep.value] = true;
+    return valid;
   } finally {
-    isPending.value = false
+    isPending.value = false;
   }
 }
 
 async function nextStep() {
-  if (!(await validateCurrentStep())) return
-  stepErrors.value[currentStep.value] = false
-  currentStep.value++
-  emit("step-change", currentStep.value)
+  if (!(await validateCurrentStep())) return;
+  stepErrors.value[currentStep.value] = false;
+  currentStep.value++;
+  emit("step-change", currentStep.value);
 }
 
 function prevStep() {
   if (currentStep.value > 0) {
-    currentStep.value--
-    emit("step-change", currentStep.value)
+    currentStep.value--;
+    emit("step-change", currentStep.value);
   }
 }
 
 async function finish() {
-  if (!(await validateCurrentStep())) return
-  emit("finish", formData.value)
+  if (!(await validateCurrentStep())) return;
+  emit("finish", formData.value);
 }
 
 function reset() {
-  currentStep.value = 0
-  formData.value = {}
-  stepErrors.value = {}
+  currentStep.value = 0;
+  formData.value = {};
+  stepErrors.value = {};
 }
 </script>
 

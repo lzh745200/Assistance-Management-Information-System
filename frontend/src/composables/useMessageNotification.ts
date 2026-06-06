@@ -56,7 +56,10 @@ export function useMessageNotification() {
       const count = await getUnreadCount();
       if (count > lastUnread) {
         const newCount = count - lastUnread;
-        showNotification("新消息提醒", `您有 ${newCount} 条新消息，请及时查看。`);
+        showNotification(
+          "新消息提醒",
+          `您有 ${newCount} 条新消息，请及时查看。`,
+        );
       }
       lastUnread = count;
     } catch {

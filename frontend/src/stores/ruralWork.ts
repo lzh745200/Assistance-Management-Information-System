@@ -7,7 +7,7 @@ export const useRuralWorkStore = defineStore("ruralWork", () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  async function fetchWorks(params?: any) {
+  async function fetchWorks(_params?: any) {
     loading.value = true;
     error.value = null;
     try {

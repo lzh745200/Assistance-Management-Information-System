@@ -70,5 +70,16 @@ export const useFundsStore = defineStore("funds", () => {
     if (idx >= 0) fundList.value[idx].status = "approved";
   }
 
-  return { fundList, current, loading, total, fetchFunds, createFund, updateFund, deleteFund, getSummary, approveFund };
+  return {
+    fundList,
+    current,
+    loading,
+    total,
+    fetchFunds,
+    createFund,
+    updateFund,
+    deleteFund,
+    getSummary,
+    approveFund,
+  };
 });

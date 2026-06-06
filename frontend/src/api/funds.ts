@@ -98,27 +98,45 @@ export const fundApi = {
 
   // ========== 工作流 ==========
   async approve(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/approve`, data || {});
+    const response = await request.post(
+      `${FUNDS_BASE}/${id}/approve`,
+      data || {},
+    );
     return response.data;
   },
   async reject(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/reject`, data || {});
+    const response = await request.post(
+      `${FUNDS_BASE}/${id}/reject`,
+      data || {},
+    );
     return response.data;
   },
   async allocate(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/allocate`, data || {});
+    const response = await request.post(
+      `${FUNDS_BASE}/${id}/allocate`,
+      data || {},
+    );
     return response.data;
   },
   async startUse(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/start-use`, data || {});
+    const response = await request.post(
+      `${FUNDS_BASE}/${id}/start-use`,
+      data || {},
+    );
     return response.data;
   },
   async complete(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/complete`, data || {});
+    const response = await request.post(
+      `${FUNDS_BASE}/${id}/complete`,
+      data || {},
+    );
     return response.data;
   },
   async audit(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/audit`, data || {});
+    const response = await request.post(
+      `${FUNDS_BASE}/${id}/audit`,
+      data || {},
+    );
     return response.data;
   },
 
@@ -130,9 +148,12 @@ export const fundApi = {
   async statisticsMultiDimension(
     params?: Record<string, string | number | boolean>,
   ) {
-    const response = await request.get(`${FUNDS_BASE}/statistics/multi-dimension`, {
-      params,
-    });
+    const response = await request.get(
+      `${FUNDS_BASE}/statistics/multi-dimension`,
+      {
+        params,
+      },
+    );
     return response.data;
   },
 
@@ -161,7 +182,9 @@ export const fundApi = {
     return (d.data || d) as { items: unknown[]; total: number };
   },
   async deleteAttachment(attachmentId: number) {
-    const response = await request.delete(`${FUNDS_BASE}/attachments/${attachmentId}`);
+    const response = await request.delete(
+      `${FUNDS_BASE}/attachments/${attachmentId}`,
+    );
     return response.data;
   },
   getPreviewUrl(attachmentId: number) {
@@ -207,4 +230,3 @@ export const fundApi = {
     return response.data;
   },
 };
-

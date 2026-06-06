@@ -12,7 +12,12 @@ export interface UnwrappedList {
  *   { code, data: { items, total } } — 标准 API 响应
  */
 export function unwrapList(res: any): UnwrappedList {
-  if (res?.items) return { items: res.items, total: res.total ?? res.items.length };
-  if (res?.data?.items) return { items: res.data.items, total: res.data.total ?? res.data.items.length };
+  if (res?.items)
+    return { items: res.items, total: res.total ?? res.items.length };
+  if (res?.data?.items)
+    return {
+      items: res.data.items,
+      total: res.data.total ?? res.data.items.length,
+    };
   return { items: [], total: 0 };
 }

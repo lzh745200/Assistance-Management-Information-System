@@ -204,7 +204,8 @@ const handleResetPassword = async () => {
       currentStep.value = 1;
       ElMessage.success("密码重置成功");
     } else {
-      const errMsg = resData?.message || resData?.detail || "重置密码失败，请检查填写信息";
+      const errMsg =
+        resData?.message || resData?.detail || "重置密码失败，请检查填写信息";
       ElMessage.error(errMsg);
     }
   } catch (error: any) {

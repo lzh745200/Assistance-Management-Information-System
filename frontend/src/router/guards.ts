@@ -28,7 +28,8 @@ router.beforeEach((to, _from, next) => {
   if (requiredRoles && requiredRoles.length > 0) {
     const user = AuthStorage.getUser() as Record<string, any> | null;
     const userRole = user?.role || "";
-    const hasAccess = ADMIN_ROLES.includes(userRole) || requiredRoles.includes(userRole);
+    const hasAccess =
+      ADMIN_ROLES.includes(userRole) || requiredRoles.includes(userRole);
     if (!hasAccess) {
       next("/403");
       return;

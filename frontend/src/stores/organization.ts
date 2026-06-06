@@ -15,8 +15,11 @@ export const useOrganizationStore = defineStore("organization", () => {
     try {
       const res = await get<ApiResponse<any[]>>("/organizations", { params });
       if (res.code === 200 && res.data) orgs.value = res.data;
-    } catch { /* silent */ }
-    finally { loading.value = false; }
+    } catch {
+      /* silent */
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function fetchOrganization(id: number) {
@@ -24,15 +27,20 @@ export const useOrganizationStore = defineStore("organization", () => {
     try {
       const res = await get<ApiResponse<any>>("/organizations/" + id);
       if (res.code === 200) current.value = res.data;
-    } catch { /* silent */ }
-    finally { loading.value = false; }
+    } catch {
+      /* silent */
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function fetchTree() {
     try {
       const res = await get<ApiResponse<any[]>>("/organizations/tree");
       if (res.code === 200 && res.data) tree.value = res.data;
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
   async function createOrganization(data: any) {
@@ -77,10 +85,17 @@ export const useOrganizationStore = defineStore("organization", () => {
   }
 
   return {
-    orgs, current, tree, loading,
+    orgs,
+    current,
+    tree,
+    loading,
     subordinateOrganizations,
-    fetchOrganizations, fetchOrganization, fetchTree,
-    createOrganization, updateOrganization, deleteOrganization,
+    fetchOrganizations,
+    fetchOrganization,
+    fetchTree,
+    createOrganization,
+    updateOrganization,
+    deleteOrganization,
     fetchSubordinateOrganizations,
   };
 });

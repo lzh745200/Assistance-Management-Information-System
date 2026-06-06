@@ -89,10 +89,14 @@ export const EDUCATION_ACTIVITY_TYPES = [
   { label: "其他", value: "other" },
 ];
 
-export function detectRegionAttributes(province?: string, _city?: string, _county?: string) {
+export function detectRegionAttributes(
+  province?: string,
+  _city?: string,
+  _county?: string,
+) {
   // 兼容旧版三参数调用：从省份值反查标签
   const provinceObj = PROVINCES.find(
-    (p) => p.value === province || p.label === province
+    (p) => p.value === province || p.label === province,
   );
   return {
     province: provinceObj?.label || province || "",

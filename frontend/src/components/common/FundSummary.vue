@@ -1,11 +1,11 @@
 <template>
   <div class="fund-summary">
     <el-row :gutter="16">
-      <el-col :xs="12" :sm="6" v-for="item in items" :key="item.key">
+      <el-col v-for="item in items" :key="item.key" :xs="12" :sm="6">
         <el-card shadow="hover" class="fund-summary__card">
           <el-statistic :title="item.label" :value="item.value">
-            <template #prefix v-if="item.prefix">{{ item.prefix }}</template>
-            <template #suffix v-if="item.suffix">{{ item.suffix }}</template>
+            <template v-if="item.prefix" #prefix>{{ item.prefix }}</template>
+            <template v-if="item.suffix" #suffix>{{ item.suffix }}</template>
           </el-statistic>
         </el-card>
       </el-col>

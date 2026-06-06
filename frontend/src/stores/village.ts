@@ -21,8 +21,11 @@ export const useVillageStore = defineStore("village", () => {
       const { items, total: t } = unwrapList(res);
       villages.value = items;
       total.value = t;
-    } catch { /* silent */ }
-    finally { loading.value = false; }
+    } catch {
+      /* silent */
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function fetchVillage(id: number) {
@@ -30,8 +33,11 @@ export const useVillageStore = defineStore("village", () => {
     try {
       const res = await get<any>("/supported-villages/" + id);
       current.value = _unwrapSingle(res);
-    } catch { /* silent */ }
-    finally { loading.value = false; }
+    } catch {
+      /* silent */
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function createVillage(data: any) {
@@ -55,5 +61,15 @@ export const useVillageStore = defineStore("village", () => {
     total.value--;
   }
 
-  return { villages, current, loading, total, fetchVillages, fetchVillage, createVillage, updateVillage, deleteVillage };
+  return {
+    villages,
+    current,
+    loading,
+    total,
+    fetchVillages,
+    fetchVillage,
+    createVillage,
+    updateVillage,
+    deleteVillage,
+  };
 });

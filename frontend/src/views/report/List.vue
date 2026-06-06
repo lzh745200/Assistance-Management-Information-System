@@ -1,1 +1,8 @@
-<template><div class="report-list"><el-card><el-table :data="[]"><el-table-column prop="name" label="报表名称"/></el-table></el-card></div></template>
+<template>
+  <div class="report-list">
+    <el-card
+      ><el-table :data="[]"
+        ><el-table-column prop="name" label="报表名称" /></el-table
+    ></el-card>
+  </div>
+</template>

@@ -202,7 +202,10 @@ const getMachineCode = async () => {
       machineData.value = payload as MachineData;
       ElMessage.success("机器码获取成功");
     } else {
-      const errMsg = response.data?.message || response.data?.detail || "获取机器码失败，请重试";
+      const errMsg =
+        response.data?.message ||
+        response.data?.detail ||
+        "获取机器码失败，请重试";
       ElMessage.error(errMsg);
     }
   } catch (error: any) {

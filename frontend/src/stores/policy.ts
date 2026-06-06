@@ -11,13 +11,19 @@ export const usePolicyStore = defineStore("policy", () => {
   async function fetchPolicies(params?: any) {
     loading.value = true;
     try {
-      const res = await get<{ code: number; data: any[]; total?: number }>("/policies", { params });
+      const res = await get<{ code: number; data: any[]; total?: number }>(
+        "/policies",
+        { params },
+      );
       if (res.code === 200 && res.data) {
         policyList.value = res.data;
         total.value = res.total || res.data.length;
       }
-    } catch { /* silent */ }
-    finally { loading.value = false; }
+    } catch {
+      /* silent */
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function fetchPolicy(id: number) {
@@ -25,8 +31,11 @@ export const usePolicyStore = defineStore("policy", () => {
     try {
       const res = await get<{ code: number; data: any }>("/policies/" + id);
       if (res.code === 200) current.value = res.data;
-    } catch { /* silent */ }
-    finally { loading.value = false; }
+    } catch {
+      /* silent */
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function createPolicy(data: any) {
@@ -42,7 +51,8 @@ export const usePolicyStore = defineStore("policy", () => {
     const res = await put("/policies/" + id, data);
     if (res.code === 200) {
       const idx = policyList.value.findIndex((p: any) => p.id === id);
-      if (idx >= 0) policyList.value[idx] = { ...policyList.value[idx], ...data };
+      if (idx >= 0)
+        policyList.value[idx] = { ...policyList.value[idx], ...data };
     }
     return res;
   }
@@ -56,5 +66,15 @@ export const usePolicyStore = defineStore("policy", () => {
     return res;
   }
 
-  return { policyList, current, loading, total, fetchPolicies, fetchPolicy, createPolicy, updatePolicy, deletePolicy };
+  return {
+    policyList,
+    current,
+    loading,
+    total,
+    fetchPolicies,
+    fetchPolicy,
+    createPolicy,
+    updatePolicy,
+    deletePolicy,
+  };
 });

@@ -4,7 +4,7 @@
     :title="title"
     :width="width"
     @update:model-value="$emit('close')"
-    ><slot /><template #footer v-if="$slots.footer"
+    ><slot /><template v-if="$slots.footer" #footer
       ><slot name="footer" /></template
   ></el-dialog>
 </template>

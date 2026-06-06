@@ -27,17 +27,25 @@ export const useRbacStore = defineStore("rbac", () => {
     try {
       const res = await get<{ code: number; data: Role[] }>("/rbac/roles");
       if (res.code === 200 && res.data) roles.value = res.data;
-    } catch { /* silent */ }
-    finally { loading.value = false; }
+    } catch {
+      /* silent */
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function fetchPermissions() {
     loading.value = true;
     try {
-      const res = await get<{ code: number; data: Permission[] }>("/rbac/permissions");
+      const res = await get<{ code: number; data: Permission[] }>(
+        "/rbac/permissions",
+      );
       if (res.code === 200 && res.data) permissions.value = res.data;
-    } catch { /* silent */ }
-    finally { loading.value = false; }
+    } catch {
+      /* silent */
+    } finally {
+      loading.value = false;
+    }
   }
 
   function hasPermission(userRole: string, permission: string): boolean {
@@ -46,9 +54,20 @@ export const useRbacStore = defineStore("rbac", () => {
     if (userRole === "super_admin") return true;
     // Check role-level permissions
     const role = roles.value.find((r) => r.name === userRole);
-    if (role?.permissions.includes("*") || role?.permissions.includes(permission)) return true;
+    if (
+      role?.permissions.includes("*") ||
+      role?.permissions.includes(permission)
+    )
+      return true;
     return false;
   }
 
-  return { roles, permissions, loading, fetchRoles, fetchPermissions, hasPermission };
+  return {
+    roles,
+    permissions,
+    loading,
+    fetchRoles,
+    fetchPermissions,
+    hasPermission,
+  };
 });

@@ -9,8 +9,14 @@
     <el-card shadow="never">
       <el-calendar v-model="currentDate">
         <template #date-cell="{ data }">
-          <div class="calendar-day" :class="{ today: isToday(data.date) }" @click="selectDate(data.date)">
-            <span class="day-num">{{ data.day.split('-').pop()?.replace(/^0/, '') }}</span>
+          <div
+            class="calendar-day"
+            :class="{ today: isToday(data.date) }"
+            @click="selectDate(data.date)"
+          >
+            <span class="day-num">{{
+              data.day.split("-").pop()?.replace(/^0/, "")
+            }}</span>
             <div class="events">
               <el-tag
                 v-for="evt in getEvents(data.date)"
@@ -37,7 +43,12 @@
     >
       <el-form :model="form" label-width="100px">
         <el-form-item label="日期" required>
-          <el-date-picker v-model="form.date" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" />
+          <el-date-picker
+            v-model="form.date"
+            type="date"
+            placeholder="选择日期"
+            value-format="YYYY-MM-DD"
+          />
         </el-form-item>
         <el-form-item label="标题" required>
           <el-input v-model="form.title" placeholder="工作标题" />
@@ -52,7 +63,12 @@
           </el-select>
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="3" placeholder="工作描述" />
+          <el-input
+            v-model="form.description"
+            type="textarea"
+            :rows="3"
+            placeholder="工作描述"
+          />
         </el-form-item>
         <el-form-item label="地点">
           <el-input v-model="form.location" placeholder="工作地点" />
@@ -60,7 +76,9 @@
       </el-form>
       <template #footer>
         <el-button @click="closeDialog">取消</el-button>
-        <el-button v-if="editingId" type="danger" @click="deleteEvent">删除</el-button>
+        <el-button v-if="editingId" type="danger" @click="deleteEvent"
+          >删除</el-button
+        >
         <el-button type="primary" @click="saveEvent">保存</el-button>
       </template>
     </el-dialog>
@@ -68,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import { ElMessage } from "element-plus";
 
 interface WorkEvent {
@@ -105,9 +123,11 @@ function saveEvents() {
 
 function isToday(date: Date): boolean {
   const now = new Date();
-  return date.getFullYear() === now.getFullYear()
-    && date.getMonth() === now.getMonth()
-    && date.getDate() === now.getDate();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
 }
 
 function getEvents(date: Date): WorkEvent[] {
@@ -181,13 +201,48 @@ function deleteEvent() {
 </script>
 
 <style scoped>
-.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-.page-title { font-size:24px; font-weight:700; color:#1a3c2a; margin:0; }
-.page-desc { color:#606266; font-size:14px; margin:0; }
-.calendar-day { min-height:60px; cursor:pointer; padding:4px; }
-.calendar-day:hover { background:#f0f9eb; border-radius:4px; }
-.day-num { font-weight:600; }
-.today .day-num { color:#d4af37; font-weight:700; }
-.events { margin-top:2px; }
-.event-tag { margin:1px 0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a3c2a;
+  margin: 0;
+}
+.page-desc {
+  color: #606266;
+  font-size: 14px;
+  margin: 0;
+}
+.calendar-day {
+  min-height: 60px;
+  cursor: pointer;
+  padding: 4px;
+}
+.calendar-day:hover {
+  background: #f0f9eb;
+  border-radius: 4px;
+}
+.day-num {
+  font-weight: 600;
+}
+.today .day-num {
+  color: #d4af37;
+  font-weight: 700;
+}
+.events {
+  margin-top: 2px;
+}
+.event-tag {
+  margin: 1px 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
 </style>
