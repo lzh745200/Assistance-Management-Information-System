@@ -69,10 +69,11 @@ const cards = computed(() => [
 ]);
 
 const SPARK_COLORS = ["#1e4d8c", "#2d6a4f", "#f59e0b", "#ef4444", "#6366f1"];
+const SPARK_ALPHAS = ["rgba(30,77,140,0.19)", "rgba(45,106,79,0.19)", "rgba(245,158,11,0.19)", "rgba(239,68,68,0.19)", "rgba(99,102,241,0.19)"];
 const sparkRefs: (HTMLElement | null)[] = [null, null, null, null, null];
 let sparkCharts: (echarts.ECharts | null)[] = [];
 
-function makeSparkOption(data: number[], color: string): echarts.EChartsCoreOption {
+function makeSparkOption(data: number[], color: string, alpha: string): echarts.EChartsCoreOption {
   return {
     grid: { left: 0, right: 0, top: 2, bottom: 0 },
     xAxis: { type: "category", data: data.map((_, idx) => idx), show: false },
@@ -81,7 +82,7 @@ function makeSparkOption(data: number[], color: string): echarts.EChartsCoreOpti
       type: "line", data, smooth: true, symbol: "none",
       lineStyle: { width: 2, color },
       areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-        { offset: 0, color: color + "30" }, { offset: 1, color: "rgba(255,255,255,0)" },
+        { offset: 0, color: alpha }, { offset: 1, color: "rgba(255,255,255,0)" },
       ])},
     }],
   };
@@ -92,9 +93,13 @@ function initSparklines() {
   sparkCharts = sparkRefs.map((el, i) => {
     if (!el) return null;
     const chart = echarts.init(el);
-    const base = Object.values(stats.value)[i] || 100;
+    const statValues = [
+      stats.value.total_villages, stats.value.total_projects, stats.value.total_schools,
+      stats.value.total_funds, stats.value.total_population,
+    ];
+    const base = statValues[i] || 100;
     const data = Array.from({ length: 8 }, () => Math.round(base * (0.7 + Math.random() * 0.5)));
-    chart.setOption(makeSparkOption(data, SPARK_COLORS[i]));
+    chart.setOption(makeSparkOption(data, SPARK_COLORS[i], SPARK_ALPHAS[i]));
     return chart;
   });
 }

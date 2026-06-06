@@ -287,7 +287,7 @@ function handleReset() {
 /**
  * 查看详情
  */
-async function handleViewDetail(task: ApprovalTask) {
+async function handleViewDetail(task: any) {
   currentTask.value = task;
   taskDiff.value = null;
   detailDialogVisible.value = true;
@@ -302,7 +302,7 @@ async function handleViewDetail(task: ApprovalTask) {
 /**
  * 跳转到实体详情
  */
-function handleViewEntity(task: ApprovalTask) {
+function handleViewEntity(task: any) {
   if (task.entity_type === "rural_work") {
     detailDialogVisible.value = false;
     pushSafe({
