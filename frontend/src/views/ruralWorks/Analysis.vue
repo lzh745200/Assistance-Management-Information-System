@@ -472,7 +472,7 @@ const loadData = async () => {
       completed: "已完成",
       delayed: "已延期",
     };
-    const items = res && res.items ? res.items : [];
+    const items = res && (res as any).items ? (res as any).items : [];
     analysisData.value = items.map((item: any) => ({
       workName: item.name || "",
       village: item.village_name || "",

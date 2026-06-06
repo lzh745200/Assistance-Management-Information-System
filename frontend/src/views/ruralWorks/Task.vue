@@ -995,8 +995,8 @@ const loadData = async () => {
   loading.value = true;
   try {
     const res = await getRuralWorks({ limit: 100 });
-    if (res && res.items && res.items.length > 0) {
-      tasks.value = res.items.map((item: any, idx: number) => ({
+    if (res && (res as any).items && (res as any).items.length > 0) {
+      tasks.value = (res as any).items.map((item: any, idx: number) => ({
         id: String(item.id) || `T${String(idx + 1).padStart(3, "0")}`,
         name: item.name || "",
         projectId: "",

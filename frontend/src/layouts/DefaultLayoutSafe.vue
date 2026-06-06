@@ -356,6 +356,8 @@
         <span>帮扶管理信息系统 v1.2.0</span>
       </el-footer>
     </el-container>
+    <!-- 移动端底部导航 -->
+    <MobileBottomNav />
   </div>
 </template>
 
@@ -363,6 +365,7 @@
 import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import MobileBottomNav from "@/components/layout/MobileBottomNav.vue";
 import {
   HomeFilled,
   Folder,

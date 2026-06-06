@@ -437,14 +437,14 @@ const handleImport = () => {
 
     try {
       const result = await importPolicies(file);
-      if (result.errors && result.errors.length > 0) {
-        const errorDetails = result.errors
+      if ((result as any).errors && (result as any).errors.length > 0) {
+        const errorDetails = (result as any).errors
           .slice(0, 5)
           .map((err: any) => `第${err.row}行「${err.title}」: ${err.error}`)
           .join("\n");
         const moreText =
-          result.errors.length > 5
-            ? `\n...还有 ${result.errors.length - 5} 条错误`
+          (result as any).errors.length > 5
+            ? `\n...还有 ${(result as any).errors.length - 5} 条错误`
             : "";
 
         ElMessage.warning({

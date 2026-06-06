@@ -52,7 +52,7 @@ export const routes: RouteRecordRaw[] = [
       {
         path: "/dashboard",
         name: "Dashboard",
-        component: () => import("@/views/HomeSafe.vue"),
+        component: () => import("@/views/dashboard/index.vue"),
         meta: { title: "工作台" },
       },
       // ── 帮扶学校 ──
