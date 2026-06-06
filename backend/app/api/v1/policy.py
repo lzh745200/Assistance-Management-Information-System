@@ -1375,3 +1375,19 @@ async def get_user_favorites(user_id: int, current_user=Depends(get_current_user
         return []
     items = db.query(Policy).filter(Policy.id.in_(policy_ids)).all()
     return [_policy_to_frontend(p) for p in items]
+
+
+# ── FTS5 全文搜索 ──
+
+@router.get("/search")
+async def search_policies(
+    q: str = Query("", description="搜索关键词"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    """全文检索帮扶政策（FTS5 + 关键词高亮）"""
+    from app.services.policy_fts_service import search_policies_fts
+    results = search_policies_fts(db, q, limit=limit, offset=offset)
+    return {"data": results, "total": len(results), "query": q}
+

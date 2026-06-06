@@ -80,7 +80,7 @@ class AnomalyDetectionService:
         for idx, pred in enumerate(predictions):
             if pred == -1:  # -1表示异常
                 anomaly = data[idx].copy()
-                anomaly["anomaly_score"] = float(model.score_samples(values_scaled[idx : idx + 1])[0])
+                anomaly["anomaly_score"] = float(model.score_samples(values_scaled[idx: idx + 1])[0])
                 anomaly["method"] = "isolation_forest"
                 anomalies.append(anomaly)
 

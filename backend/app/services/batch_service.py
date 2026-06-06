@@ -1,8 +1,7 @@
 """批量操作服务。"""
 import logging
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

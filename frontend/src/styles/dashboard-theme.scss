@@ -1,0 +1,619 @@
+/**
+ * Dashboard 深度视觉主题
+ *
+ * 职责：
+ * 1. 覆盖 Element Plus CSS 变量 → 干净精美的卡片/边框/阴影
+ * 2. 数据专属字体定义（等宽科技感数字）
+ * 3. 卡片 Hover 微交互（上浮 + 阴影加深）
+ * 4. 页面背景降饱和、图表容器现代化
+ *
+ * 设计原则：
+ * - 不破坏现有全局样式，通过 .dashboard-modern 作用域隔离
+ * - 与 tokens.scss 和 [data-theme="military"] 完全兼容
+ * - 所有过渡使用 cubic-bezier 保证流畅度
+ *
+ * 集成方式：在 main.ts 中 `import '@/styles/dashboard-theme.scss'`
+ */
+
+// ============================================================================
+// 1. Dashboard 专属 CSS 变量层
+// ============================================================================
+
+:root {
+  // ── 卡片阴影体系（比默认更柔和、更有层次） ──
+  --dash-card-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --dash-card-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --dash-card-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --dash-card-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.10), 0 6px 12px rgba(0, 0, 0, 0.06);
+
+  // ── 数据专属字体栈（等宽科技感） ──
+  // 优先级: DIN Alternate → Roboto Mono → JetBrains Mono → Consolas → 系统等宽
+  --dash-font-data:
+    'DIN Alternate', 'Roboto Mono', 'JetBrains Mono', 'Consolas',
+    'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+
+  // ── 数据字体尺寸阶梯 ──
+  --dash-data-size-sm: 16px;    // 小标签数值
+  --dash-data-size-md: 24px;    // 卡片主数值
+  --dash-data-size-lg: 32px;    // KPI 核心数值
+  --dash-data-size-xl: 40px;    // Hero 数值
+
+  // ── 数据字体字重 ──
+  --dash-data-weight: 700;       // 加粗突出
+  --dash-data-weight-hero: 800;  // Hero 数值超粗
+
+  // ── 圆角体系（比全局更大，更现代） ──
+  --dash-radius-card: 12px;
+  --dash-radius-stat-icon: 14px;
+
+  // ── 微交互参数 ──
+  --dash-hover-lift: -4px;              // hover 上浮距离
+  --dash-transition-card: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);  // 卡片过渡
+  --dash-transition-number: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);   // 数字弹性过渡
+
+  // ── 页面背景色（比默认 #f5f7fa 更克制） ──
+  --dash-bg-page: #f0f2f5;
+  --dash-bg-card: #ffffff;
+  --dash-bg-card-hover: #fafbfc;
+
+  // ── 趋势指示色 ──
+  --dash-trend-up: #22c55e;      // 环比上升（绿）
+  --dash-trend-down: #ef4444;    // 环比下降（红）
+  --dash-trend-flat: #94a3b8;    // 持平（灰）
+
+  // ── 军事蓝 + 振兴绿 品牌色 ──
+  --dash-brand-blue: #1e4d8c;    // 军队蓝
+  --dash-brand-green: #2d6a4f;   // 振兴绿
+  --dash-brand-gold: #b8960c;    // 点缀金
+
+  // ── 图表容器 ──
+  --dash-chart-bg: #fafbfc;
+  --dash-chart-radius: 12px;
+}
+
+// ============================================================================
+// 2. Dashboard 现代化作用域
+//    在 Dashboard.vue 根元素添加 class="dashboard-modern" 即可激活
+// ============================================================================
+
+.dashboard-modern {
+  // ── 页面背景降饱和 ──
+  background-color: var(--dash-bg-page);
+  min-height: 100%;
+
+  // ========================================================================
+  // 2.1 Element Plus Card 深度覆盖
+  // ========================================================================
+
+  .el-card {
+    border: none;                              // 去除默认生硬边框
+    border-radius: var(--dash-radius-card);    // 12px 大圆角
+    box-shadow: var(--dash-card-shadow-sm);    // 柔和阴影替代边框
+    background: var(--dash-bg-card);
+    transition: var(--dash-transition-card);
+    overflow: hidden;
+
+    &:hover {
+      box-shadow: var(--dash-card-shadow-hover);
+      transform: translateY(var(--dash-hover-lift));
+    }
+  }
+
+  .el-card__header {
+    padding: 16px 20px 0 20px;
+    border-bottom: none;                       // 去除默认分隔线
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--color-text-primary, #1e293b);
+    background: transparent;
+  }
+
+  .el-card__body {
+    padding: 16px 20px 20px 20px;
+  }
+
+  // ========================================================================
+  // 2.2 Element Plus Button / Select / Form 精调
+  // ========================================================================
+
+  .el-button {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+
+    &:not(.el-button--text):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  .el-select .el-input__wrapper {
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px var(--color-border-lighter, #ebeef5) inset;
+    transition: box-shadow 0.25s ease;
+
+    &:hover {
+      box-shadow: 0 0 0 1px var(--color-primary-light-3, #a0cfff) inset;
+    }
+  }
+
+  .el-form-item__label {
+    font-weight: 500;
+    color: var(--color-text-secondary, #64748b);
+    font-size: 13px;
+  }
+
+  // ========================================================================
+  // 2.3 Table 在 Dashboard 中的精调
+  // ========================================================================
+
+  .el-table {
+    border-radius: var(--dash-radius-card);
+    overflow: hidden;
+
+    th.el-table__cell {
+      background-color: #f8fafc;
+      color: var(--color-text-secondary, #64748b);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    td.el-table__cell {
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    // 行 hover 效果
+    .el-table__body tr:hover > td {
+      background-color: #f8fafc;
+    }
+  }
+
+  // ========================================================================
+  // 2.4 滚动条细化
+  // ========================================================================
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+
+    &:hover {
+      background-color: #94a3b8;
+    }
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+}
+
+// ============================================================================
+// 3. 数据专属字体类（全局可用，不受 .dashboard-modern 作用域限制）
+// ============================================================================
+
+// 基础数据数字 - 等宽、加粗、科技感
+.data-number {
+  font-family: var(--dash-font-data);
+  font-weight: var(--dash-data-weight);
+  font-feature-settings: 'tnum' 1, 'ss01' 1;  // 等宽数字 + 风格化字符集
+  letter-spacing: -0.02em;                      // 微调字距使数字更紧凑
+  font-variant-numeric: tabular-nums;           // 表格数字等宽
+  transition: var(--dash-transition-number);
+
+  // 尺寸变体
+  &--sm {
+    font-size: var(--dash-data-size-sm);
+  }
+
+  &--md {
+    font-size: var(--dash-data-size-md);
+  }
+
+  &--lg {
+    font-size: var(--dash-data-size-lg);
+    font-weight: var(--dash-data-weight-hero);
+  }
+
+  &--xl {
+    font-size: var(--dash-data-size-xl);
+    font-weight: var(--dash-data-weight-hero);
+    letter-spacing: -0.03em;
+  }
+}
+
+// 数字单位后缀（跟在数据数字后面）
+.data-unit {
+  font-family: var(--font-family-base);
+  font-size: 0.45em;
+  font-weight: 500;
+  color: var(--color-text-secondary, #94a3b8);
+  margin-left: 2px;
+  letter-spacing: 0;
+}
+
+// ============================================================================
+// 4. 趋势指示标签
+// ============================================================================
+
+.trend-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  line-height: 1.4;
+  font-family: var(--dash-font-data);
+
+  &--up {
+    color: var(--dash-trend-up);
+    background: rgba(34, 197, 94, 0.08);
+
+    .trend-tag__arrow {
+      display: inline-block;
+      transform: rotate(-45deg);
+      font-size: 10px;
+    }
+  }
+
+  &--down {
+    color: var(--dash-trend-down);
+    background: rgba(239, 68, 68, 0.08);
+
+    .trend-tag__arrow {
+      display: inline-block;
+      transform: rotate(45deg);
+      font-size: 10px;
+    }
+  }
+
+  &--flat {
+    color: var(--dash-trend-flat);
+    background: rgba(148, 163, 184, 0.08);
+  }
+}
+
+// ============================================================================
+// 5. 统计卡片容器（供 Dashboard 内 KPI 卡片使用）
+// ============================================================================
+
+.dashboard-modern {
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--dash-bg-card);
+    padding: 20px 24px;
+    border-radius: var(--dash-radius-card);
+    box-shadow: var(--dash-card-shadow-sm);
+    cursor: default;
+    transition: var(--dash-transition-card);
+    position: relative;
+    overflow: hidden;
+
+    // 左侧装饰条（品牌色）
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 40px;
+      border-radius: 0 4px 4px 0;
+      background: var(--color-border-lighter, #e2e8f0);
+      transition: height 0.3s ease, background 0.3s ease;
+    }
+
+    &:hover {
+      box-shadow: var(--dash-card-shadow-hover);
+      transform: translateY(var(--dash-hover-lift));
+
+      &::before {
+        height: 56px;
+      }
+    }
+
+    // 各主题色变体
+    &.primary::before {
+      background: linear-gradient(180deg, var(--dash-brand-blue, #1e4d8c), #3b82f6);
+    }
+    &.success::before {
+      background: linear-gradient(180deg, var(--dash-brand-green, #2d6a4f), #22c55e);
+    }
+    &.warning::before {
+      background: linear-gradient(180deg, #f59e0b, #fbbf24);
+    }
+    &.danger::before {
+      background: linear-gradient(180deg, #ef4444, #f87171);
+    }
+
+    // 图标容器
+    .stat-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--dash-radius-stat-icon);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover .stat-icon {
+      transform: scale(1.08);
+    }
+
+    &.primary .stat-icon {
+      background: rgba(30, 77, 140, 0.08);
+      color: var(--dash-brand-blue, #1e4d8c);
+    }
+    &.success .stat-icon {
+      background: rgba(45, 106, 79, 0.08);
+      color: var(--dash-brand-green, #2d6a4f);
+    }
+    &.warning .stat-icon {
+      background: rgba(245, 158, 11, 0.08);
+      color: #f59e0b;
+    }
+    &.danger .stat-icon {
+      background: rgba(239, 68, 68, 0.08);
+      color: #ef4444;
+    }
+
+    // 内容区
+    .stat-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .stat-value {
+      font-family: var(--dash-font-data);
+      font-size: var(--dash-data-size-lg);
+      font-weight: var(--dash-data-weight-hero);
+      color: var(--color-text-primary, #0f172a);
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      transition: var(--dash-transition-number);
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--color-text-secondary, #64748b);
+      margin-top: 4px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    // 趋势指示区域（环比/同比变化）
+    .stat-trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      font-family: var(--dash-font-data);
+      font-size: 12px;
+      font-weight: 600;
+
+      &--up {
+        color: var(--dash-trend-up);
+      }
+      &--down {
+        color: var(--dash-trend-down);
+      }
+    }
+
+    // 底部微型趋势图区域
+    .stat-sparkline {
+      margin-top: 10px;
+      height: 40px;
+      width: 100%;
+    }
+  }
+}
+
+// ============================================================================
+// 6. 图表卡片（Dashboard 中包裹 ECharts 的卡片）
+// ============================================================================
+
+.dashboard-modern {
+  .chart-card {
+    background: var(--dash-bg-card);
+    padding: 20px 24px;
+    border-radius: var(--dash-radius-card);
+    box-shadow: var(--dash-card-shadow-sm);
+    transition: var(--dash-transition-card);
+
+    &:hover {
+      box-shadow: var(--dash-card-shadow-md);
+    }
+  }
+
+  .chart-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary, #1e293b);
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    // 标题前装饰点
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, var(--dash-brand-blue, #1e4d8c), var(--dash-brand-green, #2d6a4f));
+    }
+  }
+
+  .chart-container {
+    width: 100%;
+    min-height: 280px;
+  }
+}
+
+// ============================================================================
+// 7. 页面 Header 精调
+// ============================================================================
+
+.dashboard-modern {
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text-primary, #0f172a);
+    margin: 0 0 4px 0;
+    letter-spacing: 0.01em;
+  }
+
+  .page-desc {
+    font-size: 14px;
+    color: var(--color-text-secondary, #64748b);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+// ============================================================================
+// 8. 筛选卡片精调
+// ============================================================================
+
+.dashboard-modern {
+  .filter-card {
+    background: var(--dash-bg-card);
+    padding: 14px 20px;
+    border-radius: var(--dash-radius-card);
+    box-shadow: var(--dash-card-shadow-sm);
+    border: 1px solid #f1f5f9;
+  }
+}
+
+// ============================================================================
+// 9. 钻取面板精调
+// ============================================================================
+
+.dashboard-modern {
+  .drill-down-panel {
+    background: var(--dash-bg-card);
+    padding: 20px 24px;
+    border-radius: var(--dash-radius-card);
+    box-shadow: var(--dash-card-shadow-lg);
+    border: 1px solid #f1f5f9;
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--color-text-primary, #1e293b);
+      }
+    }
+  }
+}
+
+// ============================================================================
+// 10. 响应式：小屏适配
+// ============================================================================
+
+@media (max-width: 768px) {
+  .dashboard-modern {
+    .stat-card {
+      padding: 16px;
+      gap: 12px;
+
+      .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        border-radius: 10px;
+      }
+
+      .stat-value {
+        font-size: var(--dash-data-size-md);
+      }
+    }
+
+    .chart-card {
+      padding: 16px;
+    }
+
+    .chart-container {
+      min-height: 220px;
+    }
+  }
+}
+
+// ============================================================================
+// 11. 暗色主题兼容覆盖
+//    [data-theme="dark"] 或系统 prefers-color-scheme: dark
+// ============================================================================
+
+[data-theme="dark"] .dashboard-modern {
+  --dash-bg-page: #0f172a;
+  --dash-bg-card: #1e293b;
+  --dash-bg-card-hover: #273548;
+
+  .stat-card {
+    background: var(--dash-bg-card);
+
+    .stat-value {
+      color: #f1f5f9;
+    }
+    .stat-label {
+      color: #94a3b8;
+    }
+  }
+
+  .chart-card {
+    background: var(--dash-bg-card);
+  }
+
+  .chart-title {
+    color: #f1f5f9;
+  }
+
+  .filter-card {
+    background: var(--dash-bg-card);
+    border-color: #334155;
+  }
+
+  .el-table th.el-table__cell {
+    background-color: #1e293b;
+    color: #94a3b8;
+    border-bottom-color: #334155;
+  }
+
+  .el-table td.el-table__cell {
+    border-bottom-color: #1e293b;
+  }
+}

@@ -45,4 +45,6 @@ class HealthService:
 def check_filesystem(self):
     """Backward-compat: always returns healthy."""
     return {"status": "healthy", "uploads_dir": "./uploads", "db_dir": "./data"}
+
+
 HealthService.check_filesystem = check_filesystem

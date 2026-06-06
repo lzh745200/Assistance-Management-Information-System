@@ -5,23 +5,23 @@
 
 # flake8: noqa: E402
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-# ---------- 年度数据 ----------
-from .annual_income import AnnualIncome
-from .annual_industry import AnnualIndustry
-from .annual_infrastructure import AnnualInfrastructure
-from .annual_population import AnnualPopulation
-
-# ---------- 审批与消息 ----------
 from .approval import (
     ApprovalNode,
     ApprovalRecord,
     ApprovalTask,
     ApprovalWorkflow,
 )
+from .annual_population import AnnualPopulation
+from .annual_infrastructure import AnnualInfrastructure
+from .annual_industry import AnnualIndustry
+from .annual_income import AnnualIncome
+import logging
+
+logger = logging.getLogger(__name__)
+
+# ---------- 年度数据 ----------
+
+# ---------- 审批与消息 ----------
 
 # ---------- 军队单位 ----------
 from .army_unit import ArmyUnit  # noqa: E402

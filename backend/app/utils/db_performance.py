@@ -93,7 +93,7 @@ class BatchOperator:
 
         try:
             for i in range(0, total, batch_size):
-                batch = data_list[i : i + batch_size]
+                batch = data_list[i: i + batch_size]
                 db.bulk_insert_mappings(model_class, batch)
                 if commit:
                     db.commit()
@@ -133,7 +133,7 @@ class BatchOperator:
 
         try:
             for i in range(0, total, batch_size):
-                batch = data_list[i : i + batch_size]
+                batch = data_list[i: i + batch_size]
                 db.bulk_update_mappings(model_class, batch)
                 if commit:
                     db.commit()

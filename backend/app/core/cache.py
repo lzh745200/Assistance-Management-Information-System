@@ -132,9 +132,11 @@ if not hasattr(CacheManager, "_cache") or isinstance(getattr(CacheManager, "_cac
         if not hasattr(self, "_cache_data"):
             object.__setattr__(self, "_cache_data", {})
         return object.__getattribute__(self, "_cache_data")
+
     @_cache.setter
     def _cache(self, value):
         object.__setattr__(self, "_cache_data", value)
+
     @_cache.deleter
     def _cache(self):
         object.__setattr__(self, "_cache_data", {})

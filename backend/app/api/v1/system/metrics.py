@@ -232,8 +232,6 @@ async def get_database_metrics(
 
     # 关键表行数统计
     try:
-        from sqlalchemy import text
-
         key_tables = ["users", "organizations", "villages", "projects", "funds", "schools"]
         row_counts = {}
         for table in key_tables:

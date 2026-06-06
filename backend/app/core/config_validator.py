@@ -120,4 +120,5 @@ class ProductionSettings:
     from app.core.config import Settings as _Settings
     model_fields = {"DATABASE_URL": type("F", (), {"default": "sqlite:///./data/rural_revitalization.db"})}
 
+
 REQUIRED_ENV_VARS = ["SECRET_KEY"]

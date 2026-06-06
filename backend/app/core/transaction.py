@@ -322,7 +322,7 @@ class BatchOperation:
 
         try:
             for i in range(0, len(items), batch_size):
-                batch = items[i : i + batch_size]
+                batch = items[i: i + batch_size]
                 db.bulk_insert_mappings(model_class, batch)
                 total_inserted += len(batch)
 
@@ -353,7 +353,7 @@ class BatchOperation:
 
         try:
             for i in range(0, len(updates), batch_size):
-                batch = updates[i : i + batch_size]
+                batch = updates[i: i + batch_size]
                 db.bulk_update_mappings(model_class, batch)
                 total_updated += len(batch)
                 db.flush()
@@ -382,7 +382,7 @@ class BatchOperation:
 
         try:
             for i in range(0, len(ids), batch_size):
-                batch_ids = ids[i : i + batch_size]
+                batch_ids = ids[i: i + batch_size]
                 db.query(model_class).filter(model_class.id.in_(batch_ids)).delete(synchronize_session=False)
                 total_deleted += len(batch_ids)
                 db.flush()

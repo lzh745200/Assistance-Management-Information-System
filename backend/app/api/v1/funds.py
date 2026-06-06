@@ -10,7 +10,6 @@ from app.api.v1.deps import require_manager_role
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.utils.pagination import keyset_paginate
-from app.utils.snake_to_camel import to_camel
 from sqlalchemy.sql import func
 
 from app.models.fund import Fund
@@ -394,7 +393,8 @@ def fund_history_fields(fund_id: int, current_user: User = Depends(get_current_u
 
 
 @router.get("/{fund_id}/history/operations")
-def fund_history_operations(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def fund_history_operations(
+        fund_id: int,
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)):
     return {"data": []}
-
-

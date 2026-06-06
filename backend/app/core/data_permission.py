@@ -118,6 +118,7 @@ def check_record_access(
         return getattr(record, owner_field, None) == getattr(user, "id", None)
     return False
 
+
 def filter_by_data_scope(query, model, user, db=None, org_field="organization_id"):
     """按数据权限过滤查询。委托给 apply_scope_to_query 实现完整过滤。"""
     if is_admin(user):

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Keyset Pagination Utility
 
 高性能游标分页替代传统OFFSET分页，适用于SQLite大数据量表。

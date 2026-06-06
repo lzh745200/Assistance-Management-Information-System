@@ -32,4 +32,8 @@ echarts.use([
   CanvasRenderer,
 ]);
 
+// 注册军队科技风主题（幂等，多次调用安全）
+import { registerMilitaryTheme } from "./echarts-theme";
+registerMilitaryTheme();
+
 export default echarts;

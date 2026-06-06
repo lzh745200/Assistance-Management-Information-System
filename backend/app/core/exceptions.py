@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 class AppError(Exception):
     """Base application error."""
+
     def __init__(self, message: str, status_code: int = 400, code=None, details=None, **kwargs):
         self.message = message
         self.status_code = status_code
@@ -40,11 +41,12 @@ class AppError(Exception):
 
 
 # ── Re-export ErrorCode helpers from sibling errors module ──
-from app.core.errors import ErrorCode, ERROR_MESSAGES, get_error_message  # noqa: E402
+from app.core.errors import ErrorCode  # noqa: E402
 
 
 class BusinessError(AppError):
     """Business logic error."""
+
     def __init__(self, message: str = "业务错误", status_code: int = 400,
                  code=ErrorCode.BUSINESS_ERROR, details=None, **kwargs):
         super().__init__(message, status_code, code=code, details=details, **kwargs)
@@ -53,11 +55,13 @@ class BusinessError(AppError):
 # ── Custom ValidationError (overrides Pydantic re-export for app-level usage) ──
 class _ValidationError(AppError):
     """Application-level validation error."""
+
     def __init__(self, message: str = "数据验证失败", field: str = "", **kwargs):
         from app.core.errors import ErrorCode as EC
         super().__init__(message, status_code=400, code=EC.VALIDATION_ERROR, **kwargs)
         if field:
             self.details["field"] = field
+
 
 # Export as ValidationError (overrides Pydantic's ValidationError for our API)
 ValidationError = _ValidationError
@@ -65,18 +69,21 @@ ValidationError = _ValidationError
 
 class AuthenticationError(AppError):
     """Authentication required."""
+
     def __init__(self, message: str = "认证失败"):
         super().__init__(message, 401)
 
 
 class AuthorizationError(AppError):
     """Insufficient permissions."""
+
     def __init__(self, message: str = "权限不足"):
         super().__init__(message, 403)
 
 
 class NotFoundError(AppError):
     """Resource not found."""
+
     def __init__(self, resource: str = "资源", identifier: str = ""):
         msg = f"{resource}不存在" if not identifier else f"{resource}({identifier})不存在"
         super().__init__(msg, 404)
@@ -86,18 +93,21 @@ class NotFoundError(AppError):
 
 class ConflictError(AppError):
     """Data conflict."""
+
     def __init__(self, message: str = "数据冲突"):
         super().__init__(message, 409)
 
 
 class DatabaseError(AppError):
     """Database operation error."""
+
     def __init__(self, message: str = "数据库操作失败"):
         super().__init__(message, 500)
 
 
 class UserNotFoundError(AppError):
     """User not found."""
+
     def __init__(self, username: str = ""):
         msg = f"用户({username})不存在" if username else "用户不存在"
         super().__init__(msg, 404)
@@ -105,6 +115,7 @@ class UserNotFoundError(AppError):
 
 class UserLockedError(AppError):
     """Account locked."""
+
     def __init__(self, duration: str = ""):
         msg = f"账户已锁定，请{duration}后再试" if duration else "账户已被锁定"
         super().__init__(msg, 403)
@@ -112,42 +123,49 @@ class UserLockedError(AppError):
 
 class PasswordValidationError(AppError):
     """Password validation failure."""
+
     def __init__(self, message: str = "密码验证失败"):
         super().__init__(message, 400)
 
 
 class FileUploadError(AppError):
     """File upload error."""
+
     def __init__(self, message: str = "文件上传失败", details: dict | None = None):
         super().__init__(message, 400, details=details)
 
 
 class BackupError(AppError):
     """Backup operation error."""
+
     def __init__(self, message: str = "备份操作失败"):
         super().__init__(message, 500)
 
 
 class RestoreError(AppError):
     """Restore operation error."""
+
     def __init__(self, message: str = "恢复操作失败"):
         super().__init__(message, 500)
 
 
 class BackupNotFoundError(AppError):
     """Backup not found."""
+
     def __init__(self, message: str = "备份文件不存在"):
         super().__init__(message, 404)
 
 
 class InvalidCredentialsError(BusinessError):
     """Invalid login credentials."""
+
     def __init__(self, message: str = "用户名或密码错误"):
         super().__init__(message, 401)
 
 
 class UserAlreadyExistsError(BusinessError):
     """User already exists (duplicate registration)."""
+
     def __init__(self, message: str = "用户已存在"):
         super().__init__(message, 409)
 
@@ -157,8 +175,10 @@ class UserAlreadyExistsError(BusinessError):
 class NotFoundException(BusinessError):
     def __init__(self, msg="Not found"): super().__init__(msg, 404)
 
+
 class AuthenticationException(BusinessError):
     def __init__(self, msg="Authentication failed"): super().__init__(msg, 401)
+
 
 class ForbiddenException(BusinessError):
     def __init__(self, msg="Forbidden"): super().__init__(msg, 403)
