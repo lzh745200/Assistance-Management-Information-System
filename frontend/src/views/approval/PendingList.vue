@@ -265,7 +265,7 @@ const todayCount = computed(() => {
 
 // 超时判断：超过24小时未审批
 const OVERDUE_HOURS = 24;
-function isOverdue(task: ApprovalTask): boolean {
+function isOverdue(task: any): boolean {
   if (!task.created_at) return false;
   const created = new Date(task.created_at).getTime();
   const now = Date.now();
@@ -308,7 +308,7 @@ async function loadTasks() {
 /**
  * 选择变化
  */
-function handleSelectionChange(selection: ApprovalTask[]) {
+function handleSelectionChange(selection: any[]) {
   selectedTasks.value = selection;
 }
 
@@ -320,7 +320,7 @@ const { pushSafe } = useRouterSafe();
 /**
  * 查看详情
  */
-function handleViewDetail(task: ApprovalTask) {
+function handleViewDetail(task: any) {
   if (task.entity_type === "rural_work") {
     pushSafe({
       path: "/rural-works",
@@ -331,7 +331,7 @@ function handleViewDetail(task: ApprovalTask) {
   }
 }
 
-function handleEditWork(task: ApprovalTask) {
+function handleEditWork(task: any) {
   if (task.entity_type === "rural_work") {
     pushSafe({
       path: "/rural-works",
@@ -345,7 +345,7 @@ function handleEditWork(task: ApprovalTask) {
 /**
  * 查看变更对比
  */
-async function handleViewDiff(task: ApprovalTask) {
+async function handleViewDiff(task: any) {
   currentTask.value = task;
   diffDialogVisible.value = true;
   taskDiff.value = null;
@@ -388,7 +388,7 @@ async function confirmApprove() {
 /**
  * 审批拒绝
  */
-function handleReject(task: ApprovalTask) {
+function handleReject(task: any) {
   currentTask.value = task;
   rejectForm.value = { opinion: "" };
   rejectDialogVisible.value = true;
@@ -421,7 +421,7 @@ async function confirmReject() {
 /**
  * 单机版快速审批单个任务
  */
-async function handleQuickApprove(task: ApprovalTask) {
+async function handleQuickApprove(task: any) {
   try {
     await ElMessageBox.confirm(
       `确定要快速通过「${task.title || `${formatEntityType(task.entity_type)} #${task.entity_id}`}」吗？`,
