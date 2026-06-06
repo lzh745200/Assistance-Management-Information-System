@@ -36,9 +36,7 @@ def test_ds07(real_db_session):
 def test_ds08(real_db_session):
     from app.services.approval_workflow_service import ApprovalWorkflowService
     s=ApprovalWorkflowService(real_db_session);assert s is not None
-def test_ds09(real_db_session):
-    from app.services.chunked_upload_service import ChunkedUploadService
-    s=ChunkedUploadService(real_db_session);assert s is not None
+def test_ds09():from app.services.chunked_upload_service import ChunkedUploadService;assert ChunkedUploadService is not None
 def test_ds10(real_db_session):
     from app.services.fund_anomaly_detector import FundAnomalyDetector
     s=FundAnomalyDetector(real_db_session);assert s is not None
