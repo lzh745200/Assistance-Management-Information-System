@@ -48,7 +48,6 @@
 </template>
 
 <script setup lang="ts">
-
 interface AlbumItem {
   id?: number;
   title?: string;
