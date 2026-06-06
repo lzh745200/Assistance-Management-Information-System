@@ -135,7 +135,7 @@ async def download_import_template(
     }
 
     if entity_type == "supported_village":
-        content = template_service.generate_supported_village_template()
+        content = template_service.generate_village_template()
     elif entity_type == "project":
         content = template_service.generate_project_template()
     elif entity_type == "fund":
