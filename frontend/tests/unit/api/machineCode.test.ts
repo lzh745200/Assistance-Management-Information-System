@@ -6,6 +6,10 @@ vi.mock('@/utils/request', () => ({
   default: (...args: any[]) => mockRequest(...args),
 }))
 
+vi.mock('@/api/request', () => ({
+  default: (...args: any[]) => mockRequest(...args),
+}))
+
 import {
   getMachineCode,
   createMachineCode,
