@@ -1,0 +1,83 @@
+/**
+ * 列表页统一规范化 (Phase 2)
+ * 覆盖 93 个 CRUD 列表页的通用元素：page-header, filter-card, table-card, stats-row, pagination
+ */
+
+/* ── 页面头部 ── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .header-info {
+    .page-title { font-size: 20px; font-weight: 700; color: var(--color-text-primary); margin: 0 0 4px 0; }
+    .page-desc { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+  }
+
+  .header-actions {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+}
+
+/* ── 统计卡片行 ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .stat-item {
+    background: var(--color-bg-card); border-radius: 10px; padding: 16px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04); cursor: pointer;
+    transition: box-shadow .2s, transform .2s; text-align: center;
+    &:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); transform: translateY(-2px); }
+    .stat-value { font-family: 'DIN Alternate','Roboto Mono',monospace; font-size: 24px; font-weight: 700; color: var(--color-text-primary); }
+    .stat-label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+  }
+}
+
+/* ── 筛选区 ── */
+.filter-card {
+  background: var(--color-bg-card); border-radius: 10px; padding: 14px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04); margin-bottom: 16px;
+  border: 1px solid var(--color-border-lighter);
+
+  .el-form-item { margin-bottom: 0; }
+}
+
+/* ── 表格卡片 ── */
+.table-card {
+  background: var(--color-bg-card); border-radius: 10px; padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+
+  .el-table {
+    --el-table-header-bg-color: var(--color-primary-dark-1);
+    --el-table-header-text-color: #ffffff;
+    border-radius: 8px; overflow: hidden;
+
+    th.el-table__cell {
+      background-color: var(--color-primary-dark-1); color: #fff;
+      font-weight: 600; font-size: 12px; border-bottom: 2px solid var(--color-accent-gold);
+    }
+    td.el-table__cell { border-bottom: 1px solid var(--color-border-lighter); }
+    .el-table__body tr:hover > td { background-color: var(--color-bg-hover); }
+  }
+}
+
+/* ── 分页 ── */
+.pagination-wrapper {
+  display: flex; justify-content: flex-end; margin-top: 16px;
+  .el-pagination {
+    .el-pager li.is-active { background-color: var(--color-primary); color: #fff; }
+    .btn-prev, .btn-next { border-radius: 6px; }
+  }
+}
+
+/* ── 响应式 ── */
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}

@@ -36,6 +36,10 @@ if getattr(sys, 'frozen', False):
             sys.path.insert(0, base_dir)
 else:
     base_dir = os.path.dirname(os.path.abspath(__file__))
+    # 开发模式：切换工作目录到 backend/，确保 get_data_path() 等
+    # 使用 Path.cwd() 的函数始终解析到正确的项目目录。
+    # 这防止了从不同目录启动时创建多个 runtime_secrets.json 副本。
+    os.chdir(base_dir)
     if base_dir not in sys.path:
         sys.path.insert(0, base_dir)
 
