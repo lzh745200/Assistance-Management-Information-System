@@ -432,6 +432,7 @@ function handleCreate() {
   pushSafe("/schools/create");
 }
 function handleView(row: any) {
+  if (!row?.id) return;
   pushSafe(`/schools/${row.id}`);
 }
 function handleEdit(row: any) {
@@ -439,6 +440,7 @@ function handleEdit(row: any) {
   pushSafe(`/schools/${row.id}/edit`);
 }
 async function handleDelete(row: any) {
+  if (!row?.id) return;
   try {
     await request.delete(`/schools/${row.id}`);
     ElMessage.success("删除成功");
