@@ -1,6 +1,6 @@
 import api from "./request";
 
-function triggerDownload(blob, filename) {
+function triggerDownload(blob: Blob, filename: string) {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

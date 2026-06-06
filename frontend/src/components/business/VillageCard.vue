@@ -4,7 +4,7 @@
       ><span>{{ name }}</span></template
     >
     <p>{{ province }} {{ county }}</p>
-    <el-tag>{{ tier || revitalization_tier }}</el-tag></el-card
+    <el-tag>{{ tier || revitalizationTier }}</el-tag></el-card
   >
 </template>
 <script setup lang="ts">

@@ -1,6 +1,6 @@
 import api from "./request";
 
-function triggerDownload(blob, filename) {
+function triggerDownload(blob: Blob, filename: string) {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -10,6 +10,39 @@ function triggerDownload(blob, filename) {
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
 }
+
+// ── Types ──
+export type PolicyCategory = string;
+export type PolicyStatus = "draft" | "active" | "archived" | "expired";
+export type LevelConfig = { value: string; label: string; description?: string };
+export type CategoriesConfig = Record<PolicyCategory, string>;
+export type Policy = {
+  id: number;
+  title: string;
+  content: string;
+  category: PolicyCategory;
+  level: string;
+  status: PolicyStatus;
+  effective_date?: string;
+  expiry_date?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+export type PolicyQuery = {
+  keyword?: string;
+  category?: PolicyCategory;
+  level?: string;
+  status?: PolicyStatus;
+  page?: number;
+  page_size?: number;
+};
+export type PolicyCreate = Omit<Policy, "id" | "created_at" | "updated_at">;
+export type PolicyUpdate = Partial<PolicyCreate>;
+export type PolicyStatistics = {
+  total: number;
+  by_category: Record<PolicyCategory, number>;
+  by_status: Record<PolicyStatus, number>;
+};
 
 // ── Query ──
 export const getLevelOptions = () => api.get("/policies/level-options");

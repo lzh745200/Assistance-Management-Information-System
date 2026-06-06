@@ -88,14 +88,14 @@ export function triggerDownload(blob: Blob, filename: string) {
 }
 
 export async function exportReportWord(reportId: number) {
-  const res = await request.get(`${BASE}/report/${reportId}/word`, {
+  const res = await request.get(`${EXPORT_BASE}/report/${reportId}/word`, {
     responseType: "blob",
   });
   return res.data;
 }
 
 export async function exportReportPdf(reportId: number) {
-  const res = await request.get(`${BASE}/report/${reportId}/pdf`, {
+  const res = await request.get(`${EXPORT_BASE}/report/${reportId}/pdf`, {
     responseType: "blob",
   });
   return res.data;
