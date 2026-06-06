@@ -111,7 +111,7 @@ import { logger } from "@/utils/logger";
 
 import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import {
   getOrganization,
@@ -156,7 +156,7 @@ const rules: FormRules = {
 const loadParentOptions = async () => {
   try {
     const res = await getOrganizations({ page_size: 1000, is_active: true });
-    const currentId = Number(route.params.id);
+    const currentId = safeRouteParam(route.params.id);
     // 编辑时排除自身，避免将自己设为上级
     parentOptions.value = (res.items || []).filter(
       (item: Organization) => item.id !== currentId,
@@ -168,7 +168,7 @@ const loadParentOptions = async () => {
 };
 
 const loadData = async () => {
-  const id = Number(route.params.id);
+  const id = safeRouteParam(route.params.id);
   if (!id) return;
 
   loading.value = true;
@@ -206,7 +206,7 @@ const handleSubmit = async () => {
     submitLoading.value = true;
     try {
       if (isEdit.value) {
-        await updateOrganization(Number(route.params.id), {
+        await updateOrganization(safeRouteParam(route.params.id), {
           name: formData.name,
           description: formData.description || undefined,
           contact_person: formData.contact_person || undefined,

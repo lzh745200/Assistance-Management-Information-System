@@ -190,7 +190,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
 import {
   ElMessage,
   type FormInstance,
@@ -274,7 +274,7 @@ const handleCategoryChange = () => {
 
 // 加载政策数据（编辑模式）
 const loadData = async () => {
-  const id = Number(route.params.id);
+  const id = safeRouteParam(route.params.id);
   if (!id || isNaN(id)) return;
 
   loading.value = true;
@@ -389,7 +389,7 @@ const handleSubmit = async () => {
 
       if (isEdit.value) {
         // 更新政策
-        const id = Number(route.params.id);
+        const id = safeRouteParam(route.params.id);
         await policyStore.editPolicy(id, data as PolicyUpdate);
         ElMessage.success("更新成功");
       } else {

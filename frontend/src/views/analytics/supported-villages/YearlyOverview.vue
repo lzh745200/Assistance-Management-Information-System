@@ -109,7 +109,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
 import { ArrowLeft, Edit, Download, Upload } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import {
@@ -126,7 +126,7 @@ import SectionDataForm from "./components/SectionDataForm.vue";
 const route = useRoute();
 const { pushSafe } = useRouterSafe();
 
-const villageId = computed(() => Number(route.params.id));
+const villageId = computed(() => safeRouteParam(route.params.id));
 const villageName = ref("");
 const loading = ref(false);
 const downloadingAll = ref(false);

@@ -406,14 +406,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { fundLifecycleApi } from "@/api/fundLifecycle";
 import type { PhaseInfo, HealthScore } from "@/api/fundLifecycle";
 
 const route = useRoute();
 const { pushSafe } = useRouterSafe();
-const projectId = computed(() => Number(route.params.projectId));
+const projectId = computed(() => safeRouteParam(route.params.projectId));
 
 const loading = ref(false);
 const phases = ref<PhaseInfo[]>([]);

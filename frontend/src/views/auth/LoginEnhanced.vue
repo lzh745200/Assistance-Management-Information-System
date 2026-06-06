@@ -7,7 +7,7 @@
         :key="index"
         class="bg-slide"
         :class="{ active: currentBgIndex === index }"
-        :style="shouldLoadBg(index) ? { backgroundImage: `url(${bg})` } : {}"
+        :style="{ backgroundImage: `url(${bg})` }"
       ></div>
       <div class="bg-overlay"></div>
     </div>
@@ -155,21 +155,32 @@ const backgroundImages = [
 
 const currentBgIndex = ref(0);
 let carouselInterval: number | null = null;
+const imagesPreloaded = ref(false);
 
-const shouldLoadBg = (index: number): boolean => {
-  const total = backgroundImages.length;
-  const prev = (currentBgIndex.value - 1 + total) % total;
-  const next = (currentBgIndex.value + 1) % total;
-  return index === currentBgIndex.value || index === prev || index === next;
+// 预加载所有背景图片，确保轮播流畅无黑屏
+const preloadAllImages = async (): Promise<void> => {
+  const promises = backgroundImages.map((src) => {
+    return new Promise<void>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve(); // 失败也继续，不阻塞轮播
+      img.src = src;
+    });
+  });
+  await Promise.all(promises);
+  imagesPreloaded.value = true;
 };
 
 const startCarousel = () => {
+  if (carouselInterval) clearInterval(carouselInterval);
   carouselInterval = window.setInterval(() => {
     currentBgIndex.value = (currentBgIndex.value + 1) % backgroundImages.length;
   }, 5000);
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // 先预加载所有背景图，再启动轮播 — 杜绝黑屏/闪烁
+  await preloadAllImages();
   startCarousel();
 });
 
@@ -284,8 +295,10 @@ const goToMachineCode = () => {
   bottom: 0;
   background-size: cover;
   background-position: center;
+  background-color: #0a1a12; /* 军事绿底色 — 图片加载前不露黑 */
   opacity: 0;
   transition: opacity 1.5s ease-in-out;
+  will-change: opacity;
 }
 
 .bg-slide.active {

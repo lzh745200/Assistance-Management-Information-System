@@ -195,10 +195,11 @@ import { ref, reactive, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { fundLifecycleApi } from "@/api/fundLifecycle";
+import { safeRouteParam } from "@/composables/useRouterSafe";
 
 const route = useRoute();
 const projectId = route.query.project_id
-  ? Number(route.query.project_id)
+  ? safeRouteParam(route.query.project_id)
   : undefined;
 
 const loading = ref(false);

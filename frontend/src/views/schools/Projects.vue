@@ -177,14 +177,14 @@ import { logger } from "@/utils/logger";
 
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
 import { ElMessage } from "element-plus";
 import { ArrowLeft, Plus } from "@element-plus/icons-vue";
 import { schoolApi } from "@/api/schools";
 
 const { pushSafe } = useRouterSafe();
 const route = useRoute();
-const schoolId = Number(route.params.id);
+const schoolId = safeRouteParam(route.params.id);
 
 const loading = ref(false);
 const saving = ref(false);

@@ -199,7 +199,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
 import { ArrowLeft, Edit, Calendar } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import ChangeHistoryDialog from "@/components/common/ChangeHistoryDialog.vue";
@@ -214,7 +214,7 @@ async function openChangeHistory() {
   changeHistoryVisible.value = true;
   changeHistoryLoading.value = true;
   try {
-    const res = await getChangeHistory(Number(route.params.id));
+    const res = await getChangeHistory(safeRouteParam(route.params.id));
     changeHistory.value = res.items || [];
   } catch {
     ElMessage.error("加载变更历史失败");
@@ -296,7 +296,7 @@ const totalInvestment = computed(() => {
 });
 
 const loadVillage = async () => {
-  const id = Number(route.params.id);
+  const id = safeRouteParam(route.params.id);
   if (!id) return;
 
   loading.value = true;
@@ -355,7 +355,7 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
       ElMessage.success("创建成功");
       pushSafe(`/supported-villages/${created.id}`);
     } else {
-      const id = Number(route.params.id);
+      const id = safeRouteParam(route.params.id);
       await updateSupportedVillage(id, data);
       ElMessage.success("保存成功");
       // 刷新数据后切换回查看模式
@@ -375,7 +375,7 @@ const handleFormCancel = () => {
   if (pageMode.value === "create") {
     pushSafe("/supported-villages");
   } else {
-    const id = Number(route.params.id);
+    const id = safeRouteParam(route.params.id);
     pushSafe(`/supported-villages/${id}`);
   }
 };

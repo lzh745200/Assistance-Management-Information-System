@@ -174,6 +174,7 @@ import { useRoute } from "vue-router";
 import { ElMessage, type FormInstance } from "element-plus";
 import { fundLifecycleApi } from "@/api/fundLifecycle";
 import { parseError } from "@/utils/errorHandler";
+import { safeRouteParam } from '@/composables/useRouterSafe';
 
 interface BudgetSummary {
   total_budget?: number;
@@ -209,7 +210,7 @@ interface PerformanceData {
 }
 
 const route = useRoute();
-const projectId = computed(() => Number(route.params.projectId));
+const projectId = computed(() => safeRouteParam(route.params.projectId));
 
 const loading = ref(false);
 const performance = ref<PerformanceData | null>(null);
