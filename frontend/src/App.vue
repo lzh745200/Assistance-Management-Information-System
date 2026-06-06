@@ -52,12 +52,7 @@ function handleRetry() {
 </script>
 
 <style>
-/* 全局基础样式 */
-html,
-body,
-#app {
-
-/* === 全部提示/通知强制页面居中 === */
+/* === 全部提示/通知强制页面居中（必须全局，EP 可能 teleport 到 body） === */
 .el-message {
   top: 50% !important;
   left: 50% !important;
@@ -78,6 +73,11 @@ body,
   align-items: center !important;
   justify-content: center !important;
 }
+
+/* 全局基础样式 */
+html,
+body,
+#app {
   height: 100%;
   margin: 0;
   padding: 0;
