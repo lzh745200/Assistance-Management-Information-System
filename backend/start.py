@@ -380,6 +380,15 @@ def main():
     # ── 启动前静态资源完整性校验 ──
     _verify_frontend_assets()
 
+    # ── 过滤 304 静态资源日志噪音 ──
+    class _Skip304Filter(logging.Filter):
+        def filter(self, record):
+            msg = record.getMessage()
+            return "304" not in msg and "login-bg" not in msg and "badges" not in msg
+
+    _uvicorn_access = logging.getLogger("uvicorn.access")
+    _uvicorn_access.addFilter(_Skip304Filter())
+
     uvicorn.run(
         app,
         host=host,
