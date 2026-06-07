@@ -14,10 +14,13 @@
           />
         </el-col>
         <el-col :span="5">
-          <div style="text-align:center">
-            <div style="font-size:12px;color:#909399">自动备份</div>
-            <el-tag :type="stats.auto_backup_enabled ? 'success' : 'info'" size="small">
-              {{ stats.auto_backup_enabled ? '已启用' : '未启用' }}
+          <div style="text-align: center">
+            <div style="font-size: 12px; color: #909399">自动备份</div>
+            <el-tag
+              :type="stats.auto_backup_enabled ? 'success' : 'info'"
+              size="small"
+            >
+              {{ stats.auto_backup_enabled ? "已启用" : "未启用" }}
             </el-tag>
           </div>
         </el-col>
@@ -161,10 +164,18 @@
             >
               验证
             </el-button>
-            <el-button size="small" type="primary" @click="handleRestore(row as BackupItem)">
+            <el-button
+              size="small"
+              type="primary"
+              @click="handleRestore(row as BackupItem)"
+            >
               恢复
             </el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row as BackupItem)">
+            <el-button
+              size="small"
+              type="danger"
+              @click="handleDelete(row as BackupItem)"
+            >
               删除
             </el-button>
           </template>

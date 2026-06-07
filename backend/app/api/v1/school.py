@@ -525,7 +525,7 @@ async def delete_attachment(
 @router.get("")
 async def list_schools(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=200),
     keyword: Optional[str] = None,
     name: Optional[str] = None,
     type: Optional[str] = None,

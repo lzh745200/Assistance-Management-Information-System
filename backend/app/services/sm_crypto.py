@@ -6,7 +6,6 @@ SM4: 128-bit block cipher, 32 rounds, Chinese national standard (GB/T 32907-2016
 import hashlib
 import json
 import logging
-import os
 from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)

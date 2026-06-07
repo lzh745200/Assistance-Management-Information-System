@@ -9,7 +9,7 @@
 
     <!-- 概览卡片 -->
     <el-row :gutter="16" class="stats-row">
-      <el-col :span="6">
+      <el-col :xs="12" :sm="6">
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon cpu-icon">🖥️</div>
@@ -20,7 +20,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :sm="6">
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon mem-icon">💾</div>
@@ -31,7 +31,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :sm="6">
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon disk-icon">📀</div>
@@ -42,7 +42,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :sm="6">
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon uptime-icon">⏱️</div>
@@ -57,7 +57,7 @@
 
     <!-- 详细监控 -->
     <el-row :gutter="16" style="margin-top: 16px">
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-card>
           <template #header>
             <span>API 请求统计</span>
@@ -80,7 +80,7 @@
           </el-table>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-card>
           <template #header>
             <span>系统日志</span>

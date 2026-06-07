@@ -162,6 +162,8 @@ body {
   transform: translate(-50%, -50%) !important;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
+  max-width: 90vw;
+  word-break: break-all;
 }
 
 /* Element Plus 通知提示 — 页面中央 */
@@ -196,6 +198,46 @@ body {
 .el-message--warning {
   background-color: var(--color-warning-light);
   border-color: var(--color-warning);
+}
+
+/* ── 全局下拉框修复：确保 el-select 弹出菜单足够宽 ── */
+.el-select-dropdown {
+  min-width: 160px !important;
+}
+.el-select-dropdown__item {
+  padding: 0 20px;
+  height: 36px;
+  line-height: 36px;
+  white-space: nowrap;
+}
+/* el-select 下拉框内容自适应宽度 */
+.el-popper.is-pure {
+  min-width: max(160px, var(--el-popper-min-width, auto));
+}
+
+/* ── 系统监控面板滚动 ── */
+.system-monitor {
+  .health-score-card { overflow: visible; }
+  .el-card { overflow: visible; }
+  .check-list {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+}
+
+/* ── 侧边栏弹出菜单最小宽度 ── */
+.aside-popper {
+  min-width: 200px !important;
+}
+
+/* ── 密码输入框可见性切换图标 ── */
+.el-input .el-input__password {
+  cursor: pointer;
+  color: var(--el-text-color-secondary, #909399);
+  font-size: 14px;
+}
+.el-input .el-input__password:hover {
+  color: var(--el-color-primary, #409eff);
 }
 
 .el-message--info {

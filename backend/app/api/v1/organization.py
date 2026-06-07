@@ -109,7 +109,7 @@ class OrganizationListResponse(BaseModel):
 @router.get("", response_model=OrganizationListResponse)
 async def get_organizations(
     page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    page_size: int = Query(20, ge=1, le=200, description="每页数量"),
     org_type: Optional[str] = None,
     parent_id: Optional[int] = None,
     is_active: Optional[bool] = None,
@@ -291,6 +291,12 @@ async def get_my_organization(current_user=Depends(get_current_user), db: Sessio
     except Exception as e:
         logger.error(f"获取当前用户组织失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"获取当前用户组织失败: {str(e)}")
+
+
+@router.get("/my", response_model=OrganizationResponse)
+async def get_my_organization_alias(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    """获取当前用户所属组织（/my 别名，兼容前端调用）"""
+    return await get_my_organization(current_user, db)
 
 
 @router.get("/subordinates", response_model=List[OrganizationResponse])

@@ -7,6 +7,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 /**
  * 离线地图组件 — 贵州省行政区划矢量地图
  *

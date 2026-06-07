@@ -598,7 +598,7 @@ async def export_projects(
 @router.get("", summary="获取项目列表")
 async def list_projects(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=200),
     keyword: Optional[str] = None,
     project_type: Optional[str] = None,
     status: Optional[str] = None,
@@ -1024,7 +1024,7 @@ async def get_project_change_history(
 async def get_project_funds(
     project_id: int,
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=200),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1079,7 +1079,7 @@ async def create_project_fund(
 async def get_project_tasks(
     project_id: int,
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=200),
     task_status: Optional[str] = Query(None, alias="status"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),

@@ -1047,7 +1047,7 @@ async def get_policies(
     document_code: Optional[str] = Query(None, description="文号筛选"),
     # 兼容旧参数
     page: Optional[int] = Query(None, ge=1),
-    page_size: Optional[int] = Query(None, ge=1, le=100),
+    page_size: Optional[int] = Query(None, ge=1, le=200),
     keyword: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
@@ -1390,4 +1390,3 @@ async def search_policies(
     from app.services.policy_fts_service import search_policies_fts
     results = search_policies_fts(db, q, limit=limit, offset=offset)
     return {"data": results, "total": len(results), "query": q}
-

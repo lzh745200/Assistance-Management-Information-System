@@ -315,7 +315,7 @@ export class FormValidator {
       state.touched = true;
     }
 
-    debounced.debouncedFn(value, callback);
+    debounced(value, callback);
   }
 
   /**

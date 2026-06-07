@@ -55,15 +55,30 @@ export async function copyToClipboard(
  */
 export function generateRandomPassword(length = 12): string {
   // 排除易混淆字符：I, l, O, 0
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lower = "abcdefghjkmnpqrstuvwxyz";
+  const digits = "23456789";
+  const special = "!@#$%&*";
+
+  const all = upper + lower + digits + special;
   const randomValues = new Uint32Array(length);
   crypto.getRandomValues(randomValues);
 
+  // 先生成随机密码
   let password = "";
   for (let i = 0; i < length; i++) {
-    password += chars[randomValues[i] % chars.length];
+    password += all[randomValues[i] % all.length];
   }
-  return password;
+
+  // 确保至少包含每种类型（替换前4位）
+  const chars = password.split("");
+  const pos = [0, 1, 2, 3].sort(() => (randomValues[0] % 2) - 0.5); // 随机位置
+  chars[pos[0] % length] = upper[randomValues[0] % upper.length];
+  chars[pos[1] % length] = lower[randomValues[1] % lower.length];
+  chars[pos[2] % length] = digits[randomValues[2] % digits.length];
+  chars[pos[3] % length] = special[randomValues[3] % special.length];
+
+  return chars.join("");
 }
 
 /**

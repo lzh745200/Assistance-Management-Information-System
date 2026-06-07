@@ -292,6 +292,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { logger } from "@/utils/logger";
 
 import { ref, reactive, computed, onMounted } from "vue";

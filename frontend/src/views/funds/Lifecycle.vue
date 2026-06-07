@@ -621,6 +621,7 @@ async function handleCreateSettlement() {
 
 // 健康度
 async function loadHealth() {
+  if (!projectId.value) return;
   try {
     healthData.value = await fundLifecycleApi.getHealth(projectId.value);
   } catch (e: any) {
@@ -629,6 +630,7 @@ async function loadHealth() {
 }
 
 onMounted(async () => {
+  if (!projectId.value) return;
   await loadPhases();
   try {
     reportData.value = await fundLifecycleApi.getReportTemplate(

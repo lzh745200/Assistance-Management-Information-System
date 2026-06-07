@@ -758,7 +758,7 @@ import { logger } from "@/utils/logger";
 import { AuthStorage } from "@/utils/authStorage";
 import { useAuthStore } from "@/stores/auth";
 
-import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useRouterSafe } from "@/composables/useRouterSafe";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -1167,6 +1167,7 @@ const loadFundDetail = async () => {
   }
   const id = route.params.id as string;
   if (!id) {
+    loading.value = false;
     ElMessage.error("无效的经费记录ID");
     pushSafe("/funds");
     return;
@@ -1279,6 +1280,15 @@ onMounted(async () => {
   await loadFundDetail();
   await Promise.all([loadAttachments(), loadAllHistory()]);
 });
+// 路由变化时重新检测页面模式（如 /funds/5 → /funds/5/edit）
+// 同一组件实例复用时 onMounted 不会重新触发，需 watch route.path
+watch(
+  () => route.path,
+  () => {
+    checkPageMode();
+    if (!isCreate.value) loadFundDetail();
+  },
+);
 onUnmounted(() => {
   // 清理预览 URL，避免内存泄漏
   cleanupPreviewUrl();

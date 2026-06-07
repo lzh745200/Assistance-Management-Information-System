@@ -1063,6 +1063,41 @@ function setupIpcHandlers() {
     shell.openPath(targetPath);
   });
 
+  // ── Worker Thread 任务（避免主进程阻塞）──
+  const { workerPool } = require('./worker-pool');
+  ipcMain.handle('worker-exec', async (_event, task, payload, timeout) => {
+    try {
+      const result = await workerPool.exec(task, payload, timeout);
+      return { success: true, data: result };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+  ipcMain.handle('worker-stats', () => workerPool.stats);
+
+  // ── 大数据 IPC（通过流式传输避免序列化阻塞）──
+  ipcMain.handle('read-file-chunked', async (_event, filePath, chunkSize) => {
+    return new Promise((resolve) => {
+      const chunks = [];
+      const stream = fs.createReadStream(filePath, {
+        highWaterMark: chunkSize || 256 * 1024,
+        encoding: 'base64',
+      });
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('end', () => resolve({ data: chunks.join('') }));
+      stream.on('error', () => resolve({ error: 'read-failed' }));
+    });
+  });
+
+  // ── 窗口恢复修复：强制重绘避免白屏 ──
+  ipcMain.on('window-force-redraw', () => {
+    if (mainWindow) {
+      mainWindow.webContents.invalidate();
+      mainWindow.focus();
+      mainWindow.webContents.focus();
+    }
+  });
+
   console.log('[IPC] 处理器注册完成');
 }
 

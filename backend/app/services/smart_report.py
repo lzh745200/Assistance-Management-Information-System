@@ -1,6 +1,5 @@
 """智能报表摘要生成 — 离线模板引擎."""
 import logging
-from datetime import datetime
 from typing import Any, Dict
 
 logger = logging.getLogger(__name__)

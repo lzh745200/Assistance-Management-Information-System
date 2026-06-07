@@ -20,9 +20,7 @@ export const useFundsStore = defineStore("funds", () => {
   );
 
   /** 剩余经费（万元） */
-  const remainFunds = computed(() =>
-    totalFunds.value - usedFunds.value,
-  );
+  const remainFunds = computed(() => totalFunds.value - usedFunds.value);
 
   async function fetchFunds(params?: any) {
     loading.value = true;

@@ -264,9 +264,6 @@
             <el-menu-item index="/system/health"
               ><span>系统健康</span></el-menu-item
             >
-            <el-menu-item index="/admin/machine-code"
-              ><span>机器码管理</span></el-menu-item
-            >
           </el-sub-menu>
 
           <el-menu-item index="/message">
@@ -277,19 +274,6 @@
           </el-menu-item>
         </el-menu>
       </el-scrollbar>
-
-      <!-- 侧边栏底部：用户信息 + 折叠按钮 -->
-      <div v-show="!isCollapsed" class="aside-footer">
-        <div class="aside-footer-user">
-          <el-avatar :size="32" class="footer-avatar">
-            <el-icon><User /></el-icon>
-          </el-avatar>
-          <div class="footer-user-info">
-            <span class="footer-username">{{ username }}</span>
-            <span class="footer-role">管理员</span>
-          </div>
-        </div>
-      </div>
     </el-aside>
 
     <!-- ============================================================ -->
@@ -638,47 +622,6 @@ function handleCommand(command: string) {
 
 .menu-item-dashboard :deep(.el-icon) {
   color: #d4af37;
-}
-
-/* ===================================================================
-   侧边栏底部
-   =================================================================== */
-.aside-footer {
-  flex-shrink: 0;
-  padding: 12px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.aside-footer-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.footer-avatar {
-  border: 2px solid rgba(212, 175, 55, 0.4);
-  flex-shrink: 0;
-}
-
-.footer-user-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.footer-username {
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.footer-role {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
 }
 
 /* ===================================================================

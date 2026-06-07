@@ -9,10 +9,10 @@
  *   import { checkVersion } from '@/composables/useVersionCheck';
  *   onMounted(() => { checkVersion(); });
  */
-import { ElMessage } from 'element-plus';
+import { ElMessage } from "element-plus";
 
 /** localStorage 键名 */
-const VERSION_KEY = 'app_version';
+const VERSION_KEY = "app_version";
 
 /** 版本比对后自动刷新的延迟（毫秒） */
 const RELOAD_DELAY = 1500;
@@ -26,7 +26,7 @@ const RELOAD_DELAY = 1500;
 export async function checkVersion(): Promise<void> {
   try {
     const response = await fetch(`/version.json?t=${Date.now()}`, {
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -34,7 +34,7 @@ export async function checkVersion(): Promise<void> {
       return;
     }
 
-    const data = await response.json() as { version?: string };
+    const data = (await response.json()) as { version?: string };
     const serverVersion = data?.version;
 
     if (!serverVersion) {
@@ -64,7 +64,7 @@ export async function checkVersion(): Promise<void> {
     // 版本一致 → 无需操作
   } catch {
     // 网络错误 → 静默跳过，不阻塞应用
-    console.debug('[VersionCheck] /version.json 获取失败，跳过版本检查');
+    console.debug("[VersionCheck] /version.json 获取失败，跳过版本检查");
   }
 }
 

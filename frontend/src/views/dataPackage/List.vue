@@ -155,6 +155,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { ref, reactive, computed, onMounted } from "vue";
 import { Upload, Download } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";

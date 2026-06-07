@@ -7,7 +7,12 @@ const mockRbac = {
   loadUserPermissions: vi.fn(),
 }
 
+const mockAuth = {
+  user: { role: 'admin' },
+}
+
 vi.mock('@/stores/rbac', () => ({ useRbacStore: () => mockRbac }))
+vi.mock('@/stores/auth', () => ({ useAuthStore: () => mockAuth }))
 
 import {
   createPermissionGuard,
@@ -58,7 +63,7 @@ describe('utils/permissionGuard', () => {
     })
 
     it('任一权限满足 -> next()', () => {
-      mockRbac.hasPermission.mockImplementation((p) => p === 'p2')
+      mockRbac.hasPermission.mockImplementation((_role: string, p: string) => p === 'p2')
       const guard = createPermissionGuard({ '/a': ['p1', 'p2'] })
       const next = vi.fn()
       guard(mkRoute('/a'), mkRoute('/b'), next)

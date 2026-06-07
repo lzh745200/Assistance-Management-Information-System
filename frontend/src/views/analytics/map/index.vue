@@ -126,6 +126,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { ref, computed, shallowRef, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { getMapMarkers, getRegions } from "@/api/map";

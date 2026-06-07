@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { get } from "@/api/request";
+import { useAuthStore } from "@/stores/auth";
 
 export interface Role {
   id: string;
@@ -48,6 +49,7 @@ export const useRbacStore = defineStore("rbac", () => {
     }
   }
 
+  /** 权限检查：需要用户角色 + 权限标识 */
   function hasPermission(userRole: string, permission: string): boolean {
     if (!userRole || !permission) return false;
     // Super admin bypasses all checks
@@ -62,6 +64,23 @@ export const useRbacStore = defineStore("rbac", () => {
     return false;
   }
 
+  /** 角色检查：当前用户是否拥有指定角色 */
+  function hasRole(roleName: string): boolean {
+    const authStore = useAuthStore();
+    const currentRole = authStore.user?.role || "";
+    if (!roleName) return false;
+    if (currentRole === "super_admin") return true;
+    if (Array.isArray(currentRole)) {
+      return currentRole.includes(roleName);
+    }
+    return currentRole === roleName;
+  }
+
+  /** 别名：异步加载用户权限（供 permissionGuard 使用） */
+  async function loadUserPermissions(): Promise<void> {
+    await fetchPermissions();
+  }
+
   return {
     roles,
     permissions,
@@ -69,5 +88,7 @@ export const useRbacStore = defineStore("rbac", () => {
     fetchRoles,
     fetchPermissions,
     hasPermission,
+    hasRole,
+    loadUserPermissions,
   };
 });

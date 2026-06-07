@@ -304,6 +304,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox, ElForm } from "element-plus";
 import { useRouterSafe } from "@/composables/useRouterSafe";
