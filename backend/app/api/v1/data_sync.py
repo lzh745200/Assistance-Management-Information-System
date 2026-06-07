@@ -3,6 +3,7 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from pathlib import Path
@@ -12,6 +13,14 @@ from app.core.security import get_current_user
 from app.core.upload_security import sanitize_filename
 from app.models.user import User
 from app.services.data_sync_service import data_sync_service, ExportConfig
+
+
+class ExportEncryptedRequest(BaseModel):
+    """加密导出请求体"""
+    password: str
+    modules: Optional[List[str]] = None
+    export_type: str = "full"
+    since: Optional[str] = None
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/data-sync", tags=["数据同步"])
@@ -97,15 +106,16 @@ async def export_data(
 
 @router.post("/export-encrypted")
 async def export_encrypted_data(
-    export_type: str = Form("full"),
-    tables: Optional[str] = Form(None),
-    password: str = Form(...),
-    since: Optional[str] = Form(None),
+    body: ExportEncryptedRequest,
     current_user: User = Depends(get_current_user),
 ):
-    """导出加密数据包（.rrs格式）"""
+    """导出加密数据包（.rrs格式，JSON body）"""
     try:
-        # 验证 export_type
+        export_type = body.export_type
+        password = body.password
+        modules = body.modules
+        since = body.since
+
         if export_type not in ["full", "selective"]:
             raise HTTPException(status_code=400, detail="export_type 必须是 'full' 或 'selective'")
 
@@ -116,15 +126,7 @@ async def export_encrypted_data(
             except ValueError:
                 raise HTTPException(status_code=400, detail="时间格式错误")
 
-        # 解析表列表
-        tables_list = None
-        if tables:
-            import json
-
-            try:
-                tables_list = json.loads(tables)
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=400, detail="tables 参数格式错误")
+        tables_list = modules  # frontend sends "modules" as table list
 
         result = await data_sync_service.export_encrypted(
             export_type=export_type,

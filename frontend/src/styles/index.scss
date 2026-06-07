@@ -155,63 +155,8 @@ body {
   --el-box-shadow-light: 0 2px 12px rgba(0,0,0,.06);
 }
 
-/* Element Plus 消息提示 — 全部页面中央显示（覆盖 EP 默认左下角） */
-.el-message,
-.el-message--success,
-.el-message--error,
-.el-message--warning,
-.el-message--info {
-  top: 50% !important;
-  left: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  transform: translate(-50%, -50%) !important;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  max-width: 90vw;
-  word-break: break-all;
-}
-
-/* 确保 el-message 容器也不偏移 */
-.el-message-fade-enter-from,
-.el-message-fade-leave-to {
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
-
-/* Element Plus 通知提示 — 页面中央 */
-.el-notification {
-  top: 50% !important;
-  left: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  transform: translate(-50%, -50%) !important;
-  margin: 0 !important;
-}
-
-/* 通知容器 — 确保全屏覆盖不偏移 */
-.el-notification__group {
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-/* Element Plus 消息弹窗 — 页面正中央 */
-.el-message-box {
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
-
-.el-message--success {
-  background-color: var(--color-success-light);
-  border-color: var(--color-success);
-}
+/* Element Plus 消息/弹窗使用默认定位（顶部居中），由 main.ts JS 处理居中 */
+.el-message--success { background-color: var(--color-success-light); border-color: var(--color-success); }
 
 .el-message--error {
   background-color: var(--color-danger-light);
