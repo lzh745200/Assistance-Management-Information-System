@@ -83,16 +83,57 @@
         </el-form-item>
         <el-form-item>
           <el-button
+            type="primary"
+            :loading="previewing"
+            :disabled="!selectedFile"
+            @click="handlePreview"
+          >
+            <el-icon><View /></el-icon> 预览数据
+          </el-button>
+          <el-button
             type="success"
             :loading="importing"
-            :disabled="!selectedFile"
+            :disabled="!previewData"
             @click="handleImport"
           >
-            <el-icon><Upload /></el-icon> 开始导入
+            <el-icon><Upload /></el-icon> 确认导入
           </el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
+
+      <!-- 数据预览 -->
+      <div v-if="previewData" class="preview-section">
+        <el-alert
+          type="info"
+          :closable="false"
+          style="margin-bottom: 12px"
+        >
+          共 {{ previewData.total }} 条数据，请确认无误后点击"确认导入"
+        </el-alert>
+        <el-table
+          :data="previewData.rows.slice(0, 10)"
+          border
+          stripe
+          max-height="300"
+          size="small"
+        >
+          <el-table-column
+            v-for="col in previewData.columns"
+            :key="col"
+            :prop="col"
+            :label="col"
+            min-width="120"
+            show-overflow-tooltip
+          />
+        </el-table>
+        <p
+          v-if="previewData.total > 10"
+          style="text-align: center; color: #909399; margin-top: 8px"
+        >
+          （仅显示前 10 条，共 {{ previewData.total }} 条）
+        </p>
+      </div>
 
       <!-- 导入结果 -->
       <el-alert
@@ -168,10 +209,11 @@
 // @ts-nocheck
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { Download, Upload, Document, Clock } from "@element-plus/icons-vue";
+import { Download, Upload, Document, Clock, View } from "@element-plus/icons-vue";
 import {
   downloadImportTemplate,
-  importVillages,
+  importEntities,
+  previewImportData,
   getImportHistory,
   formatImportStatus,
   type ImportResult,
@@ -233,7 +275,35 @@ function handleFileRemove() {
 function handleReset() {
   uploadRef.value?.clearFiles();
   selectedFile.value = null;
+  previewData.value = null;
   importResult.value = null;
+}
+
+// ── Preview ──
+const previewing = ref(false);
+const previewData = ref<{
+  rows: any[];
+  total: number;
+  columns: string[];
+} | null>(null);
+
+async function handlePreview() {
+  if (!selectedFile.value) return;
+  previewing.value = true;
+  previewData.value = null;
+  try {
+    const result = await previewImportData(
+      selectedFile.value,
+      importForm.value.entityType,
+    );
+    previewData.value = result;
+  } catch (e: any) {
+    ElMessage.error(
+      e?.response?.data?.detail || e?.message || "数据预览失败，请检查文件格式",
+    );
+  } finally {
+    previewing.value = false;
+  }
 }
 
 async function handleImport() {
@@ -241,11 +311,16 @@ async function handleImport() {
     ElMessage.warning("请先选择文件");
     return;
   }
+  if (!previewData.value) {
+    ElMessage.warning("请先预览数据确认无误后再导入");
+    return;
+  }
   importing.value = true;
   importResult.value = null;
   try {
-    const result = await importVillages(
+    const result = await importEntities(
       selectedFile.value,
+      importForm.value.entityType,
       importForm.value.mode,
     );
     importResult.value = result;

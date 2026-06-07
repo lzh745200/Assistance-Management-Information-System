@@ -66,22 +66,45 @@ export async function downloadImportTemplate(type: string): Promise<Blob> {
 }
 
 /**
- * 导入帮扶村数据
+ * 导入实体数据（通用接口，支持 village/project/fund/school）
  * @param file 上传文件
+ * @param entityType 实体类型
  * @param mode 导入模式
  * @returns 导入结果
  */
-export async function importVillages(
+export async function importEntities(
   file: File,
+  entityType: string = "supported_village",
   mode: ImportMode = "incremental",
 ): Promise<ImportResult> {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("entity_type", entityType);
   formData.append("mode", mode);
 
-  const response = await request.post("/import/villages", formData, {
+  const response = await request.post("/import/entities", formData, {
     headers: { "Content-Type": "multipart/form-data" },
     timeout: 120000,
+  });
+  return response.data;
+}
+
+/** @deprecated 使用 importEntities 替代 */
+export const importVillages = (file: File, mode?: ImportMode) =>
+  importEntities(file, "supported_village", mode);
+
+/** 预览导入数据 */
+export async function previewImportData(
+  file: File,
+  entityType: string,
+): Promise<{ rows: any[]; total: number; columns: string[] }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("entity_type", entityType);
+
+  const response = await request.post("/import/preview", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 60000,
   });
   return response.data;
 }
