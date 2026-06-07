@@ -1052,7 +1052,10 @@ function downloadAtt(att: any) {
       // 释放 Blob URL，避免内存泄漏
       setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
     })
-    .catch(() => ElMessage.error("下载失败"));
+    .catch((err: any) => {
+      console.error("[Funds/Detail] 下载附件失败:", err);
+      ElMessage.error("下载失败，请重试");
+    });
 }
 async function deleteAtt(att: any) {
   try {
@@ -1095,7 +1098,10 @@ function previewAtt(att: any) {
       previewUrl.value = URL.createObjectURL(blob);
       previewVisible.value = true;
     })
-    .catch(() => ElMessage.error("预览失败"));
+    .catch((err: any) => {
+      console.error("[Funds/Detail] 预览附件失败:", err);
+      ElMessage.error("预览失败，请重试");
+    });
 }
 
 // 工作流

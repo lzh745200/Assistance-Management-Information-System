@@ -377,7 +377,10 @@ function downloadAttachment(att: any) {
       link.click();
       document.body.removeChild(link);
     })
-    .catch(() => ElMessage.error("下载失败"));
+    .catch((err: any) => {
+      console.error("[Schools/Detail] 下载附件失败:", err);
+      ElMessage.error("下载失败，请重试");
+    });
 }
 
 function getFileIcon(name: string) {
