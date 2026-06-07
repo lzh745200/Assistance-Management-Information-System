@@ -160,11 +160,13 @@ def generate_password(length: int = 12, exclude_ambiguous: bool = False) -> str:
         alphabet = string.ascii_letters + string.digits + "!@#$%"
     while True:
         password = "".join(secrets.choice(alphabet) for _ in range(length))
-        # 确保包含大小写、数字
+        # 强制包含大写、小写、数字、特殊字符
+        has_special = any(not c.isalnum() for c in password)
         if (
             any(c.isupper() for c in password)
             and any(c.islower() for c in password)
             and any(c.isdigit() for c in password)
+            and has_special
         ):
             return password
 

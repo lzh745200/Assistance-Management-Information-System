@@ -201,15 +201,11 @@ body {
   justify-content: center !important;
 }
 
-/* Element Plus 消息弹窗 — 强制页面正中央 */
-div.el-message-box {
-  position: fixed !important;
+/* Element Plus 消息弹窗 — 页面正中央 */
+.el-message-box {
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  margin: 0 !important;
-  max-height: 80vh;
-  overflow-y: auto;
 }
 
 .el-message--success {
