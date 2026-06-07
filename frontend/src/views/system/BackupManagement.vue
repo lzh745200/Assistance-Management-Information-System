@@ -152,9 +152,9 @@ const restoreFile = ref<File | null>(null);
 const fetchBackupList = async () => {
   try {
     const response = await request.get("/system/backup");
-    // 接口返回 {items: [...], total: N}
-    const data = response;
-    backupList.value = data.items ?? data.data ?? [];
+    // 接口返回 {success, data: {items: [...], total: N}}
+    const resData = response.data;
+    backupList.value = resData?.data?.items ?? resData?.items ?? [];
   } catch (error) {
     notify("错误", "获取备份列表失败", "error");
   }
@@ -164,14 +164,14 @@ const fetchBackupList = async () => {
 const fetchBackupStatus = async () => {
   try {
     const response = await request.get("/system/backup/schedule");
-    const data = response;
+    const resData = response.data?.data ?? response.data;
     backupStatus.value = {
       backup_count: backupList.value.length,
       total_size: backupList.value.reduce(
         (sum: number, b: any) => sum + (b.size ?? b.file_size ?? 0),
         0,
       ),
-      scheduler: { running: data.running ?? false },
+      scheduler: { running: resData?.running ?? resData?.enabled ?? false },
     };
   } catch (error) {
     logger.error("获取备份状态失败:", error);

@@ -17,46 +17,13 @@
           人
         </p>
       </div>
-      <div class="quick-actions">
-        <button class="action-btn primary" @click="pushSafe('/projects')">
-          <span class="btn-icon">+</span> 新建项目
-        </button>
-        <button
-          class="action-btn secondary"
-          @click="pushSafe('/data-analysis')"
-        >
-          <span class="btn-icon">📊</span> 数据分析
-        </button>
-        <button
-          v-if="isManagerRole"
-          class="action-btn backup"
-          :disabled="backingUp"
-          @click="handleOneKeyBackup"
-        >
-          <span class="btn-icon">💾</span>
-          {{ backingUp ? "备份中..." : "一键备份" }}
-        </button>
-        <button
-          v-if="isAdminRole"
-          class="action-btn restore"
-          @click="showRestoreDialog = true"
-        >
-          <span class="btn-icon">🔄</span> 恢复数据
-        </button>
-        <button
-          v-if="!isManagerRole"
-          class="action-btn secondary"
-          @click="pushSafe('/data-package')"
-        >
-          <span class="btn-icon">📤</span> 数据上报
-        </button>
-        <button
-          class="action-btn layout-btn"
-          @click="showLayoutEditor = !showLayoutEditor"
-        >
-          <span class="btn-icon">⚙️</span> 自定义布局
-        </button>
-      </div>
+      <QuickActions
+        :is-manager="isManagerRole"
+        :is-admin="isAdminRole"
+        :backing-up="backingUp"
+        @backup="handleOneKeyBackup"
+        @restore="showRestoreDialog = true"
+      />
     </div>
 
     <!-- 布局编辑器面板 -->
@@ -628,6 +595,7 @@
 import { logger } from "@/utils/logger";
 
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import QuickActions from "@/views/dashboard/components/QuickActions.vue";
 import { useRouterSafe } from "@/composables/useRouterSafe";
 import { useAuthStore } from "@/stores/auth";
 import request from "@/api/request";

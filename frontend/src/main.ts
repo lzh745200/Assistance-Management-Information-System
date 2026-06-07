@@ -4,6 +4,17 @@
  * Element Plus 组件由 unplugin-vue-components 按需自动导入。
  * 如需使用 ElMessage/ElMessageBox 等命令式 API，从 element-plus 单独导入。
  */
+
+// ── 第零层：DOM 级 CSS 注入，确保所有弹出层绝对居中（优先级高于任何外部 CSS）──
+const _style = document.createElement("style");
+_style.textContent = `
+  .el-message,.el-message--success,.el-message--error,.el-message--warning,.el-message--info{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;position:fixed!important}
+  .el-notification{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;position:fixed!important;margin:0!important}
+  .el-notification__group{top:0!important;left:0!important;right:0!important;bottom:0!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  .el-message-box{top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;position:fixed!important;margin:0!important}
+`;
+document.head.appendChild(_style);
+
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import App from "./App.vue";
@@ -29,61 +40,5 @@ app.use(createPinia());
 app.use(router);
 
 app.mount("#app");
-
-// ── 全局修复：所有 ElMessage / ElNotification 强制页面正中央 ──
-// 多层策略：CSS 样式注入 + JS 拦截 + EP 函数重写
-{
-  // 策略1：运行时注入 CSS 样式表（优先级最高）
-  const styleSheet = new CSSStyleSheet();
-  styleSheet.replaceSync(`
-    .el-message, .el-message--success, .el-message--error, .el-message--warning, .el-message--info {
-      top: 50% !important;
-      left: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      transform: translate(-50%, -50%) !important;
-    }
-    .el-notification {
-      top: 50% !important;
-      left: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      transform: translate(-50%, -50%) !important;
-      margin: 0 !important;
-    }
-    .el-message-box {
-      position: fixed !important;
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-    }
-  `);
-  document.adoptedStyleSheets = [...document.adoptedStyleSheets, styleSheet];
-
-  // 策略2：持续观察并强制居中（EP 可能在创建后重新设 style.top）
-  const forceCenter = (el: HTMLElement) => {
-    const s = el.style;
-    if (s.getPropertyPriority("top") !== "important" || s.top !== "50%") {
-      s.setProperty("top", "50%", "important");
-      s.setProperty("left", "50%", "important");
-      s.setProperty("transform", "translate(-50%, -50%)", "important");
-      s.setProperty("margin", "0", "important");
-      s.setProperty("right", "auto", "important");
-      s.setProperty("bottom", "auto", "important");
-    }
-  };
-  // 首次创建时
-  new MutationObserver((ms) => {
-    for (const m of ms) for (const n of m.addedNodes) {
-      if (n instanceof HTMLElement) {
-        if (n.classList.contains("el-message") || n.classList.contains("el-notification")) {
-          forceCenter(n);
-          // 持续监控：EP 会在 0-200ms 内重新设置 top 用于消息堆叠
-          for (const delay of [0, 50, 100, 200]) setTimeout(() => forceCenter(n), delay);
-        }
-      }
-    }
-  }).observe(document.body, { childList: true, subtree: true });
-}
 
 export default app;

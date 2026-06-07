@@ -75,9 +75,10 @@
                 size="large"
                 :icon="Download"
                 class="military-btn"
+                :loading="downloading"
                 @click="downloadTemplate"
               >
-                下载导入模板
+                {{ downloading ? '下载中...' : '下载导入模板 (.xlsx)' }}
               </el-button>
               <el-button size="large" @click="currentStep = 1">
                 已有模板，跳过此步
@@ -488,56 +489,39 @@ function triggerDownload(href: string, filename: string) {
   document.body.removeChild(link);
 }
 
+const downloading = ref(false);
+
 const downloadTemplate = async () => {
-  logger.info("下载导入模板");
-  let url: string | null = null;
-  let downloaded = false;
+  downloading.value = true;
+  // 尝试 API 下载
   try {
     const response = await request.get("/import/template", {
       params: { entity_type: "project" },
       responseType: "blob",
     });
-    // response is already a Blob when responseType: "blob"
-    const blob =
-      response instanceof Blob
-        ? response
-        : new Blob([response], {
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          });
-    // 验证 Blob 非空且是有效 xlsx（PK zip 签名）
+    const blob = response instanceof Blob ? response : new Blob([response]);
     if (blob.size > 0) {
-      url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
       triggerDownload(url, "项目导入模板.xlsx");
-      downloaded = true;
+      window.URL.revokeObjectURL(url);
       ElMessage.success("模板下载成功");
+      downloading.value = false;
+      return;
     }
-  } catch (err) {
-    logger.warn("API 模板下载失败，尝试离线兜底", err);
-  }
-  // 离线兜底：使用原生 fetch（不附加 auth header，避免过期 token 阻断静态文件下载）
-  if (!downloaded) {
-    try {
-      const fallbackResp = await fetch(
-        "/static/templates/project_import_template.xlsx",
-      );
-      if (fallbackResp.ok) {
-        const fallbackBlob = await fallbackResp.blob();
-        if (fallbackBlob.size > 0) {
-          url = window.URL.createObjectURL(fallbackBlob);
-          triggerDownload(url, "项目导入模板.xlsx");
-          downloaded = true;
-          ElMessage.success("模板下载成功（离线模式）");
-        }
-      }
-    } catch (fallbackErr) {
-      logger.error("离线模板也不可用", fallbackErr);
-    }
-  }
-  if (!downloaded) {
+  } catch { /* fall through to static */ }
+  // 静态文件兜底
+  try {
+    const link = document.createElement("a");
+    link.href = "/static/templates/project_import_template.xlsx";
+    link.download = "项目导入模板.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    ElMessage.success("模板下载成功（离线模式）");
+  } catch {
     ElMessage.error("模板下载失败，请联系管理员");
-  }
-  if (url) {
-    window.URL.revokeObjectURL(url);
+  } finally {
+    downloading.value = false;
   }
 };
 
