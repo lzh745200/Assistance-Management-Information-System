@@ -229,6 +229,7 @@ import {
   getYearlyData,
   createSupportedVillage,
   updateSupportedVillage,
+  saveTransitionFunding,
 } from "@/api/supportedVillage";
 import type {
   SupportedVillage,
@@ -351,8 +352,21 @@ const handleYearlyData = () => {
 const handleFormSubmit = async (data: SupportedVillageCreate) => {
   loading.value = true;
   try {
+    // 提取创建模式下的过渡期年度经费数据（不传给 create API）
+    const fundingItems = (data as any)._transitionFundingItems;
+    delete (data as any)._transitionFundingItems;
+
     if (pageMode.value === "create") {
       const created = await createSupportedVillage(data);
+      // 创建成功后保存过渡期经费按年度数据
+      if (fundingItems?.length) {
+        try {
+          await saveTransitionFunding(created.id, { items: fundingItems });
+        } catch (fundErr: any) {
+          console.error("[Detail] 保存过渡资金失败:", fundErr);
+          ElMessage.warning("村记录已创建，但过渡资金保存失败，请在编辑页面重新填写");
+        }
+      }
       ElMessage.success("创建成功");
       pushSafe(`/supported-villages/${created.id}`);
     } else {
