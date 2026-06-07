@@ -2,11 +2,11 @@
 chcp 936 >nul
 setlocal enabledelayedexpansion
 
-title Military Rural System v1.2.0
+title Military Rural System v1.3.0
 
 echo.
 echo ========================================
-echo   Military Rural System v1.2.0
+echo   Military Rural System v1.3.0
 echo ========================================
 echo.
 
@@ -107,7 +107,7 @@ goto STARTUP_DONE
 echo.
 echo [3/4] Starting backend...
 
-set "FRONTEND_DIST_PATH=%CD%\frontend\dist"
+set "FRONTEND_DIST_PATH=%CD%\resources\frontend"
 
 if "%START_MODE%"=="packaged" (
     start "Backend" /B "%BACKEND_CMD%"
@@ -168,13 +168,12 @@ if "%START_MODE%"=="packaged" (
 )
 if errorlevel 1 (
     echo.
-    echo   [WARN] Backend process exited!
-    echo.
-    pause
-    goto :EOF
+    echo   [WARN] Backend process exited, restarting in 3 seconds...
+    timeout /t 3 /nobreak >nul
+    goto START_BACKEND
 )
 
-timeout /t 5 /nobreak >nul
+timeout /t 10 /nobreak >nul
 goto WATCHDOG
 
 endlocal

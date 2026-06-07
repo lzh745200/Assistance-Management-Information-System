@@ -91,7 +91,12 @@
               </template>
               <div>登录后请尽快修改密码</div>
             </el-alert>
-            <el-button type="primary" size="large" class="goto-login" @click="goToLogin">
+            <el-button
+              type="primary"
+              size="large"
+              class="goto-login"
+              @click="goToLogin"
+            >
               前往登录
             </el-button>
           </div>
