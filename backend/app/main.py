@@ -23,6 +23,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
+from starlette.types import Scope
 
 from app.api.v1 import api_v1_router
 from app.core.audit_middleware import AuditMiddleware
@@ -131,6 +133,26 @@ async def _trailing_slash_redirect(request: Request, call_next):
     return await call_next(request)
 
 
+class CachedStaticFiles(StaticFiles):
+    """带 Cache-Control 头的静态文件服务。
+
+    对带 hash 的文件名（如 index-AY635XGl.js）设置长期缓存（immutable），
+    因为这些文件内容永不改变，hash 变化意味着新版本用新文件名。
+    """
+
+    def __init__(self, *args, cache_max_age: int = 31536000, **kwargs):
+        self._cache_max_age = cache_max_age
+        super().__init__(*args, **kwargs)
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        response = await super().get_response(path, scope)
+        # 安全策略：对静态资源设置长期缓存 + immutable
+        response.headers["Cache-Control"] = (
+            f"public, max-age={self._cache_max_age}, immutable"
+        )
+        return response
+
+
 REQUIRED_PACKAGES = [
     "fastapi",
     "uvicorn",
@@ -179,16 +201,39 @@ async def shutdown(request: Request):
 _frontend_dir = setup_static_files(app)
 
 if _frontend_dir:
-    # 挂载前端静态资源（JS/CSS/图片等），必须在 SPA catch-all 之前
+    # ── 挂载前端静态资源 ──
+    # 使用 CachedStaticFiles 为带 hash 的静态资源设置长期缓存（1 年 + immutable）。
+    # Vite 构建产物文件名包含内容 hash（如 index-AY635XGl.js），
+    # 内容变化 → hash 变化 → 新文件名 → 浏览器自动获取新版本。
+    # 安全策略：Cache-Control: public, max-age=31536000, immutable
+
     assets_dir = os.path.join(_frontend_dir, "assets")
     if os.path.isdir(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend_assets")
+        app.mount(
+            "/assets",
+            CachedStaticFiles(directory=assets_dir, cache_max_age=31536000),
+            name="frontend_assets",
+        )
     images_dir = os.path.join(_frontend_dir, "images")
     if os.path.isdir(images_dir):
-        app.mount("/images", StaticFiles(directory=images_dir), name="frontend_images")
+        app.mount(
+            "/images",
+            CachedStaticFiles(directory=images_dir, cache_max_age=31536000),
+            name="frontend_images",
+        )
+    # 挂载静态文件目录（模板、下载文件等离线兜底资源）
+    # 注意：这些文件没有内容 hash 文件名（如 project_import_template.xlsx），
+    # 不能使用 immutable 缓存策略，否则更新模板后浏览器仍使用过期缓存。
+    static_dir = os.path.join(_frontend_dir, "static")
+    if os.path.isdir(static_dir):
+        app.mount(
+            "/static",
+            StaticFiles(directory=static_dir),
+            name="frontend_static",
+        )
 
-    # 缓存 static 文件到内存
-    _index_html = (Path(_frontend_dir) / "index.html").read_text(encoding="utf-8")
+    # index.html 路径（每次请求时重新读取，避免 rebuild 后缓存旧版本）
+    _index_path = Path(_frontend_dir) / "index.html"
     _favicon_path = Path(_frontend_dir) / "favicon.ico"
     _favicon_path = _favicon_path if _favicon_path.exists() else None
 
@@ -198,7 +243,11 @@ if _frontend_dir:
             return FileResponse(_favicon_path)
         return JSONResponse({"message": "Favicon not found"}, status_code=404)
 
-    # SPA fallback: API/文档/已挂载静态路径之外，返回 index.html
+    # ── SPA fallback ──
+    # 所有非 API / 非文档 / 非已挂载静态路径的 GET 请求，返回 index.html。
+    # 前端 Vue Router 在浏览器端接管路由（History 模式）。
+    # index.html 不缓存：确保浏览器始终获取最新版本，避免引用过时的 hash 资源。
+
     _reserved = (
         settings.API_PREFIX.lstrip("/"),
         "docs", "openapi", "uploads",
@@ -208,7 +257,15 @@ if _frontend_dir:
     async def spa_fallback(request: Request, full_path: str = ""):
         if full_path.startswith(_reserved):
             return JSONResponse({"detail": "Not Found"}, status_code=404)
-        return HTMLResponse(_index_html)
+        # 每次请求重新读取 index.html — 确保 rebuild 后不返回缓存旧版本
+        return HTMLResponse(
+            _index_path.read_text(encoding="utf-8"),
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
 else:
     logger.warning(
         "前端静态资源未挂载。可能原因：\n"

@@ -72,9 +72,13 @@ describe('exportUtil', () => {
     })
   })
 
-  // ==================== downloadBlob (removed) ====================
+  // ==================== downloadBlob → triggerDownload migration ====================
 
-  describe.skip('downloadBlob', () => {
-    it('removed — use triggerDownload from @/api/export instead', () => {})
+  describe('downloadBlob → triggerDownload', () => {
+    it('triggerDownload is available from @/api/export', async () => {
+      const mod = await import('@/api/export')
+      expect(mod.triggerDownload).toBeDefined()
+      expect(typeof mod.triggerDownload).toBe('function')
+    })
   })
 })

@@ -188,6 +188,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";

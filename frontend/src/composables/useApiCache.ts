@@ -1,7 +1,10 @@
 /**
  * API 缓存 Composable
+ *
+ * 使用 shallowRef 避免 Vue 深度响应式包裹泛型 Map，
+ * 防止 UnwrapRef<T> 类型推断问题。
  */
-import { ref } from "vue";
+import { shallowRef } from "vue";
 
 interface CacheEntry<T> {
   data: T;
@@ -9,7 +12,7 @@ interface CacheEntry<T> {
 }
 
 export function useApiCache<T = any>(ttlMs = 60000) {
-  const cache = ref<Map<string, CacheEntry<T>>>(new Map());
+  const cache = shallowRef<Map<string, CacheEntry<T>>>(new Map());
 
   function get(key: string): T | null {
     const entry = cache.value.get(key);

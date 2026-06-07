@@ -5,8 +5,11 @@
 """
 
 import logging
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
@@ -307,3 +310,39 @@ async def get_api_statistics(
                 "message": f"API统计数据暂不可用: {str(e)}",
             },
         }
+
+
+@router.get("/database-size", summary="获取数据库文件大小")
+async def get_database_size(current_user=Depends(get_current_user)):
+    """获取数据库文件大小（用于系统监控面板）"""
+    from app.core.config import settings
+    try:
+        db_url = settings.DATABASE_URL
+        if db_url.startswith("sqlite"):
+            parsed = urlparse(db_url) if "://" in db_url else None
+            if parsed and parsed.path:
+                db_path = parsed.path.lstrip("/")
+            else:
+                db_path = db_url.replace("sqlite:///", "")
+            if not os.path.isabs(db_path):
+                db_path = str(Path(db_path).resolve())
+        else:
+            db_path = str(Path("data/rural_revitalization.db").resolve())
+        if not os.path.exists(db_path):
+            return {
+                "success": False,
+                "data": {"size_bytes": 0, "size_mb": 0, "error": f"数据库文件不存在: {db_path}"},
+            }
+        size = os.path.getsize(db_path)
+        return {
+            "success": True,
+            "data": {
+                "size_bytes": size,
+                "size_mb": round(size / 1024 / 1024, 2),
+                "path": db_path,
+            },
+        }
+    except PermissionError:
+        return {"success": False, "data": {"size_bytes": 0, "size_mb": 0, "error": "无权限读取数据库文件"}}
+    except Exception as e:
+        return {"success": False, "data": {"size_bytes": 0, "size_mb": 0, "error": str(e)}}

@@ -188,7 +188,7 @@ def _process_import_row(row: tuple, field_names: List[str], db: Session, row_idx
 @router.get("")
 async def list_villages(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=200),
     keyword: Optional[str] = None,
     department: Optional[str] = None,
     county: Optional[str] = None,

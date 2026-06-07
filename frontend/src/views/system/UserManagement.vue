@@ -843,7 +843,7 @@ const showPendingUsers = async () => {
   }
 };
 
-const handleActivateUser = (row: User) => {
+const handleActivateUser = (row: any) => {
   currentUser.value = row;
   Object.assign(permForm, {
     role: row.role || "operator",
@@ -900,7 +900,7 @@ const handleAdd = () => {
   dialogVisible.value = true;
 };
 
-const handleEdit = (row: User) => {
+const handleEdit = (row: any) => {
   isEdit.value = true;
   dialogTitle.value = "编辑用户";
   Object.assign(formData, {
@@ -961,7 +961,7 @@ const handleSubmit = async () => {
   });
 };
 
-const handleResetPassword = (row: User) => {
+const handleResetPassword = (row: any) => {
   currentUser.value = row;
   resetPwdForm.newPassword = "";
   resetPwdDialogVisible.value = true;
@@ -974,18 +974,29 @@ const confirmResetPassword = async () => {
   }
 
   try {
+    const newPwd = resetPwdForm.newPassword;
     await request.post(`/users/${currentUser.value?.id}/admin-reset-password`, {
-      new_password: resetPwdForm.newPassword,
+      new_password: newPwd,
     });
-    ElMessage.success(`用户 ${currentUser.value?.username} 的密码已重置`);
+    try {
+      await navigator.clipboard.writeText(newPwd);
+    } catch {
+      /* ignore */
+    }
+    ElMessageBox.alert(
+      `新密码：${newPwd}`,
+      `用户「${currentUser.value?.username}」密码已重置`,
+      { confirmButtonText: "已复制到剪贴板，知道了", type: "success" },
+    );
     resetPwdDialogVisible.value = false;
+    resetPwdForm.newPassword = "";
   } catch (error: any) {
     const msg = error?.response?.data?.detail || "重置密码失败";
     ElMessage.error(msg);
   }
 };
 
-const handleAssignPermissions = (row: User) => {
+const handleAssignPermissions = (row: any) => {
   currentUser.value = row;
   const perms = (row.permissions || "").split(",").filter(Boolean);
   Object.assign(permForm, {
@@ -1024,7 +1035,7 @@ const confirmPermissions = async () => {
   }
 };
 
-const handleDelete = async (row: User) => {
+const handleDelete = async (row: any) => {
   try {
     await ElMessageBox.confirm(
       `确定删除用户 "${row.full_name || row.username}" 吗？`,

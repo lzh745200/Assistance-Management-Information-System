@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from app.models.approval import ApprovalTask, ApprovalStatus
 from app.models.project import Project
 from app.models.fund import Fund
-from app.models.message import Message
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +59,11 @@ def scan_deadline_warnings(db: Session, days_threshold: int = 7) -> List[Dict[st
     return results
 
 
-def scan_budget_warnings(db: Session, warning_threshold: float = 0.80, danger_threshold: float = 0.95) -> List[Dict[str, Any]]:
+def scan_budget_warnings(
+    db: Session,
+    warning_threshold: float = 0.80,
+    danger_threshold: float = 0.95,
+) -> List[Dict[str, Any]]:
     """扫描经费预算告警."""
     funds = db.query(Fund).filter(Fund.amount > 0).all()
     results = []

@@ -4,14 +4,14 @@
     <div class="timeline-section">
       <h3 class="section-title">近期动态</h3>
       <div class="timeline-list">
-        <div
-          v-for="item in activities"
-          :key="item.id"
-          class="timeline-item"
-        >
-          <span class="tl-time">{{ formatTime(item.time || item.created_at) }}</span>
+        <div v-for="item in activities" :key="item.id" class="timeline-item">
+          <span class="tl-time">{{
+            formatTime(item.time || item.created_at)
+          }}</span>
           <span class="tl-dot" />
-          <span class="tl-text">{{ item.action || item.description || "--" }}</span>
+          <span class="tl-text">{{
+            item.action || item.description || "--"
+          }}</span>
         </div>
         <div v-if="activities.length === 0" class="tl-empty">暂无动态</div>
       </div>
@@ -40,7 +40,12 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import {
-  List, DataAnalysis, Upload, Setting, Message, Folder,
+  List,
+  DataAnalysis,
+  Upload,
+  Setting,
+  Message,
+  Folder,
 } from "@element-plus/icons-vue";
 import request from "@/api/request";
 
@@ -50,11 +55,31 @@ const activities = ref<any[]>([]);
 
 const quickLinks = [
   { path: "/projects", label: "项目列表", icon: Folder, testId: "ql-projects" },
-  { path: "/data-analysis", label: "数据看板", icon: DataAnalysis, testId: "ql-analysis" },
-  { path: "/data-package", label: "数据上报", icon: Upload, testId: "ql-upload" },
-  { path: "/system/config", label: "系统配置", icon: Setting, testId: "ql-config" },
+  {
+    path: "/data-analysis",
+    label: "数据看板",
+    icon: DataAnalysis,
+    testId: "ql-analysis",
+  },
+  {
+    path: "/data-package",
+    label: "数据上报",
+    icon: Upload,
+    testId: "ql-upload",
+  },
+  {
+    path: "/system/config",
+    label: "系统配置",
+    icon: Setting,
+    testId: "ql-config",
+  },
   { path: "/message", label: "消息中心", icon: Message, testId: "ql-messages" },
-  { path: "/approval/pending", label: "待审批", icon: List, testId: "ql-approval" },
+  {
+    path: "/approval/pending",
+    label: "待审批",
+    icon: List,
+    testId: "ql-approval",
+  },
 ];
 
 function formatTime(t: string): string {
@@ -66,7 +91,9 @@ function formatTime(t: string): string {
 
 async function loadActivities() {
   try {
-    const res = await request.get("/dashboard/recent-activities", { params: { limit: 10 } } as any);
+    const res = await request.get("/dashboard/recent-activities", {
+      params: { limit: 10 },
+    } as any);
     const data = res?.data?.items || res?.data?.data || res?.data || [];
     activities.value = (Array.isArray(data) ? data : []).slice(0, 10);
   } catch {
@@ -74,7 +101,9 @@ async function loadActivities() {
   }
 }
 
-onMounted(() => { loadActivities(); });
+onMounted(() => {
+  loadActivities();
+});
 </script>
 
 <style scoped lang="scss">
@@ -82,38 +111,106 @@ onMounted(() => { loadActivities(); });
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 16px;
-  @media (max-width: 768px) { grid-template-columns: 1fr; }
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-.timeline-section, .quick-links {
-  background: #fff; border-radius: 12px; padding: 20px 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+.timeline-section,
+.quick-links {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .section-title {
-  font-size: 15px; font-weight: 600; color: #1e293b; margin: 0 0 16px 0;
-  display: flex; align-items: center; gap: 8px;
-  &::before { content:''; display:inline-block; width:4px; height:16px; border-radius:2px;
-    background: linear-gradient(180deg, #1e4d8c, #2d6a4f); }
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #1e4d8c, #2d6a4f);
+  }
 }
 
-.timeline-list { display: flex; flex-direction: column; gap: 0; }
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
 .timeline-item {
-  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
   border-bottom: 1px solid #f1f5f9;
-  &:last-child { border-bottom: none; }
+  &:last-child {
+    border-bottom: none;
+  }
 }
-.tl-time { font-size: 11px; color: #94a3b8; font-family: 'DIN Alternate', monospace; white-space: nowrap; min-width: 50px; }
-.tl-dot { width: 6px; height: 6px; border-radius: 50%; background: #2d6a4f; flex-shrink: 0; }
-.tl-text { font-size: 13px; color: #475569; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tl-empty { text-align: center; color: #94a3b8; font-size: 13px; padding: 20px 0; }
+.tl-time {
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: "DIN Alternate", monospace;
+  white-space: nowrap;
+  min-width: 50px;
+}
+.tl-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2d6a4f;
+  flex-shrink: 0;
+}
+.tl-text {
+  font-size: 13px;
+  color: #475569;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tl-empty {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 20px 0;
+}
 
-.ql-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.ql-item {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 16px 8px; border-radius: 10px; cursor: pointer;
-  transition: background .2s, transform .2s; color: #64748b;
-  &:hover { background: #f0f4f0; transform: translateY(-2px); color: #2d6a4f; }
+.ql-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
-.ql-label { font-size: 12px; font-weight: 500; }
+.ql-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+  color: #64748b;
+  &:hover {
+    background: #f0f4f0;
+    transform: translateY(-2px);
+    color: #2d6a4f;
+  }
+}
+.ql-label {
+  font-size: 12px;
+  font-weight: 500;
+}
 </style>

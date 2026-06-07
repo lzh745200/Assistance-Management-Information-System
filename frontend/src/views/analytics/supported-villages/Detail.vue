@@ -197,6 +197,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";

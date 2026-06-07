@@ -4,6 +4,7 @@
 
 import { logger } from "@/utils/logger";
 import { useRbacStore } from "@/stores/rbac";
+import { useAuthStore } from "@/stores/auth";
 import type { RouteLocationNormalized, NavigationGuardNext } from "vue-router";
 
 export interface RoutePermissionGuard {
@@ -20,6 +21,12 @@ export interface RoutePermissionGuard {
   ): void;
 }
 
+/** 获取当前用户角色（辅助函数，DRY） */
+function _getCurrentRole(): string {
+  const authStore = useAuthStore();
+  return authStore.user?.role || "";
+}
+
 /**
  * 创建权限守卫
  * @param routePermissions 路由权限配置
@@ -29,6 +36,7 @@ export function createPermissionGuard(
 ): RoutePermissionGuard {
   return (to, _from, next) => {
     const rbacStore = useRbacStore();
+    const userRole = _getCurrentRole();
 
     // 获取路由权限要求
     const requiredPermissions = routePermissions[to.path];
@@ -41,7 +49,7 @@ export function createPermissionGuard(
 
     // 检查是否有任意一个所需权限
     const hasPermission = requiredPermissions.some((permission) =>
-      rbacStore.hasPermission(permission),
+      rbacStore.hasPermission(userRole, permission),
     );
 
     if (hasPermission) {
@@ -62,6 +70,7 @@ export function createAsyncPermissionGuard(
 ): RoutePermissionGuard {
   return async (to, _from, next) => {
     const rbacStore = useRbacStore();
+    const userRole = _getCurrentRole();
 
     // 等待权限加载完成
     await rbacStore.loadUserPermissions();
@@ -77,7 +86,7 @@ export function createAsyncPermissionGuard(
 
     // 检查是否有任意一个所需权限
     const hasPermission = requiredPermissions.some((permission) =>
-      rbacStore.hasPermission(permission),
+      rbacStore.hasPermission(userRole, permission),
     );
 
     if (hasPermission) {
@@ -96,6 +105,7 @@ export const permissionDirective = {
   mounted(el: HTMLElement, binding: any) {
     const { value } = binding;
     const rbacStore = useRbacStore();
+    const userRole = _getCurrentRole();
 
     if (!value) {
       logger.warn("v-permission directive requires a permission value");
@@ -103,7 +113,7 @@ export const permissionDirective = {
     }
 
     // 检查权限
-    const hasPermission = rbacStore.hasPermission(value);
+    const hasPermission = rbacStore.hasPermission(userRole, value);
 
     if (!hasPermission) {
       // 权限不足，隐藏或禁用元素
@@ -120,13 +130,14 @@ export const permissionDirective = {
   updated(el: HTMLElement, binding: any) {
     const { value } = binding;
     const rbacStore = useRbacStore();
+    const userRole = _getCurrentRole();
 
     if (!value) {
       return;
     }
 
     // 检查权限
-    const hasPermission = rbacStore.hasPermission(value);
+    const hasPermission = rbacStore.hasPermission(userRole, value);
 
     if (!hasPermission) {
       if (binding.arg === "disabled") {
@@ -192,7 +203,8 @@ export const roleDirective = {
  */
 export const permissionFilter = (permission: string): boolean => {
   const rbacStore = useRbacStore();
-  return rbacStore.hasPermission(permission);
+  const userRole = _getCurrentRole();
+  return rbacStore.hasPermission(userRole, permission);
 };
 
 /**

@@ -332,12 +332,11 @@ const kpiTrends = computed<KpiTrends>(() => {
 
 const generateSparkData = (baseValue: number, points: number): number[] => {
   const data: number[] = [];
+  if (baseValue <= 0) return Array(points).fill(0);
   let val = Math.max(baseValue * 0.6, 1);
   for (let i = 0; i < points; i++) {
-    // 带趋势的随机游走：70% 概率继续趋势 + 30% 随机波动
     const trend = (baseValue - val) / (points - i);
-    const noise = (Math.random() - 0.45) * val * 0.08;
-    val = Math.max(val * 0.85, val + trend + noise);
+    val = Math.max(val * 0.85, val + trend);
     data.push(Math.round(val * 100) / 100);
   }
   // 确保最后一个点接近当前值
@@ -604,27 +603,17 @@ const updateCharts = () => {
   // ── 年度趋势对比（升级为渐变面积图） ──
   if (trendChart) {
     const years = availableYears.slice().reverse();
-    const villagesData = years.map(() =>
-      Math.max(
-        0,
-        statistics.value.villages.totalVillages +
-          Math.round((Math.random() - 0.5) * 20),
-      ),
+    const baseVillages = statistics.value.villages.totalVillages || 0;
+    const villagesData =
+      baseVillages > 0 ? years.map(() => baseVillages) : years.map(() => 0);
+    const basePop = Math.round(
+      (statistics.value.population.totalPopulation || 0) / 100,
     );
-    const populationData = years.map(() =>
-      Math.max(
-        0,
-        Math.round(statistics.value.population.totalPopulation / 100) +
-          Math.round((Math.random() - 0.5) * 50),
-      ),
-    );
-    const incomeData = years.map(() =>
-      Math.max(
-        0,
-        statistics.value.income.avgPerCapitaIncome +
-          (Math.random() - 0.5) * 0.6,
-      ),
-    );
+    const populationData =
+      basePop > 0 ? years.map(() => basePop) : years.map(() => 0);
+    const baseIncome = statistics.value.income.avgPerCapitaIncome || 0;
+    const incomeData =
+      baseIncome > 0 ? years.map(() => baseIncome) : years.map(() => 0);
 
     trendChart.setOption({
       color: ["#1e4d8c", "#2d6a4f", "#f59e0b"],

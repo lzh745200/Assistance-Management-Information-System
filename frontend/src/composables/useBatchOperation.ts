@@ -1,10 +1,15 @@
 /**
  * 批量操作 Composable
+ *
+ * 使用 shallowRef 避免 Vue 深度响应式包裹泛型 Set，
+ * 防止 UnwrapRef<T> 类型推断问题。
+ * 注意：shallowRef 只追踪 .value 替换，不追踪 Set 内部变更，
+ * 因此每次增删后需重新赋值（new Set(set)）。
  */
-import { ref, computed } from "vue";
+import { shallowRef, ref, computed } from "vue";
 
 export function useBatchOperation<T = any>() {
-  const selectedItems = ref<Set<T>>(new Set());
+  const selectedItems = shallowRef<Set<T>>(new Set());
   const isAllSelected = ref(false);
 
   const selectedCount = computed(() => selectedItems.value.size);

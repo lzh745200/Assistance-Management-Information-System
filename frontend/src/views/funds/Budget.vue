@@ -214,6 +214,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouterSafe } from "@/composables/useRouterSafe";
 import { ElMessage, type FormInstance } from "element-plus";

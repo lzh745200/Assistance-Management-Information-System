@@ -10,6 +10,7 @@ from app.api.v1.deps import require_manager_role
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.utils.pagination import keyset_paginate
+from sqlalchemy import Integer
 from sqlalchemy.sql import func
 
 from app.models.fund import Fund
@@ -91,7 +92,7 @@ def _fund_to_dict(f: Fund) -> Dict[str, Any]:
 @router.get("")
 def list_funds(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=200),
     keyword: Optional[str] = None,
     status: Optional[str] = None,
     fund_type: Optional[str] = None,
@@ -260,6 +261,164 @@ def fund_statistics_overview(
             "approved_count": approved_count,
         }
     }
+
+
+@router.get("/statistics/multi-dimension")
+def fund_statistics_multi_dimension(
+    group_by: str = Query("type", description="分组维度: period, type, source, status"),
+    start_date: str = Query(None, description="起始日期 YYYY-MM-DD"),
+    end_date: str = Query(None, description="结束日期 YYYY-MM-DD"),
+    period_type: str = Query("monthly", description="时间粒度: monthly, quarterly, yearly"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """经费多维度统计分析 — 按来源/状态/类型/时间聚合
+
+    返回统一格式: {success: true, data: [{label, count, total_amount, total_allocated, total_used, utilization_rate}, ...]}
+    """
+    from datetime import datetime as dt
+
+    base = db.query(Fund)
+    try:
+        if start_date:
+            base = base.filter(Fund.date >= dt.strptime(start_date, "%Y-%m-%d").date())
+        if end_date:
+            base = base.filter(Fund.date <= dt.strptime(end_date, "%Y-%m-%d").date())
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式错误，请使用 YYYY-MM-DD 格式",
+        )
+
+    # 定义维度映射
+    dimension_map = {
+        "type": Fund.fund_type,
+        "source": Fund.fund_source,
+        "status": Fund.status,
+    }
+
+    if group_by == "period":
+        # 时间维度：按粒度分组
+        if period_type == "quarterly":
+            # 季度聚合：((month-1)//3)+1 = 1,2,3,4
+            quarter_expr = ((func.cast(func.strftime("%m", Fund.date), Integer) - 1) / 3 + 1)
+            rows = (
+                base.with_entities(
+                    func.strftime("%Y", Fund.date).label("year"),
+                    func.cast(quarter_expr, Integer).label("quarter"),
+                    func.count(Fund.id).label("count"),
+                    func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
+                    func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
+                    func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
+                )
+                .group_by(func.strftime("%Y", Fund.date), quarter_expr)
+                .order_by(func.strftime("%Y", Fund.date), quarter_expr)
+                .all()
+            )
+        elif period_type == "yearly":
+            rows = (
+                base.with_entities(
+                    func.strftime("%Y", Fund.date).label("year"),
+                    func.count(Fund.id).label("count"),
+                    func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
+                    func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
+                    func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
+                )
+                .group_by(func.strftime("%Y", Fund.date))
+                .order_by(func.strftime("%Y", Fund.date))
+                .all()
+            )
+        else:
+            # monthly (default)
+            rows = (
+                base.with_entities(
+                    func.strftime("%Y", Fund.date).label("year"),
+                    func.strftime("%m", Fund.date).label("month"),
+                    func.count(Fund.id).label("count"),
+                    func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
+                    func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
+                    func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
+                )
+                .group_by(func.strftime("%Y", Fund.date), func.strftime("%m", Fund.date))
+                .order_by(func.strftime("%Y", Fund.date), func.strftime("%m", Fund.date))
+                .all()
+            )
+        result = []
+        for r in rows:
+            if not r[0]:
+                continue
+            if period_type == "quarterly":
+                label = f"{r[0]}Q{r[1]}"
+            elif period_type == "yearly":
+                label = str(r[0])
+            else:
+                label = f"{r[0]}-{r[1]}" if len(r) > 1 and r[1] else str(r[0])
+            result.append({
+                "label": label,
+                "count": r.count,
+                "total_amount": round(float(r.total_amount or 0), 2),
+                "total_allocated": round(float(r.total_allocated or 0), 2),
+                "total_used": round(float(r.total_used or 0), 2),
+                "utilization_rate": round(
+                    float(r.total_used or 0) / float(r.total_amount or 1) * 100, 1
+                ) if float(r.total_amount or 0) > 0 else 0,
+            })
+    elif group_by in dimension_map:
+        col = dimension_map[group_by]
+        rows = (
+            base.with_entities(
+                col.label("group_key"),
+                func.count(Fund.id).label("count"),
+                func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
+                func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
+                func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
+            )
+            .group_by(col)
+            .all()
+        )
+        # 来源维度标签映射
+        source_labels = {
+            "military": "军队投资", "government": "政府拨款",
+            "donation": "社会捐赠", "enterprise": "企业投资", "other": "其他",
+        }
+        # 状态维度标签映射
+        status_labels = {
+            "pending": "待审批", "planned": "规划中", "approved": "已批准",
+            "allocated": "已拨付", "in_use": "使用中", "completed": "已完成",
+            "audited": "已审计",
+        }
+        # 类型维度标签映射
+        type_labels = {
+            "project": "项目经费", "operation": "运营经费",
+            "education": "教育帮扶", "infrastructure": "基础设施",
+            "emergency": "应急经费", "other": "其他",
+        }
+        label_map = (
+            source_labels if group_by == "source"
+            else status_labels if group_by == "status"
+            else type_labels if group_by == "type"
+            else {}
+        )
+        result = []
+        for r in rows:
+            key = r.group_key or "未知"
+            result.append({
+                "label": label_map.get(key, key),
+                "count": r.count,
+                "total_amount": round(float(r.total_amount or 0), 2),
+                "total_allocated": round(float(r.total_allocated or 0), 2),
+                "total_used": round(float(r.total_used or 0), 2),
+                "utilization_rate": round(
+                    float(r.total_used or 0) / float(r.total_amount or 1) * 100, 1
+                ) if float(r.total_amount or 0) > 0 else 0,
+            })
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"不支持的分组维度: {group_by}，支持: period, type, source, status",
+        )
+
+    return {"success": True, "data": result}
 
 
 # ── 资金审批流程 ──

@@ -12,7 +12,7 @@ Usage（在 main.py 中注册）:
 import logging
 import time
 from collections import deque
-from typing import Any, Callable, Deque, Dict, List, Optional, Tuple
+from typing import Any, Deque, Dict, List
 
 logger = logging.getLogger("performance.slow")
 

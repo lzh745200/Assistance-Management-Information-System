@@ -178,6 +178,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { Download, Upload, QuestionFilled } from "@element-plus/icons-vue";

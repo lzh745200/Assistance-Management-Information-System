@@ -3,9 +3,17 @@
     <div class="error-boundary-content">
       <!-- 类型 1: ChunkLoadError -->
       <template v-if="errorType === 'chunk'">
-        <el-result icon="warning" title="页面模块加载失败" :sub-title="errorMessage">
+        <el-result
+          icon="warning"
+          title="页面模块加载失败"
+          :sub-title="errorMessage"
+        >
           <template #extra>
-            <el-button type="primary" :loading="isRetrying" @click="handleRetry">
+            <el-button
+              type="primary"
+              :loading="isRetrying"
+              @click="handleRetry"
+            >
               重新加载
             </el-button>
             <el-button @click="handleReload">刷新页面</el-button>
@@ -30,7 +38,7 @@
             <el-button type="primary" @click="handleReload">刷新页面</el-button>
             <el-button @click="handleGoHome">返回首页</el-button>
             <el-button @click="showDetail = !showDetail">
-              {{ showDetail ? '收起' : '查看' }}详情
+              {{ showDetail ? "收起" : "查看" }}详情
             </el-button>
           </template>
         </el-result>
@@ -70,7 +78,10 @@ function classifyError(err: unknown): { type: ErrorType; message: string } {
     msg.includes("Importing a module script failed") ||
     msg.includes("error loading dynamically imported module")
   ) {
-    return { type: "chunk", message: "页面模块加载失败，请检查网络连接后重试。" };
+    return {
+      type: "chunk",
+      message: "页面模块加载失败，请检查网络连接后重试。",
+    };
   }
 
   // NetworkError: fetch / xhr 网络错误
@@ -80,7 +91,10 @@ function classifyError(err: unknown): { type: ErrorType; message: string } {
     msg.includes("ERR_NETWORK") ||
     msg.includes("net::ERR_")
   ) {
-    return { type: "network", message: "网络连接异常，请检查后端服务是否正常运行。" };
+    return {
+      type: "network",
+      message: "网络连接异常，请检查后端服务是否正常运行。",
+    };
   }
 
   // 未知错误 → 展示完整信息
@@ -92,7 +106,7 @@ onErrorCaptured((err: unknown, _instance, info: string) => {
   const { type, message } = classifyError(err);
   errorType.value = type;
   errorMessage.value = message;
-  errorStack.value = err instanceof Error ? (err.stack || "") : "";
+  errorStack.value = err instanceof Error ? err.stack || "" : "";
   hasError.value = true;
 
   console.error(

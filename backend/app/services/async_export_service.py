@@ -1,10 +1,8 @@
 """异步导出服务 — 大文件后台导出 + 进度追踪."""
-import io
 import logging
-import os
 import uuid as _uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 

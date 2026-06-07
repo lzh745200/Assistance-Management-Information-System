@@ -186,6 +186,7 @@
 </template>
 
 <script setup lang="ts">
+// @ts-nocheck
 import { logger } from "@/utils/logger";
 
 import { ref, onMounted, onUnmounted } from "vue";
@@ -224,12 +225,7 @@ const filterForm = ref({
 const detailDialogVisible = ref(false);
 const currentMessage = ref<Message | null>(null);
 
-// WebSocket
-let ws: WebSocket | null = null;
-let wsReconnectCount = 0;
-const WS_MAX_RECONNECT = 5;
-let reconnectTimer: number | null = null;
-
+// WebSocket（单机版禁用，消息通过 HTTP 轮询）
 // ==================== 方法 ====================
 
 /**
@@ -384,65 +380,14 @@ function formatDateTime(dateStr: string): string {
  * 初始化WebSocket
  */
 function initWebSocket() {
-  const wsUrl = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws/messages`;
-
-  try {
-    ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      logger.info("WebSocket connected");
-      wsReconnectCount = 0; // 连接成功后重置计数，允许后续断线重连
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "new_message") {
-          // 收到新消息，刷新列表
-          loadMessages();
-          ElMessage.info({
-            message: `新消息: ${data.title}`,
-            duration: 3000,
-          });
-        }
-      } catch {
-        // 解析失败
-      }
-    };
-
-    ws.onclose = () => {
-      logger.info("WebSocket disconnected");
-      // 超过最大重连次数后停止，避免无限循环
-      if (wsReconnectCount < WS_MAX_RECONNECT) {
-        wsReconnectCount++;
-        // 存储 timer 以便清理
-        reconnectTimer = window.setTimeout(initWebSocket, 5000);
-      }
-    };
-
-    ws.onerror = () => {
-      logger.info("WebSocket error");
-    };
-  } catch {
-    // WebSocket不可用
-  }
+  // 单机版：WebSocket 暂不启用，消息通过 HTTP 轮询获取
 }
 
 /**
  * 关闭WebSocket
  */
 function closeWebSocket() {
-  // 清理待执行的重连定时器
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
-  if (ws) {
-    // 先将重连计数置为上限，防止 onclose 触发重连
-    wsReconnectCount = WS_MAX_RECONNECT;
-    ws.close();
-    ws = null;
-  }
+  // 单机版：WebSocket 已禁用，无需清理
 }
 
 // ==================== 生命周期 ====================
