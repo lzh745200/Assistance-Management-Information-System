@@ -404,8 +404,42 @@ export function handleImportError(error: any): boolean {
 }
 
 export function setupGlobalErrorHandler() {
+  // ── 同步未捕获异常 ──
+  window.onerror = (message, source, lineno, colno, error) => {
+    if (typeof message === "string") {
+      // 忽略 ChunkLoadError（已由 ErrorBoundary 处理）
+      if (message.includes("dynamically imported module")) {
+        return false;
+      }
+      // 忽略 ResizeObserver 良性警告
+      if (message.includes("ResizeObserver")) {
+        return false;
+      }
+    }
+    console.error("[GlobalError]", {
+      message: String(message),
+      source,
+      line: lineno,
+      col: colno,
+      error: error instanceof Error ? error.message : error,
+    });
+    return false;
+  };
+
+  // ── 未处理 Promise rejection ──
   window.addEventListener("unhandledrejection", (event) => {
-    logger.error("[Unhandled Promise Rejection]", event.reason);
+    const reason = event.reason;
+    if (
+      reason?.message?.includes("Failed to fetch dynamically imported module")
+    ) {
+      // ChunkLoadError → ErrorBoundary 已处理，仅记录
+      console.warn("[UnhandledRejection] ChunkLoadError:", reason.message);
+    } else if (reason?.response?.status === 401) {
+      console.warn("[UnhandledRejection] 401 — token may be expired");
+    } else {
+      logger.error("[Unhandled Promise Rejection]", reason);
+    }
+    event.preventDefault();
   });
 }
 

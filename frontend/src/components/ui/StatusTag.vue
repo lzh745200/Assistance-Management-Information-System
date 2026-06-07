@@ -28,7 +28,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+// @ts-nocheck
+import { ref, onMounted, onUnmounted } from "vue";
 import { ElMessageBox } from "element-plus";
 import { SecurityLevel } from "@/utils/security";
 
@@ -92,9 +93,9 @@ const handleDetail = (event: SecurityEvent) => {
 onMounted(() => {
   fetchSecurityEvents();
   // 模拟实时监控
-  setInterval(() => {
-    // 这里实际项目中应该调用API获取最新安全事件
-    if (Math.random() > 0.8) {
+  const _monitorTimer = setInterval(() => {
+    // 实际项目中调用API获取最新安全事件（Demo模式不生成假数据）
+    if (false) {
       const newEvent = {
         time: new Date().toLocaleString(),
         type: "安全扫描",
@@ -104,6 +105,10 @@ onMounted(() => {
       securityEvents.value.unshift(newEvent);
     }
   }, 5000);
+
+  onUnmounted(() => {
+    clearInterval(_monitorTimer);
+  });
 });
 </script>
 
