@@ -395,7 +395,7 @@ async function fetchData() {
         support_status: filterForm.status || undefined,
       },
     });
-    const res = response.data;
+    const res = response;
     const inner = res.data || res;
     tableData.value = inner.items || (Array.isArray(inner) ? inner : []);
     total.value = inner.total || tableData.value.length;

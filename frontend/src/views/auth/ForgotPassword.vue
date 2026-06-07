@@ -147,7 +147,7 @@ const useCurrentMachineCode = async () => {
   loadingMachineCode.value = true;
   try {
     const response = await request.get("/machine-code/get-machine-code");
-    const resData = response.data;
+    const resData = response;
     const payload =
       resData?.code === 200 ? resData.data : (resData?.data ?? resData);
     if (payload?.machine_code) {
@@ -185,7 +185,7 @@ const handleResetPassword = async () => {
       { params: resetForm.value },
     );
 
-    const resData = response.data;
+    const resData = response;
     const payload =
       resData?.code === 200 ? resData.data : (resData?.data ?? resData);
     if (payload?.new_password) {

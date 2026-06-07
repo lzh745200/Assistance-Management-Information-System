@@ -31,30 +31,59 @@ app.use(router);
 app.mount("#app");
 
 // ── 全局修复：所有 ElMessage / ElNotification 强制页面正中央 ──
-// Element Plus 用 JS 动态设置 style.top/left，CSS !important 有时不生效。
-// 使用 MutationObserver 在元素挂载后立即重新定位。
+// 多层策略：CSS 样式注入 + JS 拦截 + EP 函数重写
 {
-  const centerEl = (el: HTMLElement) => {
-    el.style.setProperty("top", "50%", "important");
-    el.style.setProperty("left", "50%", "important");
-    el.style.setProperty("right", "auto", "important");
-    el.style.setProperty("bottom", "auto", "important");
-    el.style.setProperty("transform", "translate(-50%, -50%)", "important");
-    el.style.setProperty("margin", "0", "important");
+  // 策略1：运行时注入 CSS 样式表（优先级最高）
+  const styleSheet = new CSSStyleSheet();
+  styleSheet.replaceSync(`
+    .el-message, .el-message--success, .el-message--error, .el-message--warning, .el-message--info {
+      top: 50% !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      transform: translate(-50%, -50%) !important;
+    }
+    .el-notification {
+      top: 50% !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      transform: translate(-50%, -50%) !important;
+      margin: 0 !important;
+    }
+    .el-message-box {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+    }
+  `);
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, styleSheet];
+
+  // 策略2：持续观察并强制居中（EP 可能在创建后重新设 style.top）
+  const forceCenter = (el: HTMLElement) => {
+    const s = el.style;
+    if (s.getPropertyPriority("top") !== "important" || s.top !== "50%") {
+      s.setProperty("top", "50%", "important");
+      s.setProperty("left", "50%", "important");
+      s.setProperty("transform", "translate(-50%, -50%)", "important");
+      s.setProperty("margin", "0", "important");
+      s.setProperty("right", "auto", "important");
+      s.setProperty("bottom", "auto", "important");
+    }
   };
-  const observer = new MutationObserver((mutations) => {
-    for (const m of mutations) {
-      for (const node of m.addedNodes) {
-        if (node instanceof HTMLElement) {
-          if (node.classList.contains("el-message")) centerEl(node);
-          if (node.classList.contains("el-notification")) centerEl(node);
-          // 也检查子元素
-          node.querySelectorAll?.(".el-message, .el-notification").forEach((c) => centerEl(c as HTMLElement));
+  // 首次创建时
+  new MutationObserver((ms) => {
+    for (const m of ms) for (const n of m.addedNodes) {
+      if (n instanceof HTMLElement) {
+        if (n.classList.contains("el-message") || n.classList.contains("el-notification")) {
+          forceCenter(n);
+          // 持续监控：EP 会在 0-200ms 内重新设置 top 用于消息堆叠
+          for (const delay of [0, 50, 100, 200]) setTimeout(() => forceCenter(n), delay);
         }
       }
     }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+  }).observe(document.body, { childList: true, subtree: true });
 }
 
 export default app;

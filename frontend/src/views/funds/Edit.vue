@@ -231,7 +231,7 @@ const rules: FormRules = {
 const loadData = async (id: string | number) => {
   try {
     const response = await request.get(`/funds/${id}`);
-    const d = response.data;
+    const d = response;
     if (d) {
       formData.id = d.id;
       formData.projectName = d.project_name || d.name || "";

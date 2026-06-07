@@ -240,8 +240,8 @@ const getMachineCode = async () => {
   loading.value = true;
   try {
     const response = await request.get("/machine-code/get-machine-code");
-    if (response.data.success) {
-      machineData.value = response.data.data;
+    if (response.success) {
+      machineData.value = response;
       ElMessage.success("机器码获取成功");
     }
   } catch (error: any) {
@@ -273,8 +273,8 @@ const generatePassword = async () => {
       "/machine-code/generate-initial-password",
       passwordForm.value,
     );
-    if (response.data.success) {
-      generatedPassword.value = response.data.data;
+    if (response.success) {
+      generatedPassword.value = response;
       ElMessage.success("初始密码已生成");
     }
   } catch (error: any) {
@@ -309,8 +309,8 @@ const resetPassword = async () => {
         params: resetForm.value,
       },
     );
-    if (response.data.success) {
-      resetResult.value = response.data.data;
+    if (response.success) {
+      resetResult.value = response;
       ElMessage.success("密码已重置");
     }
   } catch (error: any) {

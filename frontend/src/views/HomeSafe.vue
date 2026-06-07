@@ -1317,7 +1317,7 @@ async function loadDashboard() {
       request.get("/messages", silentConfig),
     ]);
 
-    // 统计数据（拦截器已自动解包 response.data.data => response.data）
+    // 统计数据（拦截器已自动解包 response => response）
     if (results[0].status === "fulfilled") {
       const d = results[0].value.data;
       // 只有当数据不为空且至少有一个非零值时才设置

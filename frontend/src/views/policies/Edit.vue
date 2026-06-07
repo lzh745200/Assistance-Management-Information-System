@@ -325,8 +325,8 @@ const handleBack = () => {
 
 // 上传成功处理
 const handleUploadSuccess = (response: any, _file: UploadFile) => {
-  if (response.data?.url) {
-    formData.attachment_urls.push(response.data.url);
+  if (response?.url) {
+    formData.attachment_urls.push(response.url);
   }
   ElMessage.success("上传成功");
 };

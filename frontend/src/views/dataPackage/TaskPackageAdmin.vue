@@ -426,7 +426,7 @@ async function downloadPkg(row: any) {
     const response = await request.get(`/data-packages/${row.id}/download`, {
       responseType: "blob",
     });
-    const blob = new Blob([response.data]);
+    const blob = new Blob([response]);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

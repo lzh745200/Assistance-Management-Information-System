@@ -236,10 +236,10 @@ const handleExport = async () => {
       response = await exportData(params);
     }
 
-    if (response.data.success) {
-      ElMessage.success(`导出成功! 共 ${response.data.total_records} 条记录`);
+    if (response.success) {
+      ElMessage.success(`导出成功! 共 ${response.total_records} 条记录`);
       // 自动下载
-      await handleDownloadByName(response.data.package_name);
+      await handleDownloadByName(response.package_name);
       // 刷新历史
       await loadExportHistory();
       // 清空密码
@@ -277,8 +277,8 @@ const handleDownloadByName = async (packageName: string) => {
 const loadExportHistory = async () => {
   try {
     const response = await getSyncLogs("export", 20);
-    if (response.data.success) {
-      exportHistory.value = response.data.data;
+    if (response.success) {
+      exportHistory.value = response;
     }
   } catch (error) {
     console.error("加载导出历史失败:", error);

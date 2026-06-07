@@ -411,7 +411,7 @@ const loadSchool = async () => {
   loading.value = true;
   try {
     const response = await request.get(`/schools/${id}`);
-    const result = response.data;
+    const result = response;
     const data = result.data || result;
     if (data) {
       Object.assign(school.value, {

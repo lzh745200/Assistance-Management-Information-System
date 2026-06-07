@@ -808,7 +808,7 @@ const loadData = async () => {
               : undefined,
       },
     });
-    const data = response.data?.data || response.data;
+    const data = response?.data || response;
     tableData.value = data.items || [];
     pagination.total = data.total || tableData.value.length;
   } catch (error) {

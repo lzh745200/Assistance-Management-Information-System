@@ -497,11 +497,11 @@ const downloadTemplate = async () => {
       params: { entity_type: "project" },
       responseType: "blob",
     });
-    // response.data is already a Blob when responseType: "blob"
+    // response is already a Blob when responseType: "blob"
     const blob =
-      response.data instanceof Blob
-        ? response.data
-        : new Blob([response.data], {
+      response instanceof Blob
+        ? response
+        : new Blob([response], {
             type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           });
     // 验证 Blob 非空且是有效 xlsx（PK zip 签名）
@@ -615,7 +615,7 @@ const handleUpload = async () => {
       timeout: 120000,
     });
 
-    await parsePreviewResponse(response.data);
+    await parsePreviewResponse(response);
   } catch {
     await parsePreviewResponse(null);
   } finally {
@@ -729,7 +729,7 @@ const confirmImport = async () => {
       timeout: 120000,
     });
 
-    setImportResult(true, response.data);
+    setImportResult(true, response);
   } catch {
     setImportResult(true);
   } finally {

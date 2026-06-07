@@ -240,7 +240,7 @@ async function fetchData() {
         is_active: true, // 只显示活跃的组织，过滤掉已删除的
       },
     });
-    const data = response.data;
+    const data = response;
     tableData.value =
       data.items || data.data || (Array.isArray(data) ? data : []);
     total.value = data.total || tableData.value.length;
@@ -339,7 +339,7 @@ async function handleDelete(row: any) {
     const response = await request.delete(`/organizations/${row.id}`);
 
     // 显示后端返回的消息
-    ElMessage.success(response.data.message || "组织已删除");
+    ElMessage.success(response.message || "组织已删除");
 
     // 刷新列表
     await fetchDataWithSort();

@@ -812,7 +812,7 @@ async function loadStaffFromApi() {
     const { default: request } = await import("@/api/request");
     const response = await request.get("/users/staff-list");
     const users =
-      response.data?.data?.items || response.data?.items || response.data || [];
+      response?.data?.items || response?.items || response || [];
     if (Array.isArray(users) && users.length > 0) {
       staff.value = users.map((u: any) => ({
         id: String(u.id),
@@ -833,7 +833,7 @@ async function loadProjectsFromApi() {
     const { default: request } = await import("@/api/request");
     const response = await request.get("/projects", { params: { limit: 100 } });
     const items =
-      response.data?.items || response.data?.data || response.data || [];
+      response?.items || response?.data || response || [];
     if (Array.isArray(items) && items.length > 0) {
       projects.value = items.map((p: any) => ({
         id: String(p.id),

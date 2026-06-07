@@ -408,7 +408,7 @@ async function fetchData() {
         status: filterForm.status || undefined,
       },
     });
-    const data = response.data;
+    const data = response;
     tableData.value =
       data.items || data.data || (Array.isArray(data) ? data : []);
     total.value = data.total || tableData.value.length;
