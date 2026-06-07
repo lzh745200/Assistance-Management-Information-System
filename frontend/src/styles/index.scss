@@ -185,6 +185,26 @@ body {
   justify-content: center !important;
 }
 
+/* Element Plus 消息弹窗（确认/提示/输入框）— 页面中央 */
+.el-message-box {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+}
+.el-overlay-message-box {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Element Plus 所有弹出层容器 — 页面中央 */
+.el-overlay {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 .el-message--success {
   background-color: var(--color-success-light);
   border-color: var(--color-success);
