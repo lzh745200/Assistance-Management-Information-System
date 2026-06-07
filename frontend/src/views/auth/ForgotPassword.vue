@@ -75,43 +75,26 @@
 
         <!-- 步骤2: 重置成功 -->
         <div v-if="currentStep === 1" class="step-content success-content">
-          <el-result icon="success" title="密码重置成功">
-            <template #sub-title>
-              <div class="new-password-display">
-                <p>您的新密码是：</p>
-                <div class="password-box">
-                  <span class="password-text">{{ newPassword }}</span>
-                  <el-button
-                    link
-                    type="primary"
-                    style="margin-left: 10px"
-                    @click="copyPassword"
-                  >
-                    复制
-                  </el-button>
-                </div>
-                <el-alert
-                  type="warning"
-                  :closable="false"
-                  style="margin-top: 20px"
-                >
-                  <template #title>
-                    <strong>重要提示：</strong>
-                  </template>
-                  <div>
-                    1. 请妥善保管此密码<br />
-                    2. 登录后请立即修改密码<br />
-                    3. 此密码仅显示一次，关闭后无法再次查看
-                  </div>
-                </el-alert>
-              </div>
-            </template>
-            <template #extra>
-              <el-button type="primary" @click="goToLogin">
-                前往登录
+          <div class="reset-result">
+            <el-icon class="result-icon-success"><CircleCheckFilled /></el-icon>
+            <h3>密码重置成功</h3>
+            <p class="result-subtitle">您的新密码是：</p>
+            <div class="password-box">
+              <span class="password-text">{{ newPassword }}</span>
+              <el-button type="primary" size="small" @click="copyPassword">
+                复制密码
               </el-button>
-            </template>
-          </el-result>
+            </div>
+            <el-alert type="warning" :closable="false" class="password-tip">
+              <template #title>
+                <strong>重要提示：此密码仅显示一次，请立即复制保存</strong>
+              </template>
+              <div>登录后请尽快修改密码</div>
+            </el-alert>
+            <el-button type="primary" size="large" class="goto-login" @click="goToLogin">
+              前往登录
+            </el-button>
+          </div>
         </div>
       </div>
 
@@ -129,6 +112,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
+import { CircleCheckFilled } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import request from "@/api/request";
 
@@ -381,6 +365,48 @@ const goToLogin = () => {
 .separator {
   color: rgba(255, 255, 255, 0.5);
   margin: 0 15px;
+}
+
+/* ── 密码重置成功 ── */
+.reset-result {
+  text-align: center;
+  padding: 10px 0;
+}
+.result-icon-success {
+  font-size: 56px;
+  color: #67c23a;
+  margin-bottom: 12px;
+}
+.result-subtitle {
+  margin: 10px 0 16px;
+  font-size: 15px;
+}
+.password-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  border: 1px dashed #dcdfe6;
+}
+.password-text {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  font-family: "Courier New", monospace;
+  color: #e6a23c;
+  user-select: all;
+}
+.password-tip {
+  margin: 16px 0;
+  text-align: left;
+}
+.goto-login {
+  margin-top: 16px;
+  min-width: 160px;
 }
 
 @media (max-width: 768px) {

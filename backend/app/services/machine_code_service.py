@@ -210,6 +210,8 @@ class MachineCodeService:
                     ["wmic", "cpu", "get", "Name"],
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="ignore",
                     timeout=5,
                 )
                 cpu_name = result.stdout.strip().split("\n")[-1].strip()
@@ -223,6 +225,8 @@ class MachineCodeService:
                     ["wmic", "computersystem", "get", "TotalPhysicalMemory"],
                     capture_output=True,
                     text=True,
+                    encoding="utf-8",
+                    errors="ignore",
                     timeout=5,
                 )
                 memory = result.stdout.strip().split("\n")[-1].strip()
