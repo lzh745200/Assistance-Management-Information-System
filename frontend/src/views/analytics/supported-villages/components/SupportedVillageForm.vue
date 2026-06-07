@@ -466,20 +466,34 @@ async function handleSubmit() {
     // 同步更新总额字段
     formData.transitionFundMilitaryTotal = transitionMilitaryTotal.value;
     formData.transitionFundLocalTotal = transitionLocalTotal.value;
-    emit("submit", { ...formData });
-    // 保存过渡期经费按年度数据
+
+    // 构建过渡期经费按年度数据
+    const fundingItems = transitionFundingRows.value.map((r) => ({
+      year: r.year,
+      militaryInvestment: r.militaryInvestment || 0,
+      localInvestment: r.localInvestment || 0,
+      totalInvestment: (r.militaryInvestment || 0) + (r.localInvestment || 0),
+    }));
+
+    // 编辑模式：先保存年度经费，再提交表单更新
     if (props.village?.id) {
-      const items = transitionFundingRows.value.map((r) => ({
-        year: r.year,
-        militaryInvestment: r.militaryInvestment || 0,
-        localInvestment: r.localInvestment || 0,
-        totalInvestment: (r.militaryInvestment || 0) + (r.localInvestment || 0),
-      }));
-      await saveTransitionFunding(props.village.id, { items }).catch((err) => {
+      try {
+        await saveTransitionFunding(props.village.id, { items: fundingItems });
+      } catch (err: any) {
         console.error("[SupportedVillageForm] 保存过渡资金失败:", err);
-        ElMessage.error("过渡资金保存失败，请重试");
-      });
+        ElMessage.error(
+          err?.response?.data?.detail || "过渡资金保存失败，请重试",
+        );
+        return; // 年度经费保存失败 → 阻止提交
+      }
     }
+
+    // 创建模式：将年度经费数据一并传递给父组件
+    // 父组件 Detail.vue 在创建村记录后负责调用 saveTransitionFunding
+    emit("submit", {
+      ...formData,
+      ...(props.mode === "create" ? { _transitionFundingItems: fundingItems } : {}),
+    });
   } catch (error) {
     logger.error("表单验证失败:", error);
   }
