@@ -23,6 +23,7 @@
         :backing-up="backingUp"
         @backup="handleOneKeyBackup"
         @restore="showRestoreDialog = true"
+        @toggle-layout="showLayoutEditor = !showLayoutEditor"
       />
     </div>
 
