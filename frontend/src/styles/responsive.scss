@@ -1,3 +1,4 @@
+@use "sass:map";
 /**
  * 响应式适配样式
  * 
@@ -24,8 +25,8 @@ $breakpoints: (
 /// 最小宽度媒体查询
 /// @param {String} $breakpoint - 断点名称
 @mixin min-width($breakpoint) {
-  @if map-has-key($breakpoints, $breakpoint) {
-    @media (min-width: map-get($breakpoints, $breakpoint)) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    @media (min-width: map.get($breakpoints, $breakpoint)) {
       @content;
     }
   } @else {
@@ -38,8 +39,8 @@ $breakpoints: (
 /// 最大宽度媒体查询
 /// @param {String} $breakpoint - 断点名称
 @mixin max-width($breakpoint) {
-  @if map-has-key($breakpoints, $breakpoint) {
-    @media (max-width: map-get($breakpoints, $breakpoint) - 1px) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    @media (max-width: map.get($breakpoints, $breakpoint) - 1px) {
       @content;
     }
   } @else {
@@ -53,16 +54,14 @@ $breakpoints: (
 /// @param {String} $min - 最小断点
 /// @param {String} $max - 最大断点
 @mixin between($min, $max) {
-  $min-width: if(
-    map-has-key($breakpoints, $min),
-    map-get($breakpoints, $min),
-    $min
-  );
-  $max-width: if(
-    map-has-key($breakpoints, $max),
-    map-get($breakpoints, $max) - 1px,
-    $max
-  );
+  $min-width: $min;
+  @if map.has-key($breakpoints, $min) {
+    $min-width: map.get($breakpoints, $min);
+  }
+  $max-width: $max;
+  @if map.has-key($breakpoints, $max) {
+    $max-width: map.get($breakpoints, $max) - 1px;
+  }
 
   @media (min-width: $min-width) and (max-width: $max-width) {
     @content;

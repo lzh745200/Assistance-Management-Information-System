@@ -121,6 +121,17 @@ app.add_middleware(RequestIDMiddleware)
 app.include_router(api_v1_router)
 
 
+# 全局 Content-Type charset=UTF-8 修复
+@app.middleware("http")
+async def _ensure_charset_utf8(request: Request, call_next):
+    response = await call_next(request)
+    ct = response.headers.get("content-type", "")
+    if ct and "charset" not in ct:
+        if ct.startswith("text/") or ct.startswith("application/json") or ct.startswith("application/javascript"):
+            response.headers["content-type"] = f"{ct}; charset=utf-8"
+    return response
+
+
 # 修复 API 路径尾部斜杠 404：/api/v1/xxx/?q=1 → 307 → /api/v1/xxx?q=1
 @app.middleware("http")
 async def _trailing_slash_redirect(request: Request, call_next):
@@ -511,7 +522,6 @@ def _seed_default_admin():
             User.locked_until.isnot(None),
             User.locked_until <= now,
         ).all()
-
         unlocked_count = 0
         unlocked_names = []
         for user in users_to_clean:
@@ -519,6 +529,17 @@ def _seed_default_admin():
             user.failed_login_count = 0
             unlocked_names.append(user.username)
             unlocked_count += 1
+        # admin 账户强制解锁（单机版误锁后无法远程解锁）
+        admin_locked = db.query(User).filter(
+            User.username == DEFAULT_ADMIN_USERNAME,
+            User.locked_until.isnot(None),
+        ).first()
+        if admin_locked:
+            admin_locked.locked_until = None
+            admin_locked.failed_login_count = 0
+            if "admin" not in unlocked_names:
+                unlocked_names.append("admin")
+                unlocked_count += 1
 
         if unlocked_count > 0:
             db.commit()

@@ -152,6 +152,7 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
+          api: 'modern-compiler',
           // 全局引入设计Token
           additionalData: `@use "@/styles/tokens.scss" as *;`
         }
