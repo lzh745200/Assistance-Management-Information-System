@@ -291,7 +291,7 @@ const handleSubmit = async () => {
       try {
         const payload = buildPayload();
 
-        if (isEdit.value) {
+        if (isEdit.value && formData.id && formData.id !== "null") {
           await request.put(`/funds/${formData.id}`, payload);
           ElMessage.success("修改成功");
         } else {
@@ -324,7 +324,8 @@ const handleBack = () => {
 
 onMounted(() => {
   const id = route.params.id as string;
-  if (id) {
+  // id 必须是有效数字才进入编辑模式，"null"/"undefined" 等无效值视为创建模式
+  if (id && id !== "null" && id !== "undefined" && !isNaN(Number(id))) {
     isEdit.value = true;
     loadData(id);
   }

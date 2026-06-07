@@ -199,6 +199,14 @@ async def create_work_log(
         raise HTTPException(status_code=422, detail="工作内容不能为空")
     log_data["content"] = content  # 使用去除空格后的内容
 
+    # 将字符串日期转换为 Python date 对象（SQLite Date 列要求）
+    from datetime import date as dt_date
+    raw_date = log_data.get("log_date")
+    if isinstance(raw_date, str):
+        log_data["log_date"] = dt_date.fromisoformat(raw_date)
+    elif not isinstance(raw_date, dt_date):
+        raise HTTPException(status_code=422, detail="工作日期格式无效")
+
     log = WorkLog(user_id=current_user.id, **log_data)
     db.add(log)
     db.commit()

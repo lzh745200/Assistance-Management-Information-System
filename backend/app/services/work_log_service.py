@@ -60,7 +60,7 @@ def write_work_log(db, log_type, action, entity_id, entity_name, **kwargs):
         entity_name: Name of the entity being logged
         **kwargs: user_id, username, detail, etc.
     """
-    from datetime import datetime, timezone
+    from datetime import date, datetime, timezone
     # Build content with all available context (not silently dropped)
     detail = kwargs.pop("detail", "")
     username = kwargs.pop("username", "")
@@ -72,7 +72,7 @@ def write_work_log(db, log_type, action, entity_id, entity_name, **kwargs):
     log = WorkLog(
         category=log_type,
         content=" | ".join(parts),
-        log_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        log_date=date.today(),
         **{k: v for k, v in kwargs.items() if k in _WORKLOG_COLS},
     )
     db.add(log)

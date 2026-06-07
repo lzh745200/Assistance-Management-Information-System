@@ -66,9 +66,9 @@ print(f"[OK] Villages: {db.query(SupportedVillage).count()}")
 
 # 4. Schools
 schools_data = [
-    ("红星希望小学", "小学", "贵州省", "黔南州", "都匀市", "陈老师", 320, 18, "某部队", "active"),
-    ("前进中学", "初中", "贵州省", "黔南州", "独山县", "刘校长", 580, 42, "某部队", "active"),
-    ("光明小学", "小学", "贵州省", "黔南州", "贵定县", "黄老师", 210, 12, "某部队", "active"),
+    ("红星希望小学", "primary", "贵州省", "黔南州", "都匀市", "陈老师", 320, 18, "某部队", "active"),
+    ("前进中学", "middle", "贵州省", "黔南州", "独山县", "刘校长", 580, 42, "某部队", "active"),
+    ("光明小学", "primary", "贵州省", "黔南州", "贵定县", "黄老师", 210, 12, "某部队", "active"),
 ]
 for name, stype, prov, city, dist, principal, sc, tc, unit, status in schools_data:
     if not db.query(School).filter(School.name == name).first():
@@ -124,7 +124,6 @@ for c in cats:
         db.add(PolicyCategory(name=c))
 db.commit()
 
-cats_map = {c.name: c.id for c in db.query(PolicyCategory).all()}
 policies_data = [
     ("关于全面推进乡村振兴的意见", "国家乡村振兴政策", "国家级", "published", date(2024,1,15)),
     ("军队参与乡村振兴工作实施办法", "军队帮扶政策", "军队级", "published", date(2024,2,20)),
@@ -134,8 +133,8 @@ policies_data = [
 ]
 for title, cat, level, status, pdate in policies_data:
     if not db.query(Policy).filter(Policy.title == title).first():
-        db.add(Policy(title=title, category_id=cats_map.get(cat), level=level,
-                status=status, publish_date=pdate, created_at=now))
+        db.add(Policy(title=title, category=cat, level=level,
+                status=status, issue_date=pdate, created_at=now))
 db.commit()
 print(f"[OK] Policies: {db.query(Policy).count()} (Categories: {len(cats)})")
 
