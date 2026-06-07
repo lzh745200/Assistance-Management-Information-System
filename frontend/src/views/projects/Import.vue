@@ -499,7 +499,7 @@ const downloadTemplate = async () => {
       params: { entity_type: "project" },
       responseType: "blob",
     });
-    const blob = response instanceof Blob ? response : new Blob([response]);
+    const blob = response?.data instanceof Blob ? response.data : new Blob([response?.data]);
     if (blob.size > 0) {
       const url = window.URL.createObjectURL(blob);
       triggerDownload(url, "项目导入模板.xlsx");
