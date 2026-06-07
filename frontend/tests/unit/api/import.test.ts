@@ -40,7 +40,7 @@ describe('api/import', () => {
     expect(result).toBe(blob)
   })
 
-  it('importVillages POST /import/villages with FormData (default mode=incremental)', async () => {
+  it('importVillages POST /import/entities with FormData (default entity_type=supported_village)', async () => {
     mockPost.mockResolvedValueOnce({
       data: { success: true, total_rows: 10, success_rows: 10, failed_rows: 0, skipped_rows: 0 },
     })
@@ -48,9 +48,10 @@ describe('api/import', () => {
     const result = await importVillages(file)
     expect(mockPost).toHaveBeenCalled()
     const [url, formData, config] = mockPost.mock.calls[0]
-    expect(url).toBe('/import/villages')
+    expect(url).toBe('/import/entities')
     expect(formData).toBeInstanceOf(FormData)
     expect(formData.get('file')).toBe(file)
+    expect(formData.get('entity_type')).toBe('supported_village')
     expect(formData.get('mode')).toBe('incremental')
     expect(config.headers['Content-Type']).toBe('multipart/form-data')
     expect(config.timeout).toBe(120000)
