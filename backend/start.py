@@ -264,6 +264,66 @@ def _setup_fallback_connection_reset_handler():
         pass
 
 
+def _verify_frontend_assets():
+    """启动前校验前端静态资源完整性。
+
+    检测 resources/frontend/index.html 是否存在，以及其引用的所有
+    JS/CSS 文件是否真实存在。缺失或 hash 不匹配 → 拒绝启动并打印修复指引。
+    纯 API 模式（无前端目录）下跳过校验。
+    """
+    import os
+    import subprocess
+    import sys as _sys
+
+    # 查找前端目录（复用 static_files.py 的逻辑）
+    frontend_dir = None
+    candidates = [
+        os.environ.get("FRONTEND_DIST_PATH", ""),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "dist"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "resources", "frontend"),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isfile(os.path.join(candidate, "index.html")):
+            frontend_dir = os.path.abspath(candidate)
+            break
+
+    if not frontend_dir:
+        print("[WARN] 前端静态资源未找到，启动后仅提供 API 服务")
+        print("  如需前端界面，请执行: cd frontend && npm run build")
+        return  # 允许纯 API 模式启动
+
+    # 调用审计脚本的核心校验逻辑
+    try:
+        audit_script = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "scripts", "audit_static_assets.py",
+        )
+        result = subprocess.run(
+            [_sys.executable, audit_script, "--dir", frontend_dir],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            print("=" * 60)
+            print("[FATAL] 前端静态资源完整性校验失败，拒绝启动！")
+            print("=" * 60)
+            print(result.stdout)
+            if result.stderr:
+                print(result.stderr)
+            print("修复步骤:")
+            print("  1. cd frontend && npm run build")
+            print(r"  2. Windows: call scripts\build\sync-frontend-dist.bat")
+            print("     Linux:   bash scripts/build/sync-frontend-dist.sh")
+            print("  3. 重新启动后端")
+            print("=" * 60)
+            _sys.exit(1)
+        else:
+            print("[OK] 前端静态资源完整性校验通过")
+    except FileNotFoundError:
+        print("[WARN] 审计脚本未找到，跳过静态资源校验")
+    except Exception as e:
+        print(f"[WARN] 静态资源校验执行异常: {e}，跳过校验继续启动")
+
+
 def main():
     import uvicorn
 
@@ -316,6 +376,9 @@ def main():
     # PyInstaller 环境下必须使用直接引用的 app 对象，
     # 字符串 "app.main:app" 依赖 importlib 动态导入，在冻结环境中会失败。
     from app.main import app  # noqa: E402
+
+    # ── 启动前静态资源完整性校验 ──
+    _verify_frontend_assets()
 
     uvicorn.run(
         app,
