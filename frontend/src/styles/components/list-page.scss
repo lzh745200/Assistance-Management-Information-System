@@ -52,18 +52,54 @@
 .table-card {
   background: var(--color-bg-card); border-radius: 10px; padding: 20px;
   box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
 
-  .el-table {
-    --el-table-header-bg-color: var(--color-primary-dark-1);
-    --el-table-header-text-color: #ffffff;
-    border-radius: 8px; overflow: hidden;
+/* ── 全局表格规范 ── */
+.el-table {
+  border: 1px solid var(--color-border-lighter, #ebeef5);
+  border-radius: 8px;
 
-    th.el-table__cell {
-      background-color: var(--color-primary-dark-1); color: #fff;
-      font-weight: 600; font-size: 12px; border-bottom: 2px solid var(--color-accent-gold);
-    }
-    td.el-table__cell { border-bottom: 1px solid var(--color-border-lighter); }
-    .el-table__body tr:hover > td { background-color: var(--color-bg-hover); }
+  /* 表头 — 深色背景白色文字 */
+  th.el-table__cell {
+    background-color: var(--color-primary-dark-1, #1b4332) !important;
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 2px solid var(--color-accent-gold, #d4af37) !important;
+    padding: 10px 12px;
+  }
+
+  /* 数据行 */
+  td.el-table__cell {
+    border-bottom: 1px solid var(--color-border-lighter, #ebeef5);
+    border-right: 1px solid var(--color-border-lighter, #ebeef5);
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  td.el-table__cell:last-child {
+    border-right: none;
+  }
+
+  /* 斑马纹 */
+  .el-table__body tr:nth-child(even) > td {
+    background-color: rgba(0, 0, 0, 0.015);
+  }
+  .el-table__body tr:hover > td {
+    background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.04)) !important;
+  }
+
+  /* 空状态 */
+  .el-table__empty-block {
+    border-top: 1px solid var(--color-border-lighter);
+  }
+}
+
+/* 带 border 属性的表格额外加外框 */
+.el-table--border {
+  border: 1px solid var(--color-border, #cbd5e1);
+  td.el-table__cell {
+    border-right: 1px solid var(--color-border-lighter, #ebeef5) !important;
+    border-bottom: 1px solid var(--color-border-lighter, #ebeef5) !important;
   }
 }
 

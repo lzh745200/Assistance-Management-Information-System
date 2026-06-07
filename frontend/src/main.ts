@@ -30,4 +30,31 @@ app.use(router);
 
 app.mount("#app");
 
+// ── 全局修复：所有 ElMessage / ElNotification 强制页面正中央 ──
+// Element Plus 用 JS 动态设置 style.top/left，CSS !important 有时不生效。
+// 使用 MutationObserver 在元素挂载后立即重新定位。
+{
+  const centerEl = (el: HTMLElement) => {
+    el.style.setProperty("top", "50%", "important");
+    el.style.setProperty("left", "50%", "important");
+    el.style.setProperty("right", "auto", "important");
+    el.style.setProperty("bottom", "auto", "important");
+    el.style.setProperty("transform", "translate(-50%, -50%)", "important");
+    el.style.setProperty("margin", "0", "important");
+  };
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node instanceof HTMLElement) {
+          if (node.classList.contains("el-message")) centerEl(node);
+          if (node.classList.contains("el-notification")) centerEl(node);
+          // 也检查子元素
+          node.querySelectorAll?.(".el-message, .el-notification").forEach((c) => centerEl(c as HTMLElement));
+        }
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
 export default app;

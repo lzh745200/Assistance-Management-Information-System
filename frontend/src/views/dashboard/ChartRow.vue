@@ -135,17 +135,7 @@ function buildPieOption(funds: {
 function initCharts(data: { projects: any[]; funds: any }) {
   if (barRef.value) {
     barChart = echarts.init(barRef.value);
-    barChart.setOption(
-      buildBarOption(
-        data.projects.length
-          ? data.projects
-          : [
-              { name: "道路硬化", progress: 85 },
-              { name: "饮水工程", progress: 60 },
-              { name: "电商中心", progress: 40 },
-            ],
-      ),
-    );
+    barChart.setOption(buildBarOption(data.projects || []));
   }
   if (pieRef.value) {
     pieChart = echarts.init(pieRef.value);

@@ -155,10 +155,16 @@ body {
   --el-box-shadow-light: 0 2px 12px rgba(0,0,0,.06);
 }
 
-/* Element Plus 消息提示 — 全部页面中央显示 */
-.el-message {
+/* Element Plus 消息提示 — 全部页面中央显示（覆盖 EP 默认左下角） */
+.el-message,
+.el-message--success,
+.el-message--error,
+.el-message--warning,
+.el-message--info {
   top: 50% !important;
   left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
   transform: translate(-50%, -50%) !important;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -166,10 +172,20 @@ body {
   word-break: break-all;
 }
 
+/* 确保 el-message 容器也不偏移 */
+.el-message-fade-enter-from,
+.el-message-fade-leave-to {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
 /* Element Plus 通知提示 — 页面中央 */
 .el-notification {
   top: 50% !important;
   left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
   transform: translate(-50%, -50%) !important;
   margin: 0 !important;
 }
@@ -185,24 +201,15 @@ body {
   justify-content: center !important;
 }
 
-/* Element Plus 消息弹窗（确认/提示/输入框）— 页面中央 */
-.el-message-box {
+/* Element Plus 消息弹窗 — 强制页面正中央 */
+div.el-message-box {
+  position: fixed !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
   margin: 0 !important;
-}
-.el-overlay-message-box {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-/* Element Plus 所有弹出层容器 — 页面中央 */
-.el-overlay {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .el-message--success {
