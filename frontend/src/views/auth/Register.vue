@@ -230,6 +230,7 @@ const showPassCodeHelp = () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  overflow-y: auto;
   background: linear-gradient(
     135deg,
     var(--military-dark) 0%,

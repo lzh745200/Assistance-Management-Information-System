@@ -239,6 +239,7 @@ const goToLogin = () => {
   background: linear-gradient(135deg, #081c15 0%, #1b4332 100%);
   position: relative;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .background-overlay {
