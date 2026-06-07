@@ -17,6 +17,7 @@
               重新加载
             </el-button>
             <el-button @click="handleReload">刷新页面</el-button>
+            <el-button @click="handleIgnore">忽略</el-button>
           </template>
         </el-result>
       </template>
@@ -27,6 +28,7 @@
           <template #extra>
             <el-button type="primary" @click="handleReload">刷新页面</el-button>
             <el-button @click="handleGoHome">返回首页</el-button>
+            <el-button @click="handleIgnore">忽略</el-button>
           </template>
         </el-result>
       </template>
@@ -37,6 +39,7 @@
           <template #extra>
             <el-button type="primary" @click="handleReload">刷新页面</el-button>
             <el-button @click="handleGoHome">返回首页</el-button>
+            <el-button @click="handleIgnore">忽略</el-button>
             <el-button @click="showDetail = !showDetail">
               {{ showDetail ? "收起" : "查看" }}详情
             </el-button>
@@ -126,6 +129,12 @@ function handleRetry() {
   setTimeout(() => {
     isRetrying.value = false;
   }, 500);
+}
+
+/** 忽略错误 — 关闭错误遮罩，允许用户继续使用页面 */
+function handleIgnore() {
+  hasError.value = false;
+  showDetail.value = false;
 }
 
 /** 刷新页面（绕过缓存） */
