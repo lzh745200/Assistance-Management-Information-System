@@ -345,7 +345,7 @@ const handleOrganizationChange = async (orgId: number) => {
 
   try {
     const response = await getOrganizationVerificationCode(orgId);
-    generateForm.verification_code = response.data.verification_code;
+    generateForm.verification_code = response.verification_code;
   } catch (error) {
     console.error("获取校验码失败:", error);
     ElMessage.error("获取校验码失败");
@@ -362,7 +362,7 @@ const handleGenerate = async () => {
     try {
       generating.value = true;
       const response = await createOrganizationPassCode(generateForm);
-      generatedPassCode.value = response.data.pass_code;
+      generatedPassCode.value = response.pass_code;
       ElMessage.success("通行证码生成成功");
 
       // 刷新列表
@@ -408,8 +408,8 @@ const handleQuery = async () => {
       page: pagination.page,
       page_size: pagination.page_size,
     });
-    tableData.value = response.data.items || [];
-    pagination.total = response.data.total || 0;
+    tableData.value = response.items || [];
+    pagination.total = response.total || 0;
   } catch (error) {
     console.error("查询列表失败:", error);
     ElMessage.error("查询列表失败");
@@ -436,7 +436,7 @@ const handleExport = async () => {
     });
 
     // 创建下载链接
-    const blob = new Blob([response.data], {
+    const blob = new Blob([response], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
     const url = window.URL.createObjectURL(blob);

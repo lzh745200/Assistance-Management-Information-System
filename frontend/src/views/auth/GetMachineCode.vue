@@ -197,14 +197,14 @@ const getMachineCode = async () => {
   loading.value = true;
   try {
     const response = await request.get("/machine-code/get-machine-code");
-    const payload = response.data?.data ?? response.data;
+    const payload = response?.data ?? response;
     if (payload?.machine_code) {
       machineData.value = payload as MachineData;
       ElMessage.success("机器码获取成功");
     } else {
       const errMsg =
-        response.data?.message ||
-        response.data?.detail ||
+        response?.message ||
+        response?.detail ||
         "获取机器码失败，请重试";
       ElMessage.error(errMsg);
     }

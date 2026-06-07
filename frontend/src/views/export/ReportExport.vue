@@ -472,8 +472,8 @@ async function handleExport() {
       responseType: "blob",
     });
 
-    if (response.data instanceof Blob) {
-      const blob = response.data;
+    if (response instanceof Blob) {
+      const blob = response;
       const filename = getReportFileName(selectedType.value, exportForm.format);
       triggerDownload(blob, filename);
       ElMessage.success("报表导出成功");

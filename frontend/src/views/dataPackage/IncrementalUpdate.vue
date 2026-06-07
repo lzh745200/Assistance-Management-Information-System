@@ -243,11 +243,11 @@ const importForm = ref({
 const fetchPackageList = async () => {
   try {
     const response = await request.get("/data-packages");
-    if (response.data.items) {
-      packageList.value = response.data.items.filter(
+    if (response.items) {
+      packageList.value = response.items.filter(
         (p: PackageItem) => p.type !== "update",
       );
-      incrementalPackages.value = response.data.items.filter(
+      incrementalPackages.value = response.items.filter(
         (p: PackageItem) => p.type === "update",
       );
     }
@@ -281,8 +281,8 @@ const handleDetectChanges = async () => {
       },
     );
 
-    if (response.data.success) {
-      changesSummary.value = response.data.summary;
+    if (response.success) {
+      changesSummary.value = response.summary;
       ElMessage.success("变更检测完成");
     }
   } catch (error: unknown) {
@@ -300,12 +300,12 @@ const handleExport = async () => {
       description: exportForm.value.description || "增量更新包",
     });
 
-    if (response.data.success) {
+    if (response.success) {
       ElMessage.success("增量包导出成功");
 
       // 下载文件
-      if (response.data.data.download_url) {
-        window.open(response.data.data.download_url, "_blank");
+      if (response.download_url) {
+        window.open(response.download_url, "_blank");
       }
 
       // 刷新列表
@@ -325,8 +325,8 @@ const handleImport = async () => {
       apply_changes: importForm.value.apply_changes,
     });
 
-    if (response.data.success) {
-      importResult.value = response.data.data;
+    if (response.success) {
+      importResult.value = response;
       ElMessage.success(
         importForm.value.apply_changes ? "导入成功" : "预览完成",
       );

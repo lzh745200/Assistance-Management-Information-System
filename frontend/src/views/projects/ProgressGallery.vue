@@ -248,12 +248,12 @@ const handleUpload = async (uploadData: any) => {
       },
     });
 
-    if (response.data?.code === 200) {
+    if (response?.code === 200) {
       ElMessage.success("上传成功");
       // 刷新数据
       await loadProgressData();
     } else {
-      throw new Error(response.data?.message || "上传失败");
+      throw new Error(response?.message || "上传失败");
     }
   } catch (error: any) {
     logger.error("Upload failed:", error);
@@ -272,8 +272,8 @@ const handleView = (viewData: any) => {
 const loadProjectData = async () => {
   try {
     const response = await request.get(`/projects/${projectId.value}`);
-    if (response.data) {
-      Object.assign(projectData.value, response.data);
+    if (response) {
+      Object.assign(projectData.value, response);
     }
   } catch (error: any) {
     logger.error("Load project data failed:", error);
@@ -292,8 +292,8 @@ const loadProgressData = async () => {
         },
       },
     );
-    if (response.data) {
-      progressData.value = response.data.items || response.data || [];
+    if (response) {
+      progressData.value = response.items || response || [];
     }
   } catch (error: any) {
     logger.error("Load progress data failed:", error);

@@ -280,7 +280,7 @@ const fetchMachineCodeList = async () => {
 
     // 响应结构: { data: { data: MachineCodeListResponse } }
     // 由于包含 items/total，不会被自动解包
-    const data = response.data as any;
+    const data = response as any;
     if (data.data) {
       machineCodeList.value = data.data.items;
       pagination.total = data.data.total;
@@ -334,11 +334,11 @@ const handleCreate = async () => {
     });
 
     // 机器码录入成功
-    if (response.data?.code === 200) {
+    if (response?.code === 200) {
       ElMessage.success("机器码录入成功");
 
       // 显示生成的通行码
-      generatedPassCode.value = response.data.data.pass_code;
+      generatedPassCode.value = response.pass_code;
       passCodeDialogVisible.value = true;
 
       // 刷新列表

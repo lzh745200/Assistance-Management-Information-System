@@ -315,7 +315,7 @@ const loadData = async () => {
   loading.value = true;
   try {
     const response = await request.get(`/schools/${id}`);
-    const result = response.data;
+    const result = response;
     const data = result.data || result; // 兼容扁平格式
     if (data) {
       Object.assign(formData, {
