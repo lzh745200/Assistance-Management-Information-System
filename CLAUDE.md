@@ -69,10 +69,10 @@ npm run dev
 ### 测试与质量检查
 
 ```bash
-# 后端测试（1,597 passed: 1,385 unit + 194 integration + 18 security）
+# 后端测试（1,598 passed: 1,385 unit + 195 integration + 18 security）
 cd backend && python -m pytest tests/ -v
 
-# 前端测试（711 passed, 1 skipped, all coverage thresholds pass）
+# 前端测试（1,664 passed, all coverage thresholds pass）
 cd frontend && npm test -- --run
 
 # 前端测试 + 覆盖率报告
@@ -88,9 +88,17 @@ cd frontend && npm run lint && npm run typecheck
 ```bash
 # 前端构建
 cd frontend && npm run build
-cp -r frontend/dist resources/frontend
 
-# Windows 安装包
+# 同步前端产物到 resources/frontend/（含完整性校验）
+# Windows
+call scripts\build\sync-frontend-dist.bat
+# Linux/macOS
+bash scripts/build/sync-frontend-dist.sh
+
+# 静态资源完整性审计（验证 index.html 引用的所有文件均存在）
+python scripts/audit_static_assets.py [--dir resources/frontend] [--verbose]
+
+# Windows 安装包（全部流程：构建+同步+审计+打包）
 build-scripts\build_windows_complete.bat
 
 # Linux ARM64 安装包
@@ -150,8 +158,43 @@ cmd /c "rmdir /s /q frontend\node_modules_corrupted"
 
 ### 前端 404 - JS/CSS 文件 Not Found
 
-**症状**: 后端正常启动，但浏览器加载页面时 JS/CSS 文件返回 404。
+**症状**: 后端正常启动，文件确实存在于磁盘，但浏览器加载页面时 JS/CSS 文件返回 404。
+部分文件（如 chartjs, sortable, CSS）可能正常加载，核心业务 JS chunk 返回 404。
 
-**常见原因**:
-1. **浏览器缓存**: `index.html` 被缓存，引用的旧哈希文件已不存在 → 硬刷新 `Ctrl+Shift+R`
-2. **`resources/frontend/` 与 `frontend/dist/` 不同步** → 重新 `cp -r frontend/dist resources/frontend`
+**根因分析**:
+1. **Vite `base` 路径不匹配**: `vite.config.ts` 中 `base` 默认为 `/`（绝对路径），
+   FastAPI 托管在根路径时正确，但子路径或 `file://` 协议下会断裂。
+2. **构建产物 hash 不匹配**: `index.html` 引用的文件名 hash 与磁盘上的实际文件 hash 不一致，
+   通常由不完整的 `frontend/dist` → `resources/frontend` 复制导致（旧文件残留 + 新文件覆盖不完整）。
+3. **浏览器缓存**: 浏览器缓存的旧 `index.html` 引用已被删除的旧 hash 文件。
+
+**修复流程**:
+
+```bash
+# 1. 彻底重建前端
+cd frontend && npm run build
+
+# 2. 使用同步脚本（自动清理旧文件 + 完整性校验）
+# Windows
+call scripts\build\sync-frontend-dist.bat
+# Linux
+bash scripts/build/sync-frontend-dist.sh
+
+# 3. 运行审计检查
+python scripts/audit_static_assets.py --verbose
+
+# 4. 如审计通过但浏览器仍 404 → 清除浏览器缓存
+# Chrome: Ctrl+Shift+Delete → "缓存的图片和文件"
+# 或使用无痕模式测试
+
+# 5. 如审计发现缺失文件：
+#    - 确认 npm run build 完整执行（无错误）
+#    - 确认 build 过程中没有其他程序占用 frontend/dist/
+#    - 重新执行步骤 1-2
+```
+
+**预防措施**（已集成到构建流程）:
+- `frontend/vite.config.ts` 显式设置 `base: '/'`，避免路径解析歧义
+- `scripts/build/sync-frontend-dist.bat/.sh` — 构建同步脚本，先清后拷+校验
+- `scripts/audit_static_assets.py` — 构建后审计，发现缺失立即报错阻断
+- `backend/app/main.py` — `index.html` 设置 `Cache-Control: no-cache` 防止浏览器缓存
