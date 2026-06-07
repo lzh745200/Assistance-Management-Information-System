@@ -197,16 +197,14 @@ const getMachineCode = async () => {
   loading.value = true;
   try {
     const response = await request.get("/machine-code/get-machine-code");
-    const payload = response?.data ?? response;
+    // 后端返回 {code:200, data:{machine_code, verification_code, machine_info}}
+    const resData = response?.data ?? response;
+    const payload = resData?.data ?? resData;
     if (payload?.machine_code) {
       machineData.value = payload as MachineData;
       ElMessage.success("机器码获取成功");
     } else {
-      const errMsg =
-        response?.message ||
-        response?.detail ||
-        "获取机器码失败，请重试";
-      ElMessage.error(errMsg);
+      ElMessage.error(resData?.message || "获取机器码失败，请重试");
     }
   } catch (error: any) {
     console.error("[GetMachineCode] 获取机器码失败:", error);
@@ -234,9 +232,12 @@ const copyAllInfo = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
   background: linear-gradient(135deg, #081c15 0%, #1b4332 100%);
   position: relative;
   padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .background-overlay {
@@ -257,6 +258,8 @@ const copyAllInfo = () => {
   z-index: 1;
   width: 100%;
   max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .back-button {

@@ -271,7 +271,7 @@ const goToMachineCode = () => {
   justify-content: center;
   background-color: var(--military-dark);
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
