@@ -56,9 +56,34 @@ export default defineConfig(({ mode }) => {
 
   return {
     appType: 'spa',
+
+    // 基础路径：绝对路径 `/` 适用于 FastAPI 根路径托管生产模式。
+    // 注意：生产环境 FastAPI 在 http://host:port/ 根路径下挂载前端静态文件，
+    // 使用绝对路径可确保所有资源（JS/CSS/字体/图片）和动态 import() 的
+    // chunk 路径正确解析。如果部署在子目录下（如 /app/），请改为 '/app/'。
+    // Electron file:// 协议场景则需改为 './'（相对路径）。
+    base: '/',
+
     plugins: [
       // SPA 回退 - 必须在最前面
       spaFallbackPlugin(),
+
+      // 构建时自动生成 version.json（供前端版本指纹校验）
+      {
+        name: 'generate-version-json',
+        apply: 'build',
+        generateBundle() {
+          const versionJson = JSON.stringify({
+            version: process.env.npm_package_version || '1.3.0',
+            buildTime: new Date().toISOString(),
+          }, null, 2);
+          this.emitFile({
+            type: 'asset',
+            fileName: 'version.json',
+            source: versionJson,
+          });
+        },
+      },
 
       vue({
         // 使用默认配置，避免编译问题
