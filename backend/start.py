@@ -7,6 +7,7 @@
 import os
 import sys
 import socket
+import logging
 
 # ── 关键修复：Windows 中文系统的控制台默认 GBK 编码，无法输出 Unicode 字符 ──
 # 必须在任何 print() 之前执行，否则 PyInstaller 打包后在 GBK 环境会崩溃
@@ -109,7 +110,7 @@ def _check_port_available(host: str, port: int) -> bool:
                 import subprocess
                 result = subprocess.run(
                     ['netstat', '-aon'],
-                    capture_output=True, text=True, timeout=5
+                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5
                 )
                 for line in result.stdout.splitlines():
                     if f':{port}' in line and 'LISTENING' in line:
@@ -120,7 +121,7 @@ def _check_port_available(host: str, port: int) -> bool:
                         try:
                             name_result = subprocess.run(
                                 ['tasklist', '/fi', f'PID eq {pid}', '/fo', 'csv', '/nh'],
-                                capture_output=True, text=True, timeout=5
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5
                             )
                             if name_result.stdout.strip():
                                 print(f"  占用进程: {name_result.stdout.strip()}")
@@ -300,7 +301,7 @@ def _verify_frontend_assets():
         )
         result = subprocess.run(
             [_sys.executable, audit_script, "--dir", frontend_dir],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
         )
         if result.returncode != 0:
             print("=" * 60)

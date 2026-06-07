@@ -1,6 +1,8 @@
 @echo off
-chcp 936 >nul
+chcp 65001 >nul
 setlocal enabledelayedexpansion
+set PYTHONIOENCODING=utf-8
+set PYTHONUTF8=1
 
 title Military Rural System v1.3.0
 
