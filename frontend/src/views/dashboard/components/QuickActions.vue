@@ -29,6 +29,9 @@
     >
       <span class="btn-icon">📤</span> 数据上报
     </button>
+    <button class="action-btn layout-btn" @click="$emit('toggleLayout')">
+      <span class="btn-icon">⚙️</span> 自定义布局
+    </button>
   </div>
 </template>
 
@@ -44,6 +47,7 @@ defineProps<{
 defineEmits<{
   backup: [];
   restore: [];
+  toggleLayout: [];
 }>();
 
 const { pushSafe } = useRouterSafe();
