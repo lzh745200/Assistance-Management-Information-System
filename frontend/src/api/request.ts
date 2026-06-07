@@ -56,14 +56,63 @@ request.interceptors.response.use(
       response.config.params,
     );
     pendingRequests.delete(requestKey);
+
+    // ── 脏数据过滤：确保常见字段类型安全 ──
+    const data = response.data;
+    if (data && typeof data === "object") {
+      if ("items" in data && !Array.isArray(data.items)) {
+        console.warn(
+          "[API] 'items' field is not an array, defaulting to []",
+          data,
+        );
+        data.items = [];
+      }
+      if ("data" in data && data.data === null) {
+        data.data = {};
+      }
+      if ("total" in data && typeof data.total !== "number") {
+        data.total = Array.isArray(data.items) ? data.items.length : 0;
+      }
+    }
     return response;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      _cachedToken = null;
-      AuthStorage.clear();
-      // 委托路由守卫处理跳转（whiteList: /login, /register, /forgot-password）
+    // ── 已取消的请求不提示 ──
+    if (error.__CANCEL__ || error.code === "ERR_CANCELED") {
+      return Promise.reject(error);
     }
+
+    // ── HTTP 状态码分类处理 ──
+    if (error.response) {
+      const { status, data } = error.response;
+      if (status === 401) {
+        _cachedToken = null;
+        AuthStorage.clear();
+        console.warn("[API] 401 Unauthorized");
+      } else if (status === 403) {
+        console.error("[API] 403 Forbidden:", data?.detail || "权限不足");
+      } else if (status >= 500) {
+        console.error("[API] Server error:", status, data?.detail || "");
+      } else if (status === 404) {
+        console.warn(`[API] 404: ${error.config?.url}`);
+      } else {
+        console.error(
+          "[API] Request failed:",
+          status,
+          data?.detail || data?.message || "",
+        );
+      }
+    } else if (
+      error.code === "ERR_NETWORK" ||
+      error.message?.includes("NetworkError")
+    ) {
+      console.error("[API] Network error — backend may be down");
+    } else if (error.code === "ECONNABORTED") {
+      console.warn("[API] Request timeout");
+    } else {
+      console.error("[API] Unexpected error:", error.message || error);
+    }
+
     return Promise.reject(error);
   },
 );

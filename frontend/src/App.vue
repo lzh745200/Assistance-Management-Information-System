@@ -24,10 +24,16 @@
  * 2. 路由容器 + 错误边界（组件级，切换路由自动恢复）
  */
 import zhCn from "element-plus/es/locale/lang/zh-cn";
-import { onErrorCaptured, ref } from "vue";
+import { onErrorCaptured, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { checkVersion } from "@/composables/useVersionCheck";
 
 document.title = "帮扶管理信息系统";
+
+// 启动时检查版本更新
+onMounted(() => {
+  checkVersion();
+});
 
 const router = useRouter();
 const appError = ref(false);
