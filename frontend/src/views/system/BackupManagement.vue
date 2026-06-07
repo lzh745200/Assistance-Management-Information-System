@@ -153,7 +153,7 @@ const fetchBackupList = async () => {
   try {
     const response = await request.get("/system/backup");
     // 接口返回 {items: [...], total: N}
-    const data = response.data;
+    const data = response;
     backupList.value = data.items ?? data.data ?? [];
   } catch (error) {
     notify("错误", "获取备份列表失败", "error");
@@ -164,7 +164,7 @@ const fetchBackupList = async () => {
 const fetchBackupStatus = async () => {
   try {
     const response = await request.get("/system/backup/schedule");
-    const data = response.data;
+    const data = response;
     backupStatus.value = {
       backup_count: backupList.value.length,
       total_size: backupList.value.reduce(
@@ -191,7 +191,7 @@ const confirmCreateBackup = async () => {
       include_uploads: backupForm.value.include_uploads,
     });
 
-    if (response.data.success !== false) {
+    if (response.success !== false) {
       notify("成功", "备份已创建成功", "success");
       createDialogVisible.value = false;
       await fetchBackupList();
@@ -214,7 +214,7 @@ const handleDelete = async (filename: string) => {
     });
 
     const response = await request.delete(`/system/backup/${filename}`);
-    if (response.data.success !== false) {
+    if (response.success !== false) {
       notify("成功", "备份已删除", "success");
       await fetchBackupList();
       await fetchBackupStatus();
@@ -251,7 +251,7 @@ const confirmRestore = async () => {
       },
     );
 
-    if (response.data.success) {
+    if (response.success) {
       notify("恢复成功", "系统数据已恢复，即将跳转登录页", "success");
       restoreDialogVisible.value = false;
       setTimeout(() => {

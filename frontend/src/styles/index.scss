@@ -227,19 +227,36 @@ div.el-message-box {
   border-color: var(--color-warning);
 }
 
-/* ── 全局下拉框修复：确保 el-select 弹出菜单足够宽 ── */
+/* ── 全局下拉框修复：确保 el-select 足够宽，选中值可见 ── */
+.el-select {
+  min-width: 120px;
+  .el-input__inner {
+    min-width: 80px;
+  }
+  .el-select__selected-item {
+    max-width: 100%;
+    overflow: visible;
+  }
+}
 .el-select-dropdown {
   min-width: 160px !important;
+  max-width: 400px;
+  /* 覆盖 fit-input-width 导致的下拉框过窄 */
+  width: auto !important;
+  min-width: max(160px, var(--el-select-width, 160px)) !important;
 }
 .el-select-dropdown__item {
-  padding: 0 20px;
-  height: 36px;
-  line-height: 36px;
-  white-space: nowrap;
+  padding: 0 20px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
 }
-/* el-select 下拉框内容自适应宽度 */
-.el-popper.is-pure {
-  min-width: max(160px, var(--el-popper-min-width, auto));
+/* 筛选表单中的 select 确保选中值可见 */
+.el-form-item .el-select {
+  min-width: 140px;
+  .el-select__wrapper { min-width: 120px; }
 }
 
 /* ── 系统监控面板滚动 ── */
