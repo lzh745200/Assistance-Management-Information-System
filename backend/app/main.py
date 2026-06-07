@@ -236,12 +236,25 @@ if _frontend_dir:
     _index_path = Path(_frontend_dir) / "index.html"
     _favicon_path = Path(_frontend_dir) / "favicon.ico"
     _favicon_path = _favicon_path if _favicon_path.exists() else None
+    _version_json_path = Path(_frontend_dir) / "version.json"
+    _version_json_path = _version_json_path if _version_json_path.exists() else None
 
     @app.get("/favicon.ico")
     async def favicon():
         if _favicon_path:
             return FileResponse(_favicon_path)
         return JSONResponse({"message": "Favicon not found"}, status_code=404)
+
+    @app.get("/version.json")
+    async def version_json():
+        """构建版本指纹 — 前端 useVersionCheck 启动时拉取"""
+        if _version_json_path:
+            return FileResponse(
+                _version_json_path,
+                media_type="application/json",
+                headers={"Cache-Control": "no-cache"},
+            )
+        return JSONResponse({"version": "unknown"}, status_code=404)
 
     # ── SPA fallback ──
     # 所有非 API / 非文档 / 非已挂载静态路径的 GET 请求，返回 index.html。
@@ -250,7 +263,7 @@ if _frontend_dir:
 
     _reserved = (
         settings.API_PREFIX.lstrip("/"),
-        "docs", "openapi", "uploads",
+        "docs", "openapi", "uploads", "version.json",
     )
 
     @app.get("/{full_path:path}", response_class=HTMLResponse)

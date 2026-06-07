@@ -3,6 +3,7 @@
  */
 import axios, { type AxiosRequestConfig, type Canceler } from "axios";
 import { AuthStorage } from "@/utils/authStorage";
+import { safeArray } from "@/composables/useSafeData";
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
@@ -57,21 +58,27 @@ request.interceptors.response.use(
     );
     pendingRequests.delete(requestKey);
 
-    // ── 脏数据过滤：确保常见字段类型安全 ──
+    // ── 脏数据过滤：使用 safeData 守卫确保常见字段类型安全 ──
     const data = response.data;
     if (data && typeof data === "object") {
-      if ("items" in data && !Array.isArray(data.items)) {
-        console.warn(
-          "[API] 'items' field is not an array, defaulting to []",
-          data,
-        );
-        data.items = [];
+      // 安全化 items 字段（非数组 → []）
+      if ("items" in data) {
+        const safe = safeArray(data.items);
+        if (safe !== data.items) {
+          console.warn(
+            "[API] 'items' field sanitized (was not an array)",
+            data,
+          );
+          data.items = safe;
+        }
       }
-      if ("data" in data && data.data === null) {
+      // 安全化 data 字段（null → {}）
+      if ("data" in data && (data.data === null || data.data === undefined)) {
         data.data = {};
       }
+      // 安全化 total 字段（非数字 → items.length）
       if ("total" in data && typeof data.total !== "number") {
-        data.total = Array.isArray(data.items) ? data.items.length : 0;
+        data.total = safeArray(data.items).length;
       }
     }
     return response;
