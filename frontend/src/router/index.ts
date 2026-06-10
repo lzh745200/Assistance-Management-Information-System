@@ -590,10 +590,7 @@ export const routes: RouteRecordRaw[] = [
       },
       {
         path: "/system/health",
-        name: "SystemHealth",
-        component: () =>
-          retryImport(() => import("@/views/system/SystemHealth.vue")),
-        meta: { title: "系统健康", roles: ["admin", "super_admin"] },
+        redirect: "/system/monitoring",
       },
       {
         path: "/system/encryption",
