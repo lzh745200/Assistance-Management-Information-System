@@ -41,14 +41,13 @@
         <el-table-column prop="county" label="县市" width="120" />
         <el-table-column prop="town" label="乡镇" width="120" />
         <el-table-column
-          prop="revitalization_tier"
-          label="振兴层级"
+          prop="is_revitalization_tier"
+          label="振兴梯队"
           width="100"
         >
           <template #default="{ row }">
-            <el-tag :type="tierType(row.revitalization_tier)">{{
-              row.revitalization_tier
-            }}</el-tag>
+            <el-tag v-if="row.is_revitalization_tier" type="success">是</el-tag>
+            <el-tag v-else type="info">否</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="population" label="人口" width="80" />
@@ -74,7 +73,7 @@ interface Village {
   province: string;
   county: string;
   town: string;
-  revitalization_tier: string;
+  is_revitalization_tier: boolean;
   population: number;
   annual_income: number;
 }
@@ -125,7 +124,7 @@ const provinceData = computed(() => {
 const tierData = computed(() => {
   const map: Record<string, number> = {};
   tableData.value.forEach((v) => {
-    const t = v.revitalization_tier || "未分类";
+    const t = v.is_revitalization_tier ? "振兴梯队" : "非振兴梯队";
     map[t] = (map[t] || 0) + 1;
   });
   return Object.entries(map).map(([k, v]) => ({ name: k, value: v }));
@@ -160,16 +159,6 @@ const pieOpt = computed(() => ({
     },
   ],
 }));
-
-function tierType(tier: string): string {
-  const m: Record<string, string> = {
-    重点帮扶: "danger",
-    一般帮扶: "warning",
-    巩固提升: "success",
-    示范引领: "primary",
-  };
-  return m[tier] || "info";
-}
 
 onMounted(async () => {
   loading.value = true;

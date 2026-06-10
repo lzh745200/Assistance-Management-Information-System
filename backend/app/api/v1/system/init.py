@@ -191,9 +191,10 @@ async def reset_initialization(
     危险操作：此接口将清除系统初始化标记，允许重新执行初始化流程。
     需要超级管理员权限，且必须输入确认字符串。
     """
-    from app.core.permission_utils import require_admin
+    from app.core.permission_utils import is_admin
 
-    require_admin(current_user, error_message="仅超级管理员可执行此操作")
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="仅超级管理员可执行此操作")
 
     if confirm != "RESET":
         raise HTTPException(status_code=400, detail="请输入 'RESET' 确认重置操作")

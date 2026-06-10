@@ -121,7 +121,7 @@ class DocxReportService:
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         doc = self._create_document("帮扶村列表报表", f"生成时间：{now_str}    帮扶村总数：{len(villages)}")
 
-        headers = ["ID", "村名", "县/市", "帮扶单位", "所属部门", "振兴梯队"]
+        headers = ["ID", "村名", "县/市", "帮扶单位", "所属部门", "是否振兴梯队"]
         rows = []
         for v in villages:
             rows.append(
@@ -131,7 +131,7 @@ class DocxReportService:
                     v.get("county", "") or "-",
                     v.get("support_unit", "") or "-",
                     v.get("department", "") or "-",
-                    v.get("revitalization_tier", "") or "-",
+                    "是" if v.get("is_revitalization_tier") else "否",
                 ]
             )
 

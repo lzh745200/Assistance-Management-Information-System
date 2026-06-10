@@ -22,9 +22,9 @@ Base = declarative_base()
 def _base_to_dict(self) -> dict:
     """将模型实例转为字典（所有列）。BaseModel 覆盖此方法增加 datetime 处理。"""
     result = {}
-    for col in self.__table__.columns:
-        val = getattr(self, col.name, None)
-        result[col.name] = val
+    for attr in self.__mapper__.column_attrs:
+        val = getattr(self, attr.key, None)
+        result[attr.key] = val
     return result
 
 
@@ -102,11 +102,11 @@ class BaseModel(Base, TimestampMixin):
         """将模型实例转换为字典（默认 camelCase 键名，供前端使用）"""
         from app.utils.common import dict_keys_to_camel
         result = {}
-        for col in self.__table__.columns:
-            val = getattr(self, col.name, None)
+        for attr in self.__mapper__.column_attrs:
+            val = getattr(self, attr.key, None)
             if isinstance(val, datetime):
                 val = val.isoformat()
-            result[col.name] = val
+            result[attr.key] = val
         return dict_keys_to_camel(result) if camel_case else result
 
     def __repr__(self):

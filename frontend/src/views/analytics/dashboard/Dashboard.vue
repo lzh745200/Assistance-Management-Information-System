@@ -264,7 +264,7 @@ const filterOptions = ref<FilterOptions>({
   departments: [],
   supportUnits: [],
   regionScopes: [],
-  revitalizationTiers: [],
+  isRevitalizationTier: undefined,
   years: [],
 });
 

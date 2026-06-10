@@ -95,15 +95,7 @@ onMounted(() => {
   // 模拟实时监控
   const _monitorTimer = setInterval(() => {
     // 实际项目中调用API获取最新安全事件（Demo模式不生成假数据）
-    if (false) {
-      const newEvent = {
-        time: new Date().toLocaleString(),
-        type: "安全扫描",
-        level: SecurityLevel.INTERNAL,
-        message: "系统安全扫描完成，未发现漏洞",
-      };
-      securityEvents.value.unshift(newEvent);
-    }
+    // Demo mode: no fake data generation
   }, 5000);
 
   onUnmounted(() => {

@@ -615,12 +615,12 @@ async def list_projects(
     """
     query = db.query(Project)
 
-    # N+1 优化：预加载关联数据（joinedload 一次性加载）
-    from sqlalchemy.orm import joinedload
+    # N+1 优化：预加载关联数据（selectinload 分次查询，避免超大 JOIN）
+    from sqlalchemy.orm import selectinload
 
     query = query.options(
-        joinedload(Project.tasks),
-        joinedload(Project.funds),
+        selectinload(Project.tasks),
+        selectinload(Project.funds),
     )
 
     if not include_cancelled:

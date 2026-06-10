@@ -418,16 +418,8 @@
         <el-divider content-position="left">振兴属性</el-divider>
 
         <div class="form-row">
-          <el-form-item label="振兴发展梯队">
-            <el-select
-              v-model="projectForm.revitalizationTier"
-              placeholder="请选择振兴梯队"
-              clearable
-            >
-              <el-option label="示范级" value="示范级"></el-option>
-              <el-option label="达标级" value="达标级"></el-option>
-              <el-option label="基础级" value="基础级"></el-option>
-            </el-select>
+          <el-form-item label="振兴梯队">
+            <el-switch v-model="projectForm.isRevitalizationTier" />
           </el-form-item>
           <el-form-item label="省级乡村振兴示范">
             <el-switch
@@ -451,20 +443,6 @@
               active-text="是"
               inactive-text="否"
             />
-          </el-form-item>
-          <el-form-item
-            v-if="projectForm.isTieredDevelopment"
-            label="梯次振兴等级"
-          >
-            <el-select
-              v-model="projectForm.tieredDevelopmentLevel"
-              placeholder="请选择等级"
-              clearable
-            >
-              <el-option label="示范级" value="示范级"></el-option>
-              <el-option label="达标级" value="达标级"></el-option>
-              <el-option label="基础级" value="基础级"></el-option>
-            </el-select>
           </el-form-item>
         </div>
 
@@ -797,11 +775,10 @@ const projectForm = reactive({
   isRevolutionaryArea: false,
   isKeyCounty: false,
   // 振兴属性
-  revitalizationTier: "",
+  isRevitalizationTier: false,
   isProvincialDemo: false,
   isHundredVillageDemo: false,
   isTieredDevelopment: false,
-  tieredDevelopmentLevel: "",
   createTime: "",
   updateTime: "",
 });

@@ -15,11 +15,7 @@
       <span class="btn-icon">💾</span>
       {{ backingUp ? "备份中..." : "一键备份" }}
     </button>
-    <button
-      v-if="isAdmin"
-      class="action-btn restore"
-      @click="$emit('restore')"
-    >
+    <button v-if="isAdmin" class="action-btn restore" @click="$emit('restore')">
       <span class="btn-icon">🔄</span> 恢复数据
     </button>
     <button

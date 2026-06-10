@@ -15,7 +15,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.error_handler import app_logger, BusinessLogicError
 from app.models.data_sync import DataSyncLog, DataConflict
-from app.services.data_sync_encryption_service import data_sync_encryption_service
+from app.services.encrypted_package import create_encrypted_package, extract_encrypted_package
+import hashlib as _hashlib
 
 logger = logging.getLogger(__name__)
 # 预编译正则表达式，避免每次调用重新编译
@@ -64,7 +65,6 @@ class DataSyncService:
         self.sync_dir = get_app_data_dir() / "data_sync"
         self.sync_dir.mkdir(exist_ok=True)
         self.logger = app_logger
-        self.encryption_service = data_sync_encryption_service
 
         # 支持同步的表
         self.syncable_tables = {
@@ -597,18 +597,20 @@ class DataSyncService:
                     "version": "1.0.0",
                 }
 
-                # 加密并创建 .rrs 文件
-                encrypted_bytes = self.encryption_service.create_export_package(
-                    data=export_data, metadata=metadata, password=password
+                # 加密并创建 .rrs 文件 (AES-256-GCM + PBKDF2-SHA256)
+                package_path = self.sync_dir / f"{package_name}.rrs"
+                package_data = {
+                    "metadata": metadata,
+                    "data": export_data,
+                }
+                create_encrypted_package(
+                    data=package_data,
+                    output_path=str(package_path),
+                    password=password,
                 )
 
-                # 保存文件
-                package_path = self.sync_dir / f"{package_name}.rrs"
-                with open(package_path, "wb") as f:
-                    f.write(encrypted_bytes)
-
                 # 计算文件哈希
-                file_hash = self.encryption_service.calculate_file_hash(str(package_path))
+                file_hash = _hashlib.sha256(package_path.read_bytes()).hexdigest()
                 file_size = package_path.stat().st_size
 
                 # 保存导出记录
@@ -683,15 +685,14 @@ class DataSyncService:
             if not package_file.exists():
                 raise BusinessLogicError("数据包文件不存在")
 
-            # 读取并解密文件
-            with open(package_file, "rb") as f:
-                encrypted_bytes = f.read()
-
+            # 读取并解密文件 (AES-256-GCM + PBKDF2-SHA256)
             try:
-                metadata, import_data = self.encryption_service.parse_import_package(encrypted_bytes, password)
+                package_data = extract_encrypted_package(str(package_file), password)
             except ValueError as e:
                 raise BusinessLogicError(str(e))
 
+            metadata = package_data.get("metadata", {})
+            import_data = package_data.get("data", {})
             package_name = metadata.get("package_name", "unknown")
 
             with self._get_db_context() as db:

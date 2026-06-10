@@ -104,11 +104,7 @@
 
       <!-- 数据预览 -->
       <div v-if="previewData" class="preview-section">
-        <el-alert
-          type="info"
-          :closable="false"
-          style="margin-bottom: 12px"
-        >
+        <el-alert type="info" :closable="false" style="margin-bottom: 12px">
           共 {{ previewData.total }} 条数据，请确认无误后点击"确认导入"
         </el-alert>
         <el-table
@@ -209,7 +205,13 @@
 // @ts-nocheck
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { Download, Upload, Document, Clock, View } from "@element-plus/icons-vue";
+import {
+  Download,
+  Upload,
+  Document,
+  Clock,
+  View,
+} from "@element-plus/icons-vue";
 import {
   downloadImportTemplate,
   importEntities,

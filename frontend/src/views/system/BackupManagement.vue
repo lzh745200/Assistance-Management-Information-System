@@ -191,7 +191,7 @@ const confirmCreateBackup = async () => {
       include_uploads: backupForm.value.include_uploads,
     });
 
-    if (response.success !== false) {
+    if (response.data.success !== false) {
       notify("成功", "备份已创建成功", "success");
       createDialogVisible.value = false;
       await fetchBackupList();
@@ -214,7 +214,7 @@ const handleDelete = async (filename: string) => {
     });
 
     const response = await request.delete(`/system/backup/${filename}`);
-    if (response.success !== false) {
+    if (response.data.success !== false) {
       notify("成功", "备份已删除", "success");
       await fetchBackupList();
       await fetchBackupStatus();
@@ -251,7 +251,7 @@ const confirmRestore = async () => {
       },
     );
 
-    if (response.success) {
+    if (response.data.success) {
       notify("恢复成功", "系统数据已恢复，即将跳转登录页", "success");
       restoreDialogVisible.value = false;
       setTimeout(() => {

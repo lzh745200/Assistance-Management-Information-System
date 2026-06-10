@@ -35,20 +35,20 @@ class AnalyticsService:
             )
             province_distribution = [{"province": row.province, "count": row.count} for row in province_result]
 
-            # 按脱贫类型统计 - 使用 ORM 查询
+            # 按振兴梯队统计 - 使用 ORM 查询
             tier_result = (
                 db.query(
-                    SupportedVillage.revitalization_tier,
+                    SupportedVillage.is_revitalization_tier,
                     func.count(SupportedVillage.id).label("count"),
                 )
-                .group_by(SupportedVillage.revitalization_tier)
+                .group_by(SupportedVillage.is_revitalization_tier)
                 .all()
             )
 
-            tier_map = {"1": "一类脱贫", "2": "二类脱贫", "3": "三类脱贫"}
+            tier_map = {True: "振兴梯队", False: "非振兴梯队"}
             tier_distribution = [
                 {
-                    "tier": tier_map.get(str(row.revitalization_tier), "其他"),
+                    "tier": tier_map.get(row.is_revitalization_tier, "未知"),
                     "count": row.count,
                 }
                 for row in tier_result
@@ -283,14 +283,14 @@ class AnalyticsService:
             elif compare_type == "tier":
                 result = db.execute(text("""
                     SELECT
-                        revitalization_tier as tier,
+                        CASE WHEN vp.is_revitalization_tier THEN '是' ELSE '否' END as tier,
                         COUNT(*) as village_count,
                         SUM(vp.transition_fund_military_total + vp.transition_fund_local_total) as total_investment,
                         AVG(vi.per_capita_income) as avg_income
                     FROM supported_villages vp
                     JOIN village_incomes vi ON vp.id = vi.supported_village_id
                     WHERE vi.year = (SELECT MAX(year) FROM village_incomes)
-                    GROUP BY revitalization_tier
+                    GROUP BY vp.is_revitalization_tier
                     ORDER BY avg_income DESC
                 """))
             else:
@@ -638,8 +638,8 @@ class AnalyticsService:
             provinces = db.query(SupportedVillage.province).distinct().all()
             province_list = [p[0] for p in provinces if p[0]]
 
-            tiers = db.query(SupportedVillage.revitalization_tier).distinct().all()
-            tier_list = [t[0] for t in tiers if t[0]]
+            is_tier_list = db.query(SupportedVillage.is_revitalization_tier).distinct().all()
+            tier_list = ["是" if t[0] else "否" for t in is_tier_list]
 
             departments = db.query(SupportedVillage.department).distinct().all()
             dept_list = [d[0] for d in departments if d[0]]
@@ -661,8 +661,8 @@ class AnalyticsService:
 
             if filters.get("province"):
                 query = query.filter(SupportedVillage.province == filters["province"])
-            if filters.get("tier"):
-                query = query.filter(SupportedVillage.revitalization_tier == filters["tier"])
+            if "tier" in filters and filters["tier"] is not None:
+                query = query.filter(SupportedVillage.is_revitalization_tier == (filters["tier"] == "是"))
             if filters.get("region"):
                 query = query.filter(SupportedVillage.region == filters["region"])
 

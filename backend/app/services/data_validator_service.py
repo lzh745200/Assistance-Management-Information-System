@@ -26,10 +26,6 @@ QIANNAN_COUNTIES = [
     "龙里县",
 ]
 
-# 梯次振兴发展等级常量
-TIERED_DEVELOPMENT_LEVELS = ["示范级", "达标级", "基础级"]
-
-
 class ValidationErrorCode(str, Enum):
     """验证错误码"""
 
@@ -41,9 +37,8 @@ class ValidationErrorCode(str, Enum):
     DATABASE_ERROR = "IMPORT_006"
     ROW_LIMIT_EXCEEDED = "IMPORT_007"
     INVALID_COUNTY = "IMPORT_008"
-    INVALID_TIERED_LEVEL = "IMPORT_009"
-    INVALID_NUMERIC_VALUE = "IMPORT_010"
-    VALUE_OUT_OF_RANGE = "IMPORT_011"
+    INVALID_NUMERIC_VALUE = "IMPORT_009"
+    VALUE_OUT_OF_RANGE = "IMPORT_010"
 
 
 @dataclass
@@ -117,11 +112,10 @@ class DataValidatorService:
         "is_ethnic_area": "bool",
         "is_revolutionary_area": "bool",
         "is_key_county": "bool",
-        "revitalization_tier": "str",
+        "is_revitalization_tier": "bool",
         "is_provincial_demo": "bool",
         "is_hundred_village_demo": "bool",
         "is_tiered_development": "bool",
-        "tiered_development_level": "tiered_level",  # 特殊类型：梯次等级验证
         "is_cross_province": "bool",
         "is_cross_city": "bool",
         "is_cross_unit_cooperation": "bool",
@@ -153,11 +147,10 @@ class DataValidatorService:
         "是否属于民族地区": "is_ethnic_area",
         "是否属于革命地区": "is_revolutionary_area",
         "是否属于160个国家乡村振兴重点帮扶县": "is_key_county",
-        "振兴发展梯队系列": "revitalization_tier",
+        "是否振兴梯队": "is_revitalization_tier",
         "省级乡村振兴示范创建对象": "is_provincial_demo",
         "百村示范创建对象": "is_hundred_village_demo",
         "梯次振兴发展对象": "is_tiered_development",
-        "梯次振兴发展等级": "tiered_development_level",
         "是否跨省": "is_cross_province",
         "是否跨市": "is_cross_city",
         "是否跨大单位协作帮扶": "is_cross_unit_cooperation",
@@ -423,21 +416,6 @@ class DataValidatorService:
                         value=value,
                     )
 
-            elif field_type == "tiered_level":
-                # 验证梯次振兴发展等级
-                str_value = str(value).strip() if value else ""
-                if str_value and str_value not in TIERED_DEVELOPMENT_LEVELS:
-                    return ValidationError(
-                        row_number=row_number,
-                        field_name=field_name,
-                        error_code=ValidationErrorCode.INVALID_TIERED_LEVEL,
-                        message=(
-                            f"字段 '{self._get_field_label(field_name)}' 值无效，"
-                            f"必须是: {', '.join(TIERED_DEVELOPMENT_LEVELS)}"
-                        ),
-                        value=value,
-                    )
-
             return None
 
         except (ValueError, TypeError) as e:
@@ -515,7 +493,7 @@ class DataValidatorService:
             elif field_type == "bool":
                 converted[field_name] = self.convert_bool_value(value)
 
-            elif field_type in ("county", "tiered_level"):
+            elif field_type == "county":
                 # 保持字符串值，验证在validate_row中进行
                 converted[field_name] = str(value).strip() if value else None
 
@@ -528,7 +506,6 @@ class DataValidatorService:
         self,
         rows: List[Dict[str, Any]],
         validate_county: bool = True,
-        validate_tiered_level: bool = True,
     ) -> ValidationResult:
         """
         验证导入数据（增强版）
@@ -538,13 +515,11 @@ class DataValidatorService:
         - 必填字段验证
         - 数据格式验证
         - 县 / 市范围验证（黔南州12个县市）
-        - 梯次振兴发展等级验证
         - 重复数据检查
 
         Args:
             rows: 数据行列表
             validate_county: 是否验证县 / 市字段
-            validate_tiered_level: 是否验证梯次等级字段
 
         Returns:
             ValidationResult: 包含详细错误信息的验证结果
@@ -581,16 +556,6 @@ class DataValidatorService:
                     county_error = self._validate_field_format("county", county_value, "county", idx)
                     if county_error:
                         row_errors.append(county_error)
-
-            # 额外验证梯次等级字段
-            if validate_tiered_level:
-                tiered_value = row.get("tiered_development_level")
-                if tiered_value and str(tiered_value).strip():
-                    tiered_error = self._validate_field_format(
-                        "tiered_development_level", tiered_value, "tiered_level", idx
-                    )
-                    if tiered_error:
-                        row_errors.append(tiered_error)
 
             if row_errors:
                 all_errors.extend(row_errors)

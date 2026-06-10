@@ -466,7 +466,7 @@ class ExcelImporterService:
             "is_ethnic_area",
             "is_revolutionary_area",
             "is_key_county",
-            "revitalization_tier",
+            "is_revitalization_tier",
             "is_provincial_demo",
             "is_hundred_village_demo",
             "is_tiered_development",

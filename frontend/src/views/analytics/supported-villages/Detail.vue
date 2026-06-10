@@ -53,7 +53,7 @@
             village.regionScope || "-"
           }}</el-descriptions-item>
           <el-descriptions-item label="振兴梯队">{{
-            village.revitalizationTier || "-"
+            village.isRevitalizationTier ? "是" : "否"
           }}</el-descriptions-item>
         </el-descriptions>
       </div>
@@ -82,6 +82,9 @@
           <div class="tag-section">
             <span class="section-label">振兴属性：</span>
             <div class="tag-list">
+              <el-tag v-if="village.isRevitalizationTier" type="danger"
+                >振兴梯队</el-tag
+              >
               <el-tag v-if="village.isProvincialDemo" type="success"
                 >省级示范</el-tag
               >
@@ -279,6 +282,7 @@ const hasRegionTags = computed(() => {
 const hasRevitalizationTags = computed(() => {
   if (!village.value) return false;
   return (
+    village.value.isRevitalizationTier ||
     village.value.isProvincialDemo ||
     village.value.isHundredVillageDemo ||
     village.value.isTieredDevelopment
@@ -364,7 +368,9 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
           await saveTransitionFunding(created.id, { items: fundingItems });
         } catch (fundErr: any) {
           console.error("[Detail] 保存过渡资金失败:", fundErr);
-          ElMessage.warning("村记录已创建，但过渡资金保存失败，请在编辑页面重新填写");
+          ElMessage.warning(
+            "村记录已创建，但过渡资金保存失败，请在编辑页面重新填写",
+          );
         }
       }
       ElMessage.success("创建成功");

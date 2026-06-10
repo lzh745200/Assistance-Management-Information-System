@@ -142,7 +142,7 @@ export function getStaticTemplateModules(): TemplateInfo[] {
     {
       module: "funding",
       name: "经费投入",
-      description: "过渡期帮扶经费投入数据导入模板",
+      description: "帮扶经费投入数据导入模板",
       filename: "经费投入导入模板",
     },
     {

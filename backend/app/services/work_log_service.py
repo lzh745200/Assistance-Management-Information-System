@@ -13,6 +13,7 @@ class WorkLogService:
 
     def get_work_logs(self, skip=0, limit=10, **_filters):
         from app.models.work_log import WorkLog
+
         query = self.db.query(WorkLog)
         total = query.count()
         items = query.order_by(WorkLog.id.desc()).offset(skip).limit(limit).all()
@@ -20,10 +21,12 @@ class WorkLogService:
 
     def get_work_log(self, log_id: int):
         from app.models.work_log import WorkLog
+
         return self.db.query(WorkLog).filter(WorkLog.id == log_id).first()
 
     def create_work_log(self, data: dict):
         from app.models.work_log import WorkLog
+
         log = WorkLog(**data)
         self.db.add(log)
         self.db.commit()
@@ -32,6 +35,7 @@ class WorkLogService:
 
     def update_work_log(self, log_id: int, data: dict):
         from app.models.work_log import WorkLog
+
         log = self.db.query(WorkLog).filter(WorkLog.id == log_id).first()
         if log:
             for key, value in data.items():
@@ -42,6 +46,7 @@ class WorkLogService:
 
     def delete_work_log(self, log_id: int):
         from app.models.work_log import WorkLog
+
         log = self.db.query(WorkLog).filter(WorkLog.id == log_id).first()
         if log:
             self.db.delete(log)
@@ -60,7 +65,8 @@ def write_work_log(db, log_type, action, entity_id, entity_name, **kwargs):
         entity_name: Name of the entity being logged
         **kwargs: user_id, username, detail, etc.
     """
-    from datetime import date, datetime, timezone
+    from datetime import date
+
     # Build content with all available context (not silently dropped)
     detail = kwargs.pop("detail", "")
     username = kwargs.pop("username", "")

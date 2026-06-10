@@ -211,7 +211,7 @@ async def get_map_markers(
                     "isBorderArea": v.is_border_area,
                     "isProvincialDemo": v.is_provincial_demo,
                     "isHundredVillageDemo": v.is_hundred_village_demo,
-                    "tieredDevelopmentLevel": v.tiered_development_level,
+                    "isRevitalizationTier": v.is_revitalization_tier,
                 }
             )
         result["villages"] = village_list

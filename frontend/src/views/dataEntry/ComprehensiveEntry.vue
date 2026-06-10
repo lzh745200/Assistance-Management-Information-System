@@ -120,15 +120,7 @@
             </el-col>
             <el-col :span="8">
               <el-form-item label="振兴梯队">
-                <el-select
-                  v-model="formData.basicInfo.revitalizationTier"
-                  placeholder="请选择"
-                  style="width: 100%"
-                >
-                  <el-option label="示范级" value="示范级" />
-                  <el-option label="达标级" value="达标级" />
-                  <el-option label="基础级" value="基础级" />
-                </el-select>
+                <el-switch v-model="formData.basicInfo.isRevitalizationTier" />
               </el-form-item>
             </el-col>
             <el-col :span="8">
@@ -977,7 +969,7 @@ const formData = reactive({
     isEthnicArea: false,
     isRevolutionaryArea: false,
     isKeyCounty: false,
-    revitalizationTier: "" as "" | "示范级" | "达标级" | "基础级",
+    isRevitalizationTier: false,
     helpStartYear: currentYear,
     helpType: "",
     includedInOverallPlan: false,
@@ -1348,7 +1340,7 @@ async function submitVillageData() {
     is_ethnic_area: b.isEthnicArea,
     is_revolutionary_area: b.isRevolutionaryArea,
     is_key_county: b.isKeyCounty,
-    revitalization_tier: b.revitalizationTier || undefined,
+    is_revitalization_tier: b.isRevitalizationTier || undefined,
     is_in_overall_plan: b.includedInOverallPlan,
   };
   const res = await request.post("/supported-villages", payload);

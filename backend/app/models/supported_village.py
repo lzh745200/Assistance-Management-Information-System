@@ -13,8 +13,7 @@
 - ConsumptionSupport: 消费帮扶
 - EmploymentSupport: 就业帮扶
 - EducationSupport: 教育帮扶
-- SupportFunding: 帮扶经费（过渡期）
-- TieredDevelopmentLevel: 梯次发展等级
+- SupportFunding: 帮扶经费
 - ReportSubscription: 报表订阅
 """
 
@@ -46,9 +45,6 @@ class SupportedVillage(Base, TimestampMixin):
 
     __table_args__ = (
         Index("ix_supported_villages_province", "province"),
-        Index("ix_supported_villages_tier", "revitalization_tier"),
-        Index("ix_villages_province_tier", "province", "revitalization_tier"),
-        Index("ix_villages_county_tier", "county", "revitalization_tier"),
         Index("ix_supported_villages_organization_id", "organization_id"),
         Index("ix_supported_villages_created_by", "created_by"),
         Index("ix_supported_villages_department", "department"),
@@ -75,13 +71,10 @@ class SupportedVillage(Base, TimestampMixin):
     is_key_county = Column(Boolean, default=False, comment="是否重点帮扶县")
 
     # 振兴发展
-    revitalization_tier = Column(String(50), nullable=True, comment="振兴发展梯队")
+    is_revitalization_tier = Column(Boolean, default=False, comment="是否振兴梯队")
     is_provincial_demo = Column(Boolean, default=False, comment="是否省级示范")
     is_hundred_village_demo = Column(Boolean, default=False, comment="是否百村示范")
     is_tiered_development = Column(Boolean, default=False, comment="是否梯次振兴")
-    tiered_development_level = Column(
-        String(50), nullable=True, comment="梯次振兴等级: 示范级/达标级/基础级"
-    )
 
     # 跨区域标记
     is_cross_province = Column(Boolean, default=False, comment="是否跨省帮扶")
@@ -89,15 +82,15 @@ class SupportedVillage(Base, TimestampMixin):
     is_cross_unit_cooperation = Column(Boolean, default=False, comment="是否跨单位协作")
     is_in_overall_plan = Column(Boolean, default=False, comment="是否纳入总盘子")
 
-    # 过渡期经费汇总
+    # 帮扶经费汇总
     transition_fund_military_total = Column(
-        Float, default=0, comment="2021-2025年部队投入(万元)"
+        Float, default=0, comment="部队投入(万元)"
     )
     transition_fund_local_total = Column(
         Float, default=0, comment="协调地方投入(万元)"
     )
     transition_fund_items = Column(
-        Text, default="[]", comment="过渡期经费按年度明细(JSON)"
+        Text, default="[]", comment="帮扶经费按年度明细(JSON)"
     )
 
     honors = Column(String(2000), nullable=True, comment="获得表彰情况")
@@ -217,16 +210,14 @@ class SupportedVillage(Base, TimestampMixin):
             "is_revolutionary_area": self.is_revolutionary_area or False,
             "isKeyCounty": self.is_key_county or False,
             "is_key_county": self.is_key_county or False,
-            "revitalizationTier": self.revitalization_tier,
-            "revitalization_tier": self.revitalization_tier,
+            "isRevitalizationTier": self.is_revitalization_tier or False,
+            "is_revitalization_tier": self.is_revitalization_tier or False,
             "isProvincialDemo": self.is_provincial_demo or False,
             "is_provincial_demo": self.is_provincial_demo or False,
             "isHundredVillageDemo": self.is_hundred_village_demo or False,
             "is_hundred_village_demo": self.is_hundred_village_demo or False,
             "isTieredDevelopment": self.is_tiered_development or False,
             "is_tiered_development": self.is_tiered_development or False,
-            "tieredDevelopmentLevel": self.tiered_development_level,
-            "tiered_development_level": self.tiered_development_level,
             "organizationId": self.organization_id,
             "organization_id": self.organization_id,
             "createdBy": self.created_by,
@@ -602,17 +593,6 @@ class SupportFunding(Base, TimestampMixin):
     military_investment = Column(Float, default=0, comment="部队投入(万元)")
     local_investment = Column(Float, default=0, comment="地方投入(万元)")
     planned_investment = Column(Float, default=0, comment="计划投入(万元)")
-
-
-class TieredDevelopmentLevel(Base, TimestampMixin):
-    """梯次发展等级（查找表）"""
-
-    __tablename__ = "tiered_development_levels"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    level_name = Column(String(50), unique=True, nullable=False, comment="等级名称")
-    description = Column(String(200), nullable=True, comment="描述")
-    sort_order = Column(Integer, default=0, comment="排序")
 
 
 # ══════════════════════════════════════════════════════════════

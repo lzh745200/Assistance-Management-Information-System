@@ -5,6 +5,9 @@
 import pytest
 import tempfile
 import sqlite3
+import threading
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -23,7 +26,6 @@ class TestDatabaseHealthService:
         with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
             db_path = f.name
 
-        # 创建一些表和索引
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE test_table (id INTEGER PRIMARY KEY, name TEXT)")
@@ -33,7 +35,6 @@ class TestDatabaseHealthService:
 
         yield db_path
 
-        # 清理
         import os
         try:
             os.unlink(db_path)
@@ -52,6 +53,22 @@ class TestDatabaseHealthService:
         path = service._get_db_path()
         assert isinstance(path, Path)
 
+    def test_get_db_path_non_sqlite(self, service):
+        """测试获取数据库路径 - 非SQLite数据库"""
+        with patch('app.core.config.settings') as mock_settings:
+            mock_settings.DATABASE_URL = "postgresql://localhost:5432/db"
+            path = service._get_db_path()
+        assert "data" in str(path)
+        assert "rural_revitalization" in str(path)
+
+    def test_get_db_path_exception(self, service):
+        """测试获取数据库路径 - 异常处理"""
+        with patch('app.core.config.settings') as mock_settings:
+            mock_settings.DATABASE_URL = None
+            path = service._get_db_path()
+        assert "data" in str(path)
+        assert "rural_revitalization" in str(path)
+
     def test_check_integrity_no_db(self, service):
         """测试完整性检查 - 数据库不存在"""
         with patch.object(service, 'db_path', Path('/nonexistent/db.db')):
@@ -64,6 +81,22 @@ class TestDatabaseHealthService:
         with patch.object(service, 'db_path', Path(temp_db)):
             result = service.check_integrity()
             assert result["status"] == "healthy"
+
+    def test_check_integrity_failure(self, service, temp_db):
+        """测试完整性检查 - 数据库损坏"""
+        with patch.object(service, 'db_path', Path(temp_db)):
+            with patch('sqlite3.connect') as mock_connect:
+                mock_conn = MagicMock()
+                mock_cursor = MagicMock()
+                mock_cursor.fetchone.return_value = ("not ok", "database corruption detected")
+                mock_conn.cursor.return_value = mock_cursor
+                mock_connect.return_value = mock_conn
+
+                result = service.check_integrity()
+
+        assert result["status"] == "error"
+        assert service.stats["integrity_errors"] > 0
+        assert service.health_status["status"] == "error"
 
     def test_check_integrity_exception(self, service):
         """测试完整性检查异常处理"""
@@ -128,6 +161,29 @@ class TestDatabaseHealthService:
             assert result["status"] == "ok"
             assert result["index_count"] == 1
 
+    def test_check_indexes_with_issues(self, service, temp_db):
+        """测试检查索引 - 索引异常"""
+        with patch.object(service, 'db_path', Path(temp_db)):
+            with patch('sqlite3.connect') as mock_connect:
+                mock_conn = MagicMock()
+                mock_cursor = MagicMock()
+                mock_cursor.fetchall.side_effect = [
+                    [("idx_test",)],
+                    None,
+                ]
+                execute_side_effect = [
+                    None,
+                    Exception("Index corruption"),
+                ]
+                mock_cursor.execute.side_effect = execute_side_effect
+                mock_conn.cursor.return_value = mock_cursor
+                mock_connect.return_value = mock_conn
+
+                result = service.check_indexes()
+
+        assert result["status"] == "warning"
+        assert len(result["issues"]) > 0
+
     def test_check_indexes_exception(self, service):
         """测试检查索引异常处理"""
         with patch.object(service, 'db_path', MagicMock(exists=MagicMock(return_value=True))):
@@ -168,6 +224,7 @@ class TestDatabaseHealthService:
             assert "db_size" in result
             assert "table_count" in result
             assert "index_count" in result
+            assert result["fragmentation"] >= 0
 
     def test_get_database_info_exception(self, service):
         """测试获取数据库信息异常处理"""
@@ -189,23 +246,94 @@ class TestDatabaseHealthService:
         assert isinstance(result, dict)
         assert "integrity_errors" in result
 
-    def test_start_stop_monitoring(self, service):
-        """测试启动和停止监控"""
-        import threading
-
-        # Mock _monitor_loop 避免实际运行
+    def test_start_monitoring(self, service):
+        """测试启动监控"""
         service._monitor_loop = MagicMock()
+        service.start_monitoring()
+        assert service.monitoring is True
+        service.stop_monitoring()
 
-        # 启动监控
+    def test_start_monitoring_already_running(self, service):
+        """测试启动监控 - 已在运行"""
+        service.monitoring = True
         service.start_monitoring()
         assert service.monitoring is True
 
-        # 再次启动应该返回警告但不报错
+    def test_stop_monitoring(self, service):
+        """测试停止监控"""
+        service._monitor_loop = MagicMock()
         service.start_monitoring()
-
-        # 停止监控
         service.stop_monitoring()
         assert service.monitoring is False
+
+    def test_stop_monitoring_no_thread(self, service):
+        """测试停止监控 - 无线程"""
+        service.monitor_thread = None
+        service.monitoring = True
+        service.stop_monitoring()
+        assert service.monitoring is False
+
+    def test_monitor_loop_triggers_checks(self, service):
+        """测试监控循环触发所有检查"""
+        with patch.object(service, 'check_integrity') as mock_ci:
+            with patch.object(service, 'quick_check') as mock_qc:
+                with patch.object(service, 'vacuum_database') as mock_vd:
+                    with patch('time.sleep', return_value=None):
+                        service.integrity_check_interval = 0
+                        service.quick_check_interval = 0
+                        service.vacuum_interval = 0
+
+                        def stop_after_one():
+                            service.monitoring = False
+
+                        mock_ci.side_effect = stop_after_one
+
+                        service.monitoring = True
+                        service._monitor_loop()
+
+                        mock_ci.assert_called_once()
+                        mock_qc.assert_called_once()
+                        mock_vd.assert_called_once()
+
+    def test_monitor_loop_exception_handling(self, service):
+        """测试监控循环异常处理"""
+        with patch('time.sleep') as mock_sleep:
+            service.check_integrity = MagicMock(side_effect=Exception("DB Crash"))
+            service.quick_check = MagicMock()
+            service.vacuum_database = MagicMock()
+            service.integrity_check_interval = 0
+
+            def stop_loop(*args):
+                service.monitoring = False
+
+            mock_sleep.side_effect = stop_loop
+
+            service.monitoring = True
+            service._monitor_loop()
+
+            service.check_integrity.assert_called()
+
+    def test_monitor_loop_datetime_min_initial(self, service):
+        """测试监控循环 - datetime.min初始值导致首次全触发"""
+        with patch.object(service, 'check_integrity') as mock_ci:
+            with patch.object(service, 'quick_check') as mock_qc:
+                with patch.object(service, 'vacuum_database') as mock_vd:
+                    with patch('time.sleep', return_value=None):
+                        service.integrity_check_interval = 86400
+                        service.quick_check_interval = 3600
+                        service.vacuum_interval = 604800
+
+                        def stop_after_one():
+                            service.monitoring = False
+
+                        mock_ci.side_effect = stop_after_one
+
+                        service.monitoring = True
+                        service._monitor_loop()
+
+                        mock_ci.assert_called_once()
+                        mock_qc.assert_called_once()
+                        mock_vd.assert_called_once()
 
 class TestGlobalInstance:
     """测试全局实例"""

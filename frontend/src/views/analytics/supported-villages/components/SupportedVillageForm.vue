@@ -102,41 +102,11 @@
     <!-- 振兴发展属性 -->
     <el-divider content-position="left">振兴发展属性</el-divider>
     <el-row :gutter="20">
-      <el-col :span="12">
-        <el-form-item label="振兴梯队" prop="revitalizationTier">
-          <el-select
-            v-model="formData.revitalizationTier"
-            placeholder="选择振兴梯队"
-            clearable
-            style="width: 100%"
-          >
-            <el-option label="第一梯队" value="第一梯队" />
-            <el-option label="第二梯队" value="第二梯队" />
-            <el-option label="第三梯队" value="第三梯队" />
-          </el-select>
+      <el-col :span="8">
+        <el-form-item label="振兴梯队">
+          <el-switch v-model="formData.isRevitalizationTier" />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
-        <el-form-item label="梯次振兴等级" prop="tieredDevelopmentLevel">
-          <el-select
-            v-model="formData.tieredDevelopmentLevel"
-            placeholder="选择梯次振兴发展等级"
-            clearable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="level in TIERED_DEVELOPMENT_LEVELS.filter(
-                (l) => l !== null,
-              ) as string[]"
-              :key="level"
-              :label="level"
-              :value="level"
-            />
-          </el-select>
-        </el-form-item>
-      </el-col>
-    </el-row>
-    <el-row :gutter="20">
       <el-col :span="8">
         <el-form-item label="省级示范">
           <el-switch v-model="formData.isProvincialDemo" />
@@ -147,6 +117,8 @@
           <el-switch v-model="formData.isHundredVillageDemo" />
         </el-form-item>
       </el-col>
+    </el-row>
+    <el-row :gutter="20">
       <el-col :span="8">
         <el-form-item label="梯次振兴">
           <el-switch v-model="formData.isTieredDevelopment" />
@@ -196,40 +168,105 @@
       </el-col>
     </el-row>
 
-    <!-- 过渡期帮扶经费（2021-2026年度） -->
-    <el-divider content-position="left">过渡期帮扶经费（按年度）</el-divider>
+    <!-- 帮扶经费 -->
+    <el-divider content-position="left">帮扶经费</el-divider>
+    <el-row :gutter="16" style="margin-bottom: 16px">
+      <el-col :span="6">
+        <el-form-item label="选择年度">
+          <el-select
+            v-model="selectedFundingYear"
+            placeholder="选择年度"
+            style="width: 100%"
+            @change="onFundingYearChange"
+          >
+            <el-option
+              v-for="y in availableFundingYears"
+              :key="y"
+              :label="`${y}年`"
+              :value="y"
+            />
+          </el-select>
+        </el-form-item>
+      </el-col>
+      <el-col :span="6">
+        <el-form-item label="部队投入(万元)">
+          <el-input-number
+            v-model="currentMilitaryInput"
+            :min="0"
+            :precision="2"
+            style="width: 100%"
+            placeholder="部队投入"
+          />
+        </el-form-item>
+      </el-col>
+      <el-col :span="6">
+        <el-form-item label="地方投入(万元)">
+          <el-input-number
+            v-model="currentLocalInput"
+            :min="0"
+            :precision="2"
+            style="width: 100%"
+            placeholder="地方投入"
+          />
+        </el-form-item>
+      </el-col>
+      <el-col :span="6">
+        <el-form-item label=" " label-width="12px">
+          <el-button type="primary" @click="addOrUpdateFunding">
+            {{ hasFundingYear(selectedFundingYear) ? '更新年度' : '添加年度' }}
+          </el-button>
+          <el-button
+            v-if="hasFundingYear(selectedFundingYear)"
+            type="danger"
+            plain
+            @click="removeFundingByYear(selectedFundingYear)"
+          >
+            删除
+          </el-button>
+        </el-form-item>
+      </el-col>
+    </el-row>
+    <!-- 已添加年度汇总表 -->
     <el-table
+      v-if="transitionFundingRows.length > 0"
       :data="transitionFundingRows"
       border
       size="small"
       style="margin-bottom: 16px"
     >
-      <el-table-column label="年份" width="80" align="center">
+      <el-table-column label="年度" width="100" align="center">
         <template #default="{ row }">{{ row.year }}</template>
       </el-table-column>
-      <el-table-column label="部队投入(万元)" min-width="160">
+      <el-table-column label="部队投入(万元)" min-width="150">
+        <template #default="{ row }">{{ (row.militaryInvestment || 0).toFixed(2) }}</template>
+      </el-table-column>
+      <el-table-column label="地方投入(万元)" min-width="150">
+        <template #default="{ row }">{{ (row.localInvestment || 0).toFixed(2) }}</template>
+      </el-table-column>
+      <el-table-column label="年度合计(万元)" width="140">
         <template #default="{ row }">
-          <el-input-number
-            v-model="row.militaryInvestment"
-            :min="0"
-            :precision="2"
-            size="small"
-            style="width: 100%"
-          />
+          {{ ((row.militaryInvestment || 0) + (row.localInvestment || 0)).toFixed(2) }}
         </template>
       </el-table-column>
-      <el-table-column label="地方投入(万元)" min-width="160">
+      <el-table-column label="操作" width="80" align="center">
         <template #default="{ row }">
-          <el-input-number
-            v-model="row.localInvestment"
-            :min="0"
-            :precision="2"
+          <el-button
+            type="primary"
             size="small"
-            style="width: 100%"
-          />
+            link
+            @click="editFundingYear(row.year)"
+          >
+            编辑
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
+    <el-empty
+      v-else
+      description="暂无帮扶经费数据，请选择年度添加"
+      :image-size="60"
+      style="margin-bottom: 16px"
+    />
     <el-row :gutter="20">
       <el-col :span="12">
         <el-form-item label="部队合计(万元)">
@@ -286,7 +323,6 @@ import type { FormInstance, FormRules } from "element-plus";
 import type {
   SupportedVillage,
   SupportedVillageCreate,
-  TieredDevelopmentLevel,
 } from "@/types/analytics";
 import GuizhouRegionSelector from "@/components/common/GuizhouRegionSelector.vue";
 import type { RegionValue } from "@/components/common/GuizhouRegionSelector.vue";
@@ -299,16 +335,6 @@ import {
   getTransitionFunding,
   saveTransitionFunding,
 } from "@/api/supportedVillage";
-
-/**
- * 梯次振兴发展等级选项
- * Requirements: 23.1
- */
-const TIERED_DEVELOPMENT_LEVELS: TieredDevelopmentLevel[] = [
-  "示范级",
-  "达标级",
-  "基础级",
-];
 
 const props = defineProps<{
   village?: SupportedVillage | null;
@@ -337,11 +363,10 @@ const formData = reactive<SupportedVillageCreate>({
   isEthnicArea: 0,
   isRevolutionaryArea: 0,
   isKeyCounty: 0,
-  revitalizationTier: "",
+  isRevitalizationTier: false,
   isProvincialDemo: 0,
   isHundredVillageDemo: 0,
   isTieredDevelopment: false,
-  tieredDevelopmentLevel: null, // 梯次振兴发展等级 (Requirements: 23.1)
   isCrossProvince: false,
   isCrossCity: false,
   isCrossUnitCooperation: false,
@@ -361,37 +386,98 @@ const rules: FormRules = {
   ],
 };
 
-// 过渡期帮扶经费按年度数据
-const TRANSITION_YEARS = [2021, 2022, 2023, 2024, 2025, 2026];
-const transitionFundingRows = ref(
-  TRANSITION_YEARS.map((y) => ({
-    year: y,
-    militaryInvestment: 0,
-    localInvestment: 0,
-  })),
-);
+// 帮扶经费按年度数据
+const transitionFundingRows = ref<
+  Array<{
+    year: number
+    militaryInvestment: number
+    localInvestment: number
+  }>
+>([])
+
 const transitionMilitaryTotal = computed(() =>
   transitionFundingRows.value.reduce(
     (s, r) => s + (r.militaryInvestment || 0),
     0,
   ),
-);
+)
 const transitionLocalTotal = computed(() =>
   transitionFundingRows.value.reduce((s, r) => s + (r.localInvestment || 0), 0),
-);
+)
+
+// 可选年度范围：2021 ~ 当前年份+1
+const availableFundingYears = computed(() => {
+  const currentYear = new Date().getFullYear()
+  const years: number[] = []
+  for (let y = 2021; y <= currentYear + 1; y++) {
+    years.push(y)
+  }
+  return years
+})
+
+const selectedFundingYear = ref(new Date().getFullYear())
+const currentMilitaryInput = ref(0)
+const currentLocalInput = ref(0)
+
+function hasFundingYear(year: number) {
+  return transitionFundingRows.value.some((r) => r.year === year)
+}
+
+function onFundingYearChange(year: number) {
+  const existing = transitionFundingRows.value.find((r) => r.year === year)
+  if (existing) {
+    currentMilitaryInput.value = existing.militaryInvestment
+    currentLocalInput.value = existing.localInvestment
+  } else {
+    currentMilitaryInput.value = 0
+    currentLocalInput.value = 0
+  }
+}
+
+function addOrUpdateFunding() {
+  const year = selectedFundingYear.value
+  const existing = transitionFundingRows.value.find((r) => r.year === year)
+  if (existing) {
+    existing.militaryInvestment = currentMilitaryInput.value
+    existing.localInvestment = currentLocalInput.value
+  } else {
+    transitionFundingRows.value.push({
+      year,
+      militaryInvestment: currentMilitaryInput.value,
+      localInvestment: currentLocalInput.value,
+    })
+  }
+  // 按年度排序
+  transitionFundingRows.value.sort((a, b) => a.year - b.year)
+  // 重置输入
+  currentMilitaryInput.value = 0
+  currentLocalInput.value = 0
+}
+
+function removeFundingByYear(year: number) {
+  const idx = transitionFundingRows.value.findIndex((r) => r.year === year)
+  if (idx >= 0) {
+    transitionFundingRows.value.splice(idx, 1)
+  }
+  currentMilitaryInput.value = 0
+  currentLocalInput.value = 0
+}
+
+function editFundingYear(year: number) {
+  selectedFundingYear.value = year
+  onFundingYearChange(year)
+}
 
 async function loadTransitionFunding() {
-  if (!props.village?.id) return;
+  if (!props.village?.id) return
   try {
-    const resp = await getTransitionFunding(props.village.id);
-    const items = (resp as any)?.data || resp || [];
-    for (const item of items) {
-      const row = transitionFundingRows.value.find((r) => r.year === item.year);
-      if (row) {
-        row.militaryInvestment = Number(item.militaryInvestment || 0);
-        row.localInvestment = Number(item.localInvestment || 0);
-      }
-    }
+    const resp = await getTransitionFunding(props.village.id)
+    const items = (resp as any)?.data || resp || []
+    transitionFundingRows.value = items.map((item: any) => ({
+      year: item.year,
+      militaryInvestment: Number(item.militaryInvestment || 0),
+      localInvestment: Number(item.localInvestment || 0),
+    }))
   } catch {
     /* 无数据时保持默认值 */
   }
@@ -432,11 +518,10 @@ watch(
         isEthnicArea: Boolean(village.isEthnicArea),
         isRevolutionaryArea: Boolean(village.isRevolutionaryArea),
         isKeyCounty: Boolean(village.isKeyCounty),
-        revitalizationTier: village.revitalizationTier || "",
+        isRevitalizationTier: Boolean(village.isRevitalizationTier),
         isProvincialDemo: Boolean(village.isProvincialDemo),
         isHundredVillageDemo: Boolean(village.isHundredVillageDemo),
         isTieredDevelopment: Boolean(village.isTieredDevelopment),
-        tieredDevelopmentLevel: village.tieredDevelopmentLevel || null,
         isCrossProvince: Boolean(village.isCrossProvince),
         isCrossCity: Boolean(village.isCrossCity),
         isCrossUnitCooperation: Boolean(village.isCrossUnitCooperation),
@@ -492,7 +577,9 @@ async function handleSubmit() {
     // 父组件 Detail.vue 在创建村记录后负责调用 saveTransitionFunding
     emit("submit", {
       ...formData,
-      ...(props.mode === "create" ? { _transitionFundingItems: fundingItems } : {}),
+      ...(props.mode === "create"
+        ? { _transitionFundingItems: fundingItems }
+        : {}),
     });
   } catch (error) {
     logger.error("表单验证失败:", error);

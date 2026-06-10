@@ -17,12 +17,15 @@ from app.services.data_sync_service import data_sync_service, ExportConfig
 
 class ExportEncryptedRequest(BaseModel):
     """加密导出请求体"""
+
     password: str
     modules: Optional[List[str]] = None
     export_type: str = "full"
     since: Optional[str] = None
 
+
 logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/data-sync", tags=["数据同步"])
 
 # 允许上传的文件扩展名白名单
@@ -150,8 +153,9 @@ async def download_export_package(
 ):
     """下载导出的数据包"""
     import re
+
     # 路径遍历防护：仅允许字母数字和下划线横线点
-    if not re.match(r'^[a-zA-Z0-9_\-\.]+$', package_name):
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", package_name):
         raise HTTPException(status_code=400, detail="无效的数据包名称")
     try:
         base_dir = Path("data_sync").resolve()

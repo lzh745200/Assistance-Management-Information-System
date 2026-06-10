@@ -242,8 +242,11 @@ async function fetchData() {
     });
     const resData = response.data;
     tableData.value =
-      resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : []);
-    total.value = resData?.total || resData?.data?.total || tableData.value.length;
+      resData?.items ||
+      resData?.data?.items ||
+      (Array.isArray(resData) ? resData : []);
+    total.value =
+      resData?.total || resData?.data?.total || tableData.value.length;
   } catch (e) {
     logger.error("加载数据失败:", e);
   } finally {
@@ -339,7 +342,7 @@ async function handleDelete(row: any) {
     const response = await request.delete(`/organizations/${row.id}`);
 
     // 显示后端返回的消息
-    ElMessage.success(response.message || "组织已删除");
+    ElMessage.success(response.data?.message || "组织已删除");
 
     // 刷新列表
     await fetchDataWithSort();

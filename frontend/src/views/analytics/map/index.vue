@@ -226,7 +226,7 @@ const markers = computed(() => [
     county: v.county,
     department: v.department,
     supportUnit: v.supportUnit,
-    tieredDevelopmentLevel: v.tieredDevelopmentLevel,
+    isRevitalizationTier: v.isRevitalizationTier,
     isThreeRegions: v.isThreeRegions,
     isKeyCounty: v.isKeyCounty,
     isProvincialDemo: v.isProvincialDemo,

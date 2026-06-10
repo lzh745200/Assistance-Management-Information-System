@@ -43,48 +43,26 @@
 
         <!-- 步骤1：下载模板 -->
         <div v-if="currentStep === 0" class="step-content">
-          <el-empty description="请下载导入模板并按格式填写数据">
-            <template #description>
-              <div class="step-description">
-                <p class="important-text">
-                  为确保数据正确导入，请严格按照模板格式填写项目数据
-                </p>
-                <div class="template-notice">
-                  <el-alert
-                    title="模板说明"
-                    type="info"
-                    :closable="false"
-                    show-icon
-                  >
-                    <ul class="notice-list">
-                      <li>支持导入.xlsx和.xls格式的Excel文件</li>
-                      <li>
-                        请确保必填字段（项目名称、负责人、开始时间等）不为空
-                      </li>
-                      <li>项目类型请从下拉选项中选择，避免自定义填写</li>
-                      <li>金额格式请使用数字，不带单位符号</li>
-                      <li>日期格式请使用YYYY-MM-DD</li>
-                    </ul>
-                  </el-alert>
-                </div>
-              </div>
-            </template>
-            <template #bottom>
-              <el-button
-                type="primary"
-                size="large"
-                :icon="Download"
-                class="military-btn"
-                :loading="downloading"
-                @click="downloadTemplate"
-              >
-                {{ downloading ? '下载中...' : '下载导入模板 (.xlsx)' }}
-              </el-button>
-              <el-button size="large" @click="currentStep = 1">
-                已有模板，跳过此步
-              </el-button>
-            </template>
-          </el-empty>
+          <div class="step-description">
+            <p class="important-text">为确保数据正确导入，请严格按照模板格式填写项目数据</p>
+            <div class="template-notice">
+              <el-alert title="模板说明" type="info" :closable="false" show-icon>
+                <ul class="notice-list">
+                  <li>支持导入.xlsx和.xls格式的Excel文件</li>
+                  <li>请确保必填字段（项目名称、负责人、开始时间等）不为空</li>
+                  <li>项目类型请从下拉选项中选择，避免自定义填写</li>
+                  <li>金额格式请使用数字，不带单位符号</li>
+                  <li>日期格式请使用YYYY-MM-DD</li>
+                </ul>
+              </el-alert>
+            </div>
+          </div>
+          <div style="margin-top: 30px; text-align: center;">
+            <el-button type="primary" size="large" :icon="Download" class="military-btn" :loading="downloading" @click="downloadTemplate">
+              {{ downloading ? "下载中..." : "下载导入模板 (.xlsx)" }}
+            </el-button>
+            <el-button size="large" @click="currentStep = 1">已有模板，跳过此步</el-button>
+          </div>
         </div>
 
         <!-- 步骤2：填写数据（说明） -->
@@ -493,36 +471,15 @@ const downloading = ref(false);
 
 const downloadTemplate = async () => {
   downloading.value = true;
-  // 尝试 API 下载
-  try {
-    const response = await request.get("/import/template", {
-      params: { entity_type: "project" },
-      responseType: "blob",
-    });
-    const blob = response?.data instanceof Blob ? response.data : new Blob([response?.data]);
-    if (blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
-      triggerDownload(url, "项目导入模板.xlsx");
-      window.URL.revokeObjectURL(url);
-      ElMessage.success("模板下载成功");
-      downloading.value = false;
-      return;
-    }
-  } catch { /* fall through to static */ }
-  // 静态文件兜底
-  try {
-    const link = document.createElement("a");
-    link.href = "/static/templates/project_import_template.xlsx";
-    link.download = "项目导入模板.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    ElMessage.success("模板下载成功（离线模式）");
-  } catch {
-    ElMessage.error("模板下载失败，请联系管理员");
-  } finally {
-    downloading.value = false;
-  }
+  // 直接下载静态模板（最可靠）
+  const link = document.createElement("a");
+  link.href = "/static/templates/project_import_template.xlsx";
+  link.download = "项目导入模板.xlsx";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  ElMessage.success("模板下载成功");
+  downloading.value = false;
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;

@@ -4,7 +4,7 @@
       ><span>{{ name }}</span></template
     >
     <p>{{ province }} {{ county }}</p>
-    <el-tag>{{ tier || revitalizationTier }}</el-tag></el-card
+    <el-tag v-if="isRevitalizationTier">振兴梯队</el-tag></el-card
   >
 </template>
 <script setup lang="ts">
@@ -13,6 +13,6 @@ defineProps<{
   province?: string;
   county?: string;
   tier?: string;
-  revitalizationTier?: string;
+  isRevitalizationTier?: boolean;
 }>();
 </script>

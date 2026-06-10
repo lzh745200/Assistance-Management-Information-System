@@ -75,7 +75,7 @@ _IMPORT_COLUMNS = [
     ("village_category", "村庄类别"),
     ("is_three_regions", "是否三区三州"),
     ("is_key_county", "是否重点帮扶县"),
-    ("revitalization_tier", "振兴发展梯队"),
+    ("is_revitalization_tier", "是否振兴梯队"),
     ("longitude", "经度"),
     ("latitude", "纬度"),
     ("altitude", "海拔"),
@@ -165,7 +165,7 @@ def _process_import_row(row: tuple, field_names: List[str], db: Session, row_idx
         val = row[i] if i < len(row) else None
         if val is not None and isinstance(val, str):
             val = val.strip()
-        if field_name in ("is_three_regions", "is_key_county"):
+        if field_name in ("is_three_regions", "is_key_county", "is_revitalization_tier"):
             val = str(val).strip() in ("是", "1", "True", "true", "yes", "Y")
         values[field_name] = val
     if not values.get("village_name"):
@@ -192,7 +192,7 @@ async def list_villages(
     keyword: Optional[str] = None,
     department: Optional[str] = None,
     county: Optional[str] = None,
-    tieredDevelopmentLevel: Optional[str] = None,
+    isRevitalizationTier: Optional[bool] = None,
     isThreeRegions: Optional[int] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -211,8 +211,8 @@ async def list_villages(
         query = query.filter(SupportedVillage.department == department)
     if county:
         query = query.filter(SupportedVillage.county == county)
-    if tieredDevelopmentLevel:
-        query = query.filter(SupportedVillage.revitalization_tier == tieredDevelopmentLevel)
+    if isRevitalizationTier is not None:
+        query = query.filter(SupportedVillage.is_revitalization_tier == isRevitalizationTier)
     if isThreeRegions is not None:
         query = query.filter(SupportedVillage.is_three_regions == bool(isThreeRegions))
 
@@ -262,6 +262,23 @@ async def get_filter_options(
     }
 
 
+@router.get("/options/dropdown")
+async def get_village_dropdown(
+    db: Session = Depends(get_db),
+):
+    """获取帮扶村下拉选项（id + name + county，供前端 Select 使用）"""
+    villages = (
+        db.query(SupportedVillage.id, SupportedVillage.village_name, SupportedVillage.county)
+        .order_by(SupportedVillage.id)
+        .all()
+    )
+    items = [
+        {"id": v[0], "name": v[1], "county": v[2] or ""}
+        for v in villages
+    ]
+    return {"data": {"items": items}}
+
+
 @router.get("/import-template")
 async def download_import_template():
     """下载帮扶村导入模板（Excel）"""
@@ -270,7 +287,7 @@ async def download_import_template():
     ws.title = "帮扶村导入模板"
     headers = list(_HEADER_NAMES)
     ws.append(headers)
-    ws.append(["示例村", "某部门", "某单位", "贵州省", "毕节市", "赫章县", "某乡镇", "行政村", "否", "否", "达标级", "", "", "", "", "", ""])
+    ws.append(["示例村", "某部门", "某单位", "贵州省", "毕节市", "赫章县", "某乡镇", "行政村", "否", "否", "否", "", "", "", "", "", ""])
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
