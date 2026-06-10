@@ -245,8 +245,8 @@ const changeRules: FormRules = {
 const loadStatus = async () => {
   try {
     const response = await request.get("/encryption/status");
-    if (response.success) {
-      encryptionStatus.value = response;
+    if (response.data.success) {
+      encryptionStatus.value = response.data;
     }
   } catch (error: any) {
     ElMessage.error(error.message || "加载状态失败");
@@ -277,8 +277,8 @@ const handleInitialize = async () => {
         confirm_password: initForm.value.confirmPassword,
       });
 
-      if (response.success) {
-        ElMessage.success(response.message);
+      if (response.data.success) {
+        ElMessage.success(response.data.message);
         initForm.value = { password: "", confirmPassword: "" };
         await loadStatus();
       }
@@ -307,8 +307,8 @@ const handleChangePassword = async () => {
         confirm_password: changeForm.value.confirmPassword,
       });
 
-      if (response.success) {
-        ElMessage.success(response.message);
+      if (response.data.success) {
+        ElMessage.success(response.data.message);
         changeForm.value = {
           oldPassword: "",
           newPassword: "",
@@ -347,8 +347,8 @@ const handleDisable = async () => {
       password: disableForm.value.password,
     });
 
-    if (response.success) {
-      ElMessage.success(response.message);
+    if (response.data.success) {
+      ElMessage.success(response.data.message);
       disableForm.value.password = "";
       await loadStatus();
     }

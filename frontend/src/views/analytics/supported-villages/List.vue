@@ -40,16 +40,8 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="梯次等级">
-          <el-select
-            v-model="filters.tieredDevelopmentLevel"
-            placeholder="选择等级"
-            clearable
-          >
-            <el-option label="示范级" value="示范级" />
-            <el-option label="达标级" value="达标级" />
-            <el-option label="基础级" value="基础级" />
-          </el-select>
+        <el-form-item label="振兴梯队">
+          <el-switch v-model="filters.isRevitalizationTier" />
         </el-form-item>
         <el-form-item label="三区三州">
           <el-select
@@ -193,11 +185,11 @@
         <el-table-column label="振兴属性" width="180">
           <template #default="{ row }">
             <el-tag
-              v-if="row.tieredDevelopmentLevel"
+              v-if="row.isRevitalizationTier"
               size="small"
-              :type="getTieredLevelTagType(row.tieredDevelopmentLevel)"
+              type="danger"
             >
-              {{ row.tieredDevelopmentLevel }}
+              振兴梯队
             </el-tag>
             <el-tag v-if="row.isProvincialDemo" size="small" type="success"
               >省级示范</el-tag
@@ -344,7 +336,7 @@ const filters = reactive<VillageFilters>({
   keyword: "",
   department: undefined,
   county: undefined,
-  tieredDevelopmentLevel: undefined,
+  isRevitalizationTier: undefined,
   isThreeRegions: undefined,
   isEthnicArea: undefined,
   isKeyCounty: undefined,
@@ -401,7 +393,7 @@ async function loadData() {
         keyword: filters.keyword || undefined,
         department: filters.department || undefined,
         county: filters.county || undefined,
-        tieredDevelopmentLevel: filters.tieredDevelopmentLevel || undefined,
+        isRevitalizationTier: filters.isRevitalizationTier || undefined,
         isThreeRegions: filters.isThreeRegions,
         isEthnicArea: filters.isEthnicArea,
         isKeyCounty: filters.isKeyCounty,
@@ -437,7 +429,7 @@ function handleReset() {
     keyword: "",
     department: undefined,
     county: undefined,
-    tieredDevelopmentLevel: undefined,
+    isRevitalizationTier: undefined,
     isThreeRegions: undefined,
     isEthnicArea: undefined,
     isKeyCounty: undefined,
@@ -563,7 +555,7 @@ async function handleExport() {
         keyword: filters.keyword || undefined,
         department: filters.department || undefined,
         county: filters.county || undefined,
-        tieredDevelopmentLevel: filters.tieredDevelopmentLevel || undefined,
+        isRevitalizationTier: filters.isRevitalizationTier || undefined,
         isThreeRegions: filters.isThreeRegions,
         isEthnicArea: filters.isEthnicArea,
         isKeyCounty: filters.isKeyCounty,
@@ -632,18 +624,6 @@ async function handleDownloadTemplate() {
     logger.error("下载模板失败:", error);
     ElMessage.error("下载模板功能需要后端支持，请先启动后端服务");
   }
-}
-
-// 获取梯次等级标签类型
-function getTieredLevelTagType(
-  level: string,
-): "success" | "warning" | "info" | "danger" {
-  const typeMap: Record<string, "success" | "warning" | "info" | "danger"> = {
-    示范级: "success",
-    达标级: "warning",
-    基础级: "info",
-  };
-  return typeMap[level] || "info";
 }
 
 // 初始化

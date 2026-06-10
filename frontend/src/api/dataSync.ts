@@ -31,6 +31,8 @@ export interface ImportDataResponse {
 export interface ExportEncryptedParams {
   password: string;
   modules?: string[];
+  export_type?: "full" | "selective";
+  since?: string;
 }
 
 export interface ConflictDetail {

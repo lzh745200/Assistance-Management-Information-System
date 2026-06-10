@@ -1,67 +1,205 @@
-"""TDD: 自动备份调度."""
-import pytest
+"""TDD: 自动备份调度 — 100% 行覆盖."""
 import os
-import tempfile
+import time
+import pytest
+from unittest.mock import patch, MagicMock
 
 
 class TestBackupScheduler:
-    def test_scheduler_creation(self):
+    """BackupScheduler 全覆盖测试."""
+
+    # ── __init__ ──
+
+    def test_init_default(self):
         from app.services.auto_backup import BackupScheduler
-        s = BackupScheduler(interval_minutes=60, backup_dir="/tmp")
+        s = BackupScheduler()
+        assert s.interval == 120
+        assert s.backup_dir == "./backups"
+        assert s.source_db_path == "./data/rural_revitalization.db"
+        assert s._last_backup == 0.0
+
+    def test_init_custom(self):
+        from app.services.auto_backup import BackupScheduler
+        s = BackupScheduler(interval_minutes=60, backup_dir="/tmp/custom",
+                            source_db_path="/tmp/custom.db")
         assert s.interval == 60
-        assert s.backup_dir == "/tmp"
+        assert s.backup_dir == "/tmp/custom"
+        assert s.source_db_path == "/tmp/custom.db"
+
+    def test_init_creates_backup_dir(self, tmp_path):
+        from app.services.auto_backup import BackupScheduler
+        d = tmp_path / "new_backup_dir"
+        assert not os.path.exists(d)
+        BackupScheduler(backup_dir=str(d))
+        assert os.path.exists(d)
+
+    # ── should_backup ──
 
     def test_should_backup_first_run(self):
         from app.services.auto_backup import BackupScheduler
-        import time
-        s = BackupScheduler(interval_minutes=60, backup_dir="/tmp")
-        # Never backed up — should backup
+        s = BackupScheduler(interval_minutes=60)
         assert s.should_backup() is True
 
-    def test_should_not_backup_immediately_after_last(self):
+    @patch("app.services.auto_backup.time.time")
+    def test_should_backup_elapsed_less_than_interval(self, mock_time):
         from app.services.auto_backup import BackupScheduler
-        import time
-        s = BackupScheduler(interval_minutes=60, backup_dir="/tmp")
-        s._last_backup = time.time()
+        s = BackupScheduler(interval_minutes=60)
+        s._last_backup = 1000.0
+        mock_time.return_value = 1000.0
         assert s.should_backup() is False
 
-    def test_retention_cleanup(self, tmp_path):
+    @patch("app.services.auto_backup.time.time")
+    def test_should_backup_elapsed_equals_interval(self, mock_time):
+        from app.services.auto_backup import BackupScheduler
+        s = BackupScheduler(interval_minutes=60)
+        s._last_backup = 1000.0
+        mock_time.return_value = 1000.0 + 60 * 60
+        assert s.should_backup() is True
+
+    @patch("app.services.auto_backup.time.time")
+    def test_should_backup_elapsed_exceeds_interval(self, mock_time):
+        from app.services.auto_backup import BackupScheduler
+        s = BackupScheduler(interval_minutes=60)
+        s._last_backup = 1000.0
+        mock_time.return_value = 1000.0 + 7200.0
+        assert s.should_backup() is True
+
+    # ── run_backup ──
+
+    def test_run_backup_source_not_found(self):
+        from app.services.auto_backup import BackupScheduler
+        s = BackupScheduler(source_db_path="/nonexistent/path/db.db")
+        result = s.run_backup()
+        assert result is None
+        assert s._last_backup == 0.0
+
+    def test_run_backup_success(self, tmp_path):
+        from app.services.auto_backup import BackupScheduler
+        src = tmp_path / "source.db"
+        src.write_bytes(b"test database content")
+        backup_dir = tmp_path / "backups"
+        s = BackupScheduler(backup_dir=str(backup_dir), source_db_path=str(src))
+        result = s.run_backup()
+        assert result is not None
+        assert os.path.exists(result)
+        assert s._last_backup > 0.0
+        assert "backup_" in os.path.basename(result)
+
+    @patch("app.services.auto_backup.shutil.copy2")
+    @patch("app.services.auto_backup.os.path.exists", return_value=True)
+    def test_run_backup_copy_fails(self, mock_exists, mock_copy2, tmp_path):
+        from app.services.auto_backup import BackupScheduler
+        mock_copy2.side_effect = PermissionError("access denied")
+        s = BackupScheduler(backup_dir=str(tmp_path))
+        result = s.run_backup()
+        assert result is None
+        assert s._last_backup == 0.0
+
+    # ── verify_last_backup ──
+
+    def test_verify_last_backup_no_backups(self, tmp_path):
+        from app.services.auto_backup import BackupScheduler
+        s = BackupScheduler(backup_dir=str(tmp_path))
+        assert s.verify_last_backup() is False
+
+    def test_verify_last_backup_matching_hash(self, tmp_path):
+        from app.services.auto_backup import BackupScheduler
+        src = tmp_path / "source.db"
+        src.write_bytes(b"same content")
+        bk = tmp_path / "backup_20250101_120000.db"
+        bk.write_bytes(b"same content")
+        s = BackupScheduler(backup_dir=str(tmp_path), source_db_path=str(src))
+        assert s.verify_last_backup() is True
+
+    def test_verify_last_backup_mismatched_hash(self, tmp_path):
+        from app.services.auto_backup import BackupScheduler
+        src = tmp_path / "source.db"
+        src.write_bytes(b"original content")
+        bk = tmp_path / "backup_20250101_120000.db"
+        bk.write_bytes(b"different content")
+        s = BackupScheduler(backup_dir=str(tmp_path), source_db_path=str(src))
+        assert s.verify_last_backup() is False
+
+    def test_verify_last_backup_non_backup_files_ignored(self, tmp_path):
+        from app.services.auto_backup import BackupScheduler
+        src = tmp_path / "source.db"
+        src.write_bytes(b"data")
+        not_a_backup = tmp_path / "readme.txt"
+        not_a_backup.write_text("ignore me")
+        s = BackupScheduler(backup_dir=str(tmp_path), source_db_path=str(src))
+        assert s.verify_last_backup() is False
+
+
+class TestChecksum:
+    """compute_file_checksum 全覆盖测试."""
+
+    def test_checksum_normal_file(self, tmp_path):
+        from app.services.auto_backup import compute_file_checksum
+        f = tmp_path / "test.db"
+        f.write_bytes(b"test backup data")
+        checksum = compute_file_checksum(str(f))
+        assert len(checksum) == 64
+        assert compute_file_checksum(str(f)) == checksum
+
+    def test_checksum_detect_change(self, tmp_path):
+        from app.services.auto_backup import compute_file_checksum
+        f = tmp_path / "test.db"
+        f.write_bytes(b"original data")
+        c1 = compute_file_checksum(str(f))
+        f.write_bytes(b"tampered data")
+        c2 = compute_file_checksum(str(f))
+        assert c1 != c2
+
+    def test_checksum_file_not_found(self):
+        from app.services.auto_backup import compute_file_checksum
+        assert compute_file_checksum("/nonexistent/file.db") == ""
+
+
+class TestCleanup:
+    """cleanup_old_backups 全覆盖测试."""
+
+    def test_no_backup_files(self, tmp_path):
         from app.services.auto_backup import cleanup_old_backups
-        import time
-        old = tmp_path / "backup_2020.db"
-        recent = tmp_path / "backup_2026.db"
-        old.write_text("old")
-        recent.write_text("recent")
-        # Set mtime to 100 days ago
-        old_time = time.time() - 86400 * 100
-        os.utime(old, (old_time, old_time))
-        removed = cleanup_old_backups(str(tmp_path), max_age_days=30, keep_min=1)
-        assert removed >= 1 or not old.exists()
+        assert cleanup_old_backups(str(tmp_path)) == 0
 
+    def test_none_expired(self, tmp_path):
+        from app.services.auto_backup import cleanup_old_backups
+        for i in range(5):
+            (tmp_path / f"backup_{i}.db").write_text("data")
+        assert cleanup_old_backups(str(tmp_path), max_age_days=30) == 0
 
-class TestBackupIntegrity:
-    def test_checksum_computation(self):
-        from app.services.auto_backup import compute_file_checksum
-        f = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-        f.write(b"test backup data")
-        f.close()
-        try:
-            checksum = compute_file_checksum(f.name)
-            assert len(checksum) == 64  # SHA-256
-            assert compute_file_checksum(f.name) == checksum  # Deterministic
-        finally:
-            os.unlink(f.name)
+    def test_removes_expired_respecting_keep_min(self, tmp_path):
+        from app.services.auto_backup import cleanup_old_backups
+        for i in range(10):
+            f = tmp_path / f"backup_{i}.db"
+            f.write_text("data")
+            old_time = time.time() - 60 * 86400
+            os.utime(str(f), (old_time, old_time))
+        result = cleanup_old_backups(str(tmp_path), max_age_days=30, keep_min=5)
+        assert result == 5
+        remaining = sorted(tmp_path.glob("backup_*"))
+        assert len(remaining) == 5
 
-    def test_checksum_detect_change(self):
-        from app.services.auto_backup import compute_file_checksum
-        f = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-        f.write(b"original data")
-        f.close()
-        try:
-            c1 = compute_file_checksum(f.name)
-            with open(f.name, "ab") as fh:
-                fh.write(b"tampered")
-            c2 = compute_file_checksum(f.name)
-            assert c1 != c2
-        finally:
-            os.unlink(f.name)
+    def test_old_files_under_keep_min_preserved(self, tmp_path):
+        from app.services.auto_backup import cleanup_old_backups
+        for i in range(3):
+            f = tmp_path / f"backup_{i}.db"
+            f.write_text("data")
+            old_time = time.time() - 60 * 86400
+            os.utime(str(f), (old_time, old_time))
+        result = cleanup_old_backups(str(tmp_path), max_age_days=30, keep_min=5)
+        assert result == 0
+        assert len(list(tmp_path.glob("backup_*"))) == 3
+
+    def test_some_expired_some_fresh(self, tmp_path):
+        from app.services.auto_backup import cleanup_old_backups
+        for i in range(3):
+            f = tmp_path / f"backup_old_{i}.db"
+            f.write_text("old")
+            old_time = time.time() - 60 * 86400
+            os.utime(str(f), (old_time, old_time))
+        for i in range(3):
+            f = tmp_path / f"backup_new_{i}.db"
+            f.write_text("new")
+        result = cleanup_old_backups(str(tmp_path), max_age_days=30, keep_min=1)
+        assert result == 3

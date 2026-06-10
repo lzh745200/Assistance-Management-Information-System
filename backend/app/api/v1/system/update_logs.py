@@ -138,8 +138,9 @@ async def create_update_log(
 
     用于记录系统升级或功能变更。需要管理员权限。
     """
-    from app.core.permission_utils import require_admin
-    require_admin(current_user, error_message="仅超级管理员可创建更新日志")
+    from app.core.permission_utils import is_admin
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="仅超级管理员可创建更新日志")
 
     svc = UpdateLogService(db)
     updated_by = body.updated_by or getattr(current_user, "username", "system")
@@ -170,8 +171,9 @@ async def initialize_version_history(
     从预定义的版本历史数据批量导入所有历史版本的更新记录。
     适用于新系统部署后的首次数据填充。需要管理员权限。
     """
-    from app.core.permission_utils import require_admin
-    require_admin(current_user, error_message="仅超级管理员可执行初始化操作")
+    from app.core.permission_utils import is_admin
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="仅超级管理员可执行初始化操作")
 
     svc = UpdateLogService(db)
     updated_by = body.updated_by or getattr(current_user, "username", "system")
@@ -198,8 +200,9 @@ async def sync_version_history(
     检查预定义版本历史，补充数据库中缺失的版本记录。
     保留已有记录不变，仅追加新版本。需要管理员权限。
     """
-    from app.core.permission_utils import require_admin
-    require_admin(current_user, error_message="仅超级管理员可执行同步操作")
+    from app.core.permission_utils import is_admin
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="仅超级管理员可执行同步操作")
 
     svc = UpdateLogService(db)
     updated_by = getattr(current_user, "username", "system")
@@ -226,8 +229,9 @@ async def delete_update_log(
 
     需要管理员权限。
     """
-    from app.core.permission_utils import require_admin
-    require_admin(current_user, error_message="仅超级管理员可删除更新日志")
+    from app.core.permission_utils import is_admin
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="仅超级管理员可删除更新日志")
 
     record = db.query(SystemUpdateLog).filter(SystemUpdateLog.id == update_id).first()
     if not record:

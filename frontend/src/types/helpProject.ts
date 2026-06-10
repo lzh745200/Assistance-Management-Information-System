@@ -31,8 +31,8 @@ export interface HelpProjectBasicInfo {
   isRevolutionaryArea: boolean;
   /** 是否160个重点帮扶县 */
   isKeyCounty: boolean;
-  /** 振兴梯队 */
-  revitalizationTier: "示范级" | "达标级" | "基础级" | "";
+  /** 是否振兴梯队 */
+  isRevitalizationTier: boolean;
   /** 帮扶开始年份 */
   helpStartYear: number;
   /** 帮扶结束年份 */
@@ -268,7 +268,7 @@ export interface HelpProjectFilter {
   city?: string;
   county?: string;
   helpType?: string;
-  revitalizationTier?: string;
+  isRevitalizationTier?: boolean;
   yearStart?: number;
   yearEnd?: number;
   status?: string;

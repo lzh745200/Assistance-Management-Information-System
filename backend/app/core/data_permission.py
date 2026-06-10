@@ -126,6 +126,9 @@ def filter_by_data_scope(query, model, user, db=None, org_field="organization_id
     return apply_scope_to_query(query, model, user, owner_field="created_by", dept_field=org_field)
 
 
+apply_data_scope = apply_scope_to_query
+
+
 def require_data_permission(current_user, organization_id=None, created_by=None, db=None, error_message="无权执行此操作"):
     """检查数据权限。管理员自动通过；非管理员需通过 record-ownership 检查。"""
     if is_admin(current_user):

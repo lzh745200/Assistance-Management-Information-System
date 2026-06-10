@@ -41,7 +41,7 @@ app.use(router);
 
 // ── 全局：所有 ElMessage 提示默认显示关闭按钮 ──
 import { ElMessage } from "element-plus";
-ElMessage.defaults = { ...ElMessage.defaults, showClose: true, duration: 5000 };
+(ElMessage as any).defaults = { ...(ElMessage as any).defaults, showClose: true, duration: 5000 };
 
 app.mount("#app");
 

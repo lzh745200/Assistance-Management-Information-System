@@ -79,7 +79,7 @@ class ExportFilterParams(BaseModel):
     region_scope: Optional[str] = Field(None, description="地区范围筛选")
     is_three_regions: Optional[bool] = Field(None, description="是否三区三州")
     is_border_area: Optional[bool] = Field(None, description="是否边疆地区")
-    revitalization_tier: Optional[str] = Field(None, description="振兴层级")
+    is_revitalization_tier: Optional[bool] = Field(None, description="是否振兴梯队")
 
 
 class ReportExportRequest(BaseModel):

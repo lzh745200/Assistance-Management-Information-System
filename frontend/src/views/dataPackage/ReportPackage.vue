@@ -281,7 +281,7 @@ async function downloadPackage() {
         responseType: "blob",
       },
     );
-    const blob = new Blob([response]);
+    const blob = new Blob([response.data]);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -312,7 +312,7 @@ async function handleOneClickReport() {
       });
 
       // 检查响应类型：可能是文件流或 JSON
-      const data = response;
+      const data = response.data;
       if (data instanceof Blob) {
         // 直接下载文件流
         const url = URL.createObjectURL(data);

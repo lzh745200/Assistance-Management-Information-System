@@ -218,12 +218,12 @@ const handleExport = async () => {
         export_type: (exportForm.value.exportType === "full"
           ? "full"
           : "selective") as "full" | "selective",
-        tables:
+        modules:
           exportForm.value.exportType === "full"
             ? undefined
             : exportForm.value.modules,
         password: exportForm.value.password,
-        since: exportForm.value.since?.toISOString(),
+        since: exportForm.value.since?.toISOString() ?? undefined,
       };
       response = await exportEncryptedData(params);
     } else {

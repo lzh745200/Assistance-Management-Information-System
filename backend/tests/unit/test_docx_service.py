@@ -159,8 +159,8 @@ class TestDocxService:
             service = DocxReportService()
 
             villages = [
-                {"id": 1, "village_name": "Village 1", "county": "County A", "support_unit": "Unit 1", "department": "Dept 1", "revitalization_tier": "Tier 1"},
-                {"id": 2, "name": "Village 2", "county": None, "support_unit": None, "department": None, "revitalization_tier": None},
+                {"id": 1, "village_name": "Village 1", "county": "County A", "support_unit": "Unit 1", "department": "Dept 1", "is_revitalization_tier": True},
+                {"id": 2, "name": "Village 2", "county": None, "support_unit": None, "department": None, "is_revitalization_tier": False},
             ]
 
             mock_doc = MagicMock()

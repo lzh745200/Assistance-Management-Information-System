@@ -7,12 +7,6 @@
 // ==================== 帮扶村基础类型 ====================
 
 /**
- * 梯次振兴发展等级类型
- * Requirements: 23.1
- */
-export type TieredDevelopmentLevel = "示范级" | "达标级" | "基础级" | null;
-
-/**
  * 帮扶村实体
  */
 export interface SupportedVillage {
@@ -35,11 +29,10 @@ export interface SupportedVillage {
   isKeyCounty: boolean;
 
   // 振兴发展属性
-  revitalizationTier?: string;
+  isRevitalizationTier?: boolean;
   isProvincialDemo: boolean;
   isHundredVillageDemo: boolean;
   isTieredDevelopment: boolean;
-  tieredDevelopmentLevel?: TieredDevelopmentLevel; // 梯次振兴发展等级
 
   // 跨域帮扶
   isCrossProvince: boolean;
@@ -50,7 +43,7 @@ export interface SupportedVillage {
   isInOverallPlan: boolean;
   honors?: string;
 
-  // 过渡期帮扶经费
+  // 帮扶经费
   transitionFundMilitaryTotal?: number;
   transitionFundLocalTotal?: number;
 
@@ -81,11 +74,10 @@ export interface SupportedVillageCreate {
   isEthnicArea?: number | undefined;
   isRevolutionaryArea?: number | undefined;
   isKeyCounty?: number | undefined;
-  revitalizationTier?: string;
+  isRevitalizationTier?: boolean;
   isProvincialDemo?: number | undefined;
   isHundredVillageDemo?: number | undefined;
   isTieredDevelopment?: boolean;
-  tieredDevelopmentLevel?: TieredDevelopmentLevel; // 梯次振兴发展等级
   isCrossProvince?: boolean;
   isCrossCity?: boolean;
   isCrossUnitCooperation?: boolean;
@@ -294,7 +286,7 @@ export interface VillageFilters {
   isProvincialDemo?: number | undefined;
   isHundredVillageDemo?: number | undefined;
   isTieredDevelopment?: boolean;
-  tieredDevelopmentLevel?: TieredDevelopmentLevel; // 梯次振兴发展等级筛选
+  isRevitalizationTier?: boolean;
   isCrossProvince?: boolean;
   isCrossCity?: boolean;
   isCrossUnitCooperation?: boolean;
@@ -310,7 +302,7 @@ export interface FilterOptions {
   departments: string[];
   supportUnits: string[];
   regionScopes: string[];
-  revitalizationTiers: string[];
+  isRevitalizationTier?: boolean;
   years: number[];
 }
 

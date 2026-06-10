@@ -9,7 +9,7 @@
 
     <!-- 概览卡片 -->
     <el-row :gutter="16" class="stats-row">
-      <el-col :xs="12" :sm="6">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6">
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon cpu-icon">🖥️</div>
@@ -20,7 +20,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6">
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon mem-icon">💾</div>
@@ -31,7 +31,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6">
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon disk-icon">📀</div>
@@ -42,7 +42,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="12" :sm="6">
+      <el-col :xs="24" :sm="12" :md="12" :lg="6">
         <el-card shadow="hover">
           <div class="stat-card">
             <div class="stat-icon uptime-icon">⏱️</div>
@@ -133,6 +133,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Refresh } from "@element-plus/icons-vue";
+import request from "@/utils/request";
 
 const loading = ref(false);
 
@@ -190,27 +191,21 @@ let refreshTimer: ReturnType<typeof setInterval> | null = null;
 async function refreshData() {
   loading.value = true;
   try {
-    // Fetch system metrics from API
-    const response = await fetch("/api/v1/system/health");
-    if (response.ok) {
-      const data = await response.json();
-      if (data.system) {
-        systemStats.value = {
-          cpuUsage: data.system.cpu_usage ?? 0,
-          memoryUsage: data.system.memory_usage ?? 0,
-          diskUsage: data.system.disk_usage ?? 0,
-          uptime: data.system.uptime ?? "0h 0m",
-        };
-      }
-      if (data.database) {
-        dbStats.value = {
-          size: data.database.size ?? "-",
-          tableCount: String(data.database.table_count ?? "-"),
-          connections: String(data.database.connections ?? "-"),
-          integrity: data.database.integrity ?? "-",
-        };
-      }
-    }
+    // Fetch system health from API
+    const res = await request.get("/system/health/full");
+    const data = res?.data?.data ?? res?.data ?? res ?? {};
+    systemStats.value = {
+      cpuUsage: data.cpu_usage ?? 0,
+      memoryUsage: data.memory_usage ?? 0,
+      diskUsage: data.disk_free_gb ?? 0,
+      uptime: data.uptime_seconds ? `${Math.floor(data.uptime_seconds / 3600)}h ${Math.floor((data.uptime_seconds % 3600) / 60)}m` : "0h 0m",
+    };
+    dbStats.value = {
+      size: data.db_size_mb ? `${data.db_size_mb} MB` : "-",
+      tableCount: String(data.table_count ?? "-"),
+      connections: data.db_integrity_ok !== undefined ? (data.db_integrity_ok ? "ok" : "error") : "-",
+      integrity: data.db_integrity_ok !== undefined ? (data.db_integrity_ok ? "PASS" : "FAIL") : "-",
+    };
   } catch (e) {
     console.error("Failed to fetch monitoring data:", e);
     ElMessage.error("监控数据获取失败，请稍后重试");
@@ -242,23 +237,14 @@ onUnmounted(() => {
 .page-header h2 {
   margin: 0;
 }
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.stat-icon {
-  font-size: 32px;
-}
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #303133;
-}
-.stat-label {
-  font-size: 13px;
-  color: #909399;
-}
+.stats-row { margin-bottom: 24px; }
+.stats-row :deep(.el-card) { min-height: 140px; display: flex; align-items: center; }
+.stats-row :deep(.el-card__body) { width: 100%; padding: 30px 36px !important; }
+.stat-card { display: flex; align-items: center; gap: 30px; min-width: 0; }
+.stat-icon { font-size: 60px; flex-shrink: 0; line-height: 1; }
+.stat-info { flex: 1; min-width: 0; }
+.stat-value { font-size: 40px; font-weight: 800; color: #303133; white-space: nowrap; line-height: 1.1; }
+.stat-label { font-size: 16px; color: #475569; margin-top: 6px; font-weight: 600; }
 .log-container {
   max-height: 300px;
   overflow-y: auto;

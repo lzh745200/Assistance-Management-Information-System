@@ -187,8 +187,6 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
-
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRouterSafe } from "@/composables/useRouterSafe";
 import { ElMessage, ElMessageBox } from "element-plus";

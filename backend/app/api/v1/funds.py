@@ -1,17 +1,31 @@
-"""经费管理 API 路由"""
-import logging
-from typing import Any, Dict, Optional
+"""
+经费管理 API 路由 (最终优化版)
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+军用级离线桌面管理系统 - 经费全流程管理
+重构亮点：
+1. 全面拥抱 SQLAlchemy 2.0 (select 语法)
+2. 修复状态流转中的字段映射 Bug (allocated_at -> allocation_date 等)
+3. 引入严格的状态机校验，防止非法状态流转
+4. 统计接口性能极致优化 (单次聚合、消灭 strftime 全表扫描)
+5. 集成 DataScope 数据权限隔离
+6. 修复 list_funds 中 status 参数名覆盖 fastapi.status 模块的致命隐患
+"""
+
+import logging
+from datetime import datetime, timezone
+from decimal import Decimal
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy import case, func, select
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api.v1.deps import require_manager_role
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.utils.pagination import keyset_paginate
-from sqlalchemy import Integer
-from sqlalchemy.sql import func
+from app.core.data_permission import apply_data_scope
 
 from app.models.fund import Fund
 from app.models.user import User
@@ -19,6 +33,10 @@ from app.models.user import User
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/funds", tags=["经费管理"])
 
+
+# ============================================================================
+# Pydantic Schemas (建议后续移至 app/schemas/fund.py)
+# ============================================================================
 
 class FundCreate(BaseModel):
     """创建经费记录"""
@@ -78,85 +96,123 @@ class FundUpdate(BaseModel):
     model_config = {"extra": "forbid"}
 
 
+# ============================================================================
+# 辅助工具与序列化
+# ============================================================================
+
+# 缓存驼峰命名映射，避免每次请求都反射和转换，提升序列化性能
+try:
+    from app.utils.common import StringHelper
+    _FUND_CAMEL_MAP = {col.name: StringHelper.to_camel_case(col.name) for col in Fund.__table__.columns}
+except ImportError:
+    # 降级处理：如果没有 StringHelper，使用简单的替换
+    _FUND_CAMEL_MAP = {
+        col.name: col.name.replace('_', ' ').title().replace(' ', '')[:1].lower() + col.name.replace('_', ' ').title().replace(' ', '')[1:]
+        for col in Fund.__table__.columns
+    }
+
+def _safe_val(val: Any) -> Any:
+    """安全转换数据库值为 JSON 可序列化类型"""
+    if val is None:
+        return None
+    if isinstance(val, Decimal):
+        return float(val)
+    if isinstance(val, datetime):
+        return val.isoformat()
+    if hasattr(val, "isoformat"): # 兼容 date 类型
+        return val.isoformat()
+    return val
+
 def _fund_to_dict(f: Fund) -> Dict[str, Any]:
     """将 Fund ORM 对象转为字典（camelCase 键名，前端直接使用）"""
-    from app.utils.common import StringHelper
-    cols = Fund.__table__.columns
     result = {}
-    for col in cols:
-        val = getattr(f, col.name, None)
-        result[StringHelper.to_camel_case(col.name)] = val
+    for col_name, camel_name in _FUND_CAMEL_MAP.items():
+        result[camel_name] = _safe_val(getattr(f, col_name, None))
+        
+    # 补充关联数据（如果使用了 joinedload 预加载）
+    if hasattr(f, "project") and f.project:
+        result["projectName"] = f.project.name
+    if hasattr(f, "village") and f.village:
+        result["villageName"] = f.village.name
+        
     return result
 
+def _get_fund_or_404(db: Session, fund_id: int, current_user: User) -> Fund:
+    """通用：获取经费并校验权限，不存在则抛出 404"""
+    stmt = select(Fund).where(Fund.id == fund_id)
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    fund = db.execute(stmt).scalar_one_or_none()
+    if not fund:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="经费记录不存在或无权访问")
+    return fund
+
+
+# ============================================================================
+# 1. 基础 CRUD 操作
+# ============================================================================
 
 @router.get("")
 def list_funds(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
     keyword: Optional[str] = None,
-    status: Optional[str] = None,
+    # 🚨 修复：使用 status_filter 避免覆盖 fastapi.status 模块，通过 alias 保持 API 契约
+    status_filter: Optional[str] = Query(None, alias="status"), 
     fund_type: Optional[str] = None,
     fund_source: Optional[str] = None,
     project_id: Optional[int] = None,
     village_id: Optional[int] = None,
-    cursor: Optional[str] = Query(None, description="Keyset分页游标（优先于page参数）"),
+    cursor: Optional[str] = Query(None, description="Keyset分页游标"),
     pagination: str = Query("offset", description="分页方式: 'offset' | 'keyset'"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """查询经费列表（支持OFFSET和Keyset两种分页）"""
-    query = db.query(Fund)
+    # 1. 构建基础查询 (SQLAlchemy 2.0)
+    stmt = select(Fund).options(
+        selectinload(Fund.project),
+        selectinload(Fund.village)
+    )
+    
+    # 2. 数据权限隔离
+    stmt = apply_data_scope(stmt, Fund, current_user)
 
+    # 3. 动态过滤
     if keyword:
         kw = f"%{keyword}%"
-        query = query.filter(
-            (Fund.name.ilike(kw))
-            | (Fund.code.ilike(kw))
-            | (Fund.purpose.ilike(kw))
+        stmt = stmt.where(
+            (Fund.name.ilike(kw)) | (Fund.code.ilike(kw)) | (Fund.purpose.ilike(kw))
         )
-    if status:
-        query = query.filter(Fund.status == status)
-    if fund_type:
-        query = query.filter(Fund.fund_type == fund_type)
-    if fund_source:
-        query = query.filter(Fund.fund_source == fund_source)
-    if project_id:
-        query = query.filter(Fund.project_id == project_id)
-    if village_id:
-        query = query.filter(Fund.village_id == village_id)
+    if status_filter: stmt = stmt.where(Fund.status == status_filter)
+    if fund_type: stmt = stmt.where(Fund.fund_type == fund_type)
+    if fund_source: stmt = stmt.where(Fund.fund_source == fund_source)
+    if project_id: stmt = stmt.where(Fund.project_id == project_id)
+    if village_id: stmt = stmt.where(Fund.village_id == village_id)
 
-    # Keyset分页（高性能，推荐大数据量使用）
+    # 4. 分页执行
     if pagination == "keyset":
         result = keyset_paginate(
-            query,
-            order_column=Fund.id,
-            page_size=page_size,
-            cursor=cursor,
-            desc=True,
+            stmt, order_column=Fund.id, page_size=page_size, cursor=cursor, desc=True, db=db
         )
         return {
-            "total": result["total"],
-            "page_size": result["page_size"],
+            "total": result["total"], "page_size": result["page_size"],
             "items": [_fund_to_dict(f) for f in result["items"]],
-            "next_cursor": result["next_cursor"],
-            "has_more": result["has_more"],
+            "next_cursor": result["next_cursor"], "has_more": result["has_more"],
             "pagination": "keyset",
         }
 
-    # 传统OFFSET分页（兼容旧版）
-    total = query.count()
-    items = query.order_by(Fund.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    # 传统 OFFSET 分页 (手动构建以完美兼容 apply_data_scope 和 joinedload)
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = db.execute(count_stmt).scalar_one()
+    
+    items_stmt = stmt.order_by(Fund.id.desc()).offset((page - 1) * page_size).limit(page_size)
+    items = db.execute(items_stmt).scalars().unique().all()
 
     return {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "items": [_fund_to_dict(f) for f in items],
-        "pagination": "offset",
+        "total": total, "page": page, "page_size": page_size,
+        "items": [_fund_to_dict(f) for f in items], "pagination": "offset",
     }
 
-
-# ── 资金导出（必须在 /{fund_id} 之前注册）──
 
 @router.get("/export")
 def export_funds(
@@ -165,11 +221,12 @@ def export_funds(
     limit: int = Query(5000, ge=1, le=50000, description="最大导出条数"),
 ):
     """导出经费数据（带分页上限，防止内存溢出）"""
-    funds = db.query(Fund).order_by(Fund.id.desc()).limit(limit).all()
+    stmt = select(Fund).order_by(Fund.id.desc()).limit(limit)
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    funds = db.execute(stmt).scalars().all()
     return {
         "data": [_fund_to_dict(f) for f in funds],
-        "total_exported": len(funds),
-        "limit": limit,
+        "total_exported": len(funds), "limit": limit,
     }
 
 
@@ -180,13 +237,20 @@ def get_fund(
     db: Session = Depends(get_db),
 ):
     """查询经费详情"""
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
+    stmt = (
+        select(Fund)
+        .where(Fund.id == fund_id)
+        .options(joinedload(Fund.project), joinedload(Fund.village), selectinload(Fund.organization))
+    )
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    fund = db.execute(stmt).scalar_one_or_none()
+    
     if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="经费记录不存在或无权访问")
     return {"data": _fund_to_dict(fund)}
 
 
-@router.post("")
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_fund(
     data: FundCreate,
     current_user: User = Depends(get_current_user),
@@ -194,10 +258,9 @@ def create_fund(
 ):
     """创建经费记录"""
     require_manager_role(current_user)
-    fund = Fund()
-    for key, value in data.model_dump(exclude_none=True).items():
-        if hasattr(fund, key):
-            setattr(fund, key, value)
+    fund = Fund(**data.model_dump(exclude_none=True))
+    fund.created_by = current_user.id
+    fund.organization_id = current_user.organization_id
     db.add(fund)
     db.commit()
     db.refresh(fund)
@@ -213,17 +276,20 @@ def update_fund(
 ):
     """更新经费记录"""
     require_manager_role(current_user)
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
+    fund = _get_fund_or_404(db, fund_id, current_user)
+    
+    # 业务校验：已审批或已拨付的经费不允许随意修改核心字段
+    if fund.status not in ["pending", "planned", "rejected"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="当前状态不允许修改")
+
     for key, value in data.model_dump(exclude_none=True).items():
-        if hasattr(fund, key):
-            setattr(fund, key, value)
+        setattr(fund, key, value)
+        
     db.commit()
     return {"message": "更新成功"}
 
 
-@router.delete("/{fund_id}")
+@router.delete("/{fund_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_fund(
     fund_id: int,
     current_user: User = Depends(get_current_user),
@@ -231,34 +297,41 @@ def delete_fund(
 ):
     """删除经费记录"""
     require_manager_role(current_user)
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
+    fund = _get_fund_or_404(db, fund_id, current_user)
+    
+    if fund.status != "pending":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="仅允许删除待审批(pending)状态的经费")
+        
     db.delete(fund)
     db.commit()
-    return {"message": "删除成功"}
+    return None
 
 
-# ── 资金统计 ──
+# ============================================================================
+# 2. 资金统计 (极致性能优化)
+# ============================================================================
 
 @router.get("/statistics/overview")
 def fund_statistics_overview(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """经费统计概览"""
-    total = db.query(Fund).count()
-    total_amount = db.query(Fund).with_entities(
-        func.sum(Fund.amount)
-    ).scalar() or 0
-    pending_count = db.query(Fund).filter(Fund.status == "pending").count()
-    approved_count = db.query(Fund).filter(Fund.status == "approved").count()
+    """经费统计概览 (单次聚合查询)"""
+    stmt = select(
+        func.count(Fund.id).label("total_count"),
+        func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
+        func.sum(case((Fund.status == "pending", 1), else_=0)).label("pending_count"),
+        func.sum(case((Fund.status == "approved", 1), else_=0)).label("approved_count"),
+    )
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    
+    row = db.execute(stmt).one()
     return {
         "data": {
-            "total_count": total,
-            "total_amount": float(total_amount),
-            "pending_count": pending_count,
-            "approved_count": approved_count,
+            "total_count": row.total_count,
+            "total_amount": float(row.total_amount),
+            "pending_count": row.pending_count,
+            "approved_count": row.approved_count,
         }
     }
 
@@ -272,288 +345,175 @@ def fund_statistics_multi_dimension(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """经费多维度统计分析 — 按来源/状态/类型/时间聚合
+    """经费多维度统计分析 (利用冗余字段消灭全表扫描)"""
+    stmt = select(Fund)
+    stmt = apply_data_scope(stmt, Fund, current_user)
 
-    返回统一格式: {success: true, data: [{label, count, total_amount, total_allocated, total_used, utilization_rate}, ...]}
-    """
-    from datetime import datetime as dt
-
-    base = db.query(Fund)
     try:
-        if start_date:
-            base = base.filter(Fund.date >= dt.strptime(start_date, "%Y-%m-%d").date())
-        if end_date:
-            base = base.filter(Fund.date <= dt.strptime(end_date, "%Y-%m-%d").date())
+        if start_date: stmt = stmt.where(Fund.date >= datetime.strptime(start_date, "%Y-%m-%d").date())
+        if end_date: stmt = stmt.where(Fund.date <= datetime.strptime(end_date, "%Y-%m-%d").date())
     except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail="日期格式错误，请使用 YYYY-MM-DD 格式",
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="日期格式错误，请使用 YYYY-MM-DD 格式")
 
-    # 定义维度映射
-    dimension_map = {
-        "type": Fund.fund_type,
-        "source": Fund.fund_source,
-        "status": Fund.status,
-    }
+    agg_cols = [
+        func.count(Fund.id).label("count"),
+        func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
+        func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
+        func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
+    ]
 
     if group_by == "period":
-        # 时间维度：按粒度分组
-        if period_type == "quarterly":
-            # 季度聚合：((month-1)//3)+1 = 1,2,3,4
-            quarter_expr = ((func.cast(func.strftime("%m", Fund.date), Integer) - 1) / 3 + 1)
-            rows = (
-                base.with_entities(
-                    func.strftime("%Y", Fund.date).label("year"),
-                    func.cast(quarter_expr, Integer).label("quarter"),
-                    func.count(Fund.id).label("count"),
-                    func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
-                    func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
-                    func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
-                )
-                .group_by(func.strftime("%Y", Fund.date), quarter_expr)
-                .order_by(func.strftime("%Y", Fund.date), quarter_expr)
-                .all()
-            )
-        elif period_type == "yearly":
-            rows = (
-                base.with_entities(
-                    func.strftime("%Y", Fund.date).label("year"),
-                    func.count(Fund.id).label("count"),
-                    func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
-                    func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
-                    func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
-                )
-                .group_by(func.strftime("%Y", Fund.date))
-                .order_by(func.strftime("%Y", Fund.date))
-                .all()
-            )
-        else:
-            # monthly (default)
-            rows = (
-                base.with_entities(
-                    func.strftime("%Y", Fund.date).label("year"),
-                    func.strftime("%m", Fund.date).label("month"),
-                    func.count(Fund.id).label("count"),
-                    func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
-                    func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
-                    func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
-                )
-                .group_by(func.strftime("%Y", Fund.date), func.strftime("%m", Fund.date))
-                .order_by(func.strftime("%Y", Fund.date), func.strftime("%m", Fund.date))
-                .all()
-            )
-        result = []
-        for r in rows:
-            if not r[0]:
-                continue
-            if period_type == "quarterly":
-                label = f"{r[0]}Q{r[1]}"
-            elif period_type == "yearly":
-                label = str(r[0])
-            else:
-                label = f"{r[0]}-{r[1]}" if len(r) > 1 and r[1] else str(r[0])
-            result.append({
-                "label": label,
-                "count": r.count,
-                "total_amount": round(float(r.total_amount or 0), 2),
-                "total_allocated": round(float(r.total_allocated or 0), 2),
-                "total_used": round(float(r.total_used or 0), 2),
-                "utilization_rate": round(
-                    float(r.total_used or 0) / float(r.total_amount or 1) * 100, 1
-                ) if float(r.total_amount or 0) > 0 else 0,
-            })
-    elif group_by in dimension_map:
-        col = dimension_map[group_by]
-        rows = (
-            base.with_entities(
-                col.label("group_key"),
-                func.count(Fund.id).label("count"),
-                func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
-                func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
-                func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
-            )
-            .group_by(col)
-            .all()
-        )
-        # 来源维度标签映射
-        source_labels = {
-            "military": "军队投资", "government": "政府拨款",
-            "donation": "社会捐赠", "enterprise": "企业投资", "other": "其他",
-        }
-        # 状态维度标签映射
-        status_labels = {
-            "pending": "待审批", "planned": "规划中", "approved": "已批准",
-            "allocated": "已拨付", "in_use": "使用中", "completed": "已完成",
-            "audited": "已审计",
-        }
-        # 类型维度标签映射
-        type_labels = {
-            "project": "项目经费", "operation": "运营经费",
-            "education": "教育帮扶", "infrastructure": "基础设施",
-            "emergency": "应急经费", "other": "其他",
-        }
-        label_map = (
-            source_labels if group_by == "source"
-            else status_labels if group_by == "status"
-            else type_labels if group_by == "type"
-            else {}
-        )
-        result = []
-        for r in rows:
-            key = r.group_key or "未知"
-            result.append({
-                "label": label_map.get(key, key),
-                "count": r.count,
-                "total_amount": round(float(r.total_amount or 0), 2),
-                "total_allocated": round(float(r.total_allocated or 0), 2),
-                "total_used": round(float(r.total_used or 0), 2),
-                "utilization_rate": round(
-                    float(r.total_used or 0) / float(r.total_amount or 1) * 100, 1
-                ) if float(r.total_amount or 0) > 0 else 0,
-            })
+        if period_type == "quarterly": group_col = Fund.year_quarter
+        elif period_type == "yearly": group_col = Fund.year
+        else: group_col = Fund.year_month
+        
+        stmt = stmt.with_only_columns(group_col.label("group_key"), *agg_cols).group_by(group_col).order_by(group_col)
+        
+    elif group_by in ("type", "source", "status"):
+        col_map = {"type": Fund.fund_type, "source": Fund.fund_source, "status": Fund.status}
+        group_col = col_map[group_by]
+        stmt = stmt.with_only_columns(group_col.label("group_key"), *agg_cols).group_by(group_col)
     else:
-        raise HTTPException(
-            status_code=400,
-            detail=f"不支持的分组维度: {group_by}，支持: period, type, source, status",
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"不支持的分组维度: {group_by}")
+
+    rows = db.execute(stmt).all()
+    
+    label_maps = {
+        "source": {"military": "军队投资", "government": "政府拨款", "donation": "社会捐赠", "enterprise": "企业投资", "other": "其他"},
+        "status": {"pending": "待审批", "planned": "规划中", "approved": "已批准", "allocated": "已拨付", "in_use": "使用中", "completed": "已完成", "audited": "已审计"},
+        "type": {"project": "项目经费", "operation": "运营经费", "education": "教育帮扶", "infrastructure": "基础设施", "emergency": "应急经费", "other": "其他"}
+    }
+    current_map = label_maps.get(group_by, {})
+
+    result = []
+    for r in rows:
+        key = r.group_key or "未知"
+        if not key: continue
+        
+        label = str(key) if group_by == "period" else current_map.get(key, key)
+        total_amt = float(r.total_amount or 0)
+        used_amt = float(r.total_used or 0)
+        
+        result.append({
+            "label": label,
+            "count": r.count,
+            "total_amount": round(total_amt, 2),
+            "total_allocated": round(float(r.total_allocated or 0), 2),
+            "total_used": round(used_amt, 2),
+            "utilization_rate": round((used_amt / total_amt * 100), 1) if total_amt > 0 else 0,
+        })
 
     return {"success": True, "data": result}
 
 
-# ── 资金审批流程 ──
+# ============================================================================
+# 3. 资金审批流程 (严格状态机校验)
+# ============================================================================
+
+def _transition_status(db: Session, fund: Fund, target_status: str, allowed_statuses: List[str], **kwargs):
+    """内部辅助：状态流转核心逻辑"""
+    if fund.status not in allowed_statuses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=f"状态流转非法：当前状态为 '{fund.status}'，不允许变更为 '{target_status}'"
+        )
+    fund.status = target_status
+    for k, v in kwargs.items():
+        setattr(fund, k, v)
+    db.commit()
 
 @router.post("/{fund_id}/approve")
 def approve_fund(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     require_manager_role(current_user)
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
-    fund.status = "approved"
-    fund.approved_by = current_user.full_name or current_user.username
-    from datetime import datetime, timezone
-    fund.approval_date = datetime.now(timezone.utc)
-    db.commit()
+    fund = _get_fund_or_404(db, fund_id, current_user)
+    _transition_status(db, fund, "approved", ["pending", "planned"],
+                       approved_by=current_user.full_name or current_user.username,
+                       approval_date=datetime.now(timezone.utc))
     return {"message": "审批通过"}
-
 
 @router.post("/{fund_id}/reject")
 def reject_fund(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     require_manager_role(current_user)
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
-    fund.status = "rejected"
-    fund.approved_by = current_user.full_name or current_user.username
-    db.commit()
+    fund = _get_fund_or_404(db, fund_id, current_user)
+    _transition_status(db, fund, "rejected", ["pending", "planned"],
+                       approved_by=current_user.full_name or current_user.username)
     return {"message": "审批驳回"}
-
 
 @router.post("/{fund_id}/allocate")
 def allocate_fund(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """经费拨付"""
     require_manager_role(current_user)
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
-    from datetime import datetime, timezone
-    fund.status = "allocated"
-    fund.allocated_at = datetime.now(timezone.utc)
-    db.commit()
+    fund = _get_fund_or_404(db, fund_id, current_user)
+    _transition_status(db, fund, "allocated", ["approved"],
+                       allocation_date=datetime.now(timezone.utc))
     return {"message": "经费已拨付"}
-
 
 @router.post("/{fund_id}/start-use")
 def start_use_fund(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """经费开始使用"""
     require_manager_role(current_user)
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
-    from datetime import datetime, timezone
-    fund.status = "in_use"
-    fund.used_at = datetime.now(timezone.utc)
-    db.commit()
+    fund = _get_fund_or_404(db, fund_id, current_user)
+    _transition_status(db, fund, "in_use", ["allocated"],
+                       start_date=datetime.now(timezone.utc))
     return {"message": "经费已开始使用"}
-
 
 @router.post("/{fund_id}/complete")
 def complete_fund(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """经费使用完成"""
     require_manager_role(current_user)
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
-    from datetime import datetime, timezone
-    fund.status = "completed"
-    fund.completed_at = datetime.now(timezone.utc)
-    db.commit()
+    fund = _get_fund_or_404(db, fund_id, current_user)
+    _transition_status(db, fund, "completed", ["in_use"],
+                       end_date=datetime.now(timezone.utc))
     return {"message": "经费使用完成"}
-
 
 @router.post("/{fund_id}/audit")
 def audit_fund(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """经费审计"""
     require_manager_role(current_user)
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
-    from datetime import datetime, timezone
-    fund.status = "audited"
-    fund.audited_at = datetime.now(timezone.utc)
-    db.commit()
+    fund = _get_fund_or_404(db, fund_id, current_user)
+    _transition_status(db, fund, "audited", ["completed"],
+                       audit_date=datetime.now(timezone.utc))
     return {"message": "经费审计完成"}
 
 
-# ── 帮扶村资金统计 ──
+# ============================================================================
+# 4. 帮扶村资金统计 & 历史
+# ============================================================================
 
 @router.get("/supported-village/statistics/by-type")
 def fund_stats_by_type(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """帮扶村资金按类型统计"""
-    from sqlalchemy import func as sa_func
-    rows = db.query(Fund.fund_type, sa_func.count(Fund.id), sa_func.sum(Fund.amount)).group_by(Fund.fund_type).all()
-    return {"data": [{"type": r[0] or "其他", "count": r[1], "amount": float(r[2] or 0)} for r in rows]}
-
+    stmt = select(
+        Fund.fund_type, 
+        func.count(Fund.id).label("count"), 
+        func.coalesce(func.sum(Fund.amount), 0).label("amount")
+    ).group_by(Fund.fund_type)
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    rows = db.execute(stmt).all()
+    return {"data": [{"type": r.fund_type or "其他", "count": r.count, "amount": float(r.amount)} for r in rows]}
 
 @router.get("/supported-village/statistics/yearly-comparison")
 def fund_stats_yearly_comparison(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """帮扶村资金年度对比"""
     return {"data": []}
-
 
 @router.get("/supported-village/statistics/utilization-rate")
 def fund_stats_utilization(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """帮扶村资金使用率"""
     return {"data": {"overall_rate": 0, "by_type": []}}
-
 
 @router.get("/supported-village/statistics/summary")
 def fund_stats_summary(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """帮扶村资金汇总"""
-    from sqlalchemy import func as sa_func
-    total_count = db.query(sa_func.count(Fund.id)).scalar() or 0
-    total_amount = db.query(sa_func.sum(Fund.amount)).scalar() or 0
-    return {"data": {"total_count": total_count, "total_amount": float(total_amount)}}
-
-
-# ── 资金历史 ──
+    stmt = select(
+        func.count(Fund.id).label("total_count"),
+        func.coalesce(func.sum(Fund.amount), 0).label("total_amount")
+    )
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    row = db.execute(stmt).one()
+    return {"data": {"total_count": row.total_count, "total_amount": float(row.total_amount)}}
 
 @router.get("/{fund_id}/history/status")
 def fund_history_status(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    fund = db.query(Fund).filter(Fund.id == fund_id).first()
-    if not fund:
-        raise HTTPException(status_code=404, detail="经费记录不存在")
+    _get_fund_or_404(db, fund_id, current_user)
     return {"data": []}
-
 
 @router.get("/{fund_id}/history/fields")
 def fund_history_fields(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return {"data": []}
 
-
 @router.get("/{fund_id}/history/operations")
-def fund_history_operations(
-        fund_id: int,
-        current_user: User = Depends(get_current_user),
-        db: Session = Depends(get_db)):
+def fund_history_operations(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return {"data": []}

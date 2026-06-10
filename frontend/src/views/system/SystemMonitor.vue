@@ -261,18 +261,28 @@ onMounted(() => {
 .health-score {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
+  padding: 8px 0;
 }
 .score-circle {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 4px solid;
+  border: 5px solid;
   flex-shrink: 0;
+}
+.score-value {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+}
+.score-label {
+  font-size: 13px;
+  color: #64748b;
 }
 .score-good {
   border-color: #67c23a;

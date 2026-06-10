@@ -217,7 +217,7 @@ class ReportService:
             rows = query.limit(100).all()
             return [
                 [i + 1, r.village_name or "", r.province or "", r.county or "",
-                 r.revitalization_tier or "", "", "", r.updated_at.isoformat() if r.updated_at else ""]
+                 "是" if r.is_revitalization_tier else "否", "", "", r.updated_at.isoformat() if r.updated_at else ""]
                 for i, r in enumerate(rows)
             ]
         except Exception as e:

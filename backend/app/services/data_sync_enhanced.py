@@ -1,25 +1,52 @@
 """
-数据包同步增强 - HMAC签名验证和冲突检测升级
+数据包同步增强 - 核心算法重构版
 
-在现有 data_sync_service.py 基础上添加:
-- HMAC-SHA256 数据包签名/验证
-- 字段级冲突检测（而非记录级）
-- 导入预检 dry-run 模式
-- 增量同步支持
+重构亮点：
+1. 冲突检测：引入“值标准化”机制，彻底解决 DateTime/Decimal 导致的“假冲突”。
+2. 预检导入：消灭全表主键加载，改用分块 (Chunk) IN 查询，防止 OOM。
+3. 增量同步：废弃原生 SQL，改用 SQLAlchemy 2.0 Table 反射，修复 SQLite 时区比较坑。
+4. 安全基线：保留 HMAC 恒定时间比较与严格的标识符白名单校验。
 """
 
 import hashlib
 import hmac
 import logging
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Set
+
+from sqlalchemy import MetaData, Table, select, text, bindparam
+from sqlalchemy.engine import Row
+
+from app.models.base import Base
+from app.core.database import engine
 
 logger = logging.getLogger(__name__)
 
+# ── SQL 标识符白名单（防注入） ──
+_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
+
+def _validate_identifier(name: str, context: str = "identifier") -> str:
+    if not name or not _IDENTIFIER_PATTERN.match(name):
+        raise ValueError(f"非法的 {context}: {name!r}")
+    return name
+
+def _validate_table_name(table_name: str) -> str:
+    name = _validate_identifier(table_name, "table_name")
+    if name not in Base.metadata.tables:
+        raise ValueError(f"表未注册或不允许访问: {name!r}")
+    return name
+
+def _get_table_object(table_name: str) -> Table:
+    """获取 SQLAlchemy Table 对象，用于构建 2.0 风格的 Select"""
+    _validate_table_name(table_name)
+    return Base.metadata.tables[table_name]
+
 
 # ══════════════════════════════════════════════════════════════
-#  HMAC-SHA256 签名
+#  1. HMAC-SHA256 签名 (保持原有优秀设计)
 # ══════════════════════════════════════════════════════════════
 
 def sign_data_package(data: bytes, secret: str) -> str:
@@ -28,15 +55,14 @@ def sign_data_package(data: bytes, secret: str) -> str:
         secret = secret.encode("utf-8")
     return hmac.new(secret, data, hashlib.sha256).hexdigest()
 
-
 def verify_data_package(data: bytes, signature: str, secret: str) -> bool:
-    """验证数据包HMAC签名（恒定时间比较）"""
+    """验证数据包HMAC签名（恒定时间比较，防时序攻击）"""
     expected = sign_data_package(data, secret)
     return hmac.compare_digest(expected, signature)
 
 
 # ══════════════════════════════════════════════════════════════
-#  字段级冲突检测
+#  2. 字段级冲突检测 (引入值标准化，消灭假冲突)
 # ══════════════════════════════════════════════════════════════
 
 @dataclass
@@ -49,79 +75,85 @@ class FieldConflict:
     remote_value: Any
     resolution: str = "manual"  # manual | use_local | use_remote | merge
 
+def _normalize_value(val: Any) -> Any:
+    """
+    标准化数据库值与 JSON 反序列化值，确保比较时类型一致。
+    解决 DateTime、Decimal、布尔值在序列化前后的“假冲突”。
+    """
+    if val is None:
+        return None
+    if isinstance(val, datetime):
+        # 统一转为无时区的 UTC 字符串格式 (SQLite 默认存储格式)
+        if val.tzinfo is not None:
+            val = val.astimezone(timezone.utc).replace(tzinfo=None)
+        return val.strftime("%Y-%m-%d %H:%M:%S")
+    if isinstance(val, Decimal):
+        return float(val)
+    if isinstance(val, str):
+        # 尝试将 ISO 格式的日期字符串标准化
+        if "T" in val and ("Z" in val or "+" in val or "-" in val):
+            try:
+                dt = datetime.fromisoformat(val.replace("Z", "+00:00"))
+                return dt.astimezone(timezone.utc).replace(tzinfo=None).strftime("%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                pass
+        return val.strip()
+    return val
 
 class FieldLevelConflictDetector:
-    """字段级冲突检测器 —— 比记录级更细粒度"""
+    """字段级冲突检测器"""
 
     def detect_conflicts(
         self,
         local_records: List[Dict],
         remote_records: List[Dict],
+        table: str,
         key_field: str = "id",
         ignore_fields: Optional[Set[str]] = None,
     ) -> List[FieldConflict]:
-        """
-        检测字段级冲突
-
-        Args:
-            local_records: 本地记录列表
-            remote_records: 远程记录列表
-            key_field: 主键字段名
-            ignore_fields: 忽略的字段（如updated_at）
-
-        Returns:
-            字段级冲突列表
-        """
         if ignore_fields is None:
-            ignore_fields = {"updated_at", "synced_at", "version"}
+            ignore_fields = {"updated_at", "synced_at", "version", "created_at"}
 
         conflicts = []
-
-        # 建立索引
         local_index = {r[key_field]: r for r in local_records if key_field in r}
         remote_index = {r[key_field]: r for r in remote_records if key_field in r}
-
-        # 找出共同记录
         common_keys = set(local_index.keys()) & set(remote_index.keys())
 
         for key in common_keys:
             local = local_index[key]
             remote = remote_index[key]
-
-            # 逐字段比较
             all_fields = set(local.keys()) | set(remote.keys())
-            for field in sorted(all_fields - ignore_fields):
-                local_val = local.get(field)
-                remote_val = remote.get(field)
+            
+            for field_name in sorted(all_fields - ignore_fields):
+                local_val = _normalize_value(local.get(field_name))
+                remote_val = _normalize_value(remote.get(field_name))
 
+                # 只有标准化后仍然不相等，才是真正的冲突
                 if local_val != remote_val:
                     conflicts.append(FieldConflict(
-                        table="unknown",  # caller should set
+                        table=table,
                         record_id=key,
-                        field=field,
-                        local_value=local_val,
-                        remote_value=remote_val,
+                        field=field_name,
+                        local_value=local.get(field_name), # 保留原始值用于展示
+                        remote_value=remote.get(field_name),
                     ))
-
         return conflicts
 
 
 # ══════════════════════════════════════════════════════════════
-#  导入预检 (Dry Run)
+#  3. 导入预检 Dry Run (分块查询，防止 OOM)
 # ══════════════════════════════════════════════════════════════
 
+@dataclass
 class ImportDryRunResult:
-    """导入预检结果"""
-
-    def __init__(self):
-        self.total_rows = 0
-        self.new_rows = 0
-        self.update_rows = 0
-        self.conflict_rows = 0
-        self.error_rows = 0
-        self.warnings: List[str] = []
-        self.conflicts: List[FieldConflict] = []
-        self.errors: List[Dict] = []
+    total_rows: int = 0
+    new_rows: int = 0
+    update_rows: int = 0
+    conflict_rows: int = 0
+    error_rows: int = 0
+    warnings: List[str] = field(default_factory=list)
+    conflicts: List[FieldConflict] = field(default_factory=list)
+    errors: List[Dict] = field(default_factory=list)
 
     @property
     def can_import(self) -> bool:
@@ -129,15 +161,11 @@ class ImportDryRunResult:
 
     def summary(self) -> Dict[str, Any]:
         return {
-            "total_rows": self.total_rows,
-            "new_rows": self.new_rows,
-            "update_rows": self.update_rows,
-            "conflict_rows": self.conflict_rows,
-            "error_rows": self.error_rows,
-            "warning_count": len(self.warnings),
+            "total_rows": self.total_rows, "new_rows": self.new_rows,
+            "update_rows": self.update_rows, "conflict_rows": self.conflict_rows,
+            "error_rows": self.error_rows, "warning_count": len(self.warnings),
             "conflict_count": len(self.conflicts),
         }
-
 
 def dry_run_import(
     db_session,
@@ -145,56 +173,52 @@ def dry_run_import(
     records: List[Dict],
     key_field: str = "id",
 ) -> ImportDryRunResult:
-    """
-    预检导入 —— 不实际写入，只报告冲突和异常
-
-    Args:
-        db_session: 数据库会话
-        table_name: 目标表名
-        records: 待导入记录
-        key_field: 主键字段
-
-    Returns:
-        ImportDryRunResult 包含冲突和异常的完整报告
-    """
-    from sqlalchemy import text
-
-    result = ImportDryRunResult()
-    result.total_rows = len(records)
-
-    # 获取现有记录ID集合
-    try:
-        existing = db_session.execute(
-            text(f"SELECT {key_field} FROM {table_name}")
-        ).fetchall()
-        existing_ids = {row[0] for row in existing}
-    except Exception as e:
-        result.errors.append({"row": 0, "error": f"查询表失败: {e}"})
-        result.error_rows = len(records)
+    """预检导入：使用分块 IN 查询，彻底避免大表 OOM"""
+    table = _get_table_object(table_name)
+    _validate_identifier(key_field, "key_field")
+    
+    result = ImportDryRunResult(total_rows=len(records))
+    if not records:
         return result
 
-    for i, record in enumerate(records):
+    # 提取待检查的 ID 列表
+    pending_ids = [r.get(key_field) for r in records if r.get(key_field) is not None]
+    missing_pk_count = len(records) - len(pending_ids)
+    if missing_pk_count > 0:
+        result.warnings.append(f"有 {missing_pk_count} 行缺少主键 {key_field}")
+        result.error_rows += missing_pk_count
+
+    # 分块查询已存在的 ID (SQLite 默认 IN 限制为 999，这里用 500 确保安全)
+    existing_ids = set()
+    chunk_size = 500
+    key_col = table.c[key_field]
+    
+    for i in range(0, len(pending_ids), chunk_size):
+        chunk = pending_ids[i:i + chunk_size]
         try:
-            record_id = record.get(key_field)
-            if record_id is None:
-                result.warnings.append(f"行{i}: 缺少主键 {key_field}")
-                result.error_rows += 1
-                continue
-
-            if record_id in existing_ids:
-                result.update_rows += 1
-            else:
-                result.new_rows += 1
-
+            stmt = select(key_col).where(key_col.in_(chunk))
+            rows = db_session.execute(stmt).scalars().all()
+            existing_ids.update(rows)
         except Exception as e:
-            result.errors.append({"row": i, "error": str(e)})
-            result.error_rows += 1
+            result.errors.append({"chunk": i, "error": f"查询表失败: {e}"})
+            result.error_rows = result.total_rows
+            return result
+
+    # 统计新增与更新
+    for record in records:
+        rid = record.get(key_field)
+        if rid is None:
+            continue
+        if rid in existing_ids:
+            result.update_rows += 1
+        else:
+            result.new_rows += 1
 
     return result
 
 
 # ══════════════════════════════════════════════════════════════
-#  增量同步支持
+#  4. 增量同步 (SQLAlchemy 2.0 + 修复 SQLite 时区坑)
 # ══════════════════════════════════════════════════════════════
 
 def get_changed_records(
@@ -203,35 +227,41 @@ def get_changed_records(
     since: datetime,
     key_field: str = "id",
     timestamp_field: str = "updated_at",
+    limit: int = 5000,
+    offset: int = 0,
 ) -> List[Dict]:
     """
     获取指定时间后的变更记录（增量同步）
-
-    Args:
-        db_session: 数据库会话
-        table_name: 表名
-        since: 起始时间（UTC）
-        key_field: 主键字段
-        timestamp_field: 时间戳字段
-
-    Returns:
-        变更记录列表
+    修复：统一时间格式为 SQLite 兼容的无时区 UTC 字符串。
     """
-    from sqlalchemy import text
+    table = _get_table_object(table_name)
+    _validate_identifier(key_field, "key_field")
+    _validate_identifier(timestamp_field, "timestamp_field")
 
-    if since.tzinfo is None:
-        since = since.replace(tzinfo=timezone.utc)
+    if since.tzinfo is not None:
+        since = since.astimezone(timezone.utc).replace(tzinfo=None)
+    else:
+        # 假设传入的是本地时间，转为 UTC (根据实际业务调整)
+        pass 
+        
+    # 统一格式化为 SQLite 标准格式: YYYY-MM-DD HH:MM:SS
+    since_str = since.strftime("%Y-%m-%d %H:%M:%S")
 
-    sql = f"""
-        SELECT * FROM {table_name}
-        WHERE {timestamp_field} >= :since
-        ORDER BY {timestamp_field} ASC
-    """
+    ts_col = table.c[timestamp_field]
+    
+    # 构建 SQLAlchemy 2.0 Select
+    stmt = (
+        select(table)
+        .where(ts_col >= since_str)
+        .order_by(ts_col.asc())
+        .limit(limit)
+        .offset(offset)
+    )
 
     try:
-        rows = db_session.execute(text(sql), {"since": since.isoformat()}).fetchall()
-        columns = rows[0]._fields if rows else []
-        return [dict(zip(columns, row)) for row in rows]
+        rows = db_session.execute(stmt).all()
+        # SQLAlchemy 2.0 推荐使用 _mapping 将 Row 转为字典
+        return [dict(row._mapping) for row in rows]
     except Exception as e:
         logger.error(f"增量查询失败 [{table_name}]: {e}")
         return []

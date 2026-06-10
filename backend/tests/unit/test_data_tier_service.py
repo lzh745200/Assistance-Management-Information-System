@@ -5,7 +5,7 @@
 import pytest
 import json
 import gzip
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch, mock_open
 from pathlib import Path
 import tempfile
@@ -39,7 +39,6 @@ class TestDataTierService:
     def service(self):
         """创建服务实例"""
         from app.services.data_tier_service import DataTierService
-        # 清除单例状态
         DataTierService._instance = None
         service = DataTierService()
         return service
@@ -89,6 +88,14 @@ class TestDataTierService:
         from app.services.data_tier_service import DataTier
         assert tier == DataTier.COLD
 
+    def test_determine_tier_naive_datetime(self, service):
+        """测试确定数据分级 - 无时区日期"""
+        from app.services.data_tier_service import DataTier
+        naive_date = datetime.utcnow() - timedelta(days=100)
+        assert naive_date.tzinfo is None
+        tier = service.determine_tier(naive_date)
+        assert tier == DataTier.HOT
+
     def test_get_archive_stats(self, service, temp_archive_dir):
         """测试获取归档统计"""
         with patch.object(service.config, 'COLD_ARCHIVE_PATH', temp_archive_dir):
@@ -101,8 +108,7 @@ class TestDataTierService:
         assert "storage" in stats
 
     def test_get_archive_stats_with_files(self, service, temp_archive_dir):
-        """测试获取归档统计 - 有文件"""
-        # 创建测试归档文件
+        """测试获取归档统计 - 有冷数据文件"""
         archive_file = Path(temp_archive_dir) / "test_archive.gz"
         with gzip.open(archive_file, 'wt') as f:
             f.write("test data")
@@ -115,19 +121,49 @@ class TestDataTierService:
         assert len(stats["by_tier"]["cold"]["files"]) == 1
         assert stats["storage"]["cold_archive_size"] > 0
 
+    def test_get_archive_stats_hot_warm_exist(self, service, temp_archive_dir):
+        """测试获取归档统计 - 热/温数据库文件存在"""
+        hot_file = Path(temp_archive_dir) / "hot.db"
+        hot_file.write_text("hot data")
+        warm_file = Path(temp_archive_dir) / "warm.db"
+        warm_file.write_text("warm data")
+
+        with patch.object(service.config, 'COLD_ARCHIVE_PATH', temp_archive_dir):
+            with patch.object(service.config, 'HOT_DATA_PATH', str(hot_file)):
+                with patch.object(service.config, 'WARM_DATA_PATH', str(warm_file)):
+                    stats = service.get_archive_stats(MagicMock())
+
+        assert stats["storage"]["hot_db_size"] > 0
+        assert stats["storage"]["warm_db_size"] > 0
+
     def test_archive_records_no_records(self, service):
         """测试归档记录 - 无记录"""
         mock_db = MagicMock()
         mock_query = MagicMock()
         mock_query.count.return_value = 0
 
-        # 创建一个带有 created_at 属性的模型类
         class MockModel:
             created_at = datetime.utcnow()
 
         mock_db.query.return_value.filter.return_value = mock_query
 
         count, message = service.archive_records(mock_db, MockModel)
+
+        assert count == 0
+        assert "没有需要归档的记录" in message
+
+    def test_archive_records_without_before_date(self, service):
+        """测试归档记录 - 未指定日期"""
+        mock_db = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 0
+
+        class MockModel:
+            created_at = datetime.utcnow()
+
+        mock_db.query.return_value.filter.return_value = mock_query
+
+        count, message = service.archive_records(mock_db, MockModel, before_date=None)
 
         assert count == 0
         assert "没有需要归档的记录" in message
@@ -144,11 +180,9 @@ class TestDataTierService:
         mock_query.limit.return_value.all.return_value = [mock_record]
         mock_db.query.return_value.filter.return_value = mock_query
 
-        # 创建一个带有 created_at 属性的模型类
         class MockModel:
             created_at = datetime.utcnow() - timedelta(days=500)
 
-        # 使用较新的日期（温存储）
         before_date = datetime.utcnow() - timedelta(days=500)
 
         count, message = service.archive_records(
@@ -158,26 +192,75 @@ class TestDataTierService:
         assert count == 1
         assert "warm" in message or "温" in message
 
-    def test_archive_records_to_cold(self, service, temp_archive_dir):
-        """测试归档记录到冷存储"""
-        # 创建一个简单的 MockModel 类
-        class MockModel:
-            created_at = datetime.utcnow() - timedelta(days=1500)
+    def test_archive_records_to_warm_no_is_archived(self, service):
+        """测试归档记录到温存储 - 模型无is_archived属性"""
+        mock_db = MagicMock()
+        mock_record = MagicMock()
+        del mock_record.is_archived
+        mock_record.id = 1
 
+        mock_query = MagicMock()
+        mock_query.count.return_value = 1
+        mock_query.limit.return_value.all.return_value = [mock_record]
+        mock_db.query.return_value.filter.return_value = mock_query
+
+        class MockModel:
+            created_at = datetime.utcnow() - timedelta(days=500)
+
+        before_date = datetime.utcnow() - timedelta(days=500)
+
+        count, message = service.archive_records(
+            mock_db, MockModel, before_date=before_date, batch_size=1000
+        )
+
+        assert count == 1
+        assert "warm" in message
+
+    def test_archive_records_exception(self, service):
+        """测试归档记录 - 异常处理"""
         mock_db = MagicMock()
         mock_query = MagicMock()
         mock_query.count.return_value = 1
 
-        # 模拟记录返回
+        class MockModel:
+            created_at = datetime.utcnow() - timedelta(days=500)
+
+        mock_db.query.return_value.filter.return_value = mock_query
+
+        with patch.object(service, '_archive_to_warm_storage',
+                          side_effect=Exception("Archive error")):
+            count, message = service.archive_records(
+                mock_db, MockModel, before_date=datetime.utcnow() - timedelta(days=500)
+            )
+
+        assert count == 0
+        assert "归档失败" in message
+
+    def test_archive_to_cold_full_flow(self, service, temp_archive_dir):
+        """测试归档到冷存储 - 完整流程"""
+        mock_db = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 1
+
         mock_record = MagicMock()
         mock_record.id = 1
+        mock_record.test_field = "value1"
         mock_record.__table__ = MagicMock()
-        mock_record.__table__.columns = []
+        col = MagicMock()
+        col.name = "test_field"
+        mock_record.__table__.columns = [col]
+
         mock_query.limit.return_value.all.return_value = [mock_record]
         mock_query.filter.return_value.delete.return_value = 1
         mock_db.query.return_value.filter.return_value = mock_query
 
-        # 使用较旧的日期（冷存储）
+        class MockModel:
+            __name__ = "MockModel"
+
+        MockModel.created_at = datetime(2000, 1, 1)
+        MockModel.id = MagicMock()
+        MockModel.id.in_.return_value = "mock_filter"
+
         before_date = datetime.utcnow() - timedelta(days=1500)
 
         with patch.object(service.config, 'COLD_ARCHIVE_PATH', temp_archive_dir):
@@ -185,8 +268,69 @@ class TestDataTierService:
                 mock_db, MockModel, before_date=before_date, batch_size=1000
             )
 
-        # 验证归档流程被执行
-        assert count >= 0  # 可能成功也可能因为复杂性失败
+        assert count == 1
+        assert "cold" in message or "冷" in message
+        mock_db.commit.assert_called()
+        mock_query.filter.assert_called_once()
+
+    def test_archive_to_cold_compression_disabled(self, service, temp_archive_dir):
+        """测试归档到冷存储 - 禁用压缩"""
+        mock_db = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 1
+
+        mock_record = MagicMock()
+        mock_record.id = 1
+        mock_record.test_field = "value1"
+        mock_record.__table__ = MagicMock()
+        col = MagicMock()
+        col.name = "test_field"
+        mock_record.__table__.columns = [col]
+
+        mock_query.limit.return_value.all.return_value = [mock_record]
+        mock_query.filter.return_value.delete.return_value = 1
+        mock_db.query.return_value.filter.return_value = mock_query
+
+        class MockModel:
+            __name__ = "MockModel"
+
+        MockModel.created_at = datetime(2000, 1, 1)
+        MockModel.id = MagicMock()
+        MockModel.id.in_.return_value = "mock_filter"
+
+        before_date = datetime.utcnow() - timedelta(days=1500)
+
+        with patch.object(service.config, 'COLD_ARCHIVE_PATH', temp_archive_dir):
+            with patch.object(service.config, 'COMPRESSION_ENABLED', False):
+                count, message = service.archive_records(
+                    mock_db, MockModel, before_date=before_date, batch_size=1000
+                )
+
+        assert count == 1
+        json_files = list(Path(temp_archive_dir).glob("*.json"))
+        assert len(json_files) > 0
+
+    def test_archive_to_cold_empty_records(self, service, temp_archive_dir):
+        """测试归档到冷存储 - 无记录"""
+        mock_db = MagicMock()
+        mock_query = MagicMock()
+        mock_query.count.return_value = 1
+        mock_query.limit.return_value.all.return_value = []
+
+        mock_db.query.return_value.filter.return_value = mock_query
+
+        class MockModel:
+            created_at = datetime.utcnow() - timedelta(days=1500)
+
+        before_date = datetime.utcnow() - timedelta(days=1500)
+
+        with patch.object(service.config, 'COLD_ARCHIVE_PATH', temp_archive_dir):
+            count, message = service.archive_records(
+                mock_db, MockModel, before_date=before_date, batch_size=1000
+            )
+
+        assert count == 0
+        assert "cold" in message or "冷" in message or "归档" in message
 
     def test_model_to_dict(self, service):
         """测试模型转字典"""
@@ -229,7 +373,6 @@ class TestDataTierService:
         """测试从归档恢复成功"""
         mock_db = MagicMock()
 
-        # 创建测试归档文件
         test_data = [{"id": 1, "name": "Test", "created_at": "2024-01-01T00:00:00"}]
         archive_path = Path(temp_archive_dir) / "test_restore.gz"
         with gzip.open(archive_path, 'wt') as f:
@@ -251,7 +394,6 @@ class TestDataTierService:
         """测试从归档恢复 - 指定记录ID"""
         mock_db = MagicMock()
 
-        # 创建测试归档文件
         test_data = [
             {"id": 1, "name": "Test1"},
             {"id": 2, "name": "Test2"},
@@ -269,14 +411,64 @@ class TestDataTierService:
 
         assert count == 1
 
+    def test_restore_from_archive_non_gz(self, service, temp_archive_dir):
+        """测试从归档恢复 - 非压缩文件"""
+        mock_db = MagicMock()
+
+        test_data = [{"id": 1, "name": "Test", "created_at": "2024-01-01T00:00:00"}]
+        archive_path = Path(temp_archive_dir) / "test_restore.json"
+        with open(archive_path, 'w', encoding='utf-8') as f:
+            json.dump(test_data, f)
+
+        mock_model_class = MagicMock()
+
+        with patch.object(service.config, 'COLD_ARCHIVE_PATH', temp_archive_dir):
+            count, message = service.restore_from_archive(
+                mock_db, mock_model_class, "test_restore.json"
+            )
+
+        assert count == 1
+        assert "成功恢复" in message
+        mock_db.add.assert_called_once()
+        mock_db.commit.assert_called_once()
+
+    def test_restore_from_archive_record_exception(self, service, temp_archive_dir):
+        """测试从归档恢复 - 单条记录恢复失败"""
+        mock_db = MagicMock()
+
+        test_data = [
+            {"id": 1, "name": "Good"},
+            {"id": 2, "name": "Bad"},
+        ]
+        archive_path = Path(temp_archive_dir) / "test_mixed.gz"
+        with gzip.open(archive_path, 'wt') as f:
+            json.dump(test_data, f)
+
+        call_count = [0]
+
+        def mock_constructor(**kwargs):
+            call_count[0] += 1
+            if call_count[0] == 2:
+                raise Exception("Insert failed")
+            return MagicMock()
+
+        mock_model_class = MagicMock()
+        mock_model_class.side_effect = mock_constructor
+
+        with patch.object(service.config, 'COLD_ARCHIVE_PATH', temp_archive_dir):
+            count, message = service.restore_from_archive(
+                mock_db, mock_model_class, "test_mixed.gz"
+            )
+
+        assert count == 1
+        assert "成功恢复" in message
+
     def test_restore_from_archive_exception(self, service, temp_archive_dir):
         """测试从归档恢复异常处理"""
         mock_db = MagicMock()
 
-        # 模拟 commit 失败触发回滚
         mock_db.commit.side_effect = Exception("DB Error")
 
-        # 创建测试归档文件
         test_data = [{"id": 1, "name": "Test"}]
         archive_path = Path(temp_archive_dir) / "test_restore.gz"
         with gzip.open(archive_path, 'wt') as f:
@@ -303,12 +495,10 @@ class TestDataTierService:
 
     def test_cleanup_old_archives_with_files(self, service, temp_archive_dir):
         """测试清理旧归档 - 有过期文件"""
-        # 创建旧的归档文件
         old_file = Path(temp_archive_dir) / "old_archive.gz"
         with gzip.open(old_file, 'wt') as f:
             f.write("old data")
 
-        # 修改文件时间为很久以前
         old_time = (datetime.utcnow() - timedelta(days=1000)).timestamp()
         os.utime(old_file, (old_time, old_time))
 
@@ -320,7 +510,6 @@ class TestDataTierService:
 
     def test_cleanup_old_archives_no_old_files(self, service, temp_archive_dir):
         """测试清理旧归档 - 无过期文件"""
-        # 创建新的归档文件
         new_file = Path(temp_archive_dir) / "new_archive.gz"
         with gzip.open(new_file, 'wt') as f:
             f.write("new data")
@@ -330,6 +519,21 @@ class TestDataTierService:
 
         assert count == 0
         assert new_file.exists() is True
+
+    def test_cleanup_old_archives_file_error(self, service, temp_archive_dir):
+        """测试清理旧归档 - 文件删除异常"""
+        archive_file = Path(temp_archive_dir) / "bad_archive.gz"
+        with gzip.open(archive_file, 'wt') as f:
+            f.write("data")
+
+        old_time = (datetime.utcnow() - timedelta(days=1000)).timestamp()
+        os.utime(archive_file, (old_time, old_time))
+
+        with patch.object(service.config, 'COLD_ARCHIVE_PATH', temp_archive_dir):
+            with patch.object(Path, 'unlink', side_effect=Exception("Permission denied")):
+                count, message = service.cleanup_old_archives(max_age_days=365)
+
+        assert count == 0
 
     def test_get_storage_summary(self, service):
         """测试获取存储摘要"""
@@ -371,14 +575,29 @@ class TestDataTierService:
                 "storage": {
                     "hot_db_size": 100,
                     "warm_db_size": 100,
-                    "cold_archive_size": 2 * 1024 * 1024 * 1024  # 2GB
+                    "cold_archive_size": 2 * 1024 * 1024 * 1024
                 }
             }
 
             summary = service.get_storage_summary()
 
-        # 应该有关于对象存储的建议
         assert len(summary["recommendations"]) > 0
+
+    def test_get_storage_summary_zero_total(self, service):
+        """测试获取存储摘要 - 总大小为零"""
+        with patch.object(service, 'get_archive_stats') as mock_stats:
+            mock_stats.return_value = {
+                "storage": {
+                    "hot_db_size": 0,
+                    "warm_db_size": 0,
+                    "cold_archive_size": 0
+                }
+            }
+
+            summary = service.get_storage_summary()
+
+        assert summary["storage_sizes"]["hot_db_size"] == 0
+        assert len(summary["recommendations"]) == 0
 
 class TestGlobalInstance:
     """测试全局实例"""

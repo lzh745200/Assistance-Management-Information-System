@@ -674,13 +674,14 @@ const handleAddOrg = async () => {
       sort_order: addOrgForm.value.sort_order,
       description: addOrgForm.value.description || undefined,
     });
+    const data = response.data;
 
-    if (response?.code === 200 || response?.id) {
+    if (data?.code === 200 || data?.id) {
       ElMessage.success("组织创建成功");
       addOrgDialogVisible.value = false;
       loadOrganizationTree();
     } else {
-      ElMessage.error(response?.detail || "创建组织失败");
+      ElMessage.error(data?.detail || "创建组织失败");
     }
   } catch (error: any) {
     console.error("创建组织失败:", error);
@@ -721,13 +722,14 @@ const handleUpdateOrg = async () => {
         description: editOrgForm.value.description || undefined,
       },
     );
+    const data = response.data;
 
-    if (response?.code === 200 || response?.id) {
+    if (data?.code === 200 || data?.id) {
       ElMessage.success("组织更新成功");
       editOrgDialogVisible.value = false;
       loadOrganizationTree();
     } else {
-      ElMessage.error(response?.detail || "更新组织失败");
+      ElMessage.error(data?.detail || "更新组织失败");
     }
   } catch (error: any) {
     console.error("更新组织失败:", error);
@@ -751,15 +753,16 @@ const handleDeleteOrg = async (data: any) => {
     );
 
     const response = await request.delete(`/organizations/${data.id}`);
+    const respData = response.data;
 
-    if (response?.code === 200 || response.status === 200) {
+    if (respData?.code === 200 || response.status === 200) {
       ElMessage.success("组织删除成功");
       if (selectedOrg.value?.id === data.id) {
         selectedOrg.value = null;
       }
       loadOrganizationTree();
     } else {
-      ElMessage.error(response?.detail || "删除组织失败");
+      ElMessage.error(respData?.detail || "删除组织失败");
     }
   } catch (error: any) {
     if (error !== "cancel") {
@@ -805,7 +808,8 @@ const loadUsers = async () => {
     const response = await request.get("/users", {
       params: { page_size: 200 },
     });
-    users.value = response.items || [];
+    const data = response.data;
+    users.value = data.items || [];
   } catch (error: any) {
     ElMessage.error(error.message || "加载用户列表失败");
   } finally {
@@ -816,10 +820,11 @@ const loadUsers = async () => {
 const loadOrganizationTree = async () => {
   try {
     const response = await request.get("/organizations/tree");
-    if (response?.code === 200) {
-      organizationTree.value = response || [];
-    } else if (Array.isArray(response)) {
-      organizationTree.value = response;
+    const data = response.data;
+    if (data?.code === 200) {
+      organizationTree.value = data || [];
+    } else if (Array.isArray(data)) {
+      organizationTree.value = data;
     }
   } catch (error: any) {
     ElMessage.error(error.message || "加载组织树失败");
@@ -868,13 +873,14 @@ const handleAddUser = async () => {
       organization_id: addUserForm.value.organization_id,
       permissions: addUserForm.value.permissions?.join(",") || "",
     });
+    const data = response.data;
 
-    if (response?.code === 200 || response?.id) {
+    if (data?.code === 200 || data?.id) {
       ElMessage.success("用户创建成功");
       addUserDialogVisible.value = false;
       loadUsers();
     } else {
-      ElMessage.error(response?.detail || "创建用户失败");
+      ElMessage.error(data?.detail || "创建用户失败");
     }
   } catch (error: any) {
     console.error("创建用户失败:", error);
@@ -915,13 +921,14 @@ const handleUpdateUser = async () => {
       is_active: editUserForm.value.is_active,
       organization_id: editUserForm.value.organization_id,
     });
+    const data = response.data;
 
-    if (response?.code === 200 || response?.id) {
+    if (data?.code === 200 || data?.id) {
       ElMessage.success("用户更新成功");
       editUserDialogVisible.value = false;
       loadUsers();
     } else {
-      ElMessage.error(response?.detail || "更新用户失败");
+      ElMessage.error(data?.detail || "更新用户失败");
     }
   } catch (error: any) {
     console.error("更新用户失败:", error);
@@ -945,12 +952,13 @@ const handleDeleteUser = async (row: any) => {
     );
 
     const response = await request.delete(`/users/${row.id}`);
+    const respData = response.data;
 
-    if (response?.code === 200 || response.status === 200) {
+    if (respData?.code === 200 || response.status === 200) {
       ElMessage.success("用户删除成功");
       loadUsers();
     } else {
-      ElMessage.error(response?.detail || "删除用户失败");
+      ElMessage.error(respData?.detail || "删除用户失败");
     }
   } catch (error: any) {
     if (error !== "cancel") {

@@ -1,5 +1,6 @@
 """Cache with async-compatible API."""
 import asyncio
+import functools
 import logging
 import threading
 import time
@@ -87,6 +88,7 @@ def cached(
 
     def decorator(func: Callable) -> Callable:
         if asyncio.iscoroutinefunction(func):
+            @functools.wraps(func)
             async def _aw(*args, **kwargs):
                 ck = _key_fn(*args, **kwargs) if _key_fn else f"{func.__name__}:{args}:{kwargs}"
                 cv = instance.get(ck)
@@ -97,6 +99,7 @@ def cached(
                 return r
             return _aw
 
+        @functools.wraps(func)
         def _sw(*args, **kwargs):
             ck = _key_fn(*args, **kwargs) if _key_fn else f"{func.__name__}:{args}:{kwargs}"
             cv = instance.get(ck)

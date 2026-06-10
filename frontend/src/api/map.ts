@@ -19,7 +19,7 @@ export interface VillageMarker {
   isBorderArea: boolean;
   isProvincialDemo: boolean;
   isHundredVillageDemo: boolean;
-  tieredDevelopmentLevel: string | null;
+  isRevitalizationTier: boolean;
 }
 
 export interface SchoolMarker {

@@ -24,11 +24,10 @@ class SupportedVillageCreate(BaseModel):
     is_ethnic_area: Optional[bool] = False
     is_revolutionary_area: Optional[bool] = False
     is_key_county: Optional[bool] = False
-    revitalization_tier: Optional[str] = Field(None, max_length=50, description="振兴发展梯队")
+    is_revitalization_tier: Optional[bool] = False
     is_provincial_demo: Optional[bool] = False
     is_hundred_village_demo: Optional[bool] = False
     is_tiered_development: Optional[bool] = False
-    tiered_development_level: Optional[str] = Field(None, max_length=50, description="梯次振兴发展等级")
     is_cross_province: Optional[bool] = False
     is_cross_city: Optional[bool] = False
     is_cross_unit_cooperation: Optional[bool] = False

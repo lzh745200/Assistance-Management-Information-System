@@ -410,8 +410,11 @@ async function fetchData() {
     });
     const resData = response.data;
     tableData.value =
-      resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : []);
-    total.value = resData?.total || resData?.data?.total || tableData.value.length;
+      resData?.items ||
+      resData?.data?.items ||
+      (Array.isArray(resData) ? resData : []);
+    total.value =
+      resData?.total || resData?.data?.total || tableData.value.length;
   } catch (e) {
     logger.error("加载数据失败:", e);
   } finally {

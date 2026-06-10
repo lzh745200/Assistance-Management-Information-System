@@ -4,12 +4,13 @@ Excel模板生成服务 — 军事正式风格 A4 打印版
 
 Requirements: 1.1, 1.9 - 标准 A4 打印模板，军事主题
 """
+
 from io import BytesIO
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from datetime import date
 
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Border, Font, PatternFill, Side, numbers
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.page import PageMargins
@@ -56,11 +57,14 @@ _note_font = Font(name="SimSun", color=MILITARY_GRAY_TEXT, size=10)
 _thin_side = Side(style="thin", color="cbd5e1")
 _thin_border = Border(left=_thin_side, right=_thin_side, top=_thin_side, bottom=_thin_side)
 _bottom_gold = Border(
-    left=_thin_side, right=_thin_side, top=_thin_side,
+    left=_thin_side,
+    right=_thin_side,
+    top=_thin_side,
     bottom=Side(style="medium", color=MILITARY_GOLD),
 )
 _header_border = Border(
-    left=_thin_side, right=_thin_side,
+    left=_thin_side,
+    right=_thin_side,
     top=Side(style="medium", color=MILITARY_GOLD),
     bottom=Side(style="medium", color=MILITARY_GOLD),
 )
@@ -87,25 +91,158 @@ class ExcelTemplateService:
     """Excel模板生成服务 — 军事正式风格"""
 
     VILLAGE_FIELDS: List[Dict[str, Any]] = [
-        {"name": "sequence_no", "label": "序号", "required": False, "type": "int", "example": "1", "description": "自动生成的序号"},
-        {"name": "department", "label": "各部门各单位", "required": True, "type": "str", "example": "某某部门", "description": "所属部门名称（必填）"},
-        {"name": "support_unit", "label": "具体帮扶单位", "required": True, "type": "str", "example": "某某帮扶单位", "description": "具体帮扶单位名称（必填）"},
-        {"name": "village_name", "label": "定点帮扶村", "required": True, "type": "str", "example": "某某村", "description": "帮扶村名称（必填）"},
-        {"name": "region_scope", "label": "地区范围", "required": False, "type": "str", "example": "西部地区", "description": "所属地区范围"},
-        {"name": "is_three_regions", "label": "是否属于三区三州", "required": False, "type": "bool", "example": "是", "description": "是 / 否"},
-        {"name": "is_border_area", "label": "是否属于边疆地区", "required": False, "type": "bool", "example": "否", "description": "是 / 否"},
-        {"name": "is_ethnic_area", "label": "是否属于民族地区", "required": False, "type": "bool", "example": "否", "description": "是 / 否"},
-        {"name": "is_revolutionary_area", "label": "是否属于革命地区", "required": False, "type": "bool", "example": "否", "description": "是 / 否"},
-        {"name": "is_key_county", "label": "是否属于160个国家乡村振兴重点帮扶县", "required": False, "type": "bool", "example": "是", "description": "是 / 否"},
-        {"name": "revitalization_tier", "label": "振兴发展梯队系列", "required": False, "type": "str", "example": "第一梯队", "description": "振兴发展梯队"},
-        {"name": "is_provincial_demo", "label": "省级乡村振兴示范创建对象", "required": False, "type": "bool", "example": "否", "description": "是 / 否"},
-        {"name": "is_hundred_village_demo", "label": "百村示范创建对象", "required": False, "type": "bool", "example": "否", "description": "是 / 否"},
-        {"name": "is_tiered_development", "label": "梯次振兴发展对象", "required": False, "type": "bool", "example": "是", "description": "是 / 否"},
-        {"name": "is_cross_province", "label": "是否跨省", "required": False, "type": "bool", "example": "否", "description": "是 / 否"},
-        {"name": "is_cross_city", "label": "是否跨市", "required": False, "type": "bool", "example": "否", "description": "是 / 否"},
-        {"name": "is_cross_unit_cooperation", "label": "是否跨大单位协作帮扶", "required": False, "type": "bool", "example": "否", "description": "是 / 否"},
-        {"name": "is_in_overall_plan", "label": "是否纳入总盘子", "required": False, "type": "bool", "example": "是", "description": "是 / 否"},
-        {"name": "honors", "label": "2021年以来获得的国家或省级表彰", "required": False, "type": "str", "example": "全国先进帮扶村", "description": "获得的表彰荣誉"},
+        {
+            "name": "sequence_no",
+            "label": "序号",
+            "required": False,
+            "type": "int",
+            "example": "1",
+            "description": "自动生成的序号",
+        },
+        {
+            "name": "department",
+            "label": "各部门各单位",
+            "required": True,
+            "type": "str",
+            "example": "某某部门",
+            "description": "所属部门名称（必填）",
+        },
+        {
+            "name": "support_unit",
+            "label": "具体帮扶单位",
+            "required": True,
+            "type": "str",
+            "example": "某某帮扶单位",
+            "description": "具体帮扶单位名称（必填）",
+        },
+        {
+            "name": "village_name",
+            "label": "定点帮扶村",
+            "required": True,
+            "type": "str",
+            "example": "某某村",
+            "description": "帮扶村名称（必填）",
+        },
+        {
+            "name": "region_scope",
+            "label": "地区范围",
+            "required": False,
+            "type": "str",
+            "example": "西部地区",
+            "description": "所属地区范围",
+        },
+        {
+            "name": "is_three_regions",
+            "label": "是否属于三区三州",
+            "required": False,
+            "type": "bool",
+            "example": "是",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_border_area",
+            "label": "是否属于边疆地区",
+            "required": False,
+            "type": "bool",
+            "example": "否",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_ethnic_area",
+            "label": "是否属于民族地区",
+            "required": False,
+            "type": "bool",
+            "example": "否",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_revolutionary_area",
+            "label": "是否属于革命地区",
+            "required": False,
+            "type": "bool",
+            "example": "否",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_key_county",
+            "label": "是否属于160个国家乡村振兴重点帮扶县",
+            "required": False,
+            "type": "bool",
+            "example": "是",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_revitalization_tier",
+            "label": "是否振兴梯队",
+            "required": False,
+            "type": "bool",
+            "example": "是",
+            "description": "是/否",
+        },
+        {
+            "name": "is_provincial_demo",
+            "label": "省级乡村振兴示范创建对象",
+            "required": False,
+            "type": "bool",
+            "example": "否",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_hundred_village_demo",
+            "label": "百村示范创建对象",
+            "required": False,
+            "type": "bool",
+            "example": "否",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_tiered_development",
+            "label": "梯次振兴发展对象",
+            "required": False,
+            "type": "bool",
+            "example": "是",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_cross_province",
+            "label": "是否跨省",
+            "required": False,
+            "type": "bool",
+            "example": "否",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_cross_city",
+            "label": "是否跨市",
+            "required": False,
+            "type": "bool",
+            "example": "否",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_cross_unit_cooperation",
+            "label": "是否跨大单位协作帮扶",
+            "required": False,
+            "type": "bool",
+            "example": "否",
+            "description": "是 / 否",
+        },
+        {
+            "name": "is_in_overall_plan",
+            "label": "是否纳入总盘子",
+            "required": False,
+            "type": "bool",
+            "example": "是",
+            "description": "是 / 否",
+        },
+        {
+            "name": "honors",
+            "label": "2021年以来获得的国家或省级表彰",
+            "required": False,
+            "type": "str",
+            "example": "全国先进帮扶村",
+            "description": "获得的表彰荣誉",
+        },
     ]
 
     def __init__(self):
@@ -165,8 +302,12 @@ class ExcelTemplateService:
         ws.page_setup.fitToWidth = 1
         ws.page_setup.fitToHeight = 0
         ws.page_margins = PageMargins(
-            left=0.6, right=0.6, top=0.7, bottom=0.7,
-            header=0.3, footer=0.3,
+            left=0.6,
+            right=0.6,
+            top=0.7,
+            bottom=0.7,
+            header=0.3,
+            footer=0.3,
         )
         ws.sheet_properties.pageSetUpPr = None  # reset
         ws.print_title_rows = None
@@ -294,7 +435,9 @@ class ExcelTemplateService:
         # ── 页脚 ──
         footer_row = note_start + 2
         ws.merge_cells(f"A{footer_row}:{get_column_letter(col_count)}{footer_row}")
-        ws.cell(row=footer_row, column=1).value = f"— 军队乡村振兴管理系统 v1.3.0 — {date.today().strftime('%Y-%m-%d')} —"
+        ws.cell(row=footer_row, column=1).value = (
+            f"— 军队乡村振兴管理系统 v1.3.0 — {date.today().strftime('%Y-%m-%d')} —"
+        )
         ws.cell(row=footer_row, column=1).font = _footer_font
         ws.cell(row=footer_row, column=1).alignment = _center_align
 
@@ -378,7 +521,9 @@ class ExcelTemplateService:
             ws.cell(row=r, column=2, value=field["label"]).font = _data_font
             req_text = "★ 必填" if field.get("required") else "可选"
             req_cell = ws.cell(row=r, column=3, value=req_text)
-            req_cell.font = Font(name="SimSun", bold=True, color=MILITARY_RED if field.get("required") else MILITARY_GRAY_TEXT, size=10)
+            req_cell.font = Font(
+                name="SimSun", bold=True, color=MILITARY_RED if field.get("required") else MILITARY_GRAY_TEXT, size=10
+            )
             ws.cell(row=r, column=4, value=self._get_type_label(field.get("type", "str"))).font = _data_font
             ws.cell(row=r, column=5, value=field.get("description", "")).font = _data_font
             for c_idx in range(1, col_count + 1):
@@ -416,7 +561,7 @@ class ExcelTemplateService:
         # 页脚
         footer_row = note_start + len(notes) + 2
         ws.merge_cells(f"A{footer_row}:{max_col}{footer_row}")
-        ws.cell(row=footer_row, column=1).value = f"— 军队乡村振兴管理系统 v1.3.0 —"
+        ws.cell(row=footer_row, column=1).value = "— 军队乡村振兴管理系统 v1.3.0 —"
         ws.cell(row=footer_row, column=1).font = _footer_font
         ws.cell(row=footer_row, column=1).alignment = _center_align
 
@@ -427,11 +572,20 @@ class ExcelTemplateService:
     @staticmethod
     def _get_type_label(type_str: str) -> str:
         return {
-            "str": "文本", "int": "整数", "float": "数字",
-            "bool": "是 / 否", "date": "日期", "phone": "手机号",
-            "county": "区县", "project_type": "项目类型", "project_status": "项目状态",
-            "fund_type": "资金类型", "fund_source": "资金来源", "fund_status": "资金状态",
-            "school_type": "学校类型", "support_status": "帮扶状态",
+            "str": "文本",
+            "int": "整数",
+            "float": "数字",
+            "bool": "是 / 否",
+            "date": "日期",
+            "phone": "手机号",
+            "county": "区县",
+            "project_type": "项目类型",
+            "project_status": "项目状态",
+            "fund_type": "资金类型",
+            "fund_source": "资金来源",
+            "fund_status": "资金状态",
+            "school_type": "学校类型",
+            "support_status": "帮扶状态",
         }.get(type_str, "文本")
 
     def get_field_mapping(self) -> Dict[str, str]:

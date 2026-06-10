@@ -74,16 +74,7 @@
             </el-form-item>
 
             <el-form-item label="振兴梯队">
-              <el-select
-                v-model="exportForm.filters.revitalization_tier"
-                placeholder="选择梯队"
-                clearable
-                style="width: 100%"
-              >
-                <el-option label="示范级" value="示范级" />
-                <el-option label="达标级" value="达标级" />
-                <el-option label="基础级" value="基础级" />
-              </el-select>
+              <el-switch v-model="exportForm.filters.is_revitalization_tier" />
             </el-form-item>
 
             <el-form-item>
