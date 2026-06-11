@@ -213,7 +213,7 @@
       <el-col :span="6">
         <el-form-item label=" " label-width="12px">
           <el-button type="primary" @click="addOrUpdateFunding">
-            {{ hasFundingYear(selectedFundingYear) ? '更新年度' : '添加年度' }}
+            {{ hasFundingYear(selectedFundingYear) ? "更新年度" : "添加年度" }}
           </el-button>
           <el-button
             v-if="hasFundingYear(selectedFundingYear)"
@@ -238,14 +238,22 @@
         <template #default="{ row }">{{ row.year }}</template>
       </el-table-column>
       <el-table-column label="部队投入(万元)" min-width="150">
-        <template #default="{ row }">{{ (row.militaryInvestment || 0).toFixed(2) }}</template>
+        <template #default="{ row }">{{
+          (row.militaryInvestment || 0).toFixed(2)
+        }}</template>
       </el-table-column>
       <el-table-column label="地方投入(万元)" min-width="150">
-        <template #default="{ row }">{{ (row.localInvestment || 0).toFixed(2) }}</template>
+        <template #default="{ row }">{{
+          (row.localInvestment || 0).toFixed(2)
+        }}</template>
       </el-table-column>
       <el-table-column label="年度合计(万元)" width="140">
         <template #default="{ row }">
-          {{ ((row.militaryInvestment || 0) + (row.localInvestment || 0)).toFixed(2) }}
+          {{
+            (
+              (row.militaryInvestment || 0) + (row.localInvestment || 0)
+            ).toFixed(2)
+          }}
         </template>
       </el-table-column>
       <el-table-column label="操作" width="80" align="center">
@@ -389,95 +397,95 @@ const rules: FormRules = {
 // 帮扶经费按年度数据
 const transitionFundingRows = ref<
   Array<{
-    year: number
-    militaryInvestment: number
-    localInvestment: number
+    year: number;
+    militaryInvestment: number;
+    localInvestment: number;
   }>
->([])
+>([]);
 
 const transitionMilitaryTotal = computed(() =>
   transitionFundingRows.value.reduce(
     (s, r) => s + (r.militaryInvestment || 0),
     0,
   ),
-)
+);
 const transitionLocalTotal = computed(() =>
   transitionFundingRows.value.reduce((s, r) => s + (r.localInvestment || 0), 0),
-)
+);
 
 // 可选年度范围：2021 ~ 当前年份+1
 const availableFundingYears = computed(() => {
-  const currentYear = new Date().getFullYear()
-  const years: number[] = []
+  const currentYear = new Date().getFullYear();
+  const years: number[] = [];
   for (let y = 2021; y <= currentYear + 1; y++) {
-    years.push(y)
+    years.push(y);
   }
-  return years
-})
+  return years;
+});
 
-const selectedFundingYear = ref(new Date().getFullYear())
-const currentMilitaryInput = ref(0)
-const currentLocalInput = ref(0)
+const selectedFundingYear = ref(new Date().getFullYear());
+const currentMilitaryInput = ref(0);
+const currentLocalInput = ref(0);
 
 function hasFundingYear(year: number) {
-  return transitionFundingRows.value.some((r) => r.year === year)
+  return transitionFundingRows.value.some((r) => r.year === year);
 }
 
 function onFundingYearChange(year: number) {
-  const existing = transitionFundingRows.value.find((r) => r.year === year)
+  const existing = transitionFundingRows.value.find((r) => r.year === year);
   if (existing) {
-    currentMilitaryInput.value = existing.militaryInvestment
-    currentLocalInput.value = existing.localInvestment
+    currentMilitaryInput.value = existing.militaryInvestment;
+    currentLocalInput.value = existing.localInvestment;
   } else {
-    currentMilitaryInput.value = 0
-    currentLocalInput.value = 0
+    currentMilitaryInput.value = 0;
+    currentLocalInput.value = 0;
   }
 }
 
 function addOrUpdateFunding() {
-  const year = selectedFundingYear.value
-  const existing = transitionFundingRows.value.find((r) => r.year === year)
+  const year = selectedFundingYear.value;
+  const existing = transitionFundingRows.value.find((r) => r.year === year);
   if (existing) {
-    existing.militaryInvestment = currentMilitaryInput.value
-    existing.localInvestment = currentLocalInput.value
+    existing.militaryInvestment = currentMilitaryInput.value;
+    existing.localInvestment = currentLocalInput.value;
   } else {
     transitionFundingRows.value.push({
       year,
       militaryInvestment: currentMilitaryInput.value,
       localInvestment: currentLocalInput.value,
-    })
+    });
   }
   // 按年度排序
-  transitionFundingRows.value.sort((a, b) => a.year - b.year)
+  transitionFundingRows.value.sort((a, b) => a.year - b.year);
   // 重置输入
-  currentMilitaryInput.value = 0
-  currentLocalInput.value = 0
+  currentMilitaryInput.value = 0;
+  currentLocalInput.value = 0;
 }
 
 function removeFundingByYear(year: number) {
-  const idx = transitionFundingRows.value.findIndex((r) => r.year === year)
+  const idx = transitionFundingRows.value.findIndex((r) => r.year === year);
   if (idx >= 0) {
-    transitionFundingRows.value.splice(idx, 1)
+    transitionFundingRows.value.splice(idx, 1);
   }
-  currentMilitaryInput.value = 0
-  currentLocalInput.value = 0
+  currentMilitaryInput.value = 0;
+  currentLocalInput.value = 0;
 }
 
 function editFundingYear(year: number) {
-  selectedFundingYear.value = year
-  onFundingYearChange(year)
+  selectedFundingYear.value = year;
+  onFundingYearChange(year);
 }
 
 async function loadTransitionFunding() {
-  if (!props.village?.id) return
+  if (!props.village?.id) return;
   try {
-    const resp = await getTransitionFunding(props.village.id)
-    const items = (resp as any)?.data || resp || []
+    const resp = await getTransitionFunding(props.village.id);
+    const items = (resp as any)?.data || resp || [];
     transitionFundingRows.value = items.map((item: any) => ({
       year: item.year,
       militaryInvestment: Number(item.militaryInvestment || 0),
       localInvestment: Number(item.localInvestment || 0),
-    }))
+    }));
   } catch {
     /* 无数据时保持默认值 */
   }

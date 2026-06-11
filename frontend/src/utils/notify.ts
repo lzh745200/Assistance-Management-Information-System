@@ -20,7 +20,9 @@ const GLOBAL_DEFAULTS: Partial<NotificationParamsTyped> = {
 };
 
 /** 包装后的通知函数，自动合并全局默认值 */
-function notify(options?: NotificationParams): ReturnType<typeof ElNotification> {
+function notify(
+  options?: NotificationParams,
+): ReturnType<typeof ElNotification> {
   if (typeof options === "string") {
     return ElNotification({ ...GLOBAL_DEFAULTS, message: options });
   }
@@ -28,28 +30,36 @@ function notify(options?: NotificationParams): ReturnType<typeof ElNotification>
 }
 
 // 类型快捷方式（success / error / warning / info）
-notify.success = (options?: NotificationParams): ReturnType<typeof ElNotification> => {
+notify.success = (
+  options?: NotificationParams,
+): ReturnType<typeof ElNotification> => {
   if (typeof options === "string") {
     return ElNotification.success({ ...GLOBAL_DEFAULTS, message: options });
   }
   return ElNotification.success({ ...GLOBAL_DEFAULTS, ...options });
 };
 
-notify.error = (options?: NotificationParams): ReturnType<typeof ElNotification> => {
+notify.error = (
+  options?: NotificationParams,
+): ReturnType<typeof ElNotification> => {
   if (typeof options === "string") {
     return ElNotification.error({ ...GLOBAL_DEFAULTS, message: options });
   }
   return ElNotification.error({ ...GLOBAL_DEFAULTS, ...options });
 };
 
-notify.warning = (options?: NotificationParams): ReturnType<typeof ElNotification> => {
+notify.warning = (
+  options?: NotificationParams,
+): ReturnType<typeof ElNotification> => {
   if (typeof options === "string") {
     return ElNotification.warning({ ...GLOBAL_DEFAULTS, message: options });
   }
   return ElNotification.warning({ ...GLOBAL_DEFAULTS, ...options });
 };
 
-notify.info = (options?: NotificationParams): ReturnType<typeof ElNotification> => {
+notify.info = (
+  options?: NotificationParams,
+): ReturnType<typeof ElNotification> => {
   if (typeof options === "string") {
     return ElNotification.info({ ...GLOBAL_DEFAULTS, message: options });
   }

@@ -1,10 +1,6 @@
 <template>
   <div class="role-tags-panel">
-    <el-alert
-      type="info"
-      :closable="false"
-      style="margin-bottom: 16px"
-    >
+    <el-alert type="info" :closable="false" style="margin-bottom: 16px">
       为用户分配 RBAC 角色。角色包含一组预定义的权限。
       用户会继承所分配角色的所有权限。
     </el-alert>

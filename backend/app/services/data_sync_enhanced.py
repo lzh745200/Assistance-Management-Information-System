@@ -242,10 +242,9 @@ def get_changed_records(
         since = since.astimezone(timezone.utc).replace(tzinfo=None)
     else:
         # 假设传入的是本地时间，转为 UTC
-        local_now = datetime.now(timezone.utc).astimezone()
-        utc_offset = local_now.utcoffset()
-        if utc_offset:
-            since = (since - utc_offset).replace(tzinfo=None)
+        local_tz = datetime.now(timezone.utc).astimezone().tzinfo
+        if local_tz is not None:
+            since = since.replace(tzinfo=local_tz).astimezone(timezone.utc).replace(tzinfo=None)
         
     # 统一格式化为 SQLite 标准格式: YYYY-MM-DD HH:MM:SS
     since_str = since.strftime("%Y-%m-%d %H:%M:%S")

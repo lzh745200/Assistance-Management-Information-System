@@ -44,9 +44,16 @@
         <!-- 步骤1：下载模板 -->
         <div v-if="currentStep === 0" class="step-content">
           <div class="step-description">
-            <p class="important-text">为确保数据正确导入，请严格按照模板格式填写项目数据</p>
+            <p class="important-text">
+              为确保数据正确导入，请严格按照模板格式填写项目数据
+            </p>
             <div class="template-notice">
-              <el-alert title="模板说明" type="info" :closable="false" show-icon>
+              <el-alert
+                title="模板说明"
+                type="info"
+                :closable="false"
+                show-icon
+              >
                 <ul class="notice-list">
                   <li>支持导入.xlsx和.xls格式的Excel文件</li>
                   <li>请确保必填字段（项目名称、负责人、开始时间等）不为空</li>
@@ -57,11 +64,20 @@
               </el-alert>
             </div>
           </div>
-          <div style="margin-top: 30px; text-align: center;">
-            <el-button type="primary" size="large" :icon="Download" class="military-btn" :loading="downloading" @click="downloadTemplate">
+          <div style="margin-top: 30px; text-align: center">
+            <el-button
+              type="primary"
+              size="large"
+              :icon="Download"
+              class="military-btn"
+              :loading="downloading"
+              @click="downloadTemplate"
+            >
               {{ downloading ? "下载中..." : "下载导入模板 (.xlsx)" }}
             </el-button>
-            <el-button size="large" @click="currentStep = 1">已有模板，跳过此步</el-button>
+            <el-button size="large" @click="currentStep = 1"
+              >已有模板，跳过此步</el-button
+            >
           </div>
         </div>
 

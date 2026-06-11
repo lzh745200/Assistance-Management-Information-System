@@ -76,10 +76,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="数据范围">
-              <el-select
-                v-model="legacyForm.data_scope"
-                style="width: 240px"
-              >
+              <el-select v-model="legacyForm.data_scope" style="width: 240px">
                 <el-option label="全部数据" value="all" />
                 <el-option label="本组织及子组织" value="org_children" />
                 <el-option label="本组织" value="org" />
@@ -273,7 +270,12 @@ watch(
 );
 
 // 暴露给父组件
-defineExpose({ refreshAll: () => { loadCurrentPermissions(); loadMenuConfig(); } });
+defineExpose({
+  refreshAll: () => {
+    loadCurrentPermissions();
+    loadMenuConfig();
+  },
+});
 </script>
 
 <style scoped lang="scss">
