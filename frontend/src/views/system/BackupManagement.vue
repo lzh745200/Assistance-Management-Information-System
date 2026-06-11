@@ -113,23 +113,23 @@
 import { logger } from "@/utils/logger";
 
 import { ref, onMounted } from "vue";
-import { ElMessageBox, ElNotification } from "element-plus";
+import { ElMessageBox } from "element-plus";
 import { UploadFilled } from "@element-plus/icons-vue";
 import request from "@/utils/request";
+import { notify as appNotify } from "@/utils/notify";
 
-/** 统一消息通知 — 页面正中显示 */
+/** 统一消息通知 — 页面正中显示，3 秒后自动关闭 */
 function notify(
   title: string,
   message: string,
   type: "success" | "error" | "warning" | "info" = "success",
 ) {
-  (ElNotification as any)({
+  // 使用 appNotify 包装器（已注入全局 showClose + duration），显式覆盖 duration: 3000
+  appNotify({
     title,
     message,
     type,
-    position: "top-center",
     duration: 3000,
-    showClose: true,
   });
 }
 

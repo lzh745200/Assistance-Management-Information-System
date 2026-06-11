@@ -75,6 +75,18 @@
               <el-icon><Key /></el-icon>
               批量生成账号
             </el-button>
+            <el-dropdown @command="handlePermPackageCommand">
+              <el-button type="info">
+                权限包
+                <el-icon><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="export">导出权限包</el-dropdown-item>
+                  <el-dropdown-item command="import">导入权限包</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </div>
       </template>
@@ -149,8 +161,8 @@
               <el-button
                 type="success"
                 size="small"
-                @click="handleAssignPermissions(row)"
-                >权限管理</el-button
+                @click="handleRolePermission(row)"
+                >角色/权限</el-button
               >
               <el-button type="danger" size="small" @click="handleDelete(row)"
                 >删除</el-button
@@ -546,6 +558,13 @@
         >
       </template>
     </el-dialog>
+
+    <!-- 角色/权限分配抽屉 -->
+    <PermissionAssignmentDrawer
+      v-model="permDrawerVisible"
+      :user="permDrawerUser"
+      @saved="handlePermSaved"
+    />
   </div>
 </template>
 
@@ -555,9 +574,10 @@ import { generateRandomPassword } from "@/utils/clipboard";
 
 import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
-import { Plus, Key } from "@element-plus/icons-vue";
+import { Plus, Key, ArrowDown } from "@element-plus/icons-vue";
 import request from "@/api/request";
 import { useAuthStore } from "@/stores/auth";
+import PermissionAssignmentDrawer from "@/components/permission/PermissionAssignmentDrawer.vue";
 
 const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.isAdmin);
@@ -589,6 +609,8 @@ const dialogTitle = ref("新增用户");
 const isEdit = ref(false);
 const resetPwdDialogVisible = ref(false);
 const permDialogVisible = ref(false);
+const permDrawerVisible = ref(false);
+const permDrawerUser = ref<User | null>(null);
 const pendingDialogVisible = ref(false);
 const batchDialogVisible = ref(false);
 const formRef = ref<FormInstance>();
@@ -844,16 +866,9 @@ const showPendingUsers = async () => {
 };
 
 const handleActivateUser = (row: any) => {
-  currentUser.value = row;
-  Object.assign(permForm, {
-    role: row.role || "operator",
-    data_scope: row.data_scope || "org",
-    organization_id: row.organization_id ?? null,
-    permissionList: [],
-    is_active: true,
-  });
   pendingDialogVisible.value = false;
-  permDialogVisible.value = true;
+  permDrawerUser.value = row;
+  permDrawerVisible.value = true;
 };
 
 const handleSearch = () => {
@@ -950,8 +965,7 @@ const handleSubmit = async () => {
         }
       }
       dialogVisible.value = false;
-      loadData();
-      loadPendingCount();
+      await Promise.all([loadData(), loadPendingCount()]);
     } catch (error: any) {
       const msg = error?.response?.data?.detail || "操作失败";
       ElMessage.error(msg);
@@ -996,7 +1010,8 @@ const confirmResetPassword = async () => {
   }
 };
 
-const handleAssignPermissions = (row: any) => {
+// @ts-expect-error - 保留旧权限对话框兼容性，新流程使用 handleRolePermission → PermissionAssignmentDrawer
+const _legacy_handleAssignPermissions = (row: any) => {
   currentUser.value = row;
   const perms = (row.permissions || "").split(",").filter(Boolean);
   Object.assign(permForm, {
@@ -1033,6 +1048,92 @@ const confirmPermissions = async () => {
   } finally {
     submitting.value = false;
   }
+};
+
+// ── 角色/权限分配抽屉 ──
+const handleRolePermission = (row: any) => {
+  permDrawerUser.value = row;
+  permDrawerVisible.value = true;
+};
+
+const handlePermSaved = async () => {
+  await Promise.all([loadData(), loadPendingCount()]);
+};
+
+// ── 权限包导入/导出 ──
+const exportingPermPackage = ref(false);
+const importingPermPackage = ref(false);
+
+const handlePermPackageCommand = (command: string) => {
+  if (command === "export") handleExportPermissionPackage();
+  else if (command === "import") handleImportPermissionPackage();
+};
+
+const handleExportPermissionPackage = async () => {
+  exportingPermPackage.value = true;
+  try {
+    const res = await request.post("/permission-packages/export", {});
+    const data = res.data?.data || res.data;
+    if (data.file_name) {
+      const downloadUrl = `/api/v1/permission-packages/download/${data.file_name}`;
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = data.file_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      ElMessage.success(
+        `权限包导出成功 (${data.role_count} 个角色, ${data.user_count} 个用户)`,
+      );
+    }
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.detail || "导出失败");
+  } finally {
+    exportingPermPackage.value = false;
+  }
+};
+
+const handleImportPermissionPackage = () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".zip";
+  input.onchange = async (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    importingPermPackage.value = true;
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await request.post("/permission-packages/import", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const result = res.data?.data || res.data;
+      if (result.success) {
+        const p = result.preview || {};
+        let msg = `将导入 ${p.role_count || 0} 个角色, ${p.user_legacy_count || 0} 个用户权限`;
+        if (p.warnings?.length) msg += `\n警告: ${p.warnings.join("; ")}`;
+        await ElMessageBox.confirm(msg, "确认导入权限包", {
+          type: "info",
+          confirmButtonText: "确认导入",
+          cancelButtonText: "取消",
+        });
+        const cRes = await request.post(
+          `/permission-packages/confirm/${encodeURIComponent(file.name)}`,
+          { overwrite_existing: true },
+        );
+        ElMessage.success(cRes.data?.data?.message || cRes.data?.message || "导入完成");
+        loadData();
+      } else {
+        ElMessage.error(result.message || "导入失败");
+      }
+    } catch (err: any) {
+      if (err === "cancel") return;
+      ElMessage.error(err?.response?.data?.detail || err?.message || "导入失败");
+    } finally {
+      importingPermPackage.value = false;
+    }
+  };
+  input.click();
 };
 
 const handleDelete = async (row: any) => {

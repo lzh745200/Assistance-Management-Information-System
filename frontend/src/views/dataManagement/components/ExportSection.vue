@@ -180,8 +180,7 @@ const exportForm = reactive({
     department: "",
     support_unit: "",
     region_scope: "",
-    revitalization_tier: "",
-  } as ExportFilterParams,
+    is_revitalization_tier: false,
 });
 
 // 状态
@@ -214,8 +213,8 @@ async function handleExport() {
       filters.support_unit = exportForm.filters.support_unit;
     if (exportForm.filters.region_scope)
       filters.region_scope = exportForm.filters.region_scope;
-    if (exportForm.filters.revitalization_tier)
-      filters.revitalization_tier = exportForm.filters.revitalization_tier;
+    if (exportForm.filters.is_revitalization_tier)
+      filters.is_revitalization_tier = exportForm.filters.is_revitalization_tier;
 
     const result = await exportVillages(filters, false);
 
@@ -257,7 +256,7 @@ function resetForm() {
     department: "",
     support_unit: "",
     region_scope: "",
-    revitalization_tier: "",
+    is_revitalization_tier: false,
   };
 }
 

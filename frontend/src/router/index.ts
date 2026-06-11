@@ -529,9 +529,8 @@ export const routes: RouteRecordRaw[] = [
       },
       {
         path: "/system/roles",
-        name: "SystemRoles",
-        component: () => retryImport(() => import("@/views/system/Role.vue")),
-        meta: { title: "角色管理", roles: ["admin", "super_admin"] },
+        redirect: "/system/users",
+        meta: { title: "角色管理 (已合并到用户管理)" },
       },
       {
         path: "/system/menus",
@@ -541,10 +540,8 @@ export const routes: RouteRecordRaw[] = [
       },
       {
         path: "/system/menu-permissions",
-        name: "SystemMenuPermissions",
-        component: () =>
-          retryImport(() => import("@/views/system/MenuPermission.vue")),
-        meta: { title: "菜单权限", roles: ["admin", "super_admin"] },
+        redirect: "/system/users",
+        meta: { title: "菜单权限 (已合并到用户管理)" },
       },
       {
         path: "/system/audit",

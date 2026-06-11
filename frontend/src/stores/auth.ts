@@ -33,6 +33,44 @@ export const useAuthStore = defineStore("auth", () => {
     () => user.value?.must_change_password ?? false,
   );
 
+  /**
+   * 模块级权限映射：将用户权限列表（如 ["village:read", "village:write"]）
+   * 转换为结构化查找表 { village: { view: true, edit: true }, ... }
+   * 用于 v-permission 指令的 view/edit 粒度控制
+   */
+  const modulePermissions = computed(() => {
+    const perms: string[] = user.value?.permissions || [];
+    // super_admin 拥有所有模块的全部权限 — 不使用硬编码列表，任何模块皆可
+    if (user.value?.is_superuser || user.value?.role === "super_admin") {
+      return new Proxy<Record<string, { view: boolean; edit: boolean }>>(
+        Object.create(null),
+        {
+          get(_target, prop: string) {
+            if (prop === "then" || prop === "toJSON") return undefined;
+            return { view: true, edit: true };
+          },
+          has(_target, _prop: string) { return true; },
+        },
+      );
+    }
+    const result: Record<string, { view: boolean; edit: boolean }> = {};
+    for (const p of perms) {
+      const parts = p.split(":");
+      if (parts.length >= 2) {
+        const module = parts[0];
+        const action = parts.slice(1).join(":");
+        if (!result[module]) {
+          result[module] = { view: false, edit: false };
+        }
+        if (action === "read") result[module].view = true;
+        if (action === "write" || action === "delete" || action === "manage_roles") {
+          result[module].edit = true;
+        }
+      }
+    }
+    return result;
+  });
+
   function persistAuth(t: string, u: UserInfo, refreshToken?: string) {
     token.value = t;
     user.value = u;
@@ -104,6 +142,7 @@ export const useAuthStore = defineStore("auth", () => {
     mustChangePassword,
     isAuthenticated,
     isAdmin,
+    modulePermissions,
     logout,
     login,
     fetchUser,

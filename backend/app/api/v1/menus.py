@@ -273,18 +273,9 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
                 "path": "/system/users-orgs",
                 "roles": ["admin", "super_admin", "manager"],
             },
-            {
-                "key": "roles",
-                "label": "角色权限管理",
-                "path": "/system/roles",
-                "roles": ["admin", "super_admin"],
-            },
-            {
-                "key": "menu-permission",
-                "label": "菜单权限管理",
-                "path": "/system/menu-permission",
-                "roles": ["admin", "super_admin"],
-            },
+            # 角色权限管理和菜单权限管理已合并到用户管理页面中的"角色/权限"子模块
+            # /system/roles → redirect /system/users
+            # /system/menu-permissions → redirect /system/users
             {
                 "key": "system-config",
                 "label": "系统配置",

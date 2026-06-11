@@ -105,7 +105,7 @@ try:
     from app.utils.common import StringHelper
     _FUND_CAMEL_MAP = {col.name: StringHelper.to_camel_case(col.name) for col in Fund.__table__.columns}
 except ImportError:
-    # 降级处理：如果没有 StringHelper，使用简单的替换
+    # 降级处理：如果 StringHelper 不可用，使用简单替换
     _FUND_CAMEL_MAP = {
         col.name: col.name.replace('_', ' ').title().replace(' ', '')[:1].lower() + col.name.replace('_', ' ').title().replace(' ', '')[1:]
         for col in Fund.__table__.columns
@@ -283,13 +283,16 @@ def update_fund(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="当前状态不允许修改")
 
     for key, value in data.model_dump(exclude_none=True).items():
-        setattr(fund, key, value)
+        if hasattr(fund, key):
+            setattr(fund, key, value)
+        else:
+            logger.warning("update_fund: skipping unknown field '%s' on Fund(id=%d)", key, fund_id)
         
     db.commit()
     return {"message": "更新成功"}
 
 
-@router.delete("/{fund_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{fund_id}")
 def delete_fund(
     fund_id: int,
     current_user: User = Depends(get_current_user),
@@ -298,13 +301,13 @@ def delete_fund(
     """删除经费记录"""
     require_manager_role(current_user)
     fund = _get_fund_or_404(db, fund_id, current_user)
-    
+
     if fund.status != "pending":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="仅允许删除待审批(pending)状态的经费")
-        
+
     db.delete(fund)
     db.commit()
-    return None
+    return {"message": "删除成功"}
 
 
 # ============================================================================
@@ -419,7 +422,10 @@ def _transition_status(db: Session, fund: Fund, target_status: str, allowed_stat
         )
     fund.status = target_status
     for k, v in kwargs.items():
-        setattr(fund, k, v)
+        if hasattr(fund, k):
+            setattr(fund, k, v)
+        else:
+            logger.warning("_transition_status: skipping unknown field '%s' on Fund(id=%d)", k, fund.id)
     db.commit()
 
 @router.post("/{fund_id}/approve")

@@ -4,7 +4,8 @@
  * 提供统一的错误类型、解析、策略与处理机制
  */
 import { logger } from "@/utils/logger";
-import { ElMessage, ElNotification } from "element-plus";
+import { ElMessage } from "element-plus";
+import { notify } from "@/utils/notify";
 import { getEventBus } from "@/composables/useEventBus";
 
 // ==================== 错误类型枚举 ====================
@@ -251,7 +252,7 @@ export function handleError(
   // 显示消息
   if (showMessage && strategy.shouldNotify) {
     if (strategy.notificationType === "notification") {
-      ElNotification({
+      notify({
         type: "error",
         title: "错误",
         message: appError.message,

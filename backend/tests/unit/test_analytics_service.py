@@ -584,7 +584,7 @@ class TestAnalyticsService:
         q = _make_query_mock()
         q.all.side_effect = [
             [("\u8d35\u5dde",), ("\u4e91\u5357",), (None,)],
-            [("1",), ("2",)],
+            [(True,), (False,)],
             [("\u67d0\u90e8",), (None,)],
         ]
         db.query.return_value = q
@@ -593,7 +593,7 @@ class TestAnalyticsService:
         result = svc.get_filter_options()
 
         assert result["provinces"] == ["\u8d35\u5dde", "\u4e91\u5357"]
-        assert result["tiers"] == ["1", "2"]
+        assert result["tiers"] == ["是", "否"]
         assert result["departments"] == ["\u67d0\u90e8"]
 
     def test_get_filter_options_exception(self):

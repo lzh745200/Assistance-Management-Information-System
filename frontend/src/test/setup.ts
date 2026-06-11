@@ -227,5 +227,13 @@ console.warn = (...args: any[]) => {
 
 // Mock window.open for print tests
 if (typeof window !== "undefined") {
-  vi.spyOn(window, "open").mockReturnValue(null);
+  if (!("open" in window)) {
+    Object.defineProperty(window, "open", {
+      value: vi.fn(() => null),
+      writable: true,
+      configurable: true,
+    });
+  } else {
+    vi.spyOn(window, "open").mockReturnValue(null);
+  }
 }

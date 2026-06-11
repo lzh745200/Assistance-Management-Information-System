@@ -98,7 +98,6 @@ class FundService:
                 joinedload(Fund.project),
                 joinedload(Fund.village),
                 selectinload(Fund.organization),
-                selectinload(Fund.attachments) # 预加载一对多的附件
             )
         )
         return self.db.execute(stmt).scalar_one_or_none()
