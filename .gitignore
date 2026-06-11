@@ -257,3 +257,4 @@ resources/frontend/
 *_snapshot_*/
 *.snapshot_*
 *.db.snapshot_*
+claude-code/

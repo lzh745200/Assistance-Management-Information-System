@@ -17,7 +17,7 @@ def _delete_json(client, url, data):
     return client.request("DELETE", url, json=data)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def _mock_services():
     with mock.patch('app.api.v1.system.audit.AuditService') as as_mock, \
          mock.patch('app.api.v1.system.audit.SecurityEventService') as ses_mock:

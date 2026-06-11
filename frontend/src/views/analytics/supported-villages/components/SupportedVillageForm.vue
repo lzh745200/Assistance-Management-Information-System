@@ -177,6 +177,8 @@
             v-model="selectedFundingYear"
             placeholder="选择年度"
             style="width: 100%"
+            teleported
+            :popper-options="{ strategy: 'fixed' }"
             @change="onFundingYearChange"
           >
             <el-option

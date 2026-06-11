@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   LANGUAGE: "app_language",
   RECENT_PROJECTS: "recent_projects",
   DASHBOARD_LAYOUT: "dashboard_layout",
+  DASHBOARD_ORDER: "dashboard_order",
   SIDEBAR_COLLAPSED: "sidebar_collapsed",
   TABLE_COLUMNS: "table_columns",
   SEARCH_HISTORY: "search_history",
