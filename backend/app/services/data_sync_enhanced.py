@@ -17,27 +17,28 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Set
 
-from sqlalchemy import MetaData, Table, select, text, bindparam
-from sqlalchemy.engine import Row
+from sqlalchemy import Table, select
 
 from app.models.base import Base
-from app.core.database import engine
 
 logger = logging.getLogger(__name__)
 
 # ── SQL 标识符白名单（防注入） ──
 _IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
+
 def _validate_identifier(name: str, context: str = "identifier") -> str:
     if not name or not _IDENTIFIER_PATTERN.match(name):
         raise ValueError(f"非法的 {context}: {name!r}")
     return name
+
 
 def _validate_table_name(table_name: str) -> str:
     name = _validate_identifier(table_name, "table_name")
     if name not in Base.metadata.tables:
         raise ValueError(f"表未注册或不允许访问: {name!r}")
     return name
+
 
 def _get_table_object(table_name: str) -> Table:
     """获取 SQLAlchemy Table 对象，用于构建 2.0 风格的 Select"""
@@ -49,11 +50,13 @@ def _get_table_object(table_name: str) -> Table:
 #  1. HMAC-SHA256 签名 (保持原有优秀设计)
 # ══════════════════════════════════════════════════════════════
 
+
 def sign_data_package(data: bytes, secret: str) -> str:
     """对数据包内容生成HMAC-SHA256签名"""
     if isinstance(secret, str):
         secret = secret.encode("utf-8")
     return hmac.new(secret, data, hashlib.sha256).hexdigest()
+
 
 def verify_data_package(data: bytes, signature: str, secret: str) -> bool:
     """验证数据包HMAC签名（恒定时间比较，防时序攻击）"""
@@ -74,6 +77,7 @@ class FieldConflict:
     local_value: Any
     remote_value: Any
     resolution: str = "manual"  # manual | use_local | use_remote | merge
+
 
 def _normalize_value(val: Any) -> Any:
     """
@@ -100,6 +104,7 @@ def _normalize_value(val: Any) -> Any:
         return val.strip()
     return val
 
+
 class FieldLevelConflictDetector:
     """字段级冲突检测器"""
 
@@ -120,13 +125,13 @@ class FieldLevelConflictDetector:
         common_keys = set(local_index.keys()) & set(remote_index.keys())
 
         for key in common_keys:
-            local = local_index[key]
-            remote = remote_index[key]
-            all_fields = set(local.keys()) | set(remote.keys())
-            
+            local_row = local_index[key]
+            remote_row = remote_index[key]
+            all_fields = set(local_row.keys()) | set(remote_row.keys())
+
             for field_name in sorted(all_fields - ignore_fields):
-                local_val = _normalize_value(local.get(field_name))
-                remote_val = _normalize_value(remote.get(field_name))
+                local_val = _normalize_value(local_row.get(field_name))
+                remote_val = _normalize_value(remote_row.get(field_name))
 
                 # 只有标准化后仍然不相等，才是真正的冲突
                 if local_val != remote_val:
@@ -134,8 +139,8 @@ class FieldLevelConflictDetector:
                         table=table,
                         record_id=key,
                         field=field_name,
-                        local_value=local.get(field_name), # 保留原始值用于展示
-                        remote_value=remote.get(field_name),
+                        local_value=local_row.get(field_name),  # 保留原始值用于展示
+                        remote_value=remote_row.get(field_name),
                     ))
         return conflicts
 
@@ -167,6 +172,7 @@ class ImportDryRunResult:
             "conflict_count": len(self.conflicts),
         }
 
+
 def dry_run_import(
     db_session,
     table_name: str,
@@ -176,7 +182,7 @@ def dry_run_import(
     """预检导入：使用分块 IN 查询，彻底避免大表 OOM"""
     table = _get_table_object(table_name)
     _validate_identifier(key_field, "key_field")
-    
+
     result = ImportDryRunResult(total_rows=len(records))
     if not records:
         return result
@@ -192,7 +198,7 @@ def dry_run_import(
     existing_ids = set()
     chunk_size = 500
     key_col = table.c[key_field]
-    
+
     for i in range(0, len(pending_ids), chunk_size):
         chunk = pending_ids[i:i + chunk_size]
         try:
@@ -221,6 +227,7 @@ def dry_run_import(
 #  4. 增量同步 (SQLAlchemy 2.0 + 修复 SQLite 时区坑)
 # ══════════════════════════════════════════════════════════════
 
+
 def get_changed_records(
     db_session,
     table_name: str,
@@ -240,17 +247,13 @@ def get_changed_records(
 
     if since.tzinfo is not None:
         since = since.astimezone(timezone.utc).replace(tzinfo=None)
-    else:
-        # 假设传入的是本地时间，转为 UTC
-        local_tz = datetime.now(timezone.utc).astimezone().tzinfo
-        if local_tz is not None:
-            since = since.replace(tzinfo=local_tz).astimezone(timezone.utc).replace(tzinfo=None)
-        
+    # else: naive datetime 视为已处于 UTC（SQLite 无时区），无需转换
+
     # 统一格式化为 SQLite 标准格式: YYYY-MM-DD HH:MM:SS
     since_str = since.strftime("%Y-%m-%d %H:%M:%S")
 
     ts_col = table.c[timestamp_field]
-    
+
     # 构建 SQLAlchemy 2.0 Select
     stmt = (
         select(table)

@@ -53,13 +53,17 @@ class FundService:
             joinedload(Fund.village),
             selectinload(Fund.organization)
         )
-        
+
         # 2. 构建过滤条件
         filters = []
-        if village_id: filters.append(Fund.village_id == village_id)
-        if project_id: filters.append(Fund.project_id == project_id)
-        if organization_id: filters.append(Fund.organization_id == organization_id)
-        if status: filters.append(Fund.status == status)
+        if village_id:
+            filters.append(Fund.village_id == village_id)
+        if project_id:
+            filters.append(Fund.project_id == project_id)
+        if organization_id:
+            filters.append(Fund.organization_id == organization_id)
+        if status:
+            filters.append(Fund.status == status)
         if keyword:
             kw = f"%{keyword}%"
             filters.append(
@@ -76,9 +80,9 @@ class FundService:
         data_stmt = base_stmt
         for f in filters:
             data_stmt = data_stmt.where(f)
-            
+
         data_stmt = data_stmt.order_by(Fund.id.desc()).offset((page - 1) * page_size).limit(page_size)
-        
+
         # 使用 unique() 防止 joinedload 产生笛卡尔积重复行
         items = self.db.execute(data_stmt).scalars().unique().all()
 
@@ -114,7 +118,7 @@ class FundService:
             self.db.refresh(fund)
             logger.info("Fund %d created and committed", fund.id)
         else:
-            self.db.flush() # flush 可以生成 ID 但不提交事务
+            self.db.flush()  # flush 可以生成 ID 但不提交事务
             logger.info("Fund %d created (flushed, not committed)", fund.id)
         return fund
 
@@ -123,11 +127,11 @@ class FundService:
         fund = self.get_fund(fund_id)
         if not fund:
             return None
-            
+
         for key, value in kwargs.items():
             if hasattr(fund, key) and value is not None:
                 setattr(fund, key, value)
-                
+
         if auto_commit:
             self.db.commit()
             self.db.refresh(fund)
@@ -140,7 +144,7 @@ class FundService:
         fund = self.get_fund(fund_id)
         if not fund:
             return False
-            
+
         self.db.delete(fund)
         if auto_commit:
             self.db.commit()
@@ -155,19 +159,19 @@ class FundService:
         """
         if not fund_ids:
             return 0
-            
+
         stmt = (
             update(Fund)
             .where(Fund.id.in_(fund_ids))
             .values(status=new_status)
         )
         result = self.db.execute(stmt)
-        
+
         if auto_commit:
             self.db.commit()
         else:
             self.db.flush()
-            
+
         return result.rowcount
 
 
@@ -200,7 +204,7 @@ class FundStatistics:
 
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)
-        for k in ["military_investment", "local_investment", "planned_investment", 
+        for k in ["military_investment", "local_investment", "planned_investment",
                   "total_investment", "utilization_rate"]:
             data[k] = round(data[k], 2)
         return data
@@ -219,13 +223,13 @@ class YearlyFundSummary:
 
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)
-        for k in ["total_military", "total_local", "total_planned", 
+        for k in ["total_military", "total_local", "total_planned",
                   "total_actual", "utilization_rate"]:
             data[k] = round(data[k], 2)
-        
+
         # 递归转换 by_type
         data["by_type"] = {
-            k: v.to_dict() if hasattr(v, "to_dict") else v 
+            k: v.to_dict() if hasattr(v, "to_dict") else v
             for k, v in self.by_type.items()
         }
         return data

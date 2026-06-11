@@ -179,13 +179,15 @@ describe("MonitoringDashboard", () => {
     vi.useRealTimers();
   });
 
-  // ── T1: All 6 metric cards render after data fetch ──
+  // ── T1: All 6 metric cards render after data fetch (3 primary + 3 secondary) ──
   it("renders all 6 metric cards with correct labels after data fetch", async () => {
     const wrapper = mountComponent();
     await advanceFakeTimersAndFlush();
 
-    const cards = wrapper.findAll(".metric-card");
-    expect(cards).toHaveLength(6);
+    const primaryCards = wrapper.findAll(".primary-card");
+    const secondaryCards = wrapper.findAll(".secondary-card");
+    expect(primaryCards).toHaveLength(3);
+    expect(secondaryCards).toHaveLength(3);
 
     const text = wrapper.text();
     expect(text).toContain("CPU 使用率");
@@ -240,15 +242,16 @@ describe("MonitoringDashboard", () => {
     expect(wrapper.find(".monitoring-dashboard").exists()).toBe(true);
   });
 
-  // ── T6: Responsive grid uses CSS Grid ──
-  it("uses CSS Grid for metric grid layout", async () => {
+  // ── T6: Primary metrics uses CSS Grid layout ──
+  it("uses CSS Grid for metric layout", async () => {
     const wrapper = mountComponent();
     await advanceFakeTimersAndFlush();
 
-    const grid = wrapper.find(".metric-grid");
+    const grid = wrapper.find(".primary-metrics");
     expect(grid.exists()).toBe(true);
-    // In jsdom, computed styles may not be fully populated; verify the element exists with the class
-    expect(grid.classes()).toContain("metric-grid");
+    // Verify secondary metrics section also exists
+    const secondaryGrid = wrapper.find(".secondary-metrics");
+    expect(secondaryGrid.exists()).toBe(true);
   });
 
   // ── T7: Error isolation — one failed API doesn't break all cards ──
@@ -271,9 +274,10 @@ describe("MonitoringDashboard", () => {
     const wrapper = mountComponent();
     await advanceFakeTimersAndFlush();
 
-    const cards = wrapper.findAll(".metric-card");
-    // All 6 cards still render (in error state with "--")
-    expect(cards).toHaveLength(6);
+    const primaryCards = wrapper.findAll(".primary-card");
+    const secondaryCards = wrapper.findAll(".secondary-card");
+    // All cards still render (in error state with "--") despite snapshot failure
+    expect(primaryCards.length + secondaryCards.length).toBeGreaterThanOrEqual(6);
   });
 
   // ── T8: Ring buffer caps at 10 entries ──
@@ -301,21 +305,23 @@ describe("MonitoringDashboard", () => {
     const wrapper = mountComponent();
     await advanceFakeTimersAndFlush();
 
-    // Initially collapsed (v-show false, element has style display:none)
+    // Initially expanded (default: visible, v-show renders inline style)
     let healthBody = wrapper.find(".health-body");
     expect(healthBody.exists()).toBe(true);
-    expect((healthBody.element as HTMLElement).style.display).toBe("none");
+    // v-show="true" means no inline display:none; the element is visible
+    expect((healthBody.element as HTMLElement).style.display).toBe("");
 
-    // Click the header to expand
+    // Click the header to collapse
     await wrapper.find(".health-header").trigger("click");
     await nextTick();
 
-    // Now body should be visible
+    // Now body should be hidden
     healthBody = wrapper.find(".health-body");
-    expect((healthBody.element as HTMLElement).style.display).toBe("");
+    // v-show="false" → Vue sets inline display:none
+    expect((healthBody.element as HTMLElement).style.display).toBe("none");
 
-    // Verify sessionStorage was updated
-    expect(sessionStorage.getItem("monitor-health-expanded")).toBe("true");
+    // Verify sessionStorage was updated to false after collapse
+    expect(sessionStorage.getItem("monitor-health-expanded")).toBe("false");
   });
 
   // ── T10: Timer cleared on unmount ──

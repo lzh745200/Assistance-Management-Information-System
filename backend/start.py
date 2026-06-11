@@ -299,9 +299,10 @@ def _verify_frontend_assets():
             os.path.dirname(os.path.abspath(__file__)),
             "..", "scripts", "audit_static_assets.py",
         )
+        # 启动时只做快速校验（跳过 JS 动态 import 扫描），完整审计在 CI/build 时执行
         result = subprocess.run(
-            [_sys.executable, "-u", audit_script, "--dir", frontend_dir],
-            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120,
+            [_sys.executable, audit_script, "--dir", frontend_dir, "--quick"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
         )
         if result.returncode != 0:
             print("=" * 60)

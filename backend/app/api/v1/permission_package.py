@@ -4,18 +4,15 @@
 提供权限配置包的导出/导入功能，用于离线多机协作场景下的权限同步。
 """
 
-import json
 import logging
 import os
-import zipfile
-from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_user, require_admin
+from app.core.security import require_admin
 from app.models.user import User
 from app.schemas.permission_package import (
     PermissionPackageConfirmRequest,

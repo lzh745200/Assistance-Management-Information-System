@@ -20,10 +20,9 @@ import hashlib
 import json
 import logging
 import os
-import shutil
 import zipfile
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
@@ -116,7 +115,11 @@ class PermissionPackageService:
             # 菜单覆盖
             if user.allowed_menus is not None:
                 try:
-                    menus = json.loads(user.allowed_menus) if isinstance(user.allowed_menus, str) else user.allowed_menus
+                    menus = (
+                        json.loads(user.allowed_menus)
+                        if isinstance(user.allowed_menus, str)
+                        else user.allowed_menus
+                    )
                 except (json.JSONDecodeError, TypeError):
                     menus = None
                 if menus is not None:
@@ -251,9 +254,18 @@ class PermissionPackageService:
                     "export_time": manifest.get("export_time"),
                     "roles": roles_data[:20],  # 预览前 20 个角色
                     "role_count": len(roles_data),
-                    "user_role_count": len(json.loads(zf.read("data/user_roles.json").decode("utf-8"))) if "data/user_roles.json" in names else 0,
-                    "user_permission_count": len(json.loads(zf.read("data/user_permissions.json").decode("utf-8"))) if "data/user_permissions.json" in names else 0,
-                    "user_menu_count": len(json.loads(zf.read("data/user_menus.json").decode("utf-8"))) if "data/user_menus.json" in names else 0,
+                    "user_role_count": (
+                        len(json.loads(zf.read("data/user_roles.json").decode("utf-8")))
+                        if "data/user_roles.json" in names else 0
+                    ),
+                    "user_permission_count": (
+                        len(json.loads(zf.read("data/user_permissions.json").decode("utf-8")))
+                        if "data/user_permissions.json" in names else 0
+                    ),
+                    "user_menu_count": (
+                        len(json.loads(zf.read("data/user_menus.json").decode("utf-8")))
+                        if "data/user_menus.json" in names else 0
+                    ),
                     "user_legacy_count": len(user_legacy_data),
                     "warnings": warnings,
                 }
@@ -300,9 +312,18 @@ class PermissionPackageService:
         try:
             with zipfile.ZipFile(file_path, "r") as zf:
                 roles_data = json.loads(zf.read("data/roles.json").decode("utf-8"))
-                user_roles_data = json.loads(zf.read("data/user_roles.json").decode("utf-8")) if "data/user_roles.json" in zf.namelist() else []
-                user_permissions_data = json.loads(zf.read("data/user_permissions.json").decode("utf-8")) if "data/user_permissions.json" in zf.namelist() else []
-                user_menus_data = json.loads(zf.read("data/user_menus.json").decode("utf-8")) if "data/user_menus.json" in zf.namelist() else []
+                user_roles_data = (
+                    json.loads(zf.read("data/user_roles.json").decode("utf-8"))
+                    if "data/user_roles.json" in zf.namelist() else []
+                )
+                user_permissions_data = (
+                    json.loads(zf.read("data/user_permissions.json").decode("utf-8"))
+                    if "data/user_permissions.json" in zf.namelist() else []
+                )
+                user_menus_data = (
+                    json.loads(zf.read("data/user_menus.json").decode("utf-8"))
+                    if "data/user_menus.json" in zf.namelist() else []
+                )
                 user_legacy_data = json.loads(zf.read("data/user_legacy.json").decode("utf-8"))
 
             if overwrite_existing:

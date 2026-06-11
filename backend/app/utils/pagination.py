@@ -47,7 +47,7 @@ def decode_cursor(cursor: Optional[str]) -> Optional[Any]:
         padding = 4 - len(cursor) % 4
         if padding != 4:
             cursor += "=" * padding
-            
+
         payload = base64.urlsafe_b64decode(cursor.encode("utf-8")).decode("utf-8")
         return json.loads(payload).get("v")
     except Exception as e:
@@ -120,7 +120,7 @@ def keyset_paginate(
     # 4. 执行查询 (多取 1 条用于判断是否有下一页)
     stmt = stmt.limit(page_size + 1)
     result = db.execute(stmt)
-    
+
     # 兼容 ORM 对象和标量查询
     try:
         items = result.scalars().unique().all()
@@ -168,7 +168,7 @@ def paginate_query(
 ) -> Dict[str, Any]:
     """
     通用 Offset 分页工具 (SQLAlchemy 2.0 版)。
-    
+
     彻底解决 N+1 查询和 joinedload 导致的分页错乱问题。
     将 Count 查询与 Data 查询分离，确保 Count 不受 eager_loads 影响。
 
@@ -200,18 +200,18 @@ def paginate_query(
     if filters:
         for f in filters:
             data_stmt = data_stmt.where(f)
-            
+
     # 3. 注入 Eager Loading (解决 N+1)
     if eager_loads:
         for opt in eager_loads:
             data_stmt = data_stmt.options(opt)
-            
+
     # 4. 排序与分页
     if order_by is not None:
         data_stmt = data_stmt.order_by(order_by)
-        
+
     data_stmt = data_stmt.offset((page - 1) * page_size).limit(page_size)
-    
+
     # 5. 执行并使用 unique() 去重 (防止 joinedload 产生笛卡尔积重复行)
     items = db.execute(data_stmt).scalars().unique().all()
 

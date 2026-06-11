@@ -57,36 +57,36 @@ def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
         return
 
     cursor = dbapi_connection.cursor()
-    
+
     # 1. 核心日志与一致性
     cursor.execute("PRAGMA journal_mode=WAL")         # 启用 WAL 模式，支持并发读写
     cursor.execute("PRAGMA foreign_keys=ON")          # 强制外键约束
-    
+
     # 2. 性能与安全性平衡
     # WAL 模式下 NORMAL 已经足够安全，无需 FULL（FULL 会严重拖慢写入）
     cursor.execute("PRAGMA synchronous=NORMAL")
-    
+
     # 3. 锁等待与超时 (军用环境硬件可能较慢或存在大事务，放宽至 10 秒)
-    cursor.execute("PRAGMA busy_timeout=10000")       
-    
+    cursor.execute("PRAGMA busy_timeout=10000")
+
     # 4. 内存与缓存调优 (针对现代 PC/工控机，适当放大)
     cursor.execute("PRAGMA cache_size=-64000")        # 64MB 页面缓存 (负数表示 KB)
     cursor.execute("PRAGMA mmap_size=536870912")      # 512MB 内存映射 I/O，加速全表扫描/统计
     cursor.execute("PRAGMA temp_store=MEMORY")        # 临时表/索引存储在内存中
-    
+
     # 5. WAL 维护
     cursor.execute("PRAGMA wal_autocheckpoint=1000")  # 每 1000 页自动 checkpoint
-    
+
     # 6. 查询优化器
     cursor.execute("PRAGMA automatic_index=ON")       # 允许自动创建临时索引
-    
+
     # 7. SQLCipher 加密支持 (零信任安全要求)
     if getattr(settings, "DB_ENCRYPTION_ENABLED", False):
         try:
             # 兼容 PyInstaller 打包后的绝对路径
             base_dir = Path(getattr(settings, "BASE_DIR", Path(__file__).resolve().parent.parent.parent))
             key_file = base_dir / "config" / "db.key"
-            
+
             if key_file.exists():
                 key = key_file.read_text(encoding="utf-8").strip()
                 if key:
@@ -96,7 +96,7 @@ def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
                 logger.warning("未找到数据库加密密钥文件: %s", key_file)
         except Exception as _enc_err:
             logger.error("设置 SQLCipher 密钥失败: %s", _enc_err)
-            
+
     cursor.close()
     logger.debug("SQLite PRAGMAs 初始化完成: WAL, 64MB Cache, 512MB MMAP, 10s Timeout")
 
@@ -112,7 +112,7 @@ def get_db() -> Generator[Session, None, None]:
 
 # ---------------------------------------------------------------------------
 # 数据库写入协调器 (SQLite Write Coordinator)
-# 
+#
 # 设计原则：
 # 1. 短事务 (常规 CRUD)：依赖 WAL + busy_timeout=10000 自动重试，无需加锁，性能最高。
 # 2. 长事务 (.rrs 导入、大批量更新)：使用 exclusive_write() 获取独占锁，防止
@@ -136,7 +136,7 @@ class SQLiteWriteCoordinator:
     def exclusive_write(self, timeout: float = 60.0) -> Iterator[None]:
         """
         长事务独占写上下文管理器。
-        
+
         用法：
             with db_coordinator.exclusive_write():
                 with SessionLocal() as session:
@@ -163,8 +163,8 @@ class SQLiteWriteCoordinator:
         """懒加载启动后台写入线程（仅用于兼容旧的 enqueue 方法）。"""
         if self._worker is None:
             self._worker = threading.Thread(
-                target=self._process_queue, 
-                daemon=True, 
+                target=self._process_queue,
+                daemon=True,
                 name="sqlite-write-worker"
             )
             self._worker.start()
@@ -178,7 +178,7 @@ class SQLiteWriteCoordinator:
         self._ensure_worker()
         result_holder: dict = {"result": None, "error": None, "done": threading.Event()}
         self._queue.put((fn, result_holder))
-        
+
         if not result_holder["done"].wait(timeout):
             raise TimeoutError(f"数据库写入队列操作超时（{timeout}秒）")
         if result_holder["error"]:

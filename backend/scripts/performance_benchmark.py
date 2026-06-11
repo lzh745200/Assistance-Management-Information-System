@@ -113,9 +113,9 @@ def main():
     results.append(benchmark_query(
         "Dashboard-按省份梯队统计",
         """
-            SELECT province, revitalization_tier, COUNT(*) as cnt
+            SELECT province, CASE WHEN is_revitalization_tier THEN '是' ELSE '否' END as tier, COUNT(*) as cnt
             FROM supported_villages
-            GROUP BY province, revitalization_tier
+            GROUP BY province, is_revitalization_tier
         """,
         iterations=iterations,
     ))

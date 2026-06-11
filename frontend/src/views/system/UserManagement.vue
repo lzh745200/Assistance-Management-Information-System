@@ -71,10 +71,6 @@
               <el-icon><Plus /></el-icon>
               新增用户
             </el-button>
-            <el-button type="success" @click="handleBatchGenerate">
-              <el-icon><Key /></el-icon>
-              批量生成账号
-            </el-button>
             <el-dropdown @command="handlePermPackageCommand">
               <el-button type="info">
                 权限包
@@ -403,7 +399,6 @@ const resetPwdDialogVisible = ref(false);
 const permDrawerVisible = ref(false);
 const permDrawerUser = ref<User | null>(null);
 const pendingDialogVisible = ref(false);
-const batchDialogVisible = ref(false);
 const formRef = ref<FormInstance>();
 const currentUser = ref<User | null>(null);
 
@@ -456,16 +451,6 @@ async function loadOrgTree() {
 const resetPwdForm = reactive({
   newPassword: "",
 });
-
-const batchForm = reactive({
-  count: 5,
-  prefix: "user",
-  startNum: 1,
-  role: "operator",
-  department: "",
-});
-
-const generatedAccounts = ref<any[]>([]);
 
 // Permission groups for UI grouping - 与后端 /users/permissions/options 保持一致
 const permissionGroups = [
@@ -644,12 +629,6 @@ const showPendingUsers = async () => {
   } catch {
     ElMessage.error("加载待审核用户失败");
   }
-};
-
-const handleActivateUser = (row: any) => {
-  pendingDialogVisible.value = false;
-  permDrawerUser.value = row;
-  permDrawerVisible.value = true;
 };
 
 const handleSearch = () => {
@@ -839,13 +818,10 @@ const handleImportPermissionPackage = () => {
   input.type = "file";
   input.accept = ".zip";
   input.onchange = async (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) {
-      input.remove();
-      return;
-    }
     importingPermPackage.value = true;
     try {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
       const fd = new FormData();
       fd.append("file", file);
       const res = await request.post("/permission-packages/import", fd, {
@@ -904,53 +880,6 @@ const handleDelete = async (row: any) => {
       ElMessage.error(msg);
     }
   }
-};
-
-const handleBatchGenerate = () => {
-  generatedAccounts.value = [];
-  batchDialogVisible.value = true;
-};
-
-const generateBatchAccounts = async () => {
-  if (!batchForm.prefix) {
-    ElMessage.warning("请输入用户名前缀");
-    return;
-  }
-
-  try {
-    const res = await request.post("/users/batch-create", {
-      count: batchForm.count,
-      prefix: batchForm.prefix,
-      start_num: batchForm.startNum,
-      role: batchForm.role,
-      department: batchForm.department,
-    });
-    const data = res.data?.data || res.data;
-    generatedAccounts.value = data.accounts || [];
-    ElMessage.success(res.data?.message || `成功生成账号`);
-    loadData();
-  } catch (error) {
-    ElMessage.error("生成账号失败");
-  }
-};
-
-const exportAccounts = () => {
-  if (generatedAccounts.value.length === 0) return;
-
-  let csv = "\uFEFF用户名,初始密码,角色,部门\n";
-  generatedAccounts.value.forEach((acc) => {
-    csv += `${acc.username},${acc.password},${acc.role},${acc.department}\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `账号列表_${new Date().toISOString().split("T")[0]}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-
-  ElMessage.success("账号列表已导出");
 };
 
 onMounted(() => {

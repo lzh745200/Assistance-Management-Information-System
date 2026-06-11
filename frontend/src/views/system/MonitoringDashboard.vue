@@ -2,92 +2,127 @@
   <div class="monitoring-dashboard">
     <!-- ── Header ── -->
     <div class="page-header">
-      <h2>系统监控面板</h2>
+      <h2 class="page-title">系统监控面板</h2>
       <div class="header-right">
         <span v-if="lastUpdated" class="last-updated"
-          >更新于 {{ lastUpdated }}</span
+          >🕐 更新于 {{ lastUpdated }}</span
         >
         <div class="health-badge" :class="scoreBadgeClass">
           <span class="health-score-num">{{ healthScore }}</span>
-          <span class="health-score-label">健康分</span>
+          <span class="health-score-label">分</span>
         </div>
         <el-button
           :icon="Refresh"
           :loading="loading"
           size="small"
+          type="primary"
           @click="refreshAll"
-          >刷新</el-button
         >
-        <el-button :icon="Download" size="small" @click="exportData"
-          >导出</el-button
-        >
+          刷新
+        </el-button>
+        <el-button :icon="Download" size="small" @click="exportData">
+          导出
+        </el-button>
       </div>
     </div>
 
-    <!-- ── 6 Metric Cards ── -->
-    <div class="metric-grid">
+    <!-- ── 3 Primary Metric Cards (CPU / Memory / Disk) ── -->
+    <div class="primary-metrics">
       <div
-        v-for="card in metricCards"
+        v-for="card in primaryCards"
         :key="card.key"
-        class="metric-card"
+        class="primary-card"
         :class="['status-' + card.status, { 'card-error': card.error }]"
+        @mouseenter="activePopover = card.key"
+        @mouseleave="activePopover = null"
       >
-        <el-popover
-          placement="bottom"
-          :width="200"
-          trigger="hover"
-          :show-after="300"
-        >
-          <template #reference>
-            <div class="card-inner">
-              <div class="card-icon" :style="{ color: card.iconColor }">
-                {{ card.icon }}
-              </div>
-              <div class="card-body">
-                <div class="card-value">
-                  <span v-if="card.error">--</span>
-                  <span v-else>{{ card.value }}</span>
-                  <span class="card-unit">{{ card.unit }}</span>
-                </div>
-                <el-tag :type="card.tagType" size="small">{{
-                  card.statusText
-                }}</el-tag>
-              </div>
-              <div class="card-footer">{{ card.label }}</div>
-            </div>
-          </template>
-          <div class="popover-content">
-            <div class="sparkline-bars">
-              <div
-                v-for="(pt, i) in card.history"
-                :key="i"
-                class="spark-bar"
-                :style="{
-                  height: Math.max(4, pt * 100) + '%',
-                  backgroundColor: card.sparkColor,
-                }"
-              />
-            </div>
-            <div class="detail-text">
-              <span v-if="card.detail">{{ card.detail }}</span>
-              <span v-if="card.subDetail">{{ card.subDetail }}</span>
-            </div>
-          </div>
-        </el-popover>
+        <div class="primary-card-header">
+          <span class="primary-card-icon">{{ card.icon }}</span>
+          <span class="primary-card-label">{{ card.label }}</span>
+          <el-tag :type="card.tagType" size="small" effect="dark">
+            {{ card.statusText }}
+          </el-tag>
+        </div>
+        <div class="primary-card-value">
+          <span v-if="card.error" class="value-error">--</span>
+          <span v-else class="value-number">{{ card.value }}</span>
+          <span class="value-unit">{{ card.unit }}</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div
+            class="progress-bar-fill"
+            :class="'bar-' + card.status"
+            :style="{ width: Math.min(100, (card.percent || 0)) + '%' }"
+          />
+        </div>
+        <div class="primary-card-detail">{{ card.detail }}</div>
+        <!-- 历史迷你图 -->
+        <div v-if="card.history.length > 0" class="inline-sparkline">
+          <div
+            v-for="(pt, i) in card.history"
+            :key="i"
+            class="spark-dot"
+            :style="{
+              height: Math.max(2, pt * 60) + 'px',
+              opacity: 0.3 + 0.7 * (i / card.history.length),
+            }"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3 Secondary Metric Cards (Network Recv / Network Sent / Threads) ── -->
+    <div class="secondary-metrics">
+      <div
+        v-for="card in secondaryCards"
+        :key="card.key"
+        class="secondary-card"
+        :class="{ 'card-error': card.error }"
+      >
+        <span class="secondary-icon">{{ card.icon }}</span>
+        <div class="secondary-body">
+          <span class="secondary-value">
+            <span v-if="card.error">--</span>
+            <span v-else>{{ card.value }}</span>
+          </span>
+          <span class="secondary-unit">{{ card.unit }}</span>
+          <span class="secondary-label">{{ card.label }}</span>
+        </div>
+        <el-tag :type="card.tagType" size="small" effect="plain">
+          {{ card.statusText }}
+        </el-tag>
       </div>
     </div>
 
     <!-- ── Middle Row: API Stats Chart + System Logs ── -->
     <div class="middle-row">
       <div class="chart-panel">
-        <div class="panel-header">API 请求统计（近24小时）</div>
-        <div ref="chartRef" class="chart-container"></div>
+        <div class="panel-header">
+          <span>📊 API 请求统计（近24小时）</span>
+          <el-tag v-if="apiStats.length === 0" type="warning" size="small">无数据</el-tag>
+        </div>
+        <div ref="chartRef" class="chart-container" />
+        <el-empty
+          v-if="apiStats.length === 0"
+          description="暂无 API 统计数据"
+          :image-size="48"
+          class="chart-empty"
+        />
       </div>
       <div class="log-panel">
-        <div class="panel-header">系统日志</div>
+        <div class="panel-header">
+          <span>📝 系统日志</span>
+          <div class="log-filter">
+            <el-radio-group v-model="logLevelFilter" size="small">
+              <el-radio-button value="all">全部</el-radio-button>
+              <el-radio-button value="warn">警告</el-radio-button>
+              <el-radio-button value="error">错误</el-radio-button>
+            </el-radio-group>
+          </div>
+        </div>
         <div class="log-container">
           <div
-            v-for="log in recentLogs"
+            v-for="log in filteredLogs"
             :key="log.id"
             class="log-item"
             :class="'log-' + log.level"
@@ -97,8 +132,8 @@
             <span class="log-message">{{ log.message }}</span>
           </div>
           <el-empty
-            v-if="recentLogs.length === 0"
-            description="暂无日志"
+            v-if="filteredLogs.length === 0"
+            description="暂无匹配日志"
             :image-size="32"
           />
         </div>
@@ -109,16 +144,13 @@
     <div class="health-section">
       <div class="health-header" @click="healthExpanded = !healthExpanded">
         <span class="toggle-icon">{{ healthExpanded ? "▼" : "▶" }}</span>
-        <span>系统健康检查</span>
+        <span>🩺 系统健康检查</span>
         <el-tag
           :type="
-            healthScore >= 80
-              ? 'success'
-              : healthScore >= 60
-                ? 'warning'
-                : 'danger'
+            healthScore >= 80 ? 'success' : healthScore >= 60 ? 'warning' : 'danger'
           "
           size="small"
+          effect="dark"
           style="margin-left: 12px"
         >
           {{
@@ -131,15 +163,19 @@
                   : "异常"
           }}
         </el-tag>
+        <span class="health-toggle-hint">
+          {{ healthExpanded ? "点击收起" : "点击展开" }}
+        </span>
       </div>
       <div v-show="healthExpanded" class="health-body">
         <div class="check-group">
           <h4>基础检查</h4>
           <div v-for="item in basicChecks" :key="item.name" class="check-item">
-            <el-icon :size="16"
-              ><component
+            <el-icon :size="16">
+              <component
                 :is="item.passed ? CircleCheckFilled : CircleCloseFilled"
-            /></el-icon>
+              />
+            </el-icon>
             <span class="check-name">{{ item.name }}</span>
             <span class="check-detail">{{ item.detail }}</span>
           </div>
@@ -151,10 +187,11 @@
             :key="item.name"
             class="check-item"
           >
-            <el-icon :size="16"
-              ><component
+            <el-icon :size="16">
+              <component
                 :is="item.passed ? CircleCheckFilled : CircleCloseFilled"
-            /></el-icon>
+              />
+            </el-icon>
             <span class="check-name">{{ item.name }}</span>
             <span class="check-detail">{{ item.detail }}</span>
           </div>
@@ -178,8 +215,9 @@
             <el-tag
               :type="dbInfo.integrityOk ? 'success' : 'danger'"
               size="small"
-              >{{ dbInfo.integrityOk ? "通过" : "失败" }}</el-tag
             >
+              {{ dbInfo.integrityOk ? "通过" : "失败" }}
+            </el-tag>
           </div>
           <div class="check-item">
             <span class="check-name">运行时间</span>
@@ -253,8 +291,10 @@ const loading = ref(false);
 const lastUpdated = ref("");
 const healthScore = ref(0);
 const healthExpanded = ref(
-  sessionStorage.getItem("monitor-health-expanded") === "true",
+  sessionStorage.getItem("monitor-health-expanded") !== "false",
 );
+const activePopover = ref<string | null>(null);
+const logLevelFilter = ref<"all" | "warn" | "error">("all");
 
 const snapshot = ref<SnapshotData | null>(null);
 const apiStats = ref<ApiStat[]>([]);
@@ -270,6 +310,12 @@ let chartInstance: echarts.ECharts | null = null;
 
 const configStore = useConfigStore();
 
+// ── Computed: log filtering ──
+const filteredLogs = computed(() => {
+  if (logLevelFilter.value === "all") return recentLogs.value;
+  return recentLogs.value.filter((l) => l.level === logLevelFilter.value);
+});
+
 // ── Computed: dbInfo ──
 const dbInfo = computed(() => {
   const h = healthData.value;
@@ -284,7 +330,7 @@ const dbInfo = computed(() => {
   };
 });
 
-// ── Computed: health checks from data ──
+// ── Computed: health checks ──
 const basicChecks = computed<CheckItem[]>(() => {
   const h = healthData.value;
   return [
@@ -336,7 +382,7 @@ function computeScore(
   snap: SnapshotData | null,
   health: HealthData | null,
 ): number {
-  let score = 20; // base
+  let score = 20;
   if (snap) {
     if (snap.cpu_usage < 70) score += 20;
     else if (snap.cpu_usage < 90) score += 10;
@@ -355,11 +401,10 @@ const scoreBadgeClass = computed(() => {
   return "score-danger";
 });
 
-// ── Metric card definitions ──
+// ── Metric card helpers ──
 interface MetricCard {
   key: string;
   icon: string;
-  iconColor: string;
   value: string;
   unit: string;
   status: string;
@@ -367,9 +412,8 @@ interface MetricCard {
   tagType: "success" | "warning" | "danger" | "info";
   label: string;
   detail: string;
-  subDetail: string;
+  percent: number;
   history: number[];
-  sparkColor: string;
   error: boolean;
 }
 
@@ -382,132 +426,105 @@ function statusInfo(
   statusText: string;
 } {
   const v = invert ? 100 - val : val;
-  if (v >= 90)
-    return { status: "danger", tagType: "danger" as const, statusText: "严重" };
-  if (v >= 70)
-    return {
-      status: "warning",
-      tagType: "warning" as const,
-      statusText: "警告",
-    };
-  return { status: "normal", tagType: "success" as const, statusText: "正常" };
+  if (v >= 90) return { status: "danger", tagType: "danger", statusText: "严重" };
+  if (v >= 70) return { status: "warning", tagType: "warning", statusText: "警告" };
+  return { status: "normal", tagType: "success", statusText: "正常" };
 }
 
-const metricCards = computed<MetricCard[]>(() => {
+function makePrimaryCard(
+  key: string,
+  icon: string,
+  value: string,
+  unit: string,
+  label: string,
+  detail: string,
+  percent: number,
+  history_: number[],
+  si: ReturnType<typeof statusInfo>,
+  hasData: boolean,
+): MetricCard {
+  return {
+    key, icon, value, unit, label, detail, percent,
+    ...si,
+    history: history_,
+    error: !hasData,
+  };
+}
+
+// ── Primary cards (CPU / Memory / Disk) ──
+const primaryCards = computed<MetricCard[]>(() => {
   const s = snapshot.value;
   const hist = history.value;
-  const cpuHist = hist.map((h) => h.cpu / 100);
-  const memHist = hist.map((h) => h.mem / 100);
-  const diskHist = hist.map((h) => h.disk / 100);
+  const hasData = s !== null;
 
-  const cpuSi = statusInfo(s?.cpu_usage ?? 0);
-  const memSi = statusInfo(s?.memory_usage ?? 0);
-  const diskSi = statusInfo(s?.disk_usage ?? 0);
+  return [
+    makePrimaryCard(
+      "cpu", "🖥️",
+      hasData ? s!.cpu_usage.toFixed(1) : "--", "%",
+      "CPU 使用率",
+      hasData ? `${s!.cpu_count} 核 · ${s!.process_threads} 线程` : "",
+      hasData ? s!.cpu_usage : 0,
+      hist.map((h) => h.cpu / 100),
+      statusInfo(s?.cpu_usage ?? 0),
+      hasData,
+    ),
+    makePrimaryCard(
+      "memory", "💾",
+      hasData ? s!.memory_usage.toFixed(1) : "--", "%",
+      "内存使用率",
+      hasData ? `${s!.memory_used_mb.toFixed(0)} / ${s!.memory_total_mb.toFixed(0)} MB` : "",
+      hasData ? s!.memory_usage : 0,
+      hist.map((h) => h.mem / 100),
+      statusInfo(s?.memory_usage ?? 0),
+      hasData,
+    ),
+    makePrimaryCard(
+      "disk", "📀",
+      hasData ? s!.disk_usage.toFixed(1) : "--", "%",
+      "磁盘使用率",
+      hasData ? `${s!.disk_used_gb.toFixed(1)} / ${s!.disk_total_gb.toFixed(1)} GB` : "",
+      hasData ? s!.disk_usage : 0,
+      hist.map((h) => h.disk / 100),
+      statusInfo(s?.disk_usage ?? 0),
+      hasData,
+    ),
+  ];
+});
+
+// ── Secondary cards (Network / Threads) ──
+const secondaryCards = computed<MetricCard[]>(() => {
+  const s = snapshot.value;
+  const hasData = s !== null;
+
   const netRecvSi = statusInfo(
     s ? Math.min(100, (s.network_recv_mb / 100) * 100) : 0,
   );
   const netSentSi = statusInfo(
     s ? Math.min(100, (s.network_sent_mb / 100) * 100) : 0,
   );
-  const thrSi: {
-    status: string;
-    tagType: "success" | "warning";
-    statusText: string;
-  } =
+  const thrSi =
     s?.process_threads != null && s.process_threads > 500
       ? { status: "warning", tagType: "warning" as const, statusText: "偏高" }
       : { status: "normal", tagType: "success" as const, statusText: "正常" };
 
-  const hasData = s !== null;
-
   return [
     {
-      key: "cpu",
-      icon: "🖥️",
-      iconColor: "#409eff",
-      value: hasData ? s!.cpu_usage.toFixed(1) : "--",
-      unit: "%",
-      ...cpuSi,
-      label: "CPU 使用率",
-      detail: hasData ? `${s!.cpu_count} 核` : "",
-      subDetail: hasData ? `进程线程: ${s!.process_threads}` : "",
-      history: cpuHist,
-      sparkColor: "#409eff",
-      error: !hasData,
-    },
-    {
-      key: "memory",
-      icon: "💾",
-      iconColor: "#67c23a",
-      value: hasData ? s!.memory_usage.toFixed(1) : "--",
-      unit: "%",
-      ...memSi,
-      label: "内存使用率",
-      detail: hasData
-        ? `${s!.memory_used_mb.toFixed(0)} / ${s!.memory_total_mb.toFixed(0)} MB`
-        : "",
-      subDetail: "",
-      history: memHist,
-      sparkColor: "#67c23a",
-      error: !hasData,
-    },
-    {
-      key: "disk",
-      icon: "📀",
-      iconColor: "#e6a23c",
-      value: hasData ? s!.disk_usage.toFixed(1) : "--",
-      unit: "%",
-      ...diskSi,
-      label: "磁盘使用率",
-      detail: hasData
-        ? `${s!.disk_used_gb.toFixed(1)} / ${s!.disk_total_gb.toFixed(1)} GB`
-        : "",
-      subDetail: "",
-      history: diskHist,
-      sparkColor: "#e6a23c",
-      error: !hasData,
-    },
-    {
-      key: "net_recv",
-      icon: "📥",
-      iconColor: "#909399",
-      value: hasData ? s!.network_recv_mb.toFixed(1) : "--",
-      unit: "MB",
+      key: "net_recv", icon: "📥",
+      value: hasData ? s!.network_recv_mb.toFixed(1) : "--", unit: "MB",
       ...netRecvSi,
-      label: "网络接收",
-      detail: hasData ? "累计接收" : "",
-      subDetail: "",
-      history: [],
-      sparkColor: "#909399",
-      error: !hasData,
+      label: "网络接收", detail: "累计接收", percent: 0, history: [], error: !hasData,
     },
     {
-      key: "net_sent",
-      icon: "📤",
-      iconColor: "#909399",
-      value: hasData ? s!.network_sent_mb.toFixed(1) : "--",
-      unit: "MB",
+      key: "net_sent", icon: "📤",
+      value: hasData ? s!.network_sent_mb.toFixed(1) : "--", unit: "MB",
       ...netSentSi,
-      label: "网络发送",
-      detail: hasData ? "累计发送" : "",
-      subDetail: "",
-      history: [],
-      sparkColor: "#909399",
-      error: !hasData,
+      label: "网络发送", detail: "累计发送", percent: 0, history: [], error: !hasData,
     },
     {
-      key: "threads",
-      icon: "⚙️",
-      iconColor: "#409eff",
-      value: hasData ? String(s!.process_threads) : "--",
-      unit: "",
+      key: "threads", icon: "⚙️",
+      value: hasData ? String(s!.process_threads) : "--", unit: "",
       ...thrSi,
-      label: "进程线程",
-      detail: hasData ? `${s!.cpu_count} 核 CPU` : "",
-      subDetail: "",
-      history: [],
-      sparkColor: "#409eff",
-      error: !hasData,
+      label: "进程线程", detail: hasData ? `${s!.cpu_count} 核 CPU` : "", percent: 0, history: [], error: !hasData,
     },
   ];
 });
@@ -524,8 +541,6 @@ function pushHistory(cpu: number, mem: number, disk: number) {
 async function fetchSnapshot() {
   try {
     const res = await request.get("/system/monitor/snapshot");
-    // Backend returns { success: true, data: { cpu_usage, ... } }
-    // request.get returns AxiosResponse, so res.data is the JSON body
     const data = (res as any)?.data?.data ?? (res as any)?.data ?? {};
     snapshot.value = data;
     return data as SnapshotData | null;
@@ -540,11 +555,9 @@ async function fetchApiStats() {
     const res = await request.get("/system/monitor/api-stats", {
       params: { hours: 24 },
     });
-    // Backend returns { success: true, data: { top_endpoints: [...] } }
     const data = (res as any)?.data?.data ?? (res as any)?.data ?? {};
-    const endpoints = data?.top_endpoints ?? [];
-    apiStats.value = endpoints;
-    return endpoints as ApiStat[];
+    apiStats.value = data?.top_endpoints ?? [];
+    return apiStats.value;
   } catch {
     apiStats.value = [];
     return [];
@@ -554,7 +567,6 @@ async function fetchApiStats() {
 async function fetchHealth() {
   try {
     const res = await request.get("/system/health/full");
-    // Backend returns { code: 200, data: { db_size_mb, ... } }
     const data = (res as any)?.data?.data ?? (res as any)?.data ?? {};
     healthData.value = data;
     return data as HealthData | null;
@@ -583,46 +595,22 @@ async function refreshAll() {
       console.error("Health fetch failed:", health.reason);
 
     if (snapData) {
-      pushHistory(
-        snapData.cpu_usage,
-        snapData.memory_usage,
-        snapData.disk_usage,
-      );
-      // Generate synthetic logs from data
+      pushHistory(snapData.cpu_usage, snapData.memory_usage, snapData.disk_usage);
       const sid = Date.now();
       const logs: typeof recentLogs.value = [];
       if (snapData.cpu_usage > 80)
-        logs.push({
-          id: sid,
-          time: new Date().toLocaleTimeString(),
-          level: "warn",
-          message: `CPU 使用率偏高: ${snapData.cpu_usage.toFixed(1)}%`,
-        });
+        logs.push({ id: sid, time: new Date().toLocaleTimeString(), level: "warn", message: `CPU 使用率偏高: ${snapData.cpu_usage.toFixed(1)}%` });
       if (snapData.memory_usage > 80)
-        logs.push({
-          id: sid + 1,
-          time: new Date().toLocaleTimeString(),
-          level: "warn",
-          message: `内存使用率偏高: ${snapData.memory_usage.toFixed(1)}%`,
-        });
+        logs.push({ id: sid + 1, time: new Date().toLocaleTimeString(), level: "warn", message: `内存使用率偏高: ${snapData.memory_usage.toFixed(1)}%` });
       if (snapData.disk_usage > 85)
-        logs.push({
-          id: sid + 2,
-          time: new Date().toLocaleTimeString(),
-          level: "error",
-          message: `磁盘使用率过高: ${snapData.disk_usage.toFixed(1)}%`,
-        });
+        logs.push({ id: sid + 2, time: new Date().toLocaleTimeString(), level: "error", message: `磁盘使用率过高: ${snapData.disk_usage.toFixed(1)}%` });
       if (logs.length === 0)
-        logs.push({
-          id: sid,
-          time: new Date().toLocaleTimeString(),
-          level: "info",
-          message: "系统资源使用正常",
-        });
+        logs.push({ id: sid, time: new Date().toLocaleTimeString(), level: "info", message: "系统资源使用正常" });
       recentLogs.value = logs;
     }
 
     healthScore.value = computeScore(snapData, healthVal);
+    nextTick(() => buildChart());
   } finally {
     loading.value = false;
     lastUpdated.value = new Date().toLocaleTimeString();
@@ -663,29 +651,16 @@ function buildChart() {
     ],
     series: [
       {
-        name: "请求数",
-        type: "bar",
-        data: counts,
-        itemStyle: { color: "#409eff" },
-        barMaxWidth: 28,
+        name: "请求数", type: "bar", data: counts,
+        itemStyle: { color: "#409eff" }, barMaxWidth: 28,
       },
       {
-        name: "平均耗时(ms)",
-        type: "line",
-        yAxisIndex: 0,
-        data: avgTimes,
-        lineStyle: { color: "#67c23a" },
-        symbol: "circle",
-        symbolSize: 4,
+        name: "平均耗时(ms)", type: "line", yAxisIndex: 0, data: avgTimes,
+        lineStyle: { color: "#67c23a" }, symbol: "circle", symbolSize: 4,
       },
       {
-        name: "错误率(%)",
-        type: "line",
-        yAxisIndex: 1,
-        data: errorRates,
-        lineStyle: { color: "#f56c6c" },
-        symbol: "diamond",
-        symbolSize: 4,
+        name: "错误率(%)", type: "line", yAxisIndex: 1, data: errorRates,
+        lineStyle: { color: "#f56c6c" }, symbol: "diamond", symbolSize: 4,
       },
     ],
   });
@@ -716,9 +691,7 @@ function exportData() {
 // ── Theme watch ──
 watch(
   () => configStore.theme,
-  () => {
-    nextTick(() => buildChart());
-  },
+  () => { nextTick(() => buildChart()); },
 );
 
 // ── Lifecycle ──
@@ -735,7 +708,6 @@ onUnmounted(() => {
   if (chartInstance) chartInstance.dispose();
 });
 
-// Persist health section expand state
 watch(healthExpanded, (val) => {
   sessionStorage.setItem("monitor-health-expanded", String(val));
 });
@@ -744,52 +716,51 @@ watch(healthExpanded, (val) => {
 <style scoped>
 .monitoring-dashboard {
   padding: 0;
-  color: var(--color-text-primary);
+  min-height: 100%;
+  color: var(--color-text-primary, #303133);
 }
 
-/* ── Header ── */
+/* ═══ Header ═══ */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
-.page-header h2 {
+.page-title {
   margin: 0;
-  font-size: var(--font-size-xl);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 .header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .last-updated {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #909399);
+  white-space: nowrap;
 }
 
+/* Health score badge */
 .health-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: 3px solid;
   flex-shrink: 0;
 }
-.health-badge.score-good {
-  border-color: #67c23a;
-}
-.health-badge.score-warning {
-  border-color: #e6a23c;
-}
-.health-badge.score-danger {
-  border-color: #f56c6c;
-}
+.health-badge.score-good { border-color: #67c23a; }
+.health-badge.score-warning { border-color: #e6a23c; }
+.health-badge.score-danger { border-color: #f56c6c; }
 .health-score-num {
   font-size: 18px;
   font-weight: 700;
@@ -799,173 +770,245 @@ watch(healthExpanded, (val) => {
   font-size: 10px;
   color: var(--color-text-secondary);
 }
-.score-good .health-score-num {
-  color: #67c23a;
-}
-.score-warning .health-score-num {
-  color: #e6a23c;
-}
-.score-danger .health-score-num {
-  color: #f56c6c;
-}
+.score-good .health-score-num { color: #67c23a; }
+.score-warning .health-score-num { color: #e6a23c; }
+.score-danger .health-score-num { color: #f56c6c; }
 
-/* ── Metric Grid ── */
-.metric-grid {
+/* ═══ Primary Metric Cards ═══ */
+.primary-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   margin-bottom: 16px;
 }
-@media (max-width: 768px) {
-  .metric-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media (max-width: 900px) {
+  .primary-metrics { grid-template-columns: 1fr; }
 }
 
-.metric-card {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
-  border-left: 4px solid #67c23a;
-  cursor: pointer;
-  transition:
-    box-shadow var(--transition-fast),
-    transform var(--transition-fast);
+.primary-card {
+  background: var(--color-bg-card, #fff);
+  border-radius: 12px;
+  border: 1px solid var(--color-border-light, #e4e7ed);
+  padding: 20px 24px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
-.metric-card:hover {
-  box-shadow: var(--shadow-card);
+.primary-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
-.metric-card.status-normal {
-  border-left-color: #67c23a;
-}
-.metric-card.status-warning {
-  border-left-color: #e6a23c;
-}
-.metric-card.status-danger {
-  border-left-color: #f56c6c;
-}
-.metric-card.card-error {
-  border-left-color: #c0c4cc;
-  opacity: 0.7;
+.primary-card.status-normal { border-top: 4px solid #67c23a; }
+.primary-card.status-warning { border-top: 4px solid #e6a23c; }
+.primary-card.status-danger { border-top: 4px solid #f56c6c; }
+.primary-card.card-error {
+  border-top-color: #c0c4cc;
+  opacity: 0.65;
 }
 
-.card-inner {
-  padding: 14px 16px 0;
+.primary-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
-.card-icon {
-  font-size: 28px;
+.primary-card-icon {
+  font-size: 24px;
   line-height: 1;
-  margin-bottom: 4px;
 }
-.card-body {
+.primary-card-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.primary-card-value {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
+  gap: 4px;
+  margin-bottom: 12px;
 }
-.card-value {
-  font-size: 28px;
+.value-number {
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--color-text-primary);
-  line-height: 1.2;
+  line-height: 1;
 }
-.card-unit {
-  font-size: 14px;
-  font-weight: 400;
+.value-unit {
+  font-size: 1rem;
   color: var(--color-text-secondary);
-  margin-left: 2px;
 }
-.card-footer {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  padding: 6px 16px 10px;
-  font-weight: 500;
+.value-error {
+  font-size: 2.5rem;
+  color: #c0c4cc;
 }
 
-.popover-content {
-  font-size: 12px;
+/* Progress bar */
+.progress-bar-wrap {
+  height: 6px;
+  background: var(--color-bg-card-dark, #f0f0f0);
+  border-radius: 3px;
+  margin-bottom: 10px;
+  overflow: hidden;
 }
-.sparkline-bars {
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.bar-normal { background: linear-gradient(90deg, #67c23a, #85ce61); }
+.bar-warning { background: linear-gradient(90deg, #e6a23c, #ebb563); }
+.bar-danger { background: linear-gradient(90deg, #f56c6c, #f78989); }
+
+.primary-card-detail {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+/* Inline sparkline */
+.inline-sparkline {
   display: flex;
   align-items: flex-end;
   gap: 3px;
-  height: 40px;
-  margin-bottom: 8px;
+  height: 36px;
+  margin-top: 10px;
 }
-.spark-bar {
+.spark-dot {
   flex: 1;
+  background: #409eff;
   border-radius: 2px 2px 0 0;
   min-width: 4px;
-  transition: height var(--transition-fast);
-}
-.detail-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: var(--color-text-secondary);
+  transition: height 0.4s ease;
 }
 
-/* ── Middle Row ── */
-.middle-row {
+/* ═══ Secondary Metric Cards ═══ */
+.secondary-metrics {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 16px;
 }
 @media (max-width: 768px) {
-  .middle-row {
-    grid-template-columns: 1fr;
-  }
+  .secondary-metrics { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .secondary-metrics { grid-template-columns: 1fr; }
+}
+
+.secondary-card {
+  background: var(--color-bg-card, #fff);
+  border-radius: 10px;
+  border: 1px solid var(--color-border-light, #e4e7ed);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: box-shadow 0.2s ease;
+}
+.secondary-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.secondary-card.card-error {
+  opacity: 0.55;
+}
+.secondary-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.secondary-body {
+  flex: 1;
+  min-width: 0;
+}
+.secondary-value {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--color-text-primary);
+}
+.secondary-unit {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-left: 2px;
+}
+.secondary-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ═══ Middle Row (Chart + Logs) ═══ */
+.middle-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 900px) {
+  .middle-row { grid-template-columns: 1fr; }
 }
 
 .chart-panel,
 .log-panel {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
+  background: var(--color-bg-card, #fff);
+  border-radius: 12px;
+  border: 1px solid var(--color-border-light, #e4e7ed);
   overflow: hidden;
 }
 .panel-header {
-  font-size: var(--font-size-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-text-primary);
-  padding: 12px 16px 0;
+  padding: 14px 18px 0;
 }
-.chart-container {
-  height: 280px;
+.chart-panel { position: relative; }
+.chart-container { height: 280px; width: 100%; }
+.chart-empty {
+  position: absolute;
+  top: 32px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-card, #fff);
+  border-radius: 0 0 12px 12px;
+}
+
+.log-filter {
+  display: flex;
+  align-items: center;
 }
 .log-container {
   max-height: 280px;
   overflow-y: auto;
-  padding: 0 16px 8px;
+  padding: 8px 18px 12px;
 }
 
 .log-item {
   display: flex;
   gap: 8px;
-  padding: 4px 0;
-  font-size: 12px;
-  border-bottom: 1px solid var(--color-border-lighter);
+  padding: 5px 0;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--color-border-lighter, #f5f5f5);
 }
 .log-time {
   color: var(--color-text-secondary);
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 .log-level {
-  font-weight: 600;
+  font-weight: 700;
   flex-shrink: 0;
-  width: 40px;
+  width: 38px;
 }
-.log-info .log-level {
-  color: #409eff;
-}
-.log-warn .log-level {
-  color: #e6a23c;
-}
-.log-error .log-level {
-  color: #f56c6c;
-}
+.log-info .log-level { color: #409eff; }
+.log-warn .log-level { color: #e6a23c; }
+.log-error .log-level { color: #f56c6c; }
 .log-message {
   color: var(--color-text-regular);
   overflow: hidden;
@@ -973,42 +1016,47 @@ watch(healthExpanded, (val) => {
   white-space: nowrap;
 }
 
-/* ── Health Section ── */
+/* ═══ Health Section ═══ */
 .health-section {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-light);
+  background: var(--color-bg-card, #fff);
+  border-radius: 12px;
+  border: 1px solid var(--color-border-light, #e4e7ed);
 }
 .health-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   cursor: pointer;
-  font-size: var(--font-size-md);
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-text-primary);
   user-select: none;
+  transition: background 0.15s;
 }
 .health-header:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-bg-hover, #f5f7fa);
 }
 .toggle-icon {
   font-size: 12px;
   color: var(--color-text-secondary);
+}
+.health-toggle-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-left: auto;
 }
 
 .health-body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
-  padding: 0 16px 16px;
-  border-top: 1px solid var(--color-border-lighter);
-  padding-top: 12px;
+  padding: 14px 18px 18px;
+  border-top: 1px solid var(--color-border-lighter, #f0f0f0);
 }
 .check-group h4 {
   margin: 0 0 8px;
-  font-size: var(--font-size-sm);
+  font-size: 0.82rem;
   color: var(--color-text-secondary);
   font-weight: 500;
 }
@@ -1016,22 +1064,18 @@ watch(healthExpanded, (val) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
 }
 .check-item:nth-child(odd) {
-  background: var(--color-bg-hover);
+  background: var(--color-bg-hover, #f5f7fa);
 }
-.check-item .el-icon {
+.check-item :deep(.el-icon) {
   flex-shrink: 0;
 }
-.check-item .el-icon :deep(svg) {
+.check-item :deep(.el-icon svg) {
   color: #67c23a;
-}
-.check-item:has(.el-icon + :deep(svg[style*="f56c6c"])) .el-icon :deep(svg),
-.check-item .el-icon:has(+ .check-detail:empty) {
-  color: #f56c6c;
 }
 .check-name {
   flex-shrink: 0;
