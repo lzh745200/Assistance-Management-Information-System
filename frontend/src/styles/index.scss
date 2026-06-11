@@ -5,6 +5,7 @@
 @use "./components/layout.scss" as *;
 @use "./components/table.scss" as *;
 @use "./components/form.scss" as *;
+@use "./components/prompt.scss" as *;
 
 /* 兜底：保证根节点可见，避免空白页（CSS 变量未加载时仍能显示） */
 html,
@@ -155,18 +156,7 @@ body {
   --el-box-shadow-light: 0 2px 12px rgba(0,0,0,.06);
 }
 
-/* Element Plus 消息/弹窗使用默认定位（顶部居中），由 main.ts JS 处理居中 */
-.el-message--success { background-color: var(--color-success-light); border-color: var(--color-success); }
-
-.el-message--error {
-  background-color: var(--color-danger-light);
-  border-color: var(--color-danger);
-}
-
-.el-message--warning {
-  background-color: var(--color-warning-light);
-  border-color: var(--color-warning);
-}
+/* Element Plus 消息/弹窗居中定位 + 外观美化 → 详见 styles/components/prompt.scss */
 
 /* ── 全局下拉框修复：确保 el-select 足够宽，选中值可见 ── */
 .el-select {

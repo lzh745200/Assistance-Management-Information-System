@@ -1,11 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
 
-const mockPost = vi.fn()
-const mockPut = vi.fn()
-const mockDelete = vi.fn()
-const mockPatch = vi.fn()
-const mockRequest = { post: mockPost, put: mockPut, delete: mockDelete, patch: mockPatch }
-vi.mock('@/api/request', () => ({ default: mockRequest }))
+const { mockPost, mockPut, mockDelete, mockPatch } = vi.hoisted(() => ({
+  mockPost: vi.fn(),
+  mockPut: vi.fn(),
+  mockDelete: vi.fn(),
+  mockPatch: vi.fn(),
+}))
+vi.mock('@/api/request', () => ({
+  default: { post: mockPost, put: mockPut, delete: mockDelete, patch: mockPatch },
+}))
 
 import { createUser, updateUser, deleteUser, resetPassword, updateUserStatus } from '@/api/mutations/user'
 

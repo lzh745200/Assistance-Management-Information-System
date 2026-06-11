@@ -99,7 +99,7 @@ class DataPackageService:
     # 1. 导出功能
     # ========================================================================
 
-    def export_package(
+    async def export_package(
         self,
         org_id: int,
         data_types: List[str],
@@ -107,7 +107,7 @@ class DataPackageService:
         description: str = None,
         package_type: PackageType = PackageType.report,
     ) -> DataPackageExportResult:
-        """导出数据包 (同步方法)"""
+        """导出数据包"""
         org = self.org_service.get_organization(org_id)
         if not org:
             raise BusinessError(f"组织不存在: {org_id}")
@@ -204,9 +204,9 @@ class DataPackageService:
     # 2. 导入功能
     # ========================================================================
 
-    def import_package(self, file_path: str, file_name: str, org_id: int, imported_by: int) -> DataPackageImportResult:
+    async def import_package(self, file_path: str, file_name: str, org_id: int, imported_by: int) -> DataPackageImportResult:
         """导入数据包 (预览阶段，同步方法)"""
-        validation = self.validate_package(file_path)
+        validation = await self.validate_package(file_path)
         if not validation.is_valid:
             package = self._create_package_record(
                 file_path, file_name, org_id, imported_by,
@@ -223,7 +223,7 @@ class DataPackageService:
         permanent_path = os.path.join(self.upload_dir, f"{package_code}.zip")
         shutil.copy(file_path, permanent_path)
 
-        preview = self.preview_package_data_from_file(permanent_path)
+        preview = await self.preview_package_data_from_file(permanent_path)
 
         manifest_dict = None
         if validation.manifest:
@@ -247,7 +247,7 @@ class DataPackageService:
             preview=preview, validation=validation,
         )
 
-    def validate_package(self, file_path: str) -> DataPackageValidationResult:
+    async def validate_package(self, file_path: str) -> DataPackageValidationResult:
         """验证数据包 (同步方法)"""
         errors = []
         warnings = []
@@ -301,14 +301,14 @@ class DataPackageService:
 
         return DataPackageValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings, manifest=manifest)
 
-    def preview_package_data(self, package_id: int) -> List[DataPackagePreviewData]:
+    async def preview_package_data(self, package_id: int) -> List[DataPackagePreviewData]:
         """预览导入的数据 (同步方法)"""
         package = self.db.query(DataPackage).filter(DataPackage.id == package_id).first()
         if not package or not package.file_path:
             return []
-        return self.preview_package_data_from_file(package.file_path)
+        return await self.preview_package_data_from_file(package.file_path)
 
-    def preview_package_data_from_file(self, file_path: str, sample_size: int = 10) -> List[DataPackagePreviewData]:
+    async def preview_package_data_from_file(self, file_path: str, sample_size: int = 10) -> List[DataPackagePreviewData]:
         """从文件预览数据 (同步方法)"""
         preview_list = []
         try:
@@ -329,7 +329,7 @@ class DataPackageService:
             logger.error(f"Error previewing package data from {file_path}: {e}", exc_info=True)
         return preview_list
 
-    def confirm_import(
+    async def confirm_import(
         self, package_id: int, confirmed_by: int, overwrite_existing: bool = False, selected_types: List[str] = None
     ) -> DataPackageConfirmResult:
         """确认导入数据 (核心重构：使用 Bulk Upsert 和独占锁)"""
@@ -466,7 +466,7 @@ class DataPackageService:
     # 3. 加密导入导出功能
     # ========================================================================
 
-    def export_encrypted_package(
+    async def export_encrypted_package(
         self, org_id: int, data_types: List[str], export_by: int,
         password: Optional[str] = None, description: str = None,
         package_type: PackageType = PackageType.report,
@@ -474,7 +474,7 @@ class DataPackageService:
         """导出加密数据包 (同步方法)"""
         from app.services.password_encryption_service import PasswordEncryptionService
 
-        export_result = self.export_package(org_id, data_types, export_by, description, package_type)
+        export_result = await self.export_package(org_id, data_types, export_by, description, package_type)
 
         if password:
             original_file_path = export_result.file_path
@@ -514,11 +514,11 @@ class DataPackageService:
 
         return export_result
 
-    def import_encrypted_package(
+    async def import_encrypted_package(
         self, file_path: str, file_name: str, org_id: int,
         imported_by: int, password: Optional[str] = None,
     ) -> DataPackageImportResult:
-        """导入加密数据包（预览阶段，同步方法）"""
+        """导入加密数据包（预览阶段）"""
         from app.services.password_encryption_service import InvalidPasswordError, PasswordEncryptionService
 
         decrypted_file_path = file_path
@@ -546,7 +546,7 @@ class DataPackageService:
                 except AttributeError:
                     raise BusinessError("加密文件解析失败，请确保使用最新的加密组件或提供完整的加密参数")
 
-            return self.import_package(decrypted_file_path, file_name, org_id, imported_by)
+            return await self.import_package(decrypted_file_path, file_name, org_id, imported_by)
 
         finally:
             if temp_decrypted_path and os.path.exists(temp_decrypted_path):
@@ -555,7 +555,7 @@ class DataPackageService:
                 except OSError:
                     logger.warning(f"Failed to delete temp decrypted file: {temp_decrypted_path}")
 
-    def decrypt_and_preview_package(self, package_id: int, password: str) -> DataPackageImportResult:
+    async def decrypt_and_preview_package(self, package_id: int, password: str) -> DataPackageImportResult:
         """解密并预览数据包 (同步方法)"""
         from app.services.password_encryption_service import InvalidPasswordError, PasswordEncryptionService
 
@@ -573,7 +573,7 @@ class DataPackageService:
                 encrypted_file_path, password, package.encryption_salt,
                 package.encryption_iterations, temp_decrypted_path,
             )
-            validation_result = self.validate_package(temp_decrypted_path)
+            validation_result = await self.validate_package(temp_decrypted_path)
             if not validation_result.is_valid:
                 raise PackageValidationError([e.message for e in validation_result.errors])
 
@@ -591,7 +591,7 @@ class DataPackageService:
                 except OSError:
                     pass
 
-    def confirm_import_with_conflict_resolution(
+    async def confirm_import_with_conflict_resolution(
         self, package_id: int, conflict_strategy: str = "KEEP_BOTH", password: Optional[str] = None
     ) -> Dict[str, Any]:
         """确认导入并处理冲突 (补全并优化)"""

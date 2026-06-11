@@ -144,6 +144,11 @@
 </template>
 
 <script setup lang="ts">
+// ================================================================
+// DEPRECATED: 菜单权限配置功能已集成到 UserManagement.vue 中
+// 通过用户管理页面的"角色/权限" → "菜单可见性" Tab 访问
+// 本文件保留以供参考，不再独立路由访问（/system/menu-permissions → redirect /system/users）
+// ================================================================
 import { ref, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { MENU_CONFIG, getAllMenuKeys } from "@/config/menu-config";

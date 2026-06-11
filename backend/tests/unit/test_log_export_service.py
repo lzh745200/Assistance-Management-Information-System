@@ -182,6 +182,7 @@ class TestGenerateDiagnosticReport:
             assert "数据库检查失败" in content
 
     def test_pkg_resources_failure(self, service, tmp_path):
+        pytest.importorskip("pkg_resources", reason="pkg_resources not installed")
         bad_ws = MagicMock()
         bad_ws.__iter__.side_effect = Exception("pkg fail")
         with patch("pkg_resources.working_set", bad_ws):

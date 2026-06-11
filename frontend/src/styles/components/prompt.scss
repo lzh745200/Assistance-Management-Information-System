@@ -1,0 +1,339 @@
+/**
+ * 系统提示页面统一样式 —— ElMessage / ElNotification / ElMessageBox
+ *
+ * 设计目标:
+ *   1. 居中定位 —— 由 main.ts DOM 注入提供（position:fixed + translate(-50%,-50%)）
+ *   2. 外观美化 —— 色条、阴影、渐变、圆角（本文件）
+ *   3. 关闭按钮 —— 始终可见，hover 交互反馈
+ *   4. 入场动画 —— fade + scale 柔和出现
+ *   5. 军事主题 —— 使用项目 CSS 变量，跟随主题切换
+ *
+ * 注意: 定位规则在 main.ts 第零层 DOM 注入中，不要在此重复。
+ *       .el-notification / .el-message 均为 document.body 的直接子元素。
+ *       .el-notification__group 是每个通知的内部内容容器，不是通知的父级包裹层。
+ */
+
+:root {
+  /* 弹窗入场缓动曲线 —— 统一 ElMessage / ElNotification / ElMessageBox 动效 */
+  --animation-prompt-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ================================================================
+   1. ElMessage —— 轻量操作反馈
+   ================================================================ */
+
+.el-message {
+  /* 尺寸约束 */
+  min-width: 300px;
+  max-width: 520px;
+
+  /* 外观美化 */
+  border-radius: 10px;
+  padding: 14px 20px;
+  box-shadow: var(--shadow-dialog, 0 8px 24px rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--el-border-color-lighter, #e2e8f0);
+
+  /* 入场动画 */
+  animation: promptFadeIn 0.28s var(--animation-prompt-easing);
+
+  /* 文字样式 */
+  font-size: 14px;
+  line-height: 1.6;
+
+  /* 关闭按钮 */
+  .el-message__closeBtn {
+    font-size: 16px;
+    color: var(--color-text-secondary, #64748b);
+    opacity: 0.7;
+    transition: opacity 0.2s, color 0.2s;
+
+    &:hover {
+      opacity: 1;
+      color: var(--color-text-primary, #1e293b);
+    }
+  }
+}
+
+/* 各类型左侧图标边距 */
+.el-message .el-message__icon {
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+/* 类型色条 —— 左侧色带 + 渐变背景（使用 Element Plus 主题变量）
+   ElMessage 和 ElNotification 共享同色渐变，仅 border-left 宽度不同 */
+.el-message--success, .el-notification--success {
+  border-left-style: solid;
+  border-left-color: var(--color-success, #2ecc71);
+  background: linear-gradient(135deg, var(--el-color-success-light-9, #f5fdf7) 0%, #ffffff 100%);
+}
+
+.el-message--error, .el-notification--error {
+  border-left-style: solid;
+  border-left-color: var(--color-danger, #e63946);
+  background: linear-gradient(135deg, var(--el-color-danger-light-9, #fef6f5) 0%, #ffffff 100%);
+}
+
+.el-message--warning, .el-notification--warning {
+  border-left-style: solid;
+  border-left-color: var(--color-warning, #f39c12);
+  background: linear-gradient(135deg, var(--el-color-warning-light-9, #fefaf3) 0%, #ffffff 100%);
+}
+
+.el-message--info, .el-notification--info {
+  border-left-style: solid;
+  border-left-color: var(--color-info, #5a7d6a);
+  background: linear-gradient(135deg, var(--el-color-info-light-9, #f7faf8) 0%, #ffffff 100%);
+}
+
+/* border-left 宽度差异: ElMessage 4px, ElNotification 5px */
+.el-message--success, .el-message--error, .el-message--warning, .el-message--info {
+  border-left-width: 4px;
+}
+.el-notification--success, .el-notification--error, .el-notification--warning, .el-notification--info {
+  border-left-width: 5px;
+}
+
+/* ================================================================
+   2. ElNotification —— 重要通知
+      每个 .el-notification 由 main.ts 独立居中于视口。
+      .el-notification__group 是内部内容容器，仅用于内容排版。
+   ================================================================ */
+
+/* 内部内容组 —— 居中标题/正文/关闭按钮 */
+.el-notification__group {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px;
+}
+
+.el-notification {
+  /* 尺寸约束 */
+  min-width: 360px;
+  max-width: 560px;
+  width: auto !important;
+
+  /* 外观美化 */
+  border-radius: 12px;
+  padding: 18px 24px;
+  box-shadow: var(--shadow-dialog, 0 8px 24px rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--el-border-color-lighter, #e2e8f0);
+
+  /* 入场动画 */
+  animation: promptFadeIn 0.32s var(--animation-prompt-easing);
+
+  /* 关闭按钮 */
+  .el-notification__closeBtn {
+    top: 16px;
+    right: 16px;
+    font-size: 18px;
+    color: var(--color-text-secondary, #64748b);
+    opacity: 0.7;
+    transition: opacity 0.2s, color 0.2s;
+
+    &:hover {
+      opacity: 1;
+      color: var(--color-text-primary, #1e293b);
+    }
+  }
+
+  /* 标题 */
+  .el-notification__title {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--color-text-primary, #1e293b);
+    margin-bottom: 6px;
+    padding-right: 24px; /* 为关闭按钮留出空间 */
+  }
+
+  /* 内容 */
+  .el-notification__content {
+    font-size: 14px;
+    color: var(--color-text-regular, #475569);
+    line-height: 1.6;
+  }
+}
+
+/* 通知类型色条 —— 已合并到上方 .el-message--* 共用块中 */
+
+/* ================================================================
+   3. ElMessageBox —— 确认/警告弹窗
+   ================================================================ */
+
+.el-message-box {
+  /* 尺寸约束 */
+  width: 440px !important;
+  max-width: calc(100vw - 40px);
+
+  /* 外观美化 */
+  border-radius: 14px;
+  padding-bottom: 0; /* footer 自己处理内边距 */
+  box-shadow: var(--shadow-dialog, 0 8px 24px rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--el-border-color-lighter, #e2e8f0);
+  background: #ffffff;
+
+  /* 入场动画 */
+  animation: promptFadeIn 0.3s var(--animation-prompt-easing);
+
+  /* Header */
+  .el-message-box__header {
+    padding: 20px 24px 0;
+    border-bottom: none;
+
+    .el-message-box__title {
+      font-weight: 700;
+      font-size: 17px;
+      color: var(--color-text-primary, #1e293b);
+    }
+
+    /* 右上角关闭按钮 (×) */
+    .el-message-box__headerbtn {
+      top: 18px;
+      right: 20px;
+      font-size: 18px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      color: var(--color-text-secondary, #64748b);
+      transition: background 0.2s, color 0.2s;
+
+      &:hover {
+        background: var(--el-bg-color-page, #f0f4f0);
+        color: var(--color-text-primary, #1e293b);
+      }
+    }
+  }
+
+  /* Body */
+  .el-message-box__content {
+    padding: 16px 24px 8px;
+    font-size: 15px;
+    color: var(--color-text-regular, #475569);
+    line-height: 1.7;
+  }
+
+  /* Footer (action buttons) */
+  .el-message-box__btns {
+    padding: 12px 24px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    .el-button {
+      min-width: 80px;
+      border-radius: 8px;
+      font-weight: 500;
+      padding: 9px 20px;
+      transition: all 0.2s;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+
+  /* Input 区域（prompt 类弹窗） */
+  .el-message-box__input {
+    padding-top: 12px;
+
+    .el-input__inner {
+      border-radius: 8px;
+    }
+  }
+}
+
+/* ================================================================
+   4. 动画关键帧
+      注: promptFadeIn 包含 translate(-50%,-50%) 以保持居中定位
+   ================================================================ */
+
+@keyframes promptFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* ================================================================
+   5. 响应式适配
+      断点对齐 tokens.scss: --breakpoint-sm: 576px / --breakpoint-md: 768px
+   ================================================================ */
+
+/* 小屏幕 (< sm, < 576px) */
+@media (max-width: 575px) {
+  .el-message {
+    min-width: auto;
+    max-width: calc(100vw - 32px);
+    width: calc(100vw - 32px);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .el-notification {
+    min-width: auto;
+    max-width: calc(100vw - 32px);
+    width: calc(100vw - 32px);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+
+  .el-message-box {
+    width: calc(100vw - 32px) !important;
+
+    .el-message-box__header {
+      padding: 16px 18px 0;
+    }
+
+    .el-message-box__content {
+      padding: 12px 18px 4px;
+    }
+
+    .el-message-box__btns {
+      padding: 10px 18px 16px;
+    }
+  }
+}
+
+/* 中等屏幕 (sm ~ md, 576px ~ 768px) */
+@media (min-width: 576px) and (max-width: 768px) {
+  .el-notification {
+    max-width: 480px;
+  }
+
+  .el-message {
+    max-width: 440px;
+  }
+}
+
+/* ================================================================
+   6. 可访问性增强
+   ================================================================ */
+
+/* 关闭按钮 focus 可见 */
+.el-message__closeBtn:focus-visible,
+.el-notification__closeBtn:focus-visible,
+.el-message-box__headerbtn:focus-visible {
+  outline: 2px solid var(--color-primary, #2d6a4f);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 高对比度模式下保持边框 */
+@media (prefers-contrast: high) {
+  .el-message,
+  .el-notification,
+  .el-message-box {
+    border-width: 2px;
+  }
+}

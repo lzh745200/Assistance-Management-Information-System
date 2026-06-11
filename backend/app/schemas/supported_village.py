@@ -54,11 +54,10 @@ class SupportedVillageUpdate(BaseModel):
     is_ethnic_area: Optional[bool] = None
     is_revolutionary_area: Optional[bool] = None
     is_key_county: Optional[bool] = None
-    revitalization_tier: Optional[str] = Field(None, max_length=50, description="振兴发展梯队")
+    is_revitalization_tier: Optional[bool] = None
     is_provincial_demo: Optional[bool] = None
     is_hundred_village_demo: Optional[bool] = None
     is_tiered_development: Optional[bool] = None
-    tiered_development_level: Optional[str] = Field(None, max_length=50, description="梯次振兴发展等级")
     is_cross_province: Optional[bool] = None
     is_cross_city: Optional[bool] = None
     is_cross_unit_cooperation: Optional[bool] = None
