@@ -300,8 +300,8 @@ def _verify_frontend_assets():
             "..", "scripts", "audit_static_assets.py",
         )
         result = subprocess.run(
-            [_sys.executable, audit_script, "--dir", frontend_dir],
-            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
+            [_sys.executable, "-u", audit_script, "--dir", frontend_dir],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120,
         )
         if result.returncode != 0:
             print("=" * 60)

@@ -1,10 +1,6 @@
 <template>
   <div class="permission-tree-panel">
-    <el-alert
-      type="info"
-      :closable="false"
-      style="margin-bottom: 16px"
-    >
+    <el-alert type="info" :closable="false" style="margin-bottom: 16px">
       为当前用户配置各功能模块的查看和编辑权限。
       无查看权限则模块不可见；仅有查看权限则为只读模式。
     </el-alert>
@@ -91,7 +87,11 @@ function buildModuleList(perms: string[]) {
   });
 }
 
-function togglePermission(module: string, level: "view" | "edit", value: boolean) {
+function togglePermission(
+  module: string,
+  level: "view" | "edit",
+  value: boolean,
+) {
   const codes = new Set(props.permissions);
 
   if (level === "view") {

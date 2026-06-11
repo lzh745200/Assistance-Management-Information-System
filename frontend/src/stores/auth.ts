@@ -49,7 +49,9 @@ export const useAuthStore = defineStore("auth", () => {
             if (prop === "then" || prop === "toJSON") return undefined;
             return { view: true, edit: true };
           },
-          has(_target, _prop: string) { return true; },
+          has(_target, _prop: string) {
+            return true;
+          },
         },
       );
     }
@@ -63,7 +65,11 @@ export const useAuthStore = defineStore("auth", () => {
           result[module] = { view: false, edit: false };
         }
         if (action === "read") result[module].view = true;
-        if (action === "write" || action === "delete" || action === "manage_roles") {
+        if (
+          action === "write" ||
+          action === "delete" ||
+          action === "manage_roles"
+        ) {
           result[module].edit = true;
         }
       }

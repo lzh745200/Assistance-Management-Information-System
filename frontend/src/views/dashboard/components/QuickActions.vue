@@ -4,7 +4,10 @@
     <div class="action-group">
       <span class="group-label">核心业务</span>
       <div class="action-grid">
-        <button class="action-btn primary" @click="pushSafe('/supported-villages')">
+        <button
+          class="action-btn primary"
+          @click="pushSafe('/supported-villages')"
+        >
           <span class="btn-icon">🏘️</span>
           <span class="btn-text">帮扶村管理</span>
         </button>
@@ -35,7 +38,10 @@
     <div class="action-group">
       <span class="group-label">数据与同步</span>
       <div class="action-grid">
-        <button class="action-btn secondary" @click="pushSafe('/data-analysis')">
+        <button
+          class="action-btn secondary"
+          @click="pushSafe('/data-analysis')"
+        >
           <span class="btn-icon">📊</span>
           <span class="btn-text">数据分析</span>
         </button>
@@ -43,7 +49,10 @@
           <span class="btn-icon">📥</span>
           <span class="btn-text">数据导入</span>
         </button>
-        <button class="action-btn secondary" @click="pushSafe('/export/report')">
+        <button
+          class="action-btn secondary"
+          @click="pushSafe('/export/report')"
+        >
           <span class="btn-icon">📤</span>
           <span class="btn-text">报表导出</span>
         </button>
@@ -55,7 +64,10 @@
           <span class="btn-icon">✏️</span>
           <span class="btn-text">综合录入</span>
         </button>
-        <button class="action-btn secondary" @click="pushSafe('/work-calendar')">
+        <button
+          class="action-btn secondary"
+          @click="pushSafe('/work-calendar')"
+        >
           <span class="btn-icon">📅</span>
           <span class="btn-text">工作日历</span>
         </button>
@@ -78,7 +90,10 @@
           <span class="btn-icon">💬</span>
           <span class="btn-text">消息中心</span>
         </button>
-        <button class="action-btn secondary" @click="pushSafe('/report/templates')">
+        <button
+          class="action-btn secondary"
+          @click="pushSafe('/report/templates')"
+        >
           <span class="btn-icon">📄</span>
           <span class="btn-text">报表模板</span>
         </button>
@@ -100,29 +115,55 @@
           @click="$emit('backup')"
         >
           <span class="btn-icon">💾</span>
-          <span class="btn-text">{{ backingUp ? "备份中..." : "一键备份" }}</span>
+          <span class="btn-text">{{
+            backingUp ? "备份中..." : "一键备份"
+          }}</span>
         </button>
-        <button v-if="isAdmin" class="action-btn restore" @click="$emit('restore')">
+        <button
+          v-if="isAdmin"
+          class="action-btn restore"
+          @click="$emit('restore')"
+        >
           <span class="btn-icon">🔧</span>
           <span class="btn-text">恢复数据</span>
         </button>
-        <button v-if="isManager || isAdmin" class="action-btn secondary" @click="pushSafe('/system/monitoring')">
+        <button
+          v-if="isManager || isAdmin"
+          class="action-btn secondary"
+          @click="pushSafe('/system/monitoring')"
+        >
           <span class="btn-icon">🖥️</span>
           <span class="btn-text">系统监控</span>
         </button>
-        <button v-if="isAdmin" class="action-btn secondary" @click="pushSafe('/system/users')">
+        <button
+          v-if="isAdmin"
+          class="action-btn secondary"
+          @click="pushSafe('/system/users')"
+        >
           <span class="btn-icon">👥</span>
           <span class="btn-text">用户管理</span>
         </button>
-        <button v-if="isAdmin" class="action-btn secondary" @click="pushSafe('/system/config')">
+        <button
+          v-if="isAdmin"
+          class="action-btn secondary"
+          @click="pushSafe('/system/config')"
+        >
           <span class="btn-icon">⚙️</span>
           <span class="btn-text">系统配置</span>
         </button>
-        <button v-if="isManager" class="action-btn secondary" @click="pushSafe('/system/audit')">
+        <button
+          v-if="isManager"
+          class="action-btn secondary"
+          @click="pushSafe('/system/audit')"
+        >
           <span class="btn-icon">📋</span>
           <span class="btn-text">审计日志</span>
         </button>
-        <button v-if="isAdmin" class="action-btn secondary" @click="pushSafe('/admin/machine-code')">
+        <button
+          v-if="isAdmin"
+          class="action-btn secondary"
+          @click="pushSafe('/admin/machine-code')"
+        >
           <span class="btn-icon">🔑</span>
           <span class="btn-text">机器码管理</span>
         </button>

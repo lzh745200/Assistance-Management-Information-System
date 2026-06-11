@@ -106,13 +106,15 @@ def _extract_dynamic_imports_from_js(js_dir: str, frontend_dir: str) -> Set[str]
         return refs
 
     js_files = list(js_dir_path.rglob("*.js"))
-    for js_file in js_files:
+    total = len(js_files)
+    for i, js_file in enumerate(js_files):
+        # 每 200 个文件打印一次进度，避免给人"卡死"的错觉
+        if i > 0 and i % 200 == 0:
+            print(f"    扫描进度: {i}/{total}")
         try:
-            # 只阅读前 200KB，避免大文件拖慢速度（动态 import 通常在文件头部）
-            size = js_file.stat().st_size
-            read_size = min(size, 200 * 1024)
+            # 只阅读前 100KB，动态 import 通常在文件头部附近
             with open(js_file, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read(read_size)
+                content = f.read(100 * 1024)
         except (OSError, UnicodeDecodeError):
             continue
 

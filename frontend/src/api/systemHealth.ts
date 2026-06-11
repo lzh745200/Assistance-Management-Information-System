@@ -17,9 +17,13 @@ export const systemHealthApi = {
   getTableStats: () =>
     api.get("/system/health/table-stats").catch(() => fallbackTableStats),
   runIntegrityCheck: () =>
-    api.post("/system/health/integrity-check").catch(() => fallbackIntegrityCheck),
+    api
+      .post("/system/health/integrity-check")
+      .catch(() => fallbackIntegrityCheck),
   runWalCheckpoint: () =>
-    api.post("/system/health/wal-checkpoint").catch(() => fallbackIntegrityCheck),
+    api
+      .post("/system/health/wal-checkpoint")
+      .catch(() => fallbackIntegrityCheck),
   runVacuum: () =>
     api.post("/system/health/vacuum").catch(() => fallbackIntegrityCheck),
 };

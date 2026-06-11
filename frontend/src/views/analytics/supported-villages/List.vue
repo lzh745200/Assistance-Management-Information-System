@@ -184,11 +184,7 @@
         </el-table-column>
         <el-table-column label="振兴属性" width="180">
           <template #default="{ row }">
-            <el-tag
-              v-if="row.isRevitalizationTier"
-              size="small"
-              type="danger"
-            >
+            <el-tag v-if="row.isRevitalizationTier" size="small" type="danger">
               振兴梯队
             </el-tag>
             <el-tag v-if="row.isProvincialDemo" size="small" type="success"

@@ -1,10 +1,6 @@
 <template>
   <div class="menu-visibility-panel">
-    <el-alert
-      type="info"
-      :closable="false"
-      style="margin-bottom: 16px"
-    >
+    <el-alert type="info" :closable="false" style="margin-bottom: 16px">
       配置该用户可见的菜单项。留空表示继承角色默认菜单；清空表示无菜单。
       修改后用户刷新页面即可生效。
     </el-alert>
@@ -171,9 +167,12 @@ async function saveConfig() {
   }
 }
 
-watch(() => props.currentMenuKeys, (keys) => {
-  if (keys) selectedMenuKeys.value = keys;
-});
+watch(
+  () => props.currentMenuKeys,
+  (keys) => {
+    if (keys) selectedMenuKeys.value = keys;
+  },
+);
 
 onMounted(async () => {
   await loadMenuTree();

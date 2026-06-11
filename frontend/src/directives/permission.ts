@@ -56,8 +56,16 @@ export const permission: ObjectDirective = {
     }
 
     // 模式 4：模块 view/edit 粒度，如 v-permission="{ module: 'village', level: 'edit' }"
-    if (value && typeof value === "object" && "module" in value && "level" in value) {
-      _applyModulePermission(el, value as { module: string; level: "view" | "edit" });
+    if (
+      value &&
+      typeof value === "object" &&
+      "module" in value &&
+      "level" in value
+    ) {
+      _applyModulePermission(
+        el,
+        value as { module: string; level: "view" | "edit" },
+      );
       return;
     }
 
@@ -118,8 +126,16 @@ export const permission: ObjectDirective = {
     }
 
     // 模式 4：模块 view/edit 粒度
-    if (value && typeof value === "object" && "module" in value && "level" in value) {
-      _applyModulePermission(el, value as { module: string; level: "view" | "edit" });
+    if (
+      value &&
+      typeof value === "object" &&
+      "module" in value &&
+      "level" in value
+    ) {
+      _applyModulePermission(
+        el,
+        value as { module: string; level: "view" | "edit" },
+      );
       return;
     }
   },
