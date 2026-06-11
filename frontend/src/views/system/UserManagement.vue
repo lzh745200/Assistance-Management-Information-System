@@ -82,8 +82,12 @@
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="export">导出权限包</el-dropdown-item>
-                  <el-dropdown-item command="import">导入权限包</el-dropdown-item>
+                  <el-dropdown-item command="export"
+                    >导出权限包</el-dropdown-item
+                  >
+                  <el-dropdown-item command="import"
+                    >导入权限包</el-dropdown-item
+                  >
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -347,218 +351,6 @@
       </template>
     </el-dialog>
 
-    <!-- 权限管理对话框 -->
-    <el-dialog v-model="permDialogVisible" title="权限管理" width="680px">
-      <el-form :model="permForm" label-width="110px">
-        <el-form-item label="用户">
-          <el-input
-            :value="currentUser?.full_name || currentUser?.username"
-            disabled
-          />
-        </el-form-item>
-
-        <!-- 机器码绑定状态 -->
-        <el-divider content-position="left">机器码绑定</el-divider>
-        <el-form-item label="绑定状态">
-          <el-tag v-if="currentUser?.machine_code" type="success">
-            <el-icon><Key /></el-icon>
-            已绑定
-          </el-tag>
-          <el-tag v-else type="info">未绑定</el-tag>
-          <span v-if="currentUser?.machine_code" class="machine-code-preview">
-            {{ currentUser.machine_code.substring(0, 16) }}...
-          </span>
-        </el-form-item>
-        <el-form-item label="强制机器码绑定">
-          <el-switch
-            v-model="permForm.machine_binding_required"
-            active-text="启用"
-            inactive-text="禁用"
-          />
-          <div class="form-item-tip">开启后该用户必须从绑定的机器登录</div>
-        </el-form-item>
-        <el-form-item label="允许的权限">
-          <el-input
-            v-model="permForm.allowed_permissions"
-            type="textarea"
-            :rows="2"
-            placeholder="JSON数组格式的权限白名单，如: ['user:read','village:read']'
-为空则使用角色默认权限"
-          />
-          <div class="form-item-tip">设置后用户只能使用白名单中的权限</div>
-        </el-form-item>
-
-        <el-divider content-position="left">功能权限</el-divider>
-        <el-form-item label="角色">
-          <el-select
-            v-model="permForm.role"
-            placeholder="请选择角色"
-            style="width: 100%"
-            teleported
-            fit-input-width
-          >
-            <el-option
-              v-for="role in roleOptions"
-              :key="role.value"
-              :label="role.label"
-              :value="role.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="数据范围">
-          <el-select
-            v-model="permForm.data_scope"
-            placeholder="请选择数据范围"
-            style="width: 100%"
-            teleported
-            fit-input-width
-          >
-            <el-option
-              v-for="scope in dataScopeOptions"
-              :key="scope.value"
-              :label="scope.label"
-              :value="scope.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="所属组织">
-          <el-tree-select
-            v-model="permForm.organization_id"
-            :data="orgTreeOptions"
-            :props="{ label: 'name', value: 'id', children: 'children' } as any"
-            placeholder="请选择所属组织"
-            check-strictly
-            clearable
-            filterable
-            style="width: 100%"
-            teleported
-            fit-input-width
-          />
-        </el-form-item>
-        <el-form-item label="具体权限">
-          <el-select
-            v-model="permForm.permissionList"
-            multiple
-            placeholder="请选择权限"
-            style="width: 100%"
-            collapse-tags
-            collapse-tags-tooltip
-            teleported
-            fit-input-width
-          >
-            <el-option-group
-              v-for="group in permissionGroups"
-              :key="group.category"
-              :label="group.category"
-            >
-              <el-option
-                v-for="perm in group.items"
-                :key="perm.code"
-                :label="perm.name"
-                :value="perm.code"
-              />
-            </el-option-group>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="账户状态">
-          <el-switch
-            v-model="permForm.is_active"
-            active-text="启用"
-            inactive-text="禁用"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="permDialogVisible = false">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="submitting"
-          @click="confirmPermissions"
-          >保存权限</el-button
-        >
-      </template>
-    </el-dialog>
-
-    <!-- 待审核用户对话框 -->
-    <el-dialog v-model="pendingDialogVisible" title="待审核用户" width="800px">
-      <el-table :data="pendingUsers" border>
-        <el-table-column prop="username" label="用户名" min-width="120" />
-        <el-table-column prop="full_name" label="姓名" min-width="100" />
-        <el-table-column prop="email" label="邮箱" min-width="160" />
-        <el-table-column prop="created_at" label="注册时间" width="160" />
-        <el-table-column label="操作" width="200" align="center">
-          <template #default="{ row }">
-            <el-button
-              type="success"
-              size="small"
-              @click="handleActivateUser(row)"
-              >审核通过</el-button
-            >
-            <el-button type="danger" size="small" @click="handleDelete(row)"
-              >拒绝删除</el-button
-            >
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-dialog>
-
-    <!-- 批量生成账号对话框 -->
-    <el-dialog v-model="batchDialogVisible" title="批量生成账号" width="700px">
-      <el-form :model="batchForm" label-width="120px">
-        <el-form-item label="生成数量">
-          <el-input-number v-model="batchForm.count" :min="1" :max="20" />
-        </el-form-item>
-        <el-form-item label="用户名前缀">
-          <el-input v-model="batchForm.prefix" placeholder="如: user" />
-        </el-form-item>
-        <el-form-item label="起始编号">
-          <el-input-number v-model="batchForm.startNum" :min="1" />
-        </el-form-item>
-        <el-form-item label="默认角色">
-          <el-select
-            v-model="batchForm.role"
-            placeholder="请选择角色"
-            style="width: 100%"
-            teleported
-            fit-input-width
-          >
-            <el-option
-              v-for="role in roleOptions"
-              :key="role.value"
-              :label="role.label"
-              :value="role.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="默认部门">
-          <el-input v-model="batchForm.department" placeholder="请输入部门" />
-        </el-form-item>
-      </el-form>
-
-      <div v-if="generatedAccounts.length > 0" class="generated-accounts">
-        <el-divider>生成的账号信息</el-divider>
-        <el-table :data="generatedAccounts" border size="small">
-          <el-table-column prop="username" label="用户名" />
-          <el-table-column prop="password" label="初始密码" />
-          <el-table-column prop="role" label="角色" />
-        </el-table>
-        <el-button
-          type="success"
-          style="margin-top: 10px"
-          @click="exportAccounts"
-        >
-          导出账号列表
-        </el-button>
-      </div>
-
-      <template #footer>
-        <el-button @click="batchDialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="generateBatchAccounts"
-          >生成账号</el-button
-        >
-      </template>
-    </el-dialog>
-
     <!-- 角色/权限分配抽屉 -->
     <PermissionAssignmentDrawer
       v-model="permDrawerVisible"
@@ -608,7 +400,6 @@ const dialogVisible = ref(false);
 const dialogTitle = ref("新增用户");
 const isEdit = ref(false);
 const resetPwdDialogVisible = ref(false);
-const permDialogVisible = ref(false);
 const permDrawerVisible = ref(false);
 const permDrawerUser = ref<User | null>(null);
 const pendingDialogVisible = ref(false);
@@ -664,16 +455,6 @@ async function loadOrgTree() {
 
 const resetPwdForm = reactive({
   newPassword: "",
-});
-
-const permForm = reactive({
-  role: "operator",
-  data_scope: "org",
-  organization_id: null as number | null,
-  permissionList: [] as string[],
-  is_active: true,
-  machine_binding_required: false,
-  allowed_permissions: "",
 });
 
 const batchForm = reactive({
@@ -1010,46 +791,6 @@ const confirmResetPassword = async () => {
   }
 };
 
-// @ts-expect-error - 保留旧权限对话框兼容性，新流程使用 handleRolePermission → PermissionAssignmentDrawer
-const _legacy_handleAssignPermissions = (row: any) => {
-  currentUser.value = row;
-  const perms = (row.permissions || "").split(",").filter(Boolean);
-  Object.assign(permForm, {
-    role: row.role || "operator",
-    data_scope: row.data_scope || "org",
-    organization_id: row.organization_id ?? null,
-    permissionList: perms,
-    is_active: row.is_active,
-    machine_binding_required: row.machine_binding_required || false,
-    allowed_permissions: row.allowed_permissions || "",
-  });
-  permDialogVisible.value = true;
-};
-
-const confirmPermissions = async () => {
-  submitting.value = true;
-  try {
-    await request.put(`/users/${currentUser.value?.id}/permissions`, {
-      role: permForm.role,
-      data_scope: permForm.data_scope,
-      organization_id: permForm.organization_id,
-      permissions: permForm.permissionList.join(","),
-      is_active: permForm.is_active,
-      machine_binding_required: permForm.machine_binding_required,
-      allowed_permissions: permForm.allowed_permissions,
-    });
-    ElMessage.success("权限设置成功");
-    permDialogVisible.value = false;
-    loadData();
-    loadPendingCount();
-  } catch (error: any) {
-    const msg = error?.response?.data?.detail || "权限设置失败";
-    ElMessage.error(msg);
-  } finally {
-    submitting.value = false;
-  }
-};
-
 // ── 角色/权限分配抽屉 ──
 const handleRolePermission = (row: any) => {
   permDrawerUser.value = row;
@@ -1099,7 +840,10 @@ const handleImportPermissionPackage = () => {
   input.accept = ".zip";
   input.onchange = async (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+    if (!file) {
+      input.remove();
+      return;
+    }
     importingPermPackage.value = true;
     try {
       const fd = new FormData();
@@ -1121,16 +865,21 @@ const handleImportPermissionPackage = () => {
           `/permission-packages/confirm/${encodeURIComponent(file.name)}`,
           { overwrite_existing: true },
         );
-        ElMessage.success(cRes.data?.data?.message || cRes.data?.message || "导入完成");
+        ElMessage.success(
+          cRes.data?.data?.message || cRes.data?.message || "导入完成",
+        );
         loadData();
       } else {
         ElMessage.error(result.message || "导入失败");
       }
     } catch (err: any) {
       if (err === "cancel") return;
-      ElMessage.error(err?.response?.data?.detail || err?.message || "导入失败");
+      ElMessage.error(
+        err?.response?.data?.detail || err?.message || "导入失败",
+      );
     } finally {
       importingPermPackage.value = false;
+      input.remove();
     }
   };
   input.click();
@@ -1147,8 +896,7 @@ const handleDelete = async (row: any) => {
     );
     await request.delete(`/users/${row.id}`);
     ElMessage.success("删除成功");
-    loadData();
-    loadPendingCount();
+    await Promise.all([loadData(), loadPendingCount()]);
     pendingDialogVisible.value = false;
   } catch (error: any) {
     if (error !== "cancel" && error?.toString() !== "cancel") {

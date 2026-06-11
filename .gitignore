@@ -212,6 +212,16 @@ backend/tests/unit/test_zero_*.py
 backend/tests/unit/test_exec_batch*.py
 backend/tests/unit/test_quality_coverage_*.py
 backend/tests/unit/test_services_*.py
+# Single-letter pattern padding tests (test_aa..zz, test_a1..z1, etc.)
+backend/tests/unit/test_[a-z][a-z].py
+backend/tests/unit/test_[a-z]1.py
+backend/tests/unit/test_0pct_batch.py
+# Test backup artifacts
+backend/tests/unit/backup_*.zip
+# Coverage artifacts
+*.cover
+# Workflow summaries
+.workflow-summary.md
 backend/tests/unit/test_all_services_*.py
 backend/tests/unit/test_pass_*.py
 backend/tests/unit/test_push_*.py
