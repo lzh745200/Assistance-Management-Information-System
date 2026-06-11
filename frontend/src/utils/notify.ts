@@ -14,7 +14,7 @@ import { ElNotification } from "element-plus";
 import type { NotificationParams, NotificationParamsTyped } from "element-plus";
 
 /** 全局默认值：显示关闭按钮 + 5s 自动关闭（对齐 ElMessage messageDefaults） */
-const GLOBAL_DEFAULTS: Partial<NotificationParamsTyped> = {
+const GLOBAL_DEFAULTS = {
   showClose: true,
   duration: 5000,
 };
@@ -31,7 +31,7 @@ function notify(
 
 // 类型快捷方式（success / error / warning / info）
 notify.success = (
-  options?: NotificationParams,
+  options?: NotificationParamsTyped | string,
 ): ReturnType<typeof ElNotification> => {
   if (typeof options === "string") {
     return ElNotification.success({ ...GLOBAL_DEFAULTS, message: options });
@@ -40,7 +40,7 @@ notify.success = (
 };
 
 notify.error = (
-  options?: NotificationParams,
+  options?: NotificationParamsTyped | string,
 ): ReturnType<typeof ElNotification> => {
   if (typeof options === "string") {
     return ElNotification.error({ ...GLOBAL_DEFAULTS, message: options });
@@ -49,7 +49,7 @@ notify.error = (
 };
 
 notify.warning = (
-  options?: NotificationParams,
+  options?: NotificationParamsTyped | string,
 ): ReturnType<typeof ElNotification> => {
   if (typeof options === "string") {
     return ElNotification.warning({ ...GLOBAL_DEFAULTS, message: options });
@@ -58,7 +58,7 @@ notify.warning = (
 };
 
 notify.info = (
-  options?: NotificationParams,
+  options?: NotificationParamsTyped | string,
 ): ReturnType<typeof ElNotification> => {
   if (typeof options === "string") {
     return ElNotification.info({ ...GLOBAL_DEFAULTS, message: options });

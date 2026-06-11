@@ -174,7 +174,7 @@ class DataPackageService:
             query = query.filter(model.org_id == org_id)
         elif hasattr(model, "organization_id"):
             query = query.filter(model.organization_id == org_id)
-            
+
         records = query.all()
         result = []
         for record in records:
@@ -191,7 +191,9 @@ class DataPackageService:
             result.append(record_dict)
         return result
 
-    def _create_zip_package(self, file_path: str, manifest: DataPackageManifest, data_dict: Dict[str, List[Dict]]) -> None:
+    def _create_zip_package(
+        self, file_path: str, manifest: DataPackageManifest, data_dict: Dict[str, List[Dict]]
+    ) -> None:
         """创建ZIP数据包"""
         with zipfile.ZipFile(file_path, "w", zipfile.ZIP_DEFLATED) as zf:
             manifest_json = manifest.model_dump_json(indent=2)
@@ -204,7 +206,9 @@ class DataPackageService:
     # 2. 导入功能
     # ========================================================================
 
-    async def import_package(self, file_path: str, file_name: str, org_id: int, imported_by: int) -> DataPackageImportResult:
+    async def import_package(
+        self, file_path: str, file_name: str, org_id: int, imported_by: int
+    ) -> DataPackageImportResult:
         """导入数据包 (预览阶段，同步方法)"""
         validation = await self.validate_package(file_path)
         if not validation.is_valid:
@@ -282,7 +286,11 @@ class DataPackageService:
                 for data_type in manifest_dict.get("data_types", []):
                     data_file = f"data/{data_type}.json"
                     if data_file not in zf.namelist():
-                        errors.append(DataPackageValidationError(field=data_type, message=f"缺少数据文件: {data_file}", data_type=data_type))
+                        errors.append(DataPackageValidationError(
+                            field=data_type,
+                            message=f"缺少数据文件: {data_file}",
+                            data_type=data_type,
+                        ))
                     else:
                         try:
                             data_content = zf.read(data_file).decode("utf-8")
@@ -292,14 +300,20 @@ class DataPackageService:
                             if actual_count != expected_count:
                                 warnings.append(f"{data_type}: 记录数不匹配 (期望: {expected_count}, 实际: {actual_count})")
                         except json.JSONDecodeError as e:
-                            errors.append(DataPackageValidationError(field=data_type, message=f"JSON格式错误: {str(e)}", data_type=data_type))
+                            errors.append(DataPackageValidationError(
+                                field=data_type,
+                                message=f"JSON格式错误: {str(e)}",
+                                data_type=data_type,
+                            ))
 
         except zipfile.BadZipFile:
             errors.append(DataPackageValidationError(field="file", message="ZIP文件损坏"))
         except Exception as e:
             errors.append(DataPackageValidationError(field="file", message=f"验证失败: {str(e)}"))
 
-        return DataPackageValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings, manifest=manifest)
+        return DataPackageValidationResult(
+            is_valid=len(errors) == 0, errors=errors, warnings=warnings, manifest=manifest
+        )
 
     async def preview_package_data(self, package_id: int) -> List[DataPackagePreviewData]:
         """预览导入的数据 (同步方法)"""
@@ -308,7 +322,9 @@ class DataPackageService:
             return []
         return await self.preview_package_data_from_file(package.file_path)
 
-    async def preview_package_data_from_file(self, file_path: str, sample_size: int = 10) -> List[DataPackagePreviewData]:
+    async def preview_package_data_from_file(
+        self, file_path: str, sample_size: int = 10
+    ) -> List[DataPackagePreviewData]:
         """从文件预览数据 (同步方法)"""
         preview_list = []
         try:
@@ -371,7 +387,7 @@ class DataPackageService:
                         data_content = zf.read(data_file).decode("utf-8")
                         records = json.loads(data_content)
                         model = DATA_TYPE_MODELS[data_type]
-                        
+
                         # 🚀 调用批量 Upsert 方法
                         imp, skip, errs = self._bulk_upsert_records(model, records, resolved_org_id, overwrite_existing)
                         imported_counts[data_type] = imp
@@ -409,7 +425,7 @@ class DataPackageService:
         imported = 0
         skipped = 0
         errors = []
-        
+
         mapper = inspect(model)
         pk_name = mapper.primary_key[0].name
         valid_columns = {c.key for c in mapper.column_attrs}
@@ -453,7 +469,7 @@ class DataPackageService:
 
         try:
             self.db.execute(stmt)
-            imported = len(clean_records) 
+            imported = len(clean_records)
         except Exception as e:
             errors.append(DataPackageValidationError(
                 field=model.__tablename__, message=f"批量写入数据库失败: {e}", data_type=model.__tablename__
@@ -626,26 +642,26 @@ class DataPackageService:
                 with zipfile.ZipFile(file_path, "r") as zf:
                     manifest_dict = json.loads(zf.read("manifest.json").decode("utf-8"))
                     data_types = manifest_dict.get("data_types", [])
-                    
+
                     resolver = SmartConflictResolver(self.db)
-                    
+
                     for data_type in data_types:
                         if data_type not in DATA_TYPE_MODELS:
                             continue
                         data_file = f"data/{data_type}.json"
                         if data_file not in zf.namelist():
                             continue
-                            
+
                         records = json.loads(zf.read(data_file).decode("utf-8"))
                         model = DATA_TYPE_MODELS[data_type]
-                        
+
                         # 调用冲突解决器 (假设 SmartConflictResolver 有 resolve_and_import 方法)
                         resolver.resolve_and_import(model, records, conflict_strategy)
 
                 package.status = PackageStatus.imported.value
                 package.imported_at = datetime.now(timezone.utc)
                 self.db.commit()
-                
+
             return {"success": True, "message": "导入并解决冲突完成"}
 
         except Exception as e:

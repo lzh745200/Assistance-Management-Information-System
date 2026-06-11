@@ -58,14 +58,33 @@ def is_admin(user) -> bool:
     return False
 
 
-def require_admin(func):
-    """管理员权限验证装饰器
+def require_admin(func=None, *, error_message: str = "需要管理员权限"):
+    """管理员权限验证 — 支持装饰器和直接调用两种模式。
 
-    用法:
+    装饰器模式:
         @require_admin
         def admin_only_endpoint(current_user=Depends(get_current_user)):
             pass
+
+    直接调用模式:
+        require_admin(current_user)
+        require_admin(current_user, error_message="仅管理员可执行")
     """
+    # 直接调用模式：第一个参数是用户对象（有 role 属性且值为字符串）
+    if func is not None and isinstance(getattr(func, "role", None), str):
+        user = func
+        if not is_admin(user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=error_message,
+            )
+        return None
+
+    # 装饰器模式：第一个参数是被装饰的函数
+    if func is None:
+        def decorator(f):
+            return require_admin(f, error_message=error_message)
+        return decorator
 
     @wraps(func)
     async def wrapper(*args, **kwargs):
@@ -87,7 +106,7 @@ def require_admin(func):
         if not is_admin(current_user):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="需要管理员权限",
+                detail=error_message,
             )
 
         return await func(*args, **kwargs)

@@ -3,7 +3,7 @@
 """
 
 import enum
-from datetime import datetime, date
+from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
@@ -67,13 +67,13 @@ class Fund(BaseModel):
         Index("ix_funds_project_id", "project_id"),
         Index("ix_funds_village_id", "village_id"),
         Index("ix_funds_date", "date"),
-        
+
         # --- 复合索引 (优化常见业务过滤) ---
         Index("ix_funds_project_status", "project_id", "status"),
         Index("ix_funds_village_status", "village_id", "status"),
         Index("ix_funds_status_date", "status", "date"),
         Index("ix_funds_status_type", "status", "fund_type"),
-        
+
         # 🚀 新增：大屏统计“杀手级”复合索引 (直接命中聚合查询)
         Index("ix_funds_year_month_status", "year_month", "status"),
         Index("ix_funds_year_quarter_type", "year_quarter", "fund_type"),
@@ -85,27 +85,30 @@ class Fund(BaseModel):
     type = Column(String(50), nullable=True, comment="经费大类")
     fund_type = Column(String(50), nullable=True, comment="经费类型(详细)")
     fund_source = Column(String(50), nullable=True, comment="经费来源")
-    
+
     amount = Column(Numeric(15, 2), default=0, comment="申请金额")
     planned_amount = Column(Numeric(15, 2), default=0, comment="计划金额")
     approved_amount = Column(Numeric(15, 2), nullable=True, comment="批准金额")
     allocated_amount = Column(Numeric(15, 2), default=0, comment="拨付金额")
     used_amount = Column(Numeric(15, 2), default=0, comment="使用金额")
     remaining_amount = Column(Numeric(15, 2), default=0, comment="剩余金额")
-    
+
     code = Column(String(50), nullable=True, comment="编号")
     name = Column(String(200), nullable=True, comment="名称")
-    
+
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=True, comment="项目ID")
     project_name = Column(String(200), nullable=True, comment="项目名称(冗余)")
-    village_id = Column(Integer, ForeignKey("supported_villages.id", ondelete="CASCADE"), nullable=True, comment="帮扶村ID")
+    village_id = Column(
+        Integer, ForeignKey("supported_villages.id", ondelete="CASCADE"),
+        nullable=True, comment="帮扶村ID"
+    )
     school_id = Column(Integer, ForeignKey("schools.id", ondelete="CASCADE"), nullable=True, comment="学校ID")
-    
+
     purpose = Column(Text, nullable=True, comment="用途")
     source = Column(String(200), nullable=True, comment="来源说明")
     operator = Column(String(100), nullable=True, comment="经办人")
     status = Column(String(50), default=FundStatus.PENDING.value, comment="状态")
-    
+
     applicant = Column(String(100), nullable=True, comment="申请人")
     application_date = Column(DateTime(timezone=True), nullable=True, comment="申请日期")
     approved_by = Column(String(100), nullable=True, comment="审批人")
@@ -113,11 +116,11 @@ class Fund(BaseModel):
     allocation_date = Column(DateTime(timezone=True), nullable=True, comment="拨付日期")
     allocation_method = Column(String(50), nullable=True, comment="拨付方式")
     receiver = Column(String(100), nullable=True, comment="接收人")
-    
+
     usage_description = Column(Text, nullable=True, comment="使用说明")
     start_date = Column(DateTime(timezone=True), nullable=True, comment="开始日期")
     end_date = Column(DateTime(timezone=True), nullable=True, comment="结束日期")
-    
+
     audit_date = Column(DateTime(timezone=True), nullable=True, comment="审计日期")
     audit_result = Column(String(50), nullable=True, comment="审计结果")
     audit_opinion = Column(Text, nullable=True, comment="审计意见")
@@ -135,7 +138,10 @@ class Fund(BaseModel):
     budget_status = Column(String(20), default="draft", comment="预算状态: draft/submitted/approved")
 
     # ================= 数据权限字段 =================
-    organization_id = Column(Integer, ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True, index=True, comment="所属组织ID")
+    organization_id = Column(
+        Integer, ForeignKey("organizations.id", ondelete="SET NULL"),
+        nullable=True, index=True, comment="所属组织ID"
+    )
     created_by = Column(Integer, nullable=True, index=True, comment="创建者ID")
 
     # ================= 🚀 统计聚合冗余字段 (核心优化) =================
@@ -164,18 +170,22 @@ def _enrich_fund_time_fields(mapper, connection, target: Fund):
     """
     target_date = target.date
     if not target_date and target.application_date:
-        target_date = target.application_date.date() if isinstance(target.application_date, datetime) else target.application_date
-        
+        if isinstance(target.application_date, datetime):
+            target_date = target.application_date.date()
+        else:
+            target_date = target.application_date
+
     if target_date:
         if isinstance(target_date, datetime):
             target_date = target_date.date()
-            
+
         target.year = target_date.year
         target.year_month = target_date.strftime("%Y-%m")
-        
+
         # 计算季度: 1-3月为Q1, 4-6月为Q2, 7-9月为Q3, 10-12月为Q4
         quarter = (target_date.month - 1) // 3 + 1
         target.year_quarter = f"{target_date.year}-Q{quarter}"
+
 
 # 监听插入和更新事件
 event.listen(Fund, "before_insert", _enrich_fund_time_fields)

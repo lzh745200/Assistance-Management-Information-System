@@ -591,7 +591,7 @@ class AnalyticsService:
             else:
                 villages = db.query(SupportedVillage).all()
 
-            items = [{"id": v.id, "name": v.name, "province": v.province} for v in villages]
+            items = [{"id": v.id, "name": v.village_name, "province": v.province} for v in villages]
             return {
                 "dimension": dimension,
                 "value": value,
@@ -612,7 +612,7 @@ class AnalyticsService:
         try:
             db = self.db
             villages = db.query(SupportedVillage).filter(SupportedVillage.id.in_(village_ids)).all()
-            items = [{"id": v.id, "name": v.name, "province": v.province} for v in villages]
+            items = [{"id": v.id, "name": v.village_name, "province": v.province} for v in villages]
             return {"villages": items, "year": year, "metrics": metrics or []}
         except Exception as e:
             app_logger.error(f"帮扶村对比失败: {e}")
@@ -664,7 +664,7 @@ class AnalyticsService:
             if "tier" in filters and filters["tier"] is not None:
                 query = query.filter(SupportedVillage.is_revitalization_tier == (filters["tier"] == "是"))
             if filters.get("region"):
-                query = query.filter(SupportedVillage.region == filters["region"])
+                query = query.filter(SupportedVillage.region_scope == filters["region"])
 
             total = query.count()
             items = query.offset((page - 1) * page_size).limit(page_size).all()
@@ -675,7 +675,7 @@ class AnalyticsService:
                 "page": page,
                 "page_size": page_size,
                 "pages": pages,
-                "items": [{"id": v.id, "name": v.name, "province": v.province} for v in items],
+                "items": [{"id": v.id, "name": v.village_name, "province": v.province} for v in items],
             }
         except Exception as e:
             app_logger.error(f"筛选帮扶村失败: {e}")

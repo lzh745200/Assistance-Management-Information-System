@@ -39,9 +39,9 @@ HIGH_FREQ_QUERIES = [
     {
         "name": "帮扶村-按省份梯队统计",
         "sql": """
-            SELECT province, revitalization_tier, COUNT(*) as cnt
+            SELECT province, CASE WHEN is_revitalization_tier THEN '是' ELSE '否' END as tier, COUNT(*) as cnt
             FROM supported_villages
-            GROUP BY province, revitalization_tier
+            GROUP BY province, is_revitalization_tier
         """
     },
     {

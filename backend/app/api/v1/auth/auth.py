@@ -167,21 +167,31 @@ async def login(
 
     if not verify_password(login_request.password, user.hashed_password):
         # 登录失败：原子递增失败计数（避免竞态条件）
+        failed_count = 0
         try:
-            from sqlalchemy import update
+            from sqlalchemy import update, case
             from app.models.user import User
 
-            # 原子更新：直接用 SQL INCREMENT，避免读-改-写竞态
-            new_failed_count = user.failed_login_count + 1 if user.failed_login_count else 1
-            update_values = {"failed_login_count": new_failed_count}
-            if new_failed_count >= _MAX_FAILED_ATTEMPTS:
-                update_values["locked_until"] = now + timedelta(minutes=_LOCKOUT_MINUTES)
-
-            stmt = update(User).where(User.id == user.id).values(**update_values)
+            # 原子更新：使用 SQL 表达式直接递增，避免读-改-写竞态
+            # 条件锁定：失败次数达到阈值时自动设置 locked_until
+            stmt = (
+                update(User)
+                .where(User.id == user.id)
+                .values(
+                    failed_login_count=User.failed_login_count + 1,
+                    locked_until=case(
+                        (User.failed_login_count + 1 >= _MAX_FAILED_ATTEMPTS,
+                         now + timedelta(minutes=_LOCKOUT_MINUTES)),
+                        else_=User.locked_until,
+                    ),
+                )
+            )
             db.execute(stmt)
             db.commit()
 
-            failed_count = new_failed_count
+            # 重新查询获取更新后的计数用于日志
+            db.refresh(user)
+            failed_count = user.failed_login_count or 0
             logger.info(f"登录失败: user={login_request.username}, failed_count={failed_count}/{_MAX_FAILED_ATTEMPTS}")
 
             if failed_count >= _MAX_FAILED_ATTEMPTS:
@@ -189,7 +199,7 @@ async def login(
                     "账户已锁定: user=%s, 连续失败%d次, 锁定到%s",
                     login_request.username,
                     failed_count,
-                    update_values["locked_until"],
+                    now + timedelta(minutes=_LOCKOUT_MINUTES),
                 )
         except Exception as e:
             logger.error(f"更新失败计数时出错: {e}", exc_info=True)
@@ -553,12 +563,12 @@ async def get_csrf_token(request: Request, response: Response) -> dict:
 
 @router.post("/register", response_model=LoginResponse)
 async def register_user(
+    request: Request,
     username: str = Body(..., description="用户名"),
     password: str = Body(..., description="密码"),
     pass_code: str = Body(..., description="通行码（激活码）"),
     full_name: Optional[str] = Body(None, description="姓名"),
     email: Optional[str] = Body(None, description="邮箱"),
-    request: Request = None,  # 用于速率限制（可选）
     db: Session = Depends(get_db),
 ) -> Any:
     """用户注册（通过通行码）

@@ -423,9 +423,6 @@ class RateLimitExceeded(Exception):
         super().__init__(self.message)
 
 
-# 速率限制内存存储
-_rate_limit_store: dict = {}
-
 # SQL 注入检测模式
 SQL_INJECTION_PATTERNS = [
     r"(?i)(\bUNION\b.*\bSELECT\b)",

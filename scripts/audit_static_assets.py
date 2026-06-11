@@ -108,13 +108,14 @@ def _extract_dynamic_imports_from_js(js_dir: str, frontend_dir: str) -> Set[str]
     js_files = list(js_dir_path.rglob("*.js"))
     total = len(js_files)
     for i, js_file in enumerate(js_files):
-        # 每 200 个文件打印一次进度，避免给人"卡死"的错觉
+        # 每 200 个文件打印一次进度（stderr，避免污染 stdout 审计报告）
         if i > 0 and i % 200 == 0:
-            print(f"    扫描进度: {i}/{total}")
+            print(f"    扫描进度: {i}/{total}", file=sys.stderr)
         try:
-            # 只阅读前 100KB，动态 import 通常在文件头部附近
+            # 只阅读前 200KB（与原始窗口大小一致），动态 import 通常在文件头部附近；
+            # f.read(N) 在文件小于 N 时安全返回全部内容，无需事先 stat()
             with open(js_file, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read(100 * 1024)
+                content = f.read(200 * 1024)
         except (OSError, UnicodeDecodeError):
             continue
 
@@ -175,8 +176,13 @@ def _get_actual_files(frontend_dir: str) -> Set[str]:
 # 主流程
 # ---------------------------------------------------------------
 
-def audit(frontend_dir: str, verbose: bool = False) -> int:
+def audit(frontend_dir: str, verbose: bool = False, quick: bool = False) -> int:
     """执行静态资源断链审计。
+
+    Args:
+        frontend_dir: 前端静态文件目录
+        verbose: 详细输出
+        quick: 快速模式 — 仅校验 index.html 直接引用，跳过 JS 动态 import 扫描
 
     Returns:
         0: 所有引用文件都存在
@@ -205,15 +211,19 @@ def audit(frontend_dir: str, verbose: bool = False) -> int:
         for ref in sorted(html_refs):
             print(f"    - {ref}")
 
-    # Step 2: 从 JS 文件提取动态 import
+    # Step 2: 从 JS 文件提取动态 import（快速模式下跳过）
     print()
-    print("[2/3] 扫描 JS 文件中的动态 import() 引用...")
-    assets_dir = os.path.join(frontend_dir, "assets")
-    js_refs = _extract_dynamic_imports_from_js(assets_dir, frontend_dir)
-    print(f"  提取到 {len(js_refs)} 个动态 import 引用")
-    if verbose:
-        for ref in sorted(js_refs):
-            print(f"    - {ref}")
+    if quick:
+        print("[2/3] 动态 import 扫描已跳过（快速模式）")
+        js_refs: Set[str] = set()
+    else:
+        print("[2/3] 扫描 JS 文件中的动态 import() 引用...")
+        assets_dir = os.path.join(frontend_dir, "assets")
+        js_refs = _extract_dynamic_imports_from_js(assets_dir, frontend_dir)
+        print(f"  提取到 {len(js_refs)} 个动态 import 引用")
+        if verbose:
+            for ref in sorted(js_refs):
+                print(f"    - {ref}")
 
     # Step 3: 获取实际文件列表
     print()
@@ -309,6 +319,11 @@ def main():
         action="store_true",
         help="详细输出：列出所有引用文件和未引用文件",
     )
+    parser.add_argument(
+        "--quick", "-q",
+        action="store_true",
+        help="快速模式：仅校验 index.html 直接引用的资源，跳过 JS 动态 import 扫描（适合启动时校验）",
+    )
     args = parser.parse_args()
 
     # 自动探测前端目录
@@ -331,7 +346,7 @@ def main():
             print(f"尝试过的路径: {candidates}")
             sys.exit(2)
 
-    exit_code = audit(frontend_dir, verbose=args.verbose)
+    exit_code = audit(frontend_dir, verbose=args.verbose, quick=args.quick)
     sys.exit(exit_code)
 
 

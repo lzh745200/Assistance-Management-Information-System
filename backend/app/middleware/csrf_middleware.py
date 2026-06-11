@@ -86,7 +86,7 @@ def sign_csrf_token(token: str, secret_key: Optional[str] = None) -> str:
 def _is_path_exempt(path: str) -> bool:
     """检查请求路径是否在 CSRF 豁免列表中"""
     for prefix in _CSRF_EXEMPT_PATH_PREFIXES:
-        if path == prefix or path.startswith(prefix.rstrip("/") + "/") or path.startswith(prefix):
+        if path == prefix or path.startswith(prefix):
             return True
     return False
 

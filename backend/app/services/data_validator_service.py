@@ -26,6 +26,7 @@ QIANNAN_COUNTIES = [
     "龙里县",
 ]
 
+
 class ValidationErrorCode(str, Enum):
     """验证错误码"""
 

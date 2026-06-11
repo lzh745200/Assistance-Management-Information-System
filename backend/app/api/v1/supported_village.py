@@ -317,7 +317,7 @@ async def export_villages(
         row = []
         for fn in field_names:
             val = getattr(v, fn, None)
-            if fn in ("is_three_regions", "is_key_county"):
+            if fn in ("is_three_regions", "is_key_county", "is_revitalization_tier"):
                 val = "是" if val else "否"
             row.append(val or "")
         ws.append(row)
