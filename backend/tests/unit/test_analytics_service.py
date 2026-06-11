@@ -482,8 +482,8 @@ class TestAnalyticsService:
     def test_drill_down_by_province(self):
         db = MagicMock()
         q = _make_query_mock()
-        q.all.return_value = [_Obj(id=1, name="\u6751A", province="\u8d35\u5dde"),
-                              _Obj(id=2, name="\u6751B", province="\u8d35\u5dde")]
+        q.all.return_value = [_Obj(id=1, village_name="\u6751A", province="\u8d35\u5dde"),
+                              _Obj(id=2, village_name="\u6751B", province="\u8d35\u5dde")]
         db.query.return_value = q
 
         svc = AnalyticsService(db)
@@ -494,7 +494,7 @@ class TestAnalyticsService:
     def test_drill_down_other_dimension(self):
         db = MagicMock()
         q = _make_query_mock()
-        q.all.return_value = [_Obj(id=1, name="\u6751A", province="\u8d35\u5dde")]
+        q.all.return_value = [_Obj(id=1, village_name="\u6751A", province="\u8d35\u5dde")]
         db.query.return_value = q
 
         svc = AnalyticsService(db)
@@ -516,7 +516,7 @@ class TestAnalyticsService:
     def test_compare_villages_normal(self):
         db = MagicMock()
         q = _make_query_mock()
-        q.all.return_value = [_Obj(id=1, name="\u6751A", province="\u8d35\u5dde")]
+        q.all.return_value = [_Obj(id=1, village_name="\u6751A", province="\u8d35\u5dde")]
         db.query.return_value = q
 
         svc = AnalyticsService(db)
@@ -608,30 +608,31 @@ class TestAnalyticsService:
     # ════════════════════════════════════════════
 
     def test_filter_villages_all_filters(self):
-        """'region' filter triggers AttributeError -> exception handler path."""
+        """province + tier + region filters all apply together (region_scope bug fixed)."""
         db = MagicMock()
         q = _make_query_mock()
         q.count.return_value = 1
-        q.all.return_value = [_Obj(id=1, name="\u6751A", province="\u8d35\u5dde")]
+        q.all.return_value = [_Obj(id=1, village_name="\u6751A", province="\u8d35\u5dde")]
         db.query.return_value = q
 
         svc = AnalyticsService(db)
         result = svc.filter_villages({
             "province": "\u8d35\u5dde",
-            "tier": "1",
+            "tier": "\u662f",
             "region": "\u67d0\u5730\u533a",
         }, page=2, page_size=10)
 
-        assert result["total"] == 0
-        assert result["items"] == []
+        assert result["total"] == 1
+        assert len(result["items"]) == 1
+        assert result["page"] == 2
 
     def test_filter_villages_province_tier(self):
         """province + tier filters (no region) -> success."""
         db = MagicMock()
         q = _make_query_mock()
         q.count.return_value = 3
-        q.all.return_value = [_Obj(id=1, name="\u6751A", province="\u8d35\u5dde"),
-                              _Obj(id=2, name="\u6751B", province="\u8d35\u5dde")]
+        q.all.return_value = [_Obj(id=1, village_name="\u6751A", province="\u8d35\u5dde"),
+                              _Obj(id=2, village_name="\u6751B", province="\u8d35\u5dde")]
         db.query.return_value = q
 
         svc = AnalyticsService(db)

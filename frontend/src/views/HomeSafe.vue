@@ -30,23 +30,53 @@
     <!-- 布局编辑器面板 -->
     <div v-if="showLayoutEditor" class="layout-editor-panel">
       <div class="layout-editor-header">
-        <span>自定义显示面板</span>
-        <button class="layout-close-btn" @click="showLayoutEditor = false">
-          ✕
-        </button>
+        <span>⚙️ 自定义工作台布局</span>
+        <button class="layout-close-btn" @click="showLayoutEditor = false">✕</button>
       </div>
+      <!-- 预设布局 -->
+      <div class="layout-presets">
+        <span class="presets-label">快速布局：</span>
+        <el-button
+          v-for="preset in LAYOUT_PRESETS"
+          :key="preset.key"
+          size="small"
+          :type="currentPreset === preset.key ? 'primary' : ''"
+          @click="applyPreset(preset.key)"
+        >
+          {{ preset.label }}
+        </el-button>
+      </div>
+      <!-- 可拖拽排序的卡片列表 -->
       <div class="layout-editor-body">
-        <label
-          v-for="card in DASHBOARD_CARDS"
+        <div
+          v-for="(card, index) in orderedCards"
           :key="card.key"
           class="layout-editor-item"
+          :class="{ 'item-disabled': !cardVisibility[card.key] }"
+          draggable="true"
+          @dragstart="onDragStart($event, index)"
+          @dragover.prevent="onDragOver($event, index)"
+          @dragend="onDragEnd"
+          @drop.prevent="onDrop($event, index)"
         >
-          <input v-model="cardVisibility[card.key]" type="checkbox" />
-          <span>{{ card.label }}</span>
-        </label>
+          <span class="drag-handle">⠿</span>
+          <span class="item-order">{{ index + 1 }}</span>
+          <el-switch
+            :model-value="cardVisibility[card.key]"
+            size="small"
+            @change="(val: any) => { cardVisibility[card.key] = !!val; }"
+          />
+          <div class="item-info">
+            <span class="item-label">{{ card.label }}</span>
+            <span class="item-desc">{{ card.description }}</span>
+          </div>
+        </div>
       </div>
       <div class="layout-editor-footer">
-        <button class="layout-reset-btn" @click="resetLayout">重置默认</button>
+        <span class="layout-status">
+          已显示 {{ visibleCount }} / {{ DASHBOARD_CARDS.length }} 个面板
+        </span>
+        <button class="layout-reset-btn" @click="resetLayout">恢复默认布局</button>
       </div>
     </div>
 
@@ -616,13 +646,13 @@ const showRestoreDialog = ref(false);
 
 // ─── 仪表板布局个性化 ───
 const DASHBOARD_CARDS = [
-  { key: "stats", label: "核心统计指标" },
-  { key: "quickNav", label: "快捷导航" },
-  { key: "projects", label: "项目进度" },
-  { key: "funds", label: "经费概况" },
-  { key: "activities", label: "近期动态" },
-  { key: "todos", label: "待办事项" },
-  { key: "dataOverview", label: "数据概览" },
+  { key: "stats", label: "核心统计指标", description: "项目数、村庄数、学校数、人口等关键数字" },
+  { key: "quickNav", label: "快捷导航", description: "常用功能快捷入口按钮组" },
+  { key: "projects", label: "项目进度", description: "帮扶项目列表与完成进度" },
+  { key: "funds", label: "经费概况", description: "经费分配与使用情况概览" },
+  { key: "activities", label: "近期动态", description: "最新帮扶活动与工作动态" },
+  { key: "todos", label: "待办事项", description: "待审批、待处理的工作任务" },
+  { key: "dataOverview", label: "数据概览", description: "年度帮扶数据汇总统计" },
 ] as const;
 type CardKey = (typeof DASHBOARD_CARDS)[number]["key"];
 const DEFAULT_CARD_VISIBILITY = Object.fromEntries(
@@ -647,7 +677,97 @@ watch(
 
 function resetLayout() {
   cardVisibility.value = { ...DEFAULT_CARD_VISIBILITY };
+  orderedCards.value = [...DASHBOARD_CARDS];
+  currentPreset.value = "default";
+  enhancedStorage.remove(STORAGE_KEYS.DASHBOARD_ORDER);
 }
+
+// ── 布局预设 ──
+const LAYOUT_PRESETS = [
+  { key: "all", label: "全部显示" },
+  { key: "manager", label: "管理员视角" },
+  { key: "operator", label: "操作员视角" },
+  { key: "minimal", label: "简约模式" },
+] as const;
+type PresetKey = (typeof LAYOUT_PRESETS)[number]["key"];
+const currentPreset = ref<PresetKey | "default">("default");
+
+const visibleCount = computed(() =>
+  Object.values(cardVisibility.value).filter(Boolean).length,
+);
+
+function applyPreset(key: PresetKey) {
+  currentPreset.value = key;
+  const allKeys = DASHBOARD_CARDS.map((c) => c.key);
+  const reset: Record<string, boolean> = {};
+  switch (key) {
+    case "all":
+      allKeys.forEach((k) => (reset[k] = true));
+      break;
+    case "manager":
+      // 管理员：全部显示
+      allKeys.forEach((k) => (reset[k] = true));
+      break;
+    case "operator":
+      // 操作员：隐藏数据概览、待办事项
+      allKeys.forEach((k) => (reset[k] = k !== "dataOverview" && k !== "todos"));
+      break;
+    case "minimal":
+      // 简约：仅核心统计 + 快捷导航 + 项目进度
+      allKeys.forEach(
+        (k) => (reset[k] = ["stats", "quickNav", "projects"].includes(k)),
+      );
+      break;
+  }
+  cardVisibility.value = reset as Record<CardKey, boolean>;
+}
+
+// ── 拖拽排序 ──
+const savedOrder = enhancedStorage.get<CardKey[]>(STORAGE_KEYS.DASHBOARD_ORDER);
+const orderedCards = ref<(typeof DASHBOARD_CARDS)[number][]>(
+  (() => {
+    if (!savedOrder) return [...DASHBOARD_CARDS];
+    // 以保存的顺序为基准，追加新增卡片（避免新卡片被静默丢弃）
+    const savedKeys = new Set(savedOrder);
+    const merged = savedOrder
+      .map((k) => DASHBOARD_CARDS.find((c) => c.key === k))
+      .filter(Boolean) as (typeof DASHBOARD_CARDS)[number][];
+    // 追加未在保存顺序中的新卡片
+    for (const card of DASHBOARD_CARDS) {
+      if (!savedKeys.has(card.key)) merged.push(card);
+    }
+    return merged;
+  })(),
+);
+
+let dragIndex = -1;
+
+function onDragStart(_e: DragEvent, index: number) {
+  dragIndex = index;
+}
+
+function onDragOver(_e: DragEvent, index: number) {
+  if (dragIndex === -1 || dragIndex === index) return;
+  const items = [...orderedCards.value];
+  const [moved] = items.splice(dragIndex, 1);
+  items.splice(index, 0, moved);
+  orderedCards.value = items;
+  dragIndex = index;
+}
+
+function onDrop(_e: DragEvent, _index: number) {
+  dragIndex = -1;
+  // 持久化顺序
+  enhancedStorage.set(
+    STORAGE_KEYS.DASHBOARD_ORDER,
+    orderedCards.value.map((c) => c.key),
+  );
+}
+
+function onDragEnd() {
+  dragIndex = -1;
+}
+
 const restoreBackups = ref<any[]>([]);
 const restoring = ref(false);
 // const restoreFileInput = ref<HTMLInputElement | null>(null);
@@ -2497,67 +2617,136 @@ onUnmounted(() => {
 .layout-editor-panel {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  margin-bottom: 16px;
 }
 .layout-editor-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 14px 18px;
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #334155;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
 }
 .layout-close-btn {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   color: #94a3b8;
-  padding: 0 4px;
+  padding: 2px 6px;
   line-height: 1;
+  border-radius: 4px;
 }
 .layout-close-btn:hover {
-  color: #475569;
+  color: #ef4444;
+  background: #fef2f2;
 }
+
+/* 预设布局 */
+.layout-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+}
+.presets-label {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .layout-editor-body {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 4px;
-  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 18px;
+  max-height: 360px;
+  overflow-y: auto;
 }
 .layout-editor-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: grab;
   font-size: 13px;
-  color: #475569;
-  transition: background 0.15s;
+  color: #334155;
+  transition: background 0.15s, opacity 0.15s;
+  border: 1px solid transparent;
 }
 .layout-editor-item:hover {
   background: #f1f5f9;
+  border-color: #e2e8f0;
 }
-.layout-editor-item input[type="checkbox"] {
-  cursor: pointer;
-  accent-color: #40916c;
+.layout-editor-item.item-disabled {
+  opacity: 0.5;
+}
+.layout-editor-item.item-disabled:hover {
+  opacity: 0.75;
+}
+.layout-editor-item:active {
+  cursor: grabbing;
+}
+.drag-handle {
+  color: #cbd5e1;
+  font-size: 18px;
+  cursor: grab;
+  user-select: none;
+  letter-spacing: -2px;
+}
+.item-order {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  min-width: 16px;
+  text-align: center;
+}
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+.item-label {
+  display: block;
+  font-weight: 500;
+  font-size: 14px;
+  color: #334155;
+}
+.item-desc {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .layout-editor-footer {
-  padding: 8px 16px 12px;
+  padding: 10px 18px 14px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f0f0f0;
+}
+.layout-status {
+  font-size: 12px;
+  color: #94a3b8;
 }
 .layout-reset-btn {
   background: none;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
-  padding: 4px 12px;
+  padding: 5px 14px;
   font-size: 12px;
   color: #64748b;
   cursor: pointer;
@@ -2566,5 +2755,6 @@ onUnmounted(() => {
 .layout-reset-btn:hover {
   border-color: #40916c;
   color: #40916c;
+  background: #f0fdf4;
 }
 </style>

@@ -176,7 +176,7 @@ def _process_import_row(row: tuple, field_names: List[str], db: Session, row_idx
     ).first()
     if existing:
         return False, f"第{row_idx}行: 帮扶村 '{values['village_name']}' 已存在，跳过"
-    village = SupportedVillage(**{k: v for k, v in values.items() if v})
+    village = SupportedVillage(**{k: v for k, v in values.items() if v is not None})
     db.add(village)
     return True, None
 
