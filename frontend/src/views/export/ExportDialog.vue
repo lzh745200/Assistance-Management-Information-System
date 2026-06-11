@@ -79,17 +79,12 @@
 
       <el-row :gutter="20">
         <el-col :span="12">
-          <el-form-item label="振兴层级">
-            <el-select
-              v-model="filterForm.revitalization_tier"
-              placeholder="请选择"
-              clearable
-            >
-              <el-option label="国家级" value="national" />
-              <el-option label="省级" value="provincial" />
-              <el-option label="市级" value="municipal" />
-              <el-option label="县级" value="county" />
-            </el-select>
+          <el-form-item label="振兴梯队">
+            <el-switch
+              v-model="filterForm.is_revitalization_tier"
+              active-text="是"
+              inactive-text="全部"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -219,7 +214,7 @@ const filterForm = ref<ExportFilterParams>({
   region_scope: undefined,
   is_three_regions: undefined,
   is_border_area: undefined,
-  revitalization_tier: undefined,
+  is_revitalization_tier: undefined,
 });
 
 // ==================== 监听 ====================
@@ -253,10 +248,12 @@ async function handleExport() {
     Object.entries(filterForm.value).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
         const converted =
-          key === "is_three_regions" || key === "is_border_area"
-            ? (value as number | boolean | string) === 1
+          key === "is_three_regions" ||
+          key === "is_border_area" ||
+          key === "is_revitalization_tier"
+            ? (value as number | boolean | string) === 1 || value === true
               ? true
-              : (value as number | boolean | string) === 0
+              : (value as number | boolean | string) === 0 || value === false
                 ? false
                 : undefined
             : value;
@@ -362,7 +359,7 @@ function handleReset() {
     region_scope: undefined,
     is_three_regions: undefined,
     is_border_area: undefined,
-    revitalization_tier: undefined,
+    is_revitalization_tier: undefined,
   };
   forceAsync.value = false;
   exportTask.value = null;

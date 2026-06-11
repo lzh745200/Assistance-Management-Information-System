@@ -181,6 +181,7 @@ const exportForm = reactive({
     support_unit: "",
     region_scope: "",
     is_revitalization_tier: false,
+  },
 });
 
 // 状态
@@ -214,7 +215,8 @@ async function handleExport() {
     if (exportForm.filters.region_scope)
       filters.region_scope = exportForm.filters.region_scope;
     if (exportForm.filters.is_revitalization_tier)
-      filters.is_revitalization_tier = exportForm.filters.is_revitalization_tier;
+      filters.is_revitalization_tier =
+        exportForm.filters.is_revitalization_tier;
 
     const result = await exportVillages(filters, false);
 
