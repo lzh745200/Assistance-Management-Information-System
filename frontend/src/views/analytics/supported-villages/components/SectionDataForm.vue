@@ -906,13 +906,13 @@ const sectionApiKeyMap: Record<string, string> = {
   population: "population",
   income: "income",
   force_investment: "forceInvestment",
-  industry: "industrySupport",
+  industry: "industry",
   infrastructure: "infrastructure",
   party_building: "partyBuilding",
-  medical: "medicalSupport",
-  consumption: "consumptionSupport",
-  employment: "employmentSupport",
-  education: "educationSupport",
+  medical: "medical",
+  consumption: "consumption",
+  employment: "employment",
+  education: "education",
   committee: "committee",
 };
 

@@ -31,7 +31,9 @@
     <div v-if="showLayoutEditor" class="layout-editor-panel">
       <div class="layout-editor-header">
         <span>⚙️ 自定义工作台布局</span>
-        <button class="layout-close-btn" @click="showLayoutEditor = false">✕</button>
+        <button class="layout-close-btn" @click="showLayoutEditor = false">
+          ✕
+        </button>
       </div>
       <!-- 预设布局 -->
       <div class="layout-presets">
@@ -64,7 +66,11 @@
           <el-switch
             :model-value="cardVisibility[card.key]"
             size="small"
-            @change="(val: any) => { cardVisibility[card.key] = !!val; }"
+            @change="
+              (val: any) => {
+                cardVisibility[card.key] = !!val;
+              }
+            "
           />
           <div class="item-info">
             <span class="item-label">{{ card.label }}</span>
@@ -76,7 +82,9 @@
         <span class="layout-status">
           已显示 {{ visibleCount }} / {{ DASHBOARD_CARDS.length }} 个面板
         </span>
-        <button class="layout-reset-btn" @click="resetLayout">恢复默认布局</button>
+        <button class="layout-reset-btn" @click="resetLayout">
+          恢复默认布局
+        </button>
       </div>
     </div>
 
@@ -646,13 +654,25 @@ const showRestoreDialog = ref(false);
 
 // ─── 仪表板布局个性化 ───
 const DASHBOARD_CARDS = [
-  { key: "stats", label: "核心统计指标", description: "项目数、村庄数、学校数、人口等关键数字" },
+  {
+    key: "stats",
+    label: "核心统计指标",
+    description: "项目数、村庄数、学校数、人口等关键数字",
+  },
   { key: "quickNav", label: "快捷导航", description: "常用功能快捷入口按钮组" },
   { key: "projects", label: "项目进度", description: "帮扶项目列表与完成进度" },
   { key: "funds", label: "经费概况", description: "经费分配与使用情况概览" },
-  { key: "activities", label: "近期动态", description: "最新帮扶活动与工作动态" },
+  {
+    key: "activities",
+    label: "近期动态",
+    description: "最新帮扶活动与工作动态",
+  },
   { key: "todos", label: "待办事项", description: "待审批、待处理的工作任务" },
-  { key: "dataOverview", label: "数据概览", description: "年度帮扶数据汇总统计" },
+  {
+    key: "dataOverview",
+    label: "数据概览",
+    description: "年度帮扶数据汇总统计",
+  },
 ] as const;
 type CardKey = (typeof DASHBOARD_CARDS)[number]["key"];
 const DEFAULT_CARD_VISIBILITY = Object.fromEntries(
@@ -692,8 +712,8 @@ const LAYOUT_PRESETS = [
 type PresetKey = (typeof LAYOUT_PRESETS)[number]["key"];
 const currentPreset = ref<PresetKey | "default">("default");
 
-const visibleCount = computed(() =>
-  Object.values(cardVisibility.value).filter(Boolean).length,
+const visibleCount = computed(
+  () => Object.values(cardVisibility.value).filter(Boolean).length,
 );
 
 function applyPreset(key: PresetKey) {
@@ -710,7 +730,9 @@ function applyPreset(key: PresetKey) {
       break;
     case "operator":
       // 操作员：隐藏数据概览、待办事项
-      allKeys.forEach((k) => (reset[k] = k !== "dataOverview" && k !== "todos"));
+      allKeys.forEach(
+        (k) => (reset[k] = k !== "dataOverview" && k !== "todos"),
+      );
       break;
     case "minimal":
       // 简约：仅核心统计 + 快捷导航 + 项目进度
@@ -2682,7 +2704,9 @@ onUnmounted(() => {
   cursor: grab;
   font-size: 13px;
   color: #334155;
-  transition: background 0.15s, opacity 0.15s;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
   border: 1px solid transparent;
 }
 .layout-editor-item:hover {

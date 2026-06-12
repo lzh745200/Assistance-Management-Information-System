@@ -94,27 +94,16 @@ watch(
   },
 );
 
-// 地图上的已选坐标标记
+// 地图上的已选坐标标记（仅用户点击地图后才显示）
 const mapMarkers = computed(() => {
   if (pickedLng.value == null || pickedLat.value == null) {
-    // 默认显示当前坐标
-    if (innerLng.value && innerLat.value) {
-      return [
-        {
-          lng: innerLng.value,
-          lat: innerLat.value,
-          name: "当前位置",
-          type: "default",
-        },
-      ];
-    }
     return [];
   }
   return [
     {
       lng: pickedLng.value,
       lat: pickedLat.value,
-      name: "已选位置",
+      name: "",
       type: "default",
     },
   ];
@@ -125,8 +114,8 @@ function onInputChange() {
 }
 
 function pickFromMap() {
-  pickedLng.value = innerLng.value;
-  pickedLat.value = innerLat.value;
+  pickedLng.value = null;
+  pickedLat.value = null;
   dialogVisible.value = true;
 }
 

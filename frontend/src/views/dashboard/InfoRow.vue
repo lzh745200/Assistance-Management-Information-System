@@ -94,7 +94,7 @@ async function loadActivities() {
     const res = await request.get("/dashboard/recent-activities", {
       params: { limit: 10 },
     } as any);
-    const data = res?.data?.items || res?.data?.data || res?.data || [];
+    const data = (res as any)?.data?.items || [];
     activities.value = (Array.isArray(data) ? data : []).slice(0, 10);
   } catch {
     activities.value = [];
