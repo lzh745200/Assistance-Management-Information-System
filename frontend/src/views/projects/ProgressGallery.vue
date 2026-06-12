@@ -94,7 +94,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import ProgressAlbum from "@/components/business/ProgressAlbum.vue";
 import ImageComparison from "@/components/business/ImageComparison.vue";
-import request from "@/utils/request";
+import request from "@/api/request";
 
 const route = useRoute();
 const router = useRouter();

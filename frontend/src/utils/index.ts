@@ -3,7 +3,7 @@
  */
 
 export { logger } from "./logger";
-export { default as request } from "./request";
+export { default as request } from "@/api/request";
 export { exportUtil } from "./exportUtil";
 export { copyToClipboard } from "./clipboard";
 

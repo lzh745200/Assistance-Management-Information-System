@@ -634,6 +634,9 @@ const emit = defineEmits<{
 
 const formRef = ref();
 defineExpose({ formRef });
+
+const unwrap = (raw: any, fallback: any = {}) => raw?.data || raw || fallback;
+
 const saving = ref(false);
 const copying = ref(false);
 const currentYear = new Date().getFullYear();
@@ -731,7 +734,7 @@ const formData = reactive({
 const loadYearlyData = async () => {
   try {
     const resp = await getYearlyData(props.villageId, selectedYear.value);
-    const raw: Record<string, any> = (resp as any)?.data || resp || {};
+    const raw: Record<string, any> = unwrap(resp);
     // 后端 _SECTION_MODEL key → formData 属性名映射
     const sectionMap: Record<string, keyof typeof formData> = {
       population: "population",

@@ -2,6 +2,7 @@
  * Axios HTTP 请求封装
  */
 import axios, { type AxiosRequestConfig, type Canceler } from "axios";
+import { ElMessage } from "element-plus";
 import { AuthStorage } from "@/utils/authStorage";
 import { safeArray } from "@/composables/useSafeData";
 
@@ -95,11 +96,11 @@ request.interceptors.response.use(
       if (status === 401) {
         _cachedToken = null;
         AuthStorage.clear();
-        console.warn("[API] 401 Unauthorized");
+        ElMessage.error("登录已过期，请重新登录");
       } else if (status === 403) {
-        console.error("[API] 403 Forbidden:", data?.detail || "权限不足");
+        ElMessage.error(data?.detail || "权限不足，无法执行此操作");
       } else if (status >= 500) {
-        console.error("[API] Server error:", status, data?.detail || "");
+        ElMessage.error("服务器错误，请稍后重试");
       } else if (status === 404) {
         console.warn(`[API] 404: ${error.config?.url}`);
       } else {
@@ -113,9 +114,9 @@ request.interceptors.response.use(
       error.code === "ERR_NETWORK" ||
       error.message?.includes("NetworkError")
     ) {
-      console.error("[API] Network error — backend may be down");
+      ElMessage.error("网络连接失败，请检查服务是否启动");
     } else if (error.code === "ECONNABORTED") {
-      console.warn("[API] Request timeout");
+      ElMessage.warning("请求超时，请重试");
     } else {
       console.error("[API] Unexpected error:", error.message || error);
     }

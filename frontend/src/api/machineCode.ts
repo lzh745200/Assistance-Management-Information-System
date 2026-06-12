@@ -2,7 +2,7 @@
  * 机器码管理 API
  */
 
-import request from "@/utils/request";
+import request from "@/api/request";
 
 export interface MachineCodeInfo {
   machine_code: string;

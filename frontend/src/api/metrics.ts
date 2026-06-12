@@ -2,7 +2,7 @@
  * 监控指标 API
  */
 
-import request from "@/utils/request";
+import request from "@/api/request";
 
 /**
  * 获取监控 Dashboard 数据

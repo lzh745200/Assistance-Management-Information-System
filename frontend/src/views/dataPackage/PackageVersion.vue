@@ -228,7 +228,7 @@
 import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRoute } from "vue-router";
-import request from "@/utils/request";
+import request from "@/api/request";
 import { handleApiError } from "@/utils/errorHandler";
 import { format } from "@/utils";
 

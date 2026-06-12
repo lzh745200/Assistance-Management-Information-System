@@ -414,7 +414,7 @@ import { ref, computed, onMounted } from "vue";
 import { Download, Upload, Loading } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { useRouterSafe } from "@/composables/useRouterSafe";
-import request from "@/utils/request";
+import request from "@/api/request";
 
 // 类型定义
 interface ProjectData {

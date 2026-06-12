@@ -115,7 +115,7 @@ import { logger } from "@/utils/logger";
 import { ref, onMounted } from "vue";
 import { ElMessageBox } from "element-plus";
 import { UploadFilled } from "@element-plus/icons-vue";
-import request from "@/utils/request";
+import request from "@/api/request";
 import { notify as appNotify } from "@/utils/notify";
 
 /** 统一消息通知 — 页面正中显示，3 秒后自动关闭 */

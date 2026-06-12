@@ -186,7 +186,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import request from "@/utils/request";
+import request from "@/api/request";
 import { DATA_TYPES, DATA_TYPE_LABELS } from "@/constants/dataTypes";
 import { handleApiError } from "@/utils/errorHandler";
 
