@@ -635,7 +635,7 @@ const emit = defineEmits<{
 const formRef = ref();
 defineExpose({ formRef });
 
-const unwrap = (raw: any, fallback: any = {}) => raw?.data || raw || fallback;
+import { unwrapData } from "@/utils/unwrapData";
 
 const saving = ref(false);
 const copying = ref(false);
@@ -734,9 +734,9 @@ const formData = reactive({
 const loadYearlyData = async () => {
   try {
     const resp = await getYearlyData(props.villageId, selectedYear.value);
-    const raw: Record<string, any> = unwrap(resp);
+    const raw: Record<string, any> = unwrapData(resp);
     // 后端 _SECTION_MODEL key → formData 属性名映射
-    const sectionMap: Record<string, keyof typeof formData> = {
+    const sectionMap = {
       population: "population",
       income: "income",
       "force-investment": "forceInvestment",
@@ -747,7 +747,7 @@ const loadYearlyData = async () => {
       consumption: "consumption",
       employment: "employment",
       education: "education",
-    };
+    } as const satisfies Record<string, keyof typeof formData>;
     for (const [apiKey, formKey] of Object.entries(sectionMap)) {
       if (raw[apiKey]) {
         Object.assign(formData[formKey], { ...raw[apiKey], year: selectedYear.value });

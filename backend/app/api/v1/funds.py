@@ -263,28 +263,6 @@ def get_fund(
     return {"data": _fund_to_dict(fund)}
 
 
-def _create_fund_impl(
-    data: FundCreate,
-    current_user: User,
-    db: Session,
-    *,
-    status: Optional[str] = None,
-    applicant: Optional[str] = None,
-) -> Fund:
-    """共享的经费创建逻辑"""
-    fund = Fund(**data.model_dump(exclude_none=True))
-    fund.created_by = current_user.id
-    fund.organization_id = current_user.organization_id
-    if status is not None:
-        fund.status = status
-    if applicant is not None:
-        fund.applicant = applicant
-    db.add(fund)
-    db.commit()
-    db.refresh(fund)
-    return fund
-
-
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_fund(
     data: FundCreate,
@@ -292,8 +270,8 @@ def create_fund(
     db: Session = Depends(get_db),
 ):
     """创建经费记录（需管理员权限）"""
-    require_manager_role(current_user)
-    fund = _create_fund_impl(data, current_user, db)
+    from app.services.fund_service import FundService
+    fund = FundService(db).create_fund_from_request(data, current_user, require_manager=True)
     return {"data": {"id": fund.id}, "message": "创建成功"}
 
 
@@ -304,11 +282,8 @@ def apply_fund(
     db: Session = Depends(get_db),
 ):
     """用户经费申请 — 无需管理员权限，所有登录用户均可提交"""
-    fund = _create_fund_impl(
-        data, current_user, db,
-        status="pending",
-        applicant=current_user.full_name or current_user.username,
-    )
+    from app.services.fund_service import FundService
+    fund = FundService(db).create_fund_from_request(data, current_user, require_manager=False)
     return {"data": {"id": fund.id}, "message": "申请已提交，等待审批"}
 
 

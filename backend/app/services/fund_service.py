@@ -122,6 +122,42 @@ class FundService:
             logger.info("Fund %d created (flushed, not committed)", fund.id)
         return fund
 
+    def create_fund_from_request(
+        self,
+        data: "FundCreate",
+        user,
+        *,
+        require_manager: bool = True,
+        auto_commit: bool = True,
+    ) -> Fund:
+        """
+        从 API 请求创建经费记录（统一管理员创建 + 用户申请）。
+
+        :param data: Pydantic FundCreate 模型
+        :param user: 当前登录用户
+        :param require_manager: 是否需要管理员权限（管理员创建=True，用户申请=False）
+        :param auto_commit: 是否自动提交
+        """
+        if require_manager:
+            from app.api.v1.deps import require_manager_role
+            require_manager_role(user)
+
+        fund = Fund(**data.model_dump(exclude_none=True))
+        fund.created_by = user.id
+        fund.organization_id = user.organization_id
+        if not require_manager:
+            # 用户申请：默认 pending + 记录申请人
+            fund.status = "pending"
+            fund.applicant = user.full_name or user.username
+        self.db.add(fund)
+        if auto_commit:
+            self.db.commit()
+            self.db.refresh(fund)
+            logger.info("Fund %d created (manager=%s, user=%s)", fund.id, require_manager, user.id)
+        else:
+            self.db.flush()
+        return fund
+
     def update_fund(self, fund_id: int, *, auto_commit: bool = True, **kwargs) -> Optional[Fund]:
         """更新经费记录。"""
         fund = self.get_fund(fund_id)

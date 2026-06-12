@@ -33,7 +33,6 @@ export default defineConfig({
         '**/mockData',
         'dist/',
         'tests/e2e/',
-        'src/utils/request.ts',
       ],
       // 覆盖率阈值 — 设为可实现基线 (基于实际测试结果)
       // 详细分析见 docs/测试覆盖率差距报告.md

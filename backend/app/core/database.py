@@ -7,11 +7,12 @@ Database engine and session configuration.
 SQLite 性能优化策略：
 1. WAL (Write-Ahead Logging) 模式：实现并发读写，读写互不阻塞。
 2. NORMAL 同步模式：在 WAL 下兼顾数据安全与写入性能。
-3. 动态 PRAGMA 调优：根据现代硬件自动调整 cache_size (64MB) 和 mmap_size (512MB)。
+3. 动态 PRAGMA 调优：根据现代硬件自动调整 cache_size (64MB) 和 mmap_size (可配，默认 128MB)。
 4. 长事务独占锁机制：解决大批量数据导入 (.rrs) 时的 SQLITE_BUSY 问题。
 """
 
 import logging
+import os
 import threading
 from contextlib import contextmanager
 from pathlib import Path
@@ -25,6 +26,10 @@ from sqlalchemy.pool import QueuePool
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+# 模块级常量：SQLite PRAGMA 调优值（避免每次连接重复计算）
+SQLITE_MMAP_SIZE = int(os.environ.get("SQLITE_MMAP_SIZE", 134217728))  # 默认 128MB
+SQLITE_CACHE_SIZE = int(os.environ.get("SQLITE_CACHE_SIZE", -64000))    # 默认 64MB
 
 DATABASE_URL = settings.DATABASE_URL
 IS_SQLITE = DATABASE_URL.startswith("sqlite")
@@ -69,9 +74,9 @@ def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
     # 3. 锁等待与超时 (军用环境硬件可能较慢或存在大事务，放宽至 10 秒)
     cursor.execute("PRAGMA busy_timeout=10000")
 
-    # 4. 内存与缓存调优 (针对现代 PC/工控机，适当放大)
-    cursor.execute("PRAGMA cache_size=-64000")        # 64MB 页面缓存 (负数表示 KB)
-    cursor.execute("PRAGMA mmap_size=536870912")      # 512MB 内存映射 I/O，加速全表扫描/统计
+    # 4. 内存与缓存调优 (针对现代 PC/工控机，适当放大；可通过环境变量覆盖)
+    cursor.execute(f"PRAGMA cache_size={SQLITE_CACHE_SIZE}")
+    cursor.execute(f"PRAGMA mmap_size={SQLITE_MMAP_SIZE}")
     cursor.execute("PRAGMA temp_store=MEMORY")        # 临时表/索引存储在内存中
 
     # 5. WAL 维护
@@ -98,7 +103,8 @@ def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
             logger.error("设置 SQLCipher 密钥失败: %s", _enc_err)
 
     cursor.close()
-    logger.debug("SQLite PRAGMAs 初始化完成: WAL, 64MB Cache, 512MB MMAP, 10s Timeout")
+    logger.debug("SQLite PRAGMAs 初始化完成: WAL, cache=%dKB, mmap=%dMB, timeout=10s",
+                 abs(SQLITE_CACHE_SIZE), SQLITE_MMAP_SIZE // (1024 * 1024))
 
 
 def get_db() -> Generator[Session, None, None]:

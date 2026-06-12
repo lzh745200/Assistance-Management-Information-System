@@ -482,12 +482,16 @@ function onFundingYearChange(year: number) {
   }
 }
 
-function addOrUpdateFunding() {
+function validateFundingYear(): number | null {
   const year = Number(selectedFundingYear.value);
   if (isNaN(year) || !Number.isInteger(year) || year < 2000) {
     ElMessage.warning("请输入有效年度（如 2024）");
-    return;
+    return null;
   }
+  return year;
+}
+
+function upsertFundingRow(year: number) {
   const existing = transitionFundingRows.value.find((r) => r.year === year);
   if (existing) {
     existing.militaryInvestment = currentMilitaryInput.value;
@@ -500,12 +504,21 @@ function addOrUpdateFunding() {
     });
   }
   transitionFundingRows.value.sort((a, b) => a.year - b.year);
-  // 切换到下一年度并加载其数据
+}
+
+function advanceToNextYear(year: number) {
   const nextYear = year + 1;
   if (availableFundingYears.value.includes(nextYear)) {
     selectedFundingYear.value = nextYear;
   }
   onFundingYearChange(selectedFundingYear.value);
+}
+
+function addOrUpdateFunding() {
+  const year = validateFundingYear();
+  if (year === null) return;
+  upsertFundingRow(year);
+  advanceToNextYear(year);
 }
 
 function removeFundingByYear(year: number) {
