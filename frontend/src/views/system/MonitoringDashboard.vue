@@ -52,7 +52,7 @@
           <div
             class="progress-bar-fill"
             :class="'bar-' + card.status"
-            :style="{ width: Math.min(100, (card.percent || 0)) + '%' }"
+            :style="{ width: Math.min(100, card.percent || 0) + '%' }"
           />
         </div>
         <div class="primary-card-detail">{{ card.detail }}</div>
@@ -99,7 +99,9 @@
       <div class="chart-panel">
         <div class="panel-header">
           <span>📊 API 请求统计（近24小时）</span>
-          <el-tag v-if="apiStats.length === 0" type="warning" size="small">无数据</el-tag>
+          <el-tag v-if="apiStats.length === 0" type="warning" size="small"
+            >无数据</el-tag
+          >
         </div>
         <div ref="chartRef" class="chart-container" />
         <el-empty
@@ -147,7 +149,11 @@
         <span>🩺 系统健康检查</span>
         <el-tag
           :type="
-            healthScore >= 80 ? 'success' : healthScore >= 60 ? 'warning' : 'danger'
+            healthScore >= 80
+              ? 'success'
+              : healthScore >= 60
+                ? 'warning'
+                : 'danger'
           "
           size="small"
           effect="dark"
@@ -426,8 +432,10 @@ function statusInfo(
   statusText: string;
 } {
   const v = invert ? 100 - val : val;
-  if (v >= 90) return { status: "danger", tagType: "danger", statusText: "严重" };
-  if (v >= 70) return { status: "warning", tagType: "warning", statusText: "警告" };
+  if (v >= 90)
+    return { status: "danger", tagType: "danger", statusText: "严重" };
+  if (v >= 70)
+    return { status: "warning", tagType: "warning", statusText: "警告" };
   return { status: "normal", tagType: "success", statusText: "正常" };
 }
 
@@ -444,7 +452,13 @@ function makePrimaryCard(
   hasData: boolean,
 ): MetricCard {
   return {
-    key, icon, value, unit, label, detail, percent,
+    key,
+    icon,
+    value,
+    unit,
+    label,
+    detail,
+    percent,
     ...si,
     history: history_,
     error: !hasData,
@@ -459,8 +473,10 @@ const primaryCards = computed<MetricCard[]>(() => {
 
   return [
     makePrimaryCard(
-      "cpu", "🖥️",
-      hasData ? s!.cpu_usage.toFixed(1) : "--", "%",
+      "cpu",
+      "🖥️",
+      hasData ? s!.cpu_usage.toFixed(1) : "--",
+      "%",
       "CPU 使用率",
       hasData ? `${s!.cpu_count} 核 · ${s!.process_threads} 线程` : "",
       hasData ? s!.cpu_usage : 0,
@@ -469,20 +485,28 @@ const primaryCards = computed<MetricCard[]>(() => {
       hasData,
     ),
     makePrimaryCard(
-      "memory", "💾",
-      hasData ? s!.memory_usage.toFixed(1) : "--", "%",
+      "memory",
+      "💾",
+      hasData ? s!.memory_usage.toFixed(1) : "--",
+      "%",
       "内存使用率",
-      hasData ? `${s!.memory_used_mb.toFixed(0)} / ${s!.memory_total_mb.toFixed(0)} MB` : "",
+      hasData
+        ? `${s!.memory_used_mb.toFixed(0)} / ${s!.memory_total_mb.toFixed(0)} MB`
+        : "",
       hasData ? s!.memory_usage : 0,
       hist.map((h) => h.mem / 100),
       statusInfo(s?.memory_usage ?? 0),
       hasData,
     ),
     makePrimaryCard(
-      "disk", "📀",
-      hasData ? s!.disk_usage.toFixed(1) : "--", "%",
+      "disk",
+      "📀",
+      hasData ? s!.disk_usage.toFixed(1) : "--",
+      "%",
       "磁盘使用率",
-      hasData ? `${s!.disk_used_gb.toFixed(1)} / ${s!.disk_total_gb.toFixed(1)} GB` : "",
+      hasData
+        ? `${s!.disk_used_gb.toFixed(1)} / ${s!.disk_total_gb.toFixed(1)} GB`
+        : "",
       hasData ? s!.disk_usage : 0,
       hist.map((h) => h.disk / 100),
       statusInfo(s?.disk_usage ?? 0),
@@ -509,22 +533,40 @@ const secondaryCards = computed<MetricCard[]>(() => {
 
   return [
     {
-      key: "net_recv", icon: "📥",
-      value: hasData ? s!.network_recv_mb.toFixed(1) : "--", unit: "MB",
+      key: "net_recv",
+      icon: "📥",
+      value: hasData ? s!.network_recv_mb.toFixed(1) : "--",
+      unit: "MB",
       ...netRecvSi,
-      label: "网络接收", detail: "累计接收", percent: 0, history: [], error: !hasData,
+      label: "网络接收",
+      detail: "累计接收",
+      percent: 0,
+      history: [],
+      error: !hasData,
     },
     {
-      key: "net_sent", icon: "📤",
-      value: hasData ? s!.network_sent_mb.toFixed(1) : "--", unit: "MB",
+      key: "net_sent",
+      icon: "📤",
+      value: hasData ? s!.network_sent_mb.toFixed(1) : "--",
+      unit: "MB",
       ...netSentSi,
-      label: "网络发送", detail: "累计发送", percent: 0, history: [], error: !hasData,
+      label: "网络发送",
+      detail: "累计发送",
+      percent: 0,
+      history: [],
+      error: !hasData,
     },
     {
-      key: "threads", icon: "⚙️",
-      value: hasData ? String(s!.process_threads) : "--", unit: "",
+      key: "threads",
+      icon: "⚙️",
+      value: hasData ? String(s!.process_threads) : "--",
+      unit: "",
       ...thrSi,
-      label: "进程线程", detail: hasData ? `${s!.cpu_count} 核 CPU` : "", percent: 0, history: [], error: !hasData,
+      label: "进程线程",
+      detail: hasData ? `${s!.cpu_count} 核 CPU` : "",
+      percent: 0,
+      history: [],
+      error: !hasData,
     },
   ];
 });
@@ -595,17 +637,41 @@ async function refreshAll() {
       console.error("Health fetch failed:", health.reason);
 
     if (snapData) {
-      pushHistory(snapData.cpu_usage, snapData.memory_usage, snapData.disk_usage);
+      pushHistory(
+        snapData.cpu_usage,
+        snapData.memory_usage,
+        snapData.disk_usage,
+      );
       const sid = Date.now();
       const logs: typeof recentLogs.value = [];
       if (snapData.cpu_usage > 80)
-        logs.push({ id: sid, time: new Date().toLocaleTimeString(), level: "warn", message: `CPU 使用率偏高: ${snapData.cpu_usage.toFixed(1)}%` });
+        logs.push({
+          id: sid,
+          time: new Date().toLocaleTimeString(),
+          level: "warn",
+          message: `CPU 使用率偏高: ${snapData.cpu_usage.toFixed(1)}%`,
+        });
       if (snapData.memory_usage > 80)
-        logs.push({ id: sid + 1, time: new Date().toLocaleTimeString(), level: "warn", message: `内存使用率偏高: ${snapData.memory_usage.toFixed(1)}%` });
+        logs.push({
+          id: sid + 1,
+          time: new Date().toLocaleTimeString(),
+          level: "warn",
+          message: `内存使用率偏高: ${snapData.memory_usage.toFixed(1)}%`,
+        });
       if (snapData.disk_usage > 85)
-        logs.push({ id: sid + 2, time: new Date().toLocaleTimeString(), level: "error", message: `磁盘使用率过高: ${snapData.disk_usage.toFixed(1)}%` });
+        logs.push({
+          id: sid + 2,
+          time: new Date().toLocaleTimeString(),
+          level: "error",
+          message: `磁盘使用率过高: ${snapData.disk_usage.toFixed(1)}%`,
+        });
       if (logs.length === 0)
-        logs.push({ id: sid, time: new Date().toLocaleTimeString(), level: "info", message: "系统资源使用正常" });
+        logs.push({
+          id: sid,
+          time: new Date().toLocaleTimeString(),
+          level: "info",
+          message: "系统资源使用正常",
+        });
       recentLogs.value = logs;
     }
 
@@ -651,16 +717,29 @@ function buildChart() {
     ],
     series: [
       {
-        name: "请求数", type: "bar", data: counts,
-        itemStyle: { color: "#409eff" }, barMaxWidth: 28,
+        name: "请求数",
+        type: "bar",
+        data: counts,
+        itemStyle: { color: "#409eff" },
+        barMaxWidth: 28,
       },
       {
-        name: "平均耗时(ms)", type: "line", yAxisIndex: 0, data: avgTimes,
-        lineStyle: { color: "#67c23a" }, symbol: "circle", symbolSize: 4,
+        name: "平均耗时(ms)",
+        type: "line",
+        yAxisIndex: 0,
+        data: avgTimes,
+        lineStyle: { color: "#67c23a" },
+        symbol: "circle",
+        symbolSize: 4,
       },
       {
-        name: "错误率(%)", type: "line", yAxisIndex: 1, data: errorRates,
-        lineStyle: { color: "#f56c6c" }, symbol: "diamond", symbolSize: 4,
+        name: "错误率(%)",
+        type: "line",
+        yAxisIndex: 1,
+        data: errorRates,
+        lineStyle: { color: "#f56c6c" },
+        symbol: "diamond",
+        symbolSize: 4,
       },
     ],
   });
@@ -691,7 +770,9 @@ function exportData() {
 // ── Theme watch ──
 watch(
   () => configStore.theme,
-  () => { nextTick(() => buildChart()); },
+  () => {
+    nextTick(() => buildChart());
+  },
 );
 
 // ── Lifecycle ──
@@ -758,9 +839,15 @@ watch(healthExpanded, (val) => {
   border: 3px solid;
   flex-shrink: 0;
 }
-.health-badge.score-good { border-color: #67c23a; }
-.health-badge.score-warning { border-color: #e6a23c; }
-.health-badge.score-danger { border-color: #f56c6c; }
+.health-badge.score-good {
+  border-color: #67c23a;
+}
+.health-badge.score-warning {
+  border-color: #e6a23c;
+}
+.health-badge.score-danger {
+  border-color: #f56c6c;
+}
 .health-score-num {
   font-size: 18px;
   font-weight: 700;
@@ -770,9 +857,15 @@ watch(healthExpanded, (val) => {
   font-size: 10px;
   color: var(--color-text-secondary);
 }
-.score-good .health-score-num { color: #67c23a; }
-.score-warning .health-score-num { color: #e6a23c; }
-.score-danger .health-score-num { color: #f56c6c; }
+.score-good .health-score-num {
+  color: #67c23a;
+}
+.score-warning .health-score-num {
+  color: #e6a23c;
+}
+.score-danger .health-score-num {
+  color: #f56c6c;
+}
 
 /* ═══ Primary Metric Cards ═══ */
 .primary-metrics {
@@ -782,7 +875,9 @@ watch(healthExpanded, (val) => {
   margin-bottom: 16px;
 }
 @media (max-width: 900px) {
-  .primary-metrics { grid-template-columns: 1fr; }
+  .primary-metrics {
+    grid-template-columns: 1fr;
+  }
 }
 
 .primary-card {
@@ -792,15 +887,23 @@ watch(healthExpanded, (val) => {
   padding: 20px 24px 16px;
   position: relative;
   overflow: hidden;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 .primary-card:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
-.primary-card.status-normal { border-top: 4px solid #67c23a; }
-.primary-card.status-warning { border-top: 4px solid #e6a23c; }
-.primary-card.status-danger { border-top: 4px solid #f56c6c; }
+.primary-card.status-normal {
+  border-top: 4px solid #67c23a;
+}
+.primary-card.status-warning {
+  border-top: 4px solid #e6a23c;
+}
+.primary-card.status-danger {
+  border-top: 4px solid #f56c6c;
+}
 .primary-card.card-error {
   border-top-color: #c0c4cc;
   opacity: 0.65;
@@ -857,9 +960,15 @@ watch(healthExpanded, (val) => {
   border-radius: 3px;
   transition: width 0.6s ease;
 }
-.bar-normal { background: linear-gradient(90deg, #67c23a, #85ce61); }
-.bar-warning { background: linear-gradient(90deg, #e6a23c, #ebb563); }
-.bar-danger { background: linear-gradient(90deg, #f56c6c, #f78989); }
+.bar-normal {
+  background: linear-gradient(90deg, #67c23a, #85ce61);
+}
+.bar-warning {
+  background: linear-gradient(90deg, #e6a23c, #ebb563);
+}
+.bar-danger {
+  background: linear-gradient(90deg, #f56c6c, #f78989);
+}
 
 .primary-card-detail {
   font-size: 0.8rem;
@@ -890,10 +999,14 @@ watch(healthExpanded, (val) => {
   margin-bottom: 16px;
 }
 @media (max-width: 768px) {
-  .secondary-metrics { grid-template-columns: repeat(2, 1fr); }
+  .secondary-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 480px) {
-  .secondary-metrics { grid-template-columns: 1fr; }
+  .secondary-metrics {
+    grid-template-columns: 1fr;
+  }
 }
 
 .secondary-card {
@@ -945,7 +1058,9 @@ watch(healthExpanded, (val) => {
   margin-bottom: 16px;
 }
 @media (max-width: 900px) {
-  .middle-row { grid-template-columns: 1fr; }
+  .middle-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chart-panel,
@@ -964,8 +1079,13 @@ watch(healthExpanded, (val) => {
   color: var(--color-text-primary);
   padding: 14px 18px 0;
 }
-.chart-panel { position: relative; }
-.chart-container { height: 280px; width: 100%; }
+.chart-panel {
+  position: relative;
+}
+.chart-container {
+  height: 280px;
+  width: 100%;
+}
 .chart-empty {
   position: absolute;
   top: 32px;
@@ -1006,9 +1126,15 @@ watch(healthExpanded, (val) => {
   flex-shrink: 0;
   width: 38px;
 }
-.log-info .log-level { color: #409eff; }
-.log-warn .log-level { color: #e6a23c; }
-.log-error .log-level { color: #f56c6c; }
+.log-info .log-level {
+  color: #409eff;
+}
+.log-warn .log-level {
+  color: #e6a23c;
+}
+.log-error .log-level {
+  color: #f56c6c;
+}
 .log-message {
   color: var(--color-text-regular);
   overflow: hidden;

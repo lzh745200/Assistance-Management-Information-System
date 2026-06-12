@@ -114,7 +114,8 @@ class TestGetOrganizations:
         q = mock_db.query.return_value
         q.count.return_value = 2
         q.all.return_value = [_make_mock_org(1), _make_mock_org(2)]
-        resp = client_admin.get("/api/v1/organizations")
+        with patch.object(cache_manager, "get", AsyncMock(return_value=None)):
+            resp = client_admin.get("/api/v1/organizations")
         assert resp.status_code == 200
         data = resp.json()
         assert data["total"] == 2

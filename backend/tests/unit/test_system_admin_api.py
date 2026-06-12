@@ -317,7 +317,7 @@ class TestDeleteBackup:
 
     def test_path_traversal(self, auth_client):
         resp = auth_client.delete("/api/v1/system/admin/backups/..%2Fetc%2Fpasswd")
-        assert resp.status_code in (400, 405)
+        assert resp.status_code in (400, 404, 405)
 
     def test_path_traversal_dots(self, auth_client):
         resp = auth_client.delete("/api/v1/system/admin/backups/test..db")

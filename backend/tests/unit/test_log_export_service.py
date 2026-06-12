@@ -182,10 +182,15 @@ class TestGenerateDiagnosticReport:
             assert "数据库检查失败" in content
 
     def test_pkg_resources_failure(self, service, tmp_path):
-        pytest.importorskip("pkg_resources", reason="pkg_resources not installed")
-        bad_ws = MagicMock()
-        bad_ws.__iter__.side_effect = Exception("pkg fail")
-        with patch("pkg_resources.working_set", bad_ws):
+        import builtins
+        orig_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == "pkg_resources":
+                raise ImportError("pkg_resources not available")
+            return orig_import(name, *args, **kwargs)
+
+        with patch("builtins.__import__", side_effect=mock_import):
             result = service._generate_diagnostic_report(tmp_path)
             content = result.read_text(encoding="utf-8")
             assert "获取依赖包版本失败" in content
