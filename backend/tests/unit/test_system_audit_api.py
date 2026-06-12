@@ -42,8 +42,19 @@ def db_client():
     from app.core.database import get_db
     from app.core.security import get_current_user
     from app.models import Base
-    from app.models.audit import AuditLog as _RealAuditLog
     from fastapi.testclient import TestClient
+
+    # Ensure AuditLog is the real class, not a MagicMock from test pollution
+    import app.models.audit as audit_mod
+    saved_audit = getattr(audit_mod, 'AuditLog', None)
+    if saved_audit is not None and not isinstance(saved_audit, type):
+        # AuditLog was polluted - restore from SQLAlchemy registry
+        from sqlalchemy.orm import class_mapper
+        # Find the real AuditLog in the registry
+        for mapper in Base.registry.mappers:
+            if mapper.class_.__name__ == 'AuditLog':
+                audit_mod.AuditLog = mapper.class_
+                break
 
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(bind=engine)
