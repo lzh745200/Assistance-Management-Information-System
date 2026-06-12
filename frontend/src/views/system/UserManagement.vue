@@ -812,11 +812,25 @@ const handleImportPermissionPackage = () => {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".zip";
-  input.onchange = async (e: Event) => {
+
+  // 清理函数：移除 input 元素 + 重置状态
+  const cleanup = () => {
+    importingPermPackage.value = false;
+    input.remove();
+    window.removeEventListener("focus", cleanup);
+  };
+
+  // 用户取消文件对话框时 change 事件不触发，用 window focus 代理清理
+  window.addEventListener("focus", cleanup, { once: true });
+
+  input.addEventListener("change", async (e: Event) => {
+    // 用户已选择文件 → 取消 focus 清理（change 事件先于 focus）
+    window.removeEventListener("focus", cleanup);
+
     importingPermPackage.value = true;
     try {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+      if (!file) { cleanup(); return; }
       const fd = new FormData();
       fd.append("file", file);
       const res = await request.post("/permission-packages/import", fd, {
@@ -849,10 +863,10 @@ const handleImportPermissionPackage = () => {
         err?.response?.data?.detail || err?.message || "导入失败",
       );
     } finally {
-      importingPermPackage.value = false;
-      input.remove();
+      cleanup();
     }
-  };
+  });
+
   input.click();
 };
 
@@ -927,13 +941,6 @@ onMounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
-}
-
-.generated-accounts {
-  margin-top: 20px;
-  padding: 15px;
-  background: rgba(64, 145, 108, 0.1);
-  border-radius: 4px;
 }
 
 :deep(.el-card__header) {

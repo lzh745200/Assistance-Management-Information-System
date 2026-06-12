@@ -81,6 +81,14 @@ register_exception_handlers(app)
 # 添加顺序: Metrics → Audit → RequestLogger → CSRF → CamelToSnake → CORS → SecurityHeaders → RequestID
 
 # 1. 性能监控中间件（最内层，最后执行，包裹实际请求处理）
+# 0. 数据库查询计数中间件（记录每个请求的 SQL 查询次数）
+from app.middleware.query_counter import QueryCounterMiddleware  # noqa: E402
+app.add_middleware(QueryCounterMiddleware)
+
+# 1a. 慢请求监控中间件（记录超过阈值的 SQL 查询）
+from app.middleware.slow_request_monitor import SlowRequestMiddleware  # noqa: E402
+app.add_middleware(SlowRequestMiddleware)
+
 app.add_middleware(MetricsMiddleware)
 
 # 2. 审计日志中间件

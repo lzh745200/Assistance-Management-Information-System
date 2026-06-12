@@ -29,7 +29,7 @@ export const MENU_CONFIG: MenuItem[] = [
   {
     key: "villages",
     label: "帮扶村管理",
-    path: "/villages",
+    path: "/supported-villages",
     icon: "Location",
     order: 2,
   },

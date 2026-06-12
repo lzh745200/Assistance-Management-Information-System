@@ -152,7 +152,7 @@
 import { ref, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { MENU_CONFIG, getAllMenuKeys } from "@/config/menu-config";
-import api from "@/utils/request";
+import request from "@/api/request";
 
 interface User {
   id: number;
@@ -241,7 +241,7 @@ function getMenuLabel(key: string): string {
 
 async function loadUsers() {
   try {
-    const res = await api.get<{ data?: User[] }>("/users");
+    const res = await request.get<{ data?: User[] }>("/users");
     if (res.data?.data) {
       users.value = res.data.data.filter((u) => u.is_active !== false);
     }
@@ -253,7 +253,7 @@ async function loadUsers() {
 async function selectUser(user: User) {
   selectedUserId.value = user.id;
   try {
-    const res = await api.get<{
+    const res = await request.get<{
       data?: UserMenuConfig;
     }>(`/menus/user-menus/${user.id}`);
     if (res.data?.data) {
@@ -277,7 +277,7 @@ async function saveConfig() {
   saving.value = true;
   try {
     const menu_keys = checkedMenuKeys.value;
-    await api.put(`/menus/user-menus/${selectedUser.value.user_id}`, {
+    await request.put(`/menus/user-menus/${selectedUser.value.user_id}`, {
       menu_keys,
     });
     ElMessage.success("菜单权限设置成功");
@@ -305,7 +305,7 @@ async function resetToRoleDefault() {
       { type: "warning" },
     );
 
-    await api.put(`/menus/user-menus/${selectedUser.value.user_id}`, {
+    await request.put(`/menus/user-menus/${selectedUser.value.user_id}`, {
       menu_keys: null,
     });
     ElMessage.success("已恢复角色默认菜单");
@@ -391,7 +391,7 @@ async function handleImportConfig(file: File) {
     }
 
     // 保存
-    await api.put(`/menus/user-menus/${user_id}`, { menu_keys });
+    await request.put(`/menus/user-menus/${user_id}`, { menu_keys });
 
     // 重新加载
     await selectUser({

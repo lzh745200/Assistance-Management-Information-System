@@ -293,37 +293,66 @@ def _verify_frontend_assets():
         print("  如需前端界面，请执行: cd frontend && npm run build")
         return  # 允许纯 API 模式启动
 
-    # 调用审计脚本的核心校验逻辑
+    # 调用审计脚本的核心校验逻辑（优先进程内调用，失败退回子进程）
     try:
-        audit_script = os.path.join(
+        # 进程内调用：更快，无需路径解析/超时/编码处理
+        import importlib.util as _importlib_util
+        _audit_script = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "..", "scripts", "audit_static_assets.py",
         )
-        # 启动时只做快速校验（跳过 JS 动态 import 扫描），完整审计在 CI/build 时执行
-        result = subprocess.run(
-            [_sys.executable, audit_script, "--dir", frontend_dir, "--quick"],
-            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
-        )
-        if result.returncode != 0:
-            print("=" * 60)
-            print("[FATAL] 前端静态资源完整性校验失败，拒绝启动！")
-            print("=" * 60)
-            print(result.stdout)
-            if result.stderr:
-                print(result.stderr)
-            print("修复步骤:")
-            print("  1. cd frontend && npm run build")
-            print(r"  2. Windows: call scripts\build\sync-frontend-dist.bat")
-            print("     Linux:   bash scripts/build/sync-frontend-dist.sh")
-            print("  3. 重新启动后端")
-            print("=" * 60)
-            _sys.exit(1)
+        _spec = _importlib_util.spec_from_file_location("audit_static_assets", _audit_script)
+        if _spec and _spec.loader:
+            _audit_module = _importlib_util.module_from_spec(_spec)
+            _spec.loader.exec_module(_audit_module)
+            exit_code = _audit_module.audit(frontend_dir, quick=True)
+            if exit_code != 0:
+                print("=" * 60)
+                print("[FATAL] 前端静态资源完整性校验失败，拒绝启动！")
+                print("=" * 60)
+                print("修复步骤:")
+                print("  1. cd frontend && npm run build")
+                print(r"  2. Windows: call scripts\build\sync-frontend-dist.bat")
+                print("     Linux:   bash scripts/build/sync-frontend-dist.sh")
+                print("  3. 重新启动后端")
+                print("=" * 60)
+                _sys.exit(1)
+            else:
+                print("[OK] 前端静态资源完整性校验通过")
         else:
-            print("[OK] 前端静态资源完整性校验通过")
-    except FileNotFoundError:
-        print("[WARN] 审计脚本未找到，跳过静态资源校验")
-    except Exception as e:
-        print(f"[WARN] 静态资源校验执行异常: {e}，跳过校验继续启动")
+            raise ImportError("无法加载审计模块")
+    except Exception as _audit_import_err:
+        # 回退到子进程方式（兼容 PyInstaller 打包场景）
+        try:
+            _audit_script = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "..", "scripts", "audit_static_assets.py",
+            )
+            result = subprocess.run(
+                [_sys.executable, _audit_script, "--dir", frontend_dir, "--quick"],
+                capture_output=True, text=True, encoding="utf-8",
+                errors="replace", timeout=30,
+            )
+            if result.returncode != 0:
+                print("=" * 60)
+                print("[FATAL] 前端静态资源完整性校验失败，拒绝启动！")
+                print("=" * 60)
+                print(result.stdout)
+                if result.stderr:
+                    print(result.stderr)
+                print("修复步骤:")
+                print("  1. cd frontend && npm run build")
+                print(r"  2. Windows: call scripts\build\sync-frontend-dist.bat")
+                print("     Linux:   bash scripts/build/sync-frontend-dist.sh")
+                print("  3. 重新启动后端")
+                print("=" * 60)
+                _sys.exit(1)
+            else:
+                print("[OK] 前端静态资源完整性校验通过")
+        except FileNotFoundError:
+            print("[WARN] 审计脚本未找到，跳过静态资源校验")
+        except Exception as e:
+            print(f"[WARN] 静态资源校验执行异常: {e}，跳过校验继续启动")
 
 
 def main():

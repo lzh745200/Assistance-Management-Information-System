@@ -27,11 +27,20 @@ class TestSystemAdmin:
             assert "database_size" in data
             assert "user_count" in data
 
-    def test_create_backup(self, client: TestClient, admin_token_headers: dict):
-        """测试创建备份"""
-        response = client.post(
-            "/api/v1/system/admin/backup", headers=admin_token_headers
-        )
+    def test_create_backup(self, client: TestClient, admin_token_headers: dict, tmp_path: Path):
+        """测试创建备份（使用临时目录，避免产生真实备份文件）"""
+        from unittest.mock import patch, MagicMock
+
+        backup_dir = tmp_path / "backups"
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        db_file = tmp_path / "test.db"
+        db_file.write_bytes(b"mock database content")
+
+        with patch("app.api.v1.system.admin.get_database_path", return_value=db_file), \
+             patch("app.api.v1.system.admin.get_backup_directory", return_value=backup_dir):
+            response = client.post(
+                "/api/v1/system/admin/backup", headers=admin_token_headers
+            )
         # 接受 200 成功、400 错误、401 未授权、403 禁止访问、422 参数错误或 500 服务器错误
         assert response.status_code in (200, 400, 401, 403, 422, 500)
         # 仅在成功时验证响应体
@@ -39,6 +48,9 @@ class TestSystemAdmin:
             data = response.json()
             assert data.get("success") is True
             assert "filename" in data.get("data", {})
+        # 清理临时备份文件
+        for f in backup_dir.glob("backup_*.db"):
+            f.unlink(missing_ok=True)
 
     def test_list_backups(self, client: TestClient, admin_token_headers: dict):
         """测试获取备份列表"""

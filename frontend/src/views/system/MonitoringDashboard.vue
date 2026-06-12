@@ -245,7 +245,7 @@ import {
   CircleCloseFilled,
 } from "@element-plus/icons-vue";
 import * as echarts from "echarts";
-import request from "@/utils/request";
+import request from "@/api/request";
 import { useConfigStore } from "@/stores/config";
 
 // ── Types ──

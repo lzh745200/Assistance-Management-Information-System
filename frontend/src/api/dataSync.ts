@@ -94,7 +94,3 @@ export const dataSyncApi = {
   getConflicts,
   resolveConflict,
 };
-
-export const ImportDataResponse = () => Promise.resolve({});
-
-export const SyncLog = () => Promise.resolve({});

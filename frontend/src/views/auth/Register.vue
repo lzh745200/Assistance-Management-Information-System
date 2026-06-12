@@ -132,7 +132,7 @@ import { ref, reactive } from "vue";
 import { useRouterSafe } from "@/composables/useRouterSafe";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { QuestionFilled } from "@element-plus/icons-vue";
-import request from "@/utils/request";
+import request from "@/api/request";
 
 const { pushSafe } = useRouterSafe();
 const registerFormRef = ref<FormInstance>();
