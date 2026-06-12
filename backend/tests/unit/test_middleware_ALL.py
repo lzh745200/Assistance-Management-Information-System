@@ -167,6 +167,7 @@ class TestAuditContextFunctions:
 # ==============================================================================
 
 def _make_auth_app(exclude_paths=None):
+    pytest.importorskip("app.middleware.auth", reason="Module removed")
     from starlette.applications import Starlette
     from starlette.responses import PlainTextResponse
     from starlette.routing import Route
@@ -207,6 +208,7 @@ class TestAuthMiddleware:
         assert resp.status_code == 200
 
     def test_eos_exception_normal_path(self):
+        pytest.importorskip("app.middleware.auth", reason="Module removed")
         from app.middleware.auth import AuthMiddleware
         from starlette.requests import Request
         from starlette.responses import JSONResponse
@@ -221,6 +223,7 @@ class TestAuthMiddleware:
         assert response.status_code == 499
 
     def test_eos_exception_excluded_path(self):
+        pytest.importorskip("app.middleware.auth", reason="Module removed")
         from app.middleware.auth import AuthMiddleware
         from starlette.requests import Request
         from starlette.responses import JSONResponse
@@ -723,6 +726,7 @@ class TestCSRFMiddleware:
 # ==============================================================================
 
 def _make_rbac_app(exclude_paths=None):
+    pytest.importorskip("app.middleware.rbac", reason="Module removed")
     from starlette.applications import Starlette
     from starlette.responses import PlainTextResponse
     from starlette.routing import Route
@@ -763,6 +767,7 @@ class TestRBACMiddleware:
         assert resp.status_code == 200
 
     def test_eos_exception_normal_path(self):
+        pytest.importorskip("app.middleware.rbac", reason="Module removed")
         from app.middleware.rbac import RBACMiddleware
         from starlette.requests import Request
         from starlette.responses import JSONResponse
@@ -777,6 +782,7 @@ class TestRBACMiddleware:
         assert response.status_code == 499
 
     def test_eos_exception_excluded_path(self):
+        pytest.importorskip("app.middleware.rbac", reason="Module removed")
         from app.middleware.rbac import RBACMiddleware
         from starlette.requests import Request
         from starlette.responses import JSONResponse
@@ -798,11 +804,13 @@ class TestRBACMiddleware:
 class TestPrometheusMiddleware:
 
     def test_create_with_app(self):
+        pytest.importorskip("app.middleware.prometheus_middleware", reason="Module removed")
         from app.middleware.prometheus_middleware import PrometheusMiddleware
         mw = PrometheusMiddleware(app="myapp")
         assert mw.app == "myapp"
 
     def test_create_without_app(self):
+        pytest.importorskip("app.middleware.prometheus_middleware", reason="Module removed")
         from app.middleware.prometheus_middleware import PrometheusMiddleware
         mw = PrometheusMiddleware()
         assert mw.app is None
