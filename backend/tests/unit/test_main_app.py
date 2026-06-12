@@ -555,6 +555,40 @@ class TestSQLiteColSpec:
 
 
 class TestSeedDefaultAdmin:
+    @staticmethod
+    def _patch_seed_default_admin(mock_db, *, unlock_expired_return=0):
+        """统一 mock 设置：SessionLocal + LockoutService + getenv + logger."""
+        from unittest.mock import patch as _patch
+
+        mock_lockout = MagicMock()
+        mock_lockout.unlock_expired.return_value = unlock_expired_return
+        patches = [
+            _patch("app.core.database.SessionLocal", return_value=mock_db),
+            _patch("app.main.os.getenv", return_value=""),
+            _patch("app.main.logger.warning"),
+            _patch("app.main.logger.info"),
+            _patch(
+                "app.services.lockout_service.get_lockout_service",
+                return_value=mock_lockout,
+            ),
+        ]
+        return patches, mock_lockout
+
+    @staticmethod
+    def _build_mock_db(query_all=None, query_first=None):
+        """构建 mock_db，使用 SQLAlchemy 2.0 风格的 mock 链."""
+        mock_db = MagicMock()
+        mock_result = MagicMock()
+        mock_scalars = MagicMock()
+        if query_all is not None:
+            mock_scalars.all.return_value = query_all
+        mock_result.scalars.return_value = mock_scalars
+        mock_result.scalar_one_or_none.side_effect = (
+            lambda: query_first[0] if query_first else None
+        )
+        mock_db.execute.return_value = mock_result
+        return mock_db
+
     def test_seed_admin_creation(self):
         with (
             patch("app.core.database.SessionLocal") as mock_sl,
@@ -562,14 +596,12 @@ class TestSeedDefaultAdmin:
             patch("app.core.security.generate_password", return_value="StrongP@ss1"),
             patch("app.core.security.hash_password", return_value="$2b$12$hash"),
             patch("app.main.logger.warning"),
+            patch(
+                "app.services.lockout_service.get_lockout_service",
+                return_value=MagicMock(),
+            ),
         ):
-            mock_db = MagicMock()
-            mock_query = MagicMock()
-            mock_filter = MagicMock()
-            mock_filter.all.return_value = []
-            mock_filter.first.return_value = None
-            mock_query.filter.return_value = mock_filter
-            mock_db.query.return_value = mock_query
+            mock_db = self._build_mock_db(query_all=[], query_first=[None, None])
             mock_sl.return_value = mock_db
             _seed_default_admin()
             mock_db.add.assert_called_once()
@@ -578,17 +610,15 @@ class TestSeedDefaultAdmin:
 
     def test_seed_admin_already_exists(self):
         mock_admin = MagicMock()
-        mock_db = MagicMock()
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.all.return_value = []
-        mock_filter.first.side_effect = [mock_admin]
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
+        mock_db = self._build_mock_db(query_all=[], query_first=[mock_admin, mock_admin])
         with (
             patch("app.core.database.SessionLocal", return_value=mock_db),
             patch("app.main.os.getenv", return_value="PreSetP@ss1"),
             patch("app.main.logger.info"),
+            patch(
+                "app.services.lockout_service.get_lockout_service",
+                return_value=MagicMock(),
+            ),
         ):
             _seed_default_admin()
             mock_db.add.assert_not_called()
@@ -599,21 +629,22 @@ class TestSeedDefaultAdmin:
         locked.username = "locked_user"
         admin = MagicMock()
         admin.username = "admin"
-        mock_db = MagicMock()
-        mock_query = MagicMock()
-        mock_filter = MagicMock()
-        mock_filter.all.return_value = [locked]
-        mock_filter.first.side_effect = [admin, admin]
-        mock_query.filter.return_value = mock_filter
-        mock_db.query.return_value = mock_query
+        mock_db = self._build_mock_db(query_first=[admin, admin])
+
+        mock_lockout = MagicMock()
+        mock_lockout.unlock_expired.return_value = 2
+
         with (
             patch("app.core.database.SessionLocal", return_value=mock_db),
             patch("app.main.os.getenv", return_value="PreSetP@ss1"),
             patch("app.main.logger.info"),
+            patch(
+                "app.services.lockout_service.get_lockout_service",
+                return_value=mock_lockout,
+            ),
         ):
             _seed_default_admin()
-            assert locked.locked_until is None
-            assert locked.failed_login_count == 0
+            mock_lockout.unlock_expired.assert_called_once()
             mock_db.close.assert_called_once()
 
     def test_exception_rollback(self):
