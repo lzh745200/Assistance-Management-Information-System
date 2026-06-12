@@ -167,8 +167,6 @@
         </el-form-item>
       </el-col>
     </el-row>
-
-
   </el-form>
 
   <!-- 地理位置（独立区域）-->
@@ -186,7 +184,10 @@
 
   <!-- 帮扶经费（独立区域，不受 form disabled 影响）-->
   <el-divider content-position="left">帮扶经费</el-divider>
-  <div class="funding-section" :class="{ 'funding-section--disabled': mode === 'view' }">
+  <div
+    class="funding-section"
+    :class="{ 'funding-section--disabled': mode === 'view' }"
+  >
     <!-- 单行紧凑布局：选择年度 + 部队投入 + 地方投入 + 按钮 -->
     <el-row :gutter="12" style="margin-bottom: 16px" align="bottom">
       <el-col :span="5">
@@ -237,7 +238,11 @@
         />
       </el-col>
       <el-col :span="7">
-        <el-button v-if="mode !== 'view'" type="primary" @click="addOrUpdateFunding">
+        <el-button
+          v-if="mode !== 'view'"
+          type="primary"
+          @click="addOrUpdateFunding"
+        >
           {{ hasFundingYear(selectedFundingYear) ? "更新" : "添加" }}
         </el-button>
         <el-popconfirm
@@ -267,24 +272,43 @@
       </el-table-column>
       <el-table-column label="部队投入（万元）" align="right">
         <template #default="{ row }">
-          <span class="funding-number">{{ (row.militaryInvestment || 0).toFixed(2) }}</span>
+          <span class="funding-number">{{
+            (row.militaryInvestment || 0).toFixed(2)
+          }}</span>
         </template>
       </el-table-column>
       <el-table-column label="地方投入（万元）" align="right">
         <template #default="{ row }">
-          <span class="funding-number">{{ (row.localInvestment || 0).toFixed(2) }}</span>
+          <span class="funding-number">{{
+            (row.localInvestment || 0).toFixed(2)
+          }}</span>
         </template>
       </el-table-column>
       <el-table-column label="年度合计（万元）" width="150" align="right">
         <template #default="{ row }">
           <span class="funding-number funding-number--total">
-            {{ ((row.militaryInvestment || 0) + (row.localInvestment || 0)).toFixed(2) }}
+            {{
+              (
+                (row.militaryInvestment || 0) + (row.localInvestment || 0)
+              ).toFixed(2)
+            }}
           </span>
         </template>
       </el-table-column>
-      <el-table-column v-if="mode !== 'view'" label="操作" width="130" align="center">
+      <el-table-column
+        v-if="mode !== 'view'"
+        label="操作"
+        width="130"
+        align="center"
+      >
         <template #default="{ row }">
-          <el-button type="primary" size="small" link @click="editFundingYear(row.year)">编辑</el-button>
+          <el-button
+            type="primary"
+            size="small"
+            link
+            @click="editFundingYear(row.year)"
+            >编辑</el-button
+          >
           <el-popconfirm
             title="确定删除该年度经费？"
             width="180"
@@ -305,7 +329,12 @@
     />
 
     <!-- 合计行 -->
-    <el-descriptions v-if="transitionFundingRows.length > 0" :column="2" border size="small">
+    <el-descriptions
+      v-if="transitionFundingRows.length > 0"
+      :column="2"
+      border
+      size="small"
+    >
       <el-descriptions-item label="部队合计（万元）" align="right">
         <strong>{{ transitionMilitaryTotal.toFixed(2) }}</strong>
       </el-descriptions-item>

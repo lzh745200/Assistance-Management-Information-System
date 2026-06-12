@@ -202,11 +202,11 @@ const sections = computed(() => {
       key: "industry",
       title: "产业帮扶",
       icon: "🏭",
-      stats: d?.industrySupport
+      stats: d?.industry
         ? [
             {
               label: "当年投入(万)",
-              value: (d.industrySupport.investment ?? 0).toFixed(2),
+              value: (d.industry.investment ?? 0).toFixed(2),
             },
           ]
         : [],
@@ -245,15 +245,15 @@ const sections = computed(() => {
       key: "medical",
       title: "医疗帮扶",
       icon: "🏥",
-      stats: d?.medicalSupport
+      stats: d?.medical
         ? [
             {
               label: "投入(万)",
-              value: (d.medicalSupport.investment ?? 0).toFixed(2),
+              value: (d.medical.investment ?? 0).toFixed(2),
             },
             {
               label: "巡诊(人次)",
-              value: d.medicalSupport.patientsServed ?? 0,
+              value: d.medical.patientsServed ?? 0,
             },
           ]
         : [],
@@ -262,13 +262,11 @@ const sections = computed(() => {
       key: "consumption",
       title: "消费帮扶",
       icon: "🛒",
-      stats: d?.consumptionSupport
+      stats: d?.consumption
         ? [
             {
               label: "采购产品(万)",
-              value: (
-                d.consumptionSupport.villageProductsPurchase ?? 0
-              ).toFixed(2),
+              value: (d.consumption.villageProductsPurchase ?? 0).toFixed(2),
             },
           ]
         : [],
@@ -277,15 +275,15 @@ const sections = computed(() => {
       key: "employment",
       title: "就业帮扶",
       icon: "💼",
-      stats: d?.employmentSupport
+      stats: d?.employment
         ? [
             {
               label: "聘用(人)",
-              value: d.employmentSupport.hiredPopulation ?? 0,
+              value: d.employment.hiredPopulation ?? 0,
             },
             {
               label: "培训(人次)",
-              value: d.employmentSupport.trainedPopulation ?? 0,
+              value: d.employment.trainedPopulation ?? 0,
             },
           ]
         : [],
@@ -294,15 +292,15 @@ const sections = computed(() => {
       key: "education",
       title: "教育帮扶",
       icon: "📚",
-      stats: d?.educationSupport
+      stats: d?.education
         ? [
             {
               label: "投入(万)",
-              value: (d.educationSupport.investment ?? 0).toFixed(2),
+              value: (d.education.investment ?? 0).toFixed(2),
             },
             {
               label: "资助学生(人)",
-              value: d.educationSupport.aidedStudents ?? 0,
+              value: d.education.aidedStudents ?? 0,
             },
           ]
         : [],
@@ -332,9 +330,11 @@ const sections = computed(() => {
 async function loadAllData() {
   loading.value = true;
   try {
-    const village = await getSupportedVillage(villageId.value);
+    const _v = await getSupportedVillage(villageId.value);
+    const village = (_v as any)?.data || _v;
     villageName.value = village.villageName;
-    yearlyData.value = await getYearlyData(villageId.value, selectedYear.value);
+    const _raw = await getYearlyData(villageId.value, selectedYear.value);
+    yearlyData.value = (_raw as any)?.data || _raw;
   } catch (e: any) {
     ElMessage.error(e?.message || "加载数据失败");
   } finally {

@@ -40,8 +40,8 @@
             teleported
             fit-input-width
           >
-            <el-option label="启用" :value="1" />
-            <el-option label="禁用" :value="0" />
+            <el-option label="启用" :value="true" />
+            <el-option label="禁用" :value="false" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -409,7 +409,7 @@ const searchForm = reactive({
   username: "",
   name: "",
   role: "",
-  is_active: undefined as number | undefined,
+  is_active: undefined as boolean | undefined,
 });
 
 const pagination = reactive({
@@ -588,12 +588,7 @@ const loadData = async () => {
         username: searchForm.username || undefined,
         keyword: searchForm.name || undefined,
         role: searchForm.role || undefined,
-        is_active:
-          searchForm.is_active === 1
-            ? true
-            : searchForm.is_active === 0
-              ? false
-              : undefined,
+        is_active: searchForm.is_active,
       },
     });
     const data = response?.data || response;

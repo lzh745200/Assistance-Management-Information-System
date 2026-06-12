@@ -292,12 +292,12 @@ const hasRevitalizationTags = computed(() => {
 const totalInvestment = computed(() => {
   if (!yearlyData.value) return 0;
   let total = 0;
-  if (yearlyData.value.industrySupport)
-    total += yearlyData.value.industrySupport.investment || 0;
+  if (yearlyData.value.industry)
+    total += yearlyData.value.industry.investment || 0;
   if (yearlyData.value.infrastructure)
     total += yearlyData.value.infrastructure.investment || 0;
-  if (yearlyData.value.educationSupport)
-    total += yearlyData.value.educationSupport.investment || 0;
+  if (yearlyData.value.education)
+    total += yearlyData.value.education.investment || 0;
   return total;
 });
 
@@ -307,7 +307,8 @@ const loadVillage = async () => {
 
   loading.value = true;
   try {
-    village.value = await getSupportedVillage(id);
+    const _raw = await getSupportedVillage(id);
+    village.value = (_raw as any)?.data || _raw;
     if (pageMode.value === "view") {
       await loadYearlyData();
     }
@@ -324,10 +325,8 @@ const loadYearlyData = async () => {
 
   yearlyLoading.value = true;
   try {
-    yearlyData.value = await getYearlyData(
-      village.value.id,
-      selectedYear.value,
-    );
+    const _raw = await getYearlyData(village.value.id, selectedYear.value);
+    yearlyData.value = (_raw as any)?.data || _raw;
   } catch (error) {
     logger.error("加载年度数据失败:", error);
     yearlyData.value = null;
@@ -381,7 +380,8 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
       await updateSupportedVillage(id, data);
       ElMessage.success("保存成功");
       // 刷新数据后切换回查看模式
-      village.value = await getSupportedVillage(id);
+      const _raw = await getSupportedVillage(id);
+      village.value = (_raw as any)?.data || _raw;
       pushSafe(`/supported-villages/${id}`);
     }
   } catch (error: any) {

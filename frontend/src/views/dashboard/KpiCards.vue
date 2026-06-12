@@ -218,8 +218,8 @@ async function loadStats() {
     const res = await request.get("/dashboard/stats", {
       params: { refresh: true },
     } as any);
-    if (res?.data) {
-      const d = res.data;
+    const d = res?.data || res;
+    if (d) {
       stats.value = {
         total_villages: d.total_villages ?? 0,
         total_projects: d.total_projects ?? 0,
