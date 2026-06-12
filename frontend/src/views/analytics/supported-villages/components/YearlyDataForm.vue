@@ -731,66 +731,24 @@ const formData = reactive({
 const loadYearlyData = async () => {
   try {
     const resp = await getYearlyData(props.villageId, selectedYear.value);
-    const data = (resp as any)?.data || resp || {};
-    if (data.population) {
-      Object.assign(formData.population, {
-        ...data.population,
-        year: selectedYear.value,
-      });
-    }
-    if (data.income) {
-      Object.assign(formData.income, {
-        ...data.income,
-        year: selectedYear.value,
-      });
-    }
-    if (data["force-investment"]) {
-      Object.assign(formData.forceInvestment, {
-        ...data["force-investment"],
-        year: selectedYear.value,
-      });
-    }
-    if (data.industry) {
-      Object.assign(formData.industry, {
-        ...data.industry,
-        year: selectedYear.value,
-      });
-    }
-    if (data.infrastructure) {
-      Object.assign(formData.infrastructure, {
-        ...data.infrastructure,
-        year: selectedYear.value,
-      });
-    }
-    if (data["party-building"]) {
-      Object.assign(formData.partyBuilding, {
-        ...data["party-building"],
-        year: selectedYear.value,
-      });
-    }
-    if (data.medical) {
-      Object.assign(formData.medical, {
-        ...data.medical,
-        year: selectedYear.value,
-      });
-    }
-    if (data.consumption) {
-      Object.assign(formData.consumption, {
-        ...data.consumption,
-        year: selectedYear.value,
-      });
-    }
-    if (data.employment) {
-      Object.assign(formData.employment, {
-        ...data.employment,
-        year: selectedYear.value,
-      });
-    }
-    if (data.education) {
-      Object.assign(formData.education, {
-        ...data.education,
-        year: selectedYear.value,
-      });
+    const raw: Record<string, any> = (resp as any)?.data || resp || {};
+    // 后端 _SECTION_MODEL key → formData 属性名映射
+    const sectionMap: Record<string, keyof typeof formData> = {
+      population: "population",
+      income: "income",
+      "force-investment": "forceInvestment",
+      industry: "industry",
+      infrastructure: "infrastructure",
+      "party-building": "partyBuilding",
+      medical: "medical",
+      consumption: "consumption",
+      employment: "employment",
+      education: "education",
+    };
+    for (const [apiKey, formKey] of Object.entries(sectionMap)) {
+      if (raw[apiKey]) {
+        Object.assign(formData[formKey], { ...raw[apiKey], year: selectedYear.value });
+      }
     }
   } catch (error) {
     logger.error("加载年度数据失败:", error);
