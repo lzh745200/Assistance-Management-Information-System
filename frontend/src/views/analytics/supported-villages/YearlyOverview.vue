@@ -185,15 +185,15 @@ const sections = computed(() => {
       key: "force_investment",
       title: "力量投入",
       icon: "🎖️",
-      stats: d?.forceInvestment
+      stats: d?.['force-investment']
         ? [
             {
               label: "领导到村(人次)",
-              value: d.forceInvestment.seniorLeaderVisits ?? 0,
+              value: d['force-investment'].seniorLeaderVisits ?? 0,
             },
             {
               label: "官兵到村(人次)",
-              value: d.forceInvestment.unitSoldierVisits ?? 0,
+              value: d['force-investment'].unitSoldierVisits ?? 0,
             },
           ]
         : [],
@@ -228,15 +228,15 @@ const sections = computed(() => {
       key: "party_building",
       title: "党建帮扶",
       icon: "🏛️",
-      stats: d?.partyBuilding
+      stats: d?.['party-building']
         ? [
             {
               label: "投入(万)",
-              value: (d.partyBuilding.investment ?? 0).toFixed(2),
+              value: (d['party-building'].investment ?? 0).toFixed(2),
             },
             {
               label: "联建活动(次)",
-              value: d.partyBuilding.jointActivities ?? 0,
+              value: d['party-building'].jointActivities ?? 0,
             },
           ]
         : [],
