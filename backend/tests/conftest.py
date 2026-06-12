@@ -320,8 +320,10 @@ def auth_client(client):
     async def mock_get_current_user(*args, **kwargs):
         return user
 
+    original_overrides = client.app.dependency_overrides.copy()
     client.app.dependency_overrides[get_current_user] = mock_get_current_user
-    return client
+    yield client
+    client.app.dependency_overrides = original_overrides
 
 
 @pytest.fixture
@@ -342,8 +344,10 @@ def client_with_mocked_auth(client):
     user.email = "admin@test.com"
     user.full_name = "Admin"
 
+    original_overrides = client.app.dependency_overrides.copy()
     client.app.dependency_overrides[get_current_user] = lambda: user
-    return client
+    yield client
+    client.app.dependency_overrides = original_overrides
 
 
 @pytest.fixture
@@ -364,7 +368,10 @@ def client_with_regular_user_auth(client):
     user.email = "user@test.com"
     user.full_name = "Regular User"
 
+    original_overrides = client.app.dependency_overrides.copy()
     client.app.dependency_overrides[get_current_user] = lambda: user
+    yield client
+    client.app.dependency_overrides = original_overrides
 
 
 @pytest.fixture

@@ -300,6 +300,7 @@ import {
   batchDeleteSupportedVillages,
   createSupportedVillage,
   updateSupportedVillage,
+  saveTransitionFunding,
   importSupportedVillages,
   exportSupportedVillages,
   downloadImportTemplate,
@@ -526,7 +527,17 @@ async function handleFormSubmit(data: SupportedVillageCreate) {
   try {
     if (dialogMode.value === "create") {
       logger.info("创建帮扶村...");
-      await createSupportedVillage(data);
+      const fundingItems = (data as any)._transitionFundingItems;
+      delete (data as any)._transitionFundingItems;
+      const created = await createSupportedVillage(data);
+      const villageId = created?.data?.id || created?.id;
+      if (fundingItems?.length && villageId) {
+        try {
+          await saveTransitionFunding(villageId, { items: fundingItems });
+        } catch (fundErr: any) {
+          logger.error("创建时保存过渡资金失败:", fundErr);
+        }
+      }
       ElMessage.success("创建成功");
     } else if (dialogMode.value === "edit" && currentVillage.value) {
       logger.info("更新帮扶村，ID:", currentVillage.value.id);

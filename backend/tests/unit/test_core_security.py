@@ -54,16 +54,16 @@ from app.core.security import (
 
 class TestEnsureSecretKey:
     def test_returns_from_env_jwt_secret_key(self):
-        with patch.dict(os.environ, {"JWT_SECRET_KEY": "jwt-key"}, clear=True):
+        with patch.dict(os.environ, {"JWT_SECRET_KEY": "jwt-key"}, clear=False):
             assert _ensure_secret_key() == "jwt-key"
 
     def test_returns_from_env_secret_key(self):
-        with patch.dict(os.environ, {"SECRET_KEY": "sec-key"}, clear=True):
+        with patch.dict(os.environ, {"SECRET_KEY": "sec-key"}, clear=False):
             assert _ensure_secret_key() == "sec-key"
 
     def test_raises_critical_when_missing(self):
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {"JWT_SECRET_KEY": "", "SECRET_KEY": ""}, clear=False),
             patch("app.core.security.logger.critical") as mock_crit,
         ):
             key = _ensure_secret_key()

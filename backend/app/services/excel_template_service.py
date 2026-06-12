@@ -287,6 +287,7 @@ class ExcelTemplateService:
 
         output = BytesIO()
         wb.save(output)
+        wb.close()
         output.seek(0)
         return output.getvalue()
 
