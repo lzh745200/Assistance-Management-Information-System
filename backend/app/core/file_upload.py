@@ -11,7 +11,10 @@ import uuid
 from pathlib import Path
 from typing import Optional, Set
 
-import magic  # python-magic (libmagic wrapper)
+try:
+    import magic  # python-magic (libmagic wrapper)
+except ImportError:
+    magic = None  # type: ignore[assignment]
 
 # ---------------------------------------------------------------------------
 # MIME helpers

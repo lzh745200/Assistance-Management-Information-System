@@ -515,35 +515,12 @@ def _seed_default_admin():
 
     db = SessionLocal()
     try:
-        from datetime import datetime, timezone
-
-        now = datetime.now(timezone.utc)
-        users_to_clean = db.query(User).filter(
-            User.locked_until.isnot(None),
-            User.locked_until <= now,
-        ).all()
-        unlocked_count = 0
-        unlocked_names = []
-        for user in users_to_clean:
-            user.locked_until = None
-            user.failed_login_count = 0
-            unlocked_names.append(user.username)
-            unlocked_count += 1
-        # admin 账户强制解锁（单机版误锁后无法远程解锁）
-        admin_locked = db.query(User).filter(
-            User.username == DEFAULT_ADMIN_USERNAME,
-            User.locked_until.isnot(None),
-        ).first()
-        if admin_locked:
-            admin_locked.locked_until = None
-            admin_locked.failed_login_count = 0
-            if "admin" not in unlocked_names:
-                unlocked_names.append("admin")
-                unlocked_count += 1
+        from app.services.lockout_service import get_lockout_service
+        svc = get_lockout_service()
+        unlocked_count = svc.unlock_expired(db, admin_username=DEFAULT_ADMIN_USERNAME)
 
         if unlocked_count > 0:
-            db.commit()
-            logger.info("启动时已自动处理 %d 个账户: %s", unlocked_count, unlocked_names)
+            logger.info("启动时已自动处理 %d 个账户", unlocked_count)
 
         admin = db.query(User).filter(User.username == DEFAULT_ADMIN_USERNAME).first()
         if not admin:

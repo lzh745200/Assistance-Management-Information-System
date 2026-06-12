@@ -57,6 +57,18 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return token_manager.create_access_token(subject, expires_delta=expires_delta)
 
 
+def _check_account_lockout(
+    user, username: str, db: Session, now: Optional[datetime] = None
+) -> None:
+    """检查账户锁定状态并处理过期锁定自动清理。
+
+    委托给 LockoutService 统一处理，供 login、refresh_token 等认证端点复用。
+    """
+    from app.services.lockout_service import get_lockout_service
+    svc = get_lockout_service()
+    svc.check_locked(user, username, db, now=now)
+
+
 router = APIRouter(prefix="/auth", tags=["认证"])
 
 
@@ -130,68 +142,37 @@ async def login(
 
     # 检查账户锁定状态
     now = datetime.now(timezone.utc)
-    try:
-        if getattr(user, "locked_until", None) and user.locked_until:
-            lock_time = user.locked_until
-            if lock_time.tzinfo is None:
-                lock_time = lock_time.replace(tzinfo=timezone.utc)
-
-            # 如果锁定已过期，自动清理
-            if now >= lock_time:
-                logger.info(f"自动清理过期锁定: user={login_request.username}")
-                user.locked_until = None
-                user.failed_login_count = 0
-                db.commit()
-            else:
-                # 锁定仍然有效
-                remaining = int((lock_time - now).total_seconds() / 60) + 1
-                logger.warning(
-                    "账户已锁定: user=%s, 剩余%d分钟, failed_count=%d",
-                    login_request.username,
-                    remaining,
-                    getattr(user, "failed_login_count", 0),
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_423_LOCKED,
-                    detail=f"账户已锁定，请{remaining}分钟后再试",
-                )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"检查锁定状态时出错: {e}", exc_info=True)
-        # 出错时拒绝登录（安全默认）
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="系统错误，请稍后再试",
-        )
+    _check_account_lockout(user, login_request.username, db, now=now)
 
     if not verify_password(login_request.password, user.hashed_password):
         # 登录失败：原子递增失败计数（避免竞态条件）
         failed_count = 0
         try:
-            from sqlalchemy import update, case
+            from sqlalchemy import func, update, case
             from app.models.user import User
 
-            # 原子更新：使用 SQL 表达式直接递增，避免读-改-写竞态
+            # 原子更新：使用 SQL 表达式直接递增（COALESCE 防御 NULL），避免读-改-写竞态
             # 条件锁定：失败次数达到阈值时自动设置 locked_until
+            # 使用 RETURNING 子句获取更新后的值，避免额外 SELECT 往返
+            new_count_expr = func.coalesce(User.failed_login_count, 0) + 1
             stmt = (
                 update(User)
                 .where(User.id == user.id)
                 .values(
-                    failed_login_count=User.failed_login_count + 1,
+                    failed_login_count=new_count_expr,
                     locked_until=case(
-                        (User.failed_login_count + 1 >= _MAX_FAILED_ATTEMPTS,
+                        (new_count_expr >= _MAX_FAILED_ATTEMPTS,
                          now + timedelta(minutes=_LOCKOUT_MINUTES)),
                         else_=User.locked_until,
                     ),
                 )
+                .returning(User.failed_login_count)
             )
-            db.execute(stmt)
+            result = db.execute(stmt)
             db.commit()
 
-            # 重新查询获取更新后的计数用于日志
-            db.refresh(user)
-            failed_count = user.failed_login_count or 0
+            # 直接从 RETURNING 子句获取更新后的计数值，无需额外 db.refresh()
+            failed_count = result.scalar() or 0
             logger.info(f"登录失败: user={login_request.username}, failed_count={failed_count}/{_MAX_FAILED_ATTEMPTS}")
 
             if failed_count >= _MAX_FAILED_ATTEMPTS:
@@ -467,6 +448,9 @@ async def refresh_token(request: Request, token: str = Body(..., embed=True), db
             raise HTTPException(status_code=401, detail="用户不存在")
         if not user.is_active:
             raise HTTPException(status_code=403, detail="用户已被禁用")
+
+        # 检查账户锁定状态
+        _check_account_lockout(user, username, db)
 
         # 吊销旧 token（加入黑名单使其立即失效）
         token_manager.revoke_token(token)

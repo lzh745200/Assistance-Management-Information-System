@@ -71,16 +71,6 @@ class PasswordReset(BaseModel):
     new_password: Optional[str] = None  # 如果不提供则自动生成
 
 
-class BatchUserCreate(BaseModel):
-    """批量创建用户请求"""
-
-    count: int = Field(..., ge=1, le=50)
-    prefix: str = Field(..., min_length=1, max_length=20)
-    start_num: int = Field(default=1, ge=1)
-    role: Optional[str] = "operator"
-    department: Optional[str] = None
-
-
 # ==================== 静态路由（必须在动态路由 /{user_id} 之前） ====================
 
 
@@ -147,52 +137,6 @@ async def list_roles(db: Session = Depends(get_db), current_user=Depends(get_cur
     ]
 
     return {"success": True, "data": {"items": items, "total": len(items)}}
-
-
-@router.post("/batch-create")
-async def batch_create_users(
-    batch_data: BatchUserCreate,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-):
-    """批量创建用户"""
-    if getattr(current_user, "role", None) not in (
-        "admin",
-        "super_admin",
-    ) and not is_superuser(current_user):
-        raise HTTPException(status_code=403, detail="仅管理员可执行此操作")
-    created_accounts = []
-
-    for i in range(batch_data.count):
-        num = batch_data.start_num + i
-        username = f"{batch_data.prefix}{str(num).zfill(3)}"
-
-        existing = db.query(User).filter(User.username == username).first()
-        if existing:
-            continue
-
-        password = generate_password(10)
-
-        user = User(
-            username=username,
-            full_name=username,
-            hashed_password=get_password_hash(password),
-            department=batch_data.department,
-            role=batch_data.role or "operator",
-            is_active=True,
-            is_superuser=(is_superuser(batch_data) or batch_data.role == UserRole.ADMIN),
-        )
-
-        db.add(user)
-        created_accounts.append({"username": username, "password": password, "role": batch_data.role})
-
-    db.commit()
-
-    return {
-        "success": True,
-        "message": f"成功创建 {len(created_accounts)} 个账号",
-        "data": {"accounts": created_accounts},
-    }
 
 
 # ==================== CRUD路由 ====================
