@@ -127,7 +127,7 @@ import SectionDataForm from "./components/SectionDataForm.vue";
 const route = useRoute();
 const { pushSafe } = useRouterSafe();
 
-const unwrap = (raw: any) => raw?.data || raw;
+import { unwrapData } from "@/utils/unwrapData";
 
 const villageId = computed(() => safeRouteParam(route.params.id));
 const villageName = ref("");
@@ -333,10 +333,10 @@ async function loadAllData() {
   loading.value = true;
   try {
     const _v = await getSupportedVillage(villageId.value);
-    const village = unwrap(_v);
+    const village = unwrapData(_v);
     villageName.value = village.villageName;
     const _raw = await getYearlyData(villageId.value, selectedYear.value);
-    yearlyData.value = unwrap(_raw);
+    yearlyData.value = unwrapData(_raw);
   } catch (e: any) {
     ElMessage.error(e?.message || "加载数据失败");
   } finally {

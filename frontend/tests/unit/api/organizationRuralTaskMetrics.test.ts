@@ -6,17 +6,19 @@ const mockPut = vi.fn()
 const mockDelete = vi.fn()
 const mockRequest = vi.fn()
 
-vi.mock('@/utils/request', () => ({
-  default: (...args: any[]) => mockRequest(...args),
-}))
-vi.mock('@/api/request', () => ({
-  default: {
+// 构建可调用的 default export（Axios 实例），并挂载 get/post/put/delete 方法
+const _mockDefault = Object.assign(
+  (...args: any[]) => mockRequest(...args),
+  {
     get: (...args: any[]) => mockGet(...args),
     post: (...args: any[]) => mockPost(...args),
     put: (...args: any[]) => mockPut(...args),
     delete: (...args: any[]) => mockDelete(...args),
-  },
-  default_alt: undefined,
+  }
+)
+
+vi.mock('@/api/request', () => ({
+  default: _mockDefault,
 }))
 
 import {

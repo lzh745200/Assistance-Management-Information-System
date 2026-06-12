@@ -244,7 +244,7 @@ import SupportedVillageForm from "./components/SupportedVillageForm.vue";
 const route = useRoute();
 const { pushSafe } = useRouterSafe();
 
-const unwrap = (raw: any) => raw?.data || raw;
+import { unwrapData } from "@/utils/unwrapData";
 
 const loading = ref(false);
 const yearlyLoading = ref(false);
@@ -310,7 +310,7 @@ const loadVillage = async () => {
   loading.value = true;
   try {
     const _raw = await getSupportedVillage(id);
-    village.value = unwrap(_raw);
+    village.value = unwrapData(_raw);
     if (pageMode.value === "view") {
       await loadYearlyData();
     }
@@ -328,7 +328,7 @@ const loadYearlyData = async () => {
   yearlyLoading.value = true;
   try {
     const _raw = await getYearlyData(village.value.id, selectedYear.value);
-    yearlyData.value = unwrap(_raw);
+    yearlyData.value = unwrapData(_raw);
   } catch (error) {
     logger.error("加载年度数据失败:", error);
     yearlyData.value = null;
@@ -383,7 +383,7 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
       ElMessage.success("保存成功");
       // 刷新数据后切换回查看模式
       const _raw = await getSupportedVillage(id);
-      village.value = unwrap(_raw);
+      village.value = unwrapData(_raw);
       pushSafe(`/supported-villages/${id}`);
     }
   } catch (error: any) {
