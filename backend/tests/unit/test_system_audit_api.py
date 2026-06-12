@@ -42,6 +42,7 @@ def db_client():
     from app.core.database import get_db
     from app.core.security import get_current_user
     from app.models import Base
+    from app.models.audit import AuditLog as _RealAuditLog
     from fastapi.testclient import TestClient
 
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
@@ -55,11 +56,12 @@ def db_client():
         id=1, username="admin", role="admin", is_superuser=True,
     )
 
-    yield TestClient(app, raise_server_exceptions=False), session
-
-    app.dependency_overrides = original_overrides
-    session.close()
-    engine.dispose()
+    try:
+        yield TestClient(app, raise_server_exceptions=False), session
+    finally:
+        app.dependency_overrides = original_overrides
+        session.close()
+        engine.dispose()
 
 
 # ── Tests ──

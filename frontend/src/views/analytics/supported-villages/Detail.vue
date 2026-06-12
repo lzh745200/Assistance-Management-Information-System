@@ -362,10 +362,11 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
 
     if (pageMode.value === "create") {
       const created = await createSupportedVillage(data);
+      const villageId = created?.data?.id || created?.id;
       // 创建成功后保存过渡期经费按年度数据
-      if (fundingItems?.length) {
+      if (fundingItems?.length && villageId) {
         try {
-          await saveTransitionFunding(created.id, { items: fundingItems });
+          await saveTransitionFunding(villageId, { items: fundingItems });
         } catch (fundErr: any) {
           console.error("[Detail] 保存过渡资金失败:", fundErr);
           ElMessage.warning(
@@ -374,7 +375,7 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
         }
       }
       ElMessage.success("创建成功");
-      pushSafe(`/supported-villages/${created.id}`);
+      pushSafe(`/supported-villages/${villageId}`);
     } else {
       const id = safeRouteParam(route.params.id);
       await updateSupportedVillage(id, data);

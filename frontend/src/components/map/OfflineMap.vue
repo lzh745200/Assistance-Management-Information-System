@@ -180,7 +180,7 @@ function renderMap() {
         }
         const pref = countyPrefMap[params.name] || "";
         const prefLabel = pref ? `【${pref}】` : "";
-        return `${prefLabel}${params.name}<br/>帮扶点: ${params.value ?? 0}`;
+        return `${prefLabel}${params.name}`;
       },
     },
     visualMap: {
@@ -217,7 +217,7 @@ function renderMap() {
       },
     },
     series: [
-      // 县市区层 — 显示数据统计
+      // 县市区层
       {
         name: "帮扶统计",
         type: "map",

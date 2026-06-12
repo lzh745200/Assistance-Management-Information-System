@@ -168,106 +168,132 @@
       </el-col>
     </el-row>
 
-    <!-- 帮扶经费 -->
-    <el-divider content-position="left">帮扶经费</el-divider>
-    <el-row :gutter="16" style="margin-bottom: 16px">
-      <el-col :span="6">
-        <el-form-item label="选择年度">
-          <el-select
-            v-model="selectedFundingYear"
-            placeholder="选择年度"
-            style="width: 100%"
-            teleported
-            :popper-options="{ strategy: 'fixed' }"
-            @change="onFundingYearChange"
-          >
-            <el-option
-              v-for="y in availableFundingYears"
-              :key="y"
-              :label="`${y}年`"
-              :value="y"
-            />
-          </el-select>
-        </el-form-item>
-      </el-col>
-      <el-col :span="6">
-        <el-form-item label="部队投入(万元)">
-          <el-input-number
-            v-model="currentMilitaryInput"
-            :min="0"
-            :precision="2"
-            style="width: 100%"
-            placeholder="部队投入"
+
+  </el-form>
+
+  <!-- 地理位置（独立区域）-->
+  <el-divider content-position="left">地理位置</el-divider>
+  <el-row style="margin-bottom: 16px">
+    <el-col :span="24">
+      <label class="funding-label">坐标设置</label>
+      <MapPicker
+        v-model:latitude="formData.latitude"
+        v-model:longitude="formData.longitude"
+        :disabled="mode === 'view'"
+      />
+    </el-col>
+  </el-row>
+
+  <!-- 帮扶经费（独立区域，不受 form disabled 影响）-->
+  <el-divider content-position="left">帮扶经费</el-divider>
+  <div class="funding-section" :class="{ 'funding-section--disabled': mode === 'view' }">
+    <!-- 单行紧凑布局：选择年度 + 部队投入 + 地方投入 + 按钮 -->
+    <el-row :gutter="12" style="margin-bottom: 16px" align="bottom">
+      <el-col :span="5">
+        <label class="funding-label">选择年度</label>
+        <el-select
+          v-model="selectedFundingYear"
+          placeholder="年度"
+          style="width: 100%"
+          filterable
+          allow-create
+          teleported
+          :popper-options="{ strategy: 'fixed' }"
+          :disabled="mode === 'view'"
+          @change="onFundingYearChange"
+        >
+          <el-option
+            v-for="y in availableFundingYears"
+            :key="y"
+            :label="`${y}年`"
+            :value="y"
           />
-        </el-form-item>
+        </el-select>
       </el-col>
       <el-col :span="6">
-        <el-form-item label="地方投入(万元)">
-          <el-input-number
-            v-model="currentLocalInput"
-            :min="0"
-            :precision="2"
-            style="width: 100%"
-            placeholder="地方投入"
-          />
-        </el-form-item>
+        <label class="funding-label">部队投入（万元）</label>
+        <el-input-number
+          v-model="currentMilitaryInput"
+          :min="0"
+          :precision="2"
+          :controls="true"
+          controls-position="right"
+          style="width: 100%"
+          placeholder="部队投入"
+          :disabled="mode === 'view'"
+        />
       </el-col>
       <el-col :span="6">
-        <el-form-item label=" " label-width="12px">
-          <el-button type="primary" @click="addOrUpdateFunding">
-            {{ hasFundingYear(selectedFundingYear) ? "更新年度" : "添加年度" }}
-          </el-button>
-          <el-button
-            v-if="hasFundingYear(selectedFundingYear)"
-            type="danger"
-            plain
-            @click="removeFundingByYear(selectedFundingYear)"
-          >
-            删除
-          </el-button>
-        </el-form-item>
+        <label class="funding-label">地方投入（万元）</label>
+        <el-input-number
+          v-model="currentLocalInput"
+          :min="0"
+          :precision="2"
+          :controls="true"
+          controls-position="right"
+          style="width: 100%"
+          placeholder="地方投入"
+          :disabled="mode === 'view'"
+        />
+      </el-col>
+      <el-col :span="7">
+        <el-button v-if="mode !== 'view'" type="primary" @click="addOrUpdateFunding">
+          {{ hasFundingYear(selectedFundingYear) ? "更新" : "添加" }}
+        </el-button>
+        <el-popconfirm
+          v-if="hasFundingYear(selectedFundingYear) && mode !== 'view'"
+          title="确定删除该年度经费？"
+          width="180"
+          @confirm="removeFundingByYear(selectedFundingYear)"
+        >
+          <template #reference>
+            <el-button type="danger" plain>删除</el-button>
+          </template>
+        </el-popconfirm>
       </el-col>
     </el-row>
-    <!-- 已添加年度汇总表 -->
+
+    <!-- 年度汇总表 -->
     <el-table
       v-if="transitionFundingRows.length > 0"
       :data="transitionFundingRows"
       border
+      stripe
       size="small"
       style="margin-bottom: 16px"
     >
-      <el-table-column label="年度" width="100" align="center">
-        <template #default="{ row }">{{ row.year }}</template>
+      <el-table-column label="年度" width="90" align="center">
+        <template #default="{ row }">{{ row.year }}年</template>
       </el-table-column>
-      <el-table-column label="部队投入(万元)" min-width="150">
-        <template #default="{ row }">{{
-          (row.militaryInvestment || 0).toFixed(2)
-        }}</template>
-      </el-table-column>
-      <el-table-column label="地方投入(万元)" min-width="150">
-        <template #default="{ row }">{{
-          (row.localInvestment || 0).toFixed(2)
-        }}</template>
-      </el-table-column>
-      <el-table-column label="年度合计(万元)" width="140">
+      <el-table-column label="部队投入（万元）" align="right">
         <template #default="{ row }">
-          {{
-            (
-              (row.militaryInvestment || 0) + (row.localInvestment || 0)
-            ).toFixed(2)
-          }}
+          <span class="funding-number">{{ (row.militaryInvestment || 0).toFixed(2) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="80" align="center">
+      <el-table-column label="地方投入（万元）" align="right">
         <template #default="{ row }">
-          <el-button
-            type="primary"
-            size="small"
-            link
-            @click="editFundingYear(row.year)"
+          <span class="funding-number">{{ (row.localInvestment || 0).toFixed(2) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="年度合计（万元）" width="150" align="right">
+        <template #default="{ row }">
+          <span class="funding-number funding-number--total">
+            {{ ((row.militaryInvestment || 0) + (row.localInvestment || 0)).toFixed(2) }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="mode !== 'view'" label="操作" width="130" align="center">
+        <template #default="{ row }">
+          <el-button type="primary" size="small" link @click="editFundingYear(row.year)">编辑</el-button>
+          <el-popconfirm
+            title="确定删除该年度经费？"
+            width="180"
+            @confirm="removeFundingByYear(row.year)"
           >
-            编辑
-          </el-button>
+            <template #reference>
+              <el-button type="danger" size="small" link>删除</el-button>
+            </template>
+          </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
@@ -277,45 +303,28 @@
       :image-size="60"
       style="margin-bottom: 16px"
     />
-    <el-row :gutter="20">
-      <el-col :span="12">
-        <el-form-item label="部队合计(万元)">
-          <el-input
-            :model-value="transitionMilitaryTotal.toFixed(2)"
-            disabled
-          />
-        </el-form-item>
-      </el-col>
-      <el-col :span="12">
-        <el-form-item label="地方合计(万元)">
-          <el-input :model-value="transitionLocalTotal.toFixed(2)" disabled />
-        </el-form-item>
-      </el-col>
-    </el-row>
 
-    <!-- 地理位置 -->
-    <el-divider content-position="left">地理位置</el-divider>
-    <el-row>
-      <el-col :span="24">
-        <el-form-item label="坐标设置">
-          <MapPicker
-            v-model:latitude="formData.latitude"
-            v-model:longitude="formData.longitude"
-            :disabled="mode === 'view'"
-          />
-        </el-form-item>
-      </el-col>
-    </el-row>
+    <!-- 合计行 -->
+    <el-descriptions v-if="transitionFundingRows.length > 0" :column="2" border size="small">
+      <el-descriptions-item label="部队合计（万元）" align="right">
+        <strong>{{ transitionMilitaryTotal.toFixed(2) }}</strong>
+      </el-descriptions-item>
+      <el-descriptions-item label="地方合计（万元）" align="right">
+        <strong>{{ transitionLocalTotal.toFixed(2) }}</strong>
+      </el-descriptions-item>
+    </el-descriptions>
+  </div>
 
-    <!-- 操作按钮 -->
-    <el-form-item v-if="mode !== 'view'" class="form-actions">
+  <!-- 保存/取消 — 页面最底部 -->
+  <div class="form-actions" style="margin-top: 24px">
+    <template v-if="mode !== 'view'">
       <el-button type="primary" @click="handleSubmit">保存</el-button>
       <el-button @click="handleCancel">取消</el-button>
-    </el-form-item>
-    <el-form-item v-else class="form-actions">
+    </template>
+    <template v-else>
       <el-button @click="handleCancel">关闭</el-button>
-    </el-form-item>
-  </el-form>
+    </template>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -445,7 +454,11 @@ function onFundingYearChange(year: number) {
 }
 
 function addOrUpdateFunding() {
-  const year = selectedFundingYear.value;
+  const year = Number(selectedFundingYear.value);
+  if (isNaN(year) || !Number.isInteger(year) || year < 2000) {
+    ElMessage.warning("请输入有效年度（如 2024）");
+    return;
+  }
   const existing = transitionFundingRows.value.find((r) => r.year === year);
   if (existing) {
     existing.militaryInvestment = currentMilitaryInput.value;
@@ -457,20 +470,26 @@ function addOrUpdateFunding() {
       localInvestment: currentLocalInput.value,
     });
   }
-  // 按年度排序
   transitionFundingRows.value.sort((a, b) => a.year - b.year);
-  // 重置输入
-  currentMilitaryInput.value = 0;
-  currentLocalInput.value = 0;
+  // 切换到下一年度并加载其数据
+  const nextYear = year + 1;
+  if (availableFundingYears.value.includes(nextYear)) {
+    selectedFundingYear.value = nextYear;
+  }
+  onFundingYearChange(selectedFundingYear.value);
 }
 
 function removeFundingByYear(year: number) {
+  const isSelected = selectedFundingYear.value === year;
   const idx = transitionFundingRows.value.findIndex((r) => r.year === year);
   if (idx >= 0) {
     transitionFundingRows.value.splice(idx, 1);
   }
-  currentMilitaryInput.value = 0;
-  currentLocalInput.value = 0;
+  // 仅当删除的年度是当前选中年度时才重置输入
+  if (isSelected) {
+    currentMilitaryInput.value = 0;
+    currentLocalInput.value = 0;
+  }
 }
 
 function editFundingYear(year: number) {
@@ -483,11 +502,13 @@ async function loadTransitionFunding() {
   try {
     const resp = await getTransitionFunding(props.village.id);
     const items = (resp as any)?.data || resp || [];
-    transitionFundingRows.value = items.map((item: any) => ({
-      year: item.year,
-      militaryInvestment: Number(item.militaryInvestment || 0),
-      localInvestment: Number(item.localInvestment || 0),
-    }));
+    transitionFundingRows.value = items
+      .map((item: any) => ({
+        year: item.year,
+        militaryInvestment: Number(item.militaryInvestment || 0),
+        localInvestment: Number(item.localInvestment || 0),
+      }))
+      .sort((a: { year: number }, b: { year: number }) => a.year - b.year);
   } catch {
     /* 无数据时保持默认值 */
   }
@@ -609,5 +630,33 @@ function handleCancel() {
 .form-actions {
   margin-top: 24px;
   text-align: right;
+}
+
+// 帮扶经费独立区域
+.funding-section {
+  padding: 0 4px;
+
+  &--disabled {
+    opacity: 0.85;
+  }
+}
+
+.funding-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #606266;
+  line-height: 1.4;
+}
+
+.funding-number {
+  font-variant-numeric: tabular-nums;
+  font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+
+  &--total {
+    font-weight: 700;
+    color: #1b4332;
+  }
 }
 </style>
