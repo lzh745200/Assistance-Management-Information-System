@@ -28,8 +28,19 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # 模块级常量：SQLite PRAGMA 调优值（避免每次连接重复计算）
-SQLITE_MMAP_SIZE = int(os.environ.get("SQLITE_MMAP_SIZE", 134217728))  # 默认 128MB
-SQLITE_CACHE_SIZE = int(os.environ.get("SQLITE_CACHE_SIZE", -64000))    # 默认 64MB
+def _parse_env_int(key: str, default: int) -> int:
+    """从环境变量解析整数值，非数字值时给出清晰错误并回退到默认。"""
+    raw = os.environ.get(key, "")
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        logger.warning("%s=%r 不是有效整数，使用默认值 %d", key, raw, default)
+        return default
+
+SQLITE_MMAP_SIZE = _parse_env_int("SQLITE_MMAP_SIZE", 134217728)  # 默认 128MB
+SQLITE_CACHE_SIZE = _parse_env_int("SQLITE_CACHE_SIZE", -64000)    # 默认 64MB
 
 DATABASE_URL = settings.DATABASE_URL
 IS_SQLITE = DATABASE_URL.startswith("sqlite")
