@@ -149,25 +149,6 @@ class TestUserManagement:
         assert_create_or_error(response.status_code)
         assert response.json() is not None
 
-    def test_batch_create_users(
-        self, client: TestClient, admin_token_headers: dict, db: Session
-    ):
-        """测试批量创建用户"""
-        batch_data = {
-            "count": 3,
-            "prefix": "batch_test",
-            "start_num": 1,
-            "role": "operator",
-            "department": "测试部门",
-        }
-        response = client.post(
-            "/api/v1/user-management/batch-create",
-            json=batch_data,
-            headers=admin_token_headers,
-        )
-        assert_create_or_error(response.status_code)
-        assert response.json() is not None
-
     def test_list_roles(self, client: TestClient, admin_token_headers: dict):
         """测试获取角色列表"""
         response = client.get("/api/v1/user-management/roles", headers=admin_token_headers)

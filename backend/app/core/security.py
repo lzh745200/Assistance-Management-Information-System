@@ -69,8 +69,8 @@ def _ensure_secret_key() -> str:
     if not key:
         key = _secrets.token_hex(32)
         logger.critical(
-            "SECRET_KEY 在所有来源中均缺失！已生成临时密钥 — "
-            "服务重启后所有 JWT Token 将失效。请检查 runtime_secrets.json 权限。"
+            "所有密钥来源均已耗尽，生成了临时会话密钥 — "
+            "服务重启后所有 JWT Token 将失效。请检查 runtime_secrets.json 是否存在且权限正确。"
         )
     return key
 
@@ -524,6 +524,22 @@ import threading  # noqa: E402
 
 _rate_limit_store: dict[str, list[float]] = {}
 _rate_limit_lock = threading.Lock()
+_last_rate_limit_cleanup: float = 0.0
+
+
+def _cleanup_expired_rate_keys(now: float, max_window: int = 300) -> None:
+    """清理 _rate_limit_store 中所有已过期的键，防止内存泄漏。"""
+    global _last_rate_limit_cleanup
+    # 节流：最多每 60 秒执行一次全局清理
+    if now - _last_rate_limit_cleanup < 60:
+        return
+    _last_rate_limit_cleanup = now
+    cutoff = now - max_window
+    expired = [k for k, v in _rate_limit_store.items() if not v or all(t <= cutoff for t in v)]
+    for k in expired:
+        del _rate_limit_store[k]
+    if expired:
+        logger.debug("速率限制器清理: 移除 %d 个过期键", len(expired))
 
 
 async def check_rate_limit(
@@ -553,6 +569,9 @@ async def check_rate_limit(
 
     now = time.monotonic()
     with _rate_limit_lock:
+        # 周期性清理所有过期键（最多每 60 秒一次）
+        _cleanup_expired_rate_keys(now)
+
         timestamps = _rate_limit_store.get(key, [])
         # 清理过期时间戳（滑动窗口）
         cutoff = now - window

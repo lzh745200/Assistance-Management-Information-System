@@ -382,9 +382,10 @@ async def reset_password_with_machine_code(
         # 更新用户密码
         user.hashed_password = get_password_hash(new_password)
         user.must_change_password = True
-        user.failed_login_count = 0  # 重置失败次数
-        user.locked_until = None  # 解锁账户
-        db.commit()
+
+        # 清除锁定状态
+        from app.services.lockout_service import get_lockout_service
+        get_lockout_service().clear(user, db)
 
         # 离线单机环境：密码通过控制台输出给管理员，不在HTTP响应中返回
         logger.info("用户 %s 密码已通过机器码验证重置", username)
