@@ -351,6 +351,8 @@ async def create_subscription(
             send_day=subscription.send_day,
             send_time=subscription.send_time,
             email=subscription.email,
+            output_dir=subscription.output_dir,
+            output_format=subscription.output_format,
             is_active=True,
         )
 
@@ -581,6 +583,8 @@ def _subscription_to_response(subscription: ReportSubscription) -> dict:
         "send_day": subscription.send_day,
         "send_time": subscription.send_time,
         "email": subscription.email,
+        "output_dir": subscription.output_dir,
+        "output_format": subscription.output_format,
         "is_active": subscription.is_active,
         "last_sent_at": subscription.last_sent_at,
         "next_send_at": subscription.next_send_at,

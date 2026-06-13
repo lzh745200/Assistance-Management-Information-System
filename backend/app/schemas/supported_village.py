@@ -149,7 +149,9 @@ class ReportSubscriptionCreate(BaseModel):
     frequency: str = Field("weekly", min_length=1, max_length=20, description="发送频率")
     send_day: Optional[int] = Field(None, ge=0, le=31, description="发送日期")
     send_time: Optional[str] = Field(None, max_length=10, description="发送时间")
-    email: Optional[str] = Field(None, max_length=100, description="接收邮箱")
+    email: Optional[str] = Field(None, max_length=100, description="接收邮箱（单机版保留兼容）")
+    output_dir: Optional[str] = Field(None, max_length=500, description="本地输出目录（单机版）")
+    output_format: str = Field("pdf", description="输出格式: pdf/excel")
 
 
 class ReportSubscriptionUpdate(BaseModel):
@@ -161,6 +163,8 @@ class ReportSubscriptionUpdate(BaseModel):
     send_day: Optional[int] = Field(None, ge=0, le=31, description="发送日期")
     send_time: Optional[str] = Field(None, max_length=10, description="发送时间")
     email: Optional[str] = Field(None, max_length=100, description="接收邮箱")
+    output_dir: Optional[str] = Field(None, max_length=500, description="本地输出目录")
+    output_format: Optional[str] = Field(None, description="输出格式: pdf/excel")
 
 
 class ReportSubscriptionResponse(BaseModel):
