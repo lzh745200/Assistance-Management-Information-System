@@ -594,7 +594,7 @@ describe("异常处理", () => {
     await flushPromises();
 
     expect(mockExportList).toHaveBeenCalled();
-    expect(ElMessage.success).toHaveBeenCalledWith("导出成功");
+    // 导出成功不再弹提示 — 浏览器下载栏已确认
   });
 });
 

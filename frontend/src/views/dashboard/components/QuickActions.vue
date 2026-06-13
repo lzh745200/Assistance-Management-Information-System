@@ -34,6 +34,12 @@
         <button class="action-btn primary" @click="pushSafe('/effectiveness')">
           <span class="btn-icon">🎯</span><span class="btn-text">帮扶成效</span>
         </button>
+        <button class="action-btn primary" @click="pushSafe('/projects/create')">
+          <span class="btn-icon">➕</span><span class="btn-text">新建项目</span>
+        </button>
+        <button class="action-btn primary" @click="pushSafe('/schools/create')">
+          <span class="btn-icon">🏗️</span><span class="btn-text">新建学校</span>
+        </button>
       </div>
     </div>
 
@@ -64,6 +70,15 @@
         </button>
         <button class="action-btn secondary" @click="pushSafe('/work-calendar')">
           <span class="btn-icon">📅</span><span class="btn-text">工作日历</span>
+        </button>
+        <button class="action-btn secondary" @click="pushSafe('/data-analysis/map')">
+          <span class="btn-icon">🗺️</span><span class="btn-text">地图分析</span>
+        </button>
+        <button class="action-btn secondary" @click="pushSafe('/data-analysis/assessment')">
+          <span class="btn-icon">📋</span><span class="btn-text">评估分析</span>
+        </button>
+        <button class="action-btn secondary" @click="pushSafe('/supported-villages/yearly')">
+          <span class="btn-icon">📆</span><span class="btn-text">年度概览</span>
         </button>
       </div>
     </div>
@@ -96,6 +111,15 @@
         <button class="action-btn secondary" @click="pushSafe('/report/templates')">
           <span class="btn-icon">📄</span><span class="btn-text">报表模板</span>
         </button>
+        <button class="action-btn secondary" @click="pushSafe('/todos')">
+          <span class="btn-icon">✅</span><span class="btn-text">待办事项</span>
+        </button>
+        <button class="action-btn secondary" @click="pushSafe('/funds/report')">
+          <span class="btn-icon">📊</span><span class="btn-text">经费报表</span>
+        </button>
+        <button class="action-btn secondary" @click="pushSafe('/funds/settlement')">
+          <span class="btn-icon">💳</span><span class="btn-text">经费结算</span>
+        </button>
       </div>
     </div>
 
@@ -126,6 +150,15 @@
         </button>
         <button v-if="isAdmin" class="action-btn secondary" @click="pushSafe('/admin/machine-code')">
           <span class="btn-icon">🔑</span><span class="btn-text">机器码管理</span>
+        </button>
+        <button v-if="isManager" class="action-btn secondary" @click="pushSafe('/data-management/logs')">
+          <span class="btn-icon">📜</span><span class="btn-text">操作日志</span>
+        </button>
+        <button class="action-btn secondary" @click="pushSafe('/help')">
+          <span class="btn-icon">📖</span><span class="btn-text">帮助文档</span>
+        </button>
+        <button v-if="isManager" class="action-btn secondary" @click="pushSafe('/system/feedback')">
+          <span class="btn-icon">💬</span><span class="btn-text">用户反馈</span>
         </button>
       </div>
     </div>

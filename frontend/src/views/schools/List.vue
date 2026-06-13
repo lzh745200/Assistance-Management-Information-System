@@ -463,7 +463,7 @@ async function handleDownloadTemplate() {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch {
     ElMessage.error("模板下载失败");
   }
@@ -515,7 +515,7 @@ async function handleExport() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
   } catch {
     ElMessage.error("导出失败");
   }

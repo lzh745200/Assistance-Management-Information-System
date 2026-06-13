@@ -203,7 +203,7 @@ async function handleDownloadTemplate() {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch (error) {
     ElMessage.error("模板下载失败");
   }

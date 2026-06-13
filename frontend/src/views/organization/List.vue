@@ -308,11 +308,11 @@ async function handleSubmit() {
     if (formData.value.id) {
       // 编辑
       await request.put(`/organizations/${formData.value.id}`, payload);
-      ElMessage.success("编辑成功");
+      ElMessage.success("已保存");
     } else {
       // 新增
       await request.post("/organizations", payload);
-      ElMessage.success("新增成功");
+      ElMessage.success("已创建");
     }
 
     dialogVisible.value = false;

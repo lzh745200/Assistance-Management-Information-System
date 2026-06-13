@@ -427,10 +427,10 @@ async function handleSubmit() {
       };
       if (isEditing.value && editingId.value) {
         await updateRule(editingId.value, payload);
-        ElMessage.success("规则更新成功");
+        ElMessage.success("已保存");
       } else {
         await createRule(payload);
-        ElMessage.success("规则创建成功");
+        ElMessage.success("已创建");
       }
       dialogVisible.value = false;
       await loadRules();

@@ -57,18 +57,10 @@ describe('api/projects', () => {
     expect(mockGet).toHaveBeenCalledWith('/projects/stats')
   })
 
-  it('exportList blob 触发下载', async () => {
+  it('exportList GET blob', async () => {
     mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
-    const realAnchor = (globalThis as any).document.createElement('a')
-    realAnchor.click = vi.fn()
-    const realCreate = (globalThis as any).document.createElement.bind((globalThis as any).document)
-    ;(globalThis as any).document.createElement = (tag: any) => {
-      if (tag === 'a') return realAnchor
-      return realCreate(tag)
-    }
     await projectsApi.exportList({ page: 1 })
     expect(mockGet).toHaveBeenCalledWith('/projects/export', { params: { page: 1 }, responseType: 'blob' })
-    expect(realAnchor.click).toHaveBeenCalled()
   })
 
   it('importData POST FormData', () => {

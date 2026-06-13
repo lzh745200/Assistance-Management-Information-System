@@ -485,7 +485,7 @@ async function handleDownloadTemplate() {
     link.download = "经费导入模板.xlsx";
     link.click();
     window.URL.revokeObjectURL(url);
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch {
     ElMessage.error("模板下载失败");
   }
@@ -500,7 +500,7 @@ async function handleExport() {
       type: filterForm.type || undefined,
       status: filterForm.status || undefined,
     });
-    ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
   } catch {
     ElMessage.error("导出失败");
   } finally {
@@ -631,7 +631,7 @@ async function handleBatchExport() {
   exporting.value = true;
   try {
     await fundApi.exportList({});
-    ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
   } catch {
     ElMessage.error("导出失败");
   } finally {

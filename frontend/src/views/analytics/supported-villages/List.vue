@@ -576,7 +576,7 @@ async function handleExport() {
     link.click();
     window.URL.revokeObjectURL(url);
 
-    ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
   } catch (error: any) {
     logger.error("导出失败:", error);
     ElMessage.error("导出功能需要后端支持，请先启动后端服务");
@@ -627,7 +627,7 @@ async function handleDownloadTemplate() {
     link.click();
     window.URL.revokeObjectURL(url);
 
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch (error: any) {
     logger.error("下载模板失败:", error);
     ElMessage.error("下载模板功能需要后端支持，请先启动后端服务");

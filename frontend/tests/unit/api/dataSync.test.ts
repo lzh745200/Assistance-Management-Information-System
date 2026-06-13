@@ -84,7 +84,7 @@ describe('api/dataSync', () => {
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake')
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
     await downloadExportPackage('XYZ')
-    expect(mockGet).toHaveBeenCalledWith('/data-sync/download/XYZ', { responseType: 'blob' })
+    expect(mockGet).toHaveBeenCalledWith('/data-sync/export/download/XYZ', { responseType: 'blob' })
     expect(click).toHaveBeenCalled()
   })
 

@@ -426,7 +426,7 @@ const handleExport = async () => {
     link.download = "帮扶项目导出.xlsx";
     link.click();
     window.URL.revokeObjectURL(url);
-    ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
   } catch (error) {
     ElMessage.error("导出失败");
   }

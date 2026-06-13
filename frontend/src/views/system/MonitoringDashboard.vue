@@ -608,7 +608,7 @@ async function fetchApiStats() {
 
 async function fetchHealth() {
   try {
-    const res = await request.get("/system/health/full");
+    const res = await request.get("/system/metrics");
     const data = (res as any)?.data?.data ?? (res as any)?.data ?? {};
     healthData.value = data;
     return data as HealthData | null;

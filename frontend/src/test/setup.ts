@@ -136,7 +136,6 @@ import { config } from "@vue/test-utils";
 config.global.stubs = {
   // 布局组件（同步导入，图片路径在 jsdom 中导致 file URL 错误）
   DefaultLayoutSafe: true,
-  HomeSafe: true,
   // Element Plus 组件
   "el-button": true,
   "el-input": true,

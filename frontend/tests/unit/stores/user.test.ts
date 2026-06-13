@@ -28,7 +28,7 @@ import { useUserStore } from '@/stores/user'
 describe('stores/user', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   describe('initial state', () => {
@@ -200,8 +200,9 @@ describe('stores/user', () => {
     })
 
     it('getUserProfile 无 id 抛错', async () => {
+      ;(get as any).mockResolvedValue({ code: 500 })
       const s = useUserStore()
-      await expect(s.getUserProfile()).rejects.toThrow('No user ID available')
+      await expect(s.getUserProfile()).rejects.toThrow('无法获取用户信息')
     })
 
     it('getUserProfile 用 currentUser.id', async () => {
@@ -215,17 +216,17 @@ describe('stores/user', () => {
     it('updateUserProfile = updateUser', async () => {
       ;(put as any).mockResolvedValue({ code: 200, data: { id: 1, name: 'X' } })
       const s = useUserStore()
-      await s.updateUserProfile(1, { name: 'X' })
-      expect(put).toHaveBeenCalledWith('/users/1', { name: 'X' })
+      await s.updateUserProfile({ name: 'X' }, 1)
+      expect(put).toHaveBeenCalledWith('/users/me/profile', { name: 'X' })
     })
 
-    it('uploadAvatar 返回 placeholder', async () => {
-      const w = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    it('uploadAvatar 调用 POST 并返回 response.data', async () => {
+      const mockData = { url: '/uploads/1.png' }
+      ;(post as any).mockResolvedValue({ code: 200, data: mockData })
       const s = useUserStore()
-      const r = await s.uploadAvatar(1, new File([''], 'a.png'))
-      expect(r).toEqual({ url: '' })
-      expect(w).toHaveBeenCalled()
-      w.mockRestore()
+      const r = await s.uploadAvatar(new File([''], 'a.png'), 1)
+      expect(r).toEqual(mockData)
+      expect(post).toHaveBeenCalledWith('/users/1/avatar', expect.any(FormData))
     })
   })
 })

@@ -424,7 +424,7 @@ const handleSubmit = async () => {
           description: formData.description,
           is_active: formData.status === "active",
         });
-        ElMessage.success("修改成功");
+        ElMessage.success("已保存");
       } else {
         await request.post("/rbac/roles", {
           name: formData.name,
@@ -432,7 +432,7 @@ const handleSubmit = async () => {
           permissions: [],
           is_system: false,
         });
-        ElMessage.success("创建成功");
+        ElMessage.success("已创建");
       }
       dialogVisible.value = false;
       loadRoles();
@@ -453,7 +453,7 @@ const savePermissions = async () => {
     await request.put(`/rbac/roles/${currentRole.value.id}`, {
       permissions: checkedKeys,
     });
-    ElMessage.success("权限保存成功");
+    ElMessage.success("已保存");
     permissionDialogVisible.value = false;
   } catch {
     ElMessage.error("权限保存失败");

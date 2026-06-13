@@ -622,7 +622,7 @@ function handleExport() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-  ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
 }
 
 async function loadYears() {

@@ -512,7 +512,7 @@ async function handleCancel(row: TaskInfo) {
     );
     const res = await tasksApi.cancelTask(row.task_id);
     if (res.success) {
-      ElMessage.success("任务已取消");
+      ElMessage.success("已取消");
       await refreshAll();
     } else {
       ElMessage.error(res.message || "取消失败");
@@ -537,7 +537,7 @@ async function handleDelete(row: TaskInfo) {
     );
     const res = await tasksApi.deleteTask(row.task_id);
     if (res.success) {
-      ElMessage.success("任务已删除");
+      ElMessage.success("已删除");
       await refreshAll();
     } else {
       ElMessage.error(res.message || "删除失败");
