@@ -287,8 +287,8 @@ const loadProjects = async () => {
       keyword: filterForm.search || undefined,
       status: filterForm.status || undefined,
     });
-    projects.value = response.items;
-    pagination.total = response.total;
+    projects.value = response.data.items || [];
+    pagination.total = response.data.total || 0;
   } catch (error) {
     ElMessage.error("加载项目列表失败");
   } finally {

@@ -386,7 +386,9 @@ def main():
 
     _ensure_dirs()
     from app.utils.runtime_secrets import ensure_runtime_secrets  # noqa: E402
+    print("  初始化安全密钥...", flush=True)
     ensure_runtime_secrets()
+    print("  检查数据库...", flush=True)
     _check_database_integrity()
 
     host = os.environ.get("HOST", "127.0.0.1")
@@ -406,10 +408,16 @@ def main():
 
     # PyInstaller 环境下必须使用直接引用的 app 对象，
     # 字符串 "app.main:app" 依赖 importlib 动态导入，在冻结环境中会失败。
+    print("  加载模块...", flush=True)
+    import time as _time; _t0 = _time.time()
     from app.main import app  # noqa: E402
+    print(f"  模块加载完成 ({_time.time() - _t0:.1f}s)", flush=True)
 
     # ── 启动前静态资源完整性校验 ──
+    print("  检查静态资源...", flush=True)
+    _t0 = _time.time()
     _verify_frontend_assets()
+    print(f"  静态资源就绪 ({_time.time() - _t0:.1f}s)", flush=True)
 
     # ── 过滤 304 静态资源日志噪音 ──
     class _Skip304Filter(logging.Filter):

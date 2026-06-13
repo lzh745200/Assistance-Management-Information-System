@@ -81,16 +81,8 @@ async function saveEdit(id: string) {
     }
     editingId.value = null;
   } catch {
-    /* silent */
+    ElMessage.error("保存失败，请重试");
   }
-}
-
-async function deleteActivity(id: string) {
-  try {
-    await request.delete(`/dashboard/recent-activities/${id}`);
-    activities.value = activities.value.filter((a) => a.id !== id);
-  } catch {
-    /* silent */
   }
 }
 
@@ -135,7 +127,7 @@ async function loadActivities() {
     const res = await request.get("/dashboard/recent-activities", {
       params: { limit: 10 },
     } as any);
-    const data = (res as any)?.data?.items || [];
+    const data = (res as any)?.data?.items || (res as any)?.items || [];
     activities.value = (Array.isArray(data) ? data : []).slice(0, 10);
   } catch {
     activities.value = [];
