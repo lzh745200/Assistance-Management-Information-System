@@ -2,11 +2,11 @@
 村庄 API 路由
 
 提供自然村的 CRUD 操作。
-已优化 N+1 查询：使用 joinedload 一次性加载关联数据。
+已优化 N+1 查询：使用 selectinload 分离查询加载关联数据（避免多 joinedload 笛卡尔积）。
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query as QueryParam
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -27,10 +27,10 @@ async def list_villages(
     from app.models.village import Village
 
     query = db.query(Village).options(
-        joinedload(Village.villagers),
-        joinedload(Village.industries),
-        joinedload(Village.tea_plantations),
-        joinedload(Village.cactus_fruit_plots),
+        selectinload(Village.villagers),
+        selectinload(Village.industries),
+        selectinload(Village.tea_plantations),
+        selectinload(Village.cactus_fruit_plots),
     )
 
     # 关键词搜索
@@ -92,10 +92,10 @@ async def get_village(
     village = (
         db.query(Village)
         .options(
-            joinedload(Village.villagers),
-            joinedload(Village.industries),
-            joinedload(Village.tea_plantations),
-            joinedload(Village.cactus_fruit_plots),
+            selectinload(Village.villagers),
+            selectinload(Village.industries),
+            selectinload(Village.tea_plantations),
+            selectinload(Village.cactus_fruit_plots),
         )
         .filter(Village.id == village_id)
         .first()

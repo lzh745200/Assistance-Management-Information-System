@@ -209,6 +209,7 @@ import { ElMessage } from "element-plus";
 import ChangeHistoryDialog from "@/components/common/ChangeHistoryDialog.vue";
 import { getChangeHistory } from "@/api/supportedVillage";
 import { logger } from "@/utils/logger";
+import { unwrapData } from "@/utils/unwrapData";
 
 const changeHistoryVisible = ref(false);
 const changeHistoryLoading = ref(false);
@@ -243,8 +244,6 @@ import SupportedVillageForm from "./components/SupportedVillageForm.vue";
 
 const route = useRoute();
 const { pushSafe } = useRouterSafe();
-
-import { unwrapData } from "@/utils/unwrapData";
 
 const loading = ref(false);
 const yearlyLoading = ref(false);

@@ -4,32 +4,72 @@ import json
 import os
 import struct
 import tempfile
+import time
 import zipfile
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, AsyncMock, PropertyMock
+from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
+from app.services.permission_package_service import PermissionPackageService
+from app.services.query_analyzer_service import QueryAnalyzer
+from app.services.rural_work_service import RuralWorkService, _iso, _safe_enum_value
+from app.services.update_log_service import UpdateLogService, get_update_log_service, VERSION_HISTORY_DATA
+from app.services.organization_code_service import OrganizationCodeService
+from app.services.repositories.base import BaseRepository
+from app.services.repositories.fund_repository import FundRepository
+from app.services.encrypted_package import (
+    create_encrypted_package,
+    extract_encrypted_package,
+    _derive_key,
+    MAGIC,
+    VERSION,
+)
+from app.services.query_analyzer_service import query_analyzer, monitor_query_performance
+
+
+UPLOAD_PATCH = "app.utils.paths.get_uploads_path"
+
+
+def _query_side_effect_models(empty_roles=True, role_query_result=None):
+    """Return a db.query side_effect for PermissionPackageService."""
+    def side_effect(model):
+        q = MagicMock()
+        name = getattr(model, "__name__", "")
+        if name == "RbacRole":
+            if empty_roles:
+                q.order_by.return_value.all.return_value = []
+                q.filter.return_value.all.return_value = []
+            else:
+                q.order_by.return_value.all.return_value = role_query_result or []
+                q.filter.return_value.all.return_value = []
+        elif name in ("RolePermission", "UserRole", "UserPermission"):
+            q.all.return_value = []
+            q.filter.return_value.all.return_value = []
+        elif name == "User":
+            q.filter.return_value.all.return_value = []
+            q.all.return_value = []
+        else:
+            q.all.return_value = []
+        return q
+    return side_effect
+
 
 # ---------------------------------------------------------------------------
-# 1. PermissionPackageService
+# 1. PermissionPackageService — Export
 # ---------------------------------------------------------------------------
 
 
 class TestPermissionPackageServiceExport:
 
-    def _make_service(self):
-        from app.services.permission_package_service import PermissionPackageService
+    def _make(self):
         db = MagicMock()
         return PermissionPackageService(db), db
 
     def test_export_package_basic(self):
-        svc, db = self._make_service()
-        db.query.return_value.order_by.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.all.return_value = []
-        db.query.return_value.all.return_value = []
-
-        with patch("app.services.permission_package_service.get_uploads_path", create=True) as mock_path:
+        svc, db = self._make()
+        db.query.side_effect = _query_side_effect_models()
+        with patch(UPLOAD_PATCH) as mock_path:
             mock_path.return_value = tempfile.mkdtemp()
             result = svc.export_package()
             assert result["success"] is True
@@ -38,7 +78,7 @@ class TestPermissionPackageServiceExport:
             assert os.path.exists(result["file_path"])
 
     def test_export_package_with_roles_and_users(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
 
         role = MagicMock()
         role.id = "r1"
@@ -70,33 +110,33 @@ class TestPermissionPackageServiceExport:
         user.data_scope = "all"
         user.is_superuser = True
 
-        def query_side_effect(model):
+        def side_effect(model):
             q = MagicMock()
-            if model.__name__ == "RbacRole":
+            name = getattr(model, "__name__", "")
+            if name == "RbacRole":
                 q.order_by.return_value.all.return_value = [role]
-            elif model.__name__ == "RolePermission":
                 q.filter.return_value.all.return_value = [rp]
-            elif model.__name__ == "UserRole":
+            elif name == "RolePermission":
+                q.filter.return_value.all.return_value = [rp]
+            elif name == "UserRole":
                 q.all.return_value = [ur]
-            elif model.__name__ == "UserPermission":
+            elif name == "UserPermission":
                 q.all.return_value = [up]
-            elif model.__name__ == "User":
+            elif name == "User":
                 q.filter.return_value.all.return_value = [user]
             return q
 
-        db.query.side_effect = query_side_effect
+        db.query.side_effect = side_effect
 
-        with patch("app.services.permission_package_service.get_uploads_path", create=True) as mock_path:
+        with patch(UPLOAD_PATCH) as mock_path:
             mock_path.return_value = tempfile.mkdtemp()
             result = svc.export_package(password="test", description="test desc")
             assert result["success"] is True
             assert result["role_count"] == 1
             assert result["user_count"] == 1
 
-    def test_export_package_user_menus_invalid_json(self):
-        svc, db = self._make_service()
-        db.query.return_value.order_by.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.all.return_value = []
+    def test_export_user_menus_invalid_json(self):
+        svc, db = self._make()
 
         user = MagicMock()
         user.username = "bob"
@@ -107,25 +147,24 @@ class TestPermissionPackageServiceExport:
         user.data_scope = None
         user.is_superuser = None
 
-        def query_side_effect(model):
+        def side_effect(model):
             q = MagicMock()
-            if model.__name__ == "User":
+            if getattr(model, "__name__", "") == "User":
                 q.filter.return_value.all.return_value = [user]
             else:
+                q.order_by.return_value.all.return_value = []
                 q.all.return_value = []
             return q
 
-        db.query.side_effect = query_side_effect
+        db.query.side_effect = side_effect
 
-        with patch("app.services.permission_package_service.get_uploads_path", create=True) as mock_path:
+        with patch(UPLOAD_PATCH) as mock_path:
             mock_path.return_value = tempfile.mkdtemp()
             result = svc.export_package()
             assert result["success"] is True
 
-    def test_export_package_user_menus_non_string(self):
-        svc, db = self._make_service()
-        db.query.return_value.order_by.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.all.return_value = []
+    def test_export_user_menus_non_string(self):
+        svc, db = self._make()
 
         user = MagicMock()
         user.username = "carol"
@@ -136,25 +175,24 @@ class TestPermissionPackageServiceExport:
         user.data_scope = "org"
         user.is_superuser = False
 
-        def query_side_effect(model):
+        def side_effect(model):
             q = MagicMock()
-            if model.__name__ == "User":
+            if getattr(model, "__name__", "") == "User":
                 q.filter.return_value.all.return_value = [user]
             else:
+                q.order_by.return_value.all.return_value = []
                 q.all.return_value = []
             return q
 
-        db.query.side_effect = query_side_effect
+        db.query.side_effect = side_effect
 
-        with patch("app.services.permission_package_service.get_uploads_path", create=True) as mock_path:
+        with patch(UPLOAD_PATCH) as mock_path:
             mock_path.return_value = tempfile.mkdtemp()
             result = svc.export_package()
             assert result["success"] is True
 
-    def test_export_package_user_menus_none(self):
-        svc, db = self._make_service()
-        db.query.return_value.order_by.return_value.all.return_value = []
-        db.query.return_value.filter.return_value.all.return_value = []
+    def test_export_user_menus_none(self):
+        svc, db = self._make()
 
         user = MagicMock()
         user.username = "dan"
@@ -165,26 +203,31 @@ class TestPermissionPackageServiceExport:
         user.data_scope = "org"
         user.is_superuser = False
 
-        def query_side_effect(model):
+        def side_effect(model):
             q = MagicMock()
-            if model.__name__ == "User":
+            if getattr(model, "__name__", "") == "User":
                 q.filter.return_value.all.return_value = [user]
             else:
+                q.order_by.return_value.all.return_value = []
                 q.all.return_value = []
             return q
 
-        db.query.side_effect = query_side_effect
+        db.query.side_effect = side_effect
 
-        with patch("app.services.permission_package_service.get_uploads_path", create=True) as mock_path:
+        with patch(UPLOAD_PATCH) as mock_path:
             mock_path.return_value = tempfile.mkdtemp()
             result = svc.export_package()
             assert result["success"] is True
 
 
+# ---------------------------------------------------------------------------
+# 2. PermissionPackageService — Import Preview
+# ---------------------------------------------------------------------------
+
+
 class TestPermissionPackageServiceImport:
 
-    def _make_service(self):
-        from app.services.permission_package_service import PermissionPackageService
+    def _make(self):
         db = MagicMock()
         return PermissionPackageService(db), db
 
@@ -204,13 +247,13 @@ class TestPermissionPackageServiceImport:
         return path
 
     def test_import_file_not_exists(self):
-        svc, _ = self._make_service()
+        svc, _ = self._make()
         result = svc.import_package("/nonexistent/path.zip")
         assert result["success"] is False
         assert "文件不存在" in result["errors"][0]
 
     def test_import_not_zipfile(self):
-        svc, _ = self._make_service()
+        svc, _ = self._make()
         with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as f:
             f.write(b"not a zip")
             path = f.name
@@ -221,7 +264,7 @@ class TestPermissionPackageServiceImport:
             os.unlink(path)
 
     def test_import_missing_required_file(self):
-        svc, _ = self._make_service()
+        svc, _ = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "bad.zip")
             with zipfile.ZipFile(path, "w") as zf:
@@ -231,8 +274,7 @@ class TestPermissionPackageServiceImport:
             assert "包结构不完整" in result["message"]
 
     def test_import_version_mismatch(self):
-        svc, _ = self._make_service()
-        db = svc.db
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             files = {
                 "manifest.json": {"version": "9.9", "export_time": "2025-01-01"},
@@ -246,7 +288,7 @@ class TestPermissionPackageServiceImport:
             assert any("不匹配" in w for w in result["preview"]["warnings"])
 
     def test_import_with_missing_users(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = self._make_zip(tmpdir)
             db.query.return_value.filter.return_value.all.return_value = []
@@ -255,7 +297,7 @@ class TestPermissionPackageServiceImport:
             assert any("不存在" in w for w in result["preview"]["warnings"])
 
     def test_import_invalid_json(self):
-        svc, _ = self._make_service()
+        svc, _ = self._make()
         with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as f:
             path = f.name
         try:
@@ -270,7 +312,7 @@ class TestPermissionPackageServiceImport:
             os.unlink(path)
 
     def test_import_general_exception(self):
-        svc, _ = self._make_service()
+        svc, _ = self._make()
         with patch("os.path.exists", return_value=True), \
              patch("zipfile.is_zipfile", return_value=True), \
              patch("zipfile.ZipFile") as mock_zf:
@@ -280,10 +322,14 @@ class TestPermissionPackageServiceImport:
             assert "boom" in result["message"]
 
 
+# ---------------------------------------------------------------------------
+# 3. PermissionPackageService — Confirm Import
+# ---------------------------------------------------------------------------
+
+
 class TestPermissionPackageServiceConfirm:
 
-    def _make_service(self):
-        from app.services.permission_package_service import PermissionPackageService
+    def _make(self):
         db = MagicMock()
         return PermissionPackageService(db), db
 
@@ -294,7 +340,7 @@ class TestPermissionPackageServiceConfirm:
             "data/user_roles.json": [],
             "data/user_permissions.json": [],
             "data/user_menus.json": [],
-            "data/user_legacy.json": [{"username": "alice", "role": "admin", "permissions": "", "data_scope": "org", "is_superuser": False}],
+            "data/user_legacy.json": [],
         }
         path = os.path.join(tmpdir, "test.zip")
         with zipfile.ZipFile(path, "w") as zf:
@@ -303,22 +349,35 @@ class TestPermissionPackageServiceConfirm:
         return path
 
     def test_confirm_invalid_file(self):
-        svc, _ = self._make_service()
+        svc, _ = self._make()
         result = svc.confirm_import("/nonexistent.zip")
         assert result["success"] is False
 
     def test_confirm_creates_roles(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = self._make_zip(tmpdir)
-            db.query.return_value.filter.return_value.all.return_value = []
-            db.query.return_value.all.return_value = []
+
+            def side_effect(model):
+                q = MagicMock()
+                name = getattr(model, "__name__", "")
+                if name == "RbacRole":
+                    q.filter.return_value.all.return_value = []
+                    q.filter.return_value.first.return_value = None
+                elif name == "User":
+                    q.all.return_value = []
+                    q.filter.return_value.first.return_value = None
+                else:
+                    q.all.return_value = []
+                return q
+
+            db.query.side_effect = side_effect
             result = svc.confirm_import(path)
             assert result["success"] is True
-            assert result["roles_created"] >= 0  # mock limitations: roles_created may be 0 with MagicMock
+            assert result["roles_created"] >= 1
 
     def test_confirm_updates_existing_role(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = self._make_zip(tmpdir)
             existing_role = MagicMock()
@@ -327,24 +386,27 @@ class TestPermissionPackageServiceConfirm:
             existing_role.is_active = True
             existing_role.priority = 100
 
-            def query_side_effect(model):
+            def side_effect(model):
                 q = MagicMock()
-                if model.__name__ == "RbacRole":
+                name = getattr(model, "__name__", "")
+                if name == "RbacRole":
                     q.filter.return_value.first.return_value = existing_role
                     q.filter.return_value.all.return_value = []
+                elif name == "User":
+                    q.all.return_value = []
+                    q.filter.return_value.first.return_value = None
                 else:
                     q.all.return_value = []
                     q.filter.return_value.first.return_value = None
-                    q.filter.return_value.all.return_value = []
                 return q
 
-            db.query.side_effect = query_side_effect
+            db.query.side_effect = side_effect
             result = svc.confirm_import(path)
             assert result["success"] is True
             assert result["roles_updated"] >= 1
 
     def test_confirm_with_user_roles_and_permissions(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             files = {
                 "manifest.json": {"version": "1.0", "export_time": "2025-01-01"},
@@ -360,19 +422,20 @@ class TestPermissionPackageServiceConfirm:
             existing_user.id = 1
             existing_user.username = "alice"
 
-            def query_side_effect(model):
+            def side_effect(model):
                 q = MagicMock()
-                if model.__name__ == "User":
+                name = getattr(model, "__name__", "")
+                if name == "User":
                     q.all.return_value = [existing_user]
                     q.filter.return_value.first.return_value = existing_user
-                elif model.__name__ == "RbacRole":
+                elif name == "RbacRole":
                     q.filter.return_value.all.return_value = []
                     q.filter.return_value.first.return_value = None
                 else:
                     q.all.return_value = []
                 return q
 
-            db.query.side_effect = query_side_effect
+            db.query.side_effect = side_effect
             result = svc.confirm_import(path)
             assert result["success"] is True
             assert result["user_roles_assigned"] >= 1
@@ -381,7 +444,7 @@ class TestPermissionPackageServiceConfirm:
             assert result["user_legacy_updated"] >= 1
 
     def test_confirm_user_roles_with_expires_at(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             files = {
                 "manifest.json": {"version": "1.0", "export_time": "2025-01-01"},
@@ -396,24 +459,25 @@ class TestPermissionPackageServiceConfirm:
             existing_user = MagicMock()
             existing_user.id = 1
 
-            def query_side_effect(model):
+            def side_effect(model):
                 q = MagicMock()
-                if model.__name__ == "User":
+                name = getattr(model, "__name__", "")
+                if name == "User":
                     q.all.return_value = [existing_user]
                     q.filter.return_value.first.return_value = existing_user
-                elif model.__name__ == "RbacRole":
+                elif name == "RbacRole":
                     q.filter.return_value.all.return_value = []
                     q.filter.return_value.first.return_value = None
                 else:
                     q.all.return_value = []
                 return q
 
-            db.query.side_effect = query_side_effect
+            db.query.side_effect = side_effect
             result = svc.confirm_import(path)
             assert result["success"] is True
 
     def test_confirm_user_not_found_skipped(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             files = {
                 "manifest.json": {"version": "1.0", "export_time": "2025-01-01"},
@@ -425,19 +489,19 @@ class TestPermissionPackageServiceConfirm:
             }
             path = self._make_zip(tmpdir, files)
 
-            def query_side_effect(model):
+            def side_effect(model):
                 q = MagicMock()
                 q.all.return_value = []
                 q.filter.return_value.all.return_value = []
                 q.filter.return_value.first.return_value = None
                 return q
 
-            db.query.side_effect = query_side_effect
+            db.query.side_effect = side_effect
             result = svc.confirm_import(path)
             assert result["success"] is True
 
     def test_confirm_general_exception_rollback(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = self._make_zip(tmpdir)
             db.query.side_effect = Exception("db error")
@@ -447,28 +511,30 @@ class TestPermissionPackageServiceConfirm:
             db.rollback.assert_called_once()
 
     def test_confirm_role_import_error(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = self._make_zip(tmpdir)
-            db.query.return_value.filter.return_value.all.return_value = []
 
-            def query_side_effect(model):
+            def side_effect(model):
                 q = MagicMock()
-                if model.__name__ == "RbacRole":
+                name = getattr(model, "__name__", "")
+                if name == "RbacRole":
                     q.filter.return_value.first.return_value = None
                     q.filter.return_value.all.return_value = []
-                else:
+                elif name == "User":
                     q.all.return_value = []
                     q.filter.return_value.first.return_value = None
+                else:
+                    q.all.return_value = []
                 return q
 
-            db.query.side_effect = query_side_effect
+            db.query.side_effect = side_effect
             db.add.side_effect = Exception("add failed")
             result = svc.confirm_import(path)
             assert result["success"] is True
 
     def test_confirm_import_without_optional_files(self):
-        svc, db = self._make_service()
+        svc, db = self._make()
         with tempfile.TemporaryDirectory() as tmpdir:
             files = {
                 "manifest.json": {"version": "1.0", "export_time": "2025-01-01"},
@@ -477,23 +543,27 @@ class TestPermissionPackageServiceConfirm:
             }
             path = self._make_zip(tmpdir, files)
 
-            def query_side_effect(model):
+            def side_effect(model):
                 q = MagicMock()
                 q.all.return_value = []
                 q.filter.return_value.all.return_value = []
+                q.filter.return_value.first.return_value = None
                 return q
 
-            db.query.side_effect = query_side_effect
+            db.query.side_effect = side_effect
             result = svc.confirm_import(path, overwrite_existing=False)
             assert result["success"] is True
+
+
+# ---------------------------------------------------------------------------
+# 4. PermissionPackageService — Checksum
+# ---------------------------------------------------------------------------
 
 
 class TestPermissionPackageServiceChecksum:
 
     def test_calculate_checksum(self):
-        from app.services.permission_package_service import PermissionPackageService
-        db = MagicMock()
-        svc = PermissionPackageService(db)
+        svc = PermissionPackageService(MagicMock())
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(b"hello world")
             path = f.name
@@ -507,41 +577,37 @@ class TestPermissionPackageServiceChecksum:
 
 
 # ---------------------------------------------------------------------------
-# 2. QueryAnalyzer
+# 5. QueryAnalyzer
 # ---------------------------------------------------------------------------
 
 
 class TestQueryAnalyzer:
 
-    def _make(self):
-        from app.services.query_analyzer_service import QueryAnalyzer
-        return QueryAnalyzer()
-
     def test_log_slow_query_basic(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         qa.log_slow_query("SELECT 1", 100.0, params={"a": 1}, explain_plan="SCAN")
         assert len(qa._slow_queries) == 1
         assert qa._slow_queries[0]["duration_ms"] == 100.0
 
     def test_log_slow_query_truncates_long_query(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         long_q = "SELECT " + "a" * 600
         qa.log_slow_query(long_q, 50.0)
         assert len(qa._slow_queries[0]["query"]) == 500
 
     def test_log_slow_query_trims_list(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         qa._max_slow_queries = 5
         for i in range(10):
             qa.log_slow_query(f"q{i}", float(i))
         assert len(qa._slow_queries) == 5
 
     def test_get_slow_queries_empty(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         assert qa.get_slow_queries() == []
 
     def test_get_slow_queries_with_min_duration(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         qa.log_slow_query("q1", 50.0)
         qa.log_slow_query("q2", 200.0)
         qa.log_slow_query("q3", 300.0)
@@ -549,18 +615,18 @@ class TestQueryAnalyzer:
         assert len(result) == 2
 
     def test_get_slow_queries_limit(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         for i in range(10):
             qa.log_slow_query(f"q{i}", float(i))
         assert len(qa.get_slow_queries(limit=3)) == 3
 
     def test_get_query_stats_empty(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         stats = qa.get_query_stats()
         assert stats["total_slow_queries"] == 0
 
     def test_get_query_stats_with_data(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         for v in [10.0, 20.0, 30.0]:
             qa.log_slow_query("q", v)
         stats = qa.get_query_stats()
@@ -573,26 +639,26 @@ class TestQueryAnalyzer:
         assert "p99_duration_ms" in stats
 
     def test_calculate_percentile_empty(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         assert qa._calculate_percentile([], 50) == 0.0
 
     def test_calculate_percentile_single(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         assert qa._calculate_percentile([5.0], 50) == 5.0
 
     def test_calculate_percentile_index_clamp(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         result = qa._calculate_percentile([1.0, 2.0, 3.0], 99)
         assert isinstance(result, float)
 
-    def test_detect_n_plus_one(self):
-        qa = self._make()
+    def test_detect_n_plus_one_first_call(self):
+        qa = QueryAnalyzer()
         qa.detect_n_plus_one("SELECT * FROM users WHERE id = 1", "ctx")
-        qa.detect_n_plus_one("SELECT * FROM users WHERE id = 2", "ctx")
-        assert len(qa._n_plus_one_cache) > 0
+        cache_key = "ctx:" + qa._get_query_signature("SELECT * FROM users WHERE id = 1")
+        assert cache_key in qa._n_plus_one_cache
 
     def test_detect_n_plus_one_repeated(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         for _ in range(7):
             qa.detect_n_plus_one("SELECT * FROM users WHERE id = 1", "ctx")
         count_key = None
@@ -603,19 +669,26 @@ class TestQueryAnalyzer:
         if count_key:
             assert qa._n_plus_one_cache[count_key] >= 1
 
+    def test_detect_n_plus_one_expires_old(self):
+        qa = QueryAnalyzer()
+        qa._n_plus_one_cache["old_key"] = time.time() - 5.0
+        qa._n_plus_one_cache["old_key_count"] = 3
+        qa.detect_n_plus_one("SELECT 1", "ctx")
+        assert "old_key" not in qa._n_plus_one_cache
+
     def test_get_query_signature(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         sig = qa._get_query_signature("SELECT * FROM users WHERE id = 123 AND name = 'abc'")
         assert "?" in sig
 
     def test_clear_slow_queries(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         qa.log_slow_query("q", 10.0)
         qa.clear_slow_queries()
         assert len(qa._slow_queries) == 0
 
     def test_analyze_query_plan_success(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         db = MagicMock()
         mock_result = MagicMock()
         mock_result.__iter__ = MagicMock(return_value=iter(["(0,0,SCAN TABLE users)"]))
@@ -625,7 +698,7 @@ class TestQueryAnalyzer:
         assert "SCAN" in plan
 
     def test_analyze_query_plan_exception(self):
-        qa = self._make()
+        qa = QueryAnalyzer()
         db = MagicMock()
         db.execute.side_effect = Exception("error")
         plan = qa.analyze_query_plan(db, "bad query")
@@ -635,38 +708,33 @@ class TestQueryAnalyzer:
 class TestMonitorQueryPerformance:
 
     def test_decorator_below_threshold(self):
-        from app.services.query_analyzer_service import monitor_query_performance, query_analyzer
-
-        @monitor_query_performance(threshold_ms=1000.0)
+        @monitor_query_performance(threshold_ms=10000.0)
         def fast_func():
             return "ok"
-
         result = fast_func()
         assert result == "ok"
 
     def test_decorator_above_threshold(self):
-        from app.services.query_analyzer_service import monitor_query_performance, query_analyzer
-
-        initial_count = len(query_analyzer._slow_queries)
+        before = len(query_analyzer._slow_queries)
 
         @monitor_query_performance(threshold_ms=0.0)
         def slow_func():
+            time.sleep(0.01)
             return "ok"
 
         result = slow_func()
         assert result == "ok"
-        assert len(query_analyzer._slow_queries) >= initial_count
+        assert len(query_analyzer._slow_queries) > before
 
 
 # ---------------------------------------------------------------------------
-# 3. RuralWorkService
+# 6. RuralWorkService
 # ---------------------------------------------------------------------------
 
 
 class TestRuralWorkService:
 
     def _make(self):
-        from app.services.rural_work_service import RuralWorkService
         db = MagicMock()
         return RuralWorkService(db), db
 
@@ -711,9 +779,7 @@ class TestRuralWorkService:
         q.count.return_value = 0
         q.all.return_value = []
         db.query.return_value = q
-        items, total = svc.get_rural_works(
-            start_date="not-a-date", end_date="also-not-a-date"
-        )
+        items, total = svc.get_rural_works(start_date="not-a-date", end_date="bad")
         assert items == []
 
     def test_get_rural_works_with_rows(self):
@@ -722,10 +788,8 @@ class TestRuralWorkService:
         row.id = 1
         row.code = "RW-001"
         row.name = "Test Work"
-        row.type = MagicMock()
-        row.type.value = "infrastructure"
-        row.status = MagicMock()
-        row.status.value = "in_progress"
+        row.type = MagicMock(value="infrastructure")
+        row.status = MagicMock(value="in_progress")
         row.village_id = 10
         row.responsible_person = "Alice"
         row.contact_phone = "123"
@@ -820,7 +884,6 @@ class TestRuralWorkService:
         work.type = None
         work.status = None
         work.village_id = 1
-        work.__class__ = type(work)
         db.query.return_value.filter.return_value.first.return_value = work
         result = svc.update_rural_work(1, name="Updated", nonexistent_field="x")
         assert work.name == "Updated"
@@ -832,47 +895,40 @@ class TestRuralWorkService:
         assert svc.update_rural_work(999) is None
 
     def test_generate_code(self):
-        from app.services.rural_work_service import RuralWorkService
         code = RuralWorkService._generate_code()
         assert code.startswith("RW-")
-        assert len(code) >= 11  # RW- prefix + 8 hex chars = 11
+        assert len(code) == 11
 
 
 class TestRuralWorkHelpers:
 
     def test_iso_none(self):
-        from app.services.rural_work_service import _iso
         assert _iso(None) is None
 
     def test_iso_value(self):
-        from app.services.rural_work_service import _iso
         dt = datetime(2025, 1, 1, tzinfo=timezone.utc)
         assert _iso(dt) == dt.isoformat()
 
     def test_safe_enum_value_with_value(self):
-        from app.services.rural_work_service import _safe_enum_value
         val = MagicMock()
         val.value = "enum_val"
         assert _safe_enum_value(val) == "enum_val"
 
     def test_safe_enum_value_without_value(self):
-        from app.services.rural_work_service import _safe_enum_value
         assert _safe_enum_value("plain") == "plain"
 
     def test_safe_enum_value_none(self):
-        from app.services.rural_work_service import _safe_enum_value
         assert _safe_enum_value(None) is None
 
 
 # ---------------------------------------------------------------------------
-# 4. UpdateLogService
+# 7. UpdateLogService
 # ---------------------------------------------------------------------------
 
 
 class TestUpdateLogService:
 
     def _make(self):
-        from app.services.update_log_service import UpdateLogService
         db = MagicMock()
         return UpdateLogService(db), db
 
@@ -976,20 +1032,19 @@ class TestUpdateLogService:
 
     def test_initialize_version_history_force(self):
         svc, db = self._make()
-        q = MagicMock()
-        q.delete.return_value = 5
-        db.query.return_value = q
-        q2 = MagicMock()
-        q2.count.return_value = 0
-        db.query.return_value = q2
 
-        def query_side_effect(model):
+        call_count = [0]
+
+        def side_effect(model):
             q = MagicMock()
-            q.delete.return_value = 5
-            q.count.return_value = 0
+            if call_count[0] == 0:
+                q.delete.return_value = 5
+                call_count[0] += 1
+            else:
+                q.count.return_value = 0
             return q
 
-        db.query.side_effect = query_side_effect
+        db.query.side_effect = side_effect
         result = svc.initialize_version_history(updated_by="admin", force=True)
         assert result["status"] == "success"
         assert result["initialized_count"] > 0
@@ -1004,19 +1059,13 @@ class TestUpdateLogService:
 
     def test_sync_version_history(self):
         svc, db = self._make()
-        q_filter = MagicMock()
-        q_filter.count.return_value = 0
-        q = MagicMock()
-        q.filter.return_value = q_filter
-        q.count.return_value = 0
-        db.query.return_value = q
 
-        def query_side_effect(model):
+        def side_effect(model):
             q = MagicMock()
             q.filter.return_value = MagicMock(count=MagicMock(return_value=0))
             return q
 
-        db.query.side_effect = query_side_effect
+        db.query.side_effect = side_effect
         result = svc.sync_version_history()
         assert result["status"] == "success"
         assert result["synced_count"] > 0
@@ -1031,12 +1080,16 @@ class TestUpdateLogService:
 
     def test_check_and_record_version_change_no_records(self):
         svc, db = self._make()
-        q = MagicMock()
-        q.order_by.return_value = q
-        q.first.return_value = None
-        q.delete.return_value = 0
-        q.count.return_value = 0
-        db.query.return_value = q
+
+        def side_effect(model):
+            q = MagicMock()
+            q.order_by.return_value = q
+            q.first.return_value = None
+            q.delete.return_value = 0
+            q.count.return_value = 0
+            return q
+
+        db.query.side_effect = side_effect
         result = svc.check_and_record_version_change("1.0.0")
         assert result["action"] == "initialize"
 
@@ -1045,7 +1098,7 @@ class TestUpdateLogService:
         latest = MagicMock()
         latest.version = "0.9.0"
 
-        def query_side_effect(model):
+        def side_effect(model):
             q = MagicMock()
             q.order_by.return_value = MagicMock(first=MagicMock(return_value=latest))
             q.count.return_value = 1
@@ -1053,7 +1106,7 @@ class TestUpdateLogService:
             q.first.return_value = None
             return q
 
-        db.query.side_effect = query_side_effect
+        db.query.side_effect = side_effect
         result = svc.check_and_record_version_change("1.0.0")
         assert result["action"] == "record_change"
 
@@ -1070,146 +1123,145 @@ class TestUpdateLogService:
         assert result is None
 
     def test_get_update_log_service_factory(self):
-        from app.services.update_log_service import get_update_log_service
         db = MagicMock()
         svc = get_update_log_service(db)
         assert svc.db is db
 
 
 # ---------------------------------------------------------------------------
-# 5. OrganizationCodeService
+# 8. OrganizationCodeService
 # ---------------------------------------------------------------------------
 
 
 class TestOrganizationCodeService:
 
-    def _make(self):
-        from app.services.organization_code_service import OrganizationCodeService
-        return OrganizationCodeService()
-
     def test_generate_code(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         code = svc.generate_code("TestOrg")
         assert len(code) >= 8
         assert code.isalnum()
 
     def test_generate_code_with_parent(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         code = svc.generate_code("Child", parent_code="PARENT1")
         assert len(code) >= 8
 
     def test_generate_code_collision_resolution(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         code = svc.generate_code("Org1")
         svc._codes[code] = {"info": "first"}
         code2 = svc.generate_code("Org1")
         assert code2 != code or len(code2) > len(code)
 
     def test_validate_code_valid(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         assert svc.validate_code("ABCD1234") is True
 
     def test_validate_code_too_short(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         assert svc.validate_code("AB") is False
 
     def test_validate_code_non_alnum(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         assert svc.validate_code("ABCD-EFGH") is False
 
     def test_get_code_info_found(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         svc._codes["X1"] = {"name": "test"}
         assert svc.get_code_info("X1") == {"name": "test"}
 
     def test_get_code_info_not_found(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         assert svc.get_code_info("NONE") is None
 
     def test_register_code(self):
-        svc = self._make()
+        svc = OrganizationCodeService()
         svc.register_code("C1", {"name": "org"})
         assert svc._codes["C1"] == {"name": "org"}
 
     def test_init_with_db(self):
-        from app.services.organization_code_service import OrganizationCodeService
         db = MagicMock()
         svc = OrganizationCodeService(db)
         assert svc.db is db
 
 
 # ---------------------------------------------------------------------------
-# 6. BaseRepository
+# 9. BaseRepository (async)
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.skip(reason="BaseRepository interface changed; tests need update")
 class TestBaseRepository:
 
     def _make(self):
-        from app.services.repositories.base import BaseRepository
         db = AsyncMock()
         return BaseRepository(db), db
 
     @pytest.mark.asyncio
     async def test_get_by_id(self):
         repo, db = self._make()
-        mock_model = MagicMock()
-        mock_model.id = 1
-        result_mock = MagicMock()
-        result_mock.scalar_one_or_none.return_value = mock_model
-        db.execute.return_value = result_mock
-        result = await repo.get_by_id(type("Model", (), {"id": 1}), 1)
-        assert result == mock_model
+        mock_instance = MagicMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_instance
+
+        mock_model = type("Model", (), {"id": MagicMock()})
+
+        with patch("app.services.repositories.base.select") as mock_select:
+            db.execute.return_value = mock_result
+            result = await repo.get_by_id(mock_model, 1)
+            assert result == mock_instance
 
     @pytest.mark.asyncio
     async def test_list_no_filters(self):
         repo, db = self._make()
-        mock_model = type("Model", (), {"id": 1})
+        mock_item = MagicMock()
         items_result = MagicMock()
-        items_result.scalars.return_value.all.return_value = ["item1"]
+        items_result.scalars.return_value.all.return_value = [mock_item]
         count_result = MagicMock()
         count_result.scalar.return_value = 1
 
-        async def execute_side_effect(q):
-            sql_str = str(q)
-            if "count" in sql_str.lower() or "COUNT" in sql_str:
-                return count_result
-            return items_result
-
-        db.execute.side_effect = execute_side_effect
-        result = await repo.list(mock_model)
-        assert "items" in result
-        assert result["total"] == 1
+        with patch("app.services.repositories.base.select") as mock_select, \
+             patch("app.services.repositories.base.func") as mock_func:
+            mock_func.count.return_value = MagicMock()
+            db.execute.return_value = items_result
+            db.execute.side_effect = None
+            db.execute.side_effect = [items_result, count_result]
+            result = await repo.list(MagicMock)
+            assert "items" in result
+            assert result["total"] == 1
 
     @pytest.mark.asyncio
     async def test_list_with_filters(self):
         repo, db = self._make()
-        mock_model = type("Model", (), {"id": 1, "name": "test"})
         items_result = MagicMock()
         items_result.scalars.return_value.all.return_value = []
         count_result = MagicMock()
         count_result.scalar.return_value = 0
 
-        async def execute_side_effect(q):
-            return count_result
+        mock_model = MagicMock()
+        mock_model.name = MagicMock()
+        mock_model.name.__class__ = type(MagicMock)
 
-        db.execute.side_effect = execute_side_effect
-        result = await repo.list(mock_model, filters={"name": "test"}, order_by=None)
-        assert result["items"] == []
+        with patch("app.services.repositories.base.select") as mock_select, \
+             patch("app.services.repositories.base.func") as mock_func:
+            mock_func.count.return_value = MagicMock()
+            db.execute.side_effect = [items_result, count_result]
+            result = await repo.list(mock_model, filters={"name": "test"})
+            assert result["items"] == []
 
     @pytest.mark.asyncio
     async def test_list_with_order_by(self):
         repo, db = self._make()
-        mock_model = type("Model", (), {"id": 1})
         items_result = MagicMock()
         items_result.scalars.return_value.all.return_value = []
         count_result = MagicMock()
         count_result.scalar.return_value = 0
 
-        db.execute.side_effect = [items_result, count_result]
-        result = await repo.list(mock_model, order_by="created_at")
-        assert result["items"] == []
+        with patch("app.services.repositories.base.select") as mock_select, \
+             patch("app.services.repositories.base.func") as mock_func:
+            mock_func.count.return_value = MagicMock()
+            db.execute.side_effect = [items_result, count_result]
+            result = await repo.list(MagicMock, order_by="created_at")
+            assert result["items"] == []
 
     @pytest.mark.asyncio
     async def test_create(self):
@@ -1217,8 +1269,7 @@ class TestBaseRepository:
         mock_model = MagicMock()
         instance = MagicMock()
         mock_model.return_value = instance
-        db.refresh.return_value = None
-        result = await repo.create(mock_model, name="test")
+        await repo.create(mock_model, name="test")
         mock_model.assert_called_once_with(name="test")
         db.add.assert_called_once_with(instance)
         db.commit.assert_called_once()
@@ -1227,9 +1278,7 @@ class TestBaseRepository:
     async def test_update(self):
         repo, db = self._make()
         instance = MagicMock()
-        instance.__class__.__name__ = "TestModel"
-        db.refresh.return_value = None
-        result = await repo.update(instance, name="new_name", none_field=None)
+        await repo.update(instance, name="new_name", none_field=None)
         assert instance.name == "new_name"
         db.commit.assert_called_once()
 
@@ -1243,9 +1292,9 @@ class TestBaseRepository:
         db.commit.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_delete_soft_no_is_deleted_attr(self):
+    async def test_delete_soft_no_attr(self):
         repo, db = self._make()
-        instance = type("NoAttr", (), {})()
+        instance = MagicMock(spec=[])
         await repo.delete(instance, soft=True)
         db.delete.assert_called_once_with(instance)
         db.commit.assert_called_once()
@@ -1260,113 +1309,119 @@ class TestBaseRepository:
 
 
 # ---------------------------------------------------------------------------
-# 7. FundRepository
+# 10. FundRepository (async)
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.skip(reason="Fund.attachments relationship removed; tests need update")
 class TestFundRepository:
 
     def _make(self):
-        from app.services.repositories.fund_repository import FundRepository
         db = AsyncMock()
         return FundRepository(db), db
 
     @pytest.mark.asyncio
     async def test_get_with_attachments(self):
         repo, db = self._make()
-        fund = MagicMock()
-        result_mock = MagicMock()
-        result_mock.scalar_one_or_none.return_value = fund
-        db.execute.return_value = result_mock
-        result = await repo.get_with_attachments(1)
-        assert result == fund
+        with patch("app.services.repositories.fund_repository.select") as mock_select, \
+             patch("app.services.repositories.fund_repository.selectinload") as mock_sil, \
+             patch("app.services.repositories.fund_repository.Fund") as MockFund:
+            mock_sil.return_value = MagicMock()
+            mock_result = MagicMock()
+            mock_result.scalar_one_or_none.return_value = MagicMock()
+            db.execute.return_value = mock_result
+            result = await repo.get_with_attachments(1)
+            assert result is not None
 
     @pytest.mark.asyncio
     async def test_get_lifecycle_phases(self):
         repo, db = self._make()
-        phase = MagicMock()
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.all.return_value = [phase]
-        db.execute.return_value = result_mock
-        result = await repo.get_lifecycle_phases(1)
-        assert len(result) == 1
+        with patch("app.services.repositories.fund_repository.select") as mock_select, \
+             patch("app.services.repositories.fund_repository.ProjectFundPhase") as mock_pfp:
+            phase = MagicMock()
+            mock_pfp.fund_id = MagicMock()
+            mock_pfp.phase_order = MagicMock()
+            result_mock = MagicMock()
+            result_mock.scalars.return_value.all.return_value = [phase]
+            db.execute.return_value = result_mock
+            result = await repo.get_lifecycle_phases(1)
+            assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_get_transactions_no_range(self):
         repo, db = self._make()
-        tx = MagicMock()
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.all.return_value = [tx]
-        db.execute.return_value = result_mock
-        result = await repo.get_transactions(1)
-        assert len(result) == 1
+        with patch("app.services.repositories.fund_repository.select") as mock_select:
+            tx = MagicMock()
+            result_mock = MagicMock()
+            result_mock.scalars.return_value.all.return_value = [tx]
+            db.execute.return_value = result_mock
+            result = await repo.get_transactions(1)
+            assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_get_transactions_with_range(self):
         repo, db = self._make()
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.all.return_value = []
-        db.execute.return_value = result_mock
-        result = await repo.get_transactions(1, date_range=("2025-01-01", "2025-12-31"))
-        assert result == []
+        with patch("app.services.repositories.fund_repository.select") as mock_select:
+            result_mock = MagicMock()
+            result_mock.scalars.return_value.all.return_value = []
+            db.execute.return_value = result_mock
+            result = await repo.get_transactions(1, date_range=("2025-01-01", "2025-12-31"))
+            assert result == []
 
     @pytest.mark.asyncio
     async def test_get_budget_baselines(self):
         repo, db = self._make()
-        baseline = MagicMock()
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.all.return_value = [baseline]
-        db.execute.return_value = result_mock
-        result = await repo.get_budget_baselines(1)
-        assert len(result) == 1
+        with patch("app.services.repositories.fund_repository.select") as mock_select:
+            baseline = MagicMock()
+            result_mock = MagicMock()
+            result_mock.scalars.return_value.all.return_value = [baseline]
+            db.execute.return_value = result_mock
+            result = await repo.get_budget_baselines(1)
+            assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_get_anomalies_no_filter(self):
         repo, db = self._make()
-        anomaly = MagicMock()
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.all.return_value = [anomaly]
-        db.execute.return_value = result_mock
-        result = await repo.get_anomalies(1)
-        assert len(result) == 1
+        with patch("app.services.repositories.fund_repository.select") as mock_select:
+            anomaly = MagicMock()
+            result_mock = MagicMock()
+            result_mock.scalars.return_value.all.return_value = [anomaly]
+            db.execute.return_value = result_mock
+            result = await repo.get_anomalies(1)
+            assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_get_anomalies_resolved_true(self):
         repo, db = self._make()
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.all.return_value = []
-        db.execute.return_value = result_mock
-        result = await repo.get_anomalies(1, resolved=True)
-        assert result == []
+        with patch("app.services.repositories.fund_repository.select") as mock_select:
+            result_mock = MagicMock()
+            result_mock.scalars.return_value.all.return_value = []
+            db.execute.return_value = result_mock
+            result = await repo.get_anomalies(1, resolved=True)
+            assert result == []
 
     @pytest.mark.asyncio
     async def test_get_anomalies_resolved_false(self):
         repo, db = self._make()
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.all.return_value = []
-        db.execute.return_value = result_mock
-        result = await repo.get_anomalies(1, resolved=False)
-        assert result == []
+        with patch("app.services.repositories.fund_repository.select") as mock_select:
+            result_mock = MagicMock()
+            result_mock.scalars.return_value.all.return_value = []
+            db.execute.return_value = result_mock
+            result = await repo.get_anomalies(1, resolved=False)
+            assert result == []
 
 
 # ---------------------------------------------------------------------------
-# 8. EncryptedPackage
+# 11. EncryptedPackage
 # ---------------------------------------------------------------------------
 
 
 class TestEncryptedPackage:
 
-    def _derive_key(self, password, salt):
-        from app.services.encrypted_package import _derive_key
-        return _derive_key(password, salt)
-
     def test_derive_key(self):
-        key = self._derive_key("testpass", b"0" * 16)
+        key = _derive_key("testpass", b"0" * 16)
         assert len(key) == 32
 
     def test_create_and_extract_roundtrip(self):
-        from app.services.encrypted_package import create_encrypted_package, extract_encrypted_package
         data = {"key": "value", "numbers": [1, 2, 3]}
         with tempfile.NamedTemporaryFile(suffix=".rrs", delete=False) as f:
             path = f.name
@@ -1379,7 +1434,6 @@ class TestEncryptedPackage:
             os.unlink(path)
 
     def test_extract_wrong_password(self):
-        from app.services.encrypted_package import create_encrypted_package, extract_encrypted_package
         with tempfile.NamedTemporaryFile(suffix=".rrs", delete=False) as f:
             path = f.name
         try:
@@ -1390,7 +1444,6 @@ class TestEncryptedPackage:
             os.unlink(path)
 
     def test_extract_bad_magic(self):
-        from app.services.encrypted_package import extract_encrypted_package
         with tempfile.NamedTemporaryFile(suffix=".rrs", delete=False) as f:
             f.write(b"XXXX")
             path = f.name
@@ -1401,7 +1454,6 @@ class TestEncryptedPackage:
             os.unlink(path)
 
     def test_extract_bad_version(self):
-        from app.services.encrypted_package import extract_encrypted_package, MAGIC
         with tempfile.NamedTemporaryFile(suffix=".rrs", delete=False) as f:
             f.write(MAGIC + b"2.0" + b"\x00" * 16)
             path = f.name
@@ -1412,7 +1464,6 @@ class TestEncryptedPackage:
             os.unlink(path)
 
     def test_extract_truncated_data(self):
-        from app.services.encrypted_package import extract_encrypted_package, MAGIC, VERSION
         with tempfile.NamedTemporaryFile(suffix=".rrs", delete=False) as f:
             f.write(MAGIC + VERSION + b"\x00" * 16 + struct.pack(">I", 10) + b"\x00" * 5)
             path = f.name
@@ -1423,7 +1474,6 @@ class TestEncryptedPackage:
             os.unlink(path)
 
     def test_extract_tampered_checksum(self):
-        from app.services.encrypted_package import create_encrypted_package, extract_encrypted_package
         with tempfile.NamedTemporaryFile(suffix=".rrs", delete=False) as f:
             path = f.name
         try:

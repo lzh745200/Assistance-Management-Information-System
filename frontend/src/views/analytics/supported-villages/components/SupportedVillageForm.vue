@@ -502,8 +502,8 @@ function upsertFundingRow(year: number) {
       militaryInvestment: currentMilitaryInput.value,
       localInvestment: currentLocalInput.value,
     });
+    transitionFundingRows.value.sort((a, b) => a.year - b.year);
   }
-  transitionFundingRows.value.sort((a, b) => a.year - b.year);
 }
 
 function advanceToNextYear(year: number) {

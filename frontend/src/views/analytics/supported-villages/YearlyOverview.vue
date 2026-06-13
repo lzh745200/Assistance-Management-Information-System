@@ -123,11 +123,10 @@ import {
 } from "@/api/supportedVillage";
 import type { YearlyDataSummary } from "@/types/analytics";
 import SectionDataForm from "./components/SectionDataForm.vue";
+import { unwrapData } from "@/utils/unwrapData";
 
 const route = useRoute();
 const { pushSafe } = useRouterSafe();
-
-import { unwrapData } from "@/utils/unwrapData";
 
 const villageId = computed(() => safeRouteParam(route.params.id));
 const villageName = ref("");

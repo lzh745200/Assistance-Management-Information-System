@@ -40,7 +40,8 @@ import {
   User,
 } from "@element-plus/icons-vue";
 import echarts from "@/utils/echarts";
-import request from "@/api/request";
+import { get } from "@/api/request";
+import { unwrapData } from "@/utils/unwrapData";
 
 export interface DashboardStats {
   total_villages: number;
@@ -215,10 +216,10 @@ function initSparklines() {
 
 async function loadStats() {
   try {
-    const res = await request.get("/dashboard/stats", {
+    const res = await get("/dashboard/stats", {
       params: { refresh: true },
     } as any);
-    const d = res?.data || res;
+    const d = unwrapData<Record<string, number>>(res, {} as Record<string, number>);
     if (d) {
       stats.value = {
         total_villages: d.total_villages ?? 0,

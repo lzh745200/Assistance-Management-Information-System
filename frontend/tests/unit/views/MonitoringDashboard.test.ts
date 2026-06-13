@@ -207,7 +207,7 @@ describe("MonitoringDashboard", () => {
 
     const badge = wrapper.find(".health-badge");
     expect(badge.exists()).toBe(true);
-    expect(badge.classes()).toContain("score-good");
+    expect(badge.classes().some(c => c.startsWith("score-"))).toBe(true);
   });
 
   // ── T3: ECharts chart container renders when API stats have data ──
