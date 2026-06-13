@@ -367,94 +367,14 @@ async def get_policy_statistics(current_user=Depends(get_current_user), db: Sess
 
 @router.get("/import/template")
 async def download_import_template():
-    """下载政策导入模板"""
-    from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Font, PatternFill
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "政策法规导入模板"
-
-    headers = [
-        "序号",
-        "政策标题*",
-        "政策文号",
-        "政策级别",
-        "发布机关",
-        "发布日期",
-        "生效日期",
-        "状态",
-        "关键词",
-        "政策内容",
-    ]
-    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
-
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=header)
-        cell.font = Font(bold=True, color="FFFFFF")
-        cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    sample = [
-        1,
-        "关于全面推进乡村振兴的指导意见",
-        "国发〔2024〕1号",
-        "国家级",
-        "国务院",
-        "2024-01-01",
-        "2024-02-01",
-        "有效",
-        "乡村振兴,帮扶",
-        "政策内容详情...",
-    ]
-    for col, value in enumerate(sample, 1):
-        ws.cell(row=2, column=col, value=value)
-
-    widths = {
-        "A": 8,
-        "B": 50,
-        "C": 20,
-        "D": 12,
-        "E": 20,
-        "F": 15,
-        "G": 15,
-        "H": 12,
-        "I": 30,
-        "J": 50,
-    }
-    for col_letter, w in widths.items():
-        ws.column_dimensions[col_letter].width = w
-
-    ws2 = wb.create_sheet("填写说明")
-    instructions = [
-        ["字段名", "说明", "可选值"],
-        ["政策标题*", "必填", ""],
-        ["政策文号", "选填", ""],
-        ["政策级别", "选填", "国家级/省级/市级/县级/军队"],
-        ["发布机关", "选填", ""],
-        ["发布日期", "选填", "格式: YYYY-MM-DD"],
-        ["生效日期", "选填", "格式: YYYY-MM-DD"],
-        ["状态", "选填", "有效/失效/草稿"],
-        ["关键词", "选填", "多个关键词用逗号分隔"],
-        ["政策内容", "选填", "可粘贴完整政策内容"],
-    ]
-    for r_idx, row in enumerate(instructions, 1):
-        for c_idx, val in enumerate(row, 1):
-            cell = ws2.cell(row=r_idx, column=c_idx, value=val)
-            if r_idx == 1:
-                cell.font = Font(bold=True)
-    ws2.column_dimensions["A"].width = 15
-    ws2.column_dimensions["B"].width = 20
-    ws2.column_dimensions["C"].width = 40
-
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-
-    return StreamingResponse(
-        output,
+    """下载政策导入模板（委托 ExcelTemplateService）"""
+    from fastapi.responses import Response
+    from app.services.excel_template_service import ExcelTemplateService
+    content = ExcelTemplateService().generate_policy_template()
+    return Response(
+        content=content,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=policy_import_template.xlsx"},
+        headers={"Content-Disposition": "attachment; filename*=UTF-8''policy_import_template.xlsx"},
     )
 
 

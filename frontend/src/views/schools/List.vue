@@ -279,6 +279,7 @@ import { ElMessage } from "element-plus";
 import { Plus, Download, Upload, Search } from "@element-plus/icons-vue";
 import request from "@/api/request";
 import { schoolApi } from "@/api/schools";
+import { downloadImportTemplate } from "@/api/import";
 
 const { pushSafe } = useRouterSafe();
 const tableData = ref<any[]>([]);
@@ -451,15 +452,21 @@ async function handleDelete(row: any) {
   }
 }
 // 下载模板
-function handleDownloadTemplate() {
-  const url = `${baseUrl}/schools/import/template`;
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "school_import_template.xlsx";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  ElMessage.success("模板下载已开始");
+async function handleDownloadTemplate() {
+  try {
+    const blob = await downloadImportTemplate("school");
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "学校导入模板.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    ElMessage.success("模板下载成功");
+  } catch {
+    ElMessage.error("模板下载失败");
+  }
 }
 
 // 导入相关

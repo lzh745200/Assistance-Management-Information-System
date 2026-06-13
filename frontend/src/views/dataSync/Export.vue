@@ -260,7 +260,7 @@ const handleDownload = async (row: SyncLog) => {
 const handleDownloadByName = async (packageName: string) => {
   try {
     const response = await downloadExportPackage(packageName);
-    const blob = new Blob([response as any]);
+    const blob = response.data || new Blob([response as any]);
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

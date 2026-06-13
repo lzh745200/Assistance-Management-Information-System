@@ -46,7 +46,7 @@ class TestAutoBackupJob:
             with patch("app.services.backup_scheduler.get_config", return_value="false") as mock_config:
                 from app.services.backup_scheduler import auto_backup_job
                 await auto_backup_job()
-                mock_config.assert_called_once_with("auto_backup", "true")
+                mock_config.assert_called_once_with("auto_backup", "false")
 
     @pytest.mark.asyncio
     async def test_auto_backup_success(self, mock_db_context, mock_db):

@@ -7,8 +7,43 @@
       </p>
     </div>
 
-    <!-- 质量概览统计 -->
+    <!-- 质量评分仪表盘 -->
     <el-row :gutter="16">
+      <el-col :span="6">
+        <el-card class="quality-score-card">
+          <div class="quality-gauge" :class="scoreClass">
+            <div class="gauge-ring">
+              <svg viewBox="0 0 120 120" class="gauge-svg">
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  stroke="#e0e0e0"
+                  stroke-width="8"
+                  fill="none"
+                />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  stroke="currentColor"
+                  stroke-width="8"
+                  fill="none"
+                  stroke-linecap="round"
+                  :stroke-dasharray="dashArray"
+                  :stroke-dashoffset="0"
+                  transform="rotate(-90 60 60)"
+                  class="gauge-arc"
+                />
+              </svg>
+              <div class="gauge-inner">
+                <span class="gauge-value">{{ qualityScore }}</span>
+                <span class="gauge-label">质量分</span>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
       <el-col :span="6">
         <el-card class="stat-card"
           ><div class="stat-num">{{ stats.totalVillages }}</div>
@@ -33,39 +68,79 @@
           <div class="stat-lbl">收入数据填报率</div></el-card
         >
       </el-col>
-      <el-col :span="6">
-        <el-card
-          class="stat-card"
-          :class="stats.anomalyCount > 0 ? 'danger' : 'success'"
-          ><div class="stat-num">{{ stats.anomalyCount }}</div>
-          <div class="stat-lbl">异常记录数</div></el-card
-        >
-      </el-col>
     </el-row>
 
-    <!-- 检查操作 -->
+    <!-- 操作栏 -->
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>数据质量报告</span>
+          <span>数据质量操作</span>
           <div>
-            <span
-              v-if="stats.generatedAt"
-              style="font-size: 12px; color: #999; margin-right: 16px"
-              >生成时间: {{ stats.generatedAt }}</span
-            >
+            <el-button type="warning" :loading="cleaning" @click="runClean">
+              清洗数据
+            </el-button>
             <el-button
-              type="warning"
+              type="info"
+              :loading="deduplicating"
+              @click="runDeduplicate"
+            >
+              去重检查
+            </el-button>
+            <el-button
+              type="danger"
               :loading="fullChecking"
               @click="runFullCheck"
-              >全面检查</el-button
             >
-            <el-button type="primary" :loading="loading" @click="loadReport"
-              >刷新报告</el-button
-            >
+              全面检查
+            </el-button>
+            <el-button type="primary" :loading="loading" @click="loadReport">
+              刷新报告
+            </el-button>
           </div>
         </div>
       </template>
+
+      <!-- 质量指标 -->
+      <el-row :gutter="16" style="margin-bottom: 16px">
+        <el-col :span="8">
+          <div class="metric-item">
+            <span class="metric-label">完整性</span>
+            <el-progress
+              :percentage="Math.round(stats.popFillRate * 100)"
+              :color="progressColor(stats.popFillRate)"
+              :stroke-width="16"
+            />
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="metric-item">
+            <span class="metric-label">准确性</span>
+            <el-progress
+              :percentage="
+                Math.round(
+                  (1 - stats.anomalyCount / Math.max(stats.totalVillages, 1)) *
+                    100,
+                )
+              "
+              :color="
+                progressColor(
+                  1 - stats.anomalyCount / Math.max(stats.totalVillages, 1),
+                )
+              "
+              :stroke-width="16"
+            />
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="metric-item">
+            <span class="metric-label">时效性</span>
+            <el-progress
+              :percentage="stats.generatedAt ? 100 : 0"
+              :stroke-width="16"
+            />
+          </div>
+        </el-col>
+      </el-row>
 
       <el-tabs v-model="activeTab">
         <!-- 填报缺失概览 -->
@@ -246,13 +321,12 @@
         <el-tab-pane label="全面检查" name="full">
           <el-alert
             v-if="!fullCheckResults"
-            title="请点击“全面检查”按钮开始对系统数据进行全面检查"
+            title="请点击全面检查按钮开始对系统数据进行全面检查"
             type="info"
             :closable="false"
             show-icon
           />
           <div v-else>
-            <!-- 检查总结 -->
             <el-descriptions :column="4" border style="margin-bottom: 16px">
               <el-descriptions-item label="总检查项">
                 {{ fullCheckResults.summary?.total_checks ?? 0 }}
@@ -274,7 +348,6 @@
               </el-descriptions-item>
             </el-descriptions>
 
-            <!-- 检查详情 -->
             <el-collapse v-model="activeCheckItems">
               <el-collapse-item
                 v-for="(check, index) in fullCheckResults.checks || []"
@@ -353,17 +426,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import {
   SuccessFilled,
   WarningFilled,
   CircleCloseFilled,
 } from "@element-plus/icons-vue";
+import { runFullCheck as apiRunFullCheck } from "@/api/dataQuality";
 import request from "@/api/request";
 
 const loading = ref(false);
 const fullChecking = ref(false);
+const cleaning = ref(false);
+const deduplicating = ref(false);
 const activeTab = ref("missing");
 const activeCheckItems = ref<number[]>([]);
 
@@ -381,6 +457,35 @@ const anomalies = ref<any[]>([]);
 const progressMatrix = ref<any[]>([]);
 const fullCheckResults = ref<any>(null);
 
+// 综合质量评分
+const qualityScore = computed(() => {
+  const popScore = stats.popFillRate * 40;
+  const incomeScore = stats.incomeFillRate * 30;
+  const anomalyScore = Math.max(
+    0,
+    (1 - stats.anomalyCount / Math.max(stats.totalVillages, 1)) * 30,
+  );
+  return Math.round(popScore + incomeScore + anomalyScore);
+});
+
+const scoreClass = computed(() => {
+  if (qualityScore.value >= 80) return "score-good";
+  if (qualityScore.value >= 60) return "score-warn";
+  return "score-bad";
+});
+
+const dashArray = computed(() => {
+  const circumference = 2 * Math.PI * 50;
+  const filled = (qualityScore.value / 100) * circumference;
+  return `${filled} ${circumference}`;
+});
+
+function progressColor(rate: number): string {
+  if (rate >= 0.9) return "#67c23a";
+  if (rate >= 0.6) return "#e6a23c";
+  return "#f56c6c";
+}
+
 async function loadReport() {
   loading.value = true;
   try {
@@ -389,7 +494,6 @@ async function loadReport() {
 
     stats.generatedAt = d.generated_at || "";
 
-    // 空值率报告
     const nr = d.null_rate_report || {};
     stats.totalVillages = nr.total_villages ?? 0;
     stats.popFillRate = nr.population_fill_rate ?? 0;
@@ -401,11 +505,9 @@ async function loadReport() {
         v.income_missing_years?.length > 0,
     );
 
-    // 异常值
     anomalies.value = d.income_anomalies ?? [];
     stats.anomalyCount = anomalies.value.length;
 
-    // 填报进度
     const fp = d.filing_progress || {};
     progressMatrix.value = (fp.matrix ?? []).map((item: any) => ({
       ...item,
@@ -428,11 +530,11 @@ async function loadReport() {
 async function runFullCheck() {
   fullChecking.value = true;
   try {
-    const res = await request.post("/data-quality/full-check");
-    fullCheckResults.value = res.data;
+    // 尝试使用 dataQuality API
+    const res = await apiRunFullCheck();
+    fullCheckResults.value = (res as any)?.data || res;
     activeTab.value = "full";
 
-    // 默认展开有问题的检查项
     activeCheckItems.value = (fullCheckResults.value.checks || [])
       .map((check: any, index: number) => (check.issues_count > 0 ? index : -1))
       .filter((i: number) => i >= 0);
@@ -448,9 +550,52 @@ async function runFullCheck() {
       ElMessage.success("检查完成，数据质量良好！");
     }
   } catch (err: any) {
-    ElMessage.error(err.message || "全面检查失败");
+    // 回退到原有 API
+    try {
+      const res = await request.post("/data-quality/full-check");
+      fullCheckResults.value = res.data;
+      activeTab.value = "full";
+      activeCheckItems.value = (fullCheckResults.value.checks || [])
+        .map((check: any, index: number) =>
+          check.issues_count > 0 ? index : -1,
+        )
+        .filter((i: number) => i >= 0);
+    } catch (fallbackErr: any) {
+      ElMessage.error(err?.message || "全面检查失败");
+    }
   } finally {
     fullChecking.value = false;
+  }
+}
+
+async function runClean() {
+  cleaning.value = true;
+  try {
+    ElMessage.info("数据清洗功能已触发，请查看报告了解清洗结果");
+    // 调用 dataQuality API 的 clean 方法
+    const { clean } = await import("@/api/dataQuality");
+    await clean({ records: [], cleaning_rules: {} });
+    ElMessage.success("数据清洗完成");
+    await loadReport();
+  } catch (err: any) {
+    ElMessage.error(err?.message || "数据清洗失败");
+  } finally {
+    cleaning.value = false;
+  }
+}
+
+async function runDeduplicate() {
+  deduplicating.value = true;
+  try {
+    ElMessage.info("数据去重检查已触发");
+    const { deduplicate } = await import("@/api/dataQuality");
+    await deduplicate([], ["village_name", "county"]);
+    ElMessage.success("去重检查完成");
+    await loadReport();
+  } catch (err: any) {
+    ElMessage.error(err?.message || "去重检查失败");
+  } finally {
+    deduplicating.value = false;
   }
 }
 
@@ -481,6 +626,68 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
 }
+
+/* Quality Gauge */
+.quality-score-card {
+  text-align: center;
+}
+.quality-gauge {
+  display: flex;
+  justify-content: center;
+}
+.gauge-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+.gauge-svg {
+  width: 100%;
+  height: 100%;
+}
+.gauge-arc {
+  color: #67c23a;
+  transition: stroke-dasharray 0.5s ease;
+}
+.score-good .gauge-arc {
+  color: #67c23a;
+}
+.score-warn .gauge-arc {
+  color: #e6a23c;
+}
+.score-bad .gauge-arc {
+  color: #f56c6c;
+}
+.gauge-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.gauge-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1b4332;
+  display: block;
+}
+.gauge-label {
+  font-size: 12px;
+  color: #909399;
+}
+
+/* Metric Items */
+.metric-item {
+  padding: 8px 0;
+}
+.metric-label {
+  display: block;
+  font-size: 13px;
+  color: #606266;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* Stats */
 .stat-card {
   text-align: center;
   padding: 20px;

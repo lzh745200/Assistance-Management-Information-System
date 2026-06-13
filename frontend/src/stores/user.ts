@@ -122,18 +122,26 @@ export const useUserStore = defineStore("user", () => {
     return null;
   }
 
-  async function getUserProfile(userId?: number) {
-    const id = userId || _getCurrentUserId();
-    if (!id) throw new Error("无法获取用户ID，请重新登录");
-    const profile = await fetchUser(id);
-    if (profile) currentUser.value = profile as User;
-    return profile;
+  async function getUserProfile(_userId?: number) {
+    // 使用 /me 端点（无需传用户 ID，后端从 token 解析）
+    const res = await get<ApiResponse<User>>("/users/me");
+    if (res.code === 200 && res.data) {
+      currentUser.value = res.data as User;
+      return res.data as User;
+    }
+    // fallback via fetchUser for callers that pass explicit userId
+    if (_userId) return fetchUser(_userId);
+    throw new Error("无法获取用户信息");
   }
 
-  async function updateUserProfile(data: Partial<User>, userId?: number) {
-    const id = userId || _getCurrentUserId();
-    if (!id) throw new Error("无法获取用户ID，请重新登录");
-    return updateUser(id, data);
+  async function updateUserProfile(data: Partial<User>, _userId?: number) {
+    // 使用 /me/profile 端点
+    const res = await put<ApiResponse<User>>("/users/me/profile", data);
+    if (res.code === 200) {
+      if (res.data) currentUser.value = res.data as User;
+      return res.data || res;
+    }
+    throw new Error("更新失败");
   }
 
   async function uploadAvatar(file: File, userId?: number) {

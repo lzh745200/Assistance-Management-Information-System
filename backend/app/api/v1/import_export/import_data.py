@@ -114,7 +114,7 @@ class ImportHistoryListResponse(BaseModel):
 async def download_import_template(
     entity_type: str = Query(
         "supported_village",
-        description="实体类型: supported_village, project, fund, school",
+        description="实体类型: supported_village, project, fund, school, policy",
     ),
     current_user: User = Depends(get_current_user),
 ):
@@ -123,8 +123,9 @@ async def download_import_template(
 
     Requirements: 1.1, 1.9
 
-    - entity_type: 实体类型，支持 supported_village（帮扶村）、project（项目）、fund（资金）、school（学校）
-    - 返回Excel模板文件，包含所有字段说明和示例数据
+    - entity_type: 实体类型，支持 supported_village、project、fund、school、policy
+    - 返回 Excel 模板文件，包含所有字段说明和示例数据
+    - 统一样式：军绿主题 (ExcelTemplateService)
     """
     template_service = ExcelTemplateService()
     entity_labels = {
@@ -132,21 +133,24 @@ async def download_import_template(
         "project": "项目",
         "fund": "资金",
         "school": "学校",
+        "policy": "政策",
+    }
+    method_map = {
+        "supported_village": "generate_village_template",
+        "project": "generate_project_template",
+        "fund": "generate_fund_template",
+        "school": "generate_school_template",
+        "policy": "generate_policy_template",
     }
 
-    if entity_type == "supported_village":
-        content = template_service.generate_village_template()
-    elif entity_type == "project":
-        content = template_service.generate_project_template()
-    elif entity_type == "fund":
-        content = template_service.generate_fund_template()
-    elif entity_type == "school":
-        content = template_service.generate_school_template()
-    else:
+    method_name = method_map.get(entity_type)
+    if not method_name:
         raise HTTPException(
             status_code=400,
-            detail=f"不支持的实体类型: {entity_type}，支持 supported_village, project, fund, school",
+            detail=f"不支持的实体类型: {entity_type}，支持 {', '.join(method_map.keys())}",
         )
+
+    content = getattr(template_service, method_name)()
 
     label = entity_labels.get(entity_type, entity_type)
     filename = f"{label}导入模板_{datetime.now().strftime('%Y%m%d')}.xlsx"

@@ -345,6 +345,13 @@ class BackupService:
                 os.makedirs(os.path.dirname(self.database_path), exist_ok=True)
                 shutil.copy(backup_db_path, self.database_path)
                 database_restored = True
+                # 释放旧数据库连接池，强制 SQLAlchemy 重新连接新恢复的数据库文件
+                try:
+                    from app.core.database import engine
+                    engine.dispose()
+                    logger.info("数据库连接池已释放，后续请求将自动重连到已恢复的数据库")
+                except Exception as _dispose_err:
+                    logger.warning("释放连接池失败（不影响恢复）: %s", _dispose_err)
 
             # 恢复上传文件
             backup_uploads_dir = os.path.join(temp_dir, "uploads")

@@ -10,9 +10,11 @@ import { get, post } from "./request";
 /** 密钥版本 */
 export interface KeyVersion {
   version_id: string;
-  created_at?: string;
+  created_at?: number;
   is_active?: boolean;
   key_type?: string;
+  revoked_at?: number;
+  expires_at?: number;
 }
 
 /** 密钥版本列表 */

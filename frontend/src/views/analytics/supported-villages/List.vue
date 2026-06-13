@@ -617,7 +617,8 @@ function handleImport() {
 // 下载模板
 async function handleDownloadTemplate() {
   try {
-    const blob = await downloadImportTemplate();
+    const res = await downloadImportTemplate();
+    const blob = res.data || res;
 
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");

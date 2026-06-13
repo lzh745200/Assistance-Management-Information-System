@@ -1116,8 +1116,8 @@ const adminNavItems: NavItem[] = [
   },
   {
     icon: "🔧",
-    label: "系统健壮性",
-    path: "/system/health",
+    label: "系统监控",
+    path: "/system/monitoring",
     roles: ["admin", "super_admin"],
     requiresAdmin: true,
   },

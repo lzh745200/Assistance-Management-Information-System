@@ -84,6 +84,7 @@ TEMPLATE_NAMES = {
     "project": "帮扶项目数据导入模板",
     "fund": "经费台账数据导入模板",
     "school": "学校信息数据导入模板",
+    "policy": "政策法规数据导入模板",
 }
 
 
@@ -264,11 +265,41 @@ class ExcelTemplateService:
     def generate_school_template(self, include_example: bool = True) -> bytes:
         return self._build_template("school", include_example)
 
+    def generate_policy_template(self, include_example: bool = True) -> bytes:
+        return self._build_template("policy", include_example)
+
+    # 政策字段定义（EntityImportValidator 不支持 policy，直接硬编码）
+    POLICY_FIELDS: List[Dict[str, Any]] = [
+        {"name": "sequence_no", "label": "序号", "required": False, "type": "int",
+         "example": "1", "description": "自动生成的序号"},
+        {"name": "title", "label": "政策标题", "required": True, "type": "str",
+         "example": "关于进一步加强乡村振兴帮扶工作的指导意见", "description": "政策法规的完整标题（必填）"},
+        {"name": "doc_number", "label": "政策文号", "required": False, "type": "str",
+         "example": "国办发〔2024〕15号", "description": "政策发布文号，如无则留空"},
+        {"name": "level", "label": "政策级别", "required": True, "type": "str",
+         "example": "国家级", "description": "国家级/省级/市级/县级"},
+        {"name": "issuing_authority", "label": "发布机关", "required": False, "type": "str",
+         "example": "国务院办公厅", "description": "发布政策的具体机关名称"},
+        {"name": "publish_date", "label": "发布日期", "required": False, "type": "date",
+         "example": "2024-03-15", "description": "格式 YYYY-MM-DD"},
+        {"name": "effective_date", "label": "生效日期", "required": False, "type": "date",
+         "example": "2024-04-01", "description": "格式 YYYY-MM-DD"},
+        {"name": "status", "label": "状态", "required": True, "type": "str",
+         "example": "现行有效", "description": "现行有效/已修订/已废止/即将实施"},
+        {"name": "keywords", "label": "关键词", "required": False, "type": "str",
+         "example": "乡村振兴,帮扶工作,指导意见", "description": "多个关键词用逗号分隔"},
+        {"name": "content", "label": "政策内容摘要", "required": False, "type": "str",
+         "example": "为深入贯彻落实党中央关于乡村振兴战略部署...", "description": "政策正文摘要或全文"},
+    ]
+
     def _build_template(self, entity_type: str, include_example: bool) -> bytes:
         """统一构建模板：标题页 + 数据表 + 填写说明"""
         title = TEMPLATE_NAMES.get(entity_type, f"{entity_type}数据导入模板")
         if entity_type == "village":
             fields = self.VILLAGE_FIELDS
+            validator = None
+        elif entity_type == "policy":
+            fields = self.POLICY_FIELDS
             validator = None
         else:
             validator = EntityImportValidator(entity_type)

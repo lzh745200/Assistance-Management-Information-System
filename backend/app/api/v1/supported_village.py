@@ -281,20 +281,14 @@ async def get_village_dropdown(
 
 @router.get("/import-template")
 async def download_import_template():
-    """下载帮扶村导入模板（Excel）"""
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "帮扶村导入模板"
-    headers = list(_HEADER_NAMES)
-    ws.append(headers)
-    ws.append(["示例村", "某部门", "某单位", "贵州省", "毕节市", "赫章县", "某乡镇", "行政村", "否", "否", "否", "", "", "", "", "", ""])
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-    return StreamingResponse(
-        output,
+    """下载导入模板（委托 ExcelTemplateService）"""
+    from fastapi.responses import Response
+    from app.services.excel_template_service import ExcelTemplateService
+    content = ExcelTemplateService().generate_village_template()
+    return Response(
+        content=content,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=supported_villages_template.xlsx"},
+        headers={"Content-Disposition": "attachment; filename*=UTF-8''supported_village_import_template.xlsx"},
     )
 
 

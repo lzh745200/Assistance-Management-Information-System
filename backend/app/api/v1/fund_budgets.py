@@ -98,7 +98,7 @@ class TransactionResponse(BaseModel):
 # ==================== 预算 API ====================
 
 
-@router.get("", response_model=List[BudgetResponse])
+@router.get("")
 async def get_budgets(
     year: Optional[int] = None,
     category: Optional[str] = None,
@@ -122,8 +122,11 @@ async def get_budgets(
         data = b.to_dict()
         data["remaining_amount"] = b.remaining_amount
         data["execution_rate"] = b.execution_rate
+        data["used_amount"] = float(b.executed_amount or 0)
+        data["budget"] = float(b.budget_amount or 0)
+        data["used"] = float(b.executed_amount or 0)
         result.append(data)
-    return result
+    return {"items": result, "total": len(result)}
 
 
 @router.post("", response_model=BudgetResponse)

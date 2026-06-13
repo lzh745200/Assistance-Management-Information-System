@@ -168,84 +168,15 @@ TYPE_DISPLAY = {
 
 
 @router.get("/import/template")
-async def download_import_template():  # 公开接口：无需认证
-    """下载学校导入模板"""
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "学校导入模板"
-
-    headers = [
-        "序号",
-        "学校名称*",
-        "学校编码",
-        "学校类型",
-        "省份",
-        "城市",
-        "区县",
-        "详细地址",
-        "学生人数",
-        "教师人数",
-        "帮扶状态",
-        "帮扶单位",
-        "校长",
-        "联系电话",
-    ]
-    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
-
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=header)
-        cell.font = Font(bold=True, color="FFFFFF")
-        cell.fill = header_fill
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    # 示例数据
-    sample = [
-        1,
-        "希望小学",
-        "SCH001",
-        "小学",
-        "云南省",
-        "昆明市",
-        "盘龙区",
-        "XX路XX号",
-        500,
-        30,
-        "帮扶中",
-        "某某部队",
-        "张校长",
-        "13800138000",
-    ]
-    for col, value in enumerate(sample, 1):
-        ws.cell(row=2, column=col, value=value)
-
-    # 设置列宽
-    widths = [8, 25, 15, 12, 12, 12, 12, 30, 12, 12, 12, 20, 12, 15]
-    for i, width in enumerate(widths, 1):
-        ws.column_dimensions[chr(64 + i)].width = width
-
-    # 添加说明
-    ws2 = wb.create_sheet("填写说明")
-    instructions = [
-        ["字段名", "说明", "可选值"],
-        ["学校名称*", "必填", ""],
-        ["学校编码", "选填，唯一", ""],
-        ["学校类型", "选填", "小学/初中/高中/职业学校/其他"],
-        ["帮扶状态", "选填", "帮扶中/未帮扶/已完成"],
-    ]
-    for row_idx, row in enumerate(instructions, 1):
-        for col_idx, value in enumerate(row, 1):
-            cell = ws2.cell(row=row_idx, column=col_idx, value=value)
-            if row_idx == 1:
-                cell.font = Font(bold=True)
-
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-
-    return StreamingResponse(
-        output,
+async def download_import_template():
+    """下载导入模板（委托 ExcelTemplateService）"""
+    from fastapi.responses import Response
+    from app.services.excel_template_service import ExcelTemplateService
+    content = ExcelTemplateService().generate_school_template()
+    return Response(
+        content=content,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=school_import_template.xlsx"},
+        headers={"Content-Disposition": "attachment; filename*=UTF-8''school_import_template.xlsx"},
     )
 
 

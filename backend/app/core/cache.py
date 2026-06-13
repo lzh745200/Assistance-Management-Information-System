@@ -16,16 +16,21 @@ class SimpleCache:
         self._store: dict[str, tuple[float, Any]] = {}
         self._lock = threading.Lock()
         self._max_size = max_size
+        self._hits: int = 0
+        self._misses: int = 0
 
     def get(self, key: str) -> Optional[Any]:
         with self._lock:
             entry = self._store.get(key)
             if entry is None:
+                self._misses += 1
                 return None
             expires_at, value = entry
             if expires_at > 0 and time.monotonic() > expires_at:
                 del self._store[key]
+                self._misses += 1
                 return None
+            self._hits += 1
             return value
 
     def set(self, key: str, value: Any, ttl: int = 3600) -> None:
