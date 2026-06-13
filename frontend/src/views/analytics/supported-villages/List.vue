@@ -237,7 +237,7 @@
         <el-pagination
           v-model:current-page="pagination.page"
           v-model:page-size="pagination.pageSize"
-          :total="pagination.total"
+          :total="(pagination as any)?.data?.total || (pagination as any)?.total"
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
@@ -396,8 +396,8 @@ async function loadData() {
         isKeyCounty: filters.isKeyCounty,
       },
     });
-    tableData.value = response.items;
-    pagination.total = response.total;
+    tableData.value = (response as any)?.data?.items || (response as any)?.items;
+    (pagination as any)?.data?.total || (pagination as any)?.total = (response as any)?.data?.total || (response as any)?.total;
   } catch (error) {
     ElMessage.error("加载数据失败");
   } finally {

@@ -9,9 +9,20 @@
             formatTime(item.time || item.created_at)
           }}</span>
           <span class="tl-dot" />
-          <span class="tl-text">{{
-            item.action || item.description || "--"
-          }}</span>
+          <template v-if="editingId === item.id">
+            <input v-model="editForm.action" class="tl-edit-input" placeholder="操作" />
+            <input v-model="editForm.target" class="tl-edit-input" placeholder="目标" />
+            <button class="tl-save-btn" @click="saveEdit(item.id)">保存</button>
+            <button class="tl-cancel-btn" @click="editingId = null">取消</button>
+          </template>
+          <template v-else>
+            <span class="tl-text">{{
+              item.action || item.description || "--"
+            }}</span>
+            <span class="tl-target" v-if="item.target">— {{ item.target }}</span>
+            <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">✎</button>
+            <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">✕</button>
+          </template>
         </div>
         <div v-if="activities.length === 0" class="tl-empty">暂无动态</div>
       </div>
@@ -52,6 +63,36 @@ import request from "@/api/request";
 const router = useRouter();
 
 const activities = ref<any[]>([]);
+const editingId = ref<string | null>(null);
+const editForm = ref({ action: "", target: "" });
+
+function startEdit(item: any) {
+  editingId.value = item.id;
+  editForm.value = { action: item.action || "", target: item.target || "" };
+}
+
+async function saveEdit(id: string) {
+  try {
+    await request.put(`/dashboard/recent-activities/${id}`, editForm.value);
+    const idx = activities.value.findIndex((a) => a.id === id);
+    if (idx >= 0) {
+      activities.value[idx].action = editForm.value.action;
+      activities.value[idx].target = editForm.value.target;
+    }
+    editingId.value = null;
+  } catch {
+    /* silent */
+  }
+}
+
+async function deleteActivity(id: string) {
+  try {
+    await request.delete(`/dashboard/recent-activities/${id}`);
+    activities.value = activities.value.filter((a) => a.id !== id);
+  } catch {
+    /* silent */
+  }
+}
 
 const quickLinks = [
   { path: "/projects", label: "项目列表", icon: Folder, testId: "ql-projects" },
@@ -179,6 +220,44 @@ onMounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.tl-target {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-left: 4px;
+}
+.tl-edit-btn, .tl-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  color: #94a3b8;
+  border-radius: 4px;
+}
+.timeline-item:hover .tl-edit-btn,
+.timeline-item:hover .tl-delete-btn {
+  opacity: 1;
+}
+.tl-edit-btn:hover { color: #2d6a4f; background: #f0f4f0; }
+.tl-delete-btn:hover { color: #dc2626; background: #fef2f2; }
+.tl-edit-input {
+  font-size: 12px;
+  padding: 2px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  width: 80px;
+}
+.tl-save-btn, .tl-cancel-btn {
+  font-size: 11px;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.tl-save-btn { background: #2d6a4f; color: #fff; }
+.tl-cancel-btn { background: #e5e7eb; color: #374151; }
 .tl-empty {
   text-align: center;
   color: #94a3b8;

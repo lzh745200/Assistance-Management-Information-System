@@ -220,7 +220,7 @@ async function openChangeHistory() {
   changeHistoryLoading.value = true;
   try {
     const res = await getChangeHistory(safeRouteParam(route.params.id));
-    changeHistory.value = res.items || [];
+    changeHistory.value = (res as any)?.data?.items || (res as any)?.items || [];
   } catch {
     ElMessage.error("加载变更历史失败");
   } finally {
