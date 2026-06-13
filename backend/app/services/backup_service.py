@@ -1,8 +1,9 @@
 """
 系统备份服务（增强版）
-新增功能：增量备份、备份验证、备份加密、备份压缩级别配置
+新增功能：增量备份、备份验证、备份加密（AES-256）、备份压缩级别配置
 """
 
+import base64
 import hashlib
 import json
 import logging
@@ -13,6 +14,10 @@ import tempfile
 import zipfile
 from datetime import datetime
 from pathlib import Path
+
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
@@ -104,7 +109,70 @@ class BackupService:
             logger.warning(f"路径验证失败: {file_path}, 错误: {e}")
             return False
 
-    def create_backup(self, description: str = "手动备份", include_uploads: bool = True) -> BackupRecord:
+    # ── 加密工具 ────────────────────────────────────────────────
+
+    _ENCRYPTED_MARKER = b"MRRMS_BACKUP_ENCRYPTED_V1"
+
+    @staticmethod
+    def _derive_key(password: str, salt: bytes) -> bytes:
+        """使用 PBKDF2 从密码派生 AES-256 密钥（Fernet 兼容）。"""
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=480000,
+        )
+        return base64.urlsafe_b64encode(kdf.derive(password.encode("utf-8")))
+
+    @staticmethod
+    def _encrypt_file(file_path: str, password: str) -> None:
+        """使用 AES-256（Fernet）加密文件，原地替换。"""
+        salt = os.urandom(16)
+        key = BackupService._derive_key(password, salt)
+        fernet = Fernet(key)
+
+        with open(file_path, "rb") as f:
+            plaintext = f.read()
+
+        encrypted = fernet.encrypt(plaintext)
+
+        with open(file_path, "wb") as f:
+            f.write(BackupService._ENCRYPTED_MARKER)
+            f.write(salt)
+            f.write(encrypted)
+
+    @staticmethod
+    def _is_encrypted(file_path: str) -> bool:
+        """检测备份文件是否为加密格式。"""
+        with open(file_path, "rb") as f:
+            return f.read(len(BackupService._ENCRYPTED_MARKER)) == BackupService._ENCRYPTED_MARKER
+
+    @staticmethod
+    def _decrypt_file(file_path: str, password: str) -> None:
+        """解密备份文件，原地替换为明文。密码错误时抛出 ValueError。"""
+        with open(file_path, "rb") as f:
+            marker = f.read(len(BackupService._ENCRYPTED_MARKER))
+            if marker != BackupService._ENCRYPTED_MARKER:
+                raise ValueError("文件不是加密格式")
+            salt = f.read(16)
+            encrypted = f.read()
+
+        key = BackupService._derive_key(password, salt)
+        fernet = Fernet(key)
+        try:
+            plaintext = fernet.decrypt(encrypted)
+        except Exception:
+            raise ValueError("密码错误或备份文件已损坏") from None
+
+        with open(file_path, "wb") as f:
+            f.write(plaintext)
+
+    # ── 备份操作 ────────────────────────────────────────────────
+
+    def create_backup(
+        self, description: str = "手动备份", include_uploads: bool = True,
+        password: str | None = None,
+    ) -> BackupRecord:
         """
         创建系统备份
 
@@ -149,6 +217,11 @@ class BackupService:
                 "created_at": datetime.now().isoformat(),
             }
             zipf.writestr("backup_info.json", str(backup_info))
+
+        # ── 加密（可选） ──
+        if password:
+            self._encrypt_file(backup_file_path, password)
+            logger.info("备份已加密: %s", backup_file_name)
 
         # 获取文件大小
         file_size = os.path.getsize(backup_file_path)
@@ -198,18 +271,29 @@ class BackupService:
                 continue
             zipf.extract(member, dest_dir)
 
-    def restore_backup(self, backup_file_path: str) -> Dict:
+    def restore_backup(self, backup_file_path: str, password: str | None = None) -> Dict:
         """
-        从备份恢复系统（带事务保护）
+        从备份恢复系统（带事务保护 + 加密检测）
 
         Args:
             backup_file_path: 备份文件路径
+            password: 加密密码（加密备份必需）
 
         Returns:
             恢复结果
+
+        Raises:
+            ValueError: 备份文件已加密但未提供密码，或密码错误
         """
         if not os.path.exists(backup_file_path):
             raise FileNotFoundError(f"备份文件不存在: {backup_file_path}")
+
+        # 检测加密备份
+        if self._is_encrypted(backup_file_path):
+            if not password:
+                raise ValueError("备份文件已加密，请提供密码")
+            logger.info("检测到加密备份，正在解密...")
+            self._decrypt_file(backup_file_path, password)
 
         # 解压备份文件到临时目录
         temp_dir = tempfile.mkdtemp(prefix="restore_")
