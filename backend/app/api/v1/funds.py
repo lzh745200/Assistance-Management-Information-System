@@ -538,6 +538,7 @@ def allocate_fund(fund_id: int, current_user: User = Depends(get_current_user), 
     require_manager_role(current_user)
     fund = _get_fund_or_404(db, fund_id, current_user)
     _transition_status(db, fund, "allocated", ["approved"],
+                       required_attachments=["contract", "allocation_order"],
                        allocation_date=datetime.now(timezone.utc))
     return {"message": "经费已拨付"}
 
