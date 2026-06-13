@@ -7,6 +7,9 @@
 from .base import Base, BaseModel, TimestampMixin, SoftDeleteMixin, VersionMixin
 from .user import User
 from .organization import Organization
+from .project import Project  # User.created_by FK target — required for mapper init
+from .fund import Fund  # relationship target for multiple models
+from .supported_village import SupportedVillage  # Fund FK target
 
 # ── 懒加载机制：支持 `from app.models import SomeModel` 但仅在访问时导入 ──
 _MODULE_MAP = {
