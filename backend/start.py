@@ -411,10 +411,7 @@ def main():
     from app.main import app  # noqa: E402
 
     # ── 启动前静态资源完整性校验 ──
-    print("  检查静态资源...", flush=True)
-    _t0 = _time.time()
     _verify_frontend_assets()
-    print(f"  静态资源就绪 ({_time.time() - _t0:.1f}s)", flush=True)
 
     # ── 过滤 304 静态资源日志噪音 ──
     class _Skip304Filter(logging.Filter):
