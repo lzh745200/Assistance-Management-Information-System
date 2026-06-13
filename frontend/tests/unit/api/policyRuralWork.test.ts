@@ -58,11 +58,11 @@ describe('api/policy', () => {
 
   it('getLevelOptions', () => {
     getLevelOptions()
-    expect(mockGet).toHaveBeenCalledWith('/policies/level-options')
+    expect(mockGet).toHaveBeenCalledWith('/policies/options/levels')
   })
   it('getPolicyTypes', () => {
     getPolicyTypes()
-    expect(mockGet).toHaveBeenCalledWith('/policies/types')
+    expect(mockGet).toHaveBeenCalledWith('/policies/options/levels')
   })
   it('searchPolicies GET /policies/search with q', () => {
     searchPolicies('农业')
@@ -74,7 +74,7 @@ describe('api/policy', () => {
   })
   it('getPolicyStats', () => {
     getPolicyStats()
-    expect(mockGet).toHaveBeenCalledWith('/policies/stats')
+    expect(mockGet).toHaveBeenCalledWith('/policies/statistics')
   })
   it('getPolicies GET /policies', () => {
     getPolicies({ page: 1 })
@@ -122,19 +122,19 @@ describe('api/policy', () => {
 
     it('exportPolicies -> xlsx', async () => {
       await exportPolicies({ page: 1 })
-      expect(mockGet).toHaveBeenCalledWith('/policies/export', { params: { page: 1 }, responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/policies/export/excel', { params: { page: 1 }, responseType: 'blob' })
     })
     it('exportPoliciesPDF -> pdf', async () => {
       await exportPoliciesPDF()
-      expect(mockGet).toHaveBeenCalledWith('/policies/export-pdf', { params: undefined, responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/policies/export/pdf', { params: undefined, responseType: 'blob' })
     })
     it('exportPoliciesWPS -> wps', async () => {
       await exportPoliciesWPS()
-      expect(mockGet).toHaveBeenCalledWith('/policies/export-wps', { params: undefined, responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/policies/export/wps', { params: undefined, responseType: 'blob' })
     })
     it('downloadImportTemplate', async () => {
       await downloadImportTemplate()
-      expect(mockGet).toHaveBeenCalledWith('/policies/import-template', { responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/policies/import/template', { responseType: 'blob' })
     })
   })
 
@@ -173,9 +173,9 @@ describe('api/ruralWork', () => {
     deleteRuralWork(1)
     expect(mockDelete).toHaveBeenCalledWith('/rural-works/1')
   })
-  it('generateWorkReport GET', () => {
+  it('generateWorkReport GET /rural-works/report/generate', () => {
     generateWorkReport({ year: 2026 })
-    expect(mockGet).toHaveBeenCalledWith('/rural-works/report', { params: { year: 2026 } })
+    expect(mockGet).toHaveBeenCalledWith('/rural-works/report/generate', { params: { year: 2026 } })
   })
 
   it('ruralWorkApi.list / get / create / update / delete / generateWorkReport 转发', () => {

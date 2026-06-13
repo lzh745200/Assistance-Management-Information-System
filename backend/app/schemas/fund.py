@@ -37,12 +37,18 @@ except Exception:  # noqa: BLE001
 
 
 class FundBase(BaseModel):
-    code: str = Field(..., min_length=1, max_length=50, description="")
+    code: Optional[str] = Field(None, max_length=50, description="编号（可选，留空自动生成）")
     name: str = Field(..., min_length=1, max_length=200, description="")
-    fund_type: FundType = Field(..., description="")
-    fund_source: FundSource = Field(..., description="")
+    type: Optional[str] = Field(None, max_length=50, description="经费大类")
+    amount: Optional[float] = Field(None, ge=0, description="申请金额")
+    date: Optional[datetime] = Field(None, description="业务发生日期")
+    operator: Optional[str] = Field(None, max_length=100, description="经办人")
+    source: Optional[str] = Field(None, max_length=200, description="来源说明")
+    purpose: Optional[str] = Field(None, max_length=2000, description="用途")
+    fund_type: Optional[FundType] = Field(None, description="经费类型")
+    fund_source: Optional[FundSource] = Field(None, description="经费来源")
     status: FundStatus = Field(default=FundStatus.PLANNED, description="")
-    planned_amount: float = Field(..., ge=0, description="()")
+    planned_amount: Optional[float] = Field(0, ge=0, description="计划金额")
     approved_amount: Optional[float] = Field(None, ge=0, description="()")
     allocated_amount: float = Field(default=0, ge=0, description="()")
     used_amount: float = Field(default=0, ge=0, description="()")

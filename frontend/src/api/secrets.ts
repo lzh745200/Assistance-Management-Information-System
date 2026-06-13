@@ -1,0 +1,100 @@
+/**
+ * 密钥管理 API
+ * 提供密钥轮换、版本管理和安全存储功能
+ */
+
+import { get, post } from "./request";
+
+// ==================== 类型定义 ====================
+
+/** 密钥版本 */
+export interface KeyVersion {
+  version_id: string;
+  created_at?: string;
+  is_active?: boolean;
+  key_type?: string;
+}
+
+/** 密钥版本列表 */
+export interface KeyVersionList {
+  versions: KeyVersion[];
+  count: number;
+}
+
+/** 密钥状态 */
+export interface SecretsStatus {
+  total_versions: number;
+  active_versions: number;
+  latest_version?: KeyVersion;
+  requires_rotation: boolean;
+}
+
+// ==================== 工具函数 ====================
+
+/** 构建查询字符串 */
+function buildQuery(
+  params: Record<string, string | number | undefined>,
+): string {
+  const parts = Object.entries(params)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`);
+  return parts.length > 0 ? `?${parts.join("&")}` : "";
+}
+
+// ==================== API 函数 ====================
+
+/** 列出所有密钥版本 */
+export async function getKeyVersions(): Promise<KeyVersionList> {
+  return get<KeyVersionList>("/secrets/versions");
+}
+
+/** 轮换密钥 */
+export async function rotateSecrets(
+  versionId?: string,
+): Promise<{ message: string; new_version: string }> {
+  const qs = buildQuery({ version_id: versionId });
+  return post(`/secrets/rotate${qs}`);
+}
+
+/** 创建新密钥 */
+export async function createSecret(params?: {
+  key_type?: string;
+  expires_days?: number;
+}): Promise<{ message: string; version_id: string }> {
+  const qs = buildQuery({
+    key_type: params?.key_type,
+    expires_days: params?.expires_days,
+  });
+  return post(`/secrets/create${qs}`);
+}
+
+/** 撤销密钥 */
+export async function revokeSecret(
+  versionId: string,
+): Promise<{ message: string; version_id: string }> {
+  return post(`/secrets/revoke/${versionId}`);
+}
+
+/** 清理过期密钥 */
+export async function cleanupSecrets(
+  keepDays?: number,
+): Promise<{ message: string; deleted_count: number }> {
+  const qs = buildQuery({ keep_days: keepDays || 90 });
+  return post(`/secrets/cleanup${qs}`);
+}
+
+/** 获取密钥状态 */
+export async function getSecretsStatus(): Promise<SecretsStatus> {
+  return get<SecretsStatus>("/secrets/status");
+}
+
+// ==================== 分组导出 ====================
+
+export const secretsApi = {
+  getVersions: getKeyVersions,
+  rotateSecrets,
+  createSecret,
+  revokeSecret,
+  cleanup: cleanupSecrets,
+  getStatus: getSecretsStatus,
+};

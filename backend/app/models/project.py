@@ -98,6 +98,7 @@ class Project(Base):
     actual_end_date = Column(Date, nullable=True, comment="实际结束日期")
 
     progress = Column(Integer, default=0, comment="进度百分比")
+    priority = Column(String(20), default="medium", comment="优先级: low/medium/high")
 
     leader = Column(String(50), nullable=True, comment="项目负责人")
     contact = Column(String(50), nullable=True, comment="联系方式")

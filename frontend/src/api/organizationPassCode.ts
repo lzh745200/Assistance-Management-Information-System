@@ -21,30 +21,28 @@ export type OrganizationPassCodeResponse = {
 export const orgPassCodeApi = {
   generate: (orgId: number) =>
     api.post("/organizations/" + orgId + "/passcode"),
-  verify: (code: string) =>
-    api.post("/organizations/passcode/verify", { code }),
 };
 
 export const getOrganizationVerificationCode = (orgId: number) =>
-  api.get(`/organizations/${orgId}/verification-code`);
+  api.get(`/machine-code/organization/${orgId}/verification-code`);
 
 export const createOrganizationPassCode = (
   data: CreateOrganizationPassCodeRequest,
-) => api.post("/organizations/passcodes", data);
+) => api.post("/machine-code/organization/create", data);
 
 export const getOrganizationPassCodeList = (params?: {
   organization_id?: number;
   status?: string;
   page?: number;
   page_size?: number;
-}) => api.get("/organizations/passcodes", { params });
+}) => api.get("/machine-code/organization/list", { params });
 
 export const exportOrganizationPassCodes = (params?: {
   organization_id?: number;
   status?: string;
 }) =>
   api
-    .get("/organizations/passcodes/export", {
+    .get("/machine-code/organization/export", {
       params,
       responseType: "blob",
     })

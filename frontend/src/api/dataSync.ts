@@ -76,15 +76,17 @@ export const downloadExportPackage = (packageId: string) =>
 export const getSyncLogs = (params?: any) =>
   api.get("/data-sync/logs", { params });
 
-export const getConflicts = () => api.get("/data-sync/conflicts");
+export const getConflicts = (syncLogId: number) =>
+  api.get(`/data-sync/conflicts/${syncLogId}`);
 
-export const resolveConflict = (id: string, resolution: string) =>
-  api.post("/data-sync/conflicts/" + id + "/resolve", { resolution });
+export const resolveConflict = (params: {
+  conflict_id: number;
+  resolution: string;
+  merged_data?: Record<string, any>;
+}) => api.post("/data-sync/resolve-conflict", params);
 
 // Backward-compatible object form
 export const dataSyncApi = {
-  sync: (data: any) => api.post("/data-sync/sync", data),
-  getStatus: (taskId: string) => api.get("/data-sync/status/" + taskId),
   importData,
   importEncryptedData,
   exportData,

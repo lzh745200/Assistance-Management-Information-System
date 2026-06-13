@@ -33,40 +33,46 @@ describe('api/systemHealth', () => {
 
   it('overview', () => {
     systemHealthApi.overview()
-    expect(mockGet).toHaveBeenCalledWith('/system/health/overview')
+    expect(mockGet).toHaveBeenCalledWith('/health/overview')
   })
   it('liveness', () => {
     systemHealthApi.liveness()
-    expect(mockGet).toHaveBeenCalledWith('/system/health/liveness')
+    expect(mockGet).toHaveBeenCalledWith('/health/liveness')
   })
   it('readiness', () => {
     systemHealthApi.readiness()
-    expect(mockGet).toHaveBeenCalledWith('/system/health/readiness')
+    expect(mockGet).toHaveBeenCalledWith('/health/readiness')
   })
-  it('metrics', () => {
-    systemHealthApi.metrics()
-    expect(mockGet).toHaveBeenCalledWith('/system/health/metrics')
+  it('database', () => {
+    systemHealthApi.database()
+    expect(mockGet).toHaveBeenCalledWith('/health/database')
+  })
+  it('full', () => {
+    systemHealthApi.full()
+    expect(mockGet).toHaveBeenCalledWith('/health/full')
   })
 })
 
 describe('api/offlineMap', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('offlineMapApi.getTiles', () => {
-    offlineMapApi.getTiles()
-    expect(mockGet).toHaveBeenCalledWith('/offline-map/tiles')
+  it('offlineMapApi.getTiles with z/x/y', () => {
+    offlineMapApi.getTiles(10, 512, 256)
+    expect(mockGet).toHaveBeenCalledWith('/offline-map/tiles/10/512/256')
   })
   it('offlineMapApi.getStatus', () => {
     offlineMapApi.getStatus()
     expect(mockGet).toHaveBeenCalledWith('/offline-map/status')
   })
-  it('clearTiles DELETE', () => {
+  it('clearTiles DELETE /offline-map/clear', () => {
     clearTiles()
-    expect(mockDelete).toHaveBeenCalledWith('/offline-map/tiles')
+    expect(mockDelete).toHaveBeenCalledWith('/offline-map/clear')
   })
-  it('downloadTiles POST area', () => {
-    downloadTiles('北京')
-    expect(mockPost).toHaveBeenCalledWith('/offline-map/tiles/download', { area: '北京' })
+  it('downloadTiles POST /offline-map/download with params', () => {
+    downloadTiles({ min_lat: 30, max_lat: 40, min_lon: 110, max_lon: 120, min_zoom: 4, max_zoom: 12 })
+    expect(mockPost).toHaveBeenCalledWith('/offline-map/download', null, {
+      params: { min_lat: 30, max_lat: 40, min_lon: 110, max_lon: 120, min_zoom: 4, max_zoom: 12 },
+    })
   })
   it('getMapStatus GET', () => {
     getMapStatus()

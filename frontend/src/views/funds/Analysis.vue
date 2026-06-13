@@ -238,18 +238,19 @@ const dimensionData = ref<any[]>([]);
 const fundStatsByType = ref<Record<string, FundStatistics>>({});
 
 const summary = computed(() => {
-  const total = fundsStore.totalFunds;
-  const used = fundsStore.usedFunds;
-  const remain = fundsStore.remainFunds;
+  const total = Number(fundsStore.totalFunds) || 0;
+  const used = Number(fundsStore.usedFunds) || 0;
+  const remain = Math.max(0, total - used);
   const rate = total > 0 ? parseFloat(((used / total) * 100).toFixed(2)) : 0;
   return { total, used, remain, rate };
 });
 
 // 饼图
 const pieChartOption = computed<EChartsOption>(() => {
-  const data = dimensionData.value.map((d) => ({
-    value: d.total_amount,
-    name: d.label,
+  const rawData = dimensionData.value || [];
+  const data = rawData.map((d) => ({
+    value: Number(d.total_amount) || 0,
+    name: d.label || '未知',
   }));
   const colors = [
     "#40916c",
@@ -285,8 +286,9 @@ const pieChartOption = computed<EChartsOption>(() => {
 
 // 柱状图
 const barChartOption = computed<EChartsOption>(() => {
-  const labels = dimensionData.value.map((d) => d.label);
-  const rates = dimensionData.value.map((d) => d.utilization_rate);
+  const rawData = dimensionData.value || [];
+  const labels = rawData.map((d) => d.label || '未知');
+  const rates = rawData.map((d) => Number(d.utilization_rate) || 0);
   return {
     tooltip: {
       trigger: "axis",
@@ -347,6 +349,8 @@ const loadFundStatsByType = async () => {
 };
 
 function handleDimensionChange() {
+  // 切换维度时清除旧数据，避免图表用错误格式的数据渲染
+  dimensionData.value = [];
   loadDimensionStats();
 }
 

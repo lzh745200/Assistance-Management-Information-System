@@ -58,18 +58,8 @@ describe('api/villages', () => {
     expect(mockDelete).toHaveBeenCalledWith('/supported-villages/1')
   })
 
-  it('getVillagers GET /{id}/villagers', async () => {
-    mockGet.mockResolvedValueOnce({ data: { items: [] } })
-    await villageApi.getVillagers(1, { page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/supported-villages/1/villagers', { params: { page: 1 } })
-  })
-
-  it('getIndustries GET /{id}/industries', async () => {
-    mockGet.mockResolvedValueOnce({ data: { items: [] } })
-    await villageApi.getIndustries(1, { page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/supported-villages/1/industries', { params: { page: 1 } })
-  })
 })
+
 
 describe('api/workLogs', () => {
   beforeEach(() => vi.clearAllMocks())

@@ -20,8 +20,6 @@ export interface Village {
   longitude?: number;
   latitude?: number;
   status?: string;
-  villagers_count?: number;
-  industries_count?: number;
   created_at?: string;
 }
 
@@ -100,28 +98,6 @@ export const villageApi = {
   /** 删除村庄 */
   async delete(id: number): Promise<{ message: string }> {
     const response = await request.delete(`${BASE}/${id}`);
-    return response.data;
-  },
-
-  /** 获取村庄村民列表 */
-  async getVillagers(
-    villageId: number,
-    params?: { page?: number; page_size?: number },
-  ) {
-    const response = await request.get(`${BASE}/${villageId}/villagers`, {
-      params,
-    });
-    return response.data;
-  },
-
-  /** 获取村庄产业列表 */
-  async getIndustries(
-    villageId: number,
-    params?: { page?: number; page_size?: number },
-  ) {
-    const response = await request.get(`${BASE}/${villageId}/industries`, {
-      params,
-    });
     return response.data;
   },
 };

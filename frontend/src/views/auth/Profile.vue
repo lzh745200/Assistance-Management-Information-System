@@ -511,7 +511,7 @@ const saveProfile = async () => {
 
     saving.value = true;
 
-    const updatedData = await userStore.updateUserProfile(profileForm);
+    const updatedData = await userStore.updateUserProfile({ ...profileForm });
     Object.assign(userInfo, updatedData);
     editing.value = false;
     ElMessage.success("个人资料保存成功");
@@ -546,15 +546,14 @@ const handleAvatarChange = async (file: { raw?: File }) => {
   if (file.raw) {
     uploadingAvatar.value = true;
     try {
-      const formData = new FormData();
-      formData.append("avatar", file.raw);
-
-      const res = await userStore.uploadAvatar(formData);
+      const res = await userStore.uploadAvatar(file.raw!);
       if (res?.avatar_url) {
         userInfo.avatar = res.avatar_url;
+      } else if (res?.url) {
+        userInfo.avatar = res.url;
       } else {
         // 回退：用本地 ObjectURL 预览
-        userInfo.avatar = URL.createObjectURL(file.raw);
+        userInfo.avatar = URL.createObjectURL(file.raw!);
       }
 
       ElMessage.success("头像上传成功");

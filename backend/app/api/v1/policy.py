@@ -853,6 +853,36 @@ async def export_policies_wps(
     )
 
 
+@router.get("/types")
+async def get_policy_types(db: Session = Depends(get_db)):
+    """获取政策类型选项 — 合并预定义类型与数据库中的实际分类"""
+    # 预定义政策类型
+    types = [
+        {"value": "military", "label": "军队政策"},
+        {"value": "local", "label": "地方政策"},
+        {"value": "national", "label": "国家政策"},
+        {"value": "provincial", "label": "省级政策"},
+        {"value": "municipal", "label": "市级政策"},
+        {"value": "county", "label": "县级政策"},
+        {"value": "other", "label": "其他"},
+    ]
+
+    # 尝试从数据库中获取已有的政策分类（如果 PolicyCategory 模型已启用）
+    try:
+        categories = db.query(PolicyCategory).filter(PolicyCategory.is_active.is_(True)).all()
+        if categories:
+            db_types = [{"value": c.code or c.name, "label": c.name} for c in categories]
+            # 合并去重：数据库分类优先
+            existing_codes = {t["value"] for t in types}
+            for dt in db_types:
+                if dt["value"] not in existing_codes:
+                    types.append(dt)
+    except Exception:
+        logger.debug("获取政策分类时出错，使用预定义类型")
+
+    return {"data": types}
+
+
 @router.get("/options/levels")
 async def get_level_options():
     """获取政策级别选项"""

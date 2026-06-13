@@ -30,8 +30,6 @@ import {
 } from '@/api/organization'
 import { ruralTaskApi } from '@/api/ruralTask'
 import {
-  getMetricsDashboard,
-  getHealthMetrics,
   getPrometheusMetrics,
   getBusinessMetrics,
 } from '@/api/metrics'
@@ -63,9 +61,9 @@ describe('api/organization', () => {
     deleteOrganization(5)
     expect(mockDelete).toHaveBeenCalledWith('/organizations/5')
   })
-  it('batchUpdateSortOrders PUT /organizations/sort', () => {
+  it('batchUpdateSortOrders POST /organizations/batch-update-sort', () => {
     batchUpdateSortOrders([{ id: 1, sort: 1 }])
-    expect(mockPut).toHaveBeenCalledWith('/organizations/sort', [{ id: 1, sort: 1 }])
+    expect(mockPost).toHaveBeenCalledWith('/organizations/batch-update-sort', [{ id: 1, sort: 1 }])
   })
 })
 
@@ -97,20 +95,6 @@ describe('api/ruralTask', () => {
 describe('api/metrics', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('getMetricsDashboard GET /system/metrics/dashboard', () => {
-    getMetricsDashboard()
-    expect(mockRequest).toHaveBeenCalledWith({
-      url: '/system/metrics/dashboard',
-      method: 'get',
-    })
-  })
-  it('getHealthMetrics GET /system/metrics/health', () => {
-    getHealthMetrics()
-    expect(mockRequest).toHaveBeenCalledWith({
-      url: '/system/metrics/health',
-      method: 'get',
-    })
-  })
   it('getPrometheusMetrics GET with text responseType', () => {
     getPrometheusMetrics()
     expect(mockRequest).toHaveBeenCalledWith({

@@ -1,7 +1,7 @@
 <template>
   <div class="kpi-cards">
     <div v-for="(card, i) in cards" :key="i" class="kpi-col">
-      <div class="stat-card" :class="card.theme">
+      <div class="stat-card" :class="card.theme" @click="navigateTo(card.route)">
         <div class="stat-icon">
           <el-icon><component :is="card.icon" /></el-icon>
         </div>
@@ -41,6 +41,7 @@ import {
 } from "@element-plus/icons-vue";
 import echarts from "@/utils/echarts";
 import { get } from "@/api/request";
+import { useRouterSafe } from "@/composables/useRouterSafe";
 import { unwrapData } from "@/utils/unwrapData";
 
 export interface DashboardStats {
@@ -120,6 +121,7 @@ const cards = computed(() => [
     formatted: fmt(stats.value.total_villages),
     unit: "个",
     trend: trends.value.villages,
+    route: "/supported-villages",
   },
   {
     theme: "success",
@@ -128,6 +130,7 @@ const cards = computed(() => [
     formatted: fmt(stats.value.total_projects),
     unit: "个",
     trend: trends.value.projects,
+    route: "/projects",
   },
   {
     theme: "warning",
@@ -136,6 +139,7 @@ const cards = computed(() => [
     formatted: fmt(stats.value.total_schools),
     unit: "所",
     trend: trends.value.schools,
+    route: "/schools",
   },
   {
     theme: "danger",
@@ -144,6 +148,7 @@ const cards = computed(() => [
     formatted: fmtFunds(stats.value.total_funds),
     unit: "万元",
     trend: trends.value.funds,
+    route: "/funds",
   },
   {
     theme: "info-card",
@@ -152,8 +157,19 @@ const cards = computed(() => [
     formatted: fmtPop(stats.value.total_population),
     unit: undefined,
     trend: trends.value.population,
+    route: "/supported-villages",
   },
 ]);
+
+function navigateTo(route?: string) {
+  if (!route) return;
+  try {
+    const { pushSafe } = useRouterSafe();
+    pushSafe(route);
+  } catch {
+    window.location.hash = "#" + route;
+  }
+}
 
 const SPARK_COLORS = ["#1e4d8c", "#2d6a4f", "#f59e0b", "#ef4444", "#6366f1"];
 const SPARK_ALPHAS = [
@@ -276,7 +292,7 @@ onUnmounted(() => {
   transition:
     box-shadow 0.3s,
     transform 0.3s;
-  cursor: default;
+  cursor: pointer;
   position: relative;
   overflow: hidden;
   &:hover {

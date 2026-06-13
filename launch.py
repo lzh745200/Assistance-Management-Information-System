@@ -47,12 +47,27 @@ if not (RESOURCES_FRONTEND / "index.html").exists():
 kill_port()
 
 # 预编译 Python 模块（首次较慢，后续 instant）
-import compileall, os as _os
+# 注意：Windows 上 compileall 使用 ProcessPoolExecutor（spawn 方式），
+# worker 进程可能因各种原因崩溃（DLL 缺失、内存不足等），导致
+# concurrent.futures.process.BrokenProcessPool 启动失败。
+# 解决方案：Windows 上使用 workers=1（单进程），避免进程池问题。
 _compile_flag = BACKEND_DIR / "app" / ".pyc_compiled"
 if not _compile_flag.exists():
+    import compileall
     print("  预编译模块（首次启动需几秒）...")
-    compileall.compile_dir(str(BACKEND_DIR / "app"), quiet=2, workers=0)
-    _compile_flag.touch()
+    # 使用 sys.platform 与代码库其余 21 处保持一致（避免 platform 模块 wmic 开销）
+    _compile_workers = 1 if sys.platform == "win32" else 0
+    try:
+        _compile_ok = compileall.compile_dir(
+            str(BACKEND_DIR / "app"), quiet=2, workers=_compile_workers,
+        )
+        if _compile_ok:
+            _compile_flag.touch()
+        else:
+            print("  [WARN] 部分 .pyc 编译失败（不影响系统运行，首次运行可能稍慢）")
+    except Exception as _compile_err:
+        print(f"  [WARN] 预编译失败（不影响系统运行）: {_compile_err}")
+        print("  系统将继续启动，首次运行可能稍慢...")
 
 threading.Thread(target=open_browser_when_ready, daemon=True).start()
 

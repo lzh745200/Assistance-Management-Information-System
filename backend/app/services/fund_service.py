@@ -146,7 +146,20 @@ class FundService:
         :param auto_commit: 是否自动提交。设为 False 时调用方须自行提交，
                           返回的 Fund.id 在当前事务内有效但未持久化。
         """
-        fund = Fund(**data.model_dump(exclude_none=True))
+        import uuid as _uuid
+        from datetime import datetime as _dt
+
+        fund_dict = data.model_dump(exclude_none=True)
+
+        # 自动生成 code（如未提供），格式：FUND-YYYYMMDD-XXXX
+        if not fund_dict.get("code"):
+            fund_dict["code"] = f"FUND-{_dt.now().strftime('%Y%m%d')}-{_uuid.uuid4().hex[:4].upper()}"
+
+        # 兼容前端可能传 type 字段（别名为 fund_type）
+        if "type" in fund_dict and "fund_type" not in fund_dict:
+            fund_dict["fund_type"] = fund_dict.pop("type")
+
+        fund = Fund(**fund_dict)
         fund.created_by = created_by
         if organization_id is not None:
             fund.organization_id = organization_id

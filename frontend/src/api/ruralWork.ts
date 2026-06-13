@@ -39,12 +39,13 @@ export const updateRuralWork = (id: number, data: any) =>
 export const deleteRuralWork = (id: number) => api.delete("/rural-works/" + id);
 
 export const generateWorkReport = (params?: any) =>
-  api.get("/rural-works/report", { params });
+  api.get("/rural-works/report/generate", { params });
 
 // Backward-compatible object form
 export const ruralWorkApi = {
   list: (params?: any) => api.get("/rural-works", { params }),
   get: (id: number) => api.get("/rural-works/" + id),
+  getById: (id: number) => api.get("/rural-works/" + id),
   create: (data: any) => api.post("/rural-works", data),
   update: (id: number, data: any) => api.put("/rural-works/" + id, data),
   delete: deleteRuralWork,
@@ -53,4 +54,9 @@ export const ruralWorkApi = {
   updateRuralWork,
   deleteRuralWork,
   generateWorkReport,
+  getStatistics: () => api.get("/rural-works/statistics/summary"),
+  getVillagesForSelect: () => api.get("/rural-works/villages"),
+  getAvailableYears: () => api.get("/rural-works/years"),
+  batchDelete: (ids: number[]) =>
+    api.post("/rural-works/batch-delete", { ids }),
 };

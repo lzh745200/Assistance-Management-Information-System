@@ -307,7 +307,7 @@ const loadReportData = async () => {
     const listRes = await fundApi.list({
       page: 1,
       page_size: 200,
-      type: params.type,
+      fund_type: params.type,
     });
     reportData.value = (listRes.items || []).map((f: any) => ({
       date: f.application_date || f.created_at?.slice(0, 10) || "-",

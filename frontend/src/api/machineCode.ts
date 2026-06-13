@@ -138,3 +138,49 @@ export function getMachineInfo() {
     method: "get",
   });
 }
+
+/**
+ * 获取组织验证码
+ */
+export function getOrganizationVerificationCode(orgId: number) {
+  return request({
+    url: `/machine-code/organization/${orgId}/verification-code`,
+    method: "get",
+  });
+}
+
+/**
+ * 创建组织通行码
+ */
+export function createOrganizationPassCode(data: Record<string, any>) {
+  return request({
+    url: "/machine-code/organization/create",
+    method: "post",
+    data,
+  });
+}
+
+/**
+ * 获取组织通行码列表
+ */
+export function listOrganizationPassCodes(params?: {
+  skip?: number;
+  limit?: number;
+}) {
+  return request({
+    url: "/machine-code/organization/list",
+    method: "get",
+    params,
+  });
+}
+
+/**
+ * 导出组织通行码
+ */
+export function exportOrganizationPassCodes() {
+  return request({
+    url: "/machine-code/organization/export",
+    method: "get",
+    responseType: "blob",
+  });
+}

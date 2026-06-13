@@ -6,6 +6,14 @@ import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 from datetime import datetime, timezone
 
+# 预加载所有模型以避免懒加载导致的 mapper 解析错误
+import app.models
+for _name in app.models.__all__:
+    try:
+        getattr(app.models, _name)
+    except Exception:
+        pass
+
 from app.models.approval import ApprovalAction, ApprovalStatus
 
 
@@ -267,8 +275,9 @@ class TestSubmitApproval:
         assert result.change_data == {"name": "new"}
         assert result.original_data == {"name": "old"}
         assert result.title == "审批测试"
-        mock_db.add.assert_called_once()
-        mock_db.commit.assert_called_once()
+        # submit_approval creates ApprovalTask + Message notification = 2 add/commit calls
+        assert mock_db.add.call_count == 2
+        assert mock_db.commit.call_count == 2
         mock_db.refresh.assert_called_once()
 
 

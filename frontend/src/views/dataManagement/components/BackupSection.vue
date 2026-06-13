@@ -34,13 +34,6 @@
               <el-icon><Plus /></el-icon>
               创建备份
             </el-button>
-            <el-button
-              type="warning"
-              :loading="cleaning"
-              @click="handleCleanup"
-            >
-              清理过期
-            </el-button>
           </div>
         </el-col>
       </el-row>
@@ -156,13 +149,6 @@
               @click="handlePreview(row as BackupItem)"
             >
               预览
-            </el-button>
-            <el-button
-              size="small"
-              :loading="verifying === row.id"
-              @click="handleVerify(row as BackupItem)"
-            >
-              验证
             </el-button>
             <el-button
               size="small"
@@ -321,9 +307,7 @@ import {
   getBackupList,
   restoreBackup,
   deleteBackup,
-  verifyBackup,
   getBackupStats,
-  cleanupOldBackups,
   type BackupItem,
   type BackupStats,
 } from "@/api/backup";
@@ -337,9 +321,7 @@ const emit = defineEmits<{
 // 状态
 const loading = ref(false);
 const creating = ref(false);
-const cleaning = ref(false);
 const restoring = ref(false);
-const verifying = ref<number | null>(null);
 const backups = ref<BackupItem[]>([]);
 const stats = reactive<BackupStats>({
   total_backups: 0,
@@ -429,7 +411,7 @@ const previewData = ref<{
   files: any[];
   meta: any;
 }>({ filename: "", size: 0, files: [], meta: {} });
-const previewing = ref<number | null>(null);
+const previewing = ref<string | number | null | undefined>(null);
 
 async function handlePreview(row: BackupItem) {
   previewing.value = row.id;
@@ -446,23 +428,6 @@ async function handlePreview(row: BackupItem) {
   }
 }
 
-// 验证备份
-async function handleVerify(row: BackupItem) {
-  verifying.value = row.id;
-  try {
-    const res = await verifyBackup(row.id);
-    if (res.data.success) {
-      ElMessage.success("备份验证通过");
-    } else {
-      ElMessage.warning(res.data.message || "备份验证失败");
-    }
-  } catch {
-    ElMessage.error("验证失败");
-  } finally {
-    verifying.value = null;
-  }
-}
-
 // 打开恢复对话框
 function handleRestore(row: BackupItem) {
   selectedBackup.value = row;
@@ -475,7 +440,7 @@ async function confirmRestore() {
 
   restoring.value = true;
   try {
-    const res = await restoreBackup(selectedBackup.value.id);
+    const res = await restoreBackup(selectedBackup.value.filename);
     if (res.data.success !== false) {
       ElMessage.success("恢复成功，页面将在 3 秒后刷新");
       showRestoreDialog.value = false;
@@ -503,7 +468,7 @@ async function handleDelete(row: BackupItem) {
       { type: "warning" },
     );
 
-    const res = await deleteBackup(row.id);
+    const res = await deleteBackup(row.filename);
     if (res.data.success) {
       ElMessage.success(res.data.message || "删除成功");
       loadBackups();
@@ -512,24 +477,6 @@ async function handleDelete(row: BackupItem) {
     }
   } catch {
     // 用户取消
-  }
-}
-
-// 清理过期备份
-async function handleCleanup() {
-  try {
-    await ElMessageBox.confirm("确定要清理过期备份吗？", "清理确认", {
-      type: "warning",
-    });
-
-    cleaning.value = true;
-    const res = await cleanupOldBackups();
-    ElMessage.success(res.data.message || "清理完成");
-    loadBackups();
-  } catch {
-    // 用户取消
-  } finally {
-    cleaning.value = false;
   }
 }
 
