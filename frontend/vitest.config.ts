@@ -7,7 +7,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    pool: 'forks',
+    pool: 'threads',
+    singleThread: true,
     setupFiles: ['./src/test/setup.ts'],
     // 排除E2E测试（由Playwright运行）
     exclude: [
@@ -69,11 +70,7 @@ export default defineConfig({
         }
       }
     },
-    // 属性测试配置
-    testTimeout: 60000, // 属性测试 + 高并发并行时 element-plus 模块加载较慢
-    forks: {
-      maxForks: 4, // 限制并行进程数，防止资源竞争导致动态 import 超时
-    },
+    testTimeout: 60000,
   },
   resolve: {
     alias: {

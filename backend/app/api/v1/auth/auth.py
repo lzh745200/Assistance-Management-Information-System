@@ -169,10 +169,9 @@ async def login(
                 .returning(User.failed_login_count)
             )
             result = db.execute(stmt)
-            db.commit()
-
-            # 直接从 RETURNING 子句获取更新后的计数值，无需额外 db.refresh()
+            # 先消费 RETURNING 结果再提交，防止 "SQL statements in progress"
             failed_count = result.scalar() or 0
+            db.commit()
             logger.info(f"登录失败: user={login_request.username}, failed_count={failed_count}/{_MAX_FAILED_ATTEMPTS}")
 
             if failed_count >= _MAX_FAILED_ATTEMPTS:

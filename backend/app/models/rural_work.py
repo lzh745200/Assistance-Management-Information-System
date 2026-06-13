@@ -10,6 +10,7 @@ from sqlalchemy import ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
+from app.models.village import Village  # noqa: F401 — RuralWork.village relationship target
 
 
 class WorkType(str, Enum):
