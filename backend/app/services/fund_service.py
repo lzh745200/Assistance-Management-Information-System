@@ -122,40 +122,43 @@ class FundService:
             logger.info("Fund %d created (flushed, not committed)", fund.id)
         return fund
 
-    def create_fund_from_request(
+    def create_fund_for_user(
         self,
         data: "FundCreate",
-        user,
+        created_by: int,
+        organization_id: int | None = None,
         *,
-        require_manager: bool = True,
+        status: str | None = None,
+        applicant: str | None = None,
         auto_commit: bool = True,
     ) -> Fund:
         """
-        从 API 请求创建经费记录（统一管理员创建 + 用户申请）。
+        为指定用户创建经费记录（纯业务逻辑，不含 HTTP 授权）。
 
         :param data: Pydantic FundCreate 模型
-        :param user: 当前登录用户
-        :param require_manager: 是否需要管理员权限（管理员创建=True，用户申请=False）
-        :param auto_commit: 是否自动提交
+        :param created_by: 创建者用户 ID
+        :param organization_id: 所属组织 ID（可选）
+        :param status: 经费状态（None=使用 data 中的状态或默认值）
+        :param applicant: 申请人姓名（用户申请时填写）
+        :param auto_commit: 是否自动提交。设为 False 时调用方须自行提交，
+                          返回的 Fund.id 在当前事务内有效但未持久化。
         """
-        if require_manager:
-            from app.api.v1.deps import require_manager_role
-            require_manager_role(user)
-
         fund = Fund(**data.model_dump(exclude_none=True))
-        fund.created_by = user.id
-        fund.organization_id = user.organization_id
-        if not require_manager:
-            # 用户申请：默认 pending + 记录申请人
-            fund.status = "pending"
-            fund.applicant = user.full_name or user.username
+        fund.created_by = created_by
+        if organization_id is not None:
+            fund.organization_id = organization_id
+        if status is not None:
+            fund.status = status
+        if applicant is not None:
+            fund.applicant = applicant
         self.db.add(fund)
         if auto_commit:
             self.db.commit()
             self.db.refresh(fund)
-            logger.info("Fund %d created (manager=%s, user=%s)", fund.id, require_manager, user.id)
+            logger.info("Fund %d created by user %d", fund.id, created_by)
         else:
             self.db.flush()
+            logger.info("Fund %d created by user %d (flushed, not committed)", fund.id, created_by)
         return fund
 
     def update_fund(self, fund_id: int, *, auto_commit: bool = True, **kwargs) -> Optional[Fund]:

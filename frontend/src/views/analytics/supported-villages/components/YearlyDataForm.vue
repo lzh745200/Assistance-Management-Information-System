@@ -622,6 +622,7 @@ import {
   saveEmploymentData,
   copyYearData,
 } from "@/api/supportedVillage";
+import { unwrapData } from "@/utils/unwrapData";
 
 const props = defineProps<{
   villageId: number;
@@ -634,8 +635,6 @@ const emit = defineEmits<{
 
 const formRef = ref();
 defineExpose({ formRef });
-
-import { unwrapData } from "@/utils/unwrapData";
 
 const saving = ref(false);
 const copying = ref(false);

@@ -13,9 +13,11 @@ export function unwrapData<T = Record<string, unknown>>(
   fallback: T = {} as T,
 ): T {
   if (raw && typeof raw === "object" && "data" in raw) {
-    return ((raw as Record<string, unknown>).data ?? raw) as T;
+    const inner = (raw as Record<string, unknown>).data;
+    // 使用 || 而非 ?? 保持向后兼容：data=null/0/\"\"/false 时回退到 raw
+    return (inner || raw) as T;
   }
-  return (raw ?? fallback) as T;
+  return (raw || fallback) as T;
 }
 
 export default unwrapData;

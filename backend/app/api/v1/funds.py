@@ -270,8 +270,11 @@ def create_fund(
     db: Session = Depends(get_db),
 ):
     """创建经费记录（需管理员权限）"""
+    require_manager_role(current_user)
     from app.services.fund_service import FundService
-    fund = FundService(db).create_fund_from_request(data, current_user, require_manager=True)
+    fund = FundService(db).create_fund_for_user(
+        data, current_user.id, current_user.organization_id,
+    )
     return {"data": {"id": fund.id}, "message": "创建成功"}
 
 
@@ -283,7 +286,11 @@ def apply_fund(
 ):
     """用户经费申请 — 无需管理员权限，所有登录用户均可提交"""
     from app.services.fund_service import FundService
-    fund = FundService(db).create_fund_from_request(data, current_user, require_manager=False)
+    fund = FundService(db).create_fund_for_user(
+        data, current_user.id, current_user.organization_id,
+        status="pending",
+        applicant=current_user.full_name or current_user.username,
+    )
     return {"data": {"id": fund.id}, "message": "申请已提交，等待审批"}
 
 
