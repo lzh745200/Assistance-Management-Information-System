@@ -5,6 +5,7 @@ import axios, { type AxiosRequestConfig, type Canceler } from "axios";
 import { ElMessage } from "element-plus";
 import { AuthStorage } from "@/utils/authStorage";
 import { safeArray } from "@/composables/useSafeData";
+import { isOfflineMode, getMockResponse } from "@/utils/offlineMock";
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
@@ -114,6 +115,15 @@ request.interceptors.response.use(
       error.code === "ERR_NETWORK" ||
       error.message?.includes("NetworkError")
     ) {
+      // 离线回退：检查是否处于离线模式，尝试从离线 Mock 提供数据
+      if (isOfflineMode()) {
+        const { method, url } = error.config || {};
+        const mockData = getMockResponse(method || "GET", url || "");
+        if (mockData) {
+          console.info("[API] Offline fallback:", method, url);
+          return Promise.resolve(mockData);
+        }
+      }
       ElMessage.error("网络连接失败，请检查服务是否启动");
     } else if (error.code === "ECONNABORTED") {
       ElMessage.warning("请求超时，请重试");
