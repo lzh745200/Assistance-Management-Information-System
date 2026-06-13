@@ -75,6 +75,10 @@ class SupportedVillage(Base, TimestampMixin):
     is_provincial_demo = Column(Boolean, default=False, comment="是否省级示范")
     is_hundred_village_demo = Column(Boolean, default=False, comment="是否百村示范")
     is_tiered_development = Column(Boolean, default=False, comment="是否梯次振兴")
+    transition_status = Column(
+        String(20), default="none",
+        comment="过渡状态: none/entering/in_transition/exiting/completed"
+    )
 
     # 跨区域标记
     is_cross_province = Column(Boolean, default=False, comment="是否跨省帮扶")

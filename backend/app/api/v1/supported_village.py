@@ -423,9 +423,33 @@ async def update_village(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """更新帮扶村"""
+    """更新帮扶村（过渡状态变更需管理员权限 + 写入审计日志）"""
     village = _get_village_or_404(db, village_id)
-    for key, value in data.model_dump(exclude_unset=True).items():
+    update_dict = data.model_dump(exclude_unset=True)
+
+    # ── 过渡状态变更强制审批检查 ──
+    if "transition_status" in update_dict:
+        from app.api.v1.deps import require_manager_role
+        require_manager_role(current_user)
+        old_status = village.transition_status or "none"
+        new_status = update_dict["transition_status"]
+
+        # 记录审计日志
+        from app.utils.audit_logger import AuditLogger
+        AuditLogger.log(
+            action="village_transition_change",
+            user_id=current_user.id,
+            username=current_user.username,
+            resource_type="supported_village",
+            resource_id=village_id,
+            details={
+                "old_transition_status": old_status,
+                "new_transition_status": new_status,
+                "village_name": village.name,
+            },
+        )
+
+    for key, value in update_dict.items():
         if hasattr(village, key) and key != "id":
             setattr(village, key, value)
     db.commit()
