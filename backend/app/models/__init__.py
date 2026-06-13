@@ -4,12 +4,12 @@
 此模块仅导出基础类供 Alembic 和测试使用。
 """
 
-from .base import Base, BaseModel, TimestampMixin, SoftDeleteMixin, VersionMixin
-from .user import User
-from .organization import Organization
-from .project import Project  # User.created_by FK target — required for mapper init
-from .fund import Fund  # relationship target for multiple models
-from .supported_village import SupportedVillage  # Fund FK target
+from .base import Base, BaseModel, TimestampMixin, SoftDeleteMixin, VersionMixin  # noqa: F401
+from .user import User  # noqa: F401
+from .organization import Organization  # noqa: F401
+from .project import Project  # noqa: F401 — User.created_by FK target, required for mapper init
+from .fund import Fund  # noqa: F401 — relationship target for multiple models
+from .supported_village import SupportedVillage  # noqa: F401 — Fund FK target
 
 # ── 懒加载机制：支持 `from app.models import SomeModel` 但仅在访问时导入 ──
 _MODULE_MAP = {
@@ -84,8 +84,9 @@ _MODULE_MAP = {
     "UserOrganization": ".user_organization",
 }
 
-import sys as _sys
+import sys as _sys  # noqa: E402 — intentional lazy import after _MODULE_MAP
 _current_module = _sys.modules[__name__]
+
 
 def __getattr__(name):
     if name in _MODULE_MAP:
@@ -96,5 +97,6 @@ def __getattr__(name):
         setattr(_current_module, name, attr)
         return attr
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = list(_MODULE_MAP.keys())
