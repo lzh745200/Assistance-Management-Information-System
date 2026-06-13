@@ -234,12 +234,16 @@ def get_changed_records(
     since: datetime,
     key_field: str = "id",
     timestamp_field: str = "updated_at",
+    sync_version_field: str = "sync_version",
+    last_sync_version: int = 0,
     limit: int = 5000,
     offset: int = 0,
 ) -> List[Dict]:
     """
-    获取指定时间后的变更记录（增量同步）
-    修复：统一时间格式为 SQLite 兼容的无时区 UTC 字符串。
+    获取指定时间后的变更记录（增量同步）。
+
+    基于 (timestamp, sync_version) 二元组排序，防止同一时间戳多条记录遗漏。
+    sync_version 列为 BIGINT 自增，每次 INSERT/UPDATE 时递增。
     """
     table = _get_table_object(table_name)
     _validate_identifier(key_field, "key_field")
@@ -247,25 +251,27 @@ def get_changed_records(
 
     if since.tzinfo is not None:
         since = since.astimezone(timezone.utc).replace(tzinfo=None)
-    # else: naive datetime 视为已处于 UTC（SQLite 无时区），无需转换
 
-    # 统一格式化为 SQLite 标准格式: YYYY-MM-DD HH:MM:SS
     since_str = since.strftime("%Y-%m-%d %H:%M:%S")
-
     ts_col = table.c[timestamp_field]
 
-    # 构建 SQLAlchemy 2.0 Select
-    stmt = (
-        select(table)
-        .where(ts_col >= since_str)
-        .order_by(ts_col.asc())
-        .limit(limit)
-        .offset(offset)
-    )
+    # 尝试使用 sync_version 列（如果表有此列）
+    sv_col = table.c.get(sync_version_field)
+
+    stmt = select(table).where(ts_col >= since_str)
+
+    if sv_col is not None and last_sync_version > 0:
+        # 排除已知版本号及之前的记录（时间戳相同但版本号已覆盖的）
+        stmt = stmt.where(sv_col > last_sync_version)
+
+    # 排序：先时间戳，再版本号（确保同一秒内顺序确定）
+    order_cols = [ts_col.asc()]
+    if sv_col is not None:
+        order_cols.append(sv_col.asc())
+    stmt = stmt.order_by(*order_cols).limit(limit).offset(offset)
 
     try:
         rows = db_session.execute(stmt).all()
-        # SQLAlchemy 2.0 推荐使用 _mapping 将 Row 转为字典
         return [dict(row._mapping) for row in rows]
     except Exception as e:
         logger.error(f"增量查询失败 [{table_name}]: {e}")
