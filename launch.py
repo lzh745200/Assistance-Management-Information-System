@@ -45,6 +45,15 @@ if not (RESOURCES_FRONTEND / "index.html").exists():
     print("  构建前端: cd frontend && npm run build")
 
 kill_port()
+
+# 预编译 Python 模块（首次较慢，后续 instant）
+import compileall, os as _os
+_compile_flag = BACKEND_DIR / "app" / ".pyc_compiled"
+if not _compile_flag.exists():
+    print("  预编译模块（首次启动需几秒）...")
+    compileall.compile_dir(str(BACKEND_DIR / "app"), quiet=1, workers=0)
+    _compile_flag.touch()
+
 threading.Thread(target=open_browser_when_ready, daemon=True).start()
 
 print()

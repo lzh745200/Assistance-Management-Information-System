@@ -279,7 +279,7 @@ const fetchMachineCodeList = async () => {
     });
 
     // 响应结构: { data: { data: MachineCodeListResponse } }
-    // 由于包含 items/total，不会被自动解包
+    // 拦截器已将 data.data 字段展开到顶层，但 data 键保留以兼容旧代码
     const data = response as any;
     if (data.data) {
       machineCodeList.value = data.data.items;
