@@ -51,7 +51,7 @@ import compileall, os as _os
 _compile_flag = BACKEND_DIR / "app" / ".pyc_compiled"
 if not _compile_flag.exists():
     print("  预编译模块（首次启动需几秒）...")
-    compileall.compile_dir(str(BACKEND_DIR / "app"), quiet=1, workers=0)
+    compileall.compile_dir(str(BACKEND_DIR / "app"), quiet=2, workers=0)
     _compile_flag.touch()
 
 threading.Thread(target=open_browser_when_ready, daemon=True).start()
