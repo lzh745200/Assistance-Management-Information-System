@@ -356,8 +356,8 @@ const loadData = async () => {
       project_type: filterForm.type || undefined,
       status: filterForm.status || undefined,
     });
-    projectList.value = (res as any).items || [];
-    pagination.total = (res as any).total || 0;
+    projectList.value = ((res as any)?.data?.items || (res as any)?.items || []);
+    pagination.total = (res as any)?.data?.total || (res as any)?.total || 0;
   } catch (e) {
     logger.error("[Projects] loadData failed:", e);
     ElMessage.error("加载项目列表失败");

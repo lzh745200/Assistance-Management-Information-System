@@ -194,7 +194,7 @@ async function loadHistory() {
   loadingHistory.value = true;
   try {
     const res = await getExportTasks(1, 10);
-    historyList.value = res.items;
+    historyList.value = (res as any)?.data?.items || (res as any)?.items;
   } catch (error) {
     logger.error("加载导出历史失败:", error);
   } finally {
