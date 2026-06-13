@@ -336,10 +336,11 @@ const getProgressColor = (progress: number) => {
 const loadStats = async () => {
   try {
     const data = await projectApi.getStats();
-    stats.total = data?.total ?? 0;
-    stats.inProgress = data?.in_progress ?? 0;
-    stats.completed = data?.completed ?? 0;
-    stats.totalBudget = Math.round(data?.total_budget ?? 0);
+    const s = data?.data || data;
+    stats.total = s?.total ?? 0;
+    stats.inProgress = s?.in_progress ?? 0;
+    stats.completed = s?.completed ?? 0;
+    stats.totalBudget = Math.round(s?.total_budget ?? 0);
   } catch {
     // 统计加载失败不阻塞主流程
   }

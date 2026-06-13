@@ -1005,7 +1005,8 @@ async function loadProjectData() {
 
   loading.value = true;
   try {
-    const data = await projectApi.getById(projectId);
+    const resp = await projectApi.getById(projectId);
+    const data = resp?.data || resp;
     if (!data) {
       ElMessage.error("未找到项目数据");
       pushSafe("/projects");
