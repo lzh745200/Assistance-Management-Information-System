@@ -133,7 +133,7 @@ describe('api/supportedVillage (named)', () => {
     it('downloadImportTemplate + alias downloadTemplate', async () => {
       mockGet.mockResolvedValueOnce({ data: new Blob(['x']), headers: {} })
       await downloadImportTemplate()
-      expect(mockGet).toHaveBeenCalledWith('/supported-villages/import-template', { responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/import/template', { params: { entity_type: 'supported_village' }, responseType: 'blob' })
       expect(downloadTemplate).toBe(downloadImportTemplate)
     })
   })

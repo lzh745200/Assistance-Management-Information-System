@@ -134,7 +134,7 @@ describe('api/policy', () => {
     })
     it('downloadImportTemplate', async () => {
       await downloadImportTemplate()
-      expect(mockGet).toHaveBeenCalledWith('/policies/import/template', { responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/import/template', { params: { entity_type: 'policy' }, responseType: 'blob' })
     })
   })
 

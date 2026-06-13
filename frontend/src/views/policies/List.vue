@@ -484,7 +484,7 @@ const handleDownloadTemplate = async () => {
     link.download = "政策法规导入模板.xlsx";
     link.click();
     window.URL.revokeObjectURL(url);
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch (error: any) {
     ElMessage.error("下载模板失败");
   }

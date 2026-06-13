@@ -524,7 +524,7 @@ const handleDownloadTemplate = async () => {
     const tplName =
       templates.find((t) => t.type === selectedTemplate.value)?.name || "标准";
     triggerDownload(res.data, `${tplName}导入模板_${selectedYear.value}.xlsx`);
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch {
     ElMessage.error("下载模板失败");
   }

@@ -107,7 +107,7 @@ const handleExport = async () => {
       await exportAndDownloadPdf(query);
     }
 
-    ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
     emit("export");
     emit("update:modelValue", false);
   } catch (error) {

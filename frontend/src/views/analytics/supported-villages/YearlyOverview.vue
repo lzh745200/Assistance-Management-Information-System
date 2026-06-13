@@ -353,7 +353,7 @@ function openEditDialog(key: string) {
 async function handleDownloadTemplate(sectionKey: string) {
   try {
     await downloadTemplate(sectionKey, selectedYear.value);
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch {
     ElMessage.error("模板下载失败");
   }

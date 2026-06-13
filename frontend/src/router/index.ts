@@ -593,10 +593,6 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: "系统监控", roles: ["admin", "super_admin"] },
       },
       {
-        path: "/system/health",
-        redirect: "/system/monitoring",
-      },
-      {
         path: "/system/encryption",
         name: "SystemEncryption",
         component: () =>

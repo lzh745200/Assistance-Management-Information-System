@@ -294,7 +294,7 @@ async function handleAdd() {
       priority: addForm.priority,
       deadline: addForm.deadline || undefined,
     });
-    ElMessage.success("添加成功");
+    ElMessage.success("已添加");
     addForm.title = "";
     addForm.deadline = "";
     fetchTodos();
@@ -342,7 +342,7 @@ async function handleSave() {
       deadline: editForm.deadline || undefined,
       completed: editForm.completed,
     });
-    ElMessage.success("保存成功");
+    ElMessage.success("已保存");
     editDialogVisible.value = false;
     fetchTodos();
   } catch {
@@ -355,7 +355,7 @@ async function handleSave() {
 async function handleDelete(todo: any) {
   try {
     await deleteTodo(todo.id);
-    ElMessage.success("删除成功");
+    ElMessage.success("已删除");
     fetchTodos();
   } catch {
     ElMessage.error("删除失败");

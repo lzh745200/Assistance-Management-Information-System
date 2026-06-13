@@ -258,7 +258,7 @@ const downloadTemplate = async () => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch {
     ElMessage.error("模板下载失败，请重试");
   } finally {

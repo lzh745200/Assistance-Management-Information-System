@@ -309,7 +309,7 @@ async function handleMarkAllRead() {
     await markAllAsRead();
     messages.value.forEach((m) => (m.is_read = true));
     unreadCount.value = 0;
-    ElMessage.success("已全部标记为已读");
+    ElMessage.success("已标记");
   } catch (error) {
     ElMessage.error("操作失败");
   }

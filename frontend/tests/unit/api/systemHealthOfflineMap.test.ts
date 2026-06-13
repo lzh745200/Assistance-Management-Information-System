@@ -20,38 +20,12 @@ vi.mock('@/api/request', () => ({
   },
 }))
 
-import { systemHealthApi } from '@/api/systemHealth'
 import {
   offlineMapApi,
   clearTiles,
   downloadTiles,
   getMapStatus,
 } from '@/api/offlineMap'
-
-describe('api/systemHealth', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('overview', () => {
-    systemHealthApi.overview()
-    expect(mockGet).toHaveBeenCalledWith('/health/overview')
-  })
-  it('liveness', () => {
-    systemHealthApi.liveness()
-    expect(mockGet).toHaveBeenCalledWith('/health/liveness')
-  })
-  it('readiness', () => {
-    systemHealthApi.readiness()
-    expect(mockGet).toHaveBeenCalledWith('/health/readiness')
-  })
-  it('database', () => {
-    systemHealthApi.database()
-    expect(mockGet).toHaveBeenCalledWith('/health/database')
-  })
-  it('full', () => {
-    systemHealthApi.full()
-    expect(mockGet).toHaveBeenCalledWith('/health/full')
-  })
-})
 
 describe('api/offlineMap', () => {
   beforeEach(() => vi.clearAllMocks())

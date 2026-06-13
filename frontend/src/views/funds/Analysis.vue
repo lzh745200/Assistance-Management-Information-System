@@ -373,7 +373,7 @@ function handleExportStats() {
     total_used: "已使用(万元)",
     utilization_rate: "利用率(%)",
   });
-  ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
 }
 
 onMounted(() => {

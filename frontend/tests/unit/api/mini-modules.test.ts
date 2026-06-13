@@ -40,19 +40,19 @@ describe('api/report', () => {
     vi.clearAllMocks()
   })
 
-  it('list 调用 GET /reports', () => {
+  it('list 调用 GET /reports/subscriptions', () => {
     reportApi.list({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/reports', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/reports/subscriptions', { params: { page: 1 } })
   })
 
   it('list 无参', () => {
     reportApi.list()
-    expect(mockGet).toHaveBeenCalledWith('/reports', { params: undefined })
+    expect(mockGet).toHaveBeenCalledWith('/reports/subscriptions', { params: undefined })
   })
 
-  it('generate 调用 POST /reports/generate', () => {
+  it('generate 调用 POST /reports', () => {
     reportApi.generate({ type: 'monthly' })
-    expect(mockPost).toHaveBeenCalledWith('/reports/generate', { type: 'monthly' })
+    expect(mockPost).toHaveBeenCalledWith('/reports', { type: 'monthly' })
   })
 
   it('download 调用 GET /reports/{id}/download with blob responseType', () => {

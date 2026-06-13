@@ -242,7 +242,7 @@ async function confirmCreateBackup() {
       password: backupForm.value.password || null,
     });
     if (res.data?.success !== false) {
-      ElMessage.success("备份已创建");
+      ElMessage.success("已创建");
       createDialogVisible.value = false;
       await refreshAll();
     }
@@ -264,7 +264,7 @@ async function handleDelete(row: any) {
     );
     const res = await request.delete(`/system/backup/${row.file_name}`);
     if (res.data?.success !== false) {
-      ElMessage.success("备份已删除");
+      ElMessage.success("已删除");
       await refreshAll();
     }
   } catch (e: any) {

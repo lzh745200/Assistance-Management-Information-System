@@ -573,7 +573,7 @@ function exportData() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
 }
 
 // 辅助

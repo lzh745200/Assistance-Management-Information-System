@@ -248,7 +248,7 @@ async function handleDownloadTemplate(type: string) {
     link.download = `${tpl?.label || type}导入模板.xlsx`;
     link.click();
     window.URL.revokeObjectURL(url);
-    ElMessage.success("模板下载成功");
+    // 模板下载成功 — 浏览器已确认
   } catch (e: any) {
     ElMessage.error(e?.message || "模板下载失败");
   } finally {

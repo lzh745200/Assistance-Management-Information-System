@@ -112,7 +112,7 @@ async function handleDownload(type: string) {
     link.click();
     document.body.removeChild(link);
     setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-    ElMessage.success("模板下载成功");
+    // 下载成功无提示 — 浏览器下载栏已确认
   } catch (e: any) {
     ElMessage.error(
       e?.response?.data?.detail || e?.message || "模板下载失败，请重试",

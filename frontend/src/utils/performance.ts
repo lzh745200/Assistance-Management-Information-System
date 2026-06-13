@@ -393,7 +393,6 @@ export function preloadCriticalRoutes(): void {
   preloadOnIdle(() => {
     // 预加载关键视图组件
     const criticalImports = [
-      () => import("@/views/HomeSafe.vue"),
       () => import("@/views/projects/List.vue"),
       () => import("@/views/analytics/supported-villages/List.vue"),
       () => import("@/views/dataAnalysis/Index.vue"),

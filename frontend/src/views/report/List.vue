@@ -130,7 +130,7 @@ async function handleSave() {
   try {
     if (editingId.value) {
       await reportApi.update(editingId.value, form.value);
-      ElMessage.success("更新成功");
+      ElMessage.success("已保存");
     } else {
       await reportApi.create(form.value);
       ElMessage.success("创建成功");
@@ -147,7 +147,7 @@ async function toggle(row: any) {
 }
 
 async function handleGenerate(row: any) {
-  try { await reportApi.generate({ subscription_id: row.id }); ElMessage.success("生成已触发"); }
+  try { await reportApi.generate({ subscription_id: row.id }); ElMessage.success("已生成"); }
   catch { ElMessage.error("生成失败"); }
 }
 

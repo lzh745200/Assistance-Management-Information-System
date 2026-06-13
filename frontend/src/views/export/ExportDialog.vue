@@ -267,7 +267,7 @@ async function handleExport() {
     if (result instanceof Blob) {
       const filename = `帮扶村数据_${new Date().toISOString().slice(0, 10)}.xlsx`;
       triggerDownload(result, filename);
-      ElMessage.success("导出成功");
+// 导出成功 — 浏览器已确认
       handleClose();
       return;
     }
