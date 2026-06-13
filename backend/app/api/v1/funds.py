@@ -309,7 +309,8 @@ def update_fund(
     if fund.status not in ["pending", "planned", "rejected"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="当前状态不允许修改")
 
-    for key, value in data.model_dump(exclude_none=True).items():
+    # exclude_unset: 仅排除客户端未发送的字段，显式传 null 的字段会设为 None（清空）
+    for key, value in data.model_dump(exclude_unset=True).items():
         if hasattr(fund, key):
             setattr(fund, key, value)
         else:

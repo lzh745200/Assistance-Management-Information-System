@@ -136,7 +136,11 @@ def main():
         if temp_dir.exists():
             cutoff = datetime.now().timestamp() - 7 * 86400
             deleted = 0
-            for item in temp_dir.iterdir():
+            try:
+                items = list(temp_dir.iterdir())
+            except (OSError, PermissionError):
+                items = []
+            for item in items:
                 try:
                     if item.stat().st_mtime < cutoff:
                         deleted += 1
