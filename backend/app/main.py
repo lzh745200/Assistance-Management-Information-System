@@ -516,10 +516,10 @@ def _seed_default_admin():
         _pw_hash_prefix = hashlib.sha256(_admin_password.encode()).hexdigest()[:8]
         # 控制台打印明文密码（用户需要看到才能登录）
         print(f"\n{'='*60}")
-        print("  🔑 默认管理员密码（自动生成）")
+        print("  [KEY] 默认管理员密码（自动生成）")
         print("  用户名: admin")
         print(f"  密码:   {_admin_password}")
-        print("  ⚠️  请立即复制保存！首次登录后须修改密码。")
+        print("  [WARN] 请立即复制保存！首次登录后须修改密码。")
         print(f"{'='*60}\n")
         # 日志中仅记录哈希前缀（安全）
         logger.warning(
