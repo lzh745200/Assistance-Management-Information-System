@@ -189,6 +189,7 @@ def main():
         # 测试数据库残留
         test_db = data_dir / "test_integration.db"
         if test_db.exists():
+            TOTAL_FREED += test_db.stat().st_size
             if not DRY_RUN:
                 test_db.unlink(missing_ok=True)
             print(f"  {'[DRY]' if DRY_RUN else '[DEL]'} Test DB residual: {test_db.name}")
