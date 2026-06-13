@@ -11,7 +11,7 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Integer
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Integer, text
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 
@@ -55,6 +55,13 @@ class TimestampMixin:
         server_onupdate=func.now(),
         nullable=False,
         comment="更新时间",
+    )
+    sync_version = Column(
+        BigInteger,
+        default=1,
+        server_default=text("1"),
+        nullable=False,
+        comment="同步版本号（增量同步依据）",
     )
 
 
