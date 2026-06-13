@@ -233,14 +233,15 @@ async def _import_entities(
             detail=f"不支持的实体类型: {entity_type}，支持 {', '.join(VALID_ENTITY_TYPES)}",
         )
 
-    importer = ExcelImporterService(db)
     file_bytes = await file.read()
 
     if dry_run:
-        # 仅校验模式：在 SAVEPOINT 中执行导入后回滚，获取验证结果不写入数据库
-        db.begin_nested()
+        # 仅校验模式：使用独立 DB 会话执行导入后丢弃，确保无数据泄露
+        from app.core.database import SessionLocal
+        dry_db = SessionLocal()
         try:
-            result = await importer.import_data_async(
+            dry_importer = ExcelImporterService(dry_db)
+            result = await dry_importer.import_data_async(
                 file_bytes=file_bytes,
                 filename=file.filename or "",
                 content_type=file.content_type or "",
@@ -249,8 +250,9 @@ async def _import_entities(
                 entity_type=entity_type,
             )
         finally:
-            db.rollback()
+            dry_db.close()
     else:
+        importer = ExcelImporterService(db)
         result = await importer.import_data_async(
             file_bytes=file_bytes,
             filename=file.filename or "",

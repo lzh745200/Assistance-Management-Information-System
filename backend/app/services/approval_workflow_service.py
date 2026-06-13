@@ -218,6 +218,8 @@ class ApprovalWorkflowService:
             )
             self.db.add(msg)
             self.db.commit()
+        except ImportError:
+            logger.warning("消息模块不可用，跳过审批推送")
         except Exception:
             self.db.rollback()
             logger.warning("审批消息推送失败（非致命）", exc_info=True)

@@ -148,8 +148,11 @@ class BackupService:
             return f.read(len(BackupService._ENCRYPTED_MARKER)) == BackupService._ENCRYPTED_MARKER
 
     @staticmethod
-    def _decrypt_file(file_path: str, password: str) -> None:
-        """解密备份文件，原地替换为明文。密码错误时抛出 ValueError。"""
+    def _decrypt_to_temp(file_path: str, password: str) -> str:
+        """解密备份文件到临时文件，返回临时文件路径。密码错误时抛出 ValueError。
+
+        不解密到原文件位置（保留原始加密备份以防后续恢复步骤失败）。
+        """
         with open(file_path, "rb") as f:
             marker = f.read(len(BackupService._ENCRYPTED_MARKER))
             if marker != BackupService._ENCRYPTED_MARKER:
@@ -164,8 +167,20 @@ class BackupService:
         except Exception:
             raise ValueError("密码错误或备份文件已损坏") from None
 
-        with open(file_path, "wb") as f:
+        # 写入临时文件（保留原始加密备份不受影响）
+        temp_fd, temp_path = tempfile.mkstemp(suffix=".zip", prefix="decrypted_backup_")
+        with os.fdopen(temp_fd, "wb") as f:
             f.write(plaintext)
+        return temp_path
+
+    @staticmethod
+    def _decrypt_file(file_path: str, password: str) -> None:
+        """解密备份文件，原地替换为明文（已弃用，保留向后兼容）。
+
+        新代码应使用 _decrypt_to_temp 以避免破坏原始加密备份。
+        """
+        temp_path = BackupService._decrypt_to_temp(file_path, password)
+        shutil.move(temp_path, file_path)
 
     # ── 备份操作 ────────────────────────────────────────────────
 
@@ -289,11 +304,17 @@ class BackupService:
             raise FileNotFoundError(f"备份文件不存在: {backup_file_path}")
 
         # 检测加密备份
+        decrypted_temp_path = None
         if self._is_encrypted(backup_file_path):
             if not password:
                 raise ValueError("备份文件已加密，请提供密码")
-            logger.info("检测到加密备份，正在解密...")
-            self._decrypt_file(backup_file_path, password)
+            logger.info("检测到加密备份，正在解密到临时文件...")
+            decrypted_temp_path = self._decrypt_to_temp(backup_file_path, password)
+            restore_source = decrypted_temp_path
+        else:
+            if password:
+                logger.warning("提供了密码但备份文件未加密，密码将被忽略")
+            restore_source = backup_file_path
 
         # 解压备份文件到临时目录
         temp_dir = tempfile.mkdtemp(prefix="restore_")
@@ -314,7 +335,7 @@ class BackupService:
                 shutil.copytree(self.uploads_dir, snapshot_uploads_dir)
 
             # 解压备份文件（使用安全解压，防止 zip slip）
-            with zipfile.ZipFile(backup_file_path, "r") as zipf:
+            with zipfile.ZipFile(restore_source, "r") as zipf:
                 self._safe_extractall(zipf, temp_dir)
 
             # 恢复数据库
@@ -376,6 +397,11 @@ class BackupService:
             # 清理临时文件
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir, ignore_errors=True)
+            if decrypted_temp_path and os.path.exists(decrypted_temp_path):
+                try:
+                    os.unlink(decrypted_temp_path)
+                except OSError:
+                    pass
 
     def list_backups(self) -> List[BackupRecord]:
         """
