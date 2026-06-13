@@ -598,9 +598,20 @@ export function getMockResponse(method: string, url: string): any | null {
       return detailResponse(mockDashboardStats);
     }
 
-    // 帮扶村
-    if (path === "/villages" || path.startsWith("/villages")) {
+    // 帮扶村（旧路由）
+    if (path === "/villages" || path.startsWith("/villages/")) {
       const id = extractIdFromPath(path, "/villages");
+      if (id !== null) {
+        return detailResponse(
+          mockVillages.find((v) => v.id === id) || mockVillages[0],
+        );
+      }
+      return listResponse(mockVillages);
+    }
+
+    // 帮扶村管理（新路由 — 前端主要使用）
+    if (path === "/supported-villages" || path.startsWith("/supported-villages/")) {
+      const id = extractIdFromPath(path, "/supported-villages");
       if (id !== null) {
         return detailResponse(
           mockVillages.find((v) => v.id === id) || mockVillages[0],

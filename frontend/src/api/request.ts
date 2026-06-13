@@ -116,10 +116,13 @@ request.interceptors.response.use(
       error.message?.includes("NetworkError")
     ) {
       // 离线回退：检查是否处于离线模式，尝试从离线 Mock 提供数据
-      if (isOfflineMode()) {
-        const { method, url } = error.config || {};
+      if (isOfflineMode() && error.config) {
+        const { method, url } = error.config;
         const mockData = getMockResponse(method || "GET", url || "");
         if (mockData) {
+          // 清理 pending 请求追踪（模拟成功拦截器的清理逻辑）
+          const requestKey = `${method}:${url}`;
+          pendingRequests.delete(requestKey);
           console.info("[API] Offline fallback:", method, url);
           return Promise.resolve(mockData);
         }
