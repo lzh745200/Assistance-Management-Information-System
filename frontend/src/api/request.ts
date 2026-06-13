@@ -64,20 +64,27 @@ request.interceptors.response.use(
     const data = response.data;
     if (data && typeof data === "object") {
       // 自动展开 {data: {...}} 或 {data: [...]} 包装
-      if ("data" in data && data.data !== null && data.data !== undefined) {
+      if ("data" in data) {
         const inner = data.data;
-        if (typeof inner === "object" && !Array.isArray(inner)) {
-          // data.data 是对象 → 展开到顶层，保留 message/success/code
-          for (const key of Object.keys(inner)) {
-            if (!(key in data)) {
-              data[key] = inner[key];
+        if (inner !== null && inner !== undefined) {
+          if (typeof inner === "object" && !Array.isArray(inner)) {
+            // data.data 是对象 → 展开到顶层，保留 message/success/code
+            for (const key of Object.keys(inner)) {
+              if (!(key in data)) {
+                data[key] = inner[key];
+              }
             }
+            delete data.data;
+          } else if (Array.isArray(inner)) {
+            // data.data 是数组 → 设为 items（不覆盖已有的 items）
+            if (!("items" in data)) {
+              data.items = inner;
+            }
+            delete data.data;
           }
-          delete data.data;
-        } else if (Array.isArray(inner)) {
-          // data.data 是数组 → 设为 items
-          data.items = inner;
-          delete data.data;
+        } else {
+          // data.data 是 null/undefined → 回退为空对象（防止调用方 .data.something 崩溃）
+          data.data = {};
         }
       }
       // 安全化 items 字段（非数组 → []）
