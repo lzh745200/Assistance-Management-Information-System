@@ -457,13 +457,53 @@ def fund_statistics_multi_dimension(
 # ============================================================================
 
 
-def _transition_status(db: Session, fund: Fund, target_status: str, allowed_statuses: List[str], **kwargs):
-    """内部辅助：状态流转核心逻辑"""
+def _transition_status(
+    db: Session,
+    fund: Fund,
+    target_status: str,
+    allowed_statuses: List[str],
+    *,
+    required_attachments: Optional[List[str]] = None,
+    **kwargs,
+):
+    """内部辅助：状态流转核心逻辑。
+
+    Args:
+        required_attachments: 必需的附件类别列表（如 ["contract", "allocation_order"]）。
+            传 None 表示不检查附件；传空列表 [] 表示至少需要一个附件（任意类别）。
+    """
     if fund.status not in allowed_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"状态流转非法：当前状态为 '{fund.status}'，不允许变更为 '{target_status}'"
         )
+
+    # ── 文档强制上传检查 ──
+    if required_attachments is not None:
+        from app.models.fund import FundAttachment
+        existing = db.query(FundAttachment).filter(
+            FundAttachment.fund_id == fund.id
+        ).all()
+        existing_categories = {a.category for a in existing if a.category}
+
+        if len(required_attachments) == 0:
+            # 空列表 → 至少需要 1 个附件
+            if not existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="该操作需要至少上传一个附件文档",
+                )
+        else:
+            missing = [c for c in required_attachments if c not in existing_categories]
+            if missing:
+                labels = {"contract": "合同", "allocation_order": "分配令",
+                          "invoice": "发票", "receipt": "收据", "report": "报告"}
+                missing_labels = [labels.get(m, m) for m in missing]
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"缺少必需文档: {', '.join(missing_labels)}",
+                )
+
     fund.status = target_status
     for k, v in kwargs.items():
         if hasattr(fund, k):
@@ -478,6 +518,7 @@ def approve_fund(fund_id: int, current_user: User = Depends(get_current_user), d
     require_manager_role(current_user)
     fund = _get_fund_or_404(db, fund_id, current_user)
     _transition_status(db, fund, "approved", ["pending", "planned"],
+                       required_attachments=[],  # 至少需要 1 个附件
                        approved_by=current_user.full_name or current_user.username,
                        approval_date=datetime.now(timezone.utc))
     return {"message": "审批通过"}

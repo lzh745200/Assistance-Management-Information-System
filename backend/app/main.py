@@ -55,15 +55,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     _start_database_health_monitoring()
     _start_approval_reminder()
     _start_db_maintenance()
-
-    # ── 延迟路由加载：在 FastAPI 实例创建后、接受请求前加载路由 ──
-    print("  加载路由模块...", flush=True)
-    import time as _time
-    _rt0 = _time.time()
-    from app.api.v1 import api_v1_router  # noqa: E402
-    app.include_router(api_v1_router)
-    print(f"  路由加载完成 ({_time.time() - _rt0:.1f}s)", flush=True)
-
     yield
     _stop_db_maintenance()
     _stop_approval_reminder()
@@ -133,6 +124,13 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # 7. 请求ID链路追踪中间件（最外层，最先执行）
 app.add_middleware(RequestIDMiddleware)
+
+# ── 加载路由（懒模型已提速，模块级加载安全可靠）──
+print("  加载路由模块...", flush=True)
+import time as _time; _rt0 = _time.time()
+from app.api.v1 import api_v1_router  # noqa: E402
+app.include_router(api_v1_router)
+print(f"  路由加载完成 ({_time.time() - _rt0:.1f}s)", flush=True)
 
 
 # 全局 Content-Type charset=UTF-8 修复
