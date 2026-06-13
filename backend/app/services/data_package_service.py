@@ -361,7 +361,9 @@ class DataPackageService:
         errors = []
 
         try:
-            # 🛡️ 使用独占写锁，防止大批量导入时触发 SQLITE_BUSY
+            # 🛡️ 使用 SAVEPOINT 事务保护：导入中任何失败都会回滚全部数据
+            # 配合独占写锁防止 SQLITE_BUSY
+            self.db.begin_nested()
             with db_coordinator.exclusive_write(timeout=120.0):
                 with zipfile.ZipFile(package.file_path, "r") as zf:
                     manifest_content = zf.read("manifest.json").decode("utf-8")
