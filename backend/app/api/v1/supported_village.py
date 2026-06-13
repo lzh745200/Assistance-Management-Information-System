@@ -546,11 +546,14 @@ async def validate_yearly_data(
     errors = []
     warnings = []
 
+    # 首次遍历：读取所有板块当年数据并缓存（避免同比比较时重复查询）
+    current_year_data = {}
     for section, model in _SECTION_MODEL.items():
         record = db.query(model).filter(
             model.supported_village_id == village_id,
             model.year == year,
         ).first()
+        current_year_data[section] = record
 
         if not record:
             errors.append({
@@ -572,7 +575,7 @@ async def validate_yearly_data(
                     "suggestion": "请检查原始数据并修正",
                 })
 
-    # 同比变动预警（与前一年对比）
+    # 同比变动预警（与前一年对比，复用 current_year_data 缓存）
     if year > 0:
         prev_year_data = {}
         for section, model in _SECTION_MODEL.items():
@@ -586,10 +589,7 @@ async def validate_yearly_data(
 
         if prev_year_data:
             for section, model in _SECTION_MODEL.items():
-                record = db.query(model).filter(
-                    model.supported_village_id == village_id,
-                    model.year == year,
-                ).first()
+                record = current_year_data.get(section)
                 if not record:
                     continue
                 for col in model.__table__.columns:

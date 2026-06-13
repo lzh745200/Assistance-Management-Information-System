@@ -545,6 +545,11 @@ def allocate_fund(
 
     # ── 里程碑-经费绑定检查 ──
     if milestone_id is not None:
+        if not fund.project_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="该经费未关联项目，无法绑定里程碑",
+            )
         from app.models.project_milestone import ProjectMilestone
         milestone = db.query(ProjectMilestone).filter(
             ProjectMilestone.id == milestone_id,
