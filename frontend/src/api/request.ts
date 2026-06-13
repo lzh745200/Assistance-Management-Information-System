@@ -61,14 +61,15 @@ request.interceptors.response.use(
     pendingRequests.delete(requestKey);
 
     // ── 统一响应格式：自动展开 {data: payload} → 顶层字段 ──
-    // 保持 data 键不变以兼容旧代码，同时将内部字段提升到顶层
+    // 保持 data 键不变以兼容旧代码（res.data / res.data.data），同时将内部字段提升到顶层
+    // 注意：不覆盖 code/message/data 顶层键（若 payload 内同名字段需通过 .data.xxx 访问）
     const data = response.data;
     if (data && typeof data === "object") {
       if ("data" in data) {
         const inner = data.data;
         if (inner !== null && inner !== undefined) {
           if (typeof inner === "object" && !Array.isArray(inner)) {
-            // 对象 → 展开到顶层（不覆盖已有字段，不删除 data 键）
+            // 对象 → 展开到顶层，但跳过已有键（保护 code/message/data 元数据）
             for (const key of Object.keys(inner)) {
               if (!(key in data)) {
                 data[key] = inner[key];
