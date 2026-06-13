@@ -157,6 +157,7 @@ def main():
     # ── 项目数据备份清理（保留最近 7 天） ──
     data_dir = PROJECT_ROOT / "backend" / "data"
     if data_dir.exists():
+        # zip 备份文件
         backup_pattern = "backup_*.zip"
         backups = sorted(data_dir.glob(backup_pattern), key=lambda p: p.stat().st_mtime, reverse=True)
         if len(backups) > 7:
@@ -166,6 +167,31 @@ def main():
                 TOTAL_FREED += b.stat().st_size
                 if not DRY_RUN:
                     b.unlink(missing_ok=True)
+
+        # DB 快照文件（保留最近 3 个）
+        snapshots = sorted(data_dir.glob("rural_revitalization.db.snapshot_*"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if len(snapshots) > 3:
+            for s in snapshots[3:]:
+                print(f"  {'[DRY]' if DRY_RUN else '[DEL]'} Old DB snapshot: {s.name}")
+                TOTAL_FREED += s.stat().st_size
+                if not DRY_RUN:
+                    s.unlink(missing_ok=True)
+
+        # DB 恢复前备份（保留最近 2 个）
+        restore_baks = sorted(data_dir.glob("rural_revitalization_before_restore_*.db"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if len(restore_baks) > 2:
+            for r in restore_baks[2:]:
+                print(f"  {'[DRY]' if DRY_RUN else '[DEL]'} Old restore backup: {r.name}")
+                TOTAL_FREED += r.stat().st_size
+                if not DRY_RUN:
+                    r.unlink(missing_ok=True)
+
+        # 测试数据库残留
+        test_db = data_dir / "test_integration.db"
+        if test_db.exists():
+            if not DRY_RUN:
+                test_db.unlink(missing_ok=True)
+            print(f"  {'[DRY]' if DRY_RUN else '[DEL]'} Test DB residual: {test_db.name}")
 
     # ── 日志轮转（.archive 文件，90天前的） ──
     log_dir = PROJECT_ROOT / "backend" / "logs"
