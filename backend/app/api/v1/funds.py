@@ -534,9 +534,30 @@ def reject_fund(fund_id: int, current_user: User = Depends(get_current_user), db
 
 
 @router.post("/{fund_id}/allocate")
-def allocate_fund(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def allocate_fund(
+    fund_id: int,
+    milestone_id: Optional[int] = Query(None, description="关联里程碑ID（可选，传入则校验完成状态）"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     require_manager_role(current_user)
     fund = _get_fund_or_404(db, fund_id, current_user)
+
+    # ── 里程碑-经费绑定检查 ──
+    if milestone_id is not None:
+        from app.models.project_milestone import ProjectMilestone
+        milestone = db.query(ProjectMilestone).filter(
+            ProjectMilestone.id == milestone_id,
+            ProjectMilestone.project_id == fund.project_id,
+        ).first()
+        if not milestone:
+            raise HTTPException(status_code=404, detail="里程碑不存在或不属于该项目")
+        if milestone.status != "completed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"里程碑未完成（当前状态: {milestone.status}），无法拨付经费",
+            )
+
     _transition_status(db, fund, "allocated", ["approved"],
                        required_attachments=["contract", "allocation_order"],
                        allocation_date=datetime.now(timezone.utc))
