@@ -73,37 +73,42 @@ async def get_system_info(
         elif "mysql" in db_url:
             db_type = "MySQL"
     except Exception:
-        pass
+        logger.warning("Failed to detect database type", exc_info=True)
 
     # 统计数据
     total_users = 0
     total_orgs = 0
     total_villages = 0
     total_projects = 0
+    stat_errors = []
 
     try:
         from sqlalchemy import text
         total_users = db.execute(text("SELECT COUNT(*) FROM users")).scalar() or 0
-    except Exception:
-        pass
+    except Exception as e:
+        stat_errors.append(f"users({e})")
+        logger.warning("Failed to count users: %s", e)
 
     try:
         from sqlalchemy import text
         total_orgs = db.execute(text("SELECT COUNT(*) FROM organizations")).scalar() or 0
-    except Exception:
-        pass
+    except Exception as e:
+        stat_errors.append(f"organizations({e})")
+        logger.warning("Failed to count organizations: %s", e)
 
     try:
         from sqlalchemy import text
         total_villages = db.execute(text("SELECT COUNT(*) FROM villages")).scalar() or 0
-    except Exception:
-        pass
+    except Exception as e:
+        stat_errors.append(f"villages({e})")
+        logger.warning("Failed to count villages: %s", e)
 
     try:
         from sqlalchemy import text
         total_projects = db.execute(text("SELECT COUNT(*) FROM projects")).scalar() or 0
-    except Exception:
-        pass
+    except Exception as e:
+        stat_errors.append(f"projects({e})")
+        logger.warning("Failed to count projects: %s", e)
 
     return {
         "success": True,

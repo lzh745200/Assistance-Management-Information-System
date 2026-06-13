@@ -597,8 +597,8 @@ class TestSubscriptionToResponse:
         sub = Mock(spec=[
             "id", "user_id", "name", "report_type", "format", "year",
             "village_ids", "include_sections", "frequency", "send_day",
-            "send_time", "email", "is_active", "last_sent_at", "next_send_at",
-            "created_at", "updated_at"
+            "send_time", "email", "output_dir", "output_format", "is_active",
+            "last_sent_at", "next_send_at", "created_at", "updated_at"
         ])
         sub.id = 1
         sub.user_id = 1
@@ -612,6 +612,8 @@ class TestSubscriptionToResponse:
         sub.send_day = 1
         sub.send_time = "09:00"
         sub.email = "test@test.com"
+        sub.output_dir = "/tmp/reports"
+        sub.output_format = "xlsx"
         sub.is_active = True
         sub.last_sent_at = None
         sub.next_send_at = None
@@ -628,8 +630,8 @@ class TestSubscriptionToResponse:
         sub = Mock(spec=[
             "id", "user_id", "name", "report_type", "format", "year",
             "village_ids", "include_sections", "frequency", "send_day",
-            "send_time", "email", "is_active", "last_sent_at", "next_send_at",
-            "created_at", "updated_at"
+            "send_time", "email", "output_dir", "output_format", "is_active",
+            "last_sent_at", "next_send_at", "created_at", "updated_at"
         ])
         sub.id = 2
         sub.user_id = 1
@@ -643,9 +645,11 @@ class TestSubscriptionToResponse:
         sub.send_day = None
         sub.send_time = None
         sub.email = None
+        sub.output_dir = None
+        sub.output_format = None
         sub.is_active = True
         sub.last_sent_at = None
-        sub.next_send_at = None
+        sub.next_sent_at = None
         sub.created_at = datetime(2024, 1, 1)
         sub.updated_at = datetime(2024, 1, 1)
 

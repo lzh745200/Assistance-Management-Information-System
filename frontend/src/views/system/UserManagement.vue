@@ -805,7 +805,7 @@ const handleExportPermissionPackage = async () => {
     const res = await request.post("/permission-packages/export", {});
     const data = res.data?.data || res.data;
     if (data.file_name) {
-      const downloadUrl = `/api/v1/permission-packages/download/${data.file_name}`;
+      const downloadUrl = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/permission-packages/download/${data.file_name}`;
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = data.file_name;

@@ -54,7 +54,7 @@ export const projectsApi = {
   },
   listFiles: (id: number) => api.get("/projects/" + id + "/files"),
   getFileDownloadUrl: (projectId: number, fileId: number) =>
-    "/api/v1/projects/" + projectId + "/files/" + fileId + "/download",
+    `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/projects/${projectId}/files/${fileId}/download`,
   deleteFile: (projectId: number, fileId: number) =>
     api.delete("/projects/" + projectId + "/files/" + fileId),
   previewFile: (projectId: number, fileId: number) =>

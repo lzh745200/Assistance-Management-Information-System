@@ -144,7 +144,12 @@ class TestGetResourceUsage:
             resp = client_with_mocked_auth.get("/api/v1/system/monitor/resources")
             assert resp.status_code == 200
             data = resp.json()
-            assert len(data["data"]["disk"]) == 1
+            assert len(data["data"]["disk"]) == 2
+            # First partition should have error (PermissionError)
+            assert data["data"]["disk"][0]["available"] is False
+            assert "error" in data["data"]["disk"][0]
+            # Second partition should be healthy
+            assert data["data"]["disk"][1]["filesystem"] == "ntfs"
 
     def test_psutil_not_installed(self, client_with_mocked_auth):
         _original_import = builtins.__import__
