@@ -11,7 +11,10 @@ Fund 业务服务层 (优化版)
 
 import logging
 from dataclasses import dataclass, field, asdict
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.schemas.fund import FundCreate  # noqa: F401 — type hint only
 
 from sqlalchemy import select, func, update
 from sqlalchemy.orm import Session, joinedload, selectinload
@@ -124,7 +127,7 @@ class FundService:
 
     def create_fund_for_user(
         self,
-        data: "FundCreate",
+        data: "FundCreate",  # noqa: F821 — TYPE_CHECKING import above
         created_by: int,
         organization_id: int | None = None,
         *,

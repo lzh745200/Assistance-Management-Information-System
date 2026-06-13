@@ -58,7 +58,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
     # ── 延迟路由加载：在 FastAPI 实例创建后、接受请求前加载路由 ──
     print("  加载路由模块...", flush=True)
-    import time as _time; _rt0 = _time.time()
+    import time as _time
+    _rt0 = _time.time()
     from app.api.v1 import api_v1_router  # noqa: E402
     app.include_router(api_v1_router)
     print(f"  路由加载完成 ({_time.time() - _rt0:.1f}s)", flush=True)
