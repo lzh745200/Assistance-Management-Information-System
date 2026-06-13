@@ -24,7 +24,7 @@ export const schoolsApi = {
   exportExcel: (params?: any) =>
     api.get("/schools/export/excel", { params, responseType: "blob" }),
   downloadImportTemplate: () =>
-    api.get("/schools/import/template", { responseType: "blob" }),
+    api.get("/import/template", { params: { entity_type: "school" }, responseType: "blob" }),
 
   // ========== 学校帮扶项目 ==========
   listProjects: (schoolId: number | string) =>

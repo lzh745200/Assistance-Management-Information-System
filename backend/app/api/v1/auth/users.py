@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
@@ -132,27 +132,31 @@ async def get_current_user_profile(current_user=Depends(get_current_user), db: S
     if not user:
         raise NotFoundException("用户不存在")
     return {
-        "id": user.id,
-        "username": user.username,
-        "name": user.full_name or user.username,
-        "email": user.email,
-        "phone": user.phone,
-        "department": user.department or "",
-        "position": user.position or "",
-        "avatar": user.avatar or "",
-        "gender": getattr(user, "gender", "") or "",
-        "birthday": getattr(user, "birthday", "") or "",
-        "address": getattr(user, "address", "") or "",
-        "remark": getattr(user, "remark", "") or "",
-        "role": user.role or "operator",
-        "roleName": _get_role_display(user),
-        "is_active": user.is_active,
-        "is_superuser": user.is_superuser,
-        "status": "active" if user.is_active else "inactive",
-        "lastLoginTime": (user.last_login.strftime("%Y-%m-%d %H:%M:%S") if user.last_login else ""),
-        "lastLoginIp": "",
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-        "allowed_menus": user.allowed_menus_list,
+        "code": 200,
+        "message": "success",
+        "data": {
+            "id": user.id,
+            "username": user.username,
+            "name": user.full_name or user.username,
+            "email": user.email,
+            "phone": user.phone,
+            "department": user.department or "",
+            "position": user.position or "",
+            "avatar": user.avatar or "",
+            "gender": getattr(user, "gender", "") or "",
+            "birthday": getattr(user, "birthday", "") or "",
+            "address": getattr(user, "address", "") or "",
+            "remark": getattr(user, "remark", "") or "",
+            "role": user.role or "operator",
+            "roleName": _get_role_display(user),
+            "is_active": user.is_active,
+            "is_superuser": user.is_superuser,
+            "status": "active" if user.is_active else "inactive",
+            "lastLoginTime": (user.last_login.strftime("%Y-%m-%d %H:%M:%S") if user.last_login else ""),
+            "lastLoginIp": "",
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "allowed_menus": user.allowed_menus_list,
+        },
     }
 
 
@@ -174,7 +178,25 @@ async def update_current_user_profile(
 
     db.commit()
     db.refresh(user)
-    return {"code": 200, "success": True, "message": "资料更新成功"}
+    return {
+        "code": 200, "success": True, "message": "资料更新成功",
+        "data": {
+            "id": user.id, "username": user.username,
+            "name": user.full_name or user.username,
+            "email": user.email, "phone": user.phone,
+            "department": user.department or "",
+            "position": user.position or "",
+            "avatar": user.avatar or "",
+            "gender": getattr(user, "gender", "") or "",
+            "birthday": getattr(user, "birthday", "") or "",
+            "address": getattr(user, "address", "") or "",
+            "remark": getattr(user, "remark", "") or "",
+            "role": user.role or "operator",
+            "roleName": _get_role_display(user),
+            "is_active": user.is_active,
+            "status": "active" if user.is_active else "inactive",
+        },
+    }
 
 
 # ==================== 用户列表 ====================
@@ -750,13 +772,20 @@ async def upload_avatar(
     if not user:
         raise NotFoundException("用户不存在")
 
-    # 校验文件类型
+    # 校验文件类型 — 必须有 Content-Type 且为允许的图片格式
     allowed_types = {"image/jpeg", "image/png", "image/gif", "image/webp"}
-    if avatar.content_type and avatar.content_type not in allowed_types:
+    if not avatar.content_type or avatar.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="仅支持 JPG/PNG/GIF/WebP 格式")
 
-    # 保存文件
-    upload_dir = _Path("uploads/avatars")
+    # 读取内容并校验大小（最大 2MB）
+    content = await avatar.read()
+    max_size = 2 * 1024 * 1024
+    if len(content) > max_size:
+        raise HTTPException(status_code=400, detail="头像文件不能超过 2MB")
+
+    # 保存文件到 backend/uploads/avatars/（绝对路径，避免 CWD 漂移）
+    backend_dir = _Path(__file__).resolve().parent.parent.parent.parent  # backend/
+    upload_dir = backend_dir / "uploads" / "avatars"
     upload_dir.mkdir(parents=True, exist_ok=True)
     ext = (_os.path.splitext(avatar.filename or "avatar.png")[1] or ".png").lower()
     if ext not in (".jpg", ".jpeg", ".png", ".gif", ".webp"):
@@ -764,7 +793,6 @@ async def upload_avatar(
     filename = f"{_uuid.uuid4().hex}{ext}"
     file_path = upload_dir / filename
 
-    content = await avatar.read()
     with open(file_path, "wb") as f:
         f.write(content)
 

@@ -155,9 +155,13 @@ class FundService:
         if not fund_dict.get("code"):
             fund_dict["code"] = f"FUND-{_dt.now().strftime('%Y%m%d')}-{_uuid.uuid4().hex[:4].upper()}"
 
-        # 兼容前端可能传 type 字段（别名为 fund_type）
-        if "type" in fund_dict and "fund_type" not in fund_dict:
-            fund_dict["fund_type"] = fund_dict.pop("type")
+        # 兼容前端可能传 type 字段 — 同时设置 Fund.type（经费大类）和 Fund.fund_type（经费类型详细）
+        if "type" in fund_dict:
+            frontend_type = fund_dict.pop("type")
+            if "fund_type" not in fund_dict:
+                fund_dict["fund_type"] = frontend_type
+            # 保留 type 值到 Fund.type（经费大类），不丢失数据
+            fund_dict["type"] = frontend_type
 
         fund = Fund(**fund_dict)
         fund.created_by = created_by

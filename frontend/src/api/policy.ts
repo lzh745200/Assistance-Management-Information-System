@@ -1,16 +1,5 @@
 import api from "./request";
 
-function triggerDownload(blob: Blob, filename: string) {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-}
-
 // ── Types ──
 export type PolicyCategory = string;
 export type PolicyStatus = "draft" | "active" | "archived" | "expired";
@@ -120,21 +109,13 @@ export const importPolicies = (file: File) => {
   });
 };
 export const exportPolicies = (params?: any) =>
-  api
-    .get("/policies/export/excel", { params, responseType: "blob" })
-    .then((r) => triggerDownload(r.data, "帮扶政策导出.xlsx"));
+  api.get("/policies/export/excel", { params, responseType: "blob" });
 export const exportPoliciesPDF = (params?: any) =>
-  api
-    .get("/policies/export/pdf", { params, responseType: "blob" })
-    .then((r) => triggerDownload(r.data, "帮扶政策导出.pdf"));
+  api.get("/policies/export/pdf", { params, responseType: "blob" });
 export const exportPoliciesWPS = (params?: any) =>
-  api
-    .get("/policies/export/wps", { params, responseType: "blob" })
-    .then((r) => triggerDownload(r.data, "帮扶政策导出.wps"));
+  api.get("/policies/export/wps", { params, responseType: "blob" });
 export const downloadImportTemplate = () =>
-  api
-    .get("/policies/import/template", { responseType: "blob" })
-    .then((r) => triggerDownload(r.data, "政策导入模板.xlsx"));
+  api.get("/import/template", { params: { entity_type: "policy" }, responseType: "blob" });
 
 // ── Display helpers (used by views for status/label formatting) ──
 const CATEGORY_LABELS: Record<string, string> = {};

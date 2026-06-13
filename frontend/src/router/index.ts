@@ -54,6 +54,13 @@ export const routes: RouteRecordRaw[] = [
         component: () => retryImport(() => import("@/views/auth/Profile.vue")),
         meta: { title: "个人中心" },
       },
+      {
+        path: "/profile/two-factor",
+        name: "TwoFactorSettings",
+        component: () =>
+          retryImport(() => import("@/views/auth/TwoFactorSettings.vue")),
+        meta: { title: "双因素认证" },
+      },
       // ── 工作台 ──
       {
         path: "/dashboard",
@@ -603,6 +610,34 @@ export const routes: RouteRecordRaw[] = [
           retryImport(() => import("@/views/system/Feedback.vue")),
         meta: { title: "反馈管理" },
       },
+      {
+        path: "/system/update-logs",
+        name: "SystemUpdateLogs",
+        component: () =>
+          retryImport(() => import("@/views/system/UpdateLogs.vue")),
+        meta: { title: "更新日志", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/i18n",
+        name: "SystemI18n",
+        component: () =>
+          retryImport(() => import("@/views/system/I18nManagement.vue")),
+        meta: { title: "国际化管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/chunked-upload",
+        name: "SystemChunkedUpload",
+        component: () =>
+          retryImport(() => import("@/views/system/ChunkedUploadManager.vue")),
+        meta: { title: "分片上传", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/environment",
+        name: "SystemEnvironment",
+        component: () =>
+          retryImport(() => import("@/views/system/EnvCheck.vue")),
+        meta: { title: "运行环境", roles: ["admin", "super_admin"] },
+      },
       // ── 管理面板 ──
       {
         path: "/admin/dashboard",
@@ -624,6 +659,49 @@ export const routes: RouteRecordRaw[] = [
         component: () =>
           retryImport(() => import("@/views/admin/MachineCodeManagement.vue")),
         meta: { title: "机器码设置", roles: ["admin", "super_admin"] },
+      },
+      // ── 系统安全 ──
+      {
+        path: "/system/zero-trust",
+        name: "SystemZeroTrust",
+        component: () =>
+          retryImport(() => import("@/views/system/ZeroTrust.vue")),
+        meta: { title: "零信任安全", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/user-permissions",
+        name: "SystemUserPermissions",
+        component: () =>
+          retryImport(() => import("@/views/system/UserPermissions.vue")),
+        meta: { title: "用户权限管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/secrets",
+        name: "SystemSecrets",
+        component: () =>
+          retryImport(() => import("@/views/system/SecretsManagement.vue")),
+        meta: { title: "密钥管理", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/data-tier",
+        name: "SystemDataTier",
+        component: () =>
+          retryImport(() => import("@/views/system/DataTier.vue")),
+        meta: { title: "数据分级", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/error-reports",
+        name: "SystemErrorReports",
+        component: () =>
+          retryImport(() => import("@/views/system/ErrorReports.vue")),
+        meta: { title: "错误报告", roles: ["admin", "super_admin"] },
+      },
+      {
+        path: "/system/tasks",
+        name: "SystemTasks",
+        component: () =>
+          retryImport(() => import("@/views/system/TaskManager.vue")),
+        meta: { title: "后台任务", roles: ["admin", "super_admin"] },
       },
       // ── 消息中心 ──
       {
@@ -649,6 +727,46 @@ export const routes: RouteRecordRaw[] = [
           retryImport(() => import("@/views/ai/InteractiveResult.vue")),
         meta: { title: "AI分析" },
       },
+      // ── 待办事项 ──
+      {
+        path: "/todos",
+        name: "Todos",
+        component: () => retryImport(() => import("@/views/todos/Index.vue")),
+        meta: { title: "待办事项" },
+      },
+      // ── 成效评估 ──
+      {
+        path: "/effectiveness/rankings",
+        name: "EffectivenessRankings",
+        component: () =>
+          retryImport(() => import("@/views/effectiveness/Rankings.vue")),
+        meta: { title: "成效排名" },
+      },
+      {
+        path: "/effectiveness/evaluate",
+        name: "EffectivenessEvaluate",
+        component: () =>
+          retryImport(() => import("@/views/effectiveness/Evaluation.vue")),
+        meta: { title: "成效评估" },
+      },
+      // ── 舆情监测 ──
+      {
+        path: "/sentiment",
+        name: "Sentiment",
+        component: () =>
+          retryImport(() => import("@/views/sentiment/Index.vue")),
+        meta: { title: "舆情监测" },
+      },
+      // ── 批量操作 ──
+      {
+        path: "/batch",
+        name: "BatchOperations",
+        component: () => retryImport(() => import("@/views/batch/Index.vue")),
+        meta: {
+          title: "批量操作",
+          roles: ["admin", "super_admin", "manager"],
+        },
+      },
       // ── 导入导出 ──
       {
         path: "/export/report",
@@ -670,6 +788,16 @@ export const routes: RouteRecordRaw[] = [
         component: () =>
           retryImport(() => import("@/views/reportTemplates/Index.vue")),
         meta: { title: "报告模板" },
+      },
+      {
+        path: "/data-verify/rules",
+        name: "ValidationRules",
+        component: () =>
+          retryImport(() => import("@/views/dataVerify/RulesManagement.vue")),
+        meta: {
+          title: "校验规则管理",
+          roles: ["admin", "super_admin", "manager"],
+        },
       },
     ],
   },

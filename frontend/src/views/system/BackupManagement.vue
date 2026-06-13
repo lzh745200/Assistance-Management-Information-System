@@ -3,56 +3,87 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>系统备份管理</span>
-          <el-button type="primary" @click="handleCreateBackup">
-            创建备份
-          </el-button>
+          <span class="title">系统备份管理</span>
+          <div class="header-actions">
+            <el-button :loading="loading" @click="refreshAll">刷新</el-button>
+            <el-button type="primary" @click="handleCreateBackup">
+              创建备份
+            </el-button>
+          </div>
         </div>
       </template>
 
-      <!-- 备份状态 -->
+      <!-- 备份统计 -->
       <el-descriptions :column="3" border class="backup-status">
         <el-descriptions-item label="备份数量">
-          {{ backupStatus.backup_count }}
+          {{ backupStats.totalBackups ?? 0 }}
         </el-descriptions-item>
         <el-descriptions-item label="总大小">
-          {{ formatSize(backupStatus.total_size) }}
+          {{ formatSize(backupStats.totalSize ?? 0) }}
         </el-descriptions-item>
-        <el-descriptions-item label="调度器状态">
-          <el-tag
-            :type="backupStatus.scheduler?.running ? 'success' : 'danger'"
-          >
-            {{ backupStatus.scheduler?.running ? "运行中" : "已停止" }}
+        <el-descriptions-item label="最近备份">
+          {{ formatTime(backupStats.lastBackup) }}
+        </el-descriptions-item>
+        <el-descriptions-item label="完整备份">
+          {{ backupStats.fullBackups ?? 0 }}
+        </el-descriptions-item>
+        <el-descriptions-item label="增量备份">
+          {{ backupStats.incrementalBackups ?? 0 }}
+        </el-descriptions-item>
+        <el-descriptions-item label="自动备份">
+          <el-tag :type="backupStats.scheduleEnabled ? 'success' : 'info'">
+            {{ backupStats.scheduleEnabled ? "已启用" : "未启用" }}
           </el-tag>
         </el-descriptions-item>
       </el-descriptions>
 
       <!-- 备份列表 -->
-      <el-table :data="backupList" style="width: 100%; margin-top: 20px">
-        <el-table-column prop="file_name" label="文件名" />
-        <el-table-column prop="description" label="描述" />
-        <el-table-column label="文件大小">
+      <el-table
+        v-loading="loading"
+        :data="backupList"
+        style="width: 100%; margin-top: 20px"
+      >
+        <el-table-column prop="file_name" label="文件名" min-width="200" />
+        <el-table-column prop="description" label="描述" min-width="150" />
+        <el-table-column prop="backup_type" label="类型" width="80">
+          <template #default="{ row }">
+            <el-tag
+              size="small"
+              :type="row.backup_type === 'incremental' ? 'warning' : 'primary'"
+            >
+              {{ row.backup_type === "incremental" ? "增量" : "完整" }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="大小" width="100">
           <template #default="{ row }">
             {{ formatSize(row.file_size) }}
           </template>
         </el-table-column>
-        <el-table-column label="创建时间">
+        <el-table-column label="创建时间" width="170">
           <template #default="{ row }">
             {{ formatTime(row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button
-              type="danger"
-              size="small"
-              @click="handleDelete(row.filename ?? row.file_name)"
-            >
+            <el-button size="small" type="primary" @click="handleDownload(row)">
+              下载
+            </el-button>
+            <el-button size="small" type="warning" @click="handleRestore(row)">
+              恢复
+            </el-button>
+            <el-button size="small" type="danger" @click="handleDelete(row)">
               删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
+      <el-empty
+        v-if="!loading && !backupList.length"
+        description="暂无备份记录"
+      />
     </el-card>
 
     <!-- 创建备份对话框 -->
@@ -67,12 +98,20 @@
         <el-form-item label="包含上传文件">
           <el-switch v-model="backupForm.include_uploads" />
         </el-form-item>
+        <el-form-item label="加密密码">
+          <el-input
+            v-model="backupForm.password"
+            type="password"
+            placeholder="留空则不加密"
+            show-password
+          />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="createDialogVisible = false">取消</el-button>
         <el-button
           type="primary"
-          :loading="loading"
+          :loading="creating"
           @click="confirmCreateBackup"
         >
           确定
@@ -80,28 +119,40 @@
       </template>
     </el-dialog>
 
-    <!-- 恢复备份对话框 -->
+    <!-- 恢复备份确认对话框 -->
     <el-dialog v-model="restoreDialogVisible" title="恢复备份" width="500px">
-      <el-upload
-        drag
-        :auto-upload="false"
-        :on-change="handleFileChange"
-        :limit="1"
-      >
-        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">
-          拖拽备份文件到此处，或<em>点击上传</em>
-        </div>
-      </el-upload>
       <el-alert
         title="警告：恢复备份将覆盖当前所有数据！"
-        type="warning"
+        type="error"
         :closable="false"
-        style="margin-top: 20px"
       />
+      <div style="margin-top: 16px">
+        <p><strong>备份文件：</strong>{{ restoreTarget?.file_name }}</p>
+        <p>
+          <strong>创建时间：</strong>{{ formatTime(restoreTarget?.created_at) }}
+        </p>
+        <p>
+          <strong>大小：</strong>{{ formatSize(restoreTarget?.file_size ?? 0) }}
+        </p>
+      </div>
+      <el-form
+        v-if="restoreTarget?.is_encrypted"
+        :model="restoreForm"
+        label-width="120px"
+        style="margin-top: 16px"
+      >
+        <el-form-item label="解密密码" required>
+          <el-input
+            v-model="restoreForm.password"
+            type="password"
+            placeholder="请输入加密密码"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
       <template #footer>
         <el-button @click="restoreDialogVisible = false">取消</el-button>
-        <el-button type="danger" :loading="loading" @click="confirmRestore">
+        <el-button type="danger" :loading="restoring" @click="confirmRestore">
           确认恢复
         </el-button>
       </template>
@@ -110,179 +161,176 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
-
 import { ref, onMounted } from "vue";
-import { ElMessageBox } from "element-plus";
-import { UploadFilled } from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 import request from "@/api/request";
-import { notify as appNotify } from "@/utils/notify";
 
-/** 统一消息通知 — 页面正中显示，3 秒后自动关闭 */
-function notify(
-  title: string,
-  message: string,
-  type: "success" | "error" | "warning" | "info" = "success",
-) {
-  // 使用 appNotify 包装器（已注入全局 showClose + duration），显式覆盖 duration: 3000
-  appNotify({
-    title,
-    message,
-    type,
-    duration: 3000,
-  });
-}
-
-const backupList = ref([]);
-const backupStatus = ref({
-  backup_count: 0,
-  total_size: 0,
-  scheduler: { running: false },
+const loading = ref(false);
+const creating = ref(false);
+const restoring = ref(false);
+const backupList = ref<any[]>([]);
+const backupStats = ref<Record<string, any>>({
+  totalBackups: 0,
+  totalSize: 0,
+  lastBackup: null,
+  fullBackups: 0,
+  incrementalBackups: 0,
+  scheduleEnabled: false,
 });
+
 const createDialogVisible = ref(false);
 const restoreDialogVisible = ref(false);
-const loading = ref(false);
+const restoreTarget = ref<any>(null);
 const backupForm = ref({
   description: "手动备份",
   include_uploads: true,
+  password: "",
 });
-const restoreFile = ref<File | null>(null);
+const restoreForm = ref({ password: "" });
 
-// 获取备份列表
-const fetchBackupList = async () => {
+async function fetchBackupList() {
   try {
-    const response = await request.get("/system/backup");
-    // 接口返回 {success, data: {items: [...], total: N}}
-    const resData = response.data;
+    const res = await request.get("/system/backup");
+    const resData = res.data;
     backupList.value = resData?.data?.items ?? resData?.items ?? [];
-  } catch (error) {
-    notify("错误", "获取备份列表失败", "error");
+  } catch {
+    ElMessage.error("获取备份列表失败");
   }
-};
+}
 
-// 获取备份状态（调度器状态）
-const fetchBackupStatus = async () => {
+async function fetchBackupStats() {
   try {
-    const response = await request.get("/system/backup/schedule");
-    const resData = response.data?.data ?? response.data;
-    backupStatus.value = {
-      backup_count: backupList.value.length,
-      total_size: backupList.value.reduce(
-        (sum: number, b: any) => sum + (b.size ?? b.file_size ?? 0),
-        0,
-      ),
-      scheduler: { running: resData?.running ?? resData?.enabled ?? false },
+    const res = await request.get("/system/backup/stats");
+    const resData = res.data?.data ?? res.data;
+    backupStats.value = {
+      totalBackups: resData?.totalBackups ?? 0,
+      totalSize: resData?.totalSize ?? 0,
+      lastBackup: resData?.lastBackup ?? null,
+      fullBackups: resData?.fullBackups ?? 0,
+      incrementalBackups: resData?.incrementalBackups ?? 0,
+      scheduleEnabled: resData?.scheduleEnabled ?? false,
     };
-  } catch (error) {
-    logger.error("获取备份状态失败:", error);
+  } catch {
+    // 静默处理
   }
-};
+}
 
-// 创建备份
-const handleCreateBackup = () => {
-  createDialogVisible.value = true;
-};
-
-const confirmCreateBackup = async () => {
+async function refreshAll() {
   loading.value = true;
   try {
-    const response = await request.post("/system/backup", {
-      description: backupForm.value.description,
-      include_uploads: backupForm.value.include_uploads,
-    });
-
-    if (response.data.success !== false) {
-      notify("成功", "备份已创建成功", "success");
-      createDialogVisible.value = false;
-      await fetchBackupList();
-      await fetchBackupStatus();
-    }
-  } catch (error: any) {
-    notify("创建失败", error.response?.data?.detail || "创建备份失败", "error");
+    await Promise.all([fetchBackupList(), fetchBackupStats()]);
   } finally {
     loading.value = false;
   }
-};
+}
 
-// 删除备份（使用文件名作为路径参数，与后端 DELETE /system/backup/{filename} 对应）
-const handleDelete = async (filename: string) => {
+function handleCreateBackup() {
+  backupForm.value = {
+    description: "手动备份",
+    include_uploads: true,
+    password: "",
+  };
+  createDialogVisible.value = true;
+}
+
+async function confirmCreateBackup() {
+  creating.value = true;
   try {
-    await ElMessageBox.confirm("确定要删除此备份吗？", "警告", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning",
+    const res = await request.post("/system/backup", {
+      description: backupForm.value.description,
+      include_uploads: backupForm.value.include_uploads,
+      password: backupForm.value.password || null,
     });
-
-    const response = await request.delete(`/system/backup/${filename}`);
-    if (response.data.success !== false) {
-      notify("成功", "备份已删除", "success");
-      await fetchBackupList();
-      await fetchBackupStatus();
+    if (res.data?.success !== false) {
+      ElMessage.success("备份已创建");
+      createDialogVisible.value = false;
+      await refreshAll();
     }
-  } catch (error: any) {
-    if (error !== "cancel") {
-      notify("删除失败", "无法删除备份文件", "error");
-    }
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.detail || "创建备份失败");
+  } finally {
+    creating.value = false;
   }
-};
+}
 
-// 文件选择
-const handleFileChange = (file: { raw?: File }) => {
-  restoreFile.value = file.raw ?? null;
-};
-
-// 恢复备份
-const confirmRestore = async () => {
-  if (!restoreFile.value) {
-    notify("提示", "请先选择备份文件", "warning");
-    return;
-  }
-
-  loading.value = true;
+async function handleDelete(row: any) {
   try {
-    const formData = new FormData();
-    formData.append("backup_file", restoreFile.value);
-
-    const response = await request.post(
-      "/system/backup/upload-restore",
-      formData,
+    await ElMessageBox.confirm(
+      `确定要删除备份 "${row.file_name}" 吗？`,
+      "警告",
       {
-        headers: { "Content-Type": "multipart/form-data" },
+        type: "warning",
       },
     );
+    const res = await request.delete(`/system/backup/${row.file_name}`);
+    if (res.data?.success !== false) {
+      ElMessage.success("备份已删除");
+      await refreshAll();
+    }
+  } catch (e: any) {
+    if (e !== "cancel") {
+      ElMessage.error("删除失败");
+    }
+  }
+}
 
-    if (response.data.success) {
-      notify("恢复成功", "系统数据已恢复，即将跳转登录页", "success");
+function handleRestore(row: any) {
+  restoreTarget.value = row;
+  restoreForm.value.password = "";
+  restoreDialogVisible.value = true;
+}
+
+async function confirmRestore() {
+  if (!restoreTarget.value) return;
+  restoring.value = true;
+  try {
+    const res = await request.post("/system/backup/restore", {
+      filename: restoreTarget.value.file_name,
+      password: restoreForm.value.password || null,
+    });
+    if (res.data?.success !== false) {
+      ElMessage.success("系统恢复成功，请重新登录");
       restoreDialogVisible.value = false;
       setTimeout(() => {
         window.location.href = "/login";
       }, 2000);
     }
-  } catch (error: any) {
-    notify("恢复失败", error.response?.data?.detail || "恢复失败", "error");
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.detail || "恢复失败");
   } finally {
-    loading.value = false;
+    restoring.value = false;
   }
-};
+}
 
-// 格式化文件大小
-const formatSize = (bytes: number) => {
-  if (!bytes) return "0 B";
+function handleDownload(row: any) {
+  // 通过隐藏的 iframe 或链接下载
+  const link = document.createElement("a");
+  link.href = `/api/v1/system/backup/download/${encodeURIComponent(row.file_name)}`;
+  link.download = row.file_name;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function formatSize(bytes: number) {
+  if (!bytes || bytes === 0) return "0 B";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
-};
+}
 
-// 格式化时间
-const formatTime = (time: string | number | Date) => {
+function formatTime(time: string | number | Date | null) {
   if (!time) return "-";
-  return new Date(time).toLocaleString("zh-CN");
-};
+  try {
+    return new Date(time).toLocaleString("zh-CN");
+  } catch {
+    return "-";
+  }
+}
 
 onMounted(() => {
-  fetchBackupList();
-  fetchBackupStatus();
+  refreshAll();
 });
 </script>
 
@@ -290,13 +338,19 @@ onMounted(() => {
 .backup-management {
   padding: 20px;
 }
-
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
 .backup-status {
   margin-bottom: 20px;
 }

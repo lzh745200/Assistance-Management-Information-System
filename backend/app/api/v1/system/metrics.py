@@ -13,6 +13,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from app.core.database import engine
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -120,9 +121,19 @@ async def get_system_metrics(current_user=Depends(get_current_user)):
 
     # 数据库指标
     try:
-        pass
+        pool = engine.pool
+        metrics["database"] = {
+            "status": "connected",
+            "size": getattr(pool, 'size', lambda: 0)(),
+            "checkedin": getattr(pool, 'checkedin', lambda: 0)(),
+            "overflow": getattr(pool, 'overflow', lambda: 0)(),
+            "connections_in_use": (
+                getattr(pool, 'size', lambda: 0)() - getattr(pool, 'checkedin', lambda: 0)()
+                if hasattr(pool, 'size') and hasattr(pool, 'checkedin') else 0
+            ),
+        }
     except Exception:
-        metrics["database"] = {"status": "unavailable", "message": "监控模型不可用"}
+        metrics["database"] = {"status": "unavailable", "message": "数据库监控不可用"}
 
     return {
         "success": True,

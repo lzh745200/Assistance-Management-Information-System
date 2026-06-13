@@ -51,6 +51,23 @@ request.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * RESPONSE UNWRAP INTERCEPTOR
+ *
+ * Backend wraps most responses as: { code: 200, data: <payload>, message: "success" }
+ * This interceptor expands <payload> keys into the top-level response.data object
+ * so callers can access fields directly without `.data.data.xxx`.
+ *
+ * Behavior:
+ * - Object payload → keys copied to response.data (existing keys like code/message/data preserved)
+ * - Array payload  → set as response.data.items (if items not already present)
+ *
+ * IMPORTANT: This mutates response.data IN PLACE. Both raw axios callers (Pattern A:
+ * `import request from "./request"` → use `.data`) and auto-unwrapped callers (Pattern B:
+ * `import { get, post } from "./request"` → `.data` NOT needed) see the same expanded shape.
+ *
+ * @see apiRequest — auto-unwrapped access (returns res.data directly)
+ */
 request.interceptors.response.use(
   (response) => {
     const requestKey = _makeRequestKey(
@@ -158,6 +175,28 @@ export function _setCachedToken(t: string | null) {
 
 // ── 泛型核心请求函数 ──
 
+/**
+ * Generic request function with automatic response unwrapping.
+ *
+ * Unlike raw `request.get()` which returns `AxiosResponse<T>`,
+ * this function returns `T` directly (`res.data`), unwrapping one level.
+ *
+ * Combined with the response interceptor's in-place expansion,
+ * callers receive the backend's `data` payload directly.
+ *
+ * USAGE: Prefer `get<T>(url)` / `post<T>(url, data)` convenience wrappers.
+ *        DO NOT access `.data` on their return values — they are already unwrapped.
+ *
+ * @example
+ *   // Pattern B — auto-unwrapped via apiRequest()
+ *   const items = await get<Item[]>("/items");  // Item[], not AxiosResponse
+ *   items[0].name   // correct
+ *   items.data      // WRONG (double-unwrap)
+ *
+ *   // Pattern A — raw axios instance
+ *   const res = await request.get<Item[]>("/items");
+ *   res.data[0].name  // correct (.data needed on AxiosResponse)
+ */
 export async function apiRequest<T = any>(
   config: AxiosRequestConfig,
 ): Promise<T> {

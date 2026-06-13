@@ -12,11 +12,13 @@
 需求: 5.1, 5.2, 5.3, 5.4, 5.5, 6.2, 7.1
 """
 
+import logging
 from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -24,6 +26,8 @@ from app.core.security import get_current_user
 from app.services.message_service import MessageService
 from app.services.message_template_service import MessageTemplateService
 from app.services.notification_preference_service import NotificationPreferenceService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/messages", tags=["消息通知"])
 
@@ -361,12 +365,15 @@ async def get_recent_activities(
 
         return {"items": items, "total": len(items)}
 
-    except Exception as e:
-        # 表可能不存在或查询失败时返回空列表
-        import logging
-
-        logging.getLogger(__name__).warning(f"获取近期动态失败: {e}")
+    except OperationalError as e:
+        logger.warning("获取近期动态失败 (DB operational): %s", e)
         return {"items": [], "total": 0}
+    except ProgrammingError as e:
+        logger.warning("获取近期动态失败 (schema): %s", e)
+        return {"items": [], "total": 0}
+    except Exception as e:
+        logger.error("获取近期动态时发生未预期错误: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"获取近期动态失败: {type(e).__name__}")
 
 
 @router.get("/{message_id}", response_model=MessageResponse)

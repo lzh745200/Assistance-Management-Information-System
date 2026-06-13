@@ -13,6 +13,9 @@
         <el-button @click="pushSafe('/funds/budget')">
           <el-icon><Tickets /></el-icon>预算管理
         </el-button>
+        <el-button @click="handleDownloadTemplate">
+          <el-icon><Download /></el-icon>下载模板
+        </el-button>
         <el-button
           :loading="exporting"
           :disabled="exporting"
@@ -310,6 +313,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Plus, Download, Search, Tickets } from "@element-plus/icons-vue";
 import request from "@/api/request";
 import { fundApi } from "@/api/funds";
+import { downloadImportTemplate } from "@/api/import";
 
 const phaseLabels: Record<number, string> = {
   1: "论证立项",
@@ -472,6 +476,21 @@ async function handleDelete(row: any) {
     delete deleting.value[row.id];
   }
 }
+async function handleDownloadTemplate() {
+  try {
+    const blob = await downloadImportTemplate("fund");
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "经费导入模板.xlsx";
+    link.click();
+    window.URL.revokeObjectURL(url);
+    ElMessage.success("模板下载成功");
+  } catch {
+    ElMessage.error("模板下载失败");
+  }
+}
+
 async function handleExport() {
   if (exporting.value) return;
   exporting.value = true;

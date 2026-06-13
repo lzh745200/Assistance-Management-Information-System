@@ -71,25 +71,102 @@ export const MENU_CONFIG: MenuItem[] = [
     order: 7,
   },
   {
+    key: "todos",
+    label: "待办事项",
+    path: "/todos",
+    icon: "List",
+    order: 8,
+  },
+  {
     key: "rural-works",
     label: "乡村工作",
     path: "/rural-works",
     icon: "Sunny",
-    order: 8,
+    order: 9,
+  },
+  {
+    key: "system-security",
+    label: "系统安全",
+    icon: "Lock",
+    order: 9,
+    roles: ["admin", "super_admin"],
+    children: [
+      {
+        key: "zero-trust",
+        label: "零信任安全",
+        path: "/system/zero-trust",
+        icon: "Lock",
+      },
+      {
+        key: "user-permissions",
+        label: "用户权限管理",
+        path: "/system/user-permissions",
+        icon: "User",
+      },
+      {
+        key: "secrets",
+        label: "密钥管理",
+        path: "/system/secrets",
+        icon: "Key",
+      },
+      {
+        key: "data-tier",
+        label: "数据分级",
+        path: "/system/data-tier",
+        icon: "DataBoard",
+      },
+      {
+        key: "error-reports",
+        label: "错误报告",
+        path: "/system/error-reports",
+        icon: "Warning",
+      },
+      {
+        key: "tasks",
+        label: "后台任务",
+        path: "/system/tasks",
+        icon: "Clock",
+      },
+      {
+        key: "update-logs",
+        label: "更新日志",
+        path: "/system/update-logs",
+        icon: "Document",
+      },
+      {
+        key: "i18n",
+        label: "国际化",
+        path: "/system/i18n",
+        icon: "ChatLineSquare",
+      },
+      {
+        key: "environment",
+        label: "运行环境",
+        path: "/system/environment",
+        icon: "Monitor",
+      },
+    ],
   },
   {
     key: "approval",
     label: "审批管理",
     path: "/approval/pending",
     icon: "Stamp",
-    order: 9,
+    order: 10,
     roles: ["admin", "super_admin", "approval_leader", "manager"],
+  },
+  {
+    key: "help",
+    label: "帮助中心",
+    path: "/help",
+    icon: "QuestionFilled",
+    order: 11,
   },
   {
     key: "helpData",
     label: "帮扶数据管理",
     icon: "TrendCharts",
-    order: 10,
+    order: 12,
     roles: ["admin", "super_admin", "manager", "operator"],
     children: [
       {
@@ -109,6 +186,13 @@ export const MENU_CONFIG: MenuItem[] = [
         path: "/funds",
         roles: ["admin", "super_admin", "manager"],
       },
+      {
+        key: "validation-rules",
+        label: "校验规则",
+        path: "/data-verify/rules",
+        icon: "Checked",
+        roles: ["admin", "super_admin", "manager"],
+      },
       { key: "data-analysis", label: "数据统计分析", path: "/data-analysis" },
       {
         key: "report-templates",
@@ -122,13 +206,19 @@ export const MENU_CONFIG: MenuItem[] = [
         path: "/report-export",
         roles: ["admin", "super_admin", "manager"],
       },
+      {
+        key: "batch-operations",
+        label: "批量操作",
+        path: "/batch",
+        roles: ["admin", "super_admin", "manager"],
+      },
     ],
   },
   {
     key: "analytics",
     label: "数据分析",
     icon: "DataAnalysis",
-    order: 11,
+    order: 13,
     children: [
       {
         key: "analytics-dashboard",
@@ -141,13 +231,28 @@ export const MENU_CONFIG: MenuItem[] = [
         label: "工作分析",
         path: "/data-analysis/reports",
       },
+      {
+        key: "effectiveness-rankings",
+        label: "成效排名",
+        path: "/effectiveness/rankings",
+      },
+      {
+        key: "effectiveness-evaluate",
+        label: "成效评估",
+        path: "/effectiveness/evaluate",
+      },
+      {
+        key: "sentiment",
+        label: "舆情监测",
+        path: "/sentiment",
+      },
     ],
   },
   {
     key: "reportExport",
     label: "数据上报",
     icon: "Upload",
-    order: 12,
+    order: 14,
     children: [
       { key: "data-package-report", label: "数据上报", path: "/data-package" },
       {

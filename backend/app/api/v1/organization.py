@@ -305,7 +305,7 @@ async def get_subordinates(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取下级组织列表（占位：返回所有组织）"""
+    """获取下级组织列表"""
     try:
         query = db.query(Organization).filter(Organization.is_active == True)  # noqa: E712
         if not include_self:

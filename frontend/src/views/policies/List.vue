@@ -476,7 +476,8 @@ const handleImport = () => {
 // 下载导入模板
 const handleDownloadTemplate = async () => {
   try {
-    const blob = await downloadImportTemplate();
+    const res = await downloadImportTemplate();
+    const blob = res.data || res;
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -492,14 +493,15 @@ const handleDownloadTemplate = async () => {
 // 导出PDF
 const handleExportPDF = async () => {
   try {
-    const blob = await exportPoliciesPDF({
+    const resPdf = await exportPoliciesPDF({
       category: searchForm.category || undefined,
       organization_level: searchForm.organization_level || undefined,
       status: searchForm.status || undefined,
       search: searchForm.title || undefined,
     });
 
-    const url = window.URL.createObjectURL(blob);
+    const blobPdf = resPdf.data || resPdf;
+    const url = window.URL.createObjectURL(blobPdf);
     const link = document.createElement("a");
     link.href = url;
     link.download = `政策法规_${new Date().getTime()}.pdf`;
@@ -516,14 +518,15 @@ const handleExportPDF = async () => {
 // 导出WPS
 const handleExportWPS = async () => {
   try {
-    const blob = await exportPoliciesWPS({
+    const resWps = await exportPoliciesWPS({
       category: searchForm.category || undefined,
       organization_level: searchForm.organization_level || undefined,
       status: searchForm.status || undefined,
       search: searchForm.title || undefined,
     });
+    const blobWps = resWps.data || resWps;
 
-    const url = window.URL.createObjectURL(blob);
+    const url = window.URL.createObjectURL(blobWps);
     const link = document.createElement("a");
     link.href = url;
     link.download = `政策法规_${new Date().getTime()}.wps`;
