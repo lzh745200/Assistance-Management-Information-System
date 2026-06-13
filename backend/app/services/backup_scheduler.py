@@ -35,10 +35,10 @@ async def auto_backup_job():
                 return
 
             backup_service = BackupService(db)
-            backup = backup_service.create_backup(description="自动备份", include_uploads=True)
+            backup = backup_service.create_backup(description="自动备份", include_uploads=False)
             logger.info("自动备份完成: %s, 大小: %d 字节", backup.file_name, backup.file_size)
 
-            max_count = int(get_config("max_backup_count", "10"))
+            max_count = int(get_config("max_backup_count", "5"))
             deleted_count = backup_service.cleanup_old_backups(keep_count=max_count)
             if deleted_count > 0:
                 logger.info("清理了 %d 个旧备份", deleted_count)

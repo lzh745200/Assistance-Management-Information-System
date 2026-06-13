@@ -397,7 +397,7 @@ async function loadData() {
       },
     });
     tableData.value = (response as any)?.data?.items || (response as any)?.items;
-    (pagination as any)?.data?.total || (pagination as any)?.total = (response as any)?.data?.total || (response as any)?.total;
+    pagination.total = (response as any)?.data?.total || (response as any)?.total || tableData.value.length;
   } catch (error) {
     ElMessage.error("加载数据失败");
   } finally {
