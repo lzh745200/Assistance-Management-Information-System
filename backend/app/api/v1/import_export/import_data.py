@@ -185,26 +185,23 @@ async def import_entities(
         "supported_village",
         description="实体类型: supported_village, project, fund, school",
     ),
+    dry_run: bool = Query(False, description="仅校验不实际导入，返回错误行号+修正建议"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     通用实体导入
 
-    Requirements: 1.4, 1.6, 1.7, 1.10, 20.1
-
     - file: Excel文件，支持 .xlsx 和 .xls 格式
-    - mode: 导入模式
-      - incremental: 增量导入，跳过已存在的记录
-      - full: 全量覆盖，删除现有记录后导入
+    - mode: 导入模式（incremental / full）
     - entity_type: 实体类型（supported_village, project, fund, school）
-    - 单次最多导入1000条记录
-    - 返回导入结果，包含成功 / 失败 / 跳过数量和详细错误信息
+    - dry_run: 仅校验不导入，返回错误行号 + 修正建议
     """
     return await _import_entities(
         file=file,
         mode=mode,
         entity_type=entity_type,
+        dry_run=dry_run,
         current_user=current_user,
         db=db,
     )
@@ -216,8 +213,9 @@ async def _import_entities(
     entity_type: str,
     current_user: User,
     db: Session,
+    dry_run: bool = False,
 ) -> ImportResultResponse:
-    """通用实体导入内部处理"""
+    """通用实体导入内部处理。dry_run=True 仅校验不写入数据库。"""
     try:
         import_mode = ImportMode(mode)
     except ValueError:
@@ -237,14 +235,30 @@ async def _import_entities(
 
     importer = ExcelImporterService(db)
     file_bytes = await file.read()
-    result = await importer.import_data_async(
-        file_bytes=file_bytes,
-        filename=file.filename or "",
-        content_type=file.content_type or "",
-        user_id=current_user.id,
-        mode=import_mode,
-        entity_type=entity_type,
-    )
+
+    if dry_run:
+        # 仅校验模式：在 SAVEPOINT 中执行导入后回滚，获取验证结果不写入数据库
+        db.begin_nested()
+        try:
+            result = await importer.import_data_async(
+                file_bytes=file_bytes,
+                filename=file.filename or "",
+                content_type=file.content_type or "",
+                user_id=current_user.id,
+                mode=import_mode,
+                entity_type=entity_type,
+            )
+        finally:
+            db.rollback()
+    else:
+        result = await importer.import_data_async(
+            file_bytes=file_bytes,
+            filename=file.filename or "",
+            content_type=file.content_type or "",
+            user_id=current_user.id,
+            mode=import_mode,
+            entity_type=entity_type,
+        )
 
     return ImportResultResponse(**result.to_dict())
 
