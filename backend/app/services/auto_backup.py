@@ -9,9 +9,9 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_INTERVAL_MINUTES = 120  # 默认 2 小时
-DEFAULT_RETENTION_DAYS = 30    # 保留 30 天
-DEFAULT_KEEP_MIN = 5           # 最少保留 5 个备份
+DEFAULT_INTERVAL_MINUTES = 1440  # 默认 24 小时（每日一次）
+DEFAULT_RETENTION_DAYS = 7      # 保留 7 天
+DEFAULT_KEEP_MIN = 3            # 最少保留 3 个备份
 
 
 class BackupScheduler:
@@ -37,19 +37,21 @@ class BackupScheduler:
         return elapsed >= self.interval * 60
 
     def run_backup(self) -> Optional[str]:
-        """执行一次备份，返回备份文件路径."""
+        """执行一次备份（压缩格式），返回备份文件路径."""
         if not os.path.exists(self.source_db_path):
             logger.warning("源数据库不存在: %s", self.source_db_path)
             return None
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"backup_{timestamp}.db"
+        filename = f"backup_{timestamp}.zip"
         dest = os.path.join(self.backup_dir, filename)
 
         try:
-            shutil.copy2(self.source_db_path, dest)
+            import zipfile
+            with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as zf:
+                zf.write(self.source_db_path, "rural_revitalization.db")
             self._last_backup = time.time()
-            logger.info("备份完成: %s", dest)
+            logger.info("备份完成: %s (%d bytes)", dest, os.path.getsize(dest))
 
             # 清理过期备份
             cleanup_old_backups(

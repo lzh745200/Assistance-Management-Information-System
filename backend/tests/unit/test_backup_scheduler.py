@@ -63,16 +63,16 @@ class TestAutoBackupJob:
                     if key == "auto_backup":
                         return "true"
                     if key == "max_backup_count":
-                        return "10"
+                        return "5"
                     return default
                 mock_config.side_effect = config_side_effect
                 with patch("app.services.backup_scheduler.BackupService", return_value=mock_backup_service):
                     from app.services.backup_scheduler import auto_backup_job
                     await auto_backup_job()
                     mock_backup_service.create_backup.assert_called_once_with(
-                        description="自动备份", include_uploads=True
+                        description="自动备份", include_uploads=False
                     )
-                    mock_backup_service.cleanup_old_backups.assert_called_once_with(keep_count=10)
+                    mock_backup_service.cleanup_old_backups.assert_called_once_with(keep_count=5)
 
     @pytest.mark.asyncio
     async def test_auto_backup_no_cleanup(self, mock_db_context, mock_db):
@@ -89,13 +89,13 @@ class TestAutoBackupJob:
                     if key == "auto_backup":
                         return "true"
                     if key == "max_backup_count":
-                        return "10"
+                        return "5"
                     return default
                 mock_config.side_effect = config_side_effect
                 with patch("app.services.backup_scheduler.BackupService", return_value=mock_backup_service):
                     from app.services.backup_scheduler import auto_backup_job
                     await auto_backup_job()
-                    mock_backup_service.cleanup_old_backups.assert_called_once_with(keep_count=10)
+                    mock_backup_service.cleanup_old_backups.assert_called_once_with(keep_count=5)
 
     @pytest.mark.asyncio
     async def test_auto_backup_exception(self, mock_db_context, mock_db):

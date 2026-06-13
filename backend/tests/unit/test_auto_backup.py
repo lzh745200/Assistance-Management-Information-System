@@ -13,7 +13,7 @@ class TestBackupScheduler:
     def test_init_default(self):
         from app.services.auto_backup import BackupScheduler
         s = BackupScheduler()
-        assert s.interval == 120
+        assert s.interval == 1440
         assert s.backup_dir == "./backups"
         assert s.source_db_path == "./data/rural_revitalization.db"
         assert s._last_backup == 0.0
@@ -82,14 +82,15 @@ class TestBackupScheduler:
         result = s.run_backup()
         assert result is not None
         assert os.path.exists(result)
+        assert result.endswith(".zip")
         assert s._last_backup > 0.0
         assert "backup_" in os.path.basename(result)
 
-    @patch("app.services.auto_backup.shutil.copy2")
+    @patch("zipfile.ZipFile")
     @patch("app.services.auto_backup.os.path.exists", return_value=True)
-    def test_run_backup_copy_fails(self, mock_exists, mock_copy2, tmp_path):
+    def test_run_backup_copy_fails(self, mock_exists, mock_zipfile, tmp_path):
         from app.services.auto_backup import BackupScheduler
-        mock_copy2.side_effect = PermissionError("access denied")
+        mock_zipfile.side_effect = PermissionError("access denied")
         s = BackupScheduler(backup_dir=str(tmp_path))
         result = s.run_backup()
         assert result is None
