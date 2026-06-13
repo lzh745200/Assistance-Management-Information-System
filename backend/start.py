@@ -408,10 +408,7 @@ def main():
 
     # PyInstaller 环境下必须使用直接引用的 app 对象，
     # 字符串 "app.main:app" 依赖 importlib 动态导入，在冻结环境中会失败。
-    print("  加载模块...", flush=True)
-    import time as _time; _t0 = _time.time()
     from app.main import app  # noqa: E402
-    print(f"  模块加载完成 ({_time.time() - _t0:.1f}s)", flush=True)
 
     # ── 启动前静态资源完整性校验 ──
     print("  检查静态资源...", flush=True)

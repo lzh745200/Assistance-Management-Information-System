@@ -50,6 +50,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 import {
   List,
   DataAnalysis,
@@ -83,6 +84,14 @@ async function saveEdit(id: string) {
   } catch {
     ElMessage.error("保存失败，请重试");
   }
+}
+
+async function deleteActivity(id: string) {
+  try {
+    await request.delete(`/dashboard/recent-activities/${id}`);
+    activities.value = activities.value.filter((a) => a.id !== id);
+  } catch {
+    ElMessage.error("删除失败，请重试");
   }
 }
 
