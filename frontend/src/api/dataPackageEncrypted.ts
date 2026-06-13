@@ -125,5 +125,5 @@ export function confirmImport(
  * 下载数据包
  */
 export function downloadPackage(packageId: number): string {
-  return `/api/v1/data-packages/${packageId}/download`;
+  return `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/data-packages/${packageId}/download`;
 }

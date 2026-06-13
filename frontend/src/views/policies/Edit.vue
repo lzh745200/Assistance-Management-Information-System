@@ -234,7 +234,7 @@ const formData = reactive({
 });
 
 const fileList = ref<UploadFile[]>([]);
-const uploadAction = ref("/api/v1/files/upload");
+const uploadAction = ref(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/files/upload`);
 
 // 层级选项（根据分类动态变化）
 const levelOptions = computed(() => {

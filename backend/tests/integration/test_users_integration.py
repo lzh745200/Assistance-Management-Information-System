@@ -12,7 +12,7 @@ class TestUserProfile:
         user, _ = admin_user
         resp = client.get("/api/v1/users/me", headers=admin_headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["username"] == user.username
         assert data["role"] == "admin"
         assert data["is_superuser"] is True
@@ -22,7 +22,7 @@ class TestUserProfile:
         user, _ = normal_user
         resp = client.get("/api/v1/users/me", headers=user_headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["username"] == user.username
         assert data["role"] == "user"
 
@@ -50,7 +50,7 @@ class TestUserProfile:
 
         # 验证更新生效
         resp2 = client.get("/api/v1/users/me", headers=admin_headers)
-        data = resp2.json()
+        data = resp2.json()["data"]
         assert data["name"] == test_full_name
         assert data["phone"] == test_phone
         assert data["department"] == test_dept

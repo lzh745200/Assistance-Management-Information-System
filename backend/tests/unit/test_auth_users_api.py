@@ -110,7 +110,7 @@ class TestGetCurrentUserProfile:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}/me")
             assert response.status_code == 200
-            assert response.json()["roleName"] == "超级管理员"
+            assert response.json()["data"]["roleName"] == "超级管理员"
         _clear_overrides(client, get_db, get_current_user)
 
     def test_me_not_found(self, client):
@@ -134,7 +134,7 @@ class TestGetCurrentUserProfile:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}/me")
             assert response.status_code == 200
-            assert response.json()["roleName"] == "操作员"
+            assert response.json()["data"]["roleName"] == "操作员"
         _clear_overrides(client, get_db, get_current_user)
 
     def test_me_role_display_unknown(self, client):
@@ -148,7 +148,7 @@ class TestGetCurrentUserProfile:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}/me")
             assert response.status_code == 200
-            assert response.json()["roleName"] == "普通用户"
+            assert response.json()["data"]["roleName"] == "普通用户"
         _clear_overrides(client, get_db, get_current_user)
 
 

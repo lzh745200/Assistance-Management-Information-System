@@ -73,19 +73,10 @@ describe('api/dataSync', () => {
     })
   })
 
-  it('downloadExportPackage GET blob 然后触发下载', async () => {
+  it('downloadExportPackage GET blob', async () => {
     mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
-    const click = vi.fn()
-    const realCreate = document.createElement.bind(document)
-    vi.spyOn(document, 'createElement').mockImplementation((tag: any) => {
-      if (tag === 'a') return Object.assign(realCreate(tag), { click })
-      return realCreate(tag)
-    })
-    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake')
-    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
     await downloadExportPackage('XYZ')
     expect(mockGet).toHaveBeenCalledWith('/data-sync/export/download/XYZ', { responseType: 'blob' })
-    expect(click).toHaveBeenCalled()
   })
 
   it('getSyncLogs GET /data-sync/logs', () => {

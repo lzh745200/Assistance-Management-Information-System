@@ -305,7 +305,7 @@ async function confirmRestore() {
 function handleDownload(row: any) {
   // 通过隐藏的 iframe 或链接下载
   const link = document.createElement("a");
-  link.href = `/api/v1/system/backup/download/${encodeURIComponent(row.file_name)}`;
+  link.href = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/system/backup/download/${encodeURIComponent(row.file_name)}`;
   link.download = row.file_name;
   document.body.appendChild(link);
   link.click();
