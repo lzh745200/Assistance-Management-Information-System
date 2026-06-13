@@ -527,6 +527,91 @@ async def save_yearly_section(
     return {"message": f"保存成功: {section}"}
 
 
+@router.post("/{village_id}/yearly/{year}/validate")
+async def validate_yearly_data(
+    village_id: int,
+    year: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """校验帮扶村年度数据完整性。
+
+    检查项:
+    - 8 大板块必填字段
+    - 数值合理性（人均收入≥0）
+    - 同比变动超 ±50% 预警
+    返回错误列表 + 修正建议。
+    """
+    _get_village_or_404(db, village_id)
+    errors = []
+    warnings = []
+
+    for section, model in _SECTION_MODEL.items():
+        record = db.query(model).filter(
+            model.supported_village_id == village_id,
+            model.year == year,
+        ).first()
+
+        if not record:
+            errors.append({
+                "section": section,
+                "field": None,
+                "message": f"板块 [{section}] 未录入数据",
+                "suggestion": "请先填写该板块数据",
+            })
+            continue
+
+        # 通用数值合理性检查
+        for col in model.__table__.columns:
+            val = getattr(record, col.name, None)
+            if isinstance(val, (int, float)) and val < 0:
+                errors.append({
+                    "section": section,
+                    "field": col.name,
+                    "message": f"字段 {col.name} 值为 {val}，不能为负数",
+                    "suggestion": "请检查原始数据并修正",
+                })
+
+    # 同比变动预警（与前一年对比）
+    if year > 0:
+        prev_year_data = {}
+        for section, model in _SECTION_MODEL.items():
+            prev = db.query(model).filter(
+                model.supported_village_id == village_id,
+                model.year == year - 1,
+            ).first()
+            if prev:
+                for col in model.__table__.columns:
+                    prev_year_data[f"{section}.{col.name}"] = getattr(prev, col.name, None)
+
+        if prev_year_data:
+            for section, model in _SECTION_MODEL.items():
+                record = db.query(model).filter(
+                    model.supported_village_id == village_id,
+                    model.year == year,
+                ).first()
+                if not record:
+                    continue
+                for col in model.__table__.columns:
+                    cur = getattr(record, col.name, None)
+                    prev_val = prev_year_data.get(f"{section}.{col.name}")
+                    if isinstance(cur, (int, float)) and isinstance(prev_val, (int, float)) and prev_val != 0:
+                        change_pct = (cur - prev_val) / abs(prev_val) * 100
+                        if abs(change_pct) > 50:
+                            warnings.append({
+                                "section": section,
+                                "field": col.name,
+                                "message": f"同比变动 {change_pct:+.1f}%（{prev_val} → {cur}），超过 ±50% 阈值",
+                                "suggestion": "请核实数据是否准确，如无误可忽略此预警",
+                            })
+
+    return {
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
 # ── 区块附件管理 ──
 
 

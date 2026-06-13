@@ -74,6 +74,9 @@ class SystemConfigService:
         "package_max_size_mb": {"value": "100", "description": "数据包最大大小（MB）"},
         "last_backup_time": {"value": "", "description": "最后备份时间"},
         "system_version": {"value": settings.PROJECT_VERSION, "description": "系统版本"},
+        "anomaly_zscore_threshold": {"value": "3.0", "description": "异常检测 Z-Score 阈值"},
+        "anomaly_overspend_threshold_pct": {"value": "20", "description": "超预算检测阈值（百分比）"},
+        "anomaly_detection_enabled": {"value": "true", "description": "是否启用异常检测"},
     }
 
     def __init__(self, db: Optional[Session] = None):
