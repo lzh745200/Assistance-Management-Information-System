@@ -94,3 +94,18 @@ export async function updateMarkerCoordinates(
     longitude,
   });
 }
+
+export async function getMapConfig(): Promise<Record<string, any>> {
+  return get(BASE_URL + "/config");
+}
+
+export async function getDistances(params?: {
+  from_id?: number;
+  to_id?: number;
+}): Promise<any> {
+  return get(BASE_URL + "/distances", params);
+}
+
+export async function getTileInfo(): Promise<Record<string, any>> {
+  return get(BASE_URL + "/tile-info");
+}

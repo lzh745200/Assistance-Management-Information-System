@@ -329,8 +329,20 @@ def _load_token_blacklist():
 
 def _init_database_tables():
     """确保所有数据库表已创建，并补全已有表中缺失的列"""
-    # 导入所有模型确保表定义已注册
+    # 导入所有模型确保表定义已注册。
+    # import app.models 只加载 __init__.py（懒加载入口），不会注册具体模型表；
+    # 必须通过 __getattr__ 触发所有模型类的实际导入，否则 _migrate_missing_columns
+    # 只能看到已被路由导入的模型，导致其余表的缺失列检测遗漏。
     import app.models  # noqa: F401
+    _missing_models = []
+    for _name in app.models.__all__:
+        try:
+            getattr(app.models, _name)
+        except Exception as _e:
+            _missing_models.append(f"{_name}({_e})")
+    if _missing_models:
+        logger.warning("部分模型导入失败: %s", ", ".join(_missing_models))
+
     from app.core.database import engine
     from app.models.base import Base as ModelBase
 

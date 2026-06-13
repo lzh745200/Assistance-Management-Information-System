@@ -4,59 +4,50 @@
 import request from "./request";
 
 export interface BackupItem {
-  id: number;
   filename: string;
+  size: number;
   file_size: number;
-  status: string;
   created_at: string;
-  type?: string;
+  id?: string | number;
 }
 
 export interface BackupStats {
   total_backups: number;
   total_size: number;
-  last_backup_time?: string;
   auto_backup_enabled: boolean;
+  totalBackups?: number;
+  lastBackup?: string;
+  totalSize?: number;
 }
 
-const BASE = "/system/backup";
+const BASE = "/system";
 
 export async function getBackupList(params?: {
   page?: number;
   page_size?: number;
 }) {
-  const res = await request.get(BASE, { params });
+  const res = await request.get(`${BASE}/backups`, { params });
   return res.data;
 }
 
 export async function createBackup(type?: string) {
-  const res = await request.post(BASE, { type });
+  const res = await request.post(`${BASE}/backup`, { type });
   return res.data;
 }
 
-export async function restoreBackup(id: number) {
-  const res = await request.post(`${BASE}/${id}/restore`);
+export async function restoreBackup(filename: string) {
+  const res = await request.post(`${BASE}/restore`, null, {
+    params: { filename },
+  });
   return res.data;
 }
 
-export async function deleteBackup(id: number) {
-  const res = await request.delete(`${BASE}/${id}`);
-  return res.data;
-}
-
-export async function verifyBackup(id: number) {
-  const res = await request.post(`${BASE}/${id}/verify`);
+export async function deleteBackup(filename: string) {
+  const res = await request.delete(`${BASE}/backups/${filename}`);
   return res.data;
 }
 
 export async function getBackupStats(): Promise<BackupStats> {
-  const res = await request.get(`${BASE}/stats`);
-  return res.data;
-}
-
-export async function cleanupOldBackups(retentionDays?: number) {
-  const res = await request.delete(`${BASE}/cleanup`, {
-    params: { retention_days: retentionDays || 30 },
-  });
+  const res = await request.get(`${BASE}/backup/stats`);
   return res.data;
 }

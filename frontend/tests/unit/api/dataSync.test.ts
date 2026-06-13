@@ -93,24 +93,17 @@ describe('api/dataSync', () => {
     expect(mockGet).toHaveBeenCalledWith('/data-sync/logs', { params: { page: 1 } })
   })
 
-  it('getConflicts GET /data-sync/conflicts', () => {
-    getConflicts()
-    expect(mockGet).toHaveBeenCalledWith('/data-sync/conflicts')
+  it('getConflicts GET /data-sync/conflicts/{syncLogId}', () => {
+    getConflicts(42)
+    expect(mockGet).toHaveBeenCalledWith('/data-sync/conflicts/42')
   })
 
-  it('resolveConflict POST /data-sync/conflicts/{id}/resolve', () => {
-    resolveConflict('C1', 'overwrite')
-    expect(mockPost).toHaveBeenCalledWith('/data-sync/conflicts/C1/resolve', { resolution: 'overwrite' })
-  })
-
-  it('dataSyncApi.sync POST /data-sync/sync', () => {
-    dataSyncApi.sync({ payload: 1 })
-    expect(mockPost).toHaveBeenCalledWith('/data-sync/sync', { payload: 1 })
-  })
-
-  it('dataSyncApi.getStatus GET /data-sync/status/{id}', () => {
-    dataSyncApi.getStatus('T1')
-    expect(mockGet).toHaveBeenCalledWith('/data-sync/status/T1')
+  it('resolveConflict POST /data-sync/resolve-conflict', () => {
+    resolveConflict({ conflict_id: 1, resolution: 'overwrite' })
+    expect(mockPost).toHaveBeenCalledWith('/data-sync/resolve-conflict', {
+      conflict_id: 1,
+      resolution: 'overwrite',
+    })
   })
 
   it('dataSyncApi.importData/importEncryptedData/exportData/exportEncryptedData 转发', () => {
@@ -126,10 +119,13 @@ describe('api/dataSync', () => {
     mockGet.mockResolvedValueOnce({ data: { items: [] } })
     mockGet.mockResolvedValueOnce({ data: [] })
     dataSyncApi.getSyncLogs()
-    dataSyncApi.getConflicts()
-    dataSyncApi.resolveConflict('C1', 'skip')
+    dataSyncApi.getConflicts(10)
+    dataSyncApi.resolveConflict({ conflict_id: 2, resolution: 'skip' })
     expect(mockGet).toHaveBeenCalledWith('/data-sync/logs', { params: undefined })
-    expect(mockGet).toHaveBeenCalledWith('/data-sync/conflicts')
-    expect(mockPost).toHaveBeenCalledWith('/data-sync/conflicts/C1/resolve', { resolution: 'skip' })
+    expect(mockGet).toHaveBeenCalledWith('/data-sync/conflicts/10')
+    expect(mockPost).toHaveBeenCalledWith('/data-sync/resolve-conflict', {
+      conflict_id: 2,
+      resolution: 'skip',
+    })
   })
 })

@@ -29,9 +29,9 @@ describe('api/rbac', () => {
     expect(mockGet).toHaveBeenCalledWith('/rbac/permissions')
   })
 
-  it('assignRole 调用 POST /rbac/assign', () => {
+  it('assignRole 调用 POST /rbac/assign/role', () => {
     rbacApi.assignRole(1, 2)
-    expect(mockPost).toHaveBeenCalledWith('/rbac/assign', { userId: 1, roleId: 2 })
+    expect(mockPost).toHaveBeenCalledWith('/rbac/assign/role', { user_id: 1, role_id: 2 })
   })
 })
 

@@ -266,6 +266,41 @@ export async function getApprovalHistory(params?: {
 // ==================== 单机版优化 API ====================
 
 /**
+ * 获取审批概览
+ */
+export async function getOverview(): Promise<{
+  pending_count: number;
+  approved_count: number;
+  rejected_count: number;
+  total_count: number;
+}> {
+  const response = await get<any>("/approval");
+  return response;
+}
+
+/**
+ * 发送审批提醒
+ */
+export async function remindTask(taskId: number): Promise<{ message: string }> {
+  const response = await post<any>(`/approval/tasks/${taskId}/remind`, {});
+  return response;
+}
+
+/**
+ * 重新提交审批
+ */
+export async function resubmitTask(
+  taskId: number,
+  data?: Record<string, any>,
+): Promise<{ task_id: number; status: string }> {
+  const response = await post<any>(
+    `/approval/tasks/${taskId}/resubmit`,
+    data || {},
+  );
+  return response;
+}
+
+/**
  * 单机版快速审批单个任务（跳过审批人校验）
  */
 export async function autoApproveSingleTask(

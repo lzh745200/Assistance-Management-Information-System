@@ -49,8 +49,8 @@ export interface Fund {
 export interface FundListParams {
   page?: number;
   page_size?: number;
-  search?: string;
-  type?: string;
+  keyword?: string;
+  fund_type?: string;
   status?: string;
 }
 
@@ -177,9 +177,10 @@ export const fundApi = {
 
   // ========== 附件 ==========
   async listAttachments(fundId: number) {
-    const response = await request.get(`${FUNDS_BASE}/${fundId}/attachments`);
-    const d = response.data;
-    return (d.data || d) as { items: unknown[]; total: number };
+    const res = await request.get(`${FUNDS_BASE}/${fundId}/attachments`);
+    const body: any = res.data;
+    const items = Array.isArray(body) ? body : (body?.items || body?.data || []);
+    return { items, total: items.length } as { items: unknown[]; total: number };
   },
   async deleteAttachment(attachmentId: number) {
     const response = await request.delete(
@@ -194,11 +195,32 @@ export const fundApi = {
     return `/api/v1${FUNDS_BASE}/attachments/${attachmentId}/download`;
   },
 
+  // ========== 经费状态/字段/操作历史 ==========
+  async getStatusHistory(fundId: number) {
+    const response = await request.get(
+      `${FUNDS_BASE}/${fundId}/history/status`,
+    );
+    return response.data;
+  },
+  async getFieldHistory(fundId: number) {
+    const response = await request.get(
+      `${FUNDS_BASE}/${fundId}/history/fields`,
+    );
+    return response.data;
+  },
+  async getOperationHistory(fundId: number) {
+    const response = await request.get(
+      `${FUNDS_BASE}/${fundId}/history/operations`,
+    );
+    return response.data;
+  },
+
   // ========== 预算 ==========
   async listBudgets(year?: number) {
-    const response = await request.get(`${BUDGETS_BASE}`, { params: { year } });
-    const d = response.data;
-    return (d.data || d) as { items: unknown[]; total: number };
+    const res = await request.get(`${BUDGETS_BASE}`, { params: { year } });
+    const body: any = res.data;
+    const items = Array.isArray(body) ? body : (body?.items || body?.data || []);
+    return { items, total: items.length } as { items: unknown[]; total: number };
   },
   async createBudget(data: {
     year: number;
@@ -227,6 +249,39 @@ export const fundApi = {
   },
   async deleteBudget(budgetId: number) {
     const response = await request.delete(`${BUDGETS_BASE}/${budgetId}`);
+    return response.data;
+  },
+
+  // ========== 预算告警与汇总 ==========
+  async getBudgetAlerts() {
+    const response = await request.get(`${BUDGETS_BASE}/alerts`);
+    return response.data;
+  },
+  async getBudgetSummary() {
+    const response = await request.get(`${BUDGETS_BASE}/summary`);
+    return response.data;
+  },
+
+  // ========== 预算交易记录 ==========
+  async listTransactions(budgetId: number) {
+    const res = await request.get(`${BUDGETS_BASE}/transactions`, {
+      params: { budget_id: budgetId },
+    });
+    const body: any = res.data;
+    const items = Array.isArray(body) ? body : (body?.items || body?.data || []);
+    return { items, total: items.length } as { items: unknown[]; total: number };
+  },
+  async createTransaction(budgetId: number, data: Record<string, any>) {
+    const response = await request.post(`${BUDGETS_BASE}/transactions`, {
+      ...data,
+      budget_id: budgetId,
+    });
+    return response.data;
+  },
+  async deleteTransaction(transactionId: number) {
+    const response = await request.delete(
+      `${BUDGETS_BASE}/transactions/${transactionId}`,
+    );
     return response.data;
   },
 };

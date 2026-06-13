@@ -179,10 +179,10 @@ describe('api/export', () => {
     expect(mockGet).toHaveBeenCalledWith('/async-export/status/T1')
   })
 
-  it('getExportHistory GET /async-export/history', async () => {
+  it('getExportHistory GET /async-export/tasks', async () => {
     mockGet.mockResolvedValueOnce({ data: { items: [] } })
     await getExportHistory({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/async-export/history', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/async-export/tasks', { params: { page: 1 } })
   })
 
   it('downloadExportFile GET blob', async () => {
@@ -192,16 +192,22 @@ describe('api/export', () => {
     expect(r).toBeInstanceOf(Blob)
   })
 
-  it('exportReportWord GET /export/report/{id}/word blob', async () => {
+  it('exportReportWord GET /export/report-word with report_type', async () => {
     mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
-    await exportReportWord(1)
-    expect(mockGet).toHaveBeenCalledWith('/export/report/1/word', { responseType: 'blob' })
+    await exportReportWord('summary', 2026)
+    expect(mockGet).toHaveBeenCalledWith('/export/report-word', {
+      params: { report_type: 'summary', year: 2026 },
+      responseType: 'blob',
+    })
   })
 
-  it('exportReportPdf GET /export/report/{id}/pdf blob', async () => {
+  it('exportReportPdf GET /export/report-pdf with report_type', async () => {
     mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
-    await exportReportPdf(1)
-    expect(mockGet).toHaveBeenCalledWith('/export/report/1/pdf', { responseType: 'blob' })
+    await exportReportPdf('fund_detail', 2025)
+    expect(mockGet).toHaveBeenCalledWith('/export/report-pdf', {
+      params: { report_type: 'fund_detail', year: 2025 },
+      responseType: 'blob',
+    })
   })
 
   describe('formatExportStatus', () => {

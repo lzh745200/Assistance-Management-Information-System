@@ -611,7 +611,16 @@ onMounted(() => {
 .title {
   font-size: 16px;
   font-weight: bold;
-  color: #303133;
+  color: #ffffff;
+}
+
+:deep(.el-dialog__title) {
+  color: #ffffff;
+}
+
+:deep(.el-table th.el-table__cell) {
+  color: #ffffff;
+  background-color: transparent;
 }
 
 .pagination {

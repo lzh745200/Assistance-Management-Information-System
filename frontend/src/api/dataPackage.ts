@@ -145,6 +145,22 @@ export async function getPackageHistory(
 }
 
 /**
+ * 一键报告
+ */
+export async function oneClickReport(data: Record<string, any>): Promise<any> {
+  const response = await request.post(`${BASE_URL}/one-click-report`, data);
+  return response.data;
+}
+
+/**
+ * 预览导出数据
+ */
+export async function previewExport(data: Record<string, any>): Promise<any> {
+  const response = await request.post(`${BASE_URL}/preview`, data);
+  return response.data;
+}
+
+/**
  * 获取下载URL
  */
 export function getDownloadUrl(id: number): string {

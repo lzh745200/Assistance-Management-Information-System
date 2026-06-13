@@ -145,3 +145,69 @@ export async function getSummaryStatistics(params?: {
   });
   return response;
 }
+
+// ==================== 数据分析核心端点 (/analytics/*) ====================
+
+const ANALYTICS_BASE = "/analytics";
+
+/** 获取仪表盘数据 */
+export async function getDashboard(dateRange?: string, filters?: string): Promise<any> {
+  return get(`${ANALYTICS_BASE}/dashboard`, { date_range: dateRange, filters });
+}
+
+/** 获取帮扶村分析数据 */
+export async function getVillageAnalysis(): Promise<any> {
+  return get(`${ANALYTICS_BASE}/village-analysis`);
+}
+
+/** 获取资金趋势分析 */
+export async function getFundingTrends(years?: number): Promise<any> {
+  return get(`${ANALYTICS_BASE}/funding-trends`, { years: years ?? 5 });
+}
+
+/** 获取绩效指标数据 */
+export async function getPerformanceMetrics(): Promise<any> {
+  return get(`${ANALYTICS_BASE}/performance-metrics`);
+}
+
+/** 获取对比分析数据 */
+export async function getComparisonAnalysis(data: {
+  province?: string;
+  compare_type?: string;
+  target_value?: string;
+}): Promise<any> {
+  return post(`${ANALYTICS_BASE}/comparison`, data);
+}
+
+/** 生成数据分析报表 */
+export async function generateReport(data: {
+  report_type?: string;
+  start_date?: string;
+  end_date?: string;
+}): Promise<any> {
+  return post(`${ANALYTICS_BASE}/generate-report`, data);
+}
+
+/** 导出分析数据 */
+export async function exportData(data: {
+  report_type?: string;
+  start_date?: string;
+  end_date?: string;
+}): Promise<any> {
+  return post(`${ANALYTICS_BASE}/export`, data);
+}
+
+/** 获取实时统计数据 */
+export async function getRealtimeStats(): Promise<any> {
+  return get(`${ANALYTICS_BASE}/realtime-stats`);
+}
+
+/** 获取KPI汇总数据 */
+export async function getKpiSummary(period?: string): Promise<any> {
+  return get(`${ANALYTICS_BASE}/kpi-summary`, { period: period ?? "month" });
+}
+
+/** 获取分析服务健康状态 */
+export async function getAnalyticsHealth(): Promise<any> {
+  return get(`${ANALYTICS_BASE}/health`);
+}

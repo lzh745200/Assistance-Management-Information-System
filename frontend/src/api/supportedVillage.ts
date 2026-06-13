@@ -69,6 +69,8 @@ export const copyYearData = (
   fromYear: number,
   toYear: number,
 ) => post(`/supported-villages/${villageId}/yearly/copy`, { fromYear, toYear });
+export const validateYearlyData = (villageId: number, year: number) =>
+  post(`/supported-villages/${villageId}/yearly/${year}/validate`);
 
 export const saveYearlySectionData = (
   villageId: number,
@@ -104,9 +106,10 @@ export const getSectionAttachments = (villageId: number, section: string) =>
   get(`/supported-villages/${villageId}/sections/${section}/attachments`);
 export const saveSectionData = (
   villageId: number,
+  year: number,
   section: string,
   data: any,
-) => post(`/supported-villages/${villageId}/sections/${section}`, data);
+) => post(`/supported-villages/${villageId}/yearly/${year}/${section}`, data);
 export const saveCommitteeData = (villageId: number, data: any) =>
   post(`/supported-villages/${villageId}/committee`, data);
 export const uploadSectionAttachment = (
@@ -165,3 +168,9 @@ export const importAllSectionsData = (villageId: number, file: File) => {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
+
+// ── Export modules / formats / preview ──
+export const getExportModules = () => get("/supported-villages/export/modules");
+export const getExportFormats = () => get("/supported-villages/export/formats");
+export const previewExport = (params?: any) =>
+  get("/supported-villages/export/preview", params);

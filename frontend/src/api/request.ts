@@ -171,8 +171,17 @@ export async function get<T = any>(url: string, params?: any): Promise<T> {
   return apiRequest<T>({ method: "GET", url, params });
 }
 
-export async function post<T = any>(url: string, data?: any): Promise<T> {
-  return apiRequest<T>({ method: "POST", url, data });
+export async function post<T = any>(url: string, data?: any, extra?: AxiosRequestConfig): Promise<T> {
+  const config: AxiosRequestConfig = { method: "POST", url, data, ...(extra || {}) };
+  if (data instanceof FormData && config.headers) {
+    // 移除 Content-Type 让浏览器自动设置 multipart boundary
+    // 保留其他自定义 headers（如 Authorization）
+    const h = { ...config.headers } as Record<string, any>;
+    delete h["Content-Type"];
+    delete h["content-type"];
+    config.headers = h;
+  }
+  return apiRequest<T>(config);
 }
 
 export async function put<T = any>(url: string, data?: any): Promise<T> {

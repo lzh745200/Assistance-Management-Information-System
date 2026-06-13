@@ -203,47 +203,6 @@
             </div>
           </el-tab-pane>
 
-          <!-- 相关附件标签页 -->
-          <el-tab-pane label="相关附件" name="attachments">
-            <div class="detail-card" style="margin-bottom: 0">
-              <div class="card-header"><h3>附件列表</h3></div>
-              <div class="card-body">
-                <div v-if="attachments.length">
-                  <div
-                    v-for="att in attachments"
-                    :key="att.id"
-                    class="attachment-item"
-                  >
-                    <el-tag
-                      size="small"
-                      :type="getCategoryTagType(att.category)"
-                      >{{ getCategoryLabel(att.category) }}</el-tag
-                    >
-                    <span class="att-name">{{ att.file_name }}</span>
-                    <span class="att-size">{{
-                      formatFileSize(att.file_size)
-                    }}</span>
-                    <el-button
-                      v-if="canPreview(att)"
-                      type="primary"
-                      link
-                      size="small"
-                      @click="previewAtt(att)"
-                      >预览</el-button
-                    >
-                    <el-button
-                      type="primary"
-                      link
-                      size="small"
-                      @click="downloadAtt(att)"
-                      >下载</el-button
-                    >
-                  </div>
-                </div>
-                <div v-else style="font-size: 13px; color: #999">暂无附件</div>
-              </div>
-            </div>
-          </el-tab-pane>
 
           <!-- 状态日志标签页 -->
           <el-tab-pane label="状态日志" name="statusHistory">
@@ -607,71 +566,6 @@
                   :rows="2"
                   placeholder="请输入备注信息"
               /></el-form-item>
-              <el-form-item v-if="!isCreate && fundData.id" label="相关附件">
-                <div style="width: 100%">
-                  <div style="display: flex; gap: 12px; margin-bottom: 8px">
-                    <el-select
-                      v-model="uploadCategory"
-                      style="width: 140px"
-                      size="small"
-                    >
-                      <el-option label="合同" value="contract" /><el-option
-                        label="发票"
-                        value="invoice"
-                      />
-                      <el-option label="报销凭证" value="receipt" /><el-option
-                        label="审计报告"
-                        value="report"
-                      />
-                      <el-option label="其他" value="other" />
-                    </el-select>
-                    <el-upload
-                      :action="`${apiBase}/funds/${fundData.id}/attachments`"
-                      :headers="uploadHeaders"
-                      :data="{ category: uploadCategory }"
-                      :on-success="onAttachmentUploaded"
-                      :on-error="() => ElMessage.error('上传失败')"
-                      :show-file-list="false"
-                      multiple
-                    >
-                      <el-button size="small" type="primary" plain
-                        >上传文件</el-button
-                      >
-                    </el-upload>
-                  </div>
-                  <div v-if="attachments.length" style="margin-top: 8px">
-                    <div
-                      v-for="att in attachments"
-                      :key="att.id"
-                      class="attachment-item"
-                    >
-                      <el-tag
-                        size="small"
-                        :type="getCategoryTagType(att.category)"
-                        >{{ getCategoryLabel(att.category) }}</el-tag
-                      >
-                      <span class="att-name">{{ att.file_name }}</span>
-                      <el-button
-                        type="primary"
-                        link
-                        size="small"
-                        @click="downloadAtt(att)"
-                        >下载</el-button
-                      >
-                      <el-button
-                        type="danger"
-                        link
-                        size="small"
-                        @click="deleteAtt(att)"
-                        >删除</el-button
-                      >
-                    </div>
-                  </div>
-                  <div v-else style="font-size: 12px; color: #999">
-                    暂无附件
-                  </div>
-                </div>
-              </el-form-item>
               <el-form-item>
                 <el-button
                   type="primary"
@@ -688,17 +582,6 @@
         </div>
       </template>
     </template>
-    <!-- 附件预览弹窗 -->
-    <el-dialog
-      v-model="previewVisible"
-      title="附件预览"
-      width="80%"
-      :destroy-on-close="true"
-    >
-      <div style="text-align: center">
-        <img :src="previewUrl" style="max-width: 100%; max-height: 70vh" />
-      </div>
-    </el-dialog>
     <!-- 工作流操作对话框 -->
     <el-dialog
       v-model="wfDialogVisible"
@@ -755,7 +638,6 @@
 
 <script setup lang="ts">
 import { logger } from "@/utils/logger";
-import { AuthStorage } from "@/utils/authStorage";
 import { useAuthStore } from "@/stores/auth";
 
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from "vue";
@@ -984,125 +866,11 @@ const formatOperationDetail = (detail: string | object): string => {
   if (!detail) return "-";
   try {
     const obj = typeof detail === "string" ? JSON.parse(detail) : detail;
-    const parts: string[] = [];
-    if (obj.file_name) parts.push(`文件: ${obj.file_name}`);
-    if (obj.file_size) parts.push(`大小: ${formatFileSize(obj.file_size)}`);
-    if (obj.category) parts.push(`类型: ${getCategoryLabel(obj.category)}`);
-    if (obj.attachment_id) parts.push(`附件ID: ${obj.attachment_id}`);
-    return parts.join(" | ") || JSON.stringify(obj);
+    return typeof obj === "object" ? JSON.stringify(obj) : String(detail);
   } catch {
     return String(detail);
   }
 };
-
-// 附件
-const attachments = ref<any[]>([]);
-const uploadCategory = ref("other");
-const apiBase = (import.meta as any).env?.VITE_API_BASE_URL || "/api/v1";
-const uploadHeaders = computed(() => {
-  const t = AuthStorage.getToken();
-  return { Authorization: t ? `Bearer ${t}` : "" };
-});
-const getCategoryLabel = (c: string) =>
-  ({
-    contract: "合同",
-    invoice: "发票",
-    receipt: "报销凭证",
-    report: "审计报告",
-    other: "其他",
-  })[c] || "其他";
-const getCategoryTagType = (c: string): any =>
-  ({
-    contract: "primary",
-    invoice: "warning",
-    receipt: "success",
-    report: "info",
-    other: "",
-  })[c] || "";
-const canPreview = (a: any) => {
-  const m = a.file_type || "";
-  return m.startsWith("image/") || m === "application/pdf";
-};
-async function loadAttachments() {
-  if (!fundData.id) return;
-  try {
-    const r = await fundApi.listAttachments(fundData.id);
-    attachments.value = r.items || [];
-  } catch (error) {
-    console.error("加载附件失败:", error);
-  }
-}
-function onAttachmentUploaded() {
-  ElMessage.success("上传成功");
-  loadAttachments();
-}
-function downloadAtt(att: any) {
-  const url = `${apiBase}/funds/attachments/${att.id}/download`;
-  const token = AuthStorage.getToken();
-  fetch(url, { headers: { Authorization: token ? `Bearer ${token}` : "" } })
-    .then((r) => r.blob())
-    .then((blob) => {
-      const link = document.createElement("a");
-      const objectUrl = URL.createObjectURL(blob);
-      link.href = objectUrl;
-      link.download = att.file_name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      // 释放 Blob URL，避免内存泄漏
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
-    })
-    .catch((err: any) => {
-      console.error("[Funds/Detail] 下载附件失败:", err);
-      ElMessage.error("下载失败，请重试");
-    });
-}
-async function deleteAtt(att: any) {
-  try {
-    await fundApi.deleteAttachment(att.id);
-    ElMessage.success("删除成功");
-    loadAttachments();
-  } catch (error) {
-    console.error("删除附件失败:", error);
-  }
-}
-function formatFileSize(b: number) {
-  if (!b) return "0B";
-  if (b < 1024) return b + "B";
-  if (b < 1048576) return (b / 1024).toFixed(1) + "KB";
-  return (b / 1048576).toFixed(1) + "MB";
-}
-
-const previewVisible = ref(false);
-const previewUrl = ref("");
-
-// 清理预览 URL，避免内存泄漏
-function cleanupPreviewUrl() {
-  if (previewUrl.value) {
-    URL.revokeObjectURL(previewUrl.value);
-    previewUrl.value = "";
-  }
-}
-
-function previewAtt(att: any) {
-  const url = `${apiBase}/funds/attachments/${att.id}/preview`;
-  const token = AuthStorage.getToken();
-  if ((att.file_type || "") === "application/pdf") {
-    window.open(url, "_blank");
-    return;
-  }
-  fetch(url, { headers: { Authorization: token ? `Bearer ${token}` : "" } })
-    .then((r) => r.blob())
-    .then((blob) => {
-      cleanupPreviewUrl(); // 清理之前的 URL
-      previewUrl.value = URL.createObjectURL(blob);
-      previewVisible.value = true;
-    })
-    .catch((err: any) => {
-      console.error("[Funds/Detail] 预览附件失败:", err);
-      ElMessage.error("预览失败，请重试");
-    });
-}
 
 // 工作流
 const wfDialogVisible = ref(false);
@@ -1284,7 +1052,7 @@ onMounted(async () => {
   checkPageMode();
   // 并行加载数据，提高页面加载性能
   await loadFundDetail();
-  await Promise.all([loadAttachments(), loadAllHistory()]);
+  await loadAllHistory();
 });
 // 路由变化时重新检测页面模式（如 /funds/5 → /funds/5/edit）
 // 同一组件实例复用时 onMounted 不会重新触发，需 watch route.path
@@ -1296,8 +1064,7 @@ watch(
   },
 );
 onUnmounted(() => {
-  // 清理预览 URL，避免内存泄漏
-  cleanupPreviewUrl();
+  // 清理资源
 });
 </script>
 

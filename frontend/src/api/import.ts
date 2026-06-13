@@ -126,6 +126,35 @@ export async function getImportHistory(
 }
 
 /**
+ * 验证导入数据（不执行导入）
+ * @param data 验证参数
+ * @returns 验证结果
+ */
+export async function validateImport(data: {
+  file?: File;
+  entity_type?: string;
+}): Promise<{
+  valid: boolean;
+  errors?: Array<{ row: number; field: string; message: string }>;
+  total_rows?: number;
+}> {
+  if (data.file) {
+    const formData = new FormData();
+    formData.append("file", data.file);
+    if (data.entity_type) {
+      formData.append("entity_type", data.entity_type);
+    }
+    const response = await request.post("/import/validate", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 120000,
+    });
+    return response.data;
+  }
+  const response = await request.post("/import/validate", data);
+  return response.data;
+}
+
+/**
  * 格式化导入状态
  * @param status 状态值
  * @returns 格式化后的状态信息

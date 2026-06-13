@@ -12,22 +12,27 @@
 """
 
 import logging
+import mimetypes
+import os
+import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api.v1.deps import require_manager_role
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.utils.pagination import keyset_paginate
 from app.core.data_permission import apply_data_scope
 
-from app.models.fund import Fund
+from app.models.fund import Fund, FundAttachment
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -44,6 +49,10 @@ class FundCreate(BaseModel):
     name: Optional[str] = None
     amount: float = 0
     planned_amount: float = 0
+    approved_amount: Optional[float] = None
+    allocated_amount: Optional[float] = None
+    used_amount: Optional[float] = None
+    remaining_amount: Optional[float] = None
     code: Optional[str] = None
     type: Optional[str] = None
     fund_type: Optional[str] = None
@@ -55,6 +64,8 @@ class FundCreate(BaseModel):
     purpose: Optional[str] = None
     source: Optional[str] = None
     operator: Optional[str] = None
+    receiver: Optional[str] = None
+    usage_description: Optional[str] = None
     status: str = "pending"
     applicant: Optional[str] = None
     remarks: Optional[str] = None
@@ -62,7 +73,7 @@ class FundCreate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
 
-    model_config = {"extra": "forbid"}
+    model_config = {"extra": "ignore"}
 
 
 class FundUpdate(BaseModel):
@@ -602,47 +613,146 @@ def audit_fund(fund_id: int, current_user: User = Depends(get_current_user), db:
 
 
 @router.get("/supported-village/statistics/by-type")
-def fund_stats_by_type(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def fund_stats_by_type(
+    year_start: int = Query(None),
+    year_end: int = Query(None),
+    department: str = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     stmt = select(
         Fund.fund_type,
         func.count(Fund.id).label("count"),
         func.coalesce(func.sum(Fund.amount), 0).label("amount")
     ).group_by(Fund.fund_type)
+    if year_start:
+        stmt = stmt.where(Fund.year >= year_start)
+    if year_end:
+        stmt = stmt.where(Fund.year <= year_end)
     stmt = apply_data_scope(stmt, Fund, current_user)
     rows = db.execute(stmt).all()
-    return {"data": [{"type": r.fund_type or "其他", "count": r.count, "amount": float(r.amount)} for r in rows]}
+    type_labels = {"project": "项目经费", "operation": "运营经费", "education": "教育帮扶",
+                   "infrastructure": "基础设施", "emergency": "应急经费", "other": "其他"}
+    result = {}
+    for r in rows:
+        key = r.fund_type or "other"
+        result[key] = {
+            "fund_type": key,
+            "fund_type_label": type_labels.get(key, key),
+            "total_investment": float(r.amount),
+            "count": r.count,
+        }
+    return {"success": True, "data": result, "fund_types": type_labels}
 
 
 @router.get("/supported-village/statistics/yearly-comparison")
-def fund_stats_yearly_comparison(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return {"data": []}
+def fund_stats_yearly_comparison(
+    year_start: int = Query(None),
+    year_end: int = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    stmt = select(
+        Fund.year,
+        func.count(Fund.id).label("count"),
+        func.coalesce(func.sum(Fund.amount), 0).label("amount"),
+        func.coalesce(func.sum(Fund.allocated_amount), 0).label("allocated"),
+    ).group_by(Fund.year).order_by(Fund.year)
+    if year_start:
+        stmt = stmt.where(Fund.year >= year_start)
+    if year_end:
+        stmt = stmt.where(Fund.year <= year_end)
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    rows = db.execute(stmt).all()
+    return {"success": True, "data": [
+        {"year": r.year or 0, "total_actual": float(r.amount),
+         "total_planned": float(r.allocated), "count": r.count} for r in rows
+    ]}
 
 
 @router.get("/supported-village/statistics/utilization-rate")
-def fund_stats_utilization(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return {"data": {"overall_rate": 0, "by_type": []}}
+def fund_stats_utilization(
+    year_start: int = Query(None),
+    year_end: int = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    stmt = select(
+        func.coalesce(func.sum(Fund.allocated_amount), 0).label("planned"),
+        func.coalesce(func.sum(Fund.used_amount), 0).label("actual"),
+    )
+    if year_start:
+        stmt = stmt.where(Fund.year >= year_start)
+    if year_end:
+        stmt = stmt.where(Fund.year <= year_end)
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    row = db.execute(stmt).one()
+    planned = float(row.planned)
+    actual = float(row.actual)
+    rate = round((actual / planned * 100), 1) if planned > 0 else 0
+    return {"success": True, "data": {"overall_utilization_rate": rate,
+            "total_actual_investment": actual, "total_planned_investment": planned}}
 
 
 @router.get("/supported-village/statistics/summary")
-def fund_stats_summary(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def fund_stats_summary(
+    year_start: int = Query(None),
+    year_end: int = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     stmt = select(
         func.count(Fund.id).label("total_count"),
-        func.coalesce(func.sum(Fund.amount), 0).label("total_amount")
+        func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
+        func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
+        func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
     )
+    if year_start:
+        stmt = stmt.where(Fund.year >= year_start)
+    if year_end:
+        stmt = stmt.where(Fund.year <= year_end)
     stmt = apply_data_scope(stmt, Fund, current_user)
     row = db.execute(stmt).one()
-    return {"data": {"total_count": row.total_count, "total_amount": float(row.total_amount)}}
+    return {"success": True, "data": {
+        "total_count": row.total_count, "total_amount": float(row.total_amount),
+        "total_allocated": float(row.total_allocated), "total_used": float(row.total_used),
+    }}
 
 
 @router.get("/{fund_id}/history/status")
 def fund_history_status(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """获取经费状态变更历史"""
     _get_fund_or_404(db, fund_id, current_user)
-    return {"data": []}
+    from app.models.fund_history import FundStatusHistory
+    rows = (
+        db.query(FundStatusHistory)
+        .filter(FundStatusHistory.fund_id == fund_id)
+        .order_by(FundStatusHistory.changed_at.desc())
+        .limit(100).all()
+    )
+    return {"data": [{
+        "id": r.id, "from_status": r.from_status, "to_status": r.to_status,
+        "changed_by": r.changed_by, "changed_at": r.changed_at.isoformat() if r.changed_at else None,
+        "remark": r.remark,
+    } for r in rows]}
 
 
 @router.get("/{fund_id}/history/fields")
 def fund_history_fields(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return {"data": []}
+    """获取经费字段变更历史"""
+    _get_fund_or_404(db, fund_id, current_user)
+    from app.models.fund_history import FundFieldChange
+    rows = (
+        db.query(FundFieldChange)
+        .filter(FundFieldChange.fund_id == fund_id)
+        .order_by(FundFieldChange.changed_at.desc())
+        .limit(100).all()
+    )
+    return {"data": [{
+        "id": r.id, "field_name": r.field_name, "old_value": r.old_value,
+        "new_value": r.new_value, "changed_by": r.changed_by,
+        "changed_at": r.changed_at.isoformat() if r.changed_at else None,
+    } for r in rows]}
 
 
 @router.get("/{fund_id}/history/operations")
@@ -651,4 +761,184 @@ def fund_history_operations(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return {"data": []}
+    """获取经费操作日志"""
+    _get_fund_or_404(db, fund_id, current_user)
+    from app.models.fund_history import FundOperationLog
+    rows = (
+        db.query(FundOperationLog)
+        .filter(FundOperationLog.fund_id == fund_id)
+        .order_by(FundOperationLog.created_at.desc())
+        .limit(100).all()
+    )
+    return {"data": [{
+        "id": r.id, "operation": r.operation, "operator": r.operator,
+        "detail": r.detail, "created_at": r.created_at.isoformat() if r.created_at else None,
+    } for r in rows]}
+
+
+# ============================================================================
+# 5. 附件管理 (静态路由放在动态 /{fund_id}/* 之前以提高匹配优先级)
+# ============================================================================
+
+
+@router.get("/attachments/{attachment_id}/download")
+async def download_fund_attachment(
+    attachment_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """下载经费附件"""
+    att = db.query(FundAttachment).filter(FundAttachment.id == attachment_id).first()
+    if not att:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
+
+    file_path = att.file_path
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件文件不存在")
+
+    return FileResponse(
+        path=file_path,
+        filename=att.file_name,
+        media_type=att.file_type or "application/octet-stream",
+    )
+
+
+@router.get("/attachments/{attachment_id}/preview")
+async def preview_fund_attachment(
+    attachment_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """预览经费附件（支持图片/PDF/文本等常见格式）"""
+    att = db.query(FundAttachment).filter(FundAttachment.id == attachment_id).first()
+    if not att:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
+
+    file_path = att.file_path
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件文件不存在")
+
+    # 推断 MIME 类型以决定是否内联显示
+    mime_type, _ = mimetypes.guess_type(file_path)
+    if not mime_type:
+        mime_type = att.file_type or "application/octet-stream"
+
+    # 图片、PDF、文本等可内联预览的类型使用 inline 模式
+    inline_types = (
+        "image/", "application/pdf", "text/",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    headers = {}
+    if any(mime_type.startswith(t) for t in inline_types):
+        headers["Content-Disposition"] = f"inline; filename*=UTF-8''{att.file_name}"
+
+    return FileResponse(path=file_path, media_type=mime_type, headers=headers if headers else None)
+
+
+@router.delete("/attachments/{attachment_id}")
+async def delete_fund_attachment(
+    attachment_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """删除经费附件"""
+    att = db.query(FundAttachment).filter(FundAttachment.id == attachment_id).first()
+    if not att:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
+
+    file_path = att.file_path
+
+    # 删除数据库记录
+    db.delete(att)
+    db.commit()
+
+    # 删除磁盘文件（放在 commit 之后，即使文件删除失败也不影响 DB 操作）
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except OSError as e:
+            logger.warning("删除附件文件失败: %s, 原因: %s", file_path, e)
+
+    return {"message": "删除成功"}
+
+
+@router.get("/{fund_id}/attachments")
+async def list_fund_attachments(
+    fund_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取经费附件列表"""
+    _get_fund_or_404(db, fund_id, current_user)
+
+    attachments = (
+        db.query(FundAttachment)
+        .filter(FundAttachment.fund_id == fund_id)
+        .order_by(FundAttachment.created_at.desc())
+        .all()
+    )
+    return {"items": [a.to_dict() for a in attachments], "total": len(attachments)}
+
+
+@router.post("/{fund_id}/attachments")
+async def upload_fund_attachment(
+    fund_id: int,
+    file: UploadFile = File(...),
+    category: Optional[str] = "other",
+    description: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """上传经费附件"""
+    _get_fund_or_404(db, fund_id, current_user)
+
+    # 检查文件大小
+    content = await file.read()
+    if len(content) > settings.MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"文件大小超过限制({settings.MAX_FILE_SIZE // 1048576}MB)",
+        )
+
+    # 检查文件类型
+    ext = (file.filename or "").rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else ""
+    allowed_types = settings.allowed_file_types_list + [
+        "doc", "docx", "ppt", "pptx", "txt", "zip", "rar", "xlsx", "xls",
+    ]
+    if ext and ext not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"不支持的文件类型: .{ext}",
+        )
+
+    # 创建存储目录
+    base_upload = os.path.abspath(settings.UPLOAD_DIR)
+    upload_dir = os.path.join(base_upload, "funds", str(fund_id))
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # 生成唯一文件名
+    unique_name = f"{uuid.uuid4().hex[:12]}_{file.filename}"
+    file_path = os.path.join(upload_dir, unique_name)
+
+    # 写入文件
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    # 保存数据库记录
+    uploaded_by = getattr(current_user, "full_name", None) or current_user.username
+    attachment = FundAttachment(
+        fund_id=fund_id,
+        file_name=file.filename or "unknown",
+        file_path=file_path,
+        file_size=len(content),
+        file_type=file.content_type or "application/octet-stream",
+        category=category or "other",
+        description=description or "",
+        uploaded_by=uploaded_by,
+    )
+    db.add(attachment)
+    db.commit()
+    db.refresh(attachment)
+
+    return {"message": "上传成功", "data": attachment.to_dict()}

@@ -37,11 +37,6 @@ import {
   deleteMessages,
   getNotificationPreferences,
   updateNotificationPreferences,
-  getMessageTemplates,
-  getMessageTemplate,
-  createMessageTemplate,
-  updateMessageTemplate,
-  deleteMessageTemplate,
   formatMessageType,
   formatRelativeTime,
 } from '@/api/message'
@@ -97,36 +92,6 @@ describe('api/message', () => {
     mockPut.mockResolvedValueOnce({ email_approval: false })
     await updateNotificationPreferences({ email_approval: false })
     expect(mockPut).toHaveBeenCalledWith('/notifications/preferences', { email_approval: false })
-  })
-
-  it('getMessageTemplates GET', async () => {
-    mockGet.mockResolvedValueOnce({ items: [], total: 0 })
-    await getMessageTemplates({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/admin/templates', { params: { page: 1 } })
-  })
-
-  it('getMessageTemplate GET /admin/templates/{id}', async () => {
-    mockGet.mockResolvedValueOnce({ id: 1, code: 'X' })
-    await getMessageTemplate(1)
-    expect(mockGet).toHaveBeenCalledWith('/admin/templates/1')
-  })
-
-  it('createMessageTemplate POST', async () => {
-    mockPost.mockResolvedValueOnce({ id: 1 })
-    await createMessageTemplate({ code: 'X', name: 'T' } as any)
-    expect(mockPost).toHaveBeenCalledWith('/admin/templates', { code: 'X', name: 'T' })
-  })
-
-  it('updateMessageTemplate PUT', async () => {
-    mockPut.mockResolvedValueOnce({ id: 1 })
-    await updateMessageTemplate(1, { name: 'T2' })
-    expect(mockPut).toHaveBeenCalledWith('/admin/templates/1', { name: 'T2' })
-  })
-
-  it('deleteMessageTemplate del /admin/templates/{id}', async () => {
-    mockDel.mockResolvedValueOnce(undefined)
-    await deleteMessageTemplate(1)
-    expect(mockDel).toHaveBeenCalledWith('/admin/templates/1')
   })
 
   it('formatMessageType system -> 系统通知 / info', () => {

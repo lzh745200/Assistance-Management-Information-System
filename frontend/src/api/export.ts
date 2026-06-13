@@ -48,7 +48,7 @@ export async function getExportHistory(params?: {
   page?: number;
   page_size?: number;
 }) {
-  const res = await request.get(`${ASYNC_EXPORT_BASE}/history`, { params });
+  const res = await request.get(`${ASYNC_EXPORT_BASE}/tasks`, { params });
   return res.data;
 }
 
@@ -87,15 +87,63 @@ export function triggerDownload(blob: Blob, filename: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export async function exportReportWord(reportId: number) {
-  const res = await request.get(`${EXPORT_BASE}/report/${reportId}/word`, {
+export async function exportReportWord(
+  reportType: string,
+  year?: number,
+) {
+  const res = await request.get(`${EXPORT_BASE}/report-word`, {
+    params: { report_type: reportType, ...(year ? { year } : {}) },
     responseType: "blob",
   });
   return res.data;
 }
 
-export async function exportReportPdf(reportId: number) {
-  const res = await request.get(`${EXPORT_BASE}/report/${reportId}/pdf`, {
+export async function exportReportPdf(
+  reportType: string,
+  year?: number,
+) {
+  const res = await request.get(`${EXPORT_BASE}/report-pdf`, {
+    params: { report_type: reportType, ...(year ? { year } : {}) },
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function exportUsers(params?: ExportFilterParams) {
+  const res = await request.get(`${EXPORT_BASE}/users`, {
+    params,
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function exportSchools(params?: ExportFilterParams) {
+  const res = await request.get(`${EXPORT_BASE}/schools`, {
+    params,
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function exportProjects(params?: ExportFilterParams) {
+  const res = await request.get(`${EXPORT_BASE}/projects`, {
+    params,
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function exportFunds(params?: ExportFilterParams) {
+  const res = await request.get(`${EXPORT_BASE}/funds`, {
+    params,
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+export async function exportComprehensive(params?: ExportFilterParams) {
+  const res = await request.get(`${EXPORT_BASE}/comprehensive`, {
+    params,
     responseType: "blob",
   });
   return res.data;

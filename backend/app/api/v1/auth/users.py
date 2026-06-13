@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
@@ -725,3 +725,56 @@ async def change_password(
     db.commit()
 
     return {"code": 200, "message": "密码修改成功"}
+
+
+# ==================== 头像上传 ====================
+
+
+@router.post("/{user_id}/avatar", summary="上传用户头像")
+async def upload_avatar(
+    user_id: int,
+    avatar: "UploadFile",
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """上传用户头像（仅本人或管理员）"""
+    import os as _os
+    import uuid as _uuid
+    from pathlib import Path as _Path
+
+    # 权限检查：仅本人或管理员可上传
+    if current_user.id != user_id and not is_superuser(current_user):
+        raise HTTPException(status_code=403, detail="无权修改他人头像")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise NotFoundException("用户不存在")
+
+    # 校验文件类型
+    allowed_types = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+    if avatar.content_type and avatar.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="仅支持 JPG/PNG/GIF/WebP 格式")
+
+    # 保存文件
+    upload_dir = _Path("uploads/avatars")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    ext = (_os.path.splitext(avatar.filename or "avatar.png")[1] or ".png").lower()
+    if ext not in (".jpg", ".jpeg", ".png", ".gif", ".webp"):
+        ext = ".png"
+    filename = f"{_uuid.uuid4().hex}{ext}"
+    file_path = upload_dir / filename
+
+    content = await avatar.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    # 更新用户头像 URL
+    avatar_url = f"/uploads/avatars/{filename}"
+    user.avatar = avatar_url
+    db.commit()
+
+    return {
+        "code": 200,
+        "message": "头像上传成功",
+        "avatar_url": avatar_url,
+    }

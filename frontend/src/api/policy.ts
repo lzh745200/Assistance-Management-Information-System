@@ -48,13 +48,25 @@ export type PolicyStatistics = {
   by_status: Record<PolicyStatus, number>;
 };
 
-// ── Query ──
-export const getLevelOptions = () => api.get("/policies/level-options");
-export const getPolicyTypes = () => api.get("/policies/types");
+// ── Options ──
+export const getLevelOptions = () => api.get("/policies/options/levels");
+export const getStatusOptions = () => api.get("/policies/options/statuses");
+export const getPolicyTypes = () => api.get("/policies/options/levels");
 export const searchPolicies = (query: string) =>
   api.get("/policies/search", { params: { q: query } });
+
+// ── Categories ──
 export const getPolicyCategories = () => api.get("/policies/categories");
-export const getPolicyStats = () => api.get("/policies/stats");
+export const getCategoryTree = () => api.get("/policies/categories/tree");
+export const createCategory = (data: any) =>
+  api.post("/policies/categories", data);
+export const updateCategory = (id: number, data: any) =>
+  api.put(`/policies/categories/${id}`, data);
+export const deleteCategory = (id: number) =>
+  api.delete(`/policies/categories/${id}`);
+
+// ── Statistics ──
+export const getPolicyStats = () => api.get("/policies/statistics");
 
 // ── CRUD ──
 export const getPolicies = (params?: any) => api.get("/policies", { params });
@@ -63,6 +75,41 @@ export const createPolicy = (data: any) => api.post("/policies", data);
 export const updatePolicy = (id: number, data: any) =>
   api.put("/policies/" + id, data);
 export const deletePolicy = (id: number) => api.delete("/policies/" + id);
+
+// ── Publish / Archive ──
+export const publishPolicy = (id: number) =>
+  api.post(`/policies/${id}/publish`);
+export const archivePolicy = (id: number) =>
+  api.post(`/policies/${id}/archive`);
+
+// ── File upload / preview / download ──
+export const uploadPolicyFile = (policyId: number, file: File) => {
+  const fd = new FormData();
+  fd.append("file", file);
+  return api.post(`/policies/${policyId}/upload`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+export const previewPolicyFile = (policyId: number) =>
+  api.get(`/policies/${policyId}/preview`);
+export const downloadPolicyFile = (policyId: number) =>
+  api.get(`/policies/${policyId}/download`, { responseType: "blob" });
+
+// ── Favorites ──
+export const addPolicyFavorite = (policyId: number) =>
+  api.post(`/policies/${policyId}/favorite`);
+export const removePolicyFavorite = (policyId: number) =>
+  api.delete(`/policies/${policyId}/favorite`);
+export const getPolicyFavorites = (userId: number | string) =>
+  api.get(`/policies/user/${userId}/favorites`);
+
+// ── Related ──
+export const getPolicyRelated = (policyId: number) =>
+  api.get(`/policies/${policyId}/related`);
+
+// ── Batch delete ──
+export const batchDeletePolicies = (ids: number[]) =>
+  api.post("/policies/batch-delete", { ids });
 
 // ── Import/export ──
 export const importPolicies = (file: File) => {
@@ -74,19 +121,19 @@ export const importPolicies = (file: File) => {
 };
 export const exportPolicies = (params?: any) =>
   api
-    .get("/policies/export", { params, responseType: "blob" })
+    .get("/policies/export/excel", { params, responseType: "blob" })
     .then((r) => triggerDownload(r.data, "帮扶政策导出.xlsx"));
 export const exportPoliciesPDF = (params?: any) =>
   api
-    .get("/policies/export-pdf", { params, responseType: "blob" })
+    .get("/policies/export/pdf", { params, responseType: "blob" })
     .then((r) => triggerDownload(r.data, "帮扶政策导出.pdf"));
 export const exportPoliciesWPS = (params?: any) =>
   api
-    .get("/policies/export-wps", { params, responseType: "blob" })
+    .get("/policies/export/wps", { params, responseType: "blob" })
     .then((r) => triggerDownload(r.data, "帮扶政策导出.wps"));
 export const downloadImportTemplate = () =>
   api
-    .get("/policies/import-template", { responseType: "blob" })
+    .get("/policies/import/template", { responseType: "blob" })
     .then((r) => triggerDownload(r.data, "政策导入模板.xlsx"));
 
 // ── Display helpers (used by views for status/label formatting) ──

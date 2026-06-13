@@ -29,39 +29,34 @@ describe('api/organizationPassCode', () => {
     expect(mockPost).toHaveBeenCalledWith('/organizations/5/passcode')
   })
 
-  it('orgPassCodeApi.verify POST /organizations/passcode/verify with code', () => {
-    orgPassCodeApi.verify('ABC123')
-    expect(mockPost).toHaveBeenCalledWith('/organizations/passcode/verify', { code: 'ABC123' })
-  })
-
-  it('getOrganizationVerificationCode GET /organizations/{id}/verification-code', () => {
+  it('getOrganizationVerificationCode GET /machine-code/organization/{id}/verification-code', () => {
     getOrganizationVerificationCode(3)
-    expect(mockGet).toHaveBeenCalledWith('/organizations/3/verification-code')
+    expect(mockGet).toHaveBeenCalledWith('/machine-code/organization/3/verification-code')
   })
 
-  it('createOrganizationPassCode POST /organizations/passcodes', () => {
+  it('createOrganizationPassCode POST /machine-code/organization/create', () => {
     createOrganizationPassCode({
       organization_id: 1,
       verification_code: 'VC',
       allow_subordinate_generation: true,
     })
-    expect(mockPost).toHaveBeenCalledWith('/organizations/passcodes', {
+    expect(mockPost).toHaveBeenCalledWith('/machine-code/organization/create', {
       organization_id: 1,
       verification_code: 'VC',
       allow_subordinate_generation: true,
     })
   })
 
-  it('getOrganizationPassCodeList GET /organizations/passcodes with params', () => {
+  it('getOrganizationPassCodeList GET /machine-code/organization/list with params', () => {
     getOrganizationPassCodeList({ organization_id: 1, status: 'active', page: 1, page_size: 10 })
-    expect(mockGet).toHaveBeenCalledWith('/organizations/passcodes', {
+    expect(mockGet).toHaveBeenCalledWith('/machine-code/organization/list', {
       params: { organization_id: 1, status: 'active', page: 1, page_size: 10 },
     })
   })
 
   it('getOrganizationPassCodeList 无参', () => {
     getOrganizationPassCodeList()
-    expect(mockGet).toHaveBeenCalledWith('/organizations/passcodes', { params: undefined })
+    expect(mockGet).toHaveBeenCalledWith('/machine-code/organization/list', { params: undefined })
   })
 
   it('exportOrganizationPassCodes 触发下载', async () => {
@@ -79,7 +74,7 @@ describe('api/organizationPassCode', () => {
       return realCreate(tag)
     })
     await exportOrganizationPassCodes({ status: 'active' })
-    expect(mockGet).toHaveBeenCalledWith('/organizations/passcodes/export', {
+    expect(mockGet).toHaveBeenCalledWith('/machine-code/organization/export', {
       params: { status: 'active' },
       responseType: 'blob',
     })

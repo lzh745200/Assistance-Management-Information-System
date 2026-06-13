@@ -109,21 +109,43 @@ export const useUserStore = defineStore("user", () => {
     AuthStorage.clear();
   }
 
+  /** 获取当前用户 ID（从 token 解析或 currentUser） */
+  function _getCurrentUserId(): number | null {
+    if (currentUser.value?.id) return currentUser.value.id;
+    try {
+      const token = AuthStorage.getToken();
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return payload?.sub || payload?.user_id || null;
+      }
+    } catch { /* ignore */ }
+    return null;
+  }
+
   async function getUserProfile(userId?: number) {
-    const id = userId || currentUser.value?.id;
-    if (!id) throw new Error("No user ID available");
+    const id = userId || _getCurrentUserId();
+    if (!id) throw new Error("无法获取用户ID，请重新登录");
     const profile = await fetchUser(id);
+    if (profile) currentUser.value = profile as User;
     return profile;
   }
 
-  async function updateUserProfile(id: number, data: Partial<User>) {
+  async function updateUserProfile(data: Partial<User>, userId?: number) {
+    const id = userId || _getCurrentUserId();
+    if (!id) throw new Error("无法获取用户ID，请重新登录");
     return updateUser(id, data);
   }
 
-  async function uploadAvatar(_userId: number, _file: File) {
-    // Avatar upload not yet implemented — returns placeholder URL
-    console.warn("uploadAvatar: 头像上传功能尚未实现");
-    return { url: "" };
+  async function uploadAvatar(file: File, userId?: number) {
+    const id = userId || _getCurrentUserId();
+    if (!id) throw new Error("无法获取用户ID，请重新登录");
+    const formData = new FormData();
+    formData.append("avatar", file);
+    const res = await post<ApiResponse<{ avatar_url?: string; url?: string }>>(
+      `/users/${id}/avatar`,
+      formData,
+    );
+    return res.data || (res as any);
   }
 
   return {

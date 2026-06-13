@@ -244,10 +244,7 @@
               <span class="menu-title-text">系统管理</span>
             </template>
             <el-menu-item index="/system/users"
-              ><span>用户管理</span></el-menu-item
-            >
-            <el-menu-item index="/system/roles"
-              ><span>角色管理</span></el-menu-item
+              ><span>用户与角色</span></el-menu-item
             >
             <el-menu-item index="/system/audit"
               ><span>审计管理</span></el-menu-item
@@ -260,9 +257,6 @@
             >
             <el-menu-item index="/system/monitoring"
               ><span>系统监控</span></el-menu-item
-            >
-            <el-menu-item index="/system/health"
-              ><span>系统健康</span></el-menu-item
             >
           </el-sub-menu>
 

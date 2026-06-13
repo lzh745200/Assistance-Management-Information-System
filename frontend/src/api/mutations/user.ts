@@ -22,8 +22,3 @@ export async function resetPassword(id: string) {
   const response = await request.post(`/users/${id}/reset-password`);
   return response.data;
 }
-
-export async function updateUserStatus(id: string, status: string) {
-  const response = await request.patch(`/users/${id}/status`, { status });
-  return response.data;
-}

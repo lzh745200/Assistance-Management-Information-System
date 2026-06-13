@@ -2,9 +2,15 @@
 Data Report API
 数据上报管理接口
 """
+import io
+import json
+import os as _os
+from datetime import datetime
 from typing import Optional
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -366,3 +372,105 @@ async def get_report_package(
 
     # 简化返回
     return {"report_id": report_id, "package_id": report.package_id}
+
+
+@router.get("/{report_id}/preview")
+async def preview_data_report(
+    report_id: int,
+    current_user=Depends(get_current_user),
+    service: DataReportService = Depends(get_report_service),
+    permission_service: OrganizationPermissionService = Depends(get_permission_service),
+):
+    """预览上报数据内容"""
+    from app.models.data_package import DataPackage
+
+    report = service.get_report(report_id)
+    if not report:
+        raise NotFoundException("上报不存在")
+
+    # 检查权限
+    user_org_id = get_user_org_id(current_user)
+    if user_org_id not in [report.source_org_id, report.target_org_id]:
+        if not permission_service.can_access_organization(current_user.id, report.source_org_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权查看该上报")
+
+    # 获取关联的数据包信息
+    preview_data = {
+        "report_id": report.id,
+        "report_code": report.report_code,
+        "title": report.title,
+        "status": report.status,
+        "source_org_id": report.source_org_id,
+        "target_org_id": report.target_org_id,
+        "description": report.description,
+        "submitted_at": report.submitted_at.isoformat() if report.submitted_at else None,
+        "created_at": report.created_at.isoformat() if report.created_at else None,
+    }
+
+    # 如果有数据包，获取包内的数据摘要
+    package = service.db.query(DataPackage).filter(DataPackage.id == report.package_id).first()
+    if package:
+        preview_data["package"] = {
+            "package_id": package.id,
+            "package_code": package.package_code,
+            "file_name": package.file_name,
+            "file_size": package.file_size,
+            "record_count": package.record_count,
+            "data_types": package.data_types or [],
+            "status": package.status.value if hasattr(package.status, "value") else str(package.status),
+        }
+
+    return {"data": preview_data}
+
+
+@router.get("/{report_id}/download")
+async def download_data_report(
+    report_id: int,
+    current_user=Depends(get_current_user),
+    service: DataReportService = Depends(get_report_service),
+    permission_service: OrganizationPermissionService = Depends(get_permission_service),
+):
+    """下载上报数据包文件"""
+    from app.models.data_package import DataPackage
+
+    report = service.get_report(report_id)
+    if not report:
+        raise NotFoundException("上报不存在")
+
+    # 检查权限
+    user_org_id = get_user_org_id(current_user)
+    if user_org_id not in [report.source_org_id, report.target_org_id]:
+        if not permission_service.can_access_organization(current_user.id, report.source_org_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权下载该上报")
+
+    # 获取数据包文件
+    package = service.db.query(DataPackage).filter(DataPackage.id == report.package_id).first()
+
+    if package and package.file_path:
+        if _os.path.exists(package.file_path):
+            return FileResponse(
+                path=package.file_path,
+                filename=package.file_name or f"report_{report_id}.dat",
+                media_type="application/octet-stream",
+            )
+
+    # 如果没有物理文件，返回 JSON 摘要
+    preview_data = {
+        "report_id": report.id,
+        "report_code": report.report_code,
+        "title": report.title,
+        "status": report.status,
+        "source_org_id": report.source_org_id,
+        "target_org_id": report.target_org_id,
+        "description": report.description,
+        "submitted_at": report.submitted_at.isoformat() if report.submitted_at else None,
+        "created_at": report.created_at.isoformat() if report.created_at else None,
+    }
+    json_bytes = json.dumps(preview_data, ensure_ascii=False, indent=2).encode("utf-8")
+    filename = f"report_{report.report_code}_{datetime.now().strftime('%Y%m%d')}.json"
+
+    return StreamingResponse(
+        io.BytesIO(json_bytes),
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+    )

@@ -11,4 +11,28 @@ export const updateOrganization = (id: number, data: any) =>
 export const deleteOrganization = (id: number) =>
   api.delete("/organizations/" + id);
 export const batchUpdateSortOrders = (d: any[]) =>
-  api.put("/organizations/sort", d);
+  api.post("/organizations/batch-update-sort", d);
+
+export const getMyOrganization = () =>
+  api.get("/organizations/my-organization");
+
+export const getSubordinates = () =>
+  api.get("/organizations/subordinates");
+
+export const getTypeOptions = () =>
+  api.get("/organizations/types/options");
+
+export const getChildren = (orgId: number) =>
+  api.get(`/organizations/${orgId}/children`);
+
+export const getAncestors = (orgId: number) =>
+  api.get(`/organizations/${orgId}/ancestors`);
+
+export const moveOrganization = (orgId: number, data: any) =>
+  api.post(`/organizations/${orgId}/move`, data);
+
+export const activateOrganization = (orgId: number) =>
+  api.post(`/organizations/${orgId}/activate`);
+
+export const deactivateOrganization = (orgId: number) =>
+  api.post(`/organizations/${orgId}/deactivate`);

@@ -4,7 +4,7 @@
  * Requirements: 5.1, 5.2, 5.3, 5.7, 6.2
  */
 
-import { get, post, put, del, apiRequest } from "./request";
+import { get, post, put, apiRequest } from "./request";
 
 // ==================== 类型定义 ====================
 
@@ -43,21 +43,6 @@ export interface NotificationPreference {
   site_approval: boolean;
   site_task: boolean;
   site_system: boolean;
-}
-
-/** 消息模板 */
-export interface MessageTemplate {
-  id: number;
-  code: string;
-  name: string;
-  message_type: MessageType;
-  title_template: string;
-  content_template: string;
-  email_subject_template?: string;
-  email_body_template?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at?: string;
 }
 
 // ==================== 消息 API ====================
@@ -113,6 +98,42 @@ export async function deleteMessages(messageIds: number[]): Promise<number> {
   return response.count;
 }
 
+/**
+ * 获取单条消息详情
+ */
+export async function getMessage(messageId: number): Promise<Message> {
+  const response = await get<Message>(`/messages/${messageId}`);
+  return response;
+}
+
+/**
+ * 获取消息统计概览
+ */
+export async function getStats(): Promise<{
+  total: number;
+  unread: number;
+  read: number;
+  by_type: Record<string, number>;
+}> {
+  const response = await get<{
+    total: number;
+    unread: number;
+    read: number;
+    by_type: Record<string, number>;
+  }>("/messages/stats/summary");
+  return response;
+}
+
+/**
+ * 获取最近活动
+ */
+export async function getRecentActivities(params?: {
+  limit?: number;
+}): Promise<any[]> {
+  const response = await get<any[]>("/messages/recent-activities", { params });
+  return Array.isArray(response) ? response : [];
+}
+
 // ==================== 通知偏好 API ====================
 
 /**
@@ -136,65 +157,6 @@ export async function updateNotificationPreferences(
     preferences,
   );
   return response;
-}
-
-// ==================== 消息模板 API (管理员) ====================
-
-/**
- * 获取消息模板列表
- */
-export async function getMessageTemplates(params?: {
-  page?: number;
-  page_size?: number;
-  message_type?: MessageType;
-  is_active?: boolean;
-}): Promise<{ items: MessageTemplate[]; total: number }> {
-  const response = await get<{ items: MessageTemplate[]; total: number }>(
-    "/admin/templates",
-    { params },
-  );
-  return response;
-}
-
-/**
- * 获取消息模板详情
- */
-export async function getMessageTemplate(
-  templateId: number,
-): Promise<MessageTemplate> {
-  const response = await get<MessageTemplate>(`/admin/templates/${templateId}`);
-  return response;
-}
-
-/**
- * 创建消息模板
- */
-export async function createMessageTemplate(
-  data: Omit<MessageTemplate, "id" | "created_at" | "updated_at">,
-): Promise<MessageTemplate> {
-  const response = await post<MessageTemplate>("/admin/templates", data);
-  return response;
-}
-
-/**
- * 更新消息模板
- */
-export async function updateMessageTemplate(
-  templateId: number,
-  data: Partial<MessageTemplate>,
-): Promise<MessageTemplate> {
-  const response = await put<MessageTemplate>(
-    `/admin/templates/${templateId}`,
-    data,
-  );
-  return response;
-}
-
-/**
- * 删除消息模板
- */
-export async function deleteMessageTemplate(templateId: number): Promise<void> {
-  await del(`/admin/templates/${templateId}`);
 }
 
 // ==================== 工具函数 ====================

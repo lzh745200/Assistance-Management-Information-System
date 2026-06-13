@@ -13,6 +13,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -591,3 +592,141 @@ def _subscription_to_response(subscription: ReportSubscription) -> dict:
         "created_at": subscription.created_at,
         "updated_at": subscription.updated_at,
     }
+
+
+# ==================== 报表生成接口 ====================
+
+
+class ReportGenerateRequest(BaseModel):
+    """报表生成请求"""
+    report_type: str  # comprehensive/summary/statistics
+    year: Optional[int] = None
+    village_ids: Optional[List[int]] = None
+    include_sections: Optional[List[str]] = None
+    format: str = "excel"  # excel/pdf/json
+
+
+@router.post("/generate")
+async def generate_report(
+    request: ReportGenerateRequest,
+    current_user=Depends(get_current_user),
+    service: ReportService = Depends(get_report_service),
+):
+    """
+    生成报表
+
+    根据指定参数生成报表数据，返回报表内容（JSON格式）或文件下载链接。
+    """
+    try:
+        from app.models.supported_village import SupportedVillage
+
+        # 构建报表数据
+        report_data = {
+            "report_type": request.report_type,
+            "generated_at": datetime.now().isoformat(),
+            "generated_by": getattr(current_user, "full_name", None) or current_user.username,
+            "parameters": {
+                "year": request.year,
+                "village_ids": request.village_ids,
+                "include_sections": request.include_sections,
+                "format": request.format,
+            },
+        }
+
+        # 如果是综合报表，查询帮扶村汇总数据
+        if request.report_type == "comprehensive":
+            villages_query = service.db.query(SupportedVillage)
+            if request.village_ids:
+                villages_query = villages_query.filter(SupportedVillage.id.in_(request.village_ids))
+            villages = villages_query.limit(100).all()
+            report_data["villages"] = [
+                {
+                    "id": v.id,
+                    "village_name": v.village_name,
+                    "department": v.department,
+                    "support_unit": v.support_unit,
+                    "region_scope": v.region_scope,
+                }
+                for v in villages
+            ]
+            report_data["total_villages"] = len(villages)
+
+        # 如果是汇总统计报表
+        if request.report_type == "statistics":
+            report_data["statistics"] = {
+                "total_villages": service.db.query(SupportedVillage).count(),
+            }
+
+        return {"message": "报表生成成功", "data": report_data}
+
+    except Exception as e:
+        logger.error("报表生成失败: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"报表生成失败: {str(e)}")
+
+
+@router.get("/{report_id}/download")
+async def download_generated_report(
+    report_id: int,
+    format: str = Query("excel", description="下载格式: excel/pdf/json"),
+    current_user=Depends(get_current_user),
+    service: ReportService = Depends(get_report_service),
+):
+    """
+    下载已生成的报表文件
+
+    根据报表类型和格式返回对应的文件流。
+    """
+    try:
+        # 尝试从订阅记录中查找
+        subscription = (
+            service.db.query(ReportSubscription)
+            .filter(ReportSubscription.id == report_id)
+            .first()
+        )
+
+        if subscription:
+            # 根据订阅配置重新生成报表
+            if format == "json":
+                report_json = json.dumps(
+                    {
+                        "subscription_id": subscription.id,
+                        "name": subscription.name,
+                        "report_type": subscription.report_type,
+                        "year": subscription.year,
+                        "generated_at": datetime.now().isoformat(),
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ).encode("utf-8")
+                filename = f"report_{subscription.name}_{datetime.now().strftime('%Y%m%d')}.json"
+                return StreamingResponse(
+                    io.BytesIO(report_json),
+                    media_type="application/json",
+                    headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+                )
+            elif format == "excel":
+                # 生成Excel报表
+                excel_bytes = service.export_comprehensive_report(subscription.year or datetime.now().year, None)
+                filename = f"report_{subscription.name}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+                return StreamingResponse(
+                    io.BytesIO(excel_bytes),
+                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+                )
+
+        # 如果没有订阅记录，返回基本JSON
+        report_json = json.dumps(
+            {"report_id": report_id, "message": "报表数据", "generated_at": datetime.now().isoformat()},
+            ensure_ascii=False,
+            indent=2,
+        ).encode("utf-8")
+        filename = f"report_{report_id}_{datetime.now().strftime('%Y%m%d')}.json"
+        return StreamingResponse(
+            io.BytesIO(report_json),
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+        )
+
+    except Exception as e:
+        logger.error("报表下载失败: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"报表下载失败: {str(e)}")

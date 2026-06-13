@@ -183,6 +183,28 @@ export const fundLifecycleApi = {
     return res.data?.data || res.data;
   },
 
+  // ========== 分配调拨订单 ==========
+  async listAllocationOrders(params?: Record<string, any>) {
+    const res = await request.get(`${BASE}/allocation-orders`, { params });
+    return res.data?.data || res.data;
+  },
+
+  async createAllocationOrder(data: Record<string, any>) {
+    const res = await request.post(`${BASE}/allocation-orders`, data);
+    return res.data;
+  },
+
+  async issueAllocationOrder(orderId: number) {
+    const res = await request.post(`${BASE}/allocation-orders/${orderId}/issue`);
+    return res.data;
+  },
+
+  // ========== 配额调整 ==========
+  async quotaAdjust(fundId: number, data: Record<string, any>) {
+    const res = await request.put(`${BASE}/quota-adjust/${fundId}`, data);
+    return res.data;
+  },
+
   // ========== 阶段4 - 军地对接与资金划转 ==========
   async listTransferVouchers(params?: Record<string, any>) {
     const res = await request.get(`${BASE}/transfer-vouchers`, { params });
@@ -217,6 +239,17 @@ export const fundLifecycleApi = {
   async transferLedger(projectId: number) {
     const res = await request.get(`${BASE}/transfer-ledger/${projectId}`);
     return res.data?.data || res.data;
+  },
+
+  async uploadVoucherAttachment(voucherId: number, file: File) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await request.post(
+      `${BASE}/transfer-vouchers/${voucherId}/attachments`,
+      fd,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return res.data;
   },
 
   // ========== 阶段5 - 实施监管 ==========
@@ -281,6 +314,11 @@ export const fundLifecycleApi = {
     return res.data;
   },
 
+  async getInspectionClues(projectId: number) {
+    const res = await request.get(`${BASE}/inspection-clues/${projectId}`);
+    return res.data?.data || res.data;
+  },
+
   // ========== 阶段7 - 决算与绩效 ==========
   async createSettlement(projectId: number, data?: Record<string, any>) {
     const res = await request.post(
@@ -303,8 +341,34 @@ export const fundLifecycleApi = {
     return res.data;
   },
 
+  async verifyAsset(settlementId: number, data: Record<string, any>) {
+    const res = await request.post(
+      `${BASE}/settlement/${settlementId}/verify-asset`,
+      data,
+    );
+    return res.data;
+  },
+
   async getPerformance(projectId: number) {
     const res = await request.get(`${BASE}/performance/${projectId}`);
+    return res.data?.data || res.data;
+  },
+
+  async getPerformanceReport(projectId: number) {
+    const res = await request.get(`${BASE}/performance-report/${projectId}`);
+    return res.data?.data || res.data;
+  },
+
+  async getFeasibilityReport(projectId: number) {
+    const res = await request.get(`${BASE}/feasibility-report/${projectId}`);
+    return res.data?.data || res.data;
+  },
+
+  // ========== 资金流向树 ==========
+  async getFundFlowTree(projectId: number) {
+    const res = await request.get(
+      `${BASE}/monitoring/fund-flow-tree/${projectId}`,
+    );
     return res.data?.data || res.data;
   },
 
