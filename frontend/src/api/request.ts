@@ -60,23 +60,33 @@ request.interceptors.response.use(
     );
     pendingRequests.delete(requestKey);
 
-    // ── 脏数据过滤：使用 safeData 守卫确保常见字段类型安全 ──
+    // ── 统一响应格式：自动展开 {data: payload} 包装 ──
     const data = response.data;
     if (data && typeof data === "object") {
+      // 自动展开 {data: {...}} 或 {data: [...]} 包装
+      if ("data" in data && data.data !== null && data.data !== undefined) {
+        const inner = data.data;
+        if (typeof inner === "object" && !Array.isArray(inner)) {
+          // data.data 是对象 → 展开到顶层，保留 message/success/code
+          for (const key of Object.keys(inner)) {
+            if (!(key in data)) {
+              data[key] = inner[key];
+            }
+          }
+          delete data.data;
+        } else if (Array.isArray(inner)) {
+          // data.data 是数组 → 设为 items
+          data.items = inner;
+          delete data.data;
+        }
+      }
       // 安全化 items 字段（非数组 → []）
       if ("items" in data) {
         const safe = safeArray(data.items);
         if (safe !== data.items) {
-          console.warn(
-            "[API] 'items' field sanitized (was not an array)",
-            data,
-          );
+          console.warn("[API] 'items' field sanitized (was not an array)", data);
           data.items = safe;
         }
-      }
-      // 安全化 data 字段（null → {}）
-      if ("data" in data && (data.data === null || data.data === undefined)) {
-        data.data = {};
       }
       // 安全化 total 字段（非数字 → items.length）
       if ("total" in data && typeof data.total !== "number") {
