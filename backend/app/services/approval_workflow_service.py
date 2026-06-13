@@ -205,6 +205,23 @@ class ApprovalWorkflowService:
         self.db.add(task)
         self.db.commit()
         self.db.refresh(task)
+
+        # ── 审批消息推送 ──
+        try:
+            from app.models.message import Message
+            msg = Message(
+                user_id=task.current_approver_id,
+                title=f"新的审批任务: {title or entity_type}",
+                content=f"您有一个待审批的{entity_type}申请需要处理（任务ID: {task.id}）",
+                message_type="approval",
+                is_read=False,
+            )
+            self.db.add(msg)
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            logger.warning("审批消息推送失败（非致命）", exc_info=True)
+
         return task
 
     def get_task(self, task_id: int) -> Optional[ApprovalTask]:

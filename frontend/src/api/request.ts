@@ -60,31 +60,26 @@ request.interceptors.response.use(
     );
     pendingRequests.delete(requestKey);
 
-    // ── 统一响应格式：自动展开 {data: payload} 包装 ──
+    // ── 统一响应格式：自动展开 {data: payload} → 顶层字段 ──
+    // 保持 data 键不变以兼容旧代码，同时将内部字段提升到顶层
     const data = response.data;
     if (data && typeof data === "object") {
-      // 自动展开 {data: {...}} 或 {data: [...]} 包装
       if ("data" in data) {
         const inner = data.data;
         if (inner !== null && inner !== undefined) {
           if (typeof inner === "object" && !Array.isArray(inner)) {
-            // data.data 是对象 → 展开到顶层，保留 message/success/code
+            // 对象 → 展开到顶层（不覆盖已有字段，不删除 data 键）
             for (const key of Object.keys(inner)) {
               if (!(key in data)) {
                 data[key] = inner[key];
               }
             }
-            delete data.data;
           } else if (Array.isArray(inner)) {
-            // data.data 是数组 → 设为 items（不覆盖已有的 items）
+            // 数组 → 设为 items（不覆盖已有 items）
             if (!("items" in data)) {
               data.items = inner;
             }
-            delete data.data;
           }
-        } else {
-          // data.data 是 null/undefined → 回退为空对象（防止调用方 .data.something 崩溃）
-          data.data = {};
         }
       }
       // 安全化 items 字段（非数组 → []）
