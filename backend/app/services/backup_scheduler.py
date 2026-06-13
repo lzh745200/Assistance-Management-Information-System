@@ -29,7 +29,7 @@ async def auto_backup_job():
     """自动备份任务"""
     with get_db_context() as db:
         try:
-            auto_backup_enabled = get_config("auto_backup", "true")
+            auto_backup_enabled = get_config("auto_backup", "false")
             if auto_backup_enabled != "true":
                 logger.info("自动备份已禁用，跳过")
                 return
@@ -38,7 +38,7 @@ async def auto_backup_job():
             backup = backup_service.create_backup(description="自动备份", include_uploads=False)
             logger.info("自动备份完成: %s, 大小: %d 字节", backup.file_name, backup.file_size)
 
-            max_count = int(get_config("max_backup_count", "5"))
+            max_count = int(get_config("max_backup_count", "3"))
             deleted_count = backup_service.cleanup_old_backups(keep_count=max_count)
             if deleted_count > 0:
                 logger.info("清理了 %d 个旧备份", deleted_count)
