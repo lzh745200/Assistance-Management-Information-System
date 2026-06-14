@@ -608,8 +608,8 @@ async function fetchApiStats() {
 
 async function fetchHealth() {
   try {
-    const res = await request.get("/system/metrics");
-    const data = (res as any)?.data?.data ?? (res as any)?.data ?? {};
+    const res = await request.get("/health/full");
+    const data = (res as any)?.data ?? {};
     healthData.value = data;
     return data as HealthData | null;
   } catch {

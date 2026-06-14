@@ -152,7 +152,7 @@ async def get_resource_usage(current_user=Depends(get_current_user)):
                     "free_gb": round(usage.free / (1024 ** 3), 2),
                     "percent": usage.percent,
                 })
-            except OSError as e:
+            except (OSError, Exception) as e:
                 logger.warning("Failed to read disk partition %s: %s", part.mountpoint, e)
                 disks.append({"mountpoint": part.mountpoint, "device": part.device,
                               "error": str(e), "available": False})
