@@ -9,6 +9,14 @@ from typing import AsyncGenerator
 
 from pathlib import Path
 
+# ── 关键修复：PyInstaller 无控制台模式下 sys.stdout/stderr 为 None ──
+# Uvicorn AccessFormatter.__init__ 调用 sys.stderr.isatty() 无 None 检查，
+# 在 windowed 模式 EXE 中直接崩溃（sys.stderr is None）。
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, 'w')
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, 'w')
+
 # ── 关键修复：Windows ProactorEventLoop ConnectionResetError ──
 # 必须在 import fastapi/uvicorn 之前应用，因为 uvicorn 会在启动时创建事件循环。
 # 修复采用三层纵深防御：

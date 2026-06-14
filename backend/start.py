@@ -21,6 +21,20 @@ except Exception:
 # 备用方案：如果 reconfigure 不可用（Python < 3.7 或缓冲区问题），用环境变量强制
 os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
+# ── 关键修复：PyInstaller 无控制台模式（windowed）下 sys.stdout/stderr 为 None ──
+# Uvicorn logging 配置会调用 sys.stderr.isatty()，None 没有该方法导致崩溃。
+# 修复：将 None 替换为 devnull writer，确保任何 Logger 都能安全初始化。
+_NONE_STREAM_FIXED = False
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, 'w')
+    _NONE_STREAM_FIXED = True
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, 'w')
+    _NONE_STREAM_FIXED = True
+if _NONE_STREAM_FIXED:
+    # 延迟输出——此时 stderr 刚修复，print 才安全
+    print("[FIX] PyInstaller 无控制台模式：stdout/stderr 已修复为 devnull", flush=True)
+
 # PyInstaller 打包后, 确保能正确找到 app 模块
 if getattr(sys, 'frozen', False):
     # 运行在 PyInstaller 打包环境中
