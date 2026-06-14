@@ -48,6 +48,9 @@ def engine():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    # 确保 FK 依赖的模型表已注册到 Base.metadata
+    import app.models.data_package  # noqa: F401
+    import app.models.data_report   # noqa: F401
     Base.metadata.create_all(bind=e)
     return e
 
@@ -189,7 +192,6 @@ class TestImportTemplate:
         )
 
 
-@pytest.mark.skip(reason="Pre-existing: NoReferencedTableError data_reports→data_packages FK")
 class TestImportExcel:
     @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
     def test_import_success(self, mock_validate, auth_setup, db_session):
@@ -916,7 +918,6 @@ class TestScholarshipStudents:
         assert resp.status_code in (404, 500)
 
 
-@pytest.mark.skip(reason="Pre-existing: NoReferencedTableError data_reports→data_packages FK")
 class TestImportScholarshipStudents:
     @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
     def test_import_success(self, mock_validate, auth_setup, school, db_session):

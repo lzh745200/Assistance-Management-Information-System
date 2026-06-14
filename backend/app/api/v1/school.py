@@ -195,7 +195,8 @@ async def import_schools_excel(
         tmp_path = tmp.name
 
     try:
-        wb = load_workbook(tmp_path)
+        with open(tmp_path, "rb") as _f:
+            wb = load_workbook(_f)
         ws = wb.active
 
         status_map = {"帮扶中": "active", "未帮扶": "inactive", "已完成": "completed"}
@@ -1017,7 +1018,8 @@ async def import_scholarship_students(
         "已完成": "completed",
     }
     try:
-        wb = load_workbook(tmp_path)
+        with open(tmp_path, "rb") as _f:
+            wb = load_workbook(_f)
         ws = wb.active
         imported = 0
         errors = []
