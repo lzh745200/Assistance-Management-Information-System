@@ -610,7 +610,10 @@ export function getMockResponse(method: string, url: string): any | null {
     }
 
     // 帮扶村管理（新路由 — 前端主要使用）
-    if (path === "/supported-villages" || path.startsWith("/supported-villages/")) {
+    if (
+      path === "/supported-villages" ||
+      path.startsWith("/supported-villages/")
+    ) {
       const id = extractIdFromPath(path, "/supported-villages");
       if (id !== null) {
         return detailResponse(

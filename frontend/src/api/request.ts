@@ -104,7 +104,10 @@ request.interceptors.response.use(
       if ("items" in data) {
         const safe = safeArray(data.items);
         if (safe !== data.items) {
-          console.warn("[API] 'items' field sanitized (was not an array)", data);
+          console.warn(
+            "[API] 'items' field sanitized (was not an array)",
+            data,
+          );
           data.items = safe;
         }
       }
@@ -210,8 +213,17 @@ export async function get<T = any>(url: string, params?: any): Promise<T> {
   return apiRequest<T>({ method: "GET", url, params });
 }
 
-export async function post<T = any>(url: string, data?: any, extra?: AxiosRequestConfig): Promise<T> {
-  const config: AxiosRequestConfig = { method: "POST", url, data, ...(extra || {}) };
+export async function post<T = any>(
+  url: string,
+  data?: any,
+  extra?: AxiosRequestConfig,
+): Promise<T> {
+  const config: AxiosRequestConfig = {
+    method: "POST",
+    url,
+    data,
+    ...(extra || {}),
+  };
   if (data instanceof FormData && config.headers) {
     // 移除 Content-Type 让浏览器自动设置 multipart boundary
     // 保留其他自定义 headers（如 Authorization）

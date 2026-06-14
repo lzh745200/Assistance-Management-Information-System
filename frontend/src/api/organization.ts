@@ -16,11 +16,9 @@ export const batchUpdateSortOrders = (d: any[]) =>
 export const getMyOrganization = () =>
   api.get("/organizations/my-organization");
 
-export const getSubordinates = () =>
-  api.get("/organizations/subordinates");
+export const getSubordinates = () => api.get("/organizations/subordinates");
 
-export const getTypeOptions = () =>
-  api.get("/organizations/types/options");
+export const getTypeOptions = () => api.get("/organizations/types/options");
 
 export const getChildren = (orgId: number) =>
   api.get(`/organizations/${orgId}/children`);

@@ -749,7 +749,10 @@ const loadYearlyData = async () => {
     } as const satisfies Record<string, keyof typeof formData>;
     for (const [apiKey, formKey] of Object.entries(sectionMap)) {
       if (raw[apiKey]) {
-        Object.assign(formData[formKey], { ...raw[apiKey], year: selectedYear.value });
+        Object.assign(formData[formKey], {
+          ...raw[apiKey],
+          year: selectedYear.value,
+        });
       }
     }
   } catch (error) {

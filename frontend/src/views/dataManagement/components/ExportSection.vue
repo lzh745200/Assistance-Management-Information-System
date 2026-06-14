@@ -224,7 +224,7 @@ async function handleExport() {
       // 同步导出，直接下载
       const filename = `帮扶村数据_${new Date().toISOString().slice(0, 10)}.xlsx`;
       triggerDownload(result, filename);
-// 导出成功 — 浏览器已确认
+      // 导出成功 — 浏览器已确认
     } else {
       // 异步导出
       ElMessage.success("导出任务已创建，请在历史记录中查看");

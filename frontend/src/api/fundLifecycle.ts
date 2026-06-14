@@ -195,7 +195,9 @@ export const fundLifecycleApi = {
   },
 
   async issueAllocationOrder(orderId: number) {
-    const res = await request.post(`${BASE}/allocation-orders/${orderId}/issue`);
+    const res = await request.post(
+      `${BASE}/allocation-orders/${orderId}/issue`,
+    );
     return res.data;
   },
 

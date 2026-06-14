@@ -125,7 +125,9 @@ export function confirmImport(
  * 下载数据包
  */
 export function downloadPackage(packageId: number): string {
-  const base = import.meta.env.VITE_API_BASE_URL || '/api/v1';
-  const apiBase = base.endsWith('/api/v1') ? base : `${base.replace(/\/$/, '')}/api/v1`;
+  const base = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+  const apiBase = base.endsWith("/api/v1")
+    ? base
+    : `${base.replace(/\/$/, "")}/api/v1`;
   return `${apiBase}/data-packages/${packageId}/download`;
 }

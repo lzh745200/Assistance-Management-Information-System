@@ -54,7 +54,7 @@ export const projectsApi = {
   },
   listFiles: (id: number) => api.get("/projects/" + id + "/files"),
   getFileDownloadUrl: (projectId: number, fileId: number) =>
-    `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/projects/${projectId}/files/${fileId}/download`,
+    `${import.meta.env.VITE_API_BASE_URL || "/api/v1"}/projects/${projectId}/files/${fileId}/download`,
   deleteFile: (projectId: number, fileId: number) =>
     api.delete("/projects/" + projectId + "/files/" + fileId),
   previewFile: (projectId: number, fileId: number) =>
@@ -65,14 +65,12 @@ export const projectsApi = {
     api.get(`/projects/${projectId}/history/changes`),
 
   // ========== 项目经费关联 ==========
-  getFunds: (projectId: number) =>
-    api.get(`/projects/${projectId}/funds`),
+  getFunds: (projectId: number) => api.get(`/projects/${projectId}/funds`),
   addFund: (projectId: number, data: any) =>
     api.post(`/projects/${projectId}/funds`, data),
 
   // ========== 项目任务 ==========
-  getTasks: (projectId: number) =>
-    api.get(`/projects/${projectId}/tasks`),
+  getTasks: (projectId: number) => api.get(`/projects/${projectId}/tasks`),
   createTask: (projectId: number, data: any) =>
     api.post(`/projects/${projectId}/tasks`, data),
   updateTask: (projectId: number, taskId: number, data: any) =>

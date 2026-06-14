@@ -179,8 +179,11 @@ export const fundApi = {
   async listAttachments(fundId: number) {
     const res = await request.get(`${FUNDS_BASE}/${fundId}/attachments`);
     const body: any = res.data;
-    const items = Array.isArray(body) ? body : (body?.items || body?.data || []);
-    return { items, total: items.length } as { items: unknown[]; total: number };
+    const items = Array.isArray(body) ? body : body?.items || body?.data || [];
+    return { items, total: items.length } as {
+      items: unknown[];
+      total: number;
+    };
   },
   async deleteAttachment(attachmentId: number) {
     const response = await request.delete(
@@ -219,8 +222,11 @@ export const fundApi = {
   async listBudgets(year?: number) {
     const res = await request.get(`${BUDGETS_BASE}`, { params: { year } });
     const body: any = res.data;
-    const items = Array.isArray(body) ? body : (body?.items || body?.data || []);
-    return { items, total: items.length } as { items: unknown[]; total: number };
+    const items = Array.isArray(body) ? body : body?.items || body?.data || [];
+    return { items, total: items.length } as {
+      items: unknown[];
+      total: number;
+    };
   },
   async createBudget(data: {
     year: number;
@@ -268,8 +274,11 @@ export const fundApi = {
       params: { budget_id: budgetId },
     });
     const body: any = res.data;
-    const items = Array.isArray(body) ? body : (body?.items || body?.data || []);
-    return { items, total: items.length } as { items: unknown[]; total: number };
+    const items = Array.isArray(body) ? body : body?.items || body?.data || [];
+    return { items, total: items.length } as {
+      items: unknown[];
+      total: number;
+    };
   },
   async createTransaction(budgetId: number, data: Record<string, any>) {
     const response = await request.post(`${BUDGETS_BASE}/transactions`, {

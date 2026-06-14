@@ -500,7 +500,7 @@ async function handleExport() {
       type: filterForm.type || undefined,
       status: filterForm.status || undefined,
     });
-// 导出成功 — 浏览器已确认
+    // 导出成功 — 浏览器已确认
   } catch {
     ElMessage.error("导出失败");
   } finally {
@@ -631,7 +631,7 @@ async function handleBatchExport() {
   exporting.value = true;
   try {
     await fundApi.exportList({});
-// 导出成功 — 浏览器已确认
+    // 导出成功 — 浏览器已确认
   } catch {
     ElMessage.error("导出失败");
   } finally {

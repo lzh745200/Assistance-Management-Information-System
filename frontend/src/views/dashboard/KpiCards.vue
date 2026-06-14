@@ -1,7 +1,11 @@
 <template>
   <div class="kpi-cards">
     <div v-for="(card, i) in cards" :key="i" class="kpi-col">
-      <div class="stat-card" :class="card.theme" @click="navigateTo(card.route)">
+      <div
+        class="stat-card"
+        :class="card.theme"
+        @click="navigateTo(card.route)"
+      >
         <div class="stat-icon">
           <el-icon><component :is="card.icon" /></el-icon>
         </div>
@@ -235,7 +239,10 @@ async function loadStats() {
     const res = await get("/dashboard/stats", {
       params: { refresh: true },
     } as any);
-    const d = unwrapData<Record<string, number>>(res, {} as Record<string, number>);
+    const d = unwrapData<Record<string, number>>(
+      res,
+      {} as Record<string, number>,
+    );
     if (d) {
       stats.value = {
         total_villages: d.total_villages ?? 0,

@@ -1,7 +1,11 @@
 <template>
   <div class="user-management">
     <!-- 用户/角色 Tab 切换 -->
-    <el-tabs v-model="activeTab" class="user-role-tabs" @tab-change="handleTabChange">
+    <el-tabs
+      v-model="activeTab"
+      class="user-role-tabs"
+      @tab-change="handleTabChange"
+    >
       <el-tab-pane label="用户列表" name="users" />
       <el-tab-pane label="角色管理" name="roles" />
     </el-tabs>
@@ -375,7 +379,9 @@ import { ref, reactive, onMounted, computed } from "vue";
 import RoleManagement from "./Role.vue";
 
 const activeTab = ref("users");
-function handleTabChange(_tab: any) { /* tab switched */ }
+function handleTabChange(_tab: any) {
+  /* tab switched */
+}
 import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
 import { Plus, Key, ArrowDown } from "@element-plus/icons-vue";
 import request from "@/api/request";
@@ -805,7 +811,7 @@ const handleExportPermissionPackage = async () => {
     const res = await request.post("/permission-packages/export", {});
     const data = res.data?.data || res.data;
     if (data.file_name) {
-      const downloadUrl = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/permission-packages/download/${data.file_name}`;
+      const downloadUrl = `${import.meta.env.VITE_API_BASE_URL || "/api/v1"}/permission-packages/download/${data.file_name}`;
       const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = data.file_name;
@@ -845,7 +851,10 @@ const handleImportPermissionPackage = () => {
     importingPermPackage.value = true;
     try {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) { cleanup(); return; }
+      if (!file) {
+        cleanup();
+        return;
+      }
       const fd = new FormData();
       fd.append("file", file);
       const res = await request.post("/permission-packages/import", fd, {

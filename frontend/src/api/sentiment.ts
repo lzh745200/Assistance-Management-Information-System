@@ -38,20 +38,14 @@ export function getStatistics(days?: number): Promise<any> {
 }
 
 /** 获取热词列表 */
-export function getHotKeywords(
-  days?: number,
-  topK?: number,
-): Promise<any> {
+export function getHotKeywords(days?: number, topK?: number): Promise<any> {
   return api.get(`${BASE_URL}/hot-keywords`, {
     params: { days: days ?? 7, top_k: topK ?? 20 },
   });
 }
 
 /** 获取预警列表 */
-export function getAlerts(
-  days?: number,
-  limit?: number,
-): Promise<any> {
+export function getAlerts(days?: number, limit?: number): Promise<any> {
   return api.get(`${BASE_URL}/alerts`, {
     params: { days: days ?? 7, limit: limit ?? 50 },
   });

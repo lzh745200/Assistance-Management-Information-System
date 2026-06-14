@@ -902,19 +902,15 @@ function addCommitteeMember() {
   });
 }
 
-const sectionApiKeyMap: Record<string, string> = {
-  population: "population",
-  income: "income",
+// 仅非对称映射：内部 prop key (snake_case) → 后端 API 响应 key (kebab-case)
+// 单单词 key（population、income 等）各约定间不变，无需显式映射
+const _SECTION_KEY_OVERRIDE: Record<string, string> = {
   force_investment: "force-investment",
-  industry: "industry",
-  infrastructure: "infrastructure",
   party_building: "party-building",
-  medical: "medical",
-  consumption: "consumption",
-  employment: "employment",
-  education: "education",
-  committee: "committee",
 };
+function resolveApiKey(sectionKey: string): string {
+  return _SECTION_KEY_OVERRIDE[sectionKey] ?? sectionKey;
+}
 
 // 各板块默认数据
 function getDefaultFormData(key: string): Record<string, any> {
@@ -1013,7 +1009,7 @@ async function loadSectionData() {
   committeeMembers.value = [];
   try {
     const data = await getYearlyData(props.villageId, selectedYear.value);
-    const apiKey = sectionApiKeyMap[props.sectionKey];
+    const apiKey = resolveApiKey(props.sectionKey);
     if (apiKey && (data as any)[apiKey]) {
       const sectionData = (data as any)[apiKey];
       Object.keys(formData).forEach((k) => {
@@ -1122,7 +1118,6 @@ async function handleCustomUpload(options: UploadRequestOptions) {
     const att = await uploadSectionAttachment(
       props.villageId,
       props.sectionKey,
-      selectedYear.value,
       options.file,
     );
     attachments.value.push(att);

@@ -5,12 +5,9 @@
         v-if="f.type === 'text' || !f.type"
         v-model="localModel[f.key]"
       />
-      <el-select
-        v-else-if="f.type === 'select'"
-        v-model="localModel[f.key]"
-      >
+      <el-select v-else-if="f.type === 'select'" v-model="localModel[f.key]">
         <el-option
-          v-for="opt in (f.options || [])"
+          v-for="opt in f.options || []"
           :key="opt.value"
           :label="opt.label"
           :value="opt.value"
@@ -24,7 +21,12 @@ import { ref, watch } from "vue";
 
 const props = defineProps<{
   model: Record<string, any>;
-  fields: { key: string; label: string; type?: string; options?: { label: string; value: any }[] }[];
+  fields: {
+    key: string;
+    label: string;
+    type?: string;
+    options?: { label: string; value: any }[];
+  }[];
 }>();
 const emit = defineEmits<{
   (e: "update:model", value: Record<string, any>): void;

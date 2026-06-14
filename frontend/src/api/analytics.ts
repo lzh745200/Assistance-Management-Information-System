@@ -151,7 +151,10 @@ export async function getSummaryStatistics(params?: {
 const ANALYTICS_BASE = "/analytics";
 
 /** 获取仪表盘数据 */
-export async function getDashboard(dateRange?: string, filters?: string): Promise<any> {
+export async function getDashboard(
+  dateRange?: string,
+  filters?: string,
+): Promise<any> {
   return get(`${ANALYTICS_BASE}/dashboard`, { date_range: dateRange, filters });
 }
 

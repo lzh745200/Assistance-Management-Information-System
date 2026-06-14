@@ -25,7 +25,10 @@ async function load() {
     if (props.yearStart) params.year_start = props.yearStart;
     if (props.yearEnd) params.year_end = props.yearEnd;
     if (props.department) params.department = props.department;
-    const res: any = await get("/funds/supported-village/statistics/yearly-comparison", params);
+    const res: any = await get(
+      "/funds/supported-village/statistics/yearly-comparison",
+      params,
+    );
     yearlyData.value = res?.data || res || [];
   } catch {
     yearlyData.value = [];
@@ -35,20 +38,28 @@ async function load() {
 const chartOption = computed<EChartsOption | null>(() => {
   if (!yearlyData.value.length) return null;
   const years = yearlyData.value.map((d: any) => String(d.year || ""));
-  const amounts = yearlyData.value.map((d: any) => Number(d.total_actual || d.amount || 0));
+  const amounts = yearlyData.value.map((d: any) =>
+    Number(d.total_actual || d.amount || 0),
+  );
   return {
     tooltip: { trigger: "axis" },
     legend: { data: ["经费总额"] },
     xAxis: { type: "category", data: years },
     yAxis: { type: "value", name: "万元" },
-    series: [{
-      name: "经费总额", type: "bar", data: amounts,
-      itemStyle: { color: "#40916c" },
-    }],
+    series: [
+      {
+        name: "经费总额",
+        type: "bar",
+        data: amounts,
+        itemStyle: { color: "#40916c" },
+      },
+    ],
   };
 });
 
-watch(() => [props.yearStart, props.yearEnd, props.department], load, { immediate: true });
+watch(() => [props.yearStart, props.yearEnd, props.department], load, {
+  immediate: true,
+});
 
 defineExpose({ refresh: load });
 </script>
