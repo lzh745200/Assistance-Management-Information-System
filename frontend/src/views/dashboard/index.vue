@@ -5,6 +5,7 @@
       自定义布局面板已从主页移至此处（原 HomeSafe 布局编辑器功能保留）
     </div>
     <KpiCards />
+    <QuickActions :is-manager="true" :is-admin="true" :backing-up="false" />
     <ChartRow />
     <InfoRow />
   </div>
@@ -14,6 +15,7 @@
 import { ref } from "vue";
 import PageHeader from "./PageHeader.vue";
 import KpiCards from "./KpiCards.vue";
+import QuickActions from "./components/QuickActions.vue";
 import ChartRow from "./ChartRow.vue";
 import InfoRow from "./InfoRow.vue";
 
