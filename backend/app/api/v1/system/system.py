@@ -123,6 +123,7 @@ async def get_system_info(
             "total_organizations": total_orgs,
             "total_villages": total_villages,
             "total_projects": total_projects,
+            "stat_errors": stat_errors if stat_errors else None,
         },
     }
 
