@@ -28,40 +28,14 @@
       </div>
     </div>
 
-    <!-- 右侧：快捷入口 -->
-    <div class="quick-links">
-      <h3 class="section-title">快捷入口</h3>
-      <div class="ql-grid">
-        <div
-          v-for="ql in quickLinks"
-          :key="ql.path"
-          class="ql-item"
-          :data-test="ql.testId"
-          @click="router.push(ql.path)"
-        >
-          <el-icon :size="22"><component :is="ql.icon" /></el-icon>
-          <span class="ql-label">{{ ql.label }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- 快捷入口已整合至上方"⚡ 快捷入口"卡片中 -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import {
-  List,
-  DataAnalysis,
-  Upload,
-  Setting,
-  Message,
-  Folder,
-} from "@element-plus/icons-vue";
 import request from "@/api/request";
-
-const router = useRouter();
 
 const activities = ref<any[]>([]);
 const editingId = ref<string | null>(null);
@@ -95,34 +69,6 @@ async function deleteActivity(id: string) {
   }
 }
 
-const quickLinks = [
-  { path: "/projects", label: "项目列表", icon: Folder, testId: "ql-projects" },
-  {
-    path: "/data-analysis",
-    label: "数据看板",
-    icon: DataAnalysis,
-    testId: "ql-analysis",
-  },
-  {
-    path: "/data-package",
-    label: "数据上报",
-    icon: Upload,
-    testId: "ql-upload",
-  },
-  {
-    path: "/system/config",
-    label: "系统配置",
-    icon: Setting,
-    testId: "ql-config",
-  },
-  { path: "/message", label: "消息中心", icon: Message, testId: "ql-messages" },
-  {
-    path: "/approval/pending",
-    label: "待审批",
-    icon: List,
-    testId: "ql-approval",
-  },
-];
 
 function formatTime(t: string): string {
   if (!t) return "";
@@ -151,15 +97,14 @@ onMounted(() => {
 <style scoped lang="scss">
 .info-row {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
 }
 
-.timeline-section,
-.quick-links {
+.timeline-section {
   background: #fff;
   border-radius: 12px;
   padding: 20px 24px;
@@ -266,31 +211,4 @@ onMounted(() => {
   padding: 20px 0;
 }
 
-.ql-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.ql-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 16px 8px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    transform 0.2s;
-  color: #64748b;
-  &:hover {
-    background: #f0f4f0;
-    transform: translateY(-2px);
-    color: #2d6a4f;
-  }
-}
-.ql-label {
-  font-size: 12px;
-  font-weight: 500;
-}
 </style>
