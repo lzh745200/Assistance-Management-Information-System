@@ -4,6 +4,11 @@
   "private": true,
   "description": "帮扶管理系统 - 贵州省版 Standalone桌面应用",
   "main": "electron/main.js",
+  "author": {
+    "name": "开发团队",
+    "email": "dev@bumofu.com"
+  },
+  "homepage": "https://bumofu.com",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
@@ -32,24 +37,18 @@
       "node_modules/**/*"
     ],
     "win": {
-      "target": [
-        "nsis"
-      ],
+      "target": ["nsis"],
       "icon": "resources/icon.ico"
     },
     "mac": {
-      "target": [
-        "dmg"
-      ],
+      "target": ["dmg"],
       "icon": "resources/icon.icns"
     },
     "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
+      "target": ["deb"],
       "icon": "resources/icon.png",
-      "category": "Office"
+      "category": "Office",
+      "maintainer": "开发团队 <dev@bumofu.com>"
     }
   }
 }
