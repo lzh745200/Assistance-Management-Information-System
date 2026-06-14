@@ -1,12 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller 打包配置 - Windows 32-bit (x86) 版本
-将 FastAPI 后端打包为 32 位单文件可执行程序
-版本: 1.2.0
-
-注意: 32-bit 版本排除了部分重量级依赖以保证兼容性
-排除: scipy, prophet, scikit-learn (不支持 Windows x86 构建)
-保留: 所有核心业务功能、报表生成、数据分析（pandas/numpy）
+PyInstaller 完整打包配置 - 跨平台通用版
+将 FastAPI 后端打包为单文件可执行程序，包含所有依赖
+版本: 1.1.0
 """
 
 import os
@@ -26,17 +22,27 @@ datas = [
     (os.path.join(backend_dir, 'app'), 'app'),
 ]
 
-# 自动收集 snownlp 包数据
+# 自动收集 prophet 包数据
 import importlib.util as _ilu
+_prophet_spec = _ilu.find_spec('prophet')
+if _prophet_spec and _prophet_spec.submodule_search_locations:
+    _prophet_dir = list(_prophet_spec.submodule_search_locations)[0]
+    datas.append((_prophet_dir, 'prophet'))
+
+# 自动收集 snownlp 包数据
 _snownlp_spec = _ilu.find_spec('snownlp')
 if _snownlp_spec and _snownlp_spec.submodule_search_locations:
     _snownlp_dir = list(_snownlp_spec.submodule_search_locations)[0]
     datas.append((_snownlp_dir, 'snownlp'))
 
+# 自动收集 prometheus_client 包数据（包含 HTML 模板等静态文件）
+datas += collect_data_files('prometheus_client')
+
 # 二进制文件列表
 binaries = []
 
-# hidden imports - 32-bit 精简版
+# 优化的 hidden imports - 只保留关键框架级导入
+# 使用 collect_submodules 自动收集 app 包下的所有模块
 hiddenimports = [
     # FastAPI 和 Web 框架核心
     'uvicorn',
@@ -71,9 +77,10 @@ hiddenimports = [
     'passlib.context',
     'passlib.handlers.bcrypt',
     'passlib.handlers.pbkdf2',
-    'passlib.handlers.sha_256',
+    'passlib.handlers.sha2_crypt',
     'bcrypt',
     'pyotp',
+    'qrcode.image.svg',
 
     # 工具库
     'python_multipart',
@@ -87,40 +94,57 @@ hiddenimports = [
     'structlog.processors',
     'pythonjsonlogger.jsonlogger',
 
-    # 数据处理 (保留 pandas/numpy 基本功能)
+    # 数据处理
     'openpyxl.styles',
     'openpyxl.utils',
     'pandas.core',
     'pandas.io.excel',
+    'numpy.core._multiarray_umath',
 
     # 文件处理
     'PIL.Image',
 
-    # AI功能 - 精简版
+    # AI功能
+    'sklearn.linear_model',
+    'sklearn.preprocessing',
+    'prophet',
     'jieba',
     'jieba.analyse',
     'snownlp',
+
+    # 舆情监控
+    'scrapy',
+    'bs4.builder._lxml',
+    'feedparser',
+
+    # 业务指标监控
+    'prometheus_client',
 ]
 
+# Windows 平台特定隐藏导入
 if is_win:
     hiddenimports.append('psutil._pswindows')
 
 # 自动收集 app 包下的所有子模块
 hiddenimports += collect_submodules('app')
 
-# 显式添加所有 API v1 路由模块
+# 显式添加所有 API v1 路由模块（确保 PyInstaller 能正确打包）
 hiddenimports += [
+    # 子模块包
     'app.api.v1.auth',
     'app.api.v1.data',
     'app.api.v1.import_export',
     'app.api.v1.system',
+    # System 子模块
     'app.api.v1.system.health',
     'app.api.v1.system.env',
     'app.api.v1.system.config_package',
+    # Monitoring 子模块
     'app.api.v1.monitoring',
     'app.api.v1.monitoring.metrics',
     'app.api.v1.monitoring.secrets',
     'app.api.v1.monitoring.data_tier',
+    # 业务模块
     'app.api.v1.organization',
     'app.api.v1.policy',
     'app.api.v1.projects',
@@ -162,18 +186,14 @@ hiddenimports += [
     'app.api.v1.search',
 ]
 
-# 32-bit 排除列表 - 排除不支持 x86 的重量级包
+# 排除不需要的模块（避免 Analysis 时间过长）
 excludes = [
     'pytest', 'pytest_asyncio', 'pytest_cov', 'pytest_mock',
     'hypothesis', 'flake8', 'black', 'mypy',
     'tkinter', 'test', 'tests',
     'matplotlib', 'IPython', 'jupyter',
     'notebook', 'spyder', 'pylint',
-    # 32-bit 不兼容: 科学计算重量级包
-    'scipy', 'scipy.signal', 'scipy.stats',
-    'prophet',
-    'sklearn', 'sklearn.linear_model', 'sklearn.preprocessing',
-    # 可选依赖
+    # 可选依赖（未安装的不需要导入）
     'docx', 'mammoth', 'apscheduler',
     # 不必要的 jose 后端
     'jose.backends.native_types',
@@ -184,12 +204,12 @@ excludes = [
     'app.api.v1.rbac',
     'app.api.v1.analytics',
     'app.api.v1.statistics',
+    # magic 模块导致 PyInstaller 子进程崩溃（需要 libmagic DLL）
+    # file_upload.py 中已用 try/except 保护，运行时自动降级
     'magic',
-    'scrapy',
 ]
 
-a = Analysis(
-    [os.path.join(backend_dir, 'start.py')],
+analysis_kwargs = dict(
     pathex=[backend_dir],
     binaries=binaries,
     datas=datas,
@@ -198,10 +218,17 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=excludes,
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
     cipher=block_cipher,
     noarchive=False,
+)
+
+if is_win:
+    analysis_kwargs['win_no_prefer_redirects'] = False
+    analysis_kwargs['win_private_assemblies'] = False
+
+a = Analysis(
+    [os.path.join(backend_dir, 'start.py')],
+    **analysis_kwargs,
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
@@ -220,10 +247,10 @@ exe = EXE(
     upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch='x86',
+    target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
     icon=os.path.join(backend_dir, '..', 'resources', 'icons', 'app.ico'),
