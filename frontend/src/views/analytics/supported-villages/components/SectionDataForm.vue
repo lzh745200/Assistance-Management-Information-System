@@ -905,10 +905,10 @@ function addCommitteeMember() {
 const sectionApiKeyMap: Record<string, string> = {
   population: "population",
   income: "income",
-  force_investment: "forceInvestment",
+  force_investment: "force-investment",
   industry: "industry",
   infrastructure: "infrastructure",
-  party_building: "partyBuilding",
+  party_building: "party-building",
   medical: "medical",
   consumption: "consumption",
   employment: "employment",
