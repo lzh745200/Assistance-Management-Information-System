@@ -1,14 +1,16 @@
-﻿; 帮扶管理信息系统 — Windows x64 安装脚本 (NSIS)
+﻿; 帮扶管理信息系统 — Windows 集成安装脚本 (x64 + x86)
 !include "MUI2.nsh"
+!include "x64.nsh"
 
 !define PRODUCT_NAME "BumofuAssistance"
 !define PRODUCT_DISPLAY "帮扶管理信息系统"
 !define PRODUCT_VERSION "1.2.0"
 
 SetCompressor /SOLID lzma
+SetCompressorDictSize 64
 RequestExecutionLevel admin
 Name "${PRODUCT_DISPLAY} ${PRODUCT_VERSION}"
-OutFile "..\dist\windows\${PRODUCT_DISPLAY}-${PRODUCT_VERSION}-x64-Setup.exe"
+OutFile "..\dist\windows\${PRODUCT_DISPLAY}-${PRODUCT_VERSION}-Setup.exe"
 InstallDir "$PROGRAMFILES64\${PRODUCT_DISPLAY}"
 
 !define MUI_ABORTWARNING
@@ -21,31 +23,46 @@ InstallDir "$PROGRAMFILES64\${PRODUCT_DISPLAY}"
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
-
-; Load SimpChinese for MUI
 !insertmacro MUI_LANGUAGE "SimpChinese"
 
-; LangStrings for MUI pages
-LangString MUI_TEXT_WELCOME_INFO_TITLE ${LANG_SIMPCHINESE} "${PRODUCT_DISPLAY} 安装向导"
-LangString MUI_TEXT_WELCOME_INFO_TEXT ${LANG_SIMPCHINESE} "本向导将引导您完成 ${PRODUCT_DISPLAY} ${PRODUCT_VERSION} 的安装。$\r$\n$\r$\n系统自带全部运行时环境，无需单独安装 Python、Node.js 或其他依赖。"
+Function .onInit
+  ; Auto-detect install dir for x86 systems
+  ${IfNot} ${RunningX64}
+    StrCpy $INSTDIR "$PROGRAMFILES\${PRODUCT_DISPLAY}"
+  ${EndIf}
+FunctionEnd
 
 Section "Install"
   SetOutPath "$INSTDIR"
-  DetailPrint "正在安装后端服务..."
-  File /r "..\dist\windows\package\military-rural-backend.exe"
+
+  ${If} ${RunningX64}
+    DetailPrint "安装 64-bit 版本..."
+    File /r "..\backend\dist\military-rural-backend-x64.exe"
+    Rename "$INSTDIR\military-rural-backend-x64.exe" "$INSTDIR\military-rural-backend.exe"
+  ${Else}
+    DetailPrint "安装 32-bit 版本..."
+    File /r "..\backend\dist\military-rural-backend-x86.exe"
+    Rename "$INSTDIR\military-rural-backend-x86.exe" "$INSTDIR\military-rural-backend.exe"
+  ${EndIf}
+
   File "..\dist\windows\package\launch.py"
-  DetailPrint "正在安装前端界面..."
+
+  DetailPrint "安装前端界面..."
   SetOutPath "$INSTDIR\resources\frontend"
   File /r "..\resources\frontend\*.*"
   SetOutPath "$INSTDIR"
+
   CreateDirectory "$INSTDIR\data"
   CreateDirectory "$INSTDIR\logs"
   CreateDirectory "$INSTDIR\uploads"
   CreateDirectory "$INSTDIR\exports"
   CreateDirectory "$INSTDIR\backups"
+
   CreateShortCut "$DESKTOP\${PRODUCT_DISPLAY}.lnk" "$INSTDIR\military-rural-backend.exe"
   CreateDirectory "$SMPROGRAMS\${PRODUCT_DISPLAY}"
   CreateShortCut "$SMPROGRAMS\${PRODUCT_DISPLAY}\${PRODUCT_DISPLAY}.lnk" "$INSTDIR\military-rural-backend.exe"
+  CreateShortCut "$SMPROGRAMS\${PRODUCT_DISPLAY}\卸载.lnk" "$INSTDIR\uninst.exe"
+
   WriteUninstaller "$INSTDIR\uninst.exe"
   WriteRegStr HKLM "Software\${PRODUCT_NAME}" "" "$INSTDIR"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayName" "${PRODUCT_DISPLAY}"
@@ -55,7 +72,7 @@ Section "Install"
 SectionEnd
 
 Section "Uninstall"
-  MessageBox MB_YESNO|MB_ICONQUESTION "是否保留数据库和上传文件？$\r$\n$\r$\n选择「是」保留数据（重新安装后可继续使用）$\r$\n选择「否」彻底删除所有数据" IDYES KeepData
+  MessageBox MB_YESNO|MB_ICONQUESTION "是否保留数据库和上传文件？$\r$\n$\r$\n[是] 保留数据（重新安装后可继续使用）$\r$\n[否] 彻底删除" IDYES KeepData
   RMDir /r "$INSTDIR"
   Goto Done
   KeepData:
