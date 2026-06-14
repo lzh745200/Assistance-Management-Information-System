@@ -87,10 +87,7 @@ export function triggerDownload(blob: Blob, filename: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export async function exportReportWord(
-  reportType: string,
-  year?: number,
-) {
+export async function exportReportWord(reportType: string, year?: number) {
   const res = await request.get(`${EXPORT_BASE}/report-word`, {
     params: { report_type: reportType, ...(year ? { year } : {}) },
     responseType: "blob",
@@ -98,10 +95,7 @@ export async function exportReportWord(
   return res.data;
 }
 
-export async function exportReportPdf(
-  reportType: string,
-  year?: number,
-) {
+export async function exportReportPdf(reportType: string, year?: number) {
   const res = await request.get(`${EXPORT_BASE}/report-pdf`, {
     params: { report_type: reportType, ...(year ? { year } : {}) },
     responseType: "blob",

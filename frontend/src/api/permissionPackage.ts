@@ -55,5 +55,5 @@ export async function confirmPermissionPackage(
  * @param fileName 文件名
  */
 export function getPermissionPackageDownloadUrl(fileName: string): string {
-  return `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/permission-packages/download/${fileName}`;
+  return `${import.meta.env.VITE_API_BASE_URL || "/api/v1"}/permission-packages/download/${fileName}`;
 }

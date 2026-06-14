@@ -112,21 +112,6 @@ class FundUpdate(BaseModel):
 # 辅助工具与序列化
 # ============================================================================
 
-# 缓存驼峰命名映射，避免每次请求都反射和转换，提升序列化性能
-try:
-    from app.utils.common import StringHelper
-    _FUND_CAMEL_MAP = {col.name: StringHelper.to_camel_case(col.name) for col in Fund.__table__.columns}
-except ImportError:
-    # 降级处理：如果 StringHelper 不可用，使用简单替换
-    _FUND_CAMEL_MAP = {
-        col.name: (
-            col.name.replace('_', ' ').title().replace(' ', '')[:1].lower()
-            + col.name.replace('_', ' ').title().replace(' ', '')[1:]
-        )
-        for col in Fund.__table__.columns
-    }
-
-
 def _safe_val(val: Any) -> Any:
     """安全转换数据库值为 JSON 可序列化类型"""
     if val is None:
@@ -141,16 +126,16 @@ def _safe_val(val: Any) -> Any:
 
 
 def _fund_to_dict(f: Fund) -> Dict[str, Any]:
-    """将 Fund ORM 对象转为字典（camelCase 键名，前端直接使用）"""
+    """将 Fund ORM 对象转为字典（snake_case 键名，与前端字段名一致）"""
     result = {}
-    for col_name, camel_name in _FUND_CAMEL_MAP.items():
-        result[camel_name] = _safe_val(getattr(f, col_name, None))
+    for col in Fund.__table__.columns:
+        result[col.name] = _safe_val(getattr(f, col.name, None))
 
     # 补充关联数据（如果使用了 joinedload 预加载）
     if hasattr(f, "project") and f.project:
-        result["projectName"] = f.project.name
+        result["project_name"] = f.project.name
     if hasattr(f, "village") and f.village:
-        result["villageName"] = f.village.name
+        result["village_name"] = f.village.name
 
     return result
 

@@ -118,7 +118,9 @@ export const useUserStore = defineStore("user", () => {
         const payload = JSON.parse(atob(token.split(".")[1]));
         return payload?.sub || payload?.user_id || null;
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return null;
   }
 

@@ -50,7 +50,10 @@ export const exportSupportedVillages = (params?: any) =>
       triggerDownload(r.data, m?.[1] || "supported_villages_export.xlsx");
     });
 export const downloadImportTemplate = () =>
-  api.get("/import/template", { params: { entity_type: "supported_village" }, responseType: "blob" });
+  api.get("/import/template", {
+    params: { entity_type: "supported_village" },
+    responseType: "blob",
+  });
 export const downloadTemplate = downloadImportTemplate;
 
 // ── Filter options ──

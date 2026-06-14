@@ -115,7 +115,10 @@ export const exportPoliciesPDF = (params?: any) =>
 export const exportPoliciesWPS = (params?: any) =>
   api.get("/policies/export/wps", { params, responseType: "blob" });
 export const downloadImportTemplate = () =>
-  api.get("/import/template", { params: { entity_type: "policy" }, responseType: "blob" });
+  api.get("/import/template", {
+    params: { entity_type: "policy" },
+    responseType: "blob",
+  });
 
 // ── Display helpers (used by views for status/label formatting) ──
 const CATEGORY_LABELS: Record<string, string> = {};

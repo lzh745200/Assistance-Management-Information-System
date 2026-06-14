@@ -203,7 +203,6 @@
             </div>
           </el-tab-pane>
 
-
           <!-- 状态日志标签页 -->
           <el-tab-pane label="状态日志" name="statusHistory">
             <div class="detail-card" style="margin-bottom: 0">

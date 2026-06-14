@@ -9,7 +9,9 @@ const BASE_URL = "/dashboard";
 
 /** 获取仪表盘统计数据 */
 export function getDashboardStats(refresh?: boolean): Promise<any> {
-  return api.get(`${BASE_URL}/stats`, { params: { refresh: refresh ?? false } });
+  return api.get(`${BASE_URL}/stats`, {
+    params: { refresh: refresh ?? false },
+  });
 }
 
 /** 仪表盘汇总（统计 + 近期动态，一次请求） */

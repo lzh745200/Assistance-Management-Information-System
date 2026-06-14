@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.utils.snake_to_camel import to_camel
+from app.utils.common import dict_keys_to_camel
 from app.models.supported_village import (
     SupportedVillage,
     VillagePopulation,
@@ -105,11 +105,11 @@ def _get_section_data(db: Session, model: Any, village_id: int, year: int) -> Op
         return None
     result = {}
     for col in model.__table__.columns:
+        if col.name in _SKIP_COLUMNS:
+            continue
         val = getattr(row, col.name)
-        if isinstance(val, bool):
-            val = int(val)
         result[col.name] = val
-    return to_camel(result)
+    return dict_keys_to_camel(result)
 
 
 def _copy_section_data(db: Session, model: Any, village_id: int, from_year: int, to_year: int) -> bool:

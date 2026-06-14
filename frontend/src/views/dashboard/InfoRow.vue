@@ -10,18 +10,38 @@
           }}</span>
           <span class="tl-dot" />
           <template v-if="editingId === item.id">
-            <input v-model="editForm.action" class="tl-edit-input" placeholder="操作" />
-            <input v-model="editForm.target" class="tl-edit-input" placeholder="目标" />
+            <input
+              v-model="editForm.action"
+              class="tl-edit-input"
+              placeholder="操作"
+            />
+            <input
+              v-model="editForm.target"
+              class="tl-edit-input"
+              placeholder="目标"
+            />
             <button class="tl-save-btn" @click="saveEdit(item.id)">保存</button>
-            <button class="tl-cancel-btn" @click="editingId = null">取消</button>
+            <button class="tl-cancel-btn" @click="editingId = null">
+              取消
+            </button>
           </template>
           <template v-else>
             <span class="tl-text">{{
               item.action || item.description || "--"
             }}</span>
-            <span class="tl-target" v-if="item.target">— {{ item.target }}</span>
-            <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">✎</button>
-            <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">✕</button>
+            <span v-if="item.target" class="tl-target"
+              >— {{ item.target }}</span
+            >
+            <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">
+              ✎
+            </button>
+            <button
+              class="tl-delete-btn"
+              title="删除"
+              @click="deleteActivity(item.id)"
+            >
+              ✕
+            </button>
           </template>
         </div>
         <div v-if="activities.length === 0" class="tl-empty">暂无动态</div>
@@ -68,7 +88,6 @@ async function deleteActivity(id: string) {
     ElMessage.error("删除失败，请重试");
   }
 }
-
 
 function formatTime(t: string): string {
   if (!t) return "";
@@ -171,7 +190,8 @@ onMounted(() => {
   color: #94a3b8;
   margin-left: 4px;
 }
-.tl-edit-btn, .tl-delete-btn {
+.tl-edit-btn,
+.tl-delete-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -186,8 +206,14 @@ onMounted(() => {
 .timeline-item:hover .tl-delete-btn {
   opacity: 1;
 }
-.tl-edit-btn:hover { color: #2d6a4f; background: #f0f4f0; }
-.tl-delete-btn:hover { color: #dc2626; background: #fef2f2; }
+.tl-edit-btn:hover {
+  color: #2d6a4f;
+  background: #f0f4f0;
+}
+.tl-delete-btn:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
 .tl-edit-input {
   font-size: 12px;
   padding: 2px 6px;
@@ -195,20 +221,26 @@ onMounted(() => {
   border-radius: 4px;
   width: 80px;
 }
-.tl-save-btn, .tl-cancel-btn {
+.tl-save-btn,
+.tl-cancel-btn {
   font-size: 11px;
   border: none;
   border-radius: 4px;
   padding: 2px 8px;
   cursor: pointer;
 }
-.tl-save-btn { background: #2d6a4f; color: #fff; }
-.tl-cancel-btn { background: #e5e7eb; color: #374151; }
+.tl-save-btn {
+  background: #2d6a4f;
+  color: #fff;
+}
+.tl-cancel-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
 .tl-empty {
   text-align: center;
   color: #94a3b8;
   font-size: 13px;
   padding: 20px 0;
 }
-
 </style>

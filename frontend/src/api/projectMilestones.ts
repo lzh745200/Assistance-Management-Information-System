@@ -24,6 +24,5 @@ export const projectMilestonesApi = {
   // ========== 仪表板 ==========
   getUpcomingMilestones: () =>
     api.get("/projects/dashboard/upcoming-milestones"),
-  getOverdueMilestones: () =>
-    api.get("/projects/dashboard/overdue-milestones"),
+  getOverdueMilestones: () => api.get("/projects/dashboard/overdue-milestones"),
 };

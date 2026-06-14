@@ -2,18 +2,19 @@ import api from "./request";
 
 export const rbacApi = {
   // ========== 权限检查 ==========
-  checkPermission: (data: { permission?: string; resource?: string; action?: string }) =>
-    api.post("/rbac/check", data),
+  checkPermission: (data: {
+    permission?: string;
+    resource?: string;
+    action?: string;
+  }) => api.post("/rbac/check", data),
 
   // ========== 角色管理 ==========
   getRoles: () => api.get("/rbac/roles"),
   getRole: (id: number) => api.get(`/rbac/roles/${id}`),
   createRole: (data: any) => api.post("/rbac/roles", data),
-  updateRole: (id: number, data: any) =>
-    api.put(`/rbac/roles/${id}`, data),
+  updateRole: (id: number, data: any) => api.put(`/rbac/roles/${id}`, data),
   deleteRole: (id: number) => api.delete(`/rbac/roles/${id}`),
-  getRoleUsers: (roleId: number) =>
-    api.get(`/rbac/roles/${roleId}/users`),
+  getRoleUsers: (roleId: number) => api.get(`/rbac/roles/${roleId}/users`),
 
   // ========== 权限管理 ==========
   getPermissions: () => api.get("/rbac/permissions"),
@@ -21,8 +22,7 @@ export const rbacApi = {
   // ========== 用户权限 ==========
   getUserPermissions: (userId: number) =>
     api.get(`/rbac/user/${userId}/permissions`),
-  getUserRoles: (userId: number) =>
-    api.get(`/rbac/user/${userId}/roles`),
+  getUserRoles: (userId: number) => api.get(`/rbac/user/${userId}/roles`),
 
   // ========== 分配/撤销 ==========
   assignRole: (userId: number, roleId: number) =>
@@ -35,6 +35,5 @@ export const rbacApi = {
   // ========== 当前用户权限（前端路由用）==========
   getCurrentUserPermissions: () =>
     api.get("/rbac/frontend/current-user-permissions"),
-  getRoutePermissions: () =>
-    api.get("/rbac/frontend/route-permissions"),
+  getRoutePermissions: () => api.get("/rbac/frontend/route-permissions"),
 };

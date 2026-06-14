@@ -357,7 +357,7 @@ const loadData = async () => {
       project_type: filterForm.type || undefined,
       status: filterForm.status || undefined,
     });
-    projectList.value = ((res as any)?.data?.items || (res as any)?.items || []);
+    projectList.value = (res as any)?.data?.items || (res as any)?.items || [];
     pagination.total = (res as any)?.data?.total || (res as any)?.total || 0;
   } catch (e) {
     logger.error("[Projects] loadData failed:", e);
@@ -445,7 +445,7 @@ const handleExport = async () => {
     link.download = "帮扶项目导出.xlsx";
     link.click();
     window.URL.revokeObjectURL(url);
-// 导出成功 — 浏览器已确认
+    // 导出成功 — 浏览器已确认
   } catch {
     ElMessage.error("导出失败，请稍后重试");
   }

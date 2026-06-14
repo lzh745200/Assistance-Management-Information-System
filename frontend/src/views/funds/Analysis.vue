@@ -250,7 +250,7 @@ const pieChartOption = computed<EChartsOption>(() => {
   const rawData = dimensionData.value || [];
   const data = rawData.map((d) => ({
     value: Number(d.total_amount) || 0,
-    name: d.label || '未知',
+    name: d.label || "未知",
   }));
   const colors = [
     "#40916c",
@@ -287,7 +287,7 @@ const pieChartOption = computed<EChartsOption>(() => {
 // 柱状图
 const barChartOption = computed<EChartsOption>(() => {
   const rawData = dimensionData.value || [];
-  const labels = rawData.map((d) => d.label || '未知');
+  const labels = rawData.map((d) => d.label || "未知");
   const rates = rawData.map((d) => Number(d.utilization_rate) || 0);
   return {
     tooltip: {
@@ -373,7 +373,7 @@ function handleExportStats() {
     total_used: "已使用(万元)",
     utilization_rate: "利用率(%)",
   });
-// 导出成功 — 浏览器已确认
+  // 导出成功 — 浏览器已确认
 }
 
 onMounted(() => {

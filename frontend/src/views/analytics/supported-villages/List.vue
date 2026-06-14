@@ -237,7 +237,9 @@
         <el-pagination
           v-model:current-page="pagination.page"
           v-model:page-size="pagination.pageSize"
-          :total="(pagination as any)?.data?.total || (pagination as any)?.total"
+          :total="
+            (pagination as any)?.data?.total || (pagination as any)?.total
+          "
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
@@ -396,8 +398,12 @@ async function loadData() {
         isKeyCounty: filters.isKeyCounty,
       },
     });
-    tableData.value = (response as any)?.data?.items || (response as any)?.items;
-    pagination.total = (response as any)?.data?.total || (response as any)?.total || tableData.value.length;
+    tableData.value =
+      (response as any)?.data?.items || (response as any)?.items;
+    pagination.total =
+      (response as any)?.data?.total ||
+      (response as any)?.total ||
+      tableData.value.length;
   } catch (error) {
     ElMessage.error("加载数据失败");
   } finally {
@@ -576,7 +582,7 @@ async function handleExport() {
     link.click();
     window.URL.revokeObjectURL(url);
 
-// 导出成功 — 浏览器已确认
+    // 导出成功 — 浏览器已确认
   } catch (error: any) {
     logger.error("导出失败:", error);
     ElMessage.error("导出功能需要后端支持，请先启动后端服务");

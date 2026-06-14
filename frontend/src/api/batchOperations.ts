@@ -35,10 +35,7 @@ export function batchExport(data: {
 }
 
 /** 验证批量操作 */
-export function validateBatch(
-  tableName: string,
-  ids: number[],
-): Promise<any> {
+export function validateBatch(tableName: string, ids: number[]): Promise<any> {
   return api.post(`${BASE_URL}/validate`, null, {
     params: { table_name: tableName, ids },
   });
