@@ -389,10 +389,13 @@ class TestDatabaseMaintenanceJob:
 
 class TestSchedulerControl:
     def test_start_backup_scheduler(self):
-        with patch("app.services.backup_scheduler.scheduler") as mock_scheduler:
-            from app.services.backup_scheduler import start_backup_scheduler
-            start_backup_scheduler()
-            assert mock_scheduler.add_job.call_count == 6
+        import app.services.backup_scheduler as bm
+        with patch.object(bm, "scheduler") as mock_scheduler:
+            bm.start_backup_scheduler()
+            # 4 lightweight jobs: kpi, anomaly, todo, weekly
+            # (auto_backup and db_maintenance disabled to save disk space)
+            assert mock_scheduler.add_job.call_count == 4, \
+                f"Expected 4 jobs, got {mock_scheduler.add_job.call_count}"
             mock_scheduler.start.assert_called_once()
 
     def test_stop_backup_scheduler_running(self):
