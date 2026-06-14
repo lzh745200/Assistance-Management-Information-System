@@ -1,25 +1,92 @@
 <template>
-  <div class="dashboard-home">
+  <div class="dashboard-home dashboard-modern">
     <PageHeader @toggle-layout="showLayoutEditor = !showLayoutEditor" />
-    <div v-if="showLayoutEditor" class="layout-editor-banner">
-      自定义布局面板已从主页移至此处（原 HomeSafe 布局编辑器功能保留）
+
+    <!-- 自定义布局面板 -->
+    <transition name="slide">
+      <div v-if="showLayoutEditor" class="layout-editor">
+        <div class="layout-header">
+          <span class="layout-title">
+            <el-icon><Setting /></el-icon> 自定义布局
+          </span>
+          <span v-if="layoutSaved" class="layout-saved">✅ 已保存</span>
+          <el-select v-model="layoutPreset" size="small" style="width:110px" @change="applyPreset">
+            <el-option label="默认布局" value="default" />
+            <el-option label="紧凑模式" value="compact" />
+            <el-option label="展开全部" value="expand" />
+          </el-select>
+          <el-button size="small" text @click="resetLayout">恢复默认</el-button>
+          <el-button size="small" type="primary" @click="showLayoutEditor = false">完成</el-button>
+        </div>
+        <p class="layout-hint">拖拽排序 · 开关控制可见性</p>
+        <div class="layout-sections">
+          <div
+            v-for="section in layoutSections"
+            :key="section.key"
+            class="layout-item"
+            :class="{ 'drag-over': dragOverKey === section.key }"
+            draggable="true"
+            @dragstart="onDragStart($event, section.key)"
+            @dragover.prevent="onDragOver(section.key)"
+            @dragleave="onDragLeave"
+            @drop="onDrop($event, section.key)"
+            @dragend="onDragEnd"
+          >
+            <el-icon class="drag-handle"><Rank /></el-icon>
+            <span>{{ section.label }}</span>
+            <el-switch v-model="section.visible" size="small" @change="onToggle" />
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- KPI 统计横条 -->
+    <div v-if="visible.kpi" class="kpi-strip">
+      <KpiCards />
     </div>
-    <KpiCards />
-    <QuickActions
-      :is-manager="isManager"
-      :is-admin="isAdmin"
-      :backing-up="false"
-      @backup="handleBackup"
-      @restore="handleRestore"
-    />
-    <ChartRow />
-    <InfoRow />
+
+    <!-- 中部：图表 + 快捷入口 -->
+    <div class="middle-row">
+      <div v-if="visible.charts" class="chart-panel">
+        <div class="panel-header">
+          <el-icon><TrendCharts /></el-icon>
+          <span>数据趋势</span>
+        </div>
+        <ChartRow />
+      </div>
+      <div v-if="visible.quickActions" class="quick-panel">
+        <div class="panel-header">
+          <el-icon><Grid /></el-icon>
+          <span>快捷入口</span>
+          <el-button size="small" text @click="showLayoutEditor = !showLayoutEditor">
+            <el-icon><Setting /></el-icon>
+          </el-button>
+        </div>
+        <QuickActions
+          :is-manager="isManager"
+          :is-admin="isAdmin"
+          :backing-up="false"
+          @backup="handleBackup"
+          @restore="handleRestore"
+        />
+      </div>
+    </div>
+
+    <!-- 最新动态（全宽） -->
+    <div v-if="visible.info" class="info-panel">
+      <div class="panel-header">
+        <el-icon><Clock /></el-icon>
+        <span>最新动态</span>
+      </div>
+      <InfoRow />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, reactive, watch, onMounted } from "vue";
 import { ElMessage } from "element-plus";
+import { Setting, Rank, TrendCharts, Grid, Clock } from "@element-plus/icons-vue";
 import PageHeader from "./PageHeader.vue";
 import KpiCards from "./KpiCards.vue";
 import QuickActions from "./components/QuickActions.vue";
@@ -32,8 +99,73 @@ const userStore = useUserStore();
 const isAdmin = computed(() => userStore.currentUser?.role === "admin" || userStore.currentUser?.is_superuser);
 const isManager = computed(() => isAdmin.value || userStore.currentUser?.role === "manager");
 
-function handleBackup() { ElMessage.info("请前往系统管理→备份管理手动创建备份"); }
-function handleRestore() { ElMessage.info("请前往系统管理→备份管理执行恢复"); }
+// 布局持久化
+const STORAGE_KEY = "dashboard_layout_v2";
+const defaults = [
+  { key: "kpi", label: "数据概览", visible: true },
+  { key: "charts", label: "数据趋势", visible: true },
+  { key: "quickActions", label: "快捷入口", visible: true },
+  { key: "info", label: "最新动态", visible: true },
+];
+const layoutSections = reactive<{ key: string; label: string; visible: boolean }[]>([]);
+
+function loadLayout() {
+  const VALID_KEYS = new Set(["kpi", "charts", "quickActions", "info"]);
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.every((s: any) => s?.key && VALID_KEYS.has(s.key) && typeof s.visible === "boolean")) {
+        layoutSections.splice(0, 99, ...parsed);
+        return;
+      }
+    }
+  } catch { /* ignore */ }
+  layoutSections.splice(0, 99, ...defaults.map(s => ({ ...s })));
+}
+function saveLayout() { localStorage.setItem(STORAGE_KEY, JSON.stringify([...layoutSections])); }
+function resetLayout() { layoutSections.splice(0, 99, ...defaults.map(s => ({ ...s }))); saveLayout(); ElMessage.success("已恢复默认布局"); }
+const visible = computed(() => { const m: Record<string, boolean> = {}; layoutSections.forEach(s => m[s.key] = s.visible); return m; });
+watch(layoutSections, saveLayout, { deep: true });
+onMounted(loadLayout);
+
+// 拖拽排序
+let dragKey = "";
+function onDragStart(_e: DragEvent, key: string) { dragKey = key; }
+function onDrop(_e: DragEvent, targetKey: string) {
+  if (!dragKey || dragKey === targetKey) return;
+  const from = layoutSections.findIndex(s => s.key === dragKey);
+  const to = layoutSections.findIndex(s => s.key === targetKey);
+  if (from >= 0 && to >= 0) {
+    const [item] = layoutSections.splice(from, 1);
+    layoutSections.splice(to, 0, item);
+    saveLayout();
+  }
+}
+
+const layoutSaved = ref(false);
+const layoutPreset = ref("default");
+const dragOverKey = ref("");
+
+function onDragOver(key: string) { dragOverKey.value = key; }
+function onDragLeave() { dragOverKey.value = ""; }
+function onDragEnd() { dragOverKey.value = ""; layoutSaved.value = false; saveLayout(); layoutSaved.value = true; }
+function onToggle() { layoutSaved.value = false; saveLayout(); layoutSaved.value = true; }
+
+function applyPreset(val: string) {
+  if (val === "default") layoutSections.splice(0, 99, ...defaults.map(s => ({ ...s })));
+  else if (val === "compact") {
+    layoutSections.splice(0, 99, ...defaults.map(s => ({ ...s, visible: s.key === "kpi" || s.key === "quickActions" })));
+  } else if (val === "expand") {
+    layoutSections.splice(0, 99, ...defaults.map(s => ({ ...s, visible: true })));
+  }
+  saveLayout();
+  layoutSaved.value = true;
+  setTimeout(() => layoutSaved.value = false, 2000);
+}
+
+function handleBackup() { ElMessage.info("请前往 系统管理 → 备份管理 手动创建备份"); }
+function handleRestore() { ElMessage.info("请前往 系统管理 → 备份管理 执行恢复"); }
 </script>
 
 <style scoped lang="scss">
@@ -41,15 +173,69 @@ function handleRestore() { ElMessage.info("请前往系统管理→备份管理�
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
-.layout-editor-banner {
-  background: #fef3c7;
-  border: 1px dashed #f59e0b;
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: #92400e;
+.kpi-strip {
+  /* KpiCards 内部自行管理 5 列布局 */
 }
+
+.middle-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+  @media (max-width: 960px) { grid-template-columns: 1fr; }
+}
+
+.chart-panel, .quick-panel, .info-panel {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1b4332;
+  background: linear-gradient(135deg, #f0f4f3, #fff);
+  border-bottom: 1px solid #e2e8e4;
+
+  .el-button { margin-left: auto; }
+}
+
+// 布局编辑器
+.layout-editor {
+  background: #fff;
+  border: 2px solid #409eff;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.layout-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px; padding-bottom: 10px;
+  border-bottom: 1px solid #ebeef5;
+}
+.layout-title { font-size: 15px; font-weight: 600; color: #303133; flex: 1; display: flex; align-items: center; gap: 6px; }
+.layout-sections { display: flex; flex-wrap: wrap; gap: 10px; }
+.layout-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; background: #f5f7fa; border-radius: 8px;
+  min-width: 160px; cursor: grab; user-select: none;
+  &:active { cursor: grabbing; }
+}
+.layout-saved { font-size: 12px; color: #67c23a; margin-right: 8px; }
+.layout-hint { font-size: 12px; color: #909399; margin: 0 0 10px; padding-left: 2px; }
+.drag-over { background: #ecf5ff !important; border-color: #409eff !important; transform: scale(1.03); }
+.drag-handle { color: #909399; }
+
+.slide-enter-active, .slide-leave-active { transition: all .25s ease; }
+.slide-enter-from, .slide-leave-to { opacity: 0; transform: translateY(-10px); }
 </style>

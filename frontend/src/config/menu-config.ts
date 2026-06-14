@@ -145,6 +145,12 @@ export const MENU_CONFIG: MenuItem[] = [
         path: "/system/environment",
         icon: "Monitor",
       },
+      {
+        key: "feedback",
+        label: "用户反馈",
+        path: "/system/feedback",
+        icon: "ChatDotSquare",
+      },
     ],
   },
   {

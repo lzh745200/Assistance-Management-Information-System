@@ -253,5 +253,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=os.path.join(backend_dir, '..', 'resources', 'icons', 'app.ico'),
+    icon=None,
 )

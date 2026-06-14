@@ -28,12 +28,11 @@ vi.mock("@/api/request", () => ({
 describe("InfoRow.vue", () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
-  it("renders timeline and quick-links sections", () => {
+  it("renders timeline section", () => {
     const wrapper = mount(InfoRow, {
       global: { stubs: { "el-icon": true, "el-timeline": true, "el-timeline-item": true } },
     });
     expect(wrapper.find(".timeline-section").exists()).toBe(true);
-    expect(wrapper.find(".quick-links").exists()).toBe(true);
   });
 
   it("renders at most 10 timeline items", async () => {
@@ -47,21 +46,5 @@ describe("InfoRow.vue", () => {
     expect(items.length).toBeLessThanOrEqual(11); // 10 items + possible header
   });
 
-  it("quick-link click calls router.push", async () => {
-    const wrapper = mount(InfoRow, {
-      global: { stubs: { "el-icon": true, "el-timeline": true, "el-timeline-item": true } },
-    });
-    const link = wrapper.find('[data-test="ql-projects"]');
-    if (link.exists()) {
-      await link.trigger("click");
-      expect(mockPush).toHaveBeenCalledWith("/projects");
-    }
-  });
-
-  it("renders all 6 quick-link icons", () => {
-    const wrapper = mount(InfoRow, {
-      global: { stubs: { "el-icon": true, "el-timeline": true, "el-timeline-item": true } },
-    });
-    expect(wrapper.findAll(".ql-item").length).toBe(6);
-  });
+  // quick-links moved to QuickActions component (index.vue) — tested in QuickActions.test.ts
 });
