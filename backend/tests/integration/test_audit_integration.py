@@ -32,6 +32,9 @@ def _engine():
     )
     from app.models.base import Base
     import app.models  # noqa: F401
+    # 确保 FK 依赖的模型表已注册到 Base.metadata
+    import app.models.data_package  # noqa: F401  -- DataPackage (被 DataReport FK 引用)
+    import app.models.data_report   # noqa: F401  -- DataReport
     Base.metadata.create_all(bind=engine)
     yield engine
     engine.dispose()
