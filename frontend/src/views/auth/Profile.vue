@@ -570,26 +570,9 @@ const navigateToChangePassword = () => {
   pushSafe("/settings/change-password");
 };
 
-// 绑定MFA
+// 绑定MFA — 跳转到双因素认证设置页
 const bindMfa = () => {
-  ElMessageBox.confirm(
-    "MFA（多因素认证）绑定步骤：\n" +
-      "1. 下载身份验证器应用（如 Google Authenticator、Microsoft Authenticator）\n" +
-      "2. 点击确定后系统将生成专属二维码\n" +
-      "3. 使用验证器扫描二维码完成绑定\n\n" +
-      "是否继续？",
-    "MFA绑定指引",
-    {
-      confirmButtonText: "开始绑定",
-      cancelButtonText: "稍后再说",
-      type: "info",
-      dangerouslyUseHTMLString: false,
-    },
-  )
-    .then(() => {
-      ElMessage.info("MFA绑定功能开发中，敬请期待");
-    })
-    .catch(() => {});
+  pushSafe("/profile/two-factor");
 };
 
 // 初始化

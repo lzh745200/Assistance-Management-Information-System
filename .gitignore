@@ -260,3 +260,4 @@ resources/frontend/
 *.db.snapshot_*
 claude-code/
 *.db-journal
+backend/build/
