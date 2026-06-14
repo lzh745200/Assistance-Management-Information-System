@@ -232,18 +232,18 @@ async def database_maintenance_job():
 
 
 def start_backup_scheduler():
-    """启动备份调度器"""
-    scheduler.add_job(auto_backup_job, "cron", hour=2, minute=0, id="auto_backup", replace_existing=True)
+    """启动后台调度器（仅轻量任务，不含自动备份和 VACUUM）"""
+    # 仅保留轻量定时任务：KPI缓存、异常检测、待办提醒、周报
+    # 自动备份已禁用以避免生成大文件占用磁盘空间，备份请通过管理界面手动执行
     scheduler.add_job(kpi_precalculate_job, "cron", hour=0, minute=30, id="kpi_precalculate", replace_existing=True)
     scheduler.add_job(anomaly_detection_job, "cron", hour=1, minute=0, id="anomaly_detection", replace_existing=True)
     scheduler.add_job(todo_reminder_job, "cron", hour=8, minute=0, id="todo_reminder", replace_existing=True)
     scheduler.add_job(
         weekly_report_job, "cron", day_of_week="mon", hour=6, minute=30, id="weekly_report", replace_existing=True
     )
-    scheduler.add_job(database_maintenance_job, "cron", hour=3, minute=0, id="db_maintenance", replace_existing=True)
 
     scheduler.start()
-    logger.info("调度器已启动（备份 + KPI预计算 + 异常检测 + 待办提醒 + 周报 + 数据库维护）")
+    logger.info("调度器已启动（KPI预计算 + 异常检测 + 待办提醒 + 周报，自动备份和VACUUM已禁用）")
 
 
 def stop_backup_scheduler():

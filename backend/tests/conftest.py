@@ -3,6 +3,21 @@
 
 提供测试所需的共享 fixtures 和配置。
 """
+# ── 关键修复：强制 UTF-8 编码，消除 Windows 控制台 GBK 导致的 UnicodeEncodeError ──
+import os as _os
+_os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+import sys as _sys
+if _sys.stdout and hasattr(_sys.stdout, 'reconfigure'):
+    try:
+        _sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+if _sys.stderr and hasattr(_sys.stderr, 'reconfigure'):
+    try:
+        _sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 import pytest
 import sys
 from pathlib import Path

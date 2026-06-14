@@ -172,29 +172,19 @@ async def get_backup_schedule(
 ):
     """获取自动备份计划配置
 
-    返回是否启用、执行时间、保留数量等计划参数。
+    自动备份已永久禁用（防止生成大文件占用磁盘空间）。
+    备份请通过管理界面手动执行。
     """
-    try:
-        from app.services.system_config_service import SystemConfigService
-        svc = SystemConfigService(db)
-
-        enabled = svc.get("auto_backup_enabled", "false") == "true"
-        schedule = svc.get("auto_backup_schedule", "0 2 * * *")
-        keep_count = int(svc.get("auto_backup_keep_count", "10"))
-        next_run = svc.get("auto_backup_next_run")
-
-        return {
-            "success": True,
-            "data": {
-                "enabled": enabled,
-                "schedule": schedule,
-                "keepCount": keep_count,
-                "nextRun": next_run,
-            },
-        }
-    except Exception as e:
-        logger.error("获取备份计划失败: %s", e)
-        raise HTTPException(status_code=500, detail=f"获取备份计划失败: {str(e)}")
+    return {
+        "success": True,
+        "data": {
+            "enabled": False,
+            "schedule": None,
+            "keepCount": 3,
+            "nextRun": None,
+            "message": "自动备份已禁用。请通过备份管理页面手动创建备份。",
+        },
+    }
 
 
 @router.put("/schedule", summary="更新备份计划配置")
@@ -203,40 +193,15 @@ async def update_backup_schedule(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """更新自动备份计划配置
+    """更新自动备份计划配置（已弃用——自动备份已永久禁用）
 
-    设置是否启用自动备份、执行时间、保留数量等。
-    需要管理员权限。
+    自动备份已禁用，此端点保留仅用于前端兼容。
     """
-    require_admin(current_user, error_message="仅超级管理员可修改备份计划")
-
-    try:
-        from app.services.system_config_service import SystemConfigService
-        svc = SystemConfigService(db)
-
-        svc.set("auto_backup_enabled", str(body.enabled).lower())
-        if body.schedule:
-            svc.set("auto_backup_schedule", body.schedule)
-        if body.keep_count is not None:
-            svc.set("auto_backup_keep_count", str(body.keep_count))
-
-        logger.info(
-            "备份计划已更新，操作人: %s",
-            getattr(current_user, "username", "unknown"),
-        )
-
-        return {
-            "success": True,
-            "message": "备份计划已更新",
-            "data": {
-                "enabled": body.enabled,
-                "schedule": body.schedule,
-                "keepCount": body.keep_count,
-            },
-        }
-    except Exception as e:
-        logger.error("更新备份计划失败: %s", e)
-        raise HTTPException(status_code=500, detail=f"更新备份计划失败: {str(e)}")
+    return {
+        "success": True,
+        "message": "自动备份已永久禁用以节省磁盘空间。请通过备份管理页面手动创建备份。",
+        "data": {"enabled": False, "schedule": None, "keepCount": 3},
+    }
 
 
 @router.delete("/{filename}", summary="删除指定备份")

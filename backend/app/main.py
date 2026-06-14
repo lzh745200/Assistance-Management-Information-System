@@ -54,9 +54,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     _start_resource_monitoring()
     _start_database_health_monitoring()
     _start_approval_reminder()
-    _start_db_maintenance()
+    # _start_db_maintenance() — 已禁用，VACUUM 会生成大量临时文件
     yield
-    _stop_db_maintenance()
+    # _stop_db_maintenance()
     _stop_approval_reminder()
     _stop_resource_monitoring()
     _stop_database_health_monitoring()
