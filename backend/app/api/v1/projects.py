@@ -1493,6 +1493,32 @@ async def download_project_template(
     )
 
 
+# ── Excel 导入列头映射（中文列名 → 模型字段名）──
+_COL_TO_FIELD = {
+    "项目名称": "name", "项目类型": "type", "项目状态": "status",
+    "项目描述": "description", "项目目标": "objectives",
+    "预算金额": "budget", "已投入金额": "invested_amount",
+    "项目进度": "progress", "开始日期": "start_date", "结束日期": "end_date",
+    "负责单位": "responsible_unit", "负责人": "responsible_person",
+    "紧急程度": "urgency_level", "经费来源": "fund_source",
+    "项目代码": "code", "所属村庄": "village",
+}
+
+# ── Excel 导入值映射（中文显示值 → 内部枚举值）──
+_TYPE_MAP = {
+    "基础设施": "infrastructure", "产业扶持": "industry", "教育帮扶": "education",
+    "医疗帮扶": "medical", "民生改善": "livelihood", "其他": "other",
+}
+_STATUS_MAP = {
+    "规划中": "draft", "待审批": "pending", "进行中": "in_progress",
+    "已完成": "completed", "已暂停": "paused", "已取消": "cancelled",
+}
+_URGENCY_MAP = {"低": "low", "中": "medium", "高": "high", "紧急": "urgent"}
+_FUND_SOURCE_MAP = {
+    "中央财政": "central", "地方财政": "local", "军队专项": "military",
+    "社会资金": "social", "自筹资金": "self_raised", "其他": "other",
+}
+
 @router.post("/import", summary="批量导入帮扶项目")
 async def import_projects(
     file: UploadFile = File(..., description="Excel文件"),
