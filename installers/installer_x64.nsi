@@ -1,4 +1,4 @@
-; 军队乡村振兴管理系统 — Windows x64 安装脚本 (NSIS)
+﻿; 军队乡村振兴管理系统 — Windows x64 安装脚本 (NSIS)
 ; 自带完整运行时：Python + VC++ Redist + 后端 + 前端 + 数据库
 
 !include "MUI2.nsh"
