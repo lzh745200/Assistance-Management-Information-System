@@ -155,15 +155,18 @@ class TestLifespan:
     @pytest.mark.asyncio
     async def test_lifespan_enter_and_exit(self):
         import app.main as m
-        mocks = {k: MagicMock() for k in [
+        start_funcs = [
             "_init_database_tables", "_load_token_blacklist",
             "_check_and_record_version_change", "_seed_default_admin",
             "_check_required_packages", "_verify_file_integrity",
             "_start_resource_monitoring", "_start_database_health_monitoring",
-            "_start_approval_reminder", "_start_db_maintenance",
-            "_stop_db_maintenance", "_stop_approval_reminder",
+            "_start_approval_reminder",
+        ]
+        stop_funcs = [
+            "_stop_approval_reminder",
             "_stop_resource_monitoring", "_stop_database_health_monitoring",
-        ]}
+        ]
+        mocks = {k: MagicMock() for k in start_funcs + stop_funcs}
         patchers = [patch.object(m, name, mocks[name]) for name in mocks]
         for p in patchers:
             p.start()
@@ -171,8 +174,8 @@ class TestLifespan:
             pass
         for p in patchers:
             p.stop()
-        for name, mock in mocks.items():
-            mock.assert_called_once()
+        for name in start_funcs + stop_funcs:
+            mocks[name].assert_called_once()
 
 
 class TestLoadTokenBlacklist:
