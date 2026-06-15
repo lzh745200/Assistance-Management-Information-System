@@ -1,4 +1,4 @@
-"""军队振兴乡村管理系统 - FastAPI 入口模块"""
+"""帮扶管理信息系统 - FastAPI 入口模块"""
 
 from __future__ import annotations
 
@@ -74,7 +74,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.PROJECT_VERSION,
-    description="军队振兴乡村管理系统 API",
+    description="帮扶管理信息系统 API",
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
     openapi_url="/openapi.json" if settings.DEBUG else None,
