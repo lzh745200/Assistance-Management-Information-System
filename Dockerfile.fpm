@@ -139,7 +139,7 @@ RUN fpm -s dir -t deb \
     --architecture arm64 \
     --description "帮扶管理信息系统" \
     --maintainer "support@example.com" \
-    --vendor "MilitaryRural" \
+    --vendor "AssistanceManagementInfo" \
     --license "Proprietary" \
     --url "https://example.com" \
     --category "utils" \
