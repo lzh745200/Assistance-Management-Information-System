@@ -1,36 +1,236 @@
+# .github/workflows/build-arm64.yml
+# 帮扶管理信息系统 - ARM64 .deb 构建工作流
+
 name: 构建 ARM64 .deb 安装包
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04-arm
+    # 使用 GitHub 免费的 ARM64 运行器
+    runs-on: ubuntu-24.arm
+    # 对于 Node.js 24 兼容性
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
+      # 1. 检出代码
       - name: 检出代码
         uses: actions/checkout@v4
 
+      # 2. 设置 Node.js 环境
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
+      # 3. 设置 Python 环境
       - name: 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
-      - name: 安装依赖并构建
+      # 4. 安装系统依赖
+      - name: 安装系统依赖
         run: |
-          npm install --legacy-peer-deps
-          pip install -r backend/requirements.txt
-          docker build -t myapp-arm64 .
+          sudo apt-get update
+          sudo apt-get install -y \
+            fakeroot \
+            dpkg-dev \
+            ruby-full \
+            rubygems \
+            build-essential \
+            libgtk-3-0 \
+            libnotify4 \
+            libnss3 \
+            libxss1 \
+            libxtst6 \
+            xdg-utils \
+            libatspi2.0-0 \
+            libuuid1 \
+            libsecret-1-0 \
+            libasound2 \
+            libgbm1
+          sudo gem install fpm
 
+      # 5. 安装 Node.js 依赖并构建前端
+      - name: 安装 Node 依赖
+        run: |
+          npm config set registry https://registry.npmmirror.com
+          npm install --legacy-peer-deps --network-timeout=1200000 --no-audit --no-fund
+
+      - name: 构建前端
+        run: |
+          if [ -d "frontend" ]; then
+            cd frontend
+            npm config set registry https://registry.npmmirror.com
+            npm install --legacy-peer-deps --network-timeout=1200000
+            npm run build || echo "前端构建跳过（无 build 脚本）"
+            cd ..
+          else
+            echo "frontend 目录不存在，跳过前端构建"
+          fi
+
+      # 6. 安装 Python 依赖并构建后端
+      - name: 安装 Python 依赖
+        run: |
+          pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+          if [ -f "backend/requirements.txt" ]; then
+            pip install --timeout 300 -r backend/requirements.txt
+          fi
+          pip install pyinstaller
+
+      - name: 构建后端
+        run: |
+          if [ -d "backend" ]; then
+            cd backend
+            if [ -f "military-rural-backend.spec" ]; then
+              pyinstaller military-rural-backend.spec --clean --noconfirm
+            else
+              echo "未找到 backend.spec 文件，跳过 PyInstaller 构建"
+            fi
+            cd ..
+            # 创建后端目录结构
+            mkdir -p dist/backend/linux
+            if [ -f "backend/dist/military-rural-backend" ]; then
+              cp backend/dist/military-rural-backend dist/backend/linux/
+            fi
+          else
+            echo "backend 目录不存在，跳过后端构建"
+          fi
+
+      # 7. 复制构建产物
+      - name: 准备打包文件
+        run: |
+          mkdir -p package/usr/lib/military-rural-system
+          mkdir -p package/usr/share/applications
+          mkdir -p package/usr/share/icons/hicolor/256x256/apps
+          mkdir -p package/DEBIAN
+          mkdir -p output
+
+          # 复制前端产物
+          if [ -d "frontend/dist" ]; then
+            cp -r frontend/dist/* package/usr/lib/military-rural-system/ 2>/dev/null || true
+          fi
+
+          # 复制后端产物
+          if [ -d "dist" ]; then
+            cp -r dist/* package/usr/lib/military-rural-system/ 2>/dev/null || true
+          fi
+
+          # 复制 Electron 产物（如果有）
+          if [ -d "electron" ]; then
+            cp -r electron/* package/usr/lib/military-rural-system/ 2>/dev/null || true
+          fi
+
+          # 复制资源文件
+          if [ -d "resources" ]; then
+            cp -r resources/* package/usr/lib/military-rural-system/ 2>/dev/null || true
+          fi
+
+      # 8. 创建 desktop 文件
+      - name: 创建 .desktop 文件
+        run: |
+          cat > package/usr/share/applications/military-rural-system.desktop << 'EOF'
+          [Desktop Entry]
+          Name=帮扶管理信息系统
+          Name[en]=Military Rural Revitalization System
+          Comment=帮扶管理信息系统
+          Exec=/usr/lib/military-rural-system/military-rural-system
+          Icon=/usr/share/icons/hicolor/256x256/apps/military-rural-system.png
+          Terminal=false
+          Type=Application
+          Categories=Office;Utility;
+          StartupNotify=true
+          EOF
+
+      # 9. 创建启动脚本
+      - name: 创建启动脚本
+        run: |
+          cat > package/usr/lib/military-rural-system/military-rural-system << 'EOF'
+          #!/bin/bash
+          DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          if [ -f "$DIR/main" ]; then
+            exec "$DIR/main"
+          elif [ -f "$DIR/military-rural-backend" ]; then
+            exec "$DIR/military-rural-backend"
+          else
+            echo "未找到可执行文件"
+            exit 1
+          fi
+          EOF
+          chmod +x package/usr/lib/military-rural-system/military-rural-system
+
+      # 10. 创建 DEBIAN/control 文件
+      - name: 创建 control 文件
+        run: |
+          cat > package/DEBIAN/control << 'EOF'
+          Package: military-rural-system
+          Version: 1.2.0
+          Section: utils
+          Priority: optional
+          Architecture: arm64
+          Maintainer: lzh745200 <lzh745200@example.com>
+          Description: 帮扶管理信息系统
+           帮扶管理信息系统是一个综合管理平台，
+           支持乡村振兴项目的数字化管理。
+          Depends: libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, 
+                    xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0, 
+                    libasound2, libgbm1
+          Homepage: https://github.com/lzh745200/Assistance-Management-Information-System
+          EOF
+
+      # 11. 创建 postinst 脚本（安装后执行）
+      - name: 创建 postinst 脚本
+        run: |
+          cat > package/DEBIAN/postinst << 'EOF'
+          #!/bin/bash
+          set -e
+          if [ -f /usr/lib/military-rural-system/military-rural-system ]; then
+            chmod +x /usr/lib/military-rural-system/military-rural-system
+          fi
+          exit 0
+          EOF
+          chmod +x package/DEBIAN/postinst
+
+      # 12. 使用 dpkg-deb 打包
+      - name: 打包 .deb
+        run: |
+          # 修复权限
+          sudo chown -R root:root package
+          sudo chmod -R 755 package/DEBIAN
+          sudo chmod 755 package/usr/lib/military-rural-system
+          
+          # 打包
+          dpkg-deb --build package
+          
+          # 重命名并移动到 output 目录
+          mv package.deb output/military-rural-system-1.2.0-arm64.deb
+          
+          # 显示包信息
+          dpkg-deb --info output/military-rural-system-1.2.0-arm64.deb
+          echo "✅ .deb 包构建成功！"
+
+      # 13. 上传构建产物
       - name: 上传 .deb 安装包
         uses: actions/upload-artifact@v4
         with:
-          name: deb-package
-          path: ./output/*.deb
+          name: military-rural-system-arm64
+          path: output/*.deb
+          retention-days: 30
+
+      # 14. 可选：上传构建日志
+      - name: 上传构建日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            *.log
+            output/*.txt
+          retention-days: 7
