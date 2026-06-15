@@ -1,0 +1,58 @@
+# .github/workflows/build-arm64.yml
+
+name: 构建 ARM64 .deb 安装包
+
+# 触发条件：当代码推送到 main 分支时，或手动触发
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build:
+    # 核心：指定使用 GitHub 官方提供的 ARM64 运行器
+    # 支持 ubuntu-24.04-arm, ubuntu-22.04-arm 或 windows-11-arm[citation:2][citation:10]
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      # 1. 检出你的代码
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 2. 设置 Node.js 环境 (根据你项目的实际需求调整版本)
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. 设置 Python 环境 (根据你项目的实际需求调整版本)
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # 4. 安装项目依赖并构建 .deb 包
+      #    这里直接执行你本地构建用的命令即可，因为它运行在原生 ARM 环境
+      - name: 安装依赖并构建
+        run: |
+          # 安装系统依赖 (如果有必要)
+          # sudo apt-get update && sudo apt-get install -y some-package
+          # 安装 npm 依赖
+          npm install --legacy-peer-deps
+          # 安装 Python 依赖
+          pip install -r backend/requirements.txt
+          # 执行打包命令，请替换为你的实际构建脚本
+          # 例如：npm run build:deb
+          # 或直接运行你的 Dockerfile 构建命令 (但此时不需要 --platform 参数了)
+          docker build -t myapp-arm64 .
+          
+      # 5. 将生成的 .deb 文件上传为工作流产物 (Artifact)
+      #    这样你就可以在 Actions 页面直接下载了
+      - name: 上传 .deb 安装包
+        uses: actions/upload-artifact@v4
+        with:
+          name: military-rural-deb-package
+          # 请将 ./output/*.deb 替换为你实际 .deb 文件生成的路径
+          path: ./output/*.deb

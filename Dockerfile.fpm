@@ -1,0 +1,163 @@
+# ============================================================
+# 军队乡村振兴管理系统 — fpm 打包方案 (ARM64)
+# 解决 electron-builder 兼容性问题
+# ============================================================
+
+# ─── Stage 1: 前端构建 ───
+FROM node:20-bookworm AS frontend-builder
+
+RUN npm config set registry https://registry.npmmirror.com
+
+WORKDIR /project/frontend
+
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install --legacy-peer-deps --network-timeout=600000 || \
+    npm install --legacy-peer-deps --network-timeout=600000 --registry=https://registry.npmmirror.com
+
+COPY frontend/ ./
+RUN npm run build
+
+# ─── Stage 2: 后端 PyInstaller 打包 ───
+FROM python:3.11-bookworm AS backend-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libmagic1 \
+    binutils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /project
+
+COPY backend/requirements.txt backend/
+RUN pip install --no-cache-dir --timeout 300 -r backend/requirements.txt pyinstaller
+
+COPY backend/ backend/
+COPY resources/ resources/
+COPY .env.example ./
+
+RUN cd backend && pyinstaller military-rural-backend.spec --clean --noconfirm
+
+RUN mkdir -p dist/backend/linux && \
+    cp backend/dist/military-rural-backend dist/backend/linux/military-rural-backend
+
+# ─── Stage 3: Electron 应用构建 ───
+FROM node:20-bookworm AS electron-app
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+
+# 安装运行时依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgtk-3-0 \
+    libnotify4 \
+    libnss3 \
+    libxss1 \
+    libxtst6 \
+    xdg-utils \
+    libatspi2.0-0 \
+    libuuid1 \
+    libsecret-1-0 \
+    libasound2 \
+    libgbm1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /project
+
+# 配置 npm 镜像
+RUN npm config set registry https://registry.npmmirror.com
+
+# 复制并安装依赖
+COPY package.json package-lock.json* ./
+RUN npm install --legacy-peer-deps --network-timeout=600000 --no-audit --no-fund
+
+COPY electron/ electron/
+COPY resources/ resources/
+COPY build/ build/
+
+COPY --from=frontend-builder /project/frontend/dist/ frontend/dist/
+COPY --from=backend-builder /project/dist/backend/ dist/backend/
+
+ARG VERSION=1.2.0
+ARG ARCH=arm64
+
+# 构建 Electron 应用（不打包成 deb）
+RUN npx electron-builder --linux dir --${ARCH} --publish never
+
+# ─── Stage 4: fpm 打包成 .deb ───
+FROM ubuntu:22.04 AS fpm-packager
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 安装 fpm
+RUN apt-get update && apt-get install -y \
+    ruby-full \
+    ruby-dev \
+    rubygems \
+    build-essential \
+    fakeroot \
+    dpkg-dev \
+    && gem install --no-document fpm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /package
+
+ARG VERSION=1.2.0
+ARG ARCH=arm64
+ENV PACKAGE_NAME=military-rural-revitalization-system
+ENV PACKAGE_VERSION=${VERSION}
+
+# 复制 Electron 应用
+COPY --from=electron-app /project/dist/linux-${ARCH}-unpacked/ /package/usr/lib/${PACKAGE_NAME}/
+
+# 创建启动脚本
+RUN mkdir -p /package/usr/bin && \
+    echo '#!/bin/bash\n/usr/lib/${PACKAGE_NAME}/${PACKAGE_NAME}' > /package/usr/bin/${PACKAGE_NAME} && \
+    chmod +x /package/usr/bin/${PACKAGE_NAME}
+
+# 创建 desktop 文件
+RUN mkdir -p /package/usr/share/applications && \
+    cat > /package/usr/share/applications/${PACKAGE_NAME}.desktop << EOF
+[Desktop Entry]
+Name=军队乡村振兴管理系统
+Comment=军队乡村振兴管理系统
+Exec=/usr/lib/${PACKAGE_NAME}/${PACKAGE_NAME}
+Icon=/usr/lib/${PACKAGE_NAME}/icon.png
+Terminal=false
+Type=Application
+Categories=Office;
+EOF
+
+# 使用 fpm 打包
+RUN fpm -s dir -t deb \
+    --name ${PACKAGE_NAME} \
+    --version ${PACKAGE_VERSION} \
+    --architecture arm64 \
+    --description "军队乡村振兴管理系统" \
+    --maintainer "support@example.com" \
+    --vendor "MilitaryRural" \
+    --license "Proprietary" \
+    --url "https://example.com" \
+    --category "utils" \
+    --depends "libgtk-3-0" \
+    --depends "libnotify4" \
+    --depends "libnss3" \
+    --depends "libxss1" \
+    --depends "libxtst6" \
+    --depends "xdg-utils" \
+    --depends "libatspi2.0-0" \
+    --depends "libuuid1" \
+    --depends "libsecret-1-0" \
+    --depends "libasound2" \
+    --depends "libgbm1" \
+    .
+
+RUN mkdir -p /output && \
+    find . -name "*.deb" -exec cp {} /output/ \; && \
+    echo "✅ Debian package created successfully"
+
+VOLUME ["/output"]
