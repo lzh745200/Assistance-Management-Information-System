@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "private": true,
   "type": "module",
-  "description": "军队全面推进乡村振兴工作管理系统 - 前端",
+  "description": "帮扶管理信息系统 - 前端 (Assistance Management Information System)",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
