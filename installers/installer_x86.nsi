@@ -1,4 +1,4 @@
-; 军队乡村振兴管理系统 — Windows x86 (32-bit) 安装脚本 (NSIS)
+; 帮扶管理信息系统 — Windows x86 (32-bit) 安装脚本 (NSIS)
 ; 自带完整运行时：Python + VC++ Redist + 后端 + 前端 + 数据库
 
 !include "MUI2.nsh"
@@ -6,10 +6,10 @@
 !insertmacro GetParameters
 !insertmacro GetOptions
 
-!define PRODUCT_NAME "军队乡村振兴管理系统"
-!define PRODUCT_NAME_EN "MilitaryRuralRevitalization"
+!define PRODUCT_NAME "帮扶管理信息系统"
+!define PRODUCT_NAME_EN "AssistanceManagementInformation"
 !define PRODUCT_VERSION "1.2.0"
-!define PRODUCT_PUBLISHER "Military Rural Revitalization"
+!define PRODUCT_PUBLISHER "Assistance Management Information"
 !define PRODUCT_DIR_REGKEY "Software\${PRODUCT_NAME_EN}"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME_EN}"
 
@@ -54,8 +54,8 @@ Section "Install"
 
   ; 2. 后端
   DetailPrint "正在安装后端服务..."
-  File /r "..\backend\dist\military-rural-backend-x86\*"
-  File "..\backend\dist\military-rural-backend-x86.exe"
+  File /r "..\backend\dist\assistance-management-backend-x86\*"
+  File "..\backend\dist\assistance-management-backend-x86.exe"
 
   ; 3. 前端
   DetailPrint "正在安装前端界面..."

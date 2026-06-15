@@ -37,12 +37,12 @@ Section "Install"
 
   ${If} ${RunningX64}
     DetailPrint "安装 64-bit 版本..."
-    File /r "..\backend\dist\military-rural-backend-x64.exe"
-    Rename "$INSTDIR\military-rural-backend-x64.exe" "$INSTDIR\military-rural-backend.exe"
+    File /r "..\backend\dist\assistance-management-backend-x64.exe"
+    Rename "$INSTDIR\assistance-management-backend-x64.exe" "$INSTDIR\assistance-management-backend.exe"
   ${Else}
     DetailPrint "安装 32-bit 版本..."
-    File /r "..\backend\dist\military-rural-backend-x86.exe"
-    Rename "$INSTDIR\military-rural-backend-x86.exe" "$INSTDIR\military-rural-backend.exe"
+    File /r "..\backend\dist\assistance-management-backend-x86.exe"
+    Rename "$INSTDIR\assistance-management-backend-x86.exe" "$INSTDIR\assistance-management-backend.exe"
   ${EndIf}
 
   File "..\dist\windows\package\launch.py"
@@ -58,9 +58,9 @@ Section "Install"
   CreateDirectory "$INSTDIR\exports"
   CreateDirectory "$INSTDIR\backups"
 
-  CreateShortCut "$DESKTOP\${PRODUCT_DISPLAY}.lnk" "$INSTDIR\military-rural-backend.exe"
+  CreateShortCut "$DESKTOP\${PRODUCT_DISPLAY}.lnk" "$INSTDIR\assistance-management-backend.exe"
   CreateDirectory "$SMPROGRAMS\${PRODUCT_DISPLAY}"
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_DISPLAY}\${PRODUCT_DISPLAY}.lnk" "$INSTDIR\military-rural-backend.exe"
+  CreateShortCut "$SMPROGRAMS\${PRODUCT_DISPLAY}\${PRODUCT_DISPLAY}.lnk" "$INSTDIR\assistance-management-backend.exe"
   CreateShortCut "$SMPROGRAMS\${PRODUCT_DISPLAY}\卸载.lnk" "$INSTDIR\uninst.exe"
 
   WriteUninstaller "$INSTDIR\uninst.exe"
@@ -68,7 +68,7 @@ Section "Install"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayName" "${PRODUCT_DISPLAY}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "UninstallString" "$INSTDIR\uninst.exe"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayVersion" "${PRODUCT_VERSION}"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayIcon" "$INSTDIR\military-rural-backend.exe"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" "DisplayIcon" "$INSTDIR\assistance-management-backend.exe"
 SectionEnd
 
 Section "Uninstall"

@@ -21,7 +21,7 @@ class TestGetSystemInfo:
         resp = client_with_mocked_auth.get(f"{BASE}/info")
         assert resp.status_code == 200
         data = resp.json()["data"]
-        assert data["name"] == "军队乡村振兴管理系统"
+        assert data["name"] == "帮扶管理信息系统"
         assert data["total_users"] == 5
 
     def test_db_error_defaults_to_zero(self, client_with_mocked_auth):
@@ -68,4 +68,4 @@ class TestGetVersion:
         assert resp.status_code == 200
         data = resp.json()["data"]
         assert data["version"]
-        assert data["name"] == "军队乡村振兴管理系统"
+        assert data["name"] == "帮扶管理信息系统"

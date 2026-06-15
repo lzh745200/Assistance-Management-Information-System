@@ -9,7 +9,7 @@ import platform
 from pathlib import Path
 
 print("=" * 60)
-print("军队乡村振兴管理系统 - 完整部署包构建")
+print("帮扶管理信息系统 - 完整部署包构建")
 print("=" * 60)
 
 # 检查环境

@@ -1,7 +1,7 @@
 """更新 Alembic 版本号"""
 from sqlalchemy import create_engine, text
 
-engine = create_engine('sqlite:///data/military_rural.db')
+engine = create_engine('sqlite:///data/assistance_management.db')
 with engine.connect() as conn:
     # 检查表是否存在
     result = conn.execute(text(

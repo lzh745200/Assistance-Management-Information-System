@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-军队乡村振兴管理系统 - 后端服务启动入口
+帮扶管理信息系统 - 后端服务启动入口
 用于 PyInstaller 打包时作为入口脚本
 """
 
@@ -373,7 +373,7 @@ def main():
     import uvicorn
 
     print("=" * 50)
-    print("军队乡村振兴管理系统 - 后端服务启动中")
+    print("帮扶管理信息系统 - 后端服务启动中")
     print("=" * 50)
 
     # ── 预检：Python 架构 + VC++ 运行时 DLL ──

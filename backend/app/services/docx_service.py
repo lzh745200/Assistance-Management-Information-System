@@ -108,7 +108,7 @@ class DocxReportService:
 
         # 页脚
         doc.add_paragraph("")
-        footer = doc.add_paragraph(f"军队乡村振兴管理系统 — {datetime.now().year}")
+        footer = doc.add_paragraph(f"帮扶管理信息系统 — {datetime.now().year}")
         footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         for run in footer.runs:
             run.font.size = Pt(8)
@@ -138,7 +138,7 @@ class DocxReportService:
         self._add_table(doc, headers, rows)
 
         doc.add_paragraph("")
-        footer = doc.add_paragraph(f"军队乡村振兴管理系统 — {datetime.now().year}")
+        footer = doc.add_paragraph(f"帮扶管理信息系统 — {datetime.now().year}")
         footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         for run in footer.runs:
             run.font.size = Pt(8)
@@ -177,7 +177,7 @@ class DocxReportService:
         self._add_table(doc, headers, rows)
 
         doc.add_paragraph("")
-        footer = doc.add_paragraph(f"军队乡村振兴管理系统 — {datetime.now().year}")
+        footer = doc.add_paragraph(f"帮扶管理信息系统 — {datetime.now().year}")
         footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         for run in footer.runs:
             run.font.size = Pt(8)
@@ -207,7 +207,7 @@ class DocxReportService:
         self._add_table(doc, headers, rows)
 
         doc.add_paragraph("")
-        footer = doc.add_paragraph(f"军队乡村振兴管理系统 — {datetime.now().year}")
+        footer = doc.add_paragraph(f"帮扶管理信息系统 — {datetime.now().year}")
         footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         for run in footer.runs:
             run.font.size = Pt(8)

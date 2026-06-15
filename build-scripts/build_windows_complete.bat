@@ -3,7 +3,7 @@ chcp 65001 >nul 2>&1
 setlocal enabledelayedexpansion
 
 REM ========================================
-REM 军队乡村振兴管理系统 - Windows 完整构建
+REM 帮扶管理信息系统 - Windows 完整构建
 REM ========================================
 REM 构建流程:
 REM   1. 环境检查（Node.js, Python, VC++ 运行时）
@@ -14,13 +14,13 @@ REM   5. 静态资源完整性审计
 REM   6. 打包 Windows 安装程序 (Inno Setup)
 REM ========================================
 
-title 军队乡村振兴管理系统 - Windows 完整构建
+title 帮扶管理信息系统 - Windows 完整构建
 
 set "PROJECT_ROOT=%~dp0"
 set "VERSION=1.2.0"
 
 echo ========================================
-echo 军队乡村振兴管理系统 v%VERSION%
+echo 帮扶管理信息系统 v%VERSION%
 echo Windows 完整构建
 echo ========================================
 echo.
@@ -120,10 +120,10 @@ if errorlevel 1 (
 
 REM 查找 spec 文件
 set SPEC_FILE=
-if exist "military-rural-backend-full.spec" (
-    set SPEC_FILE=military-rural-backend-full.spec
-) else if exist "military-rural.spec" (
-    set SPEC_FILE=military-rural.spec
+if exist "assistance-management-backend-full.spec" (
+    set SPEC_FILE=assistance-management-backend-full.spec
+) else if exist "assistance-management-backend.spec" (
+    set SPEC_FILE=assistance-management-backend.spec
 ) else (
     echo [警告] 未找到 PyInstaller spec 文件，跳过后端打包
     echo   如需打包后端，请创建 .spec 文件

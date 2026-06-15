@@ -8,7 +8,7 @@ describe('utils/LocalStorageManager', () => {
   describe('STORAGE_KEYS', () => {
     it('exports 10 keys', () => {
       expect(Object.keys(STORAGE_KEYS).length).toBe(9)
-      expect(STORAGE_KEYS.AUTH_TOKEN).toBe('military_rural_auth_token')
+      expect(STORAGE_KEYS.AUTH_TOKEN).toBe('assistance_management_auth_token')
     })
   })
 

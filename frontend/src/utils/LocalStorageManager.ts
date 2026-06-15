@@ -4,15 +4,15 @@ import { logger } from "@/utils/logger";
 
 // 本地存储键名常量
 export const STORAGE_KEYS = {
-  USERS: "military_rural_users",
-  ARMY_PERSONNEL: "military_rural_army_personnel",
-  PROJECTS: "military_rural_projects",
-  RURAL_WORKS: "military_rural_rural_works",
-  AUTH_TOKEN: "military_rural_auth_token",
-  CURRENT_USER: "military_rural_current_user",
-  USER_PERMISSIONS: "military_rural_user_permissions",
-  LAST_SYNC_TIME: "military_rural_last_sync_time",
-  APP_SETTINGS: "military_rural_app_settings",
+  USERS: "assistance_management_users",
+  ARMY_PERSONNEL: "assistance_management_army_personnel",
+  PROJECTS: "assistance_management_projects",
+  RURAL_WORKS: "assistance_management_rural_works",
+  AUTH_TOKEN: "assistance_management_auth_token",
+  CURRENT_USER: "assistance_management_current_user",
+  USER_PERMISSIONS: "assistance_management_user_permissions",
+  LAST_SYNC_TIME: "assistance_management_last_sync_time",
+  APP_SETTINGS: "assistance_management_app_settings",
 };
 
 // 本地存储管理器类

@@ -199,11 +199,11 @@ describe('initializeStorage', () => {
 
 describe('STORAGE_KEYS', () => {
   it('should have expected keys', () => {
-    expect(STORAGE_KEYS.USER).toContain('military_rural_')
-    expect(STORAGE_KEYS.TOKEN).toContain('military_rural_')
-    expect(STORAGE_KEYS.PROJECTS).toContain('military_rural_')
-    expect(STORAGE_KEYS.SETTINGS).toContain('military_rural_')
-    expect(STORAGE_KEYS.INITIALIZED).toContain('military_rural_')
+    expect(STORAGE_KEYS.USER).toContain('assistance_management_')
+    expect(STORAGE_KEYS.TOKEN).toContain('assistance_management_')
+    expect(STORAGE_KEYS.PROJECTS).toContain('assistance_management_')
+    expect(STORAGE_KEYS.SETTINGS).toContain('assistance_management_')
+    expect(STORAGE_KEYS.INITIALIZED).toContain('assistance_management_')
   })
 })
 

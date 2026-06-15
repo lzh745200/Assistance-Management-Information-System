@@ -233,11 +233,11 @@ class EnhancedStorage {
 }
 
 // 导出默认实例
-export const enhancedStorage = new EnhancedStorage("military_rural_");
+export const enhancedStorage = new EnhancedStorage("assistance_management_");
 
 // 导出会话存储实例
 export const sessionEnhancedStorage = new EnhancedStorage(
-  "military_rural_session_",
+  "assistance_management_session_",
   true,
 );
 

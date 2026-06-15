@@ -65,7 +65,7 @@ function getResourcePath(...segments) {
 function getBackendExePath() {
   const isWin = process.platform === 'win32';
   const isMac = process.platform === 'darwin';
-  const exeName = isWin ? 'military-rural-backend.exe' : 'military-rural-backend';
+  const exeName = isWin ? 'assistance-management-backend.exe' : 'assistance-management-backend';
   
   // 检测 ARM 架构
   const isArm64 = process.arch === 'arm64';

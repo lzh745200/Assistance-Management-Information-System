@@ -113,7 +113,7 @@ class ReportService:
 
             # Title
             c.setFont("Helvetica-Bold", 18)
-            c.drawCentredString(width / 2, height - 50, "军队乡村振兴管理系统 - 数据报表")
+            c.drawCentredString(width / 2, height - 50, "帮扶管理信息系统 - 数据报表")
 
             # Metadata
             c.setFont("Helvetica", 10)

@@ -166,7 +166,7 @@ const form = ref({
   admin_password: "",
   confirmPassword: "",
   admin_email: "",
-  system_name: "军队乡村振兴管理系统",
+  system_name: "帮扶管理信息系统",
   contact_person: "",
   contact_phone: "",
 });

@@ -6,7 +6,7 @@ metadata:
   labels:
     app: rural-system
 data:
-  DATABASE_URL: "sqlite:///./data/military_rural.db"
+  DATABASE_URL: "sqlite:///./data/assistance_management.db"
   UPLOAD_DIR: "/app/uploads"
   LOG_DIR: "/app/logs"
   CORS_ORIGINS: "http://localhost,http://rural-frontend"

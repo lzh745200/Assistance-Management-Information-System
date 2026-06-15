@@ -3,13 +3,13 @@ chcp 65001 >nul 2>&1
 setlocal enabledelayedexpansion
 
 REM ============================================
-REM 军队乡村振兴管理系统 - Windows x86 (32-bit) 完整构建
+REM 帮扶管理信息系统 - Windows x86 (32-bit) 完整构建
 REM ============================================
 REM 构建 32-bit 安装包
 REM 注意: 需要 32-bit Python 3.11
 REM ============================================
 
-title 军队乡村振兴管理系统 - Windows x86 构建
+title 帮扶管理信息系统 - Windows x86 构建
 
 set "PROJECT_ROOT=%~dp0.."
 cd /d "%PROJECT_ROOT%"
@@ -17,7 +17,7 @@ set "VERSION=1.2.0"
 set "ARCH=x86"
 
 echo ============================================
-echo   军队乡村振兴管理系统 v%VERSION%
+echo   帮扶管理信息系统 v%VERSION%
 echo   Windows x86 (32-bit) 构建
 echo ============================================
 echo.
@@ -142,11 +142,11 @@ if errorlevel 1 (
     python -m pip install pyinstaller -q
 )
 
-if exist "military-rural-backend-x86.spec" (
-    echo   使用 spec: military-rural-backend-x86.spec
-    python -m PyInstaller military-rural-backend-x86.spec --clean --noconfirm
+if exist "assistance-management-backend-x86.spec" (
+    echo   使用 spec: assistance-management-backend-x86.spec
+    python -m PyInstaller assistance-management-backend-x86.spec --clean --noconfirm
 ) else (
-    echo [错误] 未找到 32-bit spec 文件: military-rural-backend-x86.spec
+    echo [错误] 未找到 32-bit spec 文件: assistance-management-backend-x86.spec
     pause
     exit /b 1
 )
@@ -172,9 +172,9 @@ mkdir "%PKG_DIR%"
 mkdir "%PKG_DIR%\backend"
 mkdir "%PKG_DIR%\frontend"
 
-if exist "dist\military-rural-backend.exe" (
-    copy "dist\military-rural-backend.exe" "%PKG_DIR%\backend\" >nul
-    echo   后端: military-rural-backend.exe
+if exist "dist\assistance-management-backend.exe" (
+    copy "dist\assistance-management-backend.exe" "%PKG_DIR%\backend\" >nul
+    echo   后端: assistance-management-backend.exe
 )
 
 if exist "%PROJECT_ROOT%\frontend\dist" (
@@ -216,9 +216,9 @@ echo   构建完成！
 echo ============================================
 echo.
 echo   产物位置:
-echo     后端 EXE:   %PROJECT_ROOT%\backend\dist\military-rural-backend.exe
+echo     后端 EXE:   %PROJECT_ROOT%\backend\dist\assistance-management-backend.exe
 echo     打包目录:   %PROJECT_ROOT%\dist\windows\package\
-echo     安装程序:   %PROJECT_ROOT%\dist\windows\军队乡村振兴管理系统-%VERSION%-x86-Setup.exe
+echo     安装程序:   %PROJECT_ROOT%\dist\windows\帮扶管理信息系统-%VERSION%-x86-Setup.exe
 echo.
 echo   注意: 32-bit 版本不包含以下功能:
 echo     - Prophet 时间序列预测

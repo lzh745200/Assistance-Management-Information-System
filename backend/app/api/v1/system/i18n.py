@@ -21,7 +21,7 @@ router = APIRouter(prefix="/i18n", tags=["国际化"])
 
 # 中文（简体）翻译资源
 _ZH_CN_TRANSLATIONS: Dict[str, str] = {
-    "app.title": "军队乡村振兴管理系统",
+    "app.title": "帮扶管理信息系统",
     "app.subtitle": "助力乡村振兴战略实施",
     "nav.dashboard": "数据看板",
     "nav.villages": "帮扶村管理",
@@ -116,7 +116,7 @@ _ZH_TW_TRANSLATIONS: Dict[str, str] = {
 
 # 英文翻译资源
 _EN_TRANSLATIONS: Dict[str, str] = {
-    "app.title": "Military Rural Revitalization System",
+    "app.title": "Assistance Management Information System",
     "app.subtitle": "Supporting Rural Revitalization Strategy",
     "nav.dashboard": "Dashboard",
     "nav.villages": "Village Management",

@@ -97,7 +97,7 @@ win-installer: electron-build
 # ============================================================
 
 VERSION := $(shell node -p "require('./package.json').version" 2>/dev/null || echo "1.2.0")
-APP_NAME := military-rural-system
+APP_NAME := assistance-management-system
 OUTPUT_DIR := dist/deb
 
 # Docker 构建 DEB (amd64)
@@ -212,7 +212,7 @@ build-kylin: build-kylin-arm64
 kylin-clean:
 	@echo "=== 清理麒麟 V10 构建产物 ==="
 	rm -rf $(KYLIN_OUTPUT_DIR)
-	rm -rf backend/dist/military-rural-backend
+	rm -rf backend/dist/assistance-management-backend
 	rm -rf backend/build
 	docker rmi $(APP_NAME)-kylin:$(VERSION) 2>/dev/null || true
 	@echo "清理完成"
@@ -224,7 +224,7 @@ kylin-verify:
 
 # 帮助信息
 help:
-	@echo "军队乡村振兴管理系统 - Makefile"
+	@echo "帮扶管理信息系统 - Makefile"
 	@echo ""
 	@echo "可用目标:"
 	@echo "  make test         - 运行所有测试（后端 + 前端）"

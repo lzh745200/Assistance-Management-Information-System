@@ -162,7 +162,7 @@ def init_default_users(db: SessionLocal) -> None:
 
         admin_user = User(
             username="admin",
-            email="admin@military-rural.gov.cn",
+            email="admin@assistance-management.gov.cn",
             full_name="系统管理员",
             hashed_password=pwd_context.hash("password123"),
             role="admin",
@@ -190,7 +190,7 @@ def init_default_users(db: SessionLocal) -> None:
             top_org = db.query(Organization).filter(Organization.parent_id.is_(None)).first()
             if not top_org:
                 top_org = Organization(
-                    name="军队乡村振兴总部",
+                    name="帮扶管理信息总部",
                     code="ROOT",
                     org_type="department",
                     level="level_1",

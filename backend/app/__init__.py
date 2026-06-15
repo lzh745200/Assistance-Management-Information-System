@@ -1,4 +1,4 @@
-"""Military Rural Revitalization System Backend."""
+"""Assistance Management Information System Backend."""
 
 from __future__ import annotations
 
