@@ -113,7 +113,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='military-rural-backend',
+    name='assistance-management-backend',
     debug=False,
     bootloader_ignore_signals=False,
     strip=True,

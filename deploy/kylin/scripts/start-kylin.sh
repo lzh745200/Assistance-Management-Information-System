@@ -1,11 +1,11 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-#  军队乡村振兴管理系统 - 麒麟 V10 桌面启动入口
+#  帮扶管理信息系统 - 麒麟 V10 桌面启动入口
 #  由 .desktop 文件调用，负责启动服务并打开浏览器
 # ═══════════════════════════════════════════════════════════════
 set -e
 
-APP_NAME="military-rural-system"
+APP_NAME="assistance-management-system"
 SERVICE_NAME="${APP_NAME}.service"
 HEALTH_URL="http://127.0.0.1:8000/health"
 BROWSER_URL="http://127.0.0.1:8000"
@@ -47,23 +47,23 @@ fi
 
 # ── 直接启动回退函数 ──
 _direct_start() {
-    if [ -x /opt/military-rural-system/backend/military-rural-backend ]; then
-        cd /opt/military-rural-system
+    if [ -x /opt/assistance-management-system/backend/assistance-management-backend ]; then
+        cd /opt/assistance-management-system
         export KYLIN_MODE=true
-        export FRONTEND_DIST_PATH=/opt/military-rural-system/frontend
-        export DATABASE_URL=sqlite:////var/lib/military-rural-system/database/rural_revitalization.db
-        export UPLOAD_DIR=/var/lib/military-rural-system/uploads
-        export EXPORT_DIR=/var/lib/military-rural-system/exports
-        export CACHE_DIR=/var/lib/military-rural-system/cache
-        export BACKUP_DIR=/var/lib/military-rural-system/backups
-        export LOG_DIR=/var/log/military-rural-system
-        export LOG_FILE=/var/log/military-rural-system/app.log
+        export FRONTEND_DIST_PATH=/opt/assistance-management-system/frontend
+        export DATABASE_URL=sqlite:////var/lib/assistance-management-system/database/rural_revitalization.db
+        export UPLOAD_DIR=/var/lib/assistance-management-system/uploads
+        export EXPORT_DIR=/var/lib/assistance-management-system/exports
+        export CACHE_DIR=/var/lib/assistance-management-system/cache
+        export BACKUP_DIR=/var/lib/assistance-management-system/backups
+        export LOG_DIR=/var/log/assistance-management-system
+        export LOG_FILE=/var/log/assistance-management-system/app.log
         export HOST=127.0.0.1
         export PORT=8000
-        /opt/military-rural-system/backend/military-rural-backend
+        /opt/assistance-management-system/backend/assistance-management-backend
     else
         err "后端可执行文件不存在"
-        err "请重新安装: sudo dpkg -i military-rural-system_*.deb"
+        err "请重新安装: sudo dpkg -i assistance-management-system_*.deb"
     fi
 }
 
@@ -77,7 +77,7 @@ for i in $(seq 1 $MAX_WAIT); do
     if [ "$i" -eq "$MAX_WAIT" ]; then
         err "服务启动超时（${MAX_WAIT}s），请检查日志:"
         err "  sudo journalctl -u $APP_NAME -n 50 --no-pager"
-        err "  或查看: tail -50 /var/log/military-rural-system/app.log"
+        err "  或查看: tail -50 /var/log/assistance-management-system/app.log"
         exit 1
     fi
     sleep 1

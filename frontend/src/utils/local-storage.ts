@@ -3,7 +3,7 @@ import { logger } from "@/utils/logger";
 // 本地存储管理工具 - 增强单机版系统的数据存储能力
 
 // 存储键前缀，避免与其他应用冲突
-const STORAGE_PREFIX = "military_rural_";
+const STORAGE_PREFIX = "assistance_management_";
 
 // 存储键常量
 export const STORAGE_KEYS = {

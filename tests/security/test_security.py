@@ -42,7 +42,7 @@ class TestPermissionManagement:
         # 检查关键文件的权限设置
         critical_files = [
             Path(__file__).parent.parent.parent / "backend" / ".env",
-            Path(__file__).parent.parent.parent / "backend" / "data" / "military_rural.db",
+            Path(__file__).parent.parent.parent / "backend" / "data" / "assistance_management.db",
         ]
 
         for file_path in critical_files:

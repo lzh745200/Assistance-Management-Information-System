@@ -1,18 +1,18 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-#  军队乡村振兴管理系统 - DEB 安装后脚本 (postinst)
+#  帮扶管理信息系统 - DEB 安装后脚本 (postinst)
 #  在 dpkg -i 安装完成后自动执行
 # ═══════════════════════════════════════════════════════════════
 set -e
 
-APP_NAME="military-rural-system"
+APP_NAME="assistance-management-system"
 INSTALL_DIR="/opt/${APP_NAME}"
 DATA_DIR="/var/lib/${APP_NAME}"
 LOG_DIR="/var/log/${APP_NAME}"
 
 echo ""
 echo "======================================================"
-echo "  军队乡村振兴管理系统 - 安装配置"
+echo "  帮扶管理信息系统 - 安装配置"
 echo "======================================================"
 echo ""
 
@@ -31,7 +31,7 @@ if ! getent passwd ${APP_NAME} > /dev/null 2>&1; then
             --home-dir ${INSTALL_DIR} \
             --shell /bin/false \
             --no-create-home \
-            --comment "军队乡村振兴管理系统" \
+            --comment "帮扶管理信息系统" \
             ${APP_NAME}
     echo "  已创建系统用户: ${APP_NAME}"
 else
@@ -60,8 +60,8 @@ chmod 750 "${DATA_DIR}"
 chmod 750 "${LOG_DIR}"
 
 # 后端可执行权限
-if [ -f "${INSTALL_DIR}/backend/military-rural-backend" ]; then
-    chmod +x "${INSTALL_DIR}/backend/military-rural-backend"
+if [ -f "${INSTALL_DIR}/backend/assistance-management-backend" ]; then
+    chmod +x "${INSTALL_DIR}/backend/assistance-management-backend"
 fi
 
 # 启动脚本权限
@@ -71,8 +71,8 @@ fi
 
 # ── 4. 安装 systemd 服务 ──
 echo "[4/6] 配置系统服务..."
-if [ -f "${INSTALL_DIR}/systemd/military-rural.service" ]; then
-    cp "${INSTALL_DIR}/systemd/military-rural.service" /etc/systemd/system/${APP_NAME}.service
+if [ -f "${INSTALL_DIR}/systemd/assistance-management.service" ]; then
+    cp "${INSTALL_DIR}/systemd/assistance-management.service" /etc/systemd/system/${APP_NAME}.service
     systemctl daemon-reload
     systemctl enable ${APP_NAME}.service 2>/dev/null || true
     echo "  系统服务已安装并启用"
@@ -82,8 +82,8 @@ fi
 
 # ── 5. 安装桌面快捷方式 ──
 echo "[5/6] 安装桌面快捷方式..."
-if [ -f "${INSTALL_DIR}/desktop/military-rural-system.desktop" ]; then
-    cp "${INSTALL_DIR}/desktop/military-rural-system.desktop" \
+if [ -f "${INSTALL_DIR}/desktop/assistance-management-system.desktop" ]; then
+    cp "${INSTALL_DIR}/desktop/assistance-management-system.desktop" \
        /usr/share/applications/${APP_NAME}.desktop
     chmod 644 /usr/share/applications/${APP_NAME}.desktop
     update-desktop-database /usr/share/applications/ 2>/dev/null || true
@@ -106,7 +106,7 @@ echo "  安装完成！"
 echo "======================================================"
 echo ""
 echo "  启动方式:"
-echo "    1. 在应用菜单中搜索 '军队乡村振兴'"
+echo "    1. 在应用菜单中搜索 '帮扶管理信息'"
 echo "    2. 命令行运行: ${APP_NAME}"
 echo "    3. 服务管理:   sudo systemctl start ${APP_NAME}"
 echo ""

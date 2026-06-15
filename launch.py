@@ -73,7 +73,7 @@ threading.Thread(target=open_browser_when_ready, daemon=True).start()
 
 print()
 print("  ================================================")
-print("    军队乡村振兴管理系统 v1.2.0")
+print("    帮扶管理信息系统 v1.2.0")
 print("    关闭此窗口 = 停止系统")
 print("  ================================================")
 print()

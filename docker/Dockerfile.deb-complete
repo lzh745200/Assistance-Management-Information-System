@@ -1,5 +1,5 @@
 # ============================================================
-# 军队乡村振兴管理系统 — DEB 专用 Docker 构建
+# 帮扶管理信息系统 — DEB 专用 Docker 构建
 # 被 scripts/build-deb.sh 引用
 # 仅生成 DEB 包（不生成 AppImage），节省构建时间和体积
 # ============================================================
@@ -42,9 +42,9 @@ COPY backend/ backend/
 COPY resources/ resources/
 COPY .env.example ./
 
-RUN cd backend && .venv/bin/pyinstaller military-rural-backend.spec --clean --noconfirm && \
+RUN cd backend && .venv/bin/pyinstaller assistance-management-backend.spec --clean --noconfirm && \
     mkdir -p /project/dist/backend/linux && \
-    cp backend/dist/military-rural-backend /project/dist/backend/linux/military-rural-backend
+    cp backend/dist/assistance-management-backend /project/dist/backend/linux/assistance-management-backend
 
 # 复制 Electron 和构建资源
 COPY electron/ electron/

@@ -1,11 +1,11 @@
 #!/usr/bin/env pwsh
 # PowerShell 版本的全面测试脚本
-# 军队乡村振兴管理系统 - 全面测试
+# 帮扶管理信息系统 - 全面测试
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "================================" -ForegroundColor Cyan
-Write-Host "军队乡村振兴管理系统 - 全面测试" -ForegroundColor Cyan
+Write-Host "帮扶管理信息系统 - 全面测试" -ForegroundColor Cyan
 Write-Host "================================" -ForegroundColor Cyan
 
 $FAILED = 0

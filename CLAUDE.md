@@ -1,8 +1,8 @@
-# CLAUDE.md - 军队乡村振兴管理系统
+# CLAUDE.md - 帮扶管理信息系统
 
 ## 项目概述
 
-军队乡村振兴管理系统 - 完全离线的单机版桌面应用，支持多机协同数据同步。
+帮扶管理信息系统 - 完全离线的单机版桌面应用，支持多机协同数据同步。
 基于 Python FastAPI 后端 + Vue 3 TypeScript 前端 + Electron 桌面壳。
 
 > **平台说明**: 以下命令示例以 Windows 为主（`.venv\Scripts\`）。Linux/macOS 用户请将路径替换为 `.venv/bin/`、将 `\` 替换为 `/`。

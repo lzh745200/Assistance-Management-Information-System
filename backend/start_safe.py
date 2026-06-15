@@ -27,7 +27,7 @@ sys.path.insert(0, str(base_dir))
 def print_banner():
     """打印启动横幅"""
     print("\n" + "=" * 70)
-    print("  军队乡村振兴管理系统 - 后端服务")
+    print("  帮扶管理信息系统 - 后端服务")
     print("  版本: 1.0.4 (增强版)")
     print("=" * 70 + "\n")
 

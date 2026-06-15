@@ -1,5 +1,5 @@
 <template>
-  <div class="military-rural-project-import">
+  <div class="assistance-management-project-import">
     <div class="military-decoration-top">
       <div class="decoration-bar"></div>
     </div>
@@ -585,7 +585,7 @@ const redirectToList = () => {
 </script>
 
 <style scoped lang="scss">
-.military-rural-project-import {
+.assistance-management-project-import {
   min-height: 100vh;
   padding: 20px;
   background: #f5f7fa;
@@ -860,7 +860,7 @@ const redirectToList = () => {
   }
 }
 @media (max-width: 768px) {
-  .military-rural-project-import {
+  .assistance-management-project-import {
     padding: 10px;
     .import-header {
       padding: 15px 20px;

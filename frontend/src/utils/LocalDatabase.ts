@@ -5,7 +5,7 @@
 
 import { logger } from "./logger";
 
-const DB_NAME = "military_rural_db";
+const DB_NAME = "assistance_management_db";
 const DB_VERSION = 1;
 
 class LocalDatabaseClass {

@@ -1,5 +1,5 @@
 # ============================================================
-# 军队乡村振兴管理系统 — fpm 打包方案 (ARM64)
+# 帮扶管理信息系统 — fpm 打包方案 (ARM64)
 # 解决 electron-builder 兼容性问题
 # ============================================================
 
@@ -39,10 +39,10 @@ COPY backend/ backend/
 COPY resources/ resources/
 COPY .env.example ./
 
-RUN cd backend && pyinstaller military-rural-backend.spec --clean --noconfirm
+RUN cd backend && pyinstaller assistance-management-backend.spec --clean --noconfirm
 
 RUN mkdir -p dist/backend/linux && \
-    cp backend/dist/military-rural-backend dist/backend/linux/military-rural-backend
+    cp backend/dist/assistance-management-backend dist/backend/linux/assistance-management-backend
 
 # ─── Stage 3: Electron 应用构建 ───
 FROM node:20-bookworm AS electron-app
@@ -108,7 +108,7 @@ WORKDIR /package
 
 ARG VERSION=1.2.0
 ARG ARCH=arm64
-ENV PACKAGE_NAME=military-rural-revitalization-system
+ENV PACKAGE_NAME=assistance-management-information-system
 ENV PACKAGE_VERSION=${VERSION}
 
 # 复制 Electron 应用
@@ -123,8 +123,8 @@ RUN mkdir -p /package/usr/bin && \
 RUN mkdir -p /package/usr/share/applications && \
     cat > /package/usr/share/applications/${PACKAGE_NAME}.desktop << EOF
 [Desktop Entry]
-Name=军队乡村振兴管理系统
-Comment=军队乡村振兴管理系统
+Name=帮扶管理信息系统
+Comment=帮扶管理信息系统
 Exec=/usr/lib/${PACKAGE_NAME}/${PACKAGE_NAME}
 Icon=/usr/lib/${PACKAGE_NAME}/icon.png
 Terminal=false
@@ -137,7 +137,7 @@ RUN fpm -s dir -t deb \
     --name ${PACKAGE_NAME} \
     --version ${PACKAGE_VERSION} \
     --architecture arm64 \
-    --description "军队乡村振兴管理系统" \
+    --description "帮扶管理信息系统" \
     --maintainer "support@example.com" \
     --vendor "MilitaryRural" \
     --license "Proprietary" \

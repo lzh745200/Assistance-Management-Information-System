@@ -1,7 +1,7 @@
 """
 系统初始化API
 提供系统首次初始化配置和初始化状态检查
-用于军队乡村振兴管理系统的初始部署设置
+用于帮扶管理信息系统的初始部署设置
 """
 
 import logging
@@ -32,7 +32,7 @@ class InitRequest(BaseModel):
     admin_username: str = Field("admin", description="超级管理员用户名")
     admin_password: str = Field(..., description="超级管理员密码", min_length=8)
     admin_email: Optional[str] = Field(None, description="超级管理员邮箱")
-    system_name: Optional[str] = Field("军队乡村振兴管理系统", description="系统名称")
+    system_name: Optional[str] = Field("帮扶管理信息系统", description="系统名称")
     contact_person: Optional[str] = Field(None, description="联系人")
     contact_phone: Optional[str] = Field(None, description="联系电话")
 
@@ -73,7 +73,7 @@ async def check_init_status(db: Session = Depends(get_db)):
 
         if is_initialized:
             result["organization_name"] = svc.get("organization_name", "未知单位")
-            result["system_name"] = svc.get("system_name", "军队乡村振兴管理系统")
+            result["system_name"] = svc.get("system_name", "帮扶管理信息系统")
             result["initialized_at"] = svc.get("init_timestamp", None)
 
         return {"success": True, "data": result}
@@ -119,7 +119,7 @@ async def initialize_system(
 
         # 步骤2：初始化系统配置
         svc.initialize_defaults()
-        svc.set("system_name", request.system_name or "军队乡村振兴管理系统", "系统名称")
+        svc.set("system_name", request.system_name or "帮扶管理信息系统", "系统名称")
         svc.set("organization_name", request.organization_name, "单位名称")
         if request.organization_short_name:
             svc.set("organization_short_name", request.organization_short_name, "单位简称")
@@ -165,7 +165,7 @@ async def initialize_system(
 
         return {
             "success": True,
-            "message": f"系统初始化完成，欢迎使用{request.system_name or '军队乡村振兴管理系统'}",
+            "message": f"系统初始化完成，欢迎使用{request.system_name or '帮扶管理信息系统'}",
             "data": {
                 "organization_name": request.organization_name,
                 "admin_username": request.admin_username,

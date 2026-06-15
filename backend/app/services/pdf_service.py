@@ -135,7 +135,7 @@ class PDFReportService:
         elements.append(Spacer(1, 30))
 
         footer = Paragraph(
-            f"页脚 - 军队乡村振兴管理系统 - {datetime.now().year}",
+            f"页脚 - 帮扶管理信息系统 - {datetime.now().year}",
             self.styles["Footer"],
         )
         elements.append(footer)
@@ -214,7 +214,7 @@ class PDFReportService:
         elements.append(Spacer(1, 30))
 
         footer = Paragraph(
-            f"页脚 - 军队乡村振兴管理系统 - {datetime.now().year}",
+            f"页脚 - 帮扶管理信息系统 - {datetime.now().year}",
             self.styles["Footer"],
         )
         elements.append(footer)
@@ -293,7 +293,7 @@ class PDFReportService:
         elements.append(Spacer(1, 30))
 
         footer = Paragraph(
-            f"页脚 - 军队乡村振兴管理系统 - {datetime.now().year}",
+            f"页脚 - 帮扶管理信息系统 - {datetime.now().year}",
             self.styles["Footer"],
         )
         elements.append(footer)
@@ -374,7 +374,7 @@ class PDFReportService:
         elements.append(Spacer(1, 30))
 
         footer = Paragraph(
-            f"页脚 - 军队乡村振兴管理系统 - {datetime.now().year}",
+            f"页脚 - 帮扶管理信息系统 - {datetime.now().year}",
             self.styles["Footer"],
         )
         elements.append(footer)
@@ -448,7 +448,7 @@ class PDFReportService:
         elements.append(Spacer(1, 30))
 
         footer = Paragraph(
-            f"页脚 - 军队乡村振兴管理系统 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"页脚 - 帮扶管理信息系统 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             self.styles["Footer"],
         )
         elements.append(footer)

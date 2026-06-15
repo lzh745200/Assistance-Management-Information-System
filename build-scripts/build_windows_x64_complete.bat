@@ -3,7 +3,7 @@ chcp 65001 >nul 2>&1
 setlocal enabledelayedexpansion
 
 REM ============================================
-REM 军队乡村振兴管理系统 - Windows x64 完整构建
+REM 帮扶管理信息系统 - Windows x64 完整构建
 REM ============================================
 REM 构建 64-bit 安装包，包含:
 REM   1. 环境检查
@@ -14,7 +14,7 @@ REM   5. 组装打包目录
 REM   6. NSIS 打包安装程序
 REM ============================================
 
-title 军队乡村振兴管理系统 - Windows x64 构建
+title 帮扶管理信息系统 - Windows x64 构建
 
 set "PROJECT_ROOT=%~dp0.."
 cd /d "%PROJECT_ROOT%"
@@ -22,7 +22,7 @@ set "VERSION=1.2.0"
 set "ARCH=x64"
 
 echo ============================================
-echo   军队乡村振兴管理系统 v%VERSION%
+echo   帮扶管理信息系统 v%VERSION%
 echo   Windows x64 构建
 echo ============================================
 echo.
@@ -146,12 +146,12 @@ if errorlevel 1 (
     python -m pip install pyinstaller -q
 )
 
-if exist "military-rural-backend.spec" (
-    echo   使用 spec: military-rural-backend.spec
-    python -m PyInstaller military-rural-backend.spec --clean --noconfirm
-) else if exist "military-rural-backend-full.spec" (
-    echo   使用 spec: military-rural-backend-full.spec
-    python -m PyInstaller military-rural-backend-full.spec --clean --noconfirm
+if exist "assistance-management-backend.spec" (
+    echo   使用 spec: assistance-management-backend.spec
+    python -m PyInstaller assistance-management-backend.spec --clean --noconfirm
+) else if exist "assistance-management-backend-full.spec" (
+    echo   使用 spec: assistance-management-backend-full.spec
+    python -m PyInstaller assistance-management-backend-full.spec --clean --noconfirm
 ) else (
     echo [错误] 未找到 PyInstaller spec 文件
     pause
@@ -180,11 +180,11 @@ mkdir "%PKG_DIR%\backend"
 mkdir "%PKG_DIR%\frontend"
 
 REM 复制后端
-if exist "dist\military-rural-backend.exe" (
-    copy "dist\military-rural-backend.exe" "%PKG_DIR%\backend\" >nul
-    echo   后端: military-rural-backend.exe
+if exist "dist\assistance-management-backend.exe" (
+    copy "dist\assistance-management-backend.exe" "%PKG_DIR%\backend\" >nul
+    echo   后端: assistance-management-backend.exe
 ) else (
-    echo [错误] 后端构建产物不存在: dist\military-rural-backend.exe
+    echo [错误] 后端构建产物不存在: dist\assistance-management-backend.exe
     pause
     exit /b 1
 )
@@ -235,9 +235,9 @@ echo   构建完成！
 echo ============================================
 echo.
 echo   产物位置:
-echo     后端 EXE:   %PROJECT_ROOT%\backend\dist\military-rural-backend.exe
+echo     后端 EXE:   %PROJECT_ROOT%\backend\dist\assistance-management-backend.exe
 echo     打包目录:   %PROJECT_ROOT%\dist\windows\package\
-echo     安装程序:   %PROJECT_ROOT%\dist\windows\军队乡村振兴管理系统-%VERSION%-x64-Setup.exe
+echo     安装程序:   %PROJECT_ROOT%\dist\windows\帮扶管理信息系统-%VERSION%-x64-Setup.exe
 echo.
 echo   手动打包 (无 NSIS):
 echo     将 dist\windows\package\ 目录压缩为 zip 分发

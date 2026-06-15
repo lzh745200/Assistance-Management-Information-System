@@ -100,7 +100,7 @@ describe('utils/LocalDatabase', () => {
 
   it('init 调用 indexedDB.open 并保存 db', async () => {
     await localDatabase.init()
-    expect(fakeOpen).toHaveBeenCalledWith('military_rural_db', 1, expect.any(Object))
+    expect(fakeOpen).toHaveBeenCalledWith('assistance_management_db', 1, expect.any(Object))
     expect((localDatabase as any).db).toBe(fakeDB)
   })
 

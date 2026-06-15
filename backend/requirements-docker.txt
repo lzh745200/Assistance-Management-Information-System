@@ -1,4 +1,4 @@
-# Military Rural Revitalization Management System - Production Dependencies
+# Assistance Management Information Management System - Production Dependencies
 # 安装: pip install -r requirements.txt
 # 开发依赖: pip install -r requirements-dev.txt
 

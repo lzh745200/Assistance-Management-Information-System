@@ -355,7 +355,7 @@ class ExcelTemplateService:
         # ── 第1行：主标题（深绿底色 + 金色大字）──
         ws.merge_cells(f"A1:{max_col}1")
         c = ws["A1"]
-        c.value = "★ 军队乡村振兴管理系统 ★"
+        c.value = "★ 帮扶管理信息系统 ★"
         c.font = _title_font
         c.fill = _title_fill
         c.alignment = _center_align
@@ -468,7 +468,7 @@ class ExcelTemplateService:
         footer_row = note_start + 2
         ws.merge_cells(f"A{footer_row}:{get_column_letter(col_count)}{footer_row}")
         ws.cell(row=footer_row, column=1).value = (
-            f"— 军队乡村振兴管理系统 v1.3.0 — {date.today().strftime('%Y-%m-%d')} —"
+            f"— 帮扶管理信息系统 v1.3.0 — {date.today().strftime('%Y-%m-%d')} —"
         )
         ws.cell(row=footer_row, column=1).font = _footer_font
         ws.cell(row=footer_row, column=1).alignment = _center_align
@@ -593,7 +593,7 @@ class ExcelTemplateService:
         # 页脚
         footer_row = note_start + len(notes) + 2
         ws.merge_cells(f"A{footer_row}:{max_col}{footer_row}")
-        ws.cell(row=footer_row, column=1).value = "— 军队乡村振兴管理系统 v1.3.0 —"
+        ws.cell(row=footer_row, column=1).value = "— 帮扶管理信息系统 v1.3.0 —"
         ws.cell(row=footer_row, column=1).font = _footer_font
         ws.cell(row=footer_row, column=1).alignment = _center_align
 

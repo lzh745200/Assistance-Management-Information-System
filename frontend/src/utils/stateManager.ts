@@ -18,7 +18,7 @@ interface StateItem<T> {
 }
 
 export class StateManager {
-  private storagePrefix = "military_rural_";
+  private storagePrefix = "assistance_management_";
   private memoryCache = new Map<string, StateItem<any>>();
   private listeners = new Map<string, Set<Function>>();
 

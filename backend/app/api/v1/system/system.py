@@ -1,7 +1,7 @@
 """
 核心系统API
 提供系统运行控制（重启、关闭）、系统信息查询等核心功能
-用于军队乡村振兴管理系统的系统级运维操作
+用于帮扶管理信息系统的系统级运维操作
 """
 
 import logging
@@ -56,7 +56,7 @@ async def get_system_info(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """获取军队乡村振兴管理系统的综合信息
+    """获取帮扶管理信息系统的综合信息
 
     包含软件版本、运行环境、核心业务数据统计等。
     """
@@ -113,7 +113,7 @@ async def get_system_info(
     return {
         "success": True,
         "data": {
-            "name": "军队乡村振兴管理系统",
+            "name": "帮扶管理信息系统",
             "version": getattr(settings, "PROJECT_VERSION", "1.1.0"),
             "python_version": sys.version.split()[0],
             "platform": platform.platform(),
@@ -285,7 +285,7 @@ async def get_version_info():
         "success": True,
         "data": {
             "version": getattr(settings, "PROJECT_VERSION", "1.1.0"),
-            "name": "军队乡村振兴管理系统",
+            "name": "帮扶管理信息系统",
             "codename": "军乡振兴",
             "release_date": "2026-04-25",
             "description": "面向军队单位帮扶乡村工作的综合管理平台",

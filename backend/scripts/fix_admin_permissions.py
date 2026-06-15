@@ -27,7 +27,7 @@ def fix_admin_user():
             temp_password = secrets.token_urlsafe(12)
             admin = User(
                 username="admin",
-                email="admin@military-rural.gov.cn",
+                email="admin@assistance-management.gov.cn",
                 full_name="系统管理员",
                 hashed_password=get_password_hash(temp_password),
                 role="super_admin",

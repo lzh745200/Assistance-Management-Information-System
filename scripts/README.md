@@ -119,7 +119,7 @@ scripts\kill-backend.bat
    ```
 
 4. 数据库是否正常？
-   - 检查 `backend/data/military_rural.db` 是否存在
+   - 检查 `backend/data/assistance_management.db` 是否存在
    - 查看 `backend/logs/app.log` 日志
 
 ### Q: 如何查看服务日志？

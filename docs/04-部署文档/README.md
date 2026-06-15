@@ -27,6 +27,6 @@ docker run --rm --platform linux/arm64 \
 ## 一键安装
 
 ```bash
-sudo dpkg -i military-rural-system_1.2.0_arm64.deb
+sudo dpkg -i assistance-management-system_1.2.0_arm64.deb
 # 浏览器访问 http://localhost:8000
 ```

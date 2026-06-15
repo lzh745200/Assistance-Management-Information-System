@@ -1,18 +1,18 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-#  军队乡村振兴管理系统 - DEB 卸载后脚本 (postrm)
+#  帮扶管理信息系统 - DEB 卸载后脚本 (postrm)
 #  在 dpkg -r 或 dpkg --purge 完成后执行
 # ═══════════════════════════════════════════════════════════════
 set -e
 
-APP_NAME="military-rural-system"
+APP_NAME="assistance-management-system"
 DATA_DIR="/var/lib/${APP_NAME}"
 LOG_DIR="/var/log/${APP_NAME}"
 
 # 仅在 purge 模式下清除用户数据
 if [ "$1" = "purge" ]; then
     echo ""
-    echo "正在清除军队乡村振兴管理系统的所有数据..."
+    echo "正在清除帮扶管理信息系统的所有数据..."
 
     # 备份提示
     if [ -d "${DATA_DIR}/database" ] && [ "$(ls -A ${DATA_DIR}/database 2>/dev/null)" ]; then

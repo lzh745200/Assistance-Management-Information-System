@@ -31,7 +31,7 @@ class SystemStarter:
         """打印启动横幅"""
         print("=" * 70)
         print("军民融合乡村振兴管理系统 v1.1.0")
-        print("Military Rural Revitalization Management System")
+        print("Assistance Management Information Management System")
         print("=" * 70)
         print()
 

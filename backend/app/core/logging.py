@@ -11,7 +11,7 @@ class SafeLogger:
     def __init__(self, env: str = "dev", level: str = "INFO"):
         self.env = env
         self.level = getattr(logging, level.upper(), logging.INFO)
-        self.logger = logging.getLogger("military_rural")
+        self.logger = logging.getLogger("assistance_management")
         self.logger.setLevel(self.level)
         if not self.logger.handlers:
             self._setup_handlers()
@@ -50,4 +50,4 @@ class SafeLogger:
         self.logger.debug(msg, *args, **kwargs)
 
 
-logger = logging.getLogger("military_rural")
+logger = logging.getLogger("assistance_management")

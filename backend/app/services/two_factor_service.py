@@ -47,7 +47,7 @@ class TwoFactorService:
         return codes
 
     @staticmethod
-    def generate_qr_code(secret: str, user_email: str, issuer: str = "军队乡村振兴系统") -> str:
+    def generate_qr_code(secret: str, user_email: str, issuer: str = "帮扶管理信息系统") -> str:
         """
         生成TOTP二维码
 

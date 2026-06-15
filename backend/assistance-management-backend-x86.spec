@@ -240,7 +240,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='military-rural-backend',
+    name='assistance-management-backend',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

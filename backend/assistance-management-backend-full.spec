@@ -1,8 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller 完整打包配置 - 跨平台通用版
+PyInstaller 完整打包配置 - Windows版本 (优化版)
 将 FastAPI 后端打包为单文件可执行程序，包含所有依赖
-版本: 1.1.0
+版本: 1.0.4
 """
 
 import os
@@ -12,8 +12,8 @@ from pathlib import Path
 block_cipher = None
 backend_dir = os.path.dirname(os.path.abspath(SPEC))
 
-from PyInstaller.compat import is_win
-from PyInstaller.utils.hooks import collect_submodules, collect_data_files
+# 使用 collect_submodules 自动收集子模块，避免手动列出
+from PyInstaller.utils.hooks import collect_submodules
 
 # 数据文件列表
 datas = [
@@ -34,9 +34,6 @@ _snownlp_spec = _ilu.find_spec('snownlp')
 if _snownlp_spec and _snownlp_spec.submodule_search_locations:
     _snownlp_dir = list(_snownlp_spec.submodule_search_locations)[0]
     datas.append((_snownlp_dir, 'snownlp'))
-
-# 自动收集 prometheus_client 包数据（包含 HTML 模板等静态文件）
-datas += collect_data_files('prometheus_client')
 
 # 二进制文件列表
 binaries = []
@@ -86,6 +83,7 @@ hiddenimports = [
     'python_multipart',
     'dotenv',
     'diskcache',
+    'psutil._pswindows',
     'dateutil.tz',
     'pytz',
     'filelock',
@@ -102,6 +100,7 @@ hiddenimports = [
     'numpy.core._multiarray_umath',
 
     # 文件处理
+    'magic',
     'PIL.Image',
 
     # AI功能
@@ -116,75 +115,10 @@ hiddenimports = [
     'scrapy',
     'bs4.builder._lxml',
     'feedparser',
-
-    # 业务指标监控
-    'prometheus_client',
 ]
-
-# Windows 平台特定隐藏导入
-if is_win:
-    hiddenimports.append('psutil._pswindows')
 
 # 自动收集 app 包下的所有子模块
 hiddenimports += collect_submodules('app')
-
-# 显式添加所有 API v1 路由模块（确保 PyInstaller 能正确打包）
-hiddenimports += [
-    # 子模块包
-    'app.api.v1.auth',
-    'app.api.v1.data',
-    'app.api.v1.import_export',
-    'app.api.v1.system',
-    # System 子模块
-    'app.api.v1.system.health',
-    'app.api.v1.system.env',
-    'app.api.v1.system.config_package',
-    # Monitoring 子模块
-    'app.api.v1.monitoring',
-    'app.api.v1.monitoring.metrics',
-    'app.api.v1.monitoring.secrets',
-    'app.api.v1.monitoring.data_tier',
-    # 业务模块
-    'app.api.v1.organization',
-    'app.api.v1.policy',
-    'app.api.v1.projects',
-    'app.api.v1.school',
-    'app.api.v1.supported_village',
-    'app.api.v1.supported_village_export',
-    'app.api.v1.rural_works',
-    'app.api.v1.rural_tasks',
-    'app.api.v1.villages',
-    'app.api.v1.village_templates',
-    'app.api.v1.validation',
-    'app.api.v1.report_templates',
-    'app.api.v1.approval',
-    'app.api.v1.messages',
-    'app.api.v1.feedback',
-    'app.api.v1.todos',
-    'app.api.v1.ai',
-    'app.api.v1.map',
-    'app.api.v1.project_milestones',
-    'app.api.v1.fund_budgets',
-    'app.api.v1.fund_lifecycle',
-    'app.api.v1.work_logs',
-    'app.api.v1.assessment',
-    'app.api.v1.system_health',
-    'app.api.v1.performance',
-    'app.api.v1.monitoring_legacy',
-    'app.api.v1.data_quality',
-    'app.api.v1.ai_enhanced',
-    'app.api.v1.data_sync',
-    'app.api.v1.offline_map',
-    'app.api.v1.batch_operations',
-    'app.api.v1.sync',
-    'app.api.v1.user_permissions',
-    'app.api.v1.machine_code',
-    'app.api.v1.effectiveness',
-    'app.api.v1.sentiment',
-    'app.api.v1.messages_extended',
-    'app.api.v1.encryption',
-    'app.api.v1.search',
-]
 
 # 排除不需要的模块（避免 Analysis 时间过长）
 excludes = [
@@ -209,7 +143,8 @@ excludes = [
     'magic',
 ]
 
-analysis_kwargs = dict(
+a = Analysis(
+    [os.path.join(backend_dir, 'start.py')],
     pathex=[backend_dir],
     binaries=binaries,
     datas=datas,
@@ -218,17 +153,10 @@ analysis_kwargs = dict(
     hooksconfig={},
     runtime_hooks=[],
     excludes=excludes,
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
     cipher=block_cipher,
     noarchive=False,
-)
-
-if is_win:
-    analysis_kwargs['win_no_prefer_redirects'] = False
-    analysis_kwargs['win_private_assemblies'] = False
-
-a = Analysis(
-    [os.path.join(backend_dir, 'start.py')],
-    **analysis_kwargs,
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
@@ -240,14 +168,14 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='military-rural-backend',
+    name='assistance-management-backend',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

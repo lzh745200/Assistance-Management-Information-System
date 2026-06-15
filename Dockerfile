@@ -1,5 +1,5 @@
 # ============================================================
-# 军队乡村振兴管理系统 — 多阶段 Docker 构建 (ARM64)
+# 帮扶管理信息系统 — 多阶段 Docker 构建 (ARM64)
 # 目标: 银河麒麟 V10 (ARM64)
 # 输出: .deb 安装包
 # ============================================================
@@ -53,11 +53,11 @@ COPY resources/ resources/
 COPY .env.example ./
 
 # 打包后端为可执行文件
-RUN cd backend && pyinstaller military-rural-backend.spec --clean --noconfirm
+RUN cd backend && pyinstaller assistance-management-backend.spec --clean --noconfirm
 
 # 创建后端目录结构
 RUN mkdir -p dist/backend/linux && \
-    cp backend/dist/military-rural-backend dist/backend/linux/military-rural-backend
+    cp backend/dist/assistance-management-backend dist/backend/linux/assistance-management-backend
 
 # ─── Stage 3: Electron 打包 (生成 .deb) ───
 FROM node:20-bookworm AS electron-packager
