@@ -1,7 +1,4 @@
-# .github/workflows/build-arm64.yml
-# 帮扶管理信息系统 - ARM64 .deb 构建工作流
-
-name: 构建 ARM64 .deb 安装包
+name: Build ARM64 Kylin Installer
 
 on:
   push:
@@ -9,228 +6,191 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    # 使用 GitHub 免费的 ARM64 运行器
-    runs-on: ubuntu-24.arm
-    # 对于 Node.js 24 兼容性
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
+  # 构建后端
+  build-backend:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
     steps:
-      # 1. 检出代码
-      - name: 检出代码
+      - name: Checkout code
         uses: actions/checkout@v4
-
-      # 2. 设置 Node.js 环境
-      - name: 设置 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      # 3. 设置 Python 环境
-      - name: 设置 Python
+        
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      # 4. 安装系统依赖
-      - name: 安装系统依赖
+          python-version: '3.10'
+          
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            fakeroot \
-            dpkg-dev \
-            ruby-full \
-            rubygems \
-            build-essential \
-            libgtk-3-0 \
-            libnotify4 \
-            libnss3 \
-            libxss1 \
-            libxtst6 \
-            xdg-utils \
-            libatspi2.0-0 \
-            libuuid1 \
-            libsecret-1-0 \
-            libasound2 \
-            libgbm1
-          sudo gem install fpm
+          sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu python3-dev patchelf libc6-dev-arm64-cross
+          pip install -r backend/requirements.txt
+          pip install pyinstaller
+          
+      - name: Build with PyInstaller
+        run: |
+          cd backend
+          pyinstaller --name=assistance-backend --onefile --add-data "app:app" --add-data "alembic:alembic" --add-data "alembic.ini:." --hidden-import=uvicorn --hidden-import=sqlalchemy --hidden-import=alembic start.py
+          
+      - name: Upload backend
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-arm64
+          path: backend/dist/assistance-backend
+          retention-days: 7
 
-      # 5. 安装 Node.js 依赖并构建前端
-      - name: 安装 Node 依赖
+  # 构建前端
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Build frontend
+        working-directory: ./frontend
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm install --legacy-peer-deps --network-timeout=1200000 --no-audit --no-fund
-
-      - name: 构建前端
-        run: |
-          if [ -d "frontend" ]; then
-            cd frontend
-            npm config set registry https://registry.npmmirror.com
-            npm install --legacy-peer-deps --network-timeout=1200000
-            npm run build || echo "前端构建跳过（无 build 脚本）"
-            cd ..
-          else
-            echo "frontend 目录不存在，跳过前端构建"
-          fi
-
-      # 6. 安装 Python 依赖并构建后端
-      - name: 安装 Python 依赖
-        run: |
-          pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-          if [ -f "backend/requirements.txt" ]; then
-            pip install --timeout 300 -r backend/requirements.txt
-          fi
-          pip install pyinstaller
-
-      - name: 构建后端
-        run: |
-          if [ -d "backend" ]; then
-            cd backend
-            if [ -f "military-rural-backend.spec" ]; then
-              pyinstaller military-rural-backend.spec --clean --noconfirm
-            else
-              echo "未找到 backend.spec 文件，跳过 PyInstaller 构建"
-            fi
-            cd ..
-            # 创建后端目录结构
-            mkdir -p dist/backend/linux
-            if [ -f "backend/dist/military-rural-backend" ]; then
-              cp backend/dist/military-rural-backend dist/backend/linux/
-            fi
-          else
-            echo "backend 目录不存在，跳过后端构建"
-          fi
-
-      # 7. 复制构建产物
-      - name: 准备打包文件
-        run: |
-          mkdir -p package/usr/lib/military-rural-system
-          mkdir -p package/usr/share/applications
-          mkdir -p package/usr/share/icons/hicolor/256x256/apps
-          mkdir -p package/DEBIAN
-          mkdir -p output
-
-          # 复制前端产物
-          if [ -d "frontend/dist" ]; then
-            cp -r frontend/dist/* package/usr/lib/military-rural-system/ 2>/dev/null || true
-          fi
-
-          # 复制后端产物
-          if [ -d "dist" ]; then
-            cp -r dist/* package/usr/lib/military-rural-system/ 2>/dev/null || true
-          fi
-
-          # 复制 Electron 产物（如果有）
-          if [ -d "electron" ]; then
-            cp -r electron/* package/usr/lib/military-rural-system/ 2>/dev/null || true
-          fi
-
-          # 复制资源文件
-          if [ -d "resources" ]; then
-            cp -r resources/* package/usr/lib/military-rural-system/ 2>/dev/null || true
-          fi
-
-      # 8. 创建 desktop 文件
-      - name: 创建 .desktop 文件
-        run: |
-          cat > package/usr/share/applications/military-rural-system.desktop << 'EOF'
-          [Desktop Entry]
-          Name=帮扶管理信息系统
-          Name[en]=Military Rural Revitalization System
-          Comment=帮扶管理信息系统
-          Exec=/usr/lib/military-rural-system/military-rural-system
-          Icon=/usr/share/icons/hicolor/256x256/apps/military-rural-system.png
-          Terminal=false
-          Type=Application
-          Categories=Office;Utility;
-          StartupNotify=true
-          EOF
-
-      # 9. 创建启动脚本
-      - name: 创建启动脚本
-        run: |
-          cat > package/usr/lib/military-rural-system/military-rural-system << 'EOF'
-          #!/bin/bash
-          DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-          if [ -f "$DIR/main" ]; then
-            exec "$DIR/main"
-          elif [ -f "$DIR/military-rural-backend" ]; then
-            exec "$DIR/military-rural-backend"
-          else
-            echo "未找到可执行文件"
-            exit 1
-          fi
-          EOF
-          chmod +x package/usr/lib/military-rural-system/military-rural-system
-
-      # 10. 创建 DEBIAN/control 文件
-      - name: 创建 control 文件
-        run: |
-          cat > package/DEBIAN/control << 'EOF'
-          Package: military-rural-system
-          Version: 1.2.0
-          Section: utils
-          Priority: optional
-          Architecture: arm64
-          Maintainer: lzh745200 <lzh745200@example.com>
-          Description: 帮扶管理信息系统
-           帮扶管理信息系统是一个综合管理平台，
-           支持乡村振兴项目的数字化管理。
-          Depends: libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, 
-                    xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0, 
-                    libasound2, libgbm1
-          Homepage: https://github.com/lzh745200/Assistance-Management-Information-System
-          EOF
-
-      # 11. 创建 postinst 脚本（安装后执行）
-      - name: 创建 postinst 脚本
-        run: |
-          cat > package/DEBIAN/postinst << 'EOF'
-          #!/bin/bash
-          set -e
-          if [ -f /usr/lib/military-rural-system/military-rural-system ]; then
-            chmod +x /usr/lib/military-rural-system/military-rural-system
-          fi
-          exit 0
-          EOF
-          chmod +x package/DEBIAN/postinst
-
-      # 12. 使用 dpkg-deb 打包
-      - name: 打包 .deb
-        run: |
-          # 修复权限
-          sudo chown -R root:root package
-          sudo chmod -R 755 package/DEBIAN
-          sudo chmod 755 package/usr/lib/military-rural-system
+          npm ci
+          npm run build
           
-          # 打包
-          dpkg-deb --build package
-          
-          # 重命名并移动到 output 目录
-          mv package.deb output/military-rural-system-1.2.0-arm64.deb
-          
-          # 显示包信息
-          dpkg-deb --info output/military-rural-system-1.2.0-arm64.deb
-          echo "✅ .deb 包构建成功！"
-
-      # 13. 上传构建产物
-      - name: 上传 .deb 安装包
+      - name: Upload frontend
         uses: actions/upload-artifact@v4
         with:
-          name: military-rural-system-arm64
-          path: output/*.deb
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # 构建 Electron DEB 包
+  build-electron:
+    name: Build Electron DEB
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [build-backend, build-frontend]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install electron
+        working-directory: ./electron
+        run: |
+          npm config set registry https://registry.npmmirror.com
+          npm ci
+          sudo npm install -g electron-builder
+          
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-arm64'
+          path: ./artifacts
+          
+      - name: Prepare resources
+        run: |
+          mkdir -p resources/backend resources/frontend resources/icons
+          cp artifacts/backend-arm64/assistance-backend resources/backend/
+          chmod +x resources/backend/assistance-backend
+          cp -r artifacts/frontend-dist/* resources/frontend/
+          
+          cat > resources/start-services.sh << 'EOF'
+          #!/bin/bash
+          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          cd "$SCRIPT_DIR"
+          echo "启动帮扶管理信息系统..."
+          "$SCRIPT_DIR/backend/assistance-backend" &
+          cd "$SCRIPT_DIR/frontend"
+          npx serve -s . -l 3000 &
+          echo "访问: http://localhost:3000"
+          wait
+          EOF
+          chmod +x resources/start-services.sh
+          
+      - name: Build DEB
+        working-directory: ./electron
+        run: npx electron-builder --linux --arm64 --deb
+          
+      - name: Upload DEB
+        uses: actions/upload-artifact@v4
+        with:
+          name: kylin-arm64-deb
+          path: electron/dist/*.deb
           retention-days: 30
 
-      # 14. 可选：上传构建日志
-      - name: 上传构建日志
-        if: always()
+  # 打包完整安装包
+  build-installer:
+    name: Build Complete Installer
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build-electron]
+    
+    steps:
+      - name: Download DEB
+        uses: actions/download-artifact@v4
+        with:
+          name: kylin-arm64-deb
+          path: ./deb-package
+          
+      - name: Create installer
+        run: |
+          cat > install.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          echo "=========================================="
+          echo "  帮扶管理信息系统 v1.2.0 安装程序"
+          echo "  适用于: 麒麟 V10 ARM64"
+          echo "=========================================="
+          if [ "$(uname -m)" != "aarch64" ]; then
+              echo "错误: 仅支持 ARM64 架构"
+              exit 1
+          fi
+          if [ "$EUID" -ne 0 ]; then 
+              echo "请使用: sudo ./install.sh"
+              exit 1
+          fi
+          echo "安装依赖..."
+          apt-get update
+          apt-get install -y python3 python3-pip nodejs npm libxcb-xinerama0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xkb1 libxkbcommon-x11-0 libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 xdg-utils
+          pip3 install fastapi uvicorn sqlalchemy alembic bcrypt python-jose[cryptography] passlib[bcrypt]
+          npm install -g serve
+          INSTALL_DIR="/opt/assistance-system"
+          mkdir -p $INSTALL_DIR
+          tar -xzf /tmp/assistance-system.tar.gz -C $INSTALL_DIR
+          chmod +x $INSTALL_DIR/backend/assistance-backend
+          chmod +x $INSTALL_DIR/start-services.sh
+          cat > /usr/local/bin/assistance-system << 'LAUNCHER'
+          #!/bin/bash
+          /opt/assistance-system/start-services.sh
+          LAUNCHER
+          chmod +x /usr/local/bin/assistance-system
+          echo "安装完成！"
+          echo "启动: assistance-system"
+          echo "默认账号: admin / admin123"
+          EOF
+          chmod +x install.sh
+          
+          mkdir -p release-kylin
+          cp deb-package/*.deb release-kylin/
+          cp install.sh release-kylin/
+          cd release-kylin
+          tar -czf ../assistance-system-kylin-arm64-v1.2.0.tar.gz *
+          cd ..
+          
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs
-          path: |
-            *.log
-            output/*.txt
-          retention-days: 7
+          name: kylin-arm64-installer
+          path: assistance-system-kylin-arm64-v1.2.0.tar.gz
+          retention-days: 30
