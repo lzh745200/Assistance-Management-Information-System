@@ -38,11 +38,8 @@ jobs:
       - name: Build Backend
         run: |
           pip install --upgrade pip
-          # 先安装核心依赖
           pip install -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir --no-deps
-          # 如果上面失败，逐个安装关键包
           pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib bcrypt python-multipart httpx python-dotenv aiofiles Pillow openpyxl loguru || true
-          # 安装 pyinstaller
           pip install pyinstaller
           
           cd backend
@@ -62,7 +59,6 @@ jobs:
             --hidden-import=pkg_resources \
             start.py || echo "PyInstaller build failed, but continuing"
           
-          # 检查是否生成
           ls -la backend/dist/ || echo "No dist directory"
       
       - name: Upload Backend
@@ -125,27 +121,43 @@ jobs:
       
       - name: Prepare Resources
         run: |
-          mkdir -p resources/backend resources/frontend
+          # 创建 electron 项目中对应的目录（以匹配 package.json 的 files）
+          mkdir -p electron/backend/dist electron/frontend/dist
           if [ -f artifacts/backend-arm64/assistance-backend ]; then
-            cp artifacts/backend-arm64/assistance-backend resources/backend/
-            chmod +x resources/backend/assistance-backend
+            cp artifacts/backend-arm64/assistance-backend electron/backend/dist/
+            chmod +x electron/backend/dist/assistance-backend
+          else
+            echo "❌ Backend binary not found!"
+            exit 1
           fi
           if [ -d artifacts/frontend-dist ]; then
-            cp -r artifacts/frontend-dist/* resources/frontend/
+            cp -r artifacts/frontend-dist/* electron/frontend/dist/
+          else
+            echo "❌ Frontend dist not found!"
+            exit 1
           fi
       
-      - name: Build DEB
+      - name: Build DEB (ARM64)
         working-directory: ./electron
-        run: npx electron-builder --linux --arm64 --deb || echo "Build failed"
+        run: npx electron-builder --linux deb --arm64
+      
+      - name: List generated DEB files
+        working-directory: ./electron
+        run: |
+          echo "📦 查找生成的 DEB 文件："
+          # 根据 package.json 中 output 为 dist/electron，实际路径为 electron/dist/electron/
+          ls -la dist/electron/
+          if ! ls dist/electron/*.deb 1> /dev/null 2>&1; then
+            echo "❌ 未找到任何 .deb 文件！"
+            exit 1
+          fi
       
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
           name: kylin-arm64-deb
-          path: |
-            electron/dist/*.deb
-            dist/*.deb
-          if-no-files-found: warn
+          path: electron/dist/electron/*.deb
+          if-no-files-found: error
 
   build-installer:
     name: Build Installer
@@ -162,12 +174,13 @@ jobs:
         run: |
           mkdir -p release
           if [ -f deb-package/*.deb ]; then
-            tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*.deb
+            # 提取版本号从 package.json（可选）
+            VERSION=$(jq -r '.version' electron/package.json)
+            tar -czf release/assistance-system-kylin-arm64-v${VERSION}.tar.gz deb-package/*.deb
             echo "✅ 安装包创建完成"
           else
-            echo "⚠️ 未找到 DEB 包"
-            # 创建空包提示
-            echo "Build failed - no DEB package" > release/README.txt
+            echo "❌ 未找到 DEB 包，构建失败"
+            exit 1
           fi
           ls -la release/
       
