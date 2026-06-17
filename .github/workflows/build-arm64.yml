@@ -78,7 +78,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'   # 升级到 20 以满足依赖要求
       
       - name: Build Frontend
         working-directory: ./frontend
@@ -104,15 +104,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'   # 升级到 20
       
-      - name: Install Electron Dependencies
-        working-directory: ./electron
+      - name: Install Dependencies (Root)
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm install --legacy-peer-deps
-          # 全局安装 electron-builder 确保可用（也可使用 npx）
-          sudo npm install -g electron-builder
+          # 尝试安装，如果失败则重试（最多3次）
+          for i in {1..3}; do
+            npm install --legacy-peer-deps && break || sleep 5
+          done
       
       - name: Download Artifacts
         uses: actions/download-artifact@v4
@@ -120,10 +120,9 @@ jobs:
           pattern: '*-arm64'
           path: ./artifacts
       
-      - name: Prepare Resources for Electron
+      - name: Prepare Resources
         run: |
-          # 根据 package.json 的 files 配置，将后端和前端文件放到对应位置
-          # 后端二进制放到 backend/dist/
+          # 将后端二进制放到 backend/dist/
           mkdir -p backend/dist
           if [ -f artifacts/backend-arm64/assistance-backend ]; then
             cp artifacts/backend-arm64/assistance-backend backend/dist/
@@ -134,7 +133,7 @@ jobs:
             exit 1
           fi
           
-          # 前端文件覆盖到 frontend/dist/
+          # 将前端文件放到 frontend/dist/
           if [ -d artifacts/frontend-dist ]; then
             rm -rf frontend/dist
             cp -r artifacts/frontend-dist frontend/dist
@@ -145,13 +144,11 @@ jobs:
           fi
       
       - name: Build DEB (ARM64)
-        working-directory: ./electron
         run: |
-          # 使用 electron-builder 构建，输出目录由 package.json 中的 "directories.output" 指定为 "dist/electron"
+          # 在根目录运行 electron-builder，因为 package.json 在根目录
           npx electron-builder --linux --arm64 --deb
       
       - name: List generated DEB files
-        working-directory: ./electron
         run: |
           echo "📦 查找生成的 DEB 文件："
           # 根据 package.json 配置，输出目录为 dist/electron
@@ -165,7 +162,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kylin-arm64-deb
-          path: electron/dist/electron/*.deb
+          path: dist/electron/*.deb
           if-no-files-found: error
 
   build-installer:
