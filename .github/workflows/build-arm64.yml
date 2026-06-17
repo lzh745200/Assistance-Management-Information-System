@@ -106,11 +106,12 @@ jobs:
         with:
           node-version: '18'
       
-      - name: Setup Electron
+      - name: Install Electron Dependencies
         working-directory: ./electron
         run: |
           npm config set registry https://registry.npmmirror.com
           npm install --legacy-peer-deps
+          # 全局安装 electron-builder 确保可用（也可使用 npx）
           sudo npm install -g electron-builder
       
       - name: Download Artifacts
@@ -119,19 +120,25 @@ jobs:
           pattern: '*-arm64'
           path: ./artifacts
       
-      - name: Prepare Resources
+      - name: Prepare Resources for Electron
         run: |
-          # 创建 electron 项目中对应的目录（以匹配 package.json 的 files）
-          mkdir -p electron/backend/dist electron/frontend/dist
+          # 根据 package.json 的 files 配置，将后端和前端文件放到对应位置
+          # 后端二进制放到 backend/dist/
+          mkdir -p backend/dist
           if [ -f artifacts/backend-arm64/assistance-backend ]; then
-            cp artifacts/backend-arm64/assistance-backend electron/backend/dist/
-            chmod +x electron/backend/dist/assistance-backend
+            cp artifacts/backend-arm64/assistance-backend backend/dist/
+            chmod +x backend/dist/assistance-backend
+            echo "✅ Backend binary placed in backend/dist/"
           else
             echo "❌ Backend binary not found!"
             exit 1
           fi
+          
+          # 前端文件覆盖到 frontend/dist/
           if [ -d artifacts/frontend-dist ]; then
-            cp -r artifacts/frontend-dist/* electron/frontend/dist/
+            rm -rf frontend/dist
+            cp -r artifacts/frontend-dist frontend/dist
+            echo "✅ Frontend files placed in frontend/dist/"
           else
             echo "❌ Frontend dist not found!"
             exit 1
@@ -139,13 +146,15 @@ jobs:
       
       - name: Build DEB (ARM64)
         working-directory: ./electron
-        run: npx electron-builder --linux deb --arm64
+        run: |
+          # 使用 electron-builder 构建，输出目录由 package.json 中的 "directories.output" 指定为 "dist/electron"
+          npx electron-builder --linux --arm64 --deb
       
       - name: List generated DEB files
         working-directory: ./electron
         run: |
           echo "📦 查找生成的 DEB 文件："
-          # 根据 package.json 中 output 为 dist/electron，实际路径为 electron/dist/electron/
+          # 根据 package.json 配置，输出目录为 dist/electron
           ls -la dist/electron/
           if ! ls dist/electron/*.deb 1> /dev/null 2>&1; then
             echo "❌ 未找到任何 .deb 文件！"
@@ -174,9 +183,7 @@ jobs:
         run: |
           mkdir -p release
           if [ -f deb-package/*.deb ]; then
-            # 提取版本号从 package.json（可选）
-            VERSION=$(jq -r '.version' electron/package.json)
-            tar -czf release/assistance-system-kylin-arm64-v${VERSION}.tar.gz deb-package/*.deb
+            tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*.deb
             echo "✅ 安装包创建完成"
           else
             echo "❌ 未找到 DEB 包，构建失败"
