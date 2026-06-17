@@ -78,7 +78,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'   # 升级到 20 以满足依赖要求
+          node-version: '20'
       
       - name: Build Frontend
         working-directory: ./frontend
@@ -104,12 +104,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'   # 升级到 20
+          node-version: '20'
       
       - name: Install Dependencies (Root)
         run: |
           npm config set registry https://registry.npmmirror.com
-          # 尝试安装，如果失败则重试（最多3次）
           for i in {1..3}; do
             npm install --legacy-peer-deps && break || sleep 5
           done
@@ -122,7 +121,6 @@ jobs:
       
       - name: Prepare Resources
         run: |
-          # 将后端二进制放到 backend/dist/
           mkdir -p backend/dist
           if [ -f artifacts/backend-arm64/assistance-backend ]; then
             cp artifacts/backend-arm64/assistance-backend backend/dist/
@@ -133,7 +131,6 @@ jobs:
             exit 1
           fi
           
-          # 将前端文件放到 frontend/dist/
           if [ -d artifacts/frontend-dist ]; then
             rm -rf frontend/dist
             cp -r artifacts/frontend-dist frontend/dist
@@ -145,13 +142,12 @@ jobs:
       
       - name: Build DEB (ARM64)
         run: |
-          # 在根目录运行 electron-builder，因为 package.json 在根目录
-          npx electron-builder --linux --arm64 --deb
+          # 使用正确的参数：--linux 后跟目标格式，--arm64 指定架构
+          npx electron-builder --linux deb --arm64
       
       - name: List generated DEB files
         run: |
           echo "📦 查找生成的 DEB 文件："
-          # 根据 package.json 配置，输出目录为 dist/electron
           ls -la dist/electron/
           if ! ls dist/electron/*.deb 1> /dev/null 2>&1; then
             echo "❌ 未找到任何 .deb 文件！"
