@@ -160,8 +160,7 @@ jobs:
       
       - name: Build DEB (ARM64)
         run: |
-          # 使用正确的参数：--linux 后跟目标格式，--arm64 指定架构
-          npx electron-builder --linux deb --arm64
+        npx electron-builder --linux --arm64 --publish never
       
       - name: List generated DEB files
         run: |
