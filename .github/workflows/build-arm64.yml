@@ -160,7 +160,8 @@ jobs:
       
       - name: Build DEB (ARM64)
         run: |
-        npx electron-builder --linux --arm64 --publish never
+           # 使用 --publish never 禁用发布，避免 GH_TOKEN 错误
+           npx electron-builder --linux --arm64 --publish never
       
       - name: List generated DEB files
         run: |
