@@ -12,6 +12,10 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
+    "build:linux": "electron-builder --linux",
+    "build:deb": "electron-builder --linux deb",
+    "build:arm64": "electron-builder --linux deb --arm64",
+    "build:all": "electron-builder --win --mac --linux",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win --mac --linux",
     "postinstall": "electron-builder install-app-deps"
@@ -45,10 +49,22 @@
       "icon": "resources/icon.icns"
     },
     "linux": {
-      "target": ["deb"],
+      "target": [
+        {
+          "target": "deb",
+          "arch": ["x64", "arm64", "armv7l"]
+        }
+      ],
       "icon": "resources/icon.png",
       "category": "Office",
-      "maintainer": "开发团队 <dev@bumofu.com>"
+      "maintainer": "开发团队 <dev@bumofu.com>",
+      "synopsis": "帮扶管理系统",
+      "description": "帮扶管理系统 - 贵州省版 Standalone桌面应用",
+      "desktop": {
+        "Name": "帮扶管理系统",
+        "Comment": "帮扶管理系统 - 贵州省版",
+        "Categories": ["Office", "Utility"]
+      }
     }
   }
 }
