@@ -1,0 +1,119 @@
+# 创建目录
+New-Item -ItemType Directory -Force -Path ".github\workflows"
+
+# 创建并写入文件
+@"
+name: Build .deb for ARM64
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-arm64-deb:
+    name: 构建 ARM64 .deb 安装包
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 安装 ARM64 交叉编译工具
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu \
+            dpkg-cross \
+            fakeroot \
+            libc6-dev-arm64-cross
+
+      - name: 安装依赖
+        run: |
+          npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          npm install -g electron-builder
+
+      - name: 构建前端
+        run: |
+          if [ -d "frontend" ]; then
+            cd frontend
+            npm ci || npm install
+            npm run build || echo "⚠️ 前端构建脚本未配置"
+            cd ..
+          fi
+
+      - name: 准备构建文件
+        run: |
+          mkdir -p artifacts/frontend-dist
+          if [ -d "frontend/dist" ]; then
+            cp -r frontend/dist/* artifacts/frontend-dist/
+          fi
+          if [ -d "resources" ]; then
+            mkdir -p artifacts/resources
+            cp -r resources/* artifacts/resources/
+          fi
+
+      - name: 设置 ARM64 构建环境
+        run: |
+          export ELECTRON_BUILDER_ARCH=arm64
+          export TARGET_ARCH=arm64
+          export CC=aarch64-linux-gnu-gcc
+          export CXX=aarch64-linux-gnu-g++
+          echo "ELECTRON_BUILDER_ARCH=arm64" >> $GITHUB_ENV
+          echo "TARGET_ARCH=arm64" >> $GITHUB_ENV
+          echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
+
+      - name: 构建 .deb (ARM64)
+        run: |
+          npx electron-builder --linux deb --arm64 --config.directories.output=dist/electron-arm64
+
+      - name: 整理安装包
+        run: |
+          mkdir -p artifacts/installers
+          VERSION=$(node -p "require('./package.json').version")
+          DEB_FILES=$(find . -name "*.deb" -type f)
+          if [ -n "$DEB_FILES" ]; then
+            for DEB_FILE in $DEB_FILES; do
+              cp "$DEB_FILE" "artifacts/installers/帮扶管理系统-${VERSION}-arm64.deb"
+            done
+          fi
+
+      - name: 上传 .deb 安装包
+        uses: actions/upload-artifact@v4
+        with:
+          name: 帮扶管理系统-ARM64.deb
+          path: |
+            artifacts/installers/*.deb
+            dist/electron-arm64/*.deb
+            dist/electron/*.deb
+            dist/*.deb
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: 创建 GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/installers/*.deb
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+"@ | Out-File -FilePath ".github\workflows\build-deb-arm64.yml" -Encoding UTF8

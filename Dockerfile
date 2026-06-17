@@ -1,182 +1,196 @@
 # ============================================================
-# 帮扶管理信息系统 — 多阶段 Docker 构建 (ARM64)
-# 目标: 银河麒麟 V10 (ARM64)
-# 输出: .deb 安装包
+# Dockerfile - 帮扶管理信息系统
+# 适用于: Windows Docker Desktop + ARM64 交叉编译
 # ============================================================
 
-# ─── Stage 1: 前端构建 ───
-FROM node:20-bookworm AS frontend-builder
+# ============================================================
+# 阶段 1: 构建前端 (Node.js 18)
+# ============================================================
+FROM node:18-alpine AS frontend-builder
 
-# 配置国内镜像源
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm config set @sheetjs:registry https://registry.npmmirror.com
+WORKDIR /app/frontend
 
-WORKDIR /project/frontend
+# 设置 npm 镜像加速（解决网络问题）
+RUN npm config set registry https://registry.npmmirror.com
 
-# 复制前端依赖文件
-COPY frontend/package.json frontend/package-lock.json* ./
+# 复制依赖文件
+COPY frontend/package*.json ./
 
-# 安装前端依赖
-RUN npm install --legacy-peer-deps --network-timeout=600000 --registry=https://registry.npmmirror.com
+# 安装依赖（使用 legacy-peer-deps 解决版本冲突）
+RUN npm install --legacy-peer-deps
 
-# 复制前端源码并构建
+# 复制源码并构建
 COPY frontend/ ./
 RUN npm run build
 
-# ─── Stage 2: 后端 PyInstaller 打包 ───
-FROM python:3.11-bookworm AS backend-builder
+# ============================================================
+# 阶段 2: 构建后端 (Python 3.11 + PyInstaller)
+# ============================================================
+FROM python:3.11-alpine AS backend-builder
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
+WORKDIR /app/backend
 
-# 配置 pip 国内镜像源
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+# 安装构建依赖
+RUN apk add --no-cache \
+    gcc \
+    g++ \
+    make \
+    libffi-dev \
+    musl-dev \
+    linux-headers
 
-# 安装系统依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libmagic1 \
-    binutils \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /project
-
-# 复制后端依赖文件
-COPY backend/requirements.txt backend/
+# 复制依赖文件
+COPY backend/requirements.txt ./
 
 # 安装 Python 依赖
-RUN pip install --no-cache-dir --timeout 300 -r backend/requirements.txt pyinstaller
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip install pyinstaller
 
-# 复制后端源码
-COPY backend/ backend/
-COPY resources/ resources/
-COPY .env.example ./
+# 复制源码
+COPY backend/ ./
 
-# 打包后端为可执行文件
-RUN cd backend && pyinstaller assistance-management-backend.spec --clean --noconfirm
+# 使用 PyInstaller 打包
+RUN pyinstaller --name=assistance-backend \
+    --onefile \
+    --add-data "app:app" \
+    --add-data "alembic:alembic" \
+    --add-data "alembic.ini:." \
+    --hidden-import=uvicorn \
+    --hidden-import=sqlalchemy \
+    --hidden-import=alembic \
+    --hidden-import=bcrypt \
+    --hidden-import=passlib \
+    --hidden-import=python_jose \
+    --hidden-import=multipart \
+    --hidden-import=contourpy \
+    start.py
 
-# 创建后端目录结构
-RUN mkdir -p dist/backend/linux && \
-    cp backend/dist/assistance-management-backend dist/backend/linux/assistance-management-backend
+# ============================================================
+# 阶段 3: 构建 Electron (ARM64 DEB 包)
+# ============================================================
+FROM node:18-alpine AS electron-builder
 
-# ─── Stage 3: Electron 打包 (生成 .deb) ───
-FROM node:20-bookworm AS electron-packager
+# 安装 Electron 构建依赖
+RUN apk add --no-cache \
+    git \
+    python3 \
+    make \
+    g++ \
+    libx11-dev \
+    libxkbfile-dev \
+    libsecret-dev \
+    alpine-sdk
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
-ENV ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true
+WORKDIR /app/electron
 
-# 安装完整的系统依赖（修复 app-builder 执行问题）
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    # 基础工具
-    build-essential \
-    ca-certificates \
-    curl \
-    wget \
-    # Electron Builder 所需的核心库
-    libgtk-3-0 \
-    libnotify4 \
-    libnss3 \
-    libxss1 \
-    libxtst6 \
-    xdg-utils \
-    libatspi2.0-0 \
-    libuuid1 \
-    libsecret-1-0 \
-    libasound2 \
-    libgbm1 \
-    # 打包工具
-    fakeroot \
-    dpkg-dev \
-    # 图片处理
-    imagemagick \
-    # app-builder 运行时依赖（关键）
-    libc6 \
-    libstdc++6 \
-    libgcc-s1 \
-    libgconf-2-4 \
-    libx11-6 \
-    libxcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxrender1 \
-    libdbus-1-3 \
-    libexpat1 \
-    libfontconfig1 \
-    libfreetype6 \
-    libglib2.0-0 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libdrm2 \
-    libgl1-mesa-glx \
-    libgles2 \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /project
-
-# 配置 npm 镜像
+# 设置 npm 镜像加速
 RUN npm config set registry https://registry.npmmirror.com
 
-# 复制 Electron 依赖文件
-COPY package.json package-lock.json* ./
+# 复制依赖文件
+COPY electron/package*.json ./
 
-# 安装 Electron 依赖（使用淘宝镜像和更宽松的配置）
-RUN npm install --legacy-peer-deps --network-timeout=1200000 --no-audit --no-fund --registry=https://registry.npmmirror.com
+# 删除 lock 文件，重新安装
+RUN rm -f package-lock.json && \
+    npm install --legacy-peer-deps
 
-# 复制 Electron 源码
-COPY electron/ electron/
-COPY resources/ resources/
-COPY build/ build/
+# 安装 electron-builder
+RUN npm install -g electron-builder
 
-# 确保图标文件存在且尺寸符合要求（至少 256x256）
-RUN mkdir -p resources && \
-    if [ ! -f resources/icon.png ]; then \
-        convert -size 256x256 xc:blue resources/icon.png; \
-    else \
-        SIZE=$(identify -format "%w" resources/icon.png 2>/dev/null || echo "0") && \
-        if [ "$SIZE" -lt 256 ]; then \
-            convert resources/icon.png -resize 256x256 resources/icon.png; \
-        fi \
-    fi
+# 复制源码
+COPY electron/ ./
 
-# 复制前端和后端构建产物
-COPY --from=frontend-builder /project/frontend/dist/ frontend/dist/
-COPY --from=backend-builder /project/dist/backend/ dist/backend/
+# 构建 ARM64 DEB 包
+RUN npx electron-builder --linux --arm64 --deb || true
 
-# 设置构建参数
-ARG VERSION=1.2.0
-ARG ARCH=arm64
+# ============================================================
+# 阶段 4: 组装最终运行镜像
+# ============================================================
+FROM python:3.11-alpine AS runtime
 
-# 确保 app-builder 有正确的执行权限
-RUN chmod +x node_modules/@electron/universal/*.js 2>/dev/null || true
+WORKDIR /app
 
-# 清理 npm 缓存释放空间
-RUN npm cache clean --force
+# 安装运行依赖
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    bash \
+    curl \
+    libxcb \
+    libxcb-xinerama0 \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxcb-shape0 \
+    libxcb-xfixes0 \
+    libxcb-xkb1 \
+    libxkbcommon \
+    libgtk-3 \
+    libnotify \
+    nss \
+    xdg-utils
 
-# 构建 .deb 包
-RUN npx electron-builder --linux deb --${ARCH} --publish never
+# 安装 Python 运行时依赖
+RUN pip install --upgrade pip && \
+    pip install fastapi uvicorn sqlalchemy alembic bcrypt \
+    python-jose[cryptography] passlib[bcrypt] python-multipart \
+    -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# 创建输出目录并复制 .deb 文件
-RUN mkdir -p /output && \
-    find . -name "*.deb" -exec cp {} /output/ \; && \
-    if [ -d /output ] && [ "$(ls -A /output)" ]; then \
-        echo "✅ Debian packages copied to /output"; \
-        ls -la /output/; \
-    else \
-        echo "❌ No .deb files found"; \
-        exit 1; \
-    fi
+# 安装 serve
+RUN npm install -g serve
 
-# 设置输出卷
-VOLUME ["/output"]
+# 复制后端二进制
+COPY --from=backend-builder /app/backend/dist/assistance-backend /app/backend/
+RUN chmod +x /app/backend/assistance-backend
 
-# ─── Stage 4: 最终镜像（可选，用于调试）───
-FROM scratch AS final
-COPY --from=electron-packager /output /output
+# 复制前端构建产物
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/
+
+# 复制 Electron 构建产物
+COPY --from=electron-builder /app/electron/dist/*.deb /app/electron-dist/ 2>/dev/null || true
+
+# 创建启动脚本
+RUN cat > /app/start-services.sh << 'EOF'
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+echo "=========================================="
+echo "  帮扶管理信息系统 v1.2.0"
+echo "  正在启动服务..."
+echo "=========================================="
+
+# 启动后端
+echo "启动后端服务..."
+"$SCRIPT_DIR/backend/assistance-backend" &
+BACKEND_PID=$!
+
+sleep 3
+
+# 启动前端
+echo "启动前端服务..."
+cd "$SCRIPT_DIR/frontend"
+serve -s . -l 3000 &
+FRONTEND_PID=$!
+
+echo "=========================================="
+echo "服务已启动！"
+echo "前端地址: http://localhost:3000"
+echo "后端地址: http://localhost:8000"
+echo "API 文档: http://localhost:8000/docs"
+echo "默认账号: admin / admin123"
+echo "=========================================="
+echo "按 Ctrl+C 停止所有服务"
+
+wait $BACKEND_PID $FRONTEND_PID
+EOF
+
+RUN chmod +x /app/start-services.sh
+
+# 暴露端口
+EXPOSE 8000 3000
+
+# 启动命令
+CMD ["/app/start-services.sh"]

@@ -1,163 +1,177 @@
-# ============================================================
-# 帮扶管理信息系统 — fpm 打包方案 (ARM64)
-# 解决 electron-builder 兼容性问题
-# ============================================================
-
-# ─── Stage 1: 前端构建 ───
-FROM node:20-bookworm AS frontend-builder
-
-RUN npm config set registry https://registry.npmmirror.com
-
-WORKDIR /project/frontend
-
-COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm install --legacy-peer-deps --network-timeout=600000 || \
-    npm install --legacy-peer-deps --network-timeout=600000 --registry=https://registry.npmmirror.com
-
-COPY frontend/ ./
-RUN npm run build
-
-# ─── Stage 2: 后端 PyInstaller 打包 ───
-FROM python:3.11-bookworm AS backend-builder
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libmagic1 \
-    binutils \
-    && rm -rf /var/lib/apt/lists/*
-
+# ============================================
+# 阶段 1: 构建 Electron 应用
+# ============================================
+FROM node:20-slim AS electron-app
 WORKDIR /project
 
-COPY backend/requirements.txt backend/
-RUN pip install --no-cache-dir --timeout 300 -r backend/requirements.txt pyinstaller
+# 设置构建参数
+ARG TARGETARCH
+ENV ELECTRON_BUILDER_ARCH=${TARGETARCH}
 
-COPY backend/ backend/
-COPY resources/ resources/
-COPY .env.example ./
+# 复制 package 文件并安装依赖
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-RUN cd backend && pyinstaller assistance-management-backend.spec --clean --noconfirm
+# 复制源码
+COPY . .
 
-RUN mkdir -p dist/backend/linux && \
-    cp backend/dist/assistance-management-backend dist/backend/linux/assistance-management-backend
+# 构建 Electron 应用
+RUN npm run build:electron
 
-# ─── Stage 3: Electron 应用构建 ───
-FROM node:20-bookworm AS electron-app
+# 调试：显示 dist 目录内容
+RUN echo "=== Contents of /project/dist ===" && \
+    ls -la /project/dist/ && \
+    echo "=== Searching for unpacked directories ===" && \
+    find /project/dist -maxdepth 1 -type d -name "*unpacked*" -exec echo Found: {} \;
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+# 统一打包位置 - 自动找到并复制所有 unpacked 内容
+RUN mkdir -p /project/app && \
+    UNPACKED_DIRS=$(find /project/dist -maxdepth 1 -type d -name "*unpacked*") && \
+    if [ -n "$UNPACKED_DIRS" ]; then \
+        echo "Found unpacked directories:" && \
+        echo "$UNPACKED_DIRS" && \
+        FIRST_DIR=$(echo "$UNPACKED_DIRS" | head -n 1) && \
+        echo "Copying from: $FIRST_DIR" && \
+        cp -r "$FIRST_DIR"/* /project/app/ 2>/dev/null || true && \
+        echo "Files copied to /project/app:" && \
+        ls -la /project/app/; \
+    else \
+        echo "ERROR: No unpacked directory found in /project/dist!" && \
+        echo "Available directories:" && \
+        ls -la /project/dist/ && \
+        exit 1; \
+    fi
 
-# 安装运行时依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgtk-3-0 \
-    libnotify4 \
-    libnss3 \
-    libxss1 \
-    libxtst6 \
-    xdg-utils \
-    libatspi2.0-0 \
-    libuuid1 \
-    libsecret-1-0 \
-    libasound2 \
-    libgbm1 \
-    && rm -rf /var/lib/apt/lists/*
+# ============================================
+# 阶段 2: 使用 FPM 打包成 DEB
+# ============================================
+FROM debian:bookworm-slim AS fpm-packager
 
-WORKDIR /project
+# 设置构建参数
+ARG PACKAGE_NAME=military-rural-revitalization-system
+ARG PACKAGE_VERSION=1.0.0
+ARG PACKAGE_ARCH=arm64
+ARG TARGETARCH
 
-# 配置 npm 镜像
-RUN npm config set registry https://registry.npmmirror.com
+# 安装 FPM 和必要工具
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ruby \
+        ruby-dev \
+        rubygems \
+        build-essential \
+        git \
+        curl \
+        rsync \
+        file \
+        && \
+    gem install --no-document fpm && \
+    apt-get remove -y ruby-dev build-essential && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
-# 复制并安装依赖
-COPY package.json package-lock.json* ./
-RUN npm install --legacy-peer-deps --network-timeout=600000 --no-audit --no-fund
-
-COPY electron/ electron/
-COPY resources/ resources/
-COPY build/ build/
-
-COPY --from=frontend-builder /project/frontend/dist/ frontend/dist/
-COPY --from=backend-builder /project/dist/backend/ dist/backend/
-
-ARG VERSION=1.2.0
-ARG ARCH=arm64
-
-# 构建 Electron 应用（不打包成 deb）
-RUN npx electron-builder --linux dir --${ARCH} --publish never
-
-# ─── Stage 4: fpm 打包成 .deb ───
-FROM ubuntu:22.04 AS fpm-packager
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-# 安装 fpm
-RUN apt-get update && apt-get install -y \
-    ruby-full \
-    ruby-dev \
-    rubygems \
-    build-essential \
-    fakeroot \
-    dpkg-dev \
-    && gem install --no-document fpm \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /package
-
-ARG VERSION=1.2.0
-ARG ARCH=arm64
-ENV PACKAGE_NAME=assistance-management-information-system
-ENV PACKAGE_VERSION=${VERSION}
+# 创建包目录结构
+RUN mkdir -p /package/usr/lib/${PACKAGE_NAME} \
+    /package/usr/share/applications \
+    /package/usr/share/icons/hicolor/256x256/apps \
+    /package/usr/local/bin
 
 # 复制 Electron 应用
-COPY --from=electron-app /project/dist/linux-${ARCH}-unpacked/ /package/usr/lib/${PACKAGE_NAME}/
+COPY --from=electron-app /project/app/ /package/usr/lib/${PACKAGE_NAME}/
+
+# 验证应用文件
+RUN echo "=== Verifying application files ===" && \
+    ls -la /package/usr/lib/${PACKAGE_NAME}/ && \
+    if [ ! -f "/package/usr/lib/${PACKAGE_NAME}/package.json" ]; then \
+        echo "WARNING: package.json not found, but continuing..." && \
+        echo "Available files:" && \
+        ls -la /package/usr/lib/${PACKAGE_NAME}/; \
+    fi
 
 # 创建启动脚本
-RUN mkdir -p /package/usr/bin && \
-    echo '#!/bin/bash\n/usr/lib/${PACKAGE_NAME}/${PACKAGE_NAME}' > /package/usr/bin/${PACKAGE_NAME} && \
-    chmod +x /package/usr/bin/${PACKAGE_NAME}
+RUN echo '#!/bin/bash' > /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo 'APP_DIR="/usr/lib/${PACKAGE_NAME}"' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo 'if [ -f "${APP_DIR}/${PACKAGE_NAME}" ]; then' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo '    exec "${APP_DIR}/${PACKAGE_NAME}" "$@"' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo 'elif [ -f "${APP_DIR}/military-rural-revitalization-system" ]; then' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo '    exec "${APP_DIR}/military-rural-revitalization-system" "$@"' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo 'else' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo '    echo "Error: Application executable not found"' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo '    echo "Files in app directory:"' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo '    ls -la "${APP_DIR}/"' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo '    exit 1' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    echo 'fi' >> /package/usr/local/bin/${PACKAGE_NAME} && \
+    chmod +x /package/usr/local/bin/${PACKAGE_NAME}
 
-# 创建 desktop 文件
-RUN mkdir -p /package/usr/share/applications && \
-    cat > /package/usr/share/applications/${PACKAGE_NAME}.desktop << EOF
-[Desktop Entry]
-Name=帮扶管理信息系统
-Comment=帮扶管理信息系统
-Exec=/usr/lib/${PACKAGE_NAME}/${PACKAGE_NAME}
-Icon=/usr/lib/${PACKAGE_NAME}/icon.png
-Terminal=false
-Type=Application
-Categories=Office;
-EOF
+# 验证启动脚本
+RUN echo "=== Startup script ===" && \
+    cat /package/usr/local/bin/${PACKAGE_NAME}
 
-# 使用 fpm 打包
-RUN fpm -s dir -t deb \
-    --name ${PACKAGE_NAME} \
-    --version ${PACKAGE_VERSION} \
-    --architecture arm64 \
-    --description "帮扶管理信息系统" \
-    --maintainer "support@example.com" \
-    --vendor "AssistanceManagementInfo" \
-    --license "Proprietary" \
-    --url "https://example.com" \
-    --category "utils" \
-    --depends "libgtk-3-0" \
-    --depends "libnotify4" \
-    --depends "libnss3" \
-    --depends "libxss1" \
-    --depends "libxtst6" \
-    --depends "xdg-utils" \
-    --depends "libatspi2.0-0" \
-    --depends "libuuid1" \
-    --depends "libsecret-1-0" \
-    --depends "libasound2" \
-    --depends "libgbm1" \
-    .
+# 创建桌面文件
+RUN echo '[Desktop Entry]' > /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'Name=Military Rural Revitalization System' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'Comment=乡村振兴系统' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'Exec=/usr/local/bin/${PACKAGE_NAME}' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'Icon=${PACKAGE_NAME}' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'Terminal=false' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'Type=Application' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'Categories=Utility;' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'StartupWMClass=Military Rural Revitalization System' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop
 
-RUN mkdir -p /output && \
-    find . -name "*.deb" -exec cp {} /output/ \; && \
-    echo "✅ Debian package created successfully"
+# 复制图标（如果存在）
+RUN if [ -f "/package/usr/lib/${PACKAGE_NAME}/icon.png" ]; then \
+        cp /package/usr/lib/${PACKAGE_NAME}/icon.png /package/usr/share/icons/hicolor/256x256/apps/${PACKAGE_NAME}.png; \
+    elif [ -f "/package/usr/lib/${PACKAGE_NAME}/icon.ico" ]; then \
+        echo "Warning: .ico file found, but need .png for Linux" && \
+        echo "You may need to convert the icon format"; \
+    else \
+        echo "Warning: No icon found"; \
+    fi
 
-VOLUME ["/output"]
+# 使用 FPM 创建 DEB 包
+RUN cd /package && \
+    fpm \
+        --input-type dir \
+        --output-type deb \
+        --name ${PACKAGE_NAME} \
+        --version ${PACKAGE_VERSION} \
+        --architecture ${PACKAGE_ARCH} \
+        --maintainer "Your Name <your.email@example.com>" \
+        --description "Military Rural Revitalization System - 乡村振兴系统" \
+        --url "https://example.com" \
+        --license "MIT" \
+        --vendor "Your Organization" \
+        --category "utils" \
+        --depends "libc6" \
+        --depends "libx11-6" \
+        --depends "libxcb1" \
+        --depends "libxdamage1" \
+        --depends "libxext6" \
+        --depends "libxfixes3" \
+        --depends "libxrandr2" \
+        --depends "libasound2" \
+        --depends "libatk-bridge2.0-0" \
+        --depends "libatk1.0-0" \
+        --depends "libcairo2" \
+        --depends "libcups2" \
+        --depends "libdbus-1-3" \
+        --depends "libdrm2" \
+        --depends "libgbm1" \
+        --depends "libgl1" \
+        --depends "libgtk-3-0" \
+        --depends "libnspr4" \
+        --depends "libnss3" \
+        --depends "libpango-1.0-0" \
+        --depends "libpangocairo-1.0-0" \
+        --depends "libxcomposite1" \
+        --depends "libxkbcommon0" \
+        --depends "libxshmfence1" \
+        --depends "libxtst6" \
+        --force \
+        .
+
+# ============================================
+# 阶段 3: 输出包
+# ============================================
+FROM scratch AS output
+COPY --from=fpm-packager /package/*.deb /output/
