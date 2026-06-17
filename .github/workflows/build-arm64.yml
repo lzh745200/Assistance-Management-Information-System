@@ -11,7 +11,7 @@ on:
 
 jobs:
   # ============================================================
-  # Job 1: 构建后端 (PyInstaller 打包)
+  # Job 1: 构建后端 (Python 3.11 + PyInstaller)
   # ============================================================
   build-backend:
     name: Build Backend for Kylin ARM64
@@ -22,10 +22,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Python
+      - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           
       - name: Install cross-compilation dependencies
         run: |
@@ -39,10 +39,11 @@ jobs:
           
       - name: Install Python packages
         run: |
-          pip install -r backend/requirements.txt
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
           pip install pyinstaller
           
-      - name: Build with PyInstaller for ARM64
+      - name: Build with PyInstaller
         run: |
           cd backend
           pyinstaller --name=assistance-backend \
@@ -57,6 +58,7 @@ jobs:
             --hidden-import=passlib \
             --hidden-import=python_jose \
             --hidden-import=multipart \
+            --hidden-import=contourpy \
             start.py
           
       - name: Upload backend binary
@@ -67,12 +69,12 @@ jobs:
           retention-days: 7
 
   # ============================================================
-  # Job 2: 构建前端 (Vite 构建)
+  # Job 2: 构建前端 (Node.js 18 + --legacy-peer-deps)
   # ============================================================
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     
     steps:
       - name: Checkout code
@@ -83,17 +85,14 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install dependencies
+      - name: Build frontend
         working-directory: ./frontend
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm ci
+          npm install --legacy-peer-deps
+          npm run build
           
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
-          
-      - name: Upload frontend build
+      - name: Upload frontend
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
@@ -101,10 +100,10 @@ jobs:
           retention-days: 7
 
   # ============================================================
-  # Job 3: 构建 Electron 桌面应用 (ARM64 DEB 包)
+  # Job 3: 构建 Electron DEB 包 (ARM64)
   # ============================================================
   build-electron:
-    name: Build Electron ARM64 DEB Package
+    name: Build Electron DEB Package
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: [build-backend, build-frontend]
@@ -122,13 +121,10 @@ jobs:
         working-directory: ./electron
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm ci
-          
-      - name: Install electron-builder
-        run: |
+          npm install --legacy-peer-deps
           sudo npm install -g electron-builder
           
-      - name: Download artifacts
+      - name: Download backend and frontend artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: '*-arm64'
@@ -137,15 +133,10 @@ jobs:
       - name: Prepare electron resources
         run: |
           mkdir -p resources/backend resources/frontend resources/icons
-          
-          # 复制后端二进制
           cp artifacts/backend-arm64/assistance-backend resources/backend/
           chmod +x resources/backend/assistance-backend
-          
-          # 复制前端构建
           cp -r artifacts/frontend-dist/* resources/frontend/
           
-          # 创建启动脚本
           cat > resources/start-services.sh << 'EOF'
           #!/bin/bash
           SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -156,11 +147,13 @@ jobs:
           echo "  正在启动服务..."
           echo "=========================================="
           
+          echo "启动后端服务..."
           "$SCRIPT_DIR/backend/assistance-backend" &
           BACKEND_PID=$!
           
           sleep 3
           
+          echo "启动前端服务..."
           cd "$SCRIPT_DIR/frontend"
           if command -v serve &> /dev/null; then
               serve -s . -l 3000 &
@@ -170,11 +163,11 @@ jobs:
           FRONTEND_PID=$!
           
           echo "=========================================="
-          echo "服务已启动！"
-          echo "前端地址: http://localhost:3000"
-          echo "后端地址: http://localhost:8000"
-          echo "API 文档: http://localhost:8000/docs"
-          echo "默认账号: admin / admin123"
+          echo "✅ 服务已启动！"
+          echo "🌐 前端地址: http://localhost:3000"
+          echo "🔗 后端地址: http://localhost:8000"
+          echo "📚 API 文档: http://localhost:8000/docs"
+          echo "🔑 默认账号: admin / admin123"
           echo "=========================================="
           echo "按 Ctrl+C 停止所有服务"
           
@@ -182,7 +175,6 @@ jobs:
           EOF
           chmod +x resources/start-services.sh
           
-          # 创建桌面快捷方式文件
           cat > resources/icons/assistance-system.desktop << 'DESKTOP'
           [Desktop Entry]
           Type=Application
@@ -199,25 +191,18 @@ jobs:
         run: |
           npx electron-builder --linux --arm64 --deb
           
-      - name: Find and upload DEB package
-        run: |
-          echo "=== Looking for DEB packages ==="
-          find . -name "*.deb" -type f
-          mkdir -p release
-          find . -name "*.deb" -type f -exec cp {} release/ \;
-          
       - name: Upload DEB package
         uses: actions/upload-artifact@v4
         with:
           name: kylin-arm64-deb
-          path: release/*.deb
+          path: electron/dist/*.deb
           retention-days: 30
 
   # ============================================================
-  # Job 4: 构建麒麟 ARM64 完整安装包
+  # Job 4: 打包完整麒麟安装包
   # ============================================================
-  build-kylin-installer:
-    name: Build Kylin ARM64 Complete Installer
+  build-installer:
+    name: Build Complete Kylin Installer
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [build-electron]
@@ -229,9 +214,10 @@ jobs:
           name: kylin-arm64-deb
           path: ./deb-package
           
-      - name: Create installation script and package
+      - name: Create installation package
         run: |
-          # 创建安装脚本
+          mkdir -p release
+          
           cat > install.sh << 'EOF'
           #!/bin/bash
           set -e
@@ -241,105 +227,69 @@ jobs:
           echo "  适用于: 麒麟 V10 ARM64"
           echo "=========================================="
           
-          # 检查系统架构
-          ARCH=$(uname -m)
-          if [ "$ARCH" != "aarch64" ]; then
-              echo "错误: 此安装包仅支持 ARM64 (aarch64) 架构"
-              echo "当前架构: $ARCH"
+          if [ "$(uname -m)" != "aarch64" ]; then
+              echo "❌ 错误: 此安装包仅支持 ARM64 (aarch64) 架构"
+              echo "当前架构: $(uname -m)"
               exit 1
           fi
           
-          # 检查 root 权限
           if [ "$EUID" -ne 0 ]; then 
               echo "请使用 root 权限运行: sudo ./install.sh"
               exit 1
           fi
           
-          # 安装系统依赖
-          echo "正在安装系统依赖..."
+          echo "步骤 1/5: 安装系统依赖..."
           apt-get update
-          apt-get install -y \
-              python3 python3-pip nodejs npm \
+          apt-get install -y python3 python3-pip nodejs npm \
               libxcb-xinerama0 libxcb-icccm4 libxcb-image0 \
               libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
               libxcb-shape0 libxcb-xfixes0 libxcb-xkb1 \
               libxkbcommon-x11-0 libgtk-3-0 libnotify4 \
-              libnss3 libxss1 libxtst6 xdg-utils \
-              libatspi2.0-0 libuuid1 libappindicator3-1 libsecret-1-0
+              libnss3 libxss1 libxtst6 xdg-utils
           
-          # 安装或升级 Node.js
-          NODE_VERSION=$(node --version 2>/dev/null | cut -d'v' -f2 | cut -d'.' -f1 || echo "0")
-          if [ "$NODE_VERSION" -lt 18 ]; then
-              echo "安装 Node.js 18..."
-              curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-              apt-get install -y nodejs
-          fi
-          
-          # 安装 Python 依赖
-          echo "安装 Python 依赖..."
+          echo "步骤 2/5: 安装 Python 依赖..."
           pip3 install fastapi uvicorn sqlalchemy alembic bcrypt python-jose[cryptography] passlib[bcrypt] python-multipart
           
-          # 安装 serve
+          echo "步骤 3/5: 安装 Node.js 依赖..."
           npm install -g serve
           
-          # 创建安装目录
+          echo "步骤 4/5: 安装应用程序..."
           INSTALL_DIR="/opt/assistance-system"
-          echo "安装到: $INSTALL_DIR"
           mkdir -p $INSTALL_DIR
           
-          # 解压应用文件
-          echo "正在安装应用程序..."
-          tar -xzf /tmp/assistance-system.tar.gz -C $INSTALL_DIR
+          DEB_FILE=$(find ./deb-package -name "*.deb" | head -1)
+          if [ -n "$DEB_FILE" ]; then
+              dpkg -i $DEB_FILE
+              apt-get install -f -y
+          fi
           
-          # 设置权限
-          chmod +x $INSTALL_DIR/backend/assistance-backend
-          chmod +x $INSTALL_DIR/start-services.sh
-          
-          # 创建桌面快捷方式
-          cp $INSTALL_DIR/resources/icons/assistance-system.desktop /usr/share/applications/
-          
-          # 创建启动命令
           cat > /usr/local/bin/assistance-system << 'LAUNCHER'
           #!/bin/bash
           /opt/assistance-system/start-services.sh
           LAUNCHER
           chmod +x /usr/local/bin/assistance-system
           
-          # 创建 systemd 服务
-          cat > /etc/systemd/system/assistance-system.service << 'SERVICE'
-          [Unit]
-          Description=帮扶管理信息系统
-          After=network.target
+          cat > /usr/local/bin/stop-assistance-system << 'STOPPER'
+          #!/bin/bash
+          pkill -f assistance-backend 2>/dev/null || true
+          pkill -f "serve -s" 2>/dev/null || true
+          echo "服务已停止"
+          STOPPER
+          chmod +x /usr/local/bin/stop-assistance-system
           
-          [Service]
-          Type=simple
-          User=root
-          WorkingDirectory=/opt/assistance-system
-          ExecStart=/opt/assistance-system/start-services.sh
-          Restart=on-failure
-          RestartSec=10
-          
-          [Install]
-          WantedBy=multi-user.target
-          SERVICE
-          
+          echo "步骤 5/5: 配置完成！"
+          echo ""
           echo "=========================================="
-          echo "安装完成！"
+          echo "✅ 安装完成！"
           echo ""
-          echo "启动方式:"
-          echo "  1. 命令行: assistance-system"
-          echo "  2. 应用程序菜单: 帮扶管理信息系统"
-          echo "  3. 系统服务: systemctl start assistance-system"
-          echo "  4. 开机自启: systemctl enable assistance-system"
-          echo ""
-          echo "访问地址: http://localhost:8000"
-          echo "默认账号: admin / admin123"
+          echo "🚀 启动方式: assistance-system"
+          echo "🔑 默认账号: admin / admin123"
+          echo "🌐 访问地址: http://localhost:3000"
           echo "=========================================="
           EOF
           
           chmod +x install.sh
           
-          # 创建 README
           cat > README.md << 'EOF'
           # 帮扶管理信息系统 - 麒麟 ARM64 安装包
           

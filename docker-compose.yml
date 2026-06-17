@@ -1,54 +1,214 @@
 # ============================================================
-# 帮扶管理信息系统 — Docker Compose CI/CD 构建
-# 用途: 在 CI/CD 环境中使用 Docker 构建全平台安装包
-# 不是生产运行配置（系统是离线桌面应用，不需要常驻容器）
+# docker-compose.yml - 帮扶管理信息系统
+# 适用于: 麒麟 ARM64 / Ubuntu ARM64 / Docker Compose V2
+# 版本: v1.2.0
 # ============================================================
 
-version: "3.8"
+version: '3.8'
 
+# ============================================================
+# 服务定义
+# ============================================================
 services:
-  # x86_64 Linux 构建 (DEB + AppImage)
-  build-linux-amd64:
+  # ----------------------------------------------------------
+  # 主应用服务
+  # ----------------------------------------------------------
+  assistance-system:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runtime  # 使用 runtime 阶段运行
       args:
-        VERSION: "1.2.0"
-        ARCH: "x64"
+        - BUILD_VERSION=1.2.0
+        - BUILD_DATE=${BUILD_DATE:-now}
+    image: assistance-system:${TAG:-arm64}-${VERSION:-1.2.0}
+    container_name: assistance-system
+    restart: unless-stopped
+    
+    # 端口映射
+    ports:
+      - "${HTTP_PORT:-8000}:8000"      # 后端 API
+      - "${FRONTEND_PORT:-3000}:3000"  # 前端静态服务
+    
+    # 环境变量
+    environment:
+      - PROJECT_VERSION=1.2.0
+      - DATABASE_URL=sqlite:///./data/rural_revitalization.db
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - DEBUG=${DEBUG:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - TZ=Asia/Shanghai
+    
+    # 挂载卷
     volumes:
-      - ./dist/electron:/project/dist/electron
-    platform: linux/amd64
+      # 数据持久化
+      - ./data:/app/data
+      # 日志目录
+      - ./logs:/app/logs
+      # 配置文件（可选）
+      - ./config:/app/config:ro
+      # 备份目录
+      - ./backups:/app/backups
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    
+    # 网络
+    networks:
+      - assistance-network
+    
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # ARM64 Linux 构建 (DEB + AppImage)
-  # 使用麒麟 V10 ARM64 专用 Dockerfile
-  build-linux-arm64:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.kylin-arm64
+  # ----------------------------------------------------------
+  # 数据库服务（可选 - 如果使用 PostgreSQL）
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: assistance-postgres
+    restart: unless-stopped
+    profiles:
+      - full
+      - postgres
+    
+    environment:
+      - POSTGRES_USER=${DB_USER:-assistance}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-assistance123}
+      - POSTGRES_DB=${DB_NAME:-assistance_system}
+      - TZ=Asia/Shanghai
+      - PGTZ=Asia/Shanghai
+    
     volumes:
-      - ./dist/electron:/project/dist/electron
-    platform: linux/arm64
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./backups/postgres:/backups
+    
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    
+    networks:
+      - assistance-network
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1'
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-assistance} -d ${DB_NAME:-assistance_system}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  # 仅 DEB 构建（快速构建，跳过 AppImage）
-  build-deb-amd64:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.deb-complete
-      args:
-        VERSION: "1.2.0"
-        ARCH: "x64"
+  # ----------------------------------------------------------
+  # Redis 缓存服务（可选）
+  # ----------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: assistance-redis
+    restart: unless-stopped
+    profiles:
+      - full
+      - redis
+    
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    
     volumes:
-      - ./dist/electron:/project/dist/electron
-    platform: linux/amd64
+      - ./redis-data:/data
+      - ./backups/redis:/backups
+    
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    
+    networks:
+      - assistance-network
+    
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # 仅 DEB 构建 ARM64 版
-  build-deb-arm64:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.deb-complete
-      args:
-        VERSION: "1.2.0"
-        ARCH: "arm64"
+  # ----------------------------------------------------------
+  # Nginx 反向代理（可选 - 生产环境推荐）
+  # ----------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: assistance-nginx
+    restart: unless-stopped
+    profiles:
+      - full
+      - production
+    
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    
     volumes:
-      - ./dist/electron:/project/dist/electron
-    platform: linux/arm64
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    
+    depends_on:
+      - assistance-system
+    
+    networks:
+      - assistance-network
+    
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+
+# ============================================================
+# 网络定义
+# ============================================================
+networks:
+  assistance-network:
+    name: assistance-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ============================================================
+# 卷定义
+# ============================================================
+volumes:
+  data:
+    name: assistance-data
+  logs:
+    name: assistance-logs
+  postgres-data:
+    name: assistance-postgres-data
+  redis-data:
+    name: assistance-redis-data
+  backups:
+    name: assistance-backups
