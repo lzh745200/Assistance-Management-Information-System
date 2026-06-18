@@ -108,26 +108,21 @@ jobs:
       
       - name: Install Dependencies (Root)
         run: |
-          # 1. 设置镜像源（中国用户加速）
           npm config set registry https://registry.npmmirror.com
           
-          # 2. 删除可能包含错误镜像 URL 的锁文件（强制使用新镜像）
           if [ -f package-lock.json ]; then
             echo "⚠️  发现 package-lock.json，将其移除以避免旧镜像 URL 干扰"
             rm -f package-lock.json
           fi
           
-          # 3. 清理 npm 缓存（有助于避免缓存冲突）
           npm cache clean --force || echo "缓存清理完成"
           
-          # 4. 使用国内镜像安装，若失败则自动切换到官方源重试
           echo "🚀 开始安装依赖（使用国内镜像）..."
           npm install --legacy-peer-deps --registry=https://registry.npmmirror.com || \
           ( echo "⚠️  国内镜像安装失败，尝试官方源..." && \
             npm install --legacy-peer-deps --registry=https://registry.npmjs.org ) || \
           ( echo "❌ 安装仍然失败，请检查网络或依赖版本" && exit 1 )
           
-          # 5. 显示安装后的版本信息（用于调试）
           echo "✅ 安装完成，关键包版本："
           npx electron-builder --version || echo "electron-builder 未全局安装，将在构建时使用 npx"
       
@@ -160,7 +155,6 @@ jobs:
       
       - name: Build DEB (ARM64)
         run: |
-           # 使用 --publish never 禁用发布，避免 GH_TOKEN 错误
            npx electron-builder --linux --arm64 --publish never
       
       - name: List generated DEB files
@@ -192,15 +186,21 @@ jobs:
       
       - name: Package Installer
         run: |
+          # 创建 release 目录
           mkdir -p release
-          if [ -f deb-package/*.deb ]; then
-            tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*.deb
-            echo "✅ 安装包创建完成"
-          else
-            echo "❌ 未找到 DEB 包，构建失败"
-            exit 1
+          # 使用 find 命令检查是否有 .deb 文件（安全处理多个文件的情况）
+          if [ -n "$(find deb-package -maxdepth 1 -name '*.deb' -print -quit)" ]; then
+               # 如果找到了 .deb 文件，全部打包
+              tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*arm64*.deb
+              echo "✅ 安装包创建完成"
+         else
+                echo "❌ 未找到 DEB 包，构建失败"
+               # 打印目录内容帮助排查
+               ls -la deb-package/ || echo "deb-package 目录不存在"
+               exit 1
           fi
-          ls -la release/
+            # 显示 release 目录内容
+              ls -la release/
       
       - name: Upload Installer
         uses: actions/upload-artifact@v4
