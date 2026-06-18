@@ -458,12 +458,22 @@ const formData = reactive({
 
 const orgTreeOptions = ref<any[]>([]);
 
+/** 递归转换组织树数据，确保 id 为字符串（防止 el-tree-select setAttribute('0', …) DOM 异常） */
+function normalizeOrgTreeNodes(nodes: any[]): any[] {
+  return nodes.map((node: any) => ({
+    ...node,
+    id: String(node.id ?? node.key ?? ""),
+    children: node.children ? normalizeOrgTreeNodes(node.children) : undefined,
+  }));
+}
+
 async function loadOrgTree() {
   try {
     const res = await request.get("/organizations/tree", {
       showError: false,
     } as any);
-    orgTreeOptions.value = res.data?.data || res.data || [];
+    const raw = res.data?.data || res.data || [];
+    orgTreeOptions.value = Array.isArray(raw) ? normalizeOrgTreeNodes(raw) : [];
   } catch {
     orgTreeOptions.value = [];
   }

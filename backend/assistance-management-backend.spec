@@ -20,6 +20,8 @@ datas = [
     (os.path.join(backend_dir, 'alembic'), 'alembic'),
     (os.path.join(backend_dir, '.env.example'), '.'),
     (os.path.join(backend_dir, 'app'), 'app'),
+    # 前端静态文件 — 必须包含，否则打包后 GET / 返回 404
+    (os.path.join(backend_dir, '..', 'resources', 'frontend'), 'resources/frontend'),
 ]
 
 # 自动收集 prophet 包数据

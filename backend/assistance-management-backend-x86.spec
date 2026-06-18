@@ -20,6 +20,7 @@ datas = [
     (os.path.join(backend_dir, 'alembic'), 'alembic'),
     (os.path.join(backend_dir, '.env.example'), '.'),
     (os.path.join(backend_dir, 'app'), 'app'),
+    (os.path.join(backend_dir, '..', 'resources', 'frontend'), 'resources/frontend'),
 ]
 
 # 自动收集 prophet 包数据

@@ -27,7 +27,7 @@ export const rbacApi = {
   // ========== 分配/撤销 ==========
   assignRole: (userId: number, roleId: number) =>
     api.post("/rbac/assign/role", { user_id: userId, role_id: roleId }),
-  grantPermission: (data: { role_id: number; permission_id: number }) =>
+  grantPermission: (data: { user_id: number; permissions: string[] }) =>
     api.post("/rbac/grant/permission", data),
   revokeRole: (data: { user_id: number; role_id: number }) =>
     api.delete("/rbac/revoke/role", { data }),

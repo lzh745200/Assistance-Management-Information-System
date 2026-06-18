@@ -13,6 +13,8 @@ def find_frontend_dir() -> str | None:
     """查找前端构建产物目录，返回包含 index.html 的目录路径或 None。"""
     candidates = [
         os.environ.get("FRONTEND_DIST_PATH", ""),
+        # PyInstaller 打包后：资源在 _MEIPASS 中
+        str(Path(getattr(sys, '_MEIPASS', '')) / "resources" / "frontend"),
         str(Path(__file__).resolve().parent.parent.parent.parent / "frontend" / "dist"),
         str(Path(__file__).resolve().parent.parent.parent.parent / "resources" / "frontend"),
     ]

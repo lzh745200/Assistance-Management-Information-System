@@ -173,7 +173,9 @@ async function loadCurrentPermissions() {
   if (!props.user?.id) return;
   try {
     const res = await request.get(`/rbac/user/${props.user.id}/permissions`);
-    const perms = res.data?.data || res.data || [];
+    // 后端返回 UserPermissionsResponse: { user_id, permissions: [...], roles: [...] }
+    const payload = res.data?.data || res.data;
+    const perms = payload?.permissions || payload || [];
     currentPermissions.value = Array.isArray(perms) ? perms : [];
   } catch {
     currentPermissions.value = [];

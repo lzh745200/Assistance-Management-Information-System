@@ -1,8 +1,10 @@
 !define PRODUCT_NAME "Assistance System"
-!define PRODUCT_VERSION "1.3.0"
+!define PRODUCT_VERSION "1.4.0"
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64
 !include "MUI2.nsh"
+!define MUI_ICON "app-icon.ico"
+!define MUI_UNICON "app-icon.ico"
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION} (32-bit)"
 OutFile "..\build\dist\setup-${PRODUCT_VERSION}-x86.exe"
 InstallDir "$PROGRAMFILES\${PRODUCT_NAME}"
