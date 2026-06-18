@@ -10,7 +10,7 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
-# 设置 npm 镜像加速（解决网络问题）
+# 设置 npm 镜像加速
 RUN npm config set registry https://registry.npmmirror.com
 
 # 复制依赖文件
@@ -71,7 +71,7 @@ RUN pyinstaller --name=assistance-backend \
 # ============================================================
 FROM node:18-alpine AS electron-builder
 
-# 安装 Electron 构建依赖
+# 安装 Electron 构建依赖（Alpine 需要额外包）
 RUN apk add --no-cache \
     git \
     python3 \
@@ -80,42 +80,8 @@ RUN apk add --no-cache \
     libx11-dev \
     libxkbfile-dev \
     libsecret-dev \
-    alpine-sdk
-
-WORKDIR /app/electron
-
-# 设置 npm 镜像加速
-RUN npm config set registry https://registry.npmmirror.com
-
-# 复制依赖文件
-COPY electron/package*.json ./
-
-# 删除 lock 文件，重新安装
-RUN rm -f package-lock.json && \
-    npm install --legacy-peer-deps
-
-# 安装 electron-builder
-RUN npm install -g electron-builder
-
-# 复制源码
-COPY electron/ ./
-
-# 构建 ARM64 DEB 包
-RUN npx electron-builder --linux --arm64 --deb || true
-
-# ============================================================
-# 阶段 4: 组装最终运行镜像
-# ============================================================
-FROM python:3.11-alpine AS runtime
-
-WORKDIR /app
-
-# 安装运行依赖
-RUN apk add --no-cache \
-    nodejs \
-    npm \
-    bash \
-    curl \
+    alpine-sdk \
+    # 以下为 electron-builder 可能需要的运行时库（仅用于构建，非必须）
     libxcb \
     libxcb-xinerama0 \
     libxcb-icccm4 \
@@ -132,13 +98,68 @@ RUN apk add --no-cache \
     nss \
     xdg-utils
 
-# 安装 Python 运行时依赖
+WORKDIR /app/electron
+
+# 设置 npm 镜像加速
+RUN npm config set registry https://registry.npmmirror.com
+
+# 复制依赖文件（假设 electron 相关文件在 electron/ 目录，如 package.json）
+COPY electron/package*.json ./
+
+# 删除可能存在的 lock 文件以强制使用新镜像
+RUN rm -f package-lock.json && \
+    npm install --legacy-peer-deps
+
+# 安装 electron-builder（全局安装便于直接调用）
+RUN npm install -g electron-builder
+
+# 复制源码
+COPY electron/ ./
+
+# 设置 Electron 下载镜像环境变量（关键！解决网络问题）
+ENV ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+ENV ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
+
+# 构建 ARM64 DEB 包（显式指定 --linux --arm64，并禁用发布）
+RUN npx electron-builder --linux --arm64 --publish never
+
+# ============================================================
+# 阶段 4: 组装最终运行镜像（可选，用于在容器内运行整套系统）
+# ============================================================
+FROM python:3.11-alpine AS runtime
+
+WORKDIR /app
+
+# 安装运行依赖（包括前端服务、后端运行库等）
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    bash \
+    curl \
+    # 以下为 Electron 运行时依赖（如果要在容器中运行 Electron 应用，但此处只作为服务运行，可酌情保留）
+    libxcb \
+    libxcb-xinerama0 \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxcb-shape0 \
+    libxcb-xfixes0 \
+    libxcb-xkb1 \
+    libxkbcommon \
+    libgtk-3 \
+    libnotify \
+    nss \
+    xdg-utils
+
+# 安装 Python 运行时依赖（仅后端运行时所需）
 RUN pip install --upgrade pip && \
     pip install fastapi uvicorn sqlalchemy alembic bcrypt \
     python-jose[cryptography] passlib[bcrypt] python-multipart \
     -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# 安装 serve
+# 安装 serve（用于托管前端静态文件）
 RUN npm install -g serve
 
 # 复制后端二进制
@@ -148,7 +169,7 @@ RUN chmod +x /app/backend/assistance-backend
 # 复制前端构建产物
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/
 
-# 复制 Electron 构建产物
+# 复制 Electron 构建产物（deb 包）到 /app/electron-dist/（如果存在）
 COPY --from=electron-builder /app/electron/dist/*.deb /app/electron-dist/ 2>/dev/null || true
 
 # 创建启动脚本

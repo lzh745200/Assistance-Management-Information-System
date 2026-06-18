@@ -1,60 +1,121 @@
 # Git
 .git/
 .gitignore
+.gitattributes
 
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Node.js (递归排除所有层级)
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg
-*.egg-info/
+# Python (递归排除所有常见大目录)
+**/venv/
+**/.venv/
+**/env/
+**/ENV/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.egg-info/
+**/*.egg
+**/*.so
+
+# 构建输出 (递归排除)
+**/dist/
+**/build/
+**/*.deb
+**/*.dmg
+**/*.exe
+
+# 明确排除 backend 内的大目录（重点）
+backend/venv/
+backend/.venv/
+backend/data/
+backend/logs/
+backend/__pycache__/
+backend/*.db
+backend/*.sqlite3
+backend/*.pkl
+backend/*.h5
+backend/*.pb
+backend/dist/
+backend/build/
+
+# 明确排除 frontend 和 electron 的大目录
+frontend/dist/
+frontend/node_modules/
+frontend/.cache/
+frontend/build/
+electron/dist/
+electron/node_modules/
+
+# 根目录下的大目录
 dist/
 build/
-.venv/
-venv/
-ENV/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+node_modules/
 logs/
-*.log
-
-# Data
 data/
 backups/
 postgres-data/
 redis-data/
 
-# Build
-dist/
-*.deb
-*.dmg
-*.exe
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-
-# Other
-.env
+# 日志和临时文件
+*.log
 *.tmp
 *.temp
+*.bak
+*.backup
+
+# 压缩包
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tgz
+*.iso
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*.iml
+
+# OS 文件
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# Docker 相关
+Dockerfile*
+.dockerignore
+docker-compose.yml
+
+# 文档（通常不需要）
+README.md
+LICENSE
+CHANGELOG.md
+*.md
+
+# 测试
+tests/
+test/
+coverage/
+.nyc_output/
+
+# 其他大文件
+*.pkl
+*.h5
+*.pb
+*.onnx
+*.npy
+*.db
+*.sqlite3
+*.sqlite
