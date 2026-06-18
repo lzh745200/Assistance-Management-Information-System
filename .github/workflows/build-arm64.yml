@@ -14,12 +14,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install System Dependencies
         run: |
           sudo apt-get update
@@ -41,7 +41,7 @@ jobs:
           pip install -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir --no-deps
           pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib bcrypt python-multipart httpx python-dotenv aiofiles Pillow openpyxl loguru || true
           pip install pyinstaller
-          
+
           cd backend
           pyinstaller --name=assistance-backend \
             --onefile \
@@ -58,9 +58,9 @@ jobs:
             --hidden-import=contourpy \
             --hidden-import=pkg_resources \
             start.py || echo "PyInstaller build failed, but continuing"
-          
+
           ls -la backend/dist/ || echo "No dist directory"
-      
+
       - name: Upload Backend
         uses: actions/upload-artifact@v4
         with:
@@ -74,19 +74,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Build Frontend
         working-directory: ./frontend
         run: |
           npm config set registry https://registry.npmmirror.com
           npm install --legacy-peer-deps
           npm run build
-      
+
       - name: Upload Frontend
         uses: actions/upload-artifact@v4
         with:
@@ -100,77 +100,88 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install Dependencies (Root)
         run: |
           npm config set registry https://registry.npmmirror.com
-          
           if [ -f package-lock.json ]; then
             echo "⚠️  发现 package-lock.json，将其移除以避免旧镜像 URL 干扰"
             rm -f package-lock.json
           fi
-          
           npm cache clean --force || echo "缓存清理完成"
-          
           echo "🚀 开始安装依赖（使用国内镜像）..."
           npm install --legacy-peer-deps --registry=https://registry.npmmirror.com || \
           ( echo "⚠️  国内镜像安装失败，尝试官方源..." && \
             npm install --legacy-peer-deps --registry=https://registry.npmjs.org ) || \
           ( echo "❌ 安装仍然失败，请检查网络或依赖版本" && exit 1 )
-          
           echo "✅ 安装完成，关键包版本："
           npx electron-builder --version || echo "electron-builder 未全局安装，将在构建时使用 npx"
-      
-      - name: Download Artifacts
+
+      - name: Download Artifacts (Backend)
         uses: actions/download-artifact@v4
         with:
-          pattern: '*-arm64'
-          path: ./artifacts
-      
+          name: backend-arm64
+          path: ./artifacts/backend
+
+      - name: Download Artifacts (Frontend)
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./artifacts/frontend
+
       - name: Prepare Resources
         run: |
-          mkdir -p backend/dist
-          if [ -f artifacts/backend-arm64/assistance-backend ]; then
-            cp artifacts/backend-arm64/assistance-backend backend/dist/
+          mkdir -p backend/dist frontend
+          if [ -f artifacts/backend/assistance-backend ]; then
+            cp artifacts/backend/assistance-backend backend/dist/
             chmod +x backend/dist/assistance-backend
             echo "✅ Backend binary placed in backend/dist/"
           else
             echo "❌ Backend binary not found!"
             exit 1
           fi
-          
-          if [ -d artifacts/frontend-dist ]; then
+
+          if [ -d artifacts/frontend ]; then
             rm -rf frontend/dist
-            cp -r artifacts/frontend-dist frontend/dist
+            cp -r artifacts/frontend frontend/dist
             echo "✅ Frontend files placed in frontend/dist/"
           else
             echo "❌ Frontend dist not found!"
             exit 1
           fi
-      
+
       - name: Build DEB (ARM64)
         run: |
-           npx electron-builder --linux --arm64 --publish never
-      
+          # 明确指定输出 deb 格式，并指定架构
+          npx electron-builder --linux deb --arm64 --publish never
+
       - name: List generated DEB files
         run: |
           echo "📦 查找生成的 DEB 文件："
-          ls -la dist/electron/
-          if ! ls dist/electron/*.deb 1> /dev/null 2>&1; then
-            echo "❌ 未找到任何 .deb 文件！"
+          # electron-builder 默认输出到 dist/ 目录，检查该目录下的 .deb 文件
+          if [ -d "dist" ]; then
+            ls -la dist/
+            if ls dist/*.deb 1> /dev/null 2>&1; then
+              echo "✅ 找到 .deb 文件"
+            else
+              echo "❌ dist/ 目录下没有 .deb 文件"
+              exit 1
+            fi
+          else
+            echo "❌ dist/ 目录不存在"
             exit 1
           fi
-      
+
       - name: Upload DEB
         uses: actions/upload-artifact@v4
         with:
           name: kylin-arm64-deb
-          path: dist/electron/*.deb
+          path: dist/*.deb
           if-no-files-found: error
 
   build-installer:
@@ -183,31 +194,33 @@ jobs:
         with:
           name: kylin-arm64-deb
           path: ./deb-package
-      
+
       - name: Package Installer
         run: |
           # 创建 release 目录
           mkdir -p release
-          # 使用 find 命令检查是否有 .deb 文件（安全处理多个文件的情况）
+
+          # 使用 find 安全检查 .deb 文件（避免多个文件导致 -f 失败）
           if [ -n "$(find deb-package -maxdepth 1 -name '*.deb' -print -quit)" ]; then
-               # 如果找到了 .deb 文件，全部打包
-              tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*arm64*.deb
-              echo "✅ 安装包创建完成"
-         else
-                echo "❌ 未找到 DEB 包，构建失败"
-               # 打印目录内容帮助排查
-               ls -la deb-package/ || echo "deb-package 目录不存在"
-               exit 1
+            # 打包所有 arm64 相关的 .deb 文件（名称包含 arm64）
+            tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*arm64*.deb
+            echo "✅ 安装包创建完成"
+          else
+            echo "❌ 未找到 DEB 包，构建失败"
+            # 打印目录内容帮助排查
+            ls -la deb-package/ || echo "deb-package 目录不存在"
+            exit 1
           fi
-            # 显示 release 目录内容
-              ls -la release/
-      
+
+          # 显示 release 目录内容
+          ls -la release/
+
       - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
           name: kylin-arm64-installer
           path: release/*.tar.gz
-      
+
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
