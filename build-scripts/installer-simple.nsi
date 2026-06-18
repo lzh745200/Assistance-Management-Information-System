@@ -2,7 +2,7 @@
 ; Produces standalone .exe installer with all runtimes bundled
 
 !define PRODUCT_NAME "Assistance System"
-!define PRODUCT_VERSION "1.3.0"
+!define PRODUCT_VERSION "1.4.0"
 !define PRODUCT_PUBLISHER "Military"
 
 SetCompressor /SOLID lzma
@@ -10,6 +10,10 @@ SetCompressorDictSize 64
 
 !include "MUI2.nsh"
 !include "x64.nsh"
+
+; Custom icon for installer and uninstaller
+!define MUI_ICON "app-icon.ico"
+!define MUI_UNICON "app-icon.ico"
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "..\build\dist\setup-${PRODUCT_VERSION}.exe"

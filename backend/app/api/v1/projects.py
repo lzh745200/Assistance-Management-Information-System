@@ -1519,6 +1519,7 @@ _FUND_SOURCE_MAP = {
     "社会资金": "social", "自筹资金": "self_raised", "其他": "other",
 }
 
+
 @router.post("/import", summary="批量导入帮扶项目")
 async def import_projects(
     file: UploadFile = File(..., description="Excel文件"),

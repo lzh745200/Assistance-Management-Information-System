@@ -455,6 +455,16 @@ const treeProps = {
   isLeaf: "leaf",
 };
 
+/** 将组织树节点 id 转为字符串，防止 el-tree setAttribute 数值型 DOM 异常 */
+function safeTreeNode(item: any) {
+  return {
+    ...item,
+    id: String(item.id ?? ""),
+    name: item.name,
+    leaf: !item.children || item.children.length === 0,
+  };
+}
+
 /** 懒加载树节点 */
 const loadNode = (node: any, resolve: (data: any[]) => void) => {
   if (node.level === 0) {
@@ -464,13 +474,7 @@ const loadNode = (node: any, resolve: (data: any[]) => void) => {
       .getOrganizationTree()
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
-          resolve(
-            res.data.map((item) => ({
-              ...item,
-              name: item.name,
-              leaf: !item.children || item.children.length === 0,
-            })),
-          );
+          resolve(res.data.map(safeTreeNode));
         } else {
           resolve([]);
         }
@@ -488,13 +492,7 @@ const loadNode = (node: any, resolve: (data: any[]) => void) => {
       .getOrganizationTree(node.data.id)
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
-          resolve(
-            res.data.map((item) => ({
-              ...item,
-              name: item.name,
-              leaf: !item.children || item.children.length === 0,
-            })),
-          );
+          resolve(res.data.map(safeTreeNode));
         } else {
           resolve([]);
         }

@@ -49,13 +49,18 @@ class RoleResponse(BaseModel):
 
 
 class PermissionGrant(BaseModel):
-    user_id: str
-    permission: str
+    user_id: int
+    permissions: List[str]
     expires_at: Optional[datetime] = None
 
 
+class RoleRevoke(BaseModel):
+    user_id: int
+    role_id: str
+
+
 class RoleAssign(BaseModel):
-    user_id: str
+    user_id: int
     role_id: str
     expires_at: Optional[datetime] = None
 
@@ -280,7 +285,7 @@ async def assign_role(
 ):
     """分配角色给用户"""
     success = await rbac_service.assign_role(
-        user_id=assignment.user_id,
+        user_id=str(assignment.user_id),
         role_id=assignment.role_id,
         granted_by=str(current_user.id),
         expires_at=assignment.expires_at.isoformat() if assignment.expires_at else None,
@@ -297,18 +302,17 @@ async def assign_role(
 
 @router.delete("/revoke/role")
 async def revoke_role(
-    user_id: str,
-    role_id: str,
+    revoke: RoleRevoke,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
     """撤销用户角色"""
-    success = await rbac_service.revoke_role(user_id=user_id, role_id=role_id, db=db)
+    success = await rbac_service.revoke_role(user_id=str(revoke.user_id), role_id=revoke.role_id, db=db)
 
     if success:
         return {
             "success": True,
-            "message": f"角色撤销成功: 用户 {user_id} -> 角色 {role_id}",
+            "message": f"角色撤销成功: 用户 {revoke.user_id} -> 角色 {revoke.role_id}",
         }
     raise HTTPException(status_code=400, detail="角色撤销失败")
 
@@ -319,21 +323,29 @@ async def grant_permission(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
-    """直接授予权限给用户"""
-    success = await rbac_service.grant_permission(
-        user_id=grant.user_id,
-        permission=grant.permission,
-        granted_by=str(current_user.id),
-        expires_at=grant.expires_at.isoformat() if grant.expires_at else None,
-        db=db,
-    )
+    """直接授予权限给用户（支持批量权限）"""
+    granted: List[str] = []
+    failed: List[str] = []
 
-    if success:
-        return {
-            "success": True,
-            "message": f"权限授予成功: 用户 {grant.user_id} -> 权限 {grant.permission}",
-        }
-    raise HTTPException(status_code=400, detail="权限授予失败")
+    for perm in grant.permissions:
+        success = await rbac_service.grant_permission(
+            user_id=str(grant.user_id),
+            permission=perm,
+            granted_by=str(current_user.id),
+            expires_at=grant.expires_at.isoformat() if grant.expires_at else None,
+            db=db,
+        )
+        if success:
+            granted.append(perm)
+        else:
+            failed.append(perm)
+
+    return {
+        "success": len(failed) == 0,
+        "granted": granted,
+        "failed": failed,
+        "message": f"权限授予完成: 成功 {len(granted)}, 失败 {len(failed)}",
+    }
 
 
 # ==================== 权限列表 API ====================
