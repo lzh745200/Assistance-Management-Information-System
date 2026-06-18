@@ -160,20 +160,20 @@ jobs:
           # 明确指定输出 deb 格式，并指定架构
           npx electron-builder --linux deb --arm64 --publish never
 
-      - name: List generated DEB files
+      - name: List and collect generated DEB files
         run: |
           echo "📦 查找生成的 DEB 文件："
-          # electron-builder 默认输出到 dist/ 目录，检查该目录下的 .deb 文件
-          if [ -d "dist" ]; then
-            ls -la dist/
-            if ls dist/*.deb 1> /dev/null 2>&1; then
-              echo "✅ 找到 .deb 文件"
-            else
-              echo "❌ dist/ 目录下没有 .deb 文件"
-              exit 1
-            fi
+          # 递归查找 dist 目录下所有 .deb 文件（可能位于 dist/electron/ 等子目录）
+          deb_files=$(find dist -name "*.deb" -type f)
+          if [ -n "$deb_files" ]; then
+            echo "✅ 找到 .deb 文件："
+            echo "$deb_files"
+            mkdir -p deb-artifacts
+            echo "$deb_files" | xargs -I {} cp {} deb-artifacts/
+            echo "复制到 deb-artifacts/ 目录"
+            ls -la deb-artifacts/
           else
-            echo "❌ dist/ 目录不存在"
+            echo "❌ 未找到 .deb 文件"
             exit 1
           fi
 
@@ -181,7 +181,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kylin-arm64-deb
-          path: dist/*.deb
+          path: deb-artifacts/*.deb
           if-no-files-found: error
 
   build-installer:
@@ -202,8 +202,8 @@ jobs:
 
           # 使用 find 安全检查 .deb 文件（避免多个文件导致 -f 失败）
           if [ -n "$(find deb-package -maxdepth 1 -name '*.deb' -print -quit)" ]; then
-            # 打包所有 arm64 相关的 .deb 文件（名称包含 arm64）
-            tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*arm64*.deb
+            # 打包所有 .deb 文件（确保即使文件名不含 arm64 也能成功）
+            tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*.deb
             echo "✅ 安装包创建完成"
           else
             echo "❌ 未找到 DEB 包，构建失败"
