@@ -83,8 +83,14 @@ jobs:
       - name: Build Frontend
         working-directory: ./frontend
         run: |
+          echo "🚀 尝试使用国内镜像安装依赖（带重试）..."
           npm config set registry https://registry.npmmirror.com
-          npm install --legacy-peer-deps
+          # 增加内置重试和超时参数，提高容错
+          npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 || \
+          ( echo "⚠️  国内镜像安装失败，切换到官方源并重试..." && \
+            npm config set registry https://registry.npmjs.org && \
+            npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 ) || \
+          ( echo "❌ 两次安装均失败，请检查网络" && exit 1 )
           npm run build
 
       - name: Upload Frontend
@@ -115,9 +121,9 @@ jobs:
           fi
           npm cache clean --force || echo "缓存清理完成"
           echo "🚀 开始安装依赖（使用国内镜像）..."
-          npm install --legacy-peer-deps --registry=https://registry.npmmirror.com || \
+          npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 --registry=https://registry.npmmirror.com || \
           ( echo "⚠️  国内镜像安装失败，尝试官方源..." && \
-            npm install --legacy-peer-deps --registry=https://registry.npmjs.org ) || \
+            npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 --registry=https://registry.npmjs.org ) || \
           ( echo "❌ 安装仍然失败，请检查网络或依赖版本" && exit 1 )
           echo "✅ 安装完成，关键包版本："
           npx electron-builder --version || echo "electron-builder 未全局安装，将在构建时使用 npx"
@@ -155,10 +161,9 @@ jobs:
             exit 1
           fi
 
-      # ---- 新增：构建自包含应用 ----
+      # ---- 构建自包含应用 ----
       - name: Build un-packaged app (ARM64)
         run: |
-          # 生成未打包的应用目录，位于 dist/linux-arm64-unpacked
           npx electron-builder --linux --arm64 --dir --publish never
 
       - name: Setup QEMU for ARM64 container
@@ -166,20 +171,16 @@ jobs:
 
       - name: Collect dependencies and set RPATH in ARM64 container
         run: |
-          # 从 package.json 获取应用名称和版本
           APP_NAME=$(node -p "require('./package.json').name")
           APP_VERSION=$(node -p "require('./package.json').version")
           UNPACKED_DIR="dist/linux-arm64-unpacked"
           
-          # 创建自包含目录结构
           SELF_CONTAINED_DIR="dist/self-contained"
           mkdir -p "$SELF_CONTAINED_DIR/opt/$APP_NAME"
           mkdir -p "$SELF_CONTAINED_DIR/DEBIAN"
           
-          # 复制整个未打包应用到 opt 目录
           cp -r "$UNPACKED_DIR"/* "$SELF_CONTAINED_DIR/opt/$APP_NAME/"
           
-          # 创建 DEBIAN/control 文件（无依赖声明）
           cat > "$SELF_CONTAINED_DIR/DEBIAN/control" << EOF
           Package: $APP_NAME
           Version: $APP_VERSION
@@ -189,47 +190,34 @@ jobs:
            This package includes all runtime dependencies and requires no external libraries.
           EOF
           
-          # 启动 ARM64 容器，挂载应用目录，执行依赖收集和 RPATH 修改
           docker run --rm --platform linux/arm64 \
             -v $(pwd)/$SELF_CONTAINED_DIR/opt/$APP_NAME:/app \
             arm64v8/ubuntu:20.04 \
             bash -c "
               set -e
-              # 更新并安装必要工具
               apt update && apt install -y patchelf file
-              
               cd /app
-              # 查找主可执行文件（通常与包名相同或为第一个可执行文件）
               MAIN_EXEC=\$(find . -maxdepth 1 -type f -executable | head -n1)
               if [ -z \"\$MAIN_EXEC\" ]; then
                 echo '❌ 未找到主可执行文件'
                 exit 1
               fi
               echo \"主程序: \$MAIN_EXEC\"
-              
-              # 创建 lib 目录存放依赖库
               mkdir -p lib
-              
-              # 使用 ldd 提取所有依赖库，复制到 lib/
               echo '📦 正在复制依赖库...'
               ldd \"\$MAIN_EXEC\" | grep '=> /' | awk '{print \$3}' | while read lib; do
                 if [ -f \"\$lib\" ]; then
                   cp -a \"\$lib\" lib/ 2>/dev/null || echo \"复制 \$lib 失败\"
                 fi
               done
-              
-              # 修改所有可执行文件的 RPATH
               echo '🔧 修改 RPATH...'
               find . -type f -executable -exec patchelf --set-rpath '\$ORIGIN/lib' {} \; 2>/dev/null || true
-              
               echo '✅ 依赖收集和 RPATH 修改完成'
             "
           
-          # 在主机上使用 dpkg-deb 打包
           echo "📦 正在打包成 .deb ..."
           dpkg-deb --build "$SELF_CONTAINED_DIR" "${APP_NAME}_${APP_VERSION}_arm64.deb"
           
-          # 将生成的 .deb 移动到便于上传的位置
           mkdir -p deb-artifacts
           cp "${APP_NAME}_${APP_VERSION}_arm64.deb" deb-artifacts/
 
@@ -255,7 +243,6 @@ jobs:
         run: |
           mkdir -p release
           if [ -n "$(find deb-package -maxdepth 1 -name '*.deb' -print -quit)" ]; then
-            # 从 deb 文件名获取版本（也可直接写死）
             DEB_FILE=$(ls deb-package/*.deb | head -n1)
             VERSION=$(echo "$DEB_FILE" | sed -n 's/.*_\(.*\)_arm64\.deb/\1/p')
             if [ -z "$VERSION" ]; then
