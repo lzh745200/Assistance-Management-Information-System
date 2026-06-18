@@ -1,4 +1,4 @@
-﻿name: Build ARM64 Kylin Installer
+﻿name: Build Self-Contained ARM64 Kylin Installer
 
 on:
   push:
@@ -94,7 +94,7 @@ jobs:
           path: frontend/dist/
 
   build-electron:
-    name: Build Electron DEB
+    name: Build Self-Contained Electron DEB
     runs-on: ubuntu-latest
     needs: [build-backend, build-frontend]
     steps:
@@ -155,64 +155,119 @@ jobs:
             exit 1
           fi
 
-      - name: Build DEB (ARM64)
+      # ---- 新增：构建自包含应用 ----
+      - name: Build un-packaged app (ARM64)
         run: |
-          # 明确指定输出 deb 格式，并指定架构
-          npx electron-builder --linux deb --arm64 --publish never
+          # 生成未打包的应用目录，位于 dist/linux-arm64-unpacked
+          npx electron-builder --linux --arm64 --dir --publish never
 
-      - name: List and collect generated DEB files
+      - name: Setup QEMU for ARM64 container
+        uses: docker/setup-qemu-action@v3
+
+      - name: Collect dependencies and set RPATH in ARM64 container
         run: |
-          echo "📦 查找生成的 DEB 文件："
-          # 递归查找 dist 目录下所有 .deb 文件（可能位于 dist/electron/ 等子目录）
-          deb_files=$(find dist -name "*.deb" -type f)
-          if [ -n "$deb_files" ]; then
-            echo "✅ 找到 .deb 文件："
-            echo "$deb_files"
-            mkdir -p deb-artifacts
-            echo "$deb_files" | xargs -I {} cp {} deb-artifacts/
-            echo "复制到 deb-artifacts/ 目录"
-            ls -la deb-artifacts/
-          else
-            echo "❌ 未找到 .deb 文件"
-            exit 1
-          fi
+          # 从 package.json 获取应用名称和版本
+          APP_NAME=$(node -p "require('./package.json').name")
+          APP_VERSION=$(node -p "require('./package.json').version")
+          UNPACKED_DIR="dist/linux-arm64-unpacked"
+          
+          # 创建自包含目录结构
+          SELF_CONTAINED_DIR="dist/self-contained"
+          mkdir -p "$SELF_CONTAINED_DIR/opt/$APP_NAME"
+          mkdir -p "$SELF_CONTAINED_DIR/DEBIAN"
+          
+          # 复制整个未打包应用到 opt 目录
+          cp -r "$UNPACKED_DIR"/* "$SELF_CONTAINED_DIR/opt/$APP_NAME/"
+          
+          # 创建 DEBIAN/control 文件（无依赖声明）
+          cat > "$SELF_CONTAINED_DIR/DEBIAN/control" << EOF
+          Package: $APP_NAME
+          Version: $APP_VERSION
+          Architecture: arm64
+          Maintainer: Your Name <your.email@example.com>
+          Description: Self-contained application for Kylin V10 ARM64
+           This package includes all runtime dependencies and requires no external libraries.
+          EOF
+          
+          # 启动 ARM64 容器，挂载应用目录，执行依赖收集和 RPATH 修改
+          docker run --rm --platform linux/arm64 \
+            -v $(pwd)/$SELF_CONTAINED_DIR/opt/$APP_NAME:/app \
+            arm64v8/ubuntu:20.04 \
+            bash -c "
+              set -e
+              # 更新并安装必要工具
+              apt update && apt install -y patchelf file
+              
+              cd /app
+              # 查找主可执行文件（通常与包名相同或为第一个可执行文件）
+              MAIN_EXEC=\$(find . -maxdepth 1 -type f -executable | head -n1)
+              if [ -z \"\$MAIN_EXEC\" ]; then
+                echo '❌ 未找到主可执行文件'
+                exit 1
+              fi
+              echo \"主程序: \$MAIN_EXEC\"
+              
+              # 创建 lib 目录存放依赖库
+              mkdir -p lib
+              
+              # 使用 ldd 提取所有依赖库，复制到 lib/
+              echo '📦 正在复制依赖库...'
+              ldd \"\$MAIN_EXEC\" | grep '=> /' | awk '{print \$3}' | while read lib; do
+                if [ -f \"\$lib\" ]; then
+                  cp -a \"\$lib\" lib/ 2>/dev/null || echo \"复制 \$lib 失败\"
+                fi
+              done
+              
+              # 修改所有可执行文件的 RPATH
+              echo '🔧 修改 RPATH...'
+              find . -type f -executable -exec patchelf --set-rpath '\$ORIGIN/lib' {} \; 2>/dev/null || true
+              
+              echo '✅ 依赖收集和 RPATH 修改完成'
+            "
+          
+          # 在主机上使用 dpkg-deb 打包
+          echo "📦 正在打包成 .deb ..."
+          dpkg-deb --build "$SELF_CONTAINED_DIR" "${APP_NAME}_${APP_VERSION}_arm64.deb"
+          
+          # 将生成的 .deb 移动到便于上传的位置
+          mkdir -p deb-artifacts
+          cp "${APP_NAME}_${APP_VERSION}_arm64.deb" deb-artifacts/
 
-      - name: Upload DEB
+      - name: Upload Self-Contained DEB
         uses: actions/upload-artifact@v4
         with:
-          name: kylin-arm64-deb
+          name: kylin-arm64-self-contained-deb
           path: deb-artifacts/*.deb
           if-no-files-found: error
 
   build-installer:
-    name: Build Installer
+    name: Build Installer (tar.gz)
     runs-on: ubuntu-latest
     needs: [build-electron]
     steps:
-      - name: Download DEB
+      - name: Download Self-Contained DEB
         uses: actions/download-artifact@v4
         with:
-          name: kylin-arm64-deb
+          name: kylin-arm64-self-contained-deb
           path: ./deb-package
 
       - name: Package Installer
         run: |
-          # 创建 release 目录
           mkdir -p release
-
-          # 使用 find 安全检查 .deb 文件（避免多个文件导致 -f 失败）
           if [ -n "$(find deb-package -maxdepth 1 -name '*.deb' -print -quit)" ]; then
-            # 打包所有 .deb 文件（确保即使文件名不含 arm64 也能成功）
-            tar -czf release/assistance-system-kylin-arm64-v1.2.0.tar.gz deb-package/*.deb
+            # 从 deb 文件名获取版本（也可直接写死）
+            DEB_FILE=$(ls deb-package/*.deb | head -n1)
+            VERSION=$(echo "$DEB_FILE" | sed -n 's/.*_\(.*\)_arm64\.deb/\1/p')
+            if [ -z "$VERSION" ]; then
+              VERSION="1.2.0"
+            fi
+            tar -czf "release/assistance-system-kylin-arm64-v${VERSION}.tar.gz" deb-package/*.deb
             echo "✅ 安装包创建完成"
           else
             echo "❌ 未找到 DEB 包，构建失败"
-            # 打印目录内容帮助排查
             ls -la deb-package/ || echo "deb-package 目录不存在"
             exit 1
           fi
-
-          # 显示 release 目录内容
           ls -la release/
 
       - name: Upload Installer
