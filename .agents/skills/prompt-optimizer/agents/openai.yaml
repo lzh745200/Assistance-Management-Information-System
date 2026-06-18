@@ -1,0 +1,6 @@
+interface:
+  display_name: "Prompt Optimizer"
+  short_description: "Turn rough ideas into sharp prompts"
+  icon_small: "./assets/testany-logo-small.png"
+  icon_large: "./assets/testany-logo.svg"
+  default_prompt: "Use $prompt-optimizer to rewrite this draft into a stronger prompt for the target model."

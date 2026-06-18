@@ -1,30 +1,23 @@
 # ============================================
-# 阶段 1: 构建 Electron 应用
+# 阶段 1: 构建 Electron 应用 (ARM64)
 # ============================================
-FROM node:20-slim AS electron-app
+FROM --platform=linux/arm64 node:20-slim AS electron-app
 WORKDIR /project
 
-# 设置构建参数
-ARG TARGETARCH
-ENV ELECTRON_BUILDER_ARCH=${TARGETARCH}
+RUN npm config set registry https://registry.npmmirror.com
 
-# 复制 package 文件并安装依赖
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --registry=https://registry.npmmirror.com
 
-# 复制源码
 COPY . .
 
-# 构建 Electron 应用
 RUN npm run build:electron
 
-# 调试：显示 dist 目录内容
 RUN echo "=== Contents of /project/dist ===" && \
     ls -la /project/dist/ && \
     echo "=== Searching for unpacked directories ===" && \
     find /project/dist -maxdepth 1 -type d -name "*unpacked*" -exec echo Found: {} \;
 
-# 统一打包位置 - 自动找到并复制所有 unpacked 内容
 RUN mkdir -p /project/app && \
     UNPACKED_DIRS=$(find /project/dist -maxdepth 1 -type d -name "*unpacked*") && \
     if [ -n "$UNPACKED_DIRS" ]; then \
@@ -45,15 +38,16 @@ RUN mkdir -p /project/app && \
 # ============================================
 # 阶段 2: 使用 FPM 打包成 DEB
 # ============================================
-FROM debian:bookworm-slim AS fpm-packager
+FROM --platform=linux/arm64 debian:bookworm-slim AS fpm-packager
 
-# 设置构建参数
+RUN echo "deb https://mirrors.ustc.edu.cn/debian bookworm main contrib non-free non-free-firmware" > /etc/apt/sources.list && \
+    echo "deb https://mirrors.ustc.edu.cn/debian bookworm-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list && \
+    echo "deb https://mirrors.ustc.edu.cn/debian-security bookworm-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+
 ARG PACKAGE_NAME=military-rural-revitalization-system
 ARG PACKAGE_VERSION=1.0.0
 ARG PACKAGE_ARCH=arm64
-ARG TARGETARCH
 
-# 安装 FPM 和必要工具
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ruby \
@@ -65,21 +59,18 @@ RUN apt-get update && \
         rsync \
         file \
         && \
-    gem install --no-document fpm && \
+    gem install --no-document fpm --source https://gems.ruby-china.com/ && \
     apt-get remove -y ruby-dev build-essential && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
-# 创建包目录结构
 RUN mkdir -p /package/usr/lib/${PACKAGE_NAME} \
     /package/usr/share/applications \
     /package/usr/share/icons/hicolor/256x256/apps \
     /package/usr/local/bin
 
-# 复制 Electron 应用
 COPY --from=electron-app /project/app/ /package/usr/lib/${PACKAGE_NAME}/
 
-# 验证应用文件
 RUN echo "=== Verifying application files ===" && \
     ls -la /package/usr/lib/${PACKAGE_NAME}/ && \
     if [ ! -f "/package/usr/lib/${PACKAGE_NAME}/package.json" ]; then \
@@ -88,7 +79,6 @@ RUN echo "=== Verifying application files ===" && \
         ls -la /package/usr/lib/${PACKAGE_NAME}/; \
     fi
 
-# 创建启动脚本
 RUN echo '#!/bin/bash' > /package/usr/local/bin/${PACKAGE_NAME} && \
     echo 'APP_DIR="/usr/lib/${PACKAGE_NAME}"' >> /package/usr/local/bin/${PACKAGE_NAME} && \
     echo 'if [ -f "${APP_DIR}/${PACKAGE_NAME}" ]; then' >> /package/usr/local/bin/${PACKAGE_NAME} && \
@@ -103,32 +93,24 @@ RUN echo '#!/bin/bash' > /package/usr/local/bin/${PACKAGE_NAME} && \
     echo 'fi' >> /package/usr/local/bin/${PACKAGE_NAME} && \
     chmod +x /package/usr/local/bin/${PACKAGE_NAME}
 
-# 验证启动脚本
-RUN echo "=== Startup script ===" && \
-    cat /package/usr/local/bin/${PACKAGE_NAME}
-
-# 创建桌面文件
 RUN echo '[Desktop Entry]' > /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
     echo 'Name=Military Rural Revitalization System' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
-    echo 'Comment=乡村振兴系统' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
+    echo 'Comment=帮扶管理信息系统' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
     echo 'Exec=/usr/local/bin/${PACKAGE_NAME}' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
     echo 'Icon=${PACKAGE_NAME}' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
     echo 'Terminal=false' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
     echo 'Type=Application' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
-    echo 'Categories=Utility;' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop && \
-    echo 'StartupWMClass=Military Rural Revitalization System' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop
+    echo 'Categories=Utility;' >> /package/usr/share/applications/${PACKAGE_NAME}.desktop
 
-# 复制图标（如果存在）
 RUN if [ -f "/package/usr/lib/${PACKAGE_NAME}/icon.png" ]; then \
         cp /package/usr/lib/${PACKAGE_NAME}/icon.png /package/usr/share/icons/hicolor/256x256/apps/${PACKAGE_NAME}.png; \
+        echo "Icon copied"; \
     elif [ -f "/package/usr/lib/${PACKAGE_NAME}/icon.ico" ]; then \
-        echo "Warning: .ico file found, but need .png for Linux" && \
-        echo "You may need to convert the icon format"; \
+        echo "Warning: .ico file found, but need .png for Linux"; \
     else \
         echo "Warning: No icon found"; \
     fi
 
-# 使用 FPM 创建 DEB 包
 RUN cd /package && \
     fpm \
         --input-type dir \
@@ -137,7 +119,7 @@ RUN cd /package && \
         --version ${PACKAGE_VERSION} \
         --architecture ${PACKAGE_ARCH} \
         --maintainer "Your Name <your.email@example.com>" \
-        --description "Military Rural Revitalization System - 乡村振兴系统" \
+        --description "Military Rural Revitalization System - 帮扶管理信息系统" \
         --url "https://example.com" \
         --license "MIT" \
         --vendor "Your Organization" \

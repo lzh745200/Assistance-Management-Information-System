@@ -17,7 +17,7 @@ REM ========================================
 title 帮扶管理信息系统 - Windows 完整构建
 
 set "PROJECT_ROOT=%~dp0"
-set "VERSION=1.2.0"
+set "VERSION=1.3.0"
 
 echo ========================================
 echo 帮扶管理信息系统 v%VERSION%
