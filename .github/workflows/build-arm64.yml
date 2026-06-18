@@ -85,7 +85,6 @@ jobs:
         run: |
           echo "🚀 尝试使用国内镜像安装依赖（带重试）..."
           npm config set registry https://registry.npmmirror.com
-          # 增加内置重试和超时参数，提高容错
           npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 || \
           ( echo "⚠️  国内镜像安装失败，切换到官方源并重试..." && \
             npm config set registry https://registry.npmjs.org && \
@@ -166,6 +165,14 @@ jobs:
         run: |
           npx electron-builder --linux --arm64 --dir --publish never
 
+      # 调试：列出 dist 目录内容
+      - name: Debug dist directory
+        run: |
+          echo "📂 dist 目录内容："
+          ls -la dist/ || echo "dist 目录不存在"
+          echo "查找 unpacked 目录："
+          find dist -type d -name "*unpacked*" 2>/dev/null || echo "未找到 unpacked 目录"
+
       - name: Setup QEMU for ARM64 container
         uses: docker/setup-qemu-action@v3
 
@@ -173,13 +180,21 @@ jobs:
         run: |
           APP_NAME=$(node -p "require('./package.json').name")
           APP_VERSION=$(node -p "require('./package.json').version")
-          UNPACKED_DIR="dist/linux-arm64-unpacked"
+          
+          # 动态查找 unpacked 目录（可能是 linux-arm64-unpacked 或 linux-unpacked）
+          UNPACKED_DIR=$(find dist -type d -name "*unpacked*" | head -n1)
+          if [ -z "$UNPACKED_DIR" ]; then
+            echo "❌ 未找到 unpacked 目录，请检查 electron-builder 输出"
+            exit 1
+          fi
+          echo "✅ 找到 unpacked 目录: $UNPACKED_DIR"
           
           SELF_CONTAINED_DIR="dist/self-contained"
           mkdir -p "$SELF_CONTAINED_DIR/opt/$APP_NAME"
           mkdir -p "$SELF_CONTAINED_DIR/DEBIAN"
           
-          cp -r "$UNPACKED_DIR"/* "$SELF_CONTAINED_DIR/opt/$APP_NAME/"
+          # 使用 . 复制所有内容（包括隐藏文件），避免通配符问题
+          cp -r "$UNPACKED_DIR"/. "$SELF_CONTAINED_DIR/opt/$APP_NAME/"
           
           cat > "$SELF_CONTAINED_DIR/DEBIAN/control" << EOF
           Package: $APP_NAME
