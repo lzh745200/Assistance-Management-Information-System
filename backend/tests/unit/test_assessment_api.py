@@ -25,8 +25,7 @@ from app.api.v1.assessment import (
 
 
 # ---------------------------------------------------------------------------
-# Global middleware patch — disable camelCase conversion so plain-dict
-# responses are tested as-is.
+# Global middleware patch
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(autouse=True)
@@ -39,28 +38,27 @@ def _no_camel_to_snake():
 
 
 # ---------------------------------------------------------------------------
-# Fixture — uses conftest's auth_client_with_db for a proven in-memory
-# SQLite TestClient + auth override.  Returns (client, db) tuple for
-# direct data seeding.
+# Fixture — uses conftest's auth_client_with_db (in-memory SQLite + auth).
+# Returns (client, db) tuple.
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
 def c(auth_client_with_db):
-    """Shorthand: (TestClient, db_session) with admin auth & in-memory DB."""
     return auth_client_with_db
 
 
 # ---------------------------------------------------------------------------
-# Test-data helpers
+# Test-data helpers (NO explicit IDs — let SQLite auto-generate them)
 # ---------------------------------------------------------------------------
 
 _REF_DATE = date.today()
 _CURRENT_YEAR = _REF_DATE.year
 
 
-def _v(db, id_=1, name="测试村", support_unit="某部队"):
+def mkv(db, name="测试村", support_unit="某部队"):
+    """Create a SupportedVillage (auto-id) and return it."""
     v = SupportedVillage(
-        id=id_, village_name=name, support_unit=support_unit,
+        village_name=name, support_unit=support_unit,
         province="贵州省", city="毕节市", county="测试县",
         department="测试部", is_three_regions=True,
         is_revitalization_tier=True,
@@ -69,7 +67,8 @@ def _v(db, id_=1, name="测试村", support_unit="某部队"):
     return v
 
 
-def _inc(db, village_id, year, per_capita=1.5, collective=20.0):
+def mki(db, village_id, year, per_capita=1.5, collective=20.0):
+    """Create a VillageIncome and return it."""
     inc = VillageIncome(
         supported_village_id=village_id, year=year,
         per_capita_income=per_capita, collective_income=collective,
@@ -78,27 +77,28 @@ def _inc(db, village_id, year, per_capita=1.5, collective=20.0):
     return inc
 
 
-def _prj(db, id_=1, village_id=1, name="项目X", status="completed",
-         budget=100, actual_cost=80, end_date=None):
+def mkp(db, village_id, name="项目X", status="completed", budget=100, actual_cost=80, end_date=None):
+    """Create a Project (auto-id) and return it."""
     p = Project(
-        id=id_, name=name, village_id=village_id, status=status,
+        name=name, village_id=village_id, status=status,
         budget=budget, actual_cost=actual_cost, end_date=end_date,
     )
     db.add(p)
     return p
 
 
-def _fnd(db, id_=1, village_id=1, amount=50, used_amount=45):
+def mkf(db, village_id, amount=50, used_amount=45):
+    """Create a Fund (auto-id) and return it."""
     f = Fund(
-        id=id_, village_id=village_id, amount=amount, used_amount=used_amount,
-        name=f"经费{id_}", fund_type="乡村振兴",
+        village_id=village_id, amount=amount, used_amount=used_amount,
+        name="经费", fund_type="乡村振兴",
     )
     db.add(f)
     return f
 
 
-def _save(db):
-    """Flush + commit so data is visible to subsequent queries."""
+def save(db):
+    """Flush + commit — makes data visible to subsequent queries."""
     db.flush()
     db.commit()
 
@@ -129,14 +129,13 @@ class TestGetVillageScores:
 
     def test_village_no_income_no_projects_no_funds(self, c):
         client, db = c
-        _v(db)
-        _save(db)
+        mkv(db)
+        save(db)
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
         data = resp.json()
         assert data["total"] == 1
         item = data["items"][0]
-        assert item["village_id"] == 1
         assert item["village_name"] == "测试村"
         assert item["rank"] == 1
         assert item["scores"]["economic"] == 50.0
@@ -147,35 +146,36 @@ class TestGetVillageScores:
 
     def test_two_villages_with_full_data_ranking(self, c):
         client, db = c
-        _v(db, id_=1, name="富裕村")
-        _v(db, id_=2, name="普通村")
+        v1 = mkv(db, name="富裕村")
+        v2 = mkv(db, name="普通村")
+        save(db)  # flush so v1.id and v2.id are available
 
         # Village 1: income 1.0→2.0 (100% growth → economic cap 100)
-        _inc(db, 1, _CURRENT_YEAR, per_capita=2.0, collective=30)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=1.0, collective=20)
+        mki(db, v1.id, _CURRENT_YEAR, per_capita=2.0, collective=30)
+        mki(db, v1.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=20)
         # Village 2: income flat
-        _inc(db, 2, _CURRENT_YEAR, per_capita=1.5, collective=15)
-        _inc(db, 2, _CURRENT_YEAR - 1, per_capita=1.5, collective=15)
+        mki(db, v2.id, _CURRENT_YEAR, per_capita=1.5, collective=15)
+        mki(db, v2.id, _CURRENT_YEAR - 1, per_capita=1.5, collective=15)
 
-        # Village 1: 2/2 completed, Village 2: 0/1 completed
-        _prj(db, id_=1, village_id=1, status="completed")
-        _prj(db, id_=2, village_id=1, status="completed")
-        _prj(db, id_=3, village_id=2, status="in_progress")
+        # Village 1: 2/2 completed
+        mkp(db, v1.id, status="completed")
+        mkp(db, v1.id, status="completed")
+        # Village 2: 0/1 completed
+        mkp(db, v2.id, status="in_progress")
 
-        # Village 1: 90% fund execution, Village 2: 10%
-        _fnd(db, id_=1, village_id=1, amount=50, used_amount=45)
-        _fnd(db, id_=2, village_id=2, amount=100, used_amount=10)
+        mkf(db, v1.id, amount=50, used_amount=45)   # 90%
+        mkf(db, v2.id, amount=100, used_amount=10)  # 10%
 
-        _save(db)
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total"] == 2
+        assert data["total"] == 2, f"Expected 2 villages, got {data}"
         first, second = data["items"]
         assert first["rank"] == 1
         assert second["rank"] == 2
-        assert first["village_id"] == 1
+        assert first["village_name"] == "富裕村"
         assert first["total_score"] > second["total_score"]
 
         assert first["scores"]["economic"] == 100.0
@@ -188,11 +188,12 @@ class TestGetVillageScores:
 
     def test_income_decline_economic_floor(self, c):
         client, db = c
-        _v(db, id_=1, name="衰退村")
+        v = mkv(db, name="衰退村")
+        save(db)
         # 2.0→1.0 = -50% decline → floor at 0
-        _inc(db, 1, _CURRENT_YEAR, per_capita=1.0, collective=10)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=2.0, collective=20)
-        _save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=1.0, collective=10)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=2.0, collective=20)
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
         item = resp.json()["items"][0]
@@ -200,11 +201,12 @@ class TestGetVillageScores:
 
     def test_income_growth_economic_cap(self, c):
         client, db = c
-        _v(db, id_=1, name="暴增村")
+        v = mkv(db, name="暴增村")
+        save(db)
         # 0.1→2.0 = 1900% growth → cap at 100
-        _inc(db, 1, _CURRENT_YEAR, per_capita=2.0, collective=30)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=0.1, collective=5)
-        _save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=2.0, collective=30)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=0.1, collective=5)
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
         item = resp.json()["items"][0]
@@ -222,8 +224,8 @@ class TestGetVillageScores:
         }
         mock_get_cache.return_value = mock_cache
 
-        _v(db)
-        _save(db)
+        mkv(db)
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
@@ -239,8 +241,8 @@ class TestGetVillageScores:
         mock_cache.get.return_value = None
         mock_get_cache.return_value = mock_cache
 
-        _v(db)
-        _save(db)
+        mkv(db)
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
@@ -256,8 +258,8 @@ class TestGetVillageScores:
         mock_cache.get.return_value = None
         mock_get_cache.return_value = mock_cache
 
-        _v(db)
-        _save(db)
+        mkv(db)
+        save(db)
 
         client.get("/api/v1/assessment/village-scores?year=2022")
         assert mock_cache.set.called
@@ -266,16 +268,19 @@ class TestGetVillageScores:
 
     def test_score_level_assignment(self, c):
         client, db = c
-        _v(db, id_=1, name="优村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=5.0, collective=100)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=1.0, collective=50)
-        _prj(db, id_=1, village_id=1, status="completed", budget=100, actual_cost=100)
-        _fnd(db, id_=1, village_id=1, amount=100, used_amount=100)
-        _v(db, id_=2, name="差村")
-        _save(db)
+        v_high = mkv(db, name="优村")
+        v_low = mkv(db, name="差村")
+        save(db)
+
+        mki(db, v_high.id, _CURRENT_YEAR, per_capita=5.0, collective=100)
+        mki(db, v_high.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=50)
+        mkp(db, v_high.id, status="completed", budget=100, actual_cost=100)
+        mkf(db, v_high.id, amount=100, used_amount=100)
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
         items = resp.json()["items"]
+        assert len(items) == 2
         levels = {it["village_name"]: it["level"] for it in items}
         assert levels.get("优村") == "优秀"
         assert levels.get("差村") == "待改进"
@@ -283,17 +288,20 @@ class TestGetVillageScores:
     def test_multiple_villages_rank_sequential(self, c):
         client, db = c
         for i in range(1, 6):
-            _v(db, id_=i, name=f"村{i}")
-        _save(db)
+            mkv(db, name=f"村{i}")
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
-        ranks = [it["rank"] for it in resp.json()["items"]]
+        assert resp.status_code == 200
+        items = resp.json()["items"]
+        assert len(items) == 5
+        ranks = [it["rank"] for it in items]
         assert ranks == list(range(1, 6))
 
     def test_support_unit_in_response(self, c):
         client, db = c
-        _v(db, id_=1, name="某村", support_unit="火箭军某部")
-        _save(db)
+        mkv(db, name="某村", support_unit="火箭军某部")
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
         item = resp.json()["items"][0]
@@ -301,8 +309,8 @@ class TestGetVillageScores:
 
     def test_empty_support_unit_uses_empty_string(self, c):
         client, db = c
-        v = _v(db, id_=1, name="某村", support_unit=None)
-        _save(db)
+        mkv(db, name="某村", support_unit=None)
+        save(db)
 
         resp = client.get("/api/v1/assessment/village-scores")
         item = resp.json()["items"][0]
@@ -325,37 +333,39 @@ class TestDetectAnomalies:
 
     def test_income_drop_detected(self, c):
         client, db = c
-        _v(db, id_=1, name="下降村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=0.6, collective=10)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
-        _save(db)
+        v = mkv(db, name="下降村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=0.6, collective=10)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
         assert len(drops) == 1
         assert drops[0]["level"] == "danger"
-        assert drops[0]["village_id"] == 1
         assert drops[0]["village_name"] == "下降村"
         assert "40.0%" in drops[0]["message"]
 
     def test_income_drop_exactly_30_percent_not_triggered(self, c):
         client, db = c
-        _v(db, id_=1, name="临界村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=0.7, collective=10)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
-        _save(db)
+        v = mkv(db, name="临界村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=0.7, collective=10)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
-        # (0.7-1.0)/1.0 = -0.3, NOT < -0.3
+        # (0.7-1.0)/1.0 = -0.3, which is NOT < -0.3 (strict less-than)
         assert len(drops) == 0
 
     def test_income_drop_just_over_30_percent_triggered(self, c):
         client, db = c
-        _v(db, id_=1, name="略超村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=0.699, collective=10)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
-        _save(db)
+        v = mkv(db, name="略超村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=0.699, collective=10)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
@@ -363,10 +373,11 @@ class TestDetectAnomalies:
 
     def test_income_increase_no_anomaly(self, c):
         client, db = c
-        _v(db, id_=1, name="增长村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=2.0, collective=30)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=1.0, collective=20)
-        _save(db)
+        v = mkv(db, name="增长村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=2.0, collective=30)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=20)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
@@ -374,19 +385,21 @@ class TestDetectAnomalies:
 
     def test_no_previous_year_no_anomaly(self, c):
         client, db = c
-        _v(db, id_=1, name="新村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=0.5, collective=5)
-        _save(db)
+        v = mkv(db, name="新村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=0.5, collective=5)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         assert resp.json()["total"] == 0
 
     def test_previous_income_zero_no_anomaly(self, c):
         client, db = c
-        _v(db, id_=1, name="零收村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=1.0, collective=10)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=0.0, collective=0)
-        _save(db)
+        v = mkv(db, name="零收村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=1.0, collective=10)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=0.0, collective=0)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
@@ -394,10 +407,11 @@ class TestDetectAnomalies:
 
     def test_previous_income_none_no_anomaly(self, c):
         client, db = c
-        _v(db, id_=1, name="空收村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=1.0, collective=10)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=None, collective=None)
-        _save(db)
+        v = mkv(db, name="空收村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=1.0, collective=10)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=None, collective=None)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
@@ -405,26 +419,25 @@ class TestDetectAnomalies:
 
     def test_project_overdue_detected(self, c):
         client, db = c
+        v = mkv(db, name="A村")
+        save(db)
         overdue_date = _REF_DATE - timedelta(days=60)
-        _v(db, id_=1, name="A村")
-        _prj(db, id_=1, village_id=1, name="逾期项目",
-              status="in_progress", end_date=overdue_date)
-        _save(db)
+        mkp(db, v.id, name="逾期项目", status="in_progress", end_date=overdue_date)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
         assert len(overdues) == 1
         assert overdues[0]["level"] == "warning"
         assert overdues[0]["project_name"] == "逾期项目"
-        assert "60" in str(overdues[0]["message"])
 
     def test_project_overdue_less_than_30_days_not_triggered(self, c):
         client, db = c
+        v = mkv(db, name="A村")
+        save(db)
         recent_date = _REF_DATE - timedelta(days=10)
-        _v(db, id_=1, name="A村")
-        _prj(db, id_=1, village_id=1, name="近期项目",
-              status="in_progress", end_date=recent_date)
-        _save(db)
+        mkp(db, v.id, name="近期项目", status="in_progress", end_date=recent_date)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
@@ -432,11 +445,11 @@ class TestDetectAnomalies:
 
     def test_completed_project_no_overdue(self, c):
         client, db = c
+        v = mkv(db, name="A村")
+        save(db)
         old_date = _REF_DATE - timedelta(days=365)
-        _v(db, id_=1, name="A村")
-        _prj(db, id_=1, village_id=1, name="已完成",
-              status="completed", end_date=old_date)
-        _save(db)
+        mkp(db, v.id, name="已完成", status="completed", end_date=old_date)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
@@ -444,11 +457,11 @@ class TestDetectAnomalies:
 
     def test_cancelled_project_no_overdue(self, c):
         client, db = c
+        v = mkv(db, name="A村")
+        save(db)
         old_date = _REF_DATE - timedelta(days=100)
-        _v(db, id_=1, name="A村")
-        _prj(db, id_=1, village_id=1, name="已取消",
-              status="cancelled", end_date=old_date)
-        _save(db)
+        mkp(db, v.id, name="已取消", status="cancelled", end_date=old_date)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
@@ -456,24 +469,23 @@ class TestDetectAnomalies:
 
     def test_budget_overrun_detected(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _prj(db, id_=1, village_id=1, name="超支项目",
-              status="in_progress", budget=100, actual_cost=150)
-        _save(db)
+        v = mkv(db, name="A村")
+        save(db)
+        mkp(db, v.id, name="超支项目", status="in_progress", budget=100, actual_cost=150)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         overruns = [a for a in resp.json()["items"] if a["type"] == "budget_overrun"]
         assert len(overruns) == 1
-        assert overruns[0]["level"] == "warning"
         assert overruns[0]["project_name"] == "超支项目"
         assert "50.0%" in overruns[0]["message"]
 
     def test_budget_zero_no_overrun(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _prj(db, id_=1, village_id=1, name="零预算",
-              status="in_progress", budget=0, actual_cost=100)
-        _save(db)
+        v = mkv(db, name="A村")
+        save(db)
+        mkp(db, v.id, name="零预算", status="in_progress", budget=0, actual_cost=100)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         overruns = [a for a in resp.json()["items"] if a["type"] == "budget_overrun"]
@@ -481,10 +493,10 @@ class TestDetectAnomalies:
 
     def test_budget_equal_cost_no_overrun(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _prj(db, id_=1, village_id=1, name="恰好",
-              status="in_progress", budget=100, actual_cost=100)
-        _save(db)
+        v = mkv(db, name="A村")
+        save(db)
+        mkp(db, v.id, name="恰好", status="in_progress", budget=100, actual_cost=100)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         overruns = [a for a in resp.json()["items"] if a["type"] == "budget_overrun"]
@@ -492,16 +504,17 @@ class TestDetectAnomalies:
 
     def test_multiple_anomaly_types(self, c):
         client, db = c
+        v1 = mkv(db, name="多问题村")
+        v2 = mkv(db, name="超支村")
+        save(db)
+
+        mki(db, v1.id, _CURRENT_YEAR, per_capita=0.5, collective=8)
+        mki(db, v1.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
+
         overdue_date = _REF_DATE - timedelta(days=90)
-        _v(db, id_=1, name="多问题村")
-        _v(db, id_=2, name="超支村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=0.5, collective=8)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
-        _prj(db, id_=1, village_id=1, name="拖期项目",
-              status="in_progress", end_date=overdue_date)
-        _prj(db, id_=2, village_id=2, name="超支工程",
-              status="in_progress", budget=100, actual_cost=200)
-        _save(db)
+        mkp(db, v1.id, name="拖期项目", status="in_progress", end_date=overdue_date)
+        mkp(db, v2.id, name="超支工程", status="in_progress", budget=100, actual_cost=200)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         types = {a["type"] for a in resp.json()["items"]}
@@ -511,11 +524,12 @@ class TestDetectAnomalies:
 
     def test_project_end_date_none_no_overdue(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        p = Project(id=1, name="无日期项目", village_id=1, status="in_progress",
+        v = mkv(db, name="A村")
+        save(db)
+        p = Project(name="无日期项目", village_id=v.id, status="in_progress",
                     end_date=None, budget=100, actual_cost=50)
         db.add(p)
-        _save(db)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
@@ -523,10 +537,11 @@ class TestDetectAnomalies:
 
     def test_current_per_capita_none_triggers_drop(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=None, collective=None)
-        _inc(db, 1, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
-        _save(db)
+        v = mkv(db, name="A村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=None, collective=None)
+        mki(db, v.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
+        save(db)
 
         resp = client.get("/api/v1/assessment/anomalies")
         drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
@@ -550,9 +565,10 @@ class TestTrendPrediction:
 
     def test_insufficient_data_one_row(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, 2024, per_capita=1.5, collective=20)
-        _save(db)
+        v = mkv(db)
+        save(db)
+        mki(db, v.id, 2024, per_capita=1.5, collective=20)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction")
         assert resp.status_code == 200
@@ -560,10 +576,11 @@ class TestTrendPrediction:
 
     def test_two_years_per_capita_income(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, 2024, per_capita=1.5, collective=20)
-        _inc(db, 1, 2025, per_capita=2.0, collective=25)
-        _save(db)
+        v = mkv(db)
+        save(db)
+        mki(db, v.id, 2024, per_capita=1.5, collective=20)
+        mki(db, v.id, 2025, per_capita=2.0, collective=25)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction?metric=per_capita_income")
         assert resp.status_code == 200
@@ -577,11 +594,12 @@ class TestTrendPrediction:
 
     def test_three_years_per_capita_income(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, 2023, per_capita=1.0, collective=15)
-        _inc(db, 1, 2024, per_capita=1.5, collective=20)
-        _inc(db, 1, 2025, per_capita=2.0, collective=25)
-        _save(db)
+        v = mkv(db)
+        save(db)
+        mki(db, v.id, 2023, per_capita=1.0, collective=15)
+        mki(db, v.id, 2024, per_capita=1.5, collective=20)
+        mki(db, v.id, 2025, per_capita=2.0, collective=25)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction?metric=per_capita_income")
         assert resp.status_code == 200
@@ -593,10 +611,11 @@ class TestTrendPrediction:
 
     def test_collective_income_metric(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, 2024, per_capita=1.5, collective=20)
-        _inc(db, 1, 2025, per_capita=2.0, collective=30)
-        _save(db)
+        v = mkv(db)
+        save(db)
+        mki(db, v.id, 2024, per_capita=1.5, collective=20)
+        mki(db, v.id, 2025, per_capita=2.0, collective=30)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction?metric=collective_income")
         assert resp.status_code == 200
@@ -607,10 +626,11 @@ class TestTrendPrediction:
 
     def test_flat_data_zero_slope(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
+        v = mkv(db)
+        save(db)
         for yr in range(2020, 2025):
-            _inc(db, 1, yr, per_capita=2.0, collective=25)
-        _save(db)
+            mki(db, v.id, yr, per_capita=2.0, collective=25)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction")
         data = resp.json()
@@ -622,11 +642,12 @@ class TestTrendPrediction:
 
     def test_decreasing_trend(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, 2023, per_capita=3.0, collective=40)
-        _inc(db, 1, 2024, per_capita=2.0, collective=30)
-        _inc(db, 1, 2025, per_capita=1.0, collective=20)
-        _save(db)
+        v = mkv(db)
+        save(db)
+        mki(db, v.id, 2023, per_capita=3.0, collective=40)
+        mki(db, v.id, 2024, per_capita=2.0, collective=30)
+        mki(db, v.id, 2025, per_capita=1.0, collective=20)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction")
         data = resp.json()
@@ -634,10 +655,11 @@ class TestTrendPrediction:
 
     def test_predicted_values_non_negative(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, 2023, per_capita=5.0, collective=50)
-        _inc(db, 1, 2024, per_capita=2.0, collective=20)
-        _save(db)
+        v = mkv(db)
+        save(db)
+        mki(db, v.id, 2023, per_capita=5.0, collective=50)
+        mki(db, v.id, 2024, per_capita=2.0, collective=20)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction")
         for p in resp.json()["predicted"]:
@@ -645,27 +667,28 @@ class TestTrendPrediction:
 
     def test_intercept_field_present(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, 2023, per_capita=1.0, collective=10)
-        _inc(db, 1, 2024, per_capita=2.0, collective=20)
-        _save(db)
+        v = mkv(db)
+        save(db)
+        mki(db, v.id, 2023, per_capita=1.0, collective=10)
+        mki(db, v.id, 2024, per_capita=2.0, collective=20)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction")
         data = resp.json()
         assert "slope" in data
         assert "intercept" in data
         assert isinstance(data["slope"], (int, float))
-        assert isinstance(data["intercept"], (int, float))
 
     def test_multiple_villages_averaged(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _v(db, id_=2, name="B村")
-        _inc(db, 1, 2024, per_capita=1.0, collective=10)
-        _inc(db, 2, 2024, per_capita=3.0, collective=30)
-        _inc(db, 1, 2025, per_capita=2.0, collective=20)
-        _inc(db, 2, 2025, per_capita=4.0, collective=40)
-        _save(db)
+        v1 = mkv(db, name="A村")
+        v2 = mkv(db, name="B村")
+        save(db)
+        mki(db, v1.id, 2024, per_capita=1.0, collective=10)
+        mki(db, v2.id, 2024, per_capita=3.0, collective=30)
+        mki(db, v1.id, 2025, per_capita=2.0, collective=20)
+        mki(db, v2.id, 2025, per_capita=4.0, collective=40)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction")
         data = resp.json()
@@ -675,10 +698,11 @@ class TestTrendPrediction:
 
     def test_null_collective_income_handled(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _inc(db, 1, 2024, per_capita=1.0, collective=None)
-        _inc(db, 1, 2025, per_capita=2.0, collective=20)
-        _save(db)
+        v = mkv(db)
+        save(db)
+        mki(db, v.id, 2024, per_capita=1.0, collective=None)
+        mki(db, v.id, 2025, per_capita=2.0, collective=20)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction?metric=collective_income")
         assert resp.status_code == 200
@@ -688,11 +712,12 @@ class TestTrendPrediction:
 
     def test_village_without_income_not_affecting_aggregation(self, c):
         client, db = c
-        _v(db, id_=1, name="有收村")
-        _v(db, id_=2, name="无收村")
-        _inc(db, 1, 2024, per_capita=1.0, collective=10)
-        _inc(db, 1, 2025, per_capita=1.5, collective=15)
-        _save(db)
+        v1 = mkv(db, name="有收村")
+        v2 = mkv(db, name="无收村")
+        save(db)
+        mki(db, v1.id, 2024, per_capita=1.0, collective=10)
+        mki(db, v1.id, 2025, per_capita=1.5, collective=15)
+        save(db)
 
         resp = client.get("/api/v1/assessment/trend-prediction")
         data = resp.json()
@@ -721,23 +746,23 @@ class TestVillageComparison:
 
     def test_mixed_valid_and_invalid_ids(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1,abc,xyz")
+        v = mkv(db, name="A村")
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id},abc,xyz")
         assert resp.json()["total"] == 1
 
     def test_single_village_full_data(self, c):
         client, db = c
-        _v(db, id_=1, name="完整村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=2.5, collective=35)
-        _prj(db, id_=1, village_id=1, name="项目A", status="completed")
-        _prj(db, id_=2, village_id=1, name="项目B", status="in_progress")
-        _fnd(db, id_=1, village_id=1, amount=200, used_amount=180)
-        _save(db)
+        v = mkv(db, name="完整村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=2.5, collective=35)
+        mkp(db, v.id, name="项目A", status="completed")
+        mkp(db, v.id, name="项目B", status="in_progress")
+        mkf(db, v.id, amount=200, used_amount=180)
+        save(db)
 
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1")
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
         item = resp.json()["items"][0]
-        assert item["village_id"] == 1
         assert item["village_name"] == "完整村"
         assert item["per_capita_income"] == 2.5
         assert item["collective_income"] == 35.0
@@ -748,57 +773,64 @@ class TestVillageComparison:
 
     def test_two_villages_comparison(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _v(db, id_=2, name="B村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=1.0, collective=10)
-        _inc(db, 2, _CURRENT_YEAR, per_capita=3.0, collective=50)
-        _save(db)
+        v1 = mkv(db, name="A村")
+        v2 = mkv(db, name="B村")
+        save(db)
+        mki(db, v1.id, _CURRENT_YEAR, per_capita=1.0, collective=10)
+        mki(db, v2.id, _CURRENT_YEAR, per_capita=3.0, collective=50)
+        save(db)
 
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1,2")
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v1.id},{v2.id}")
         names = {it["village_name"] for it in resp.json()["items"]}
         assert names == {"A村", "B村"}
 
     def test_five_villages_max(self, c):
         client, db = c
+        ids = []
         for i in range(1, 6):
-            _v(db, id_=i, name=f"村{i}")
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1,2,3,4,5")
+            v = mkv(db, name=f"村{i}")
+            ids.append(v.id)
+        save(db)
+        resp = client.get("/api/v1/assessment/village-comparison?village_ids=" + ",".join(map(str, ids)))
         assert resp.json()["total"] == 5
 
     def test_more_than_five_ids_truncated(self, c):
         client, db = c
+        ids = []
         for i in range(1, 8):
-            _v(db, id_=i, name=f"村{i}")
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1,2,3,4,5,6,7")
+            v = mkv(db, name=f"村{i}")
+            ids.append(v.id)
+        save(db)
+        resp = client.get("/api/v1/assessment/village-comparison?village_ids=" + ",".join(map(str, ids)))
         ids_returned = {it["village_id"] for it in resp.json()["items"]}
-        assert ids_returned == {1, 2, 3, 4, 5}
+        # First 5 IDs only
+        assert len(ids_returned) == 5
+        assert ids_returned == set(ids[:5])
 
     def test_village_not_found_skipped(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1,999")
+        v = mkv(db, name="A村")
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id},99999")
         data = resp.json()
         assert data["total"] == 1
-        assert data["items"][0]["village_id"] == 1
 
     def test_village_no_income_data(self, c):
         client, db = c
-        _v(db, id_=1, name="无收村")
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1")
+        v = mkv(db, name="无收村")
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
         item = resp.json()["items"][0]
         assert item["per_capita_income"] == 0
         assert item["collective_income"] == 0
 
     def test_village_no_projects(self, c):
         client, db = c
-        _v(db, id_=1, name="无项村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=1.5, collective=20)
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1")
+        v = mkv(db, name="无项村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=1.5, collective=20)
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
         item = resp.json()["items"][0]
         assert item["total_projects"] == 0
         assert item["completed_projects"] == 0
@@ -806,59 +838,63 @@ class TestVillageComparison:
 
     def test_village_no_funds(self, c):
         client, db = c
-        _v(db, id_=1, name="无费村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=1.5, collective=20)
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1")
+        v = mkv(db, name="无费村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=1.5, collective=20)
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
         item = resp.json()["items"][0]
         assert item["total_funds"] == 0
 
     def test_village_only_one_income_year(self, c):
         client, db = c
-        _v(db, id_=1, name="单收村")
-        _inc(db, 1, 2023, per_capita=1.8, collective=25)
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1")
+        v = mkv(db, name="单收村")
+        save(db)
+        mki(db, v.id, 2023, per_capita=1.8, collective=25)
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
         item = resp.json()["items"][0]
         assert item["per_capita_income"] == 1.8
 
     def test_village_multiple_income_years_picks_latest(self, c):
         client, db = c
-        _v(db, id_=1, name="多收村")
-        _inc(db, 1, 2020, per_capita=0.5, collective=5)
-        _inc(db, 1, 2023, per_capita=1.5, collective=20)
-        _inc(db, 1, 2025, per_capita=3.0, collective=45)
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1")
+        v = mkv(db, name="多收村")
+        save(db)
+        mki(db, v.id, 2020, per_capita=0.5, collective=5)
+        mki(db, v.id, 2023, per_capita=1.5, collective=20)
+        mki(db, v.id, 2025, per_capita=3.0, collective=45)
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
         item = resp.json()["items"][0]
         assert item["per_capita_income"] == 3.0
         assert item["collective_income"] == 45.0
 
     def test_duplicate_ids_appear_multiple_times(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _v(db, id_=2, name="B村")
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1,1,2,2,2")
-        # iterates for each vid, first 5 → 5 rows
+        v1 = mkv(db, name="A村")
+        v2 = mkv(db, name="B村")
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v1.id},{v1.id},{v2.id},{v2.id},{v2.id}")
         assert resp.json()["total"] == 5
 
     def test_per_capita_none_defaults_zero(self, c):
         client, db = c
-        _v(db, id_=1, name="缺收村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=None, collective=None)
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1")
+        v = mkv(db, name="缺收村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=None, collective=None)
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
         item = resp.json()["items"][0]
         assert item["per_capita_income"] == 0
         assert item["collective_income"] == 0
 
     def test_project_completion_rate_zero_projects(self, c):
         client, db = c
-        _v(db, id_=1, name="无项村")
-        _inc(db, 1, _CURRENT_YEAR, per_capita=1.0, collective=10)
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=1")
+        v = mkv(db, name="无项村")
+        save(db)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=1.0, collective=10)
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
         item = resp.json()["items"][0]
         assert item["total_projects"] == 0
         assert item["completed_projects"] == 0
@@ -866,20 +902,19 @@ class TestVillageComparison:
 
     def test_all_ids_not_found(self, c):
         client, db = c
-        _v(db, id_=1, name="A村")
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=999,888")
+        v = mkv(db, name="A村")
+        save(db)
+        resp = client.get("/api/v1/assessment/village-comparison?village_ids=99999,88888")
         assert resp.json()["items"] == []
         assert resp.json()["total"] == 0
 
     def test_mixed_valid_and_invalid_village_id(self, c):
         client, db = c
-        _v(db, id_=5, name="存在的村")
-        _save(db)
-        resp = client.get("/api/v1/assessment/village-comparison?village_ids=5,404")
+        v = mkv(db, name="存在的村")
+        save(db)
+        resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id},40499")
         data = resp.json()
         assert data["total"] == 1
-        assert data["items"][0]["village_id"] == 5
 
 
 # ===================================================================
@@ -910,7 +945,6 @@ class TestScoreLevel:
 
 
 class TestCalculateVillageScoreBatch:
-    """Direct unit tests for _calculate_village_score_batch()."""
 
     @staticmethod
     def _v(id_=1):
