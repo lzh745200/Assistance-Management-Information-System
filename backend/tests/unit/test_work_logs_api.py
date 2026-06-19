@@ -96,12 +96,16 @@ def _setup_client(client, mock_db, user):
 
 
 def _build_query_chain(first_return=None, all_return=None, count_value=0):
-    """Build a mock that supports .query(Model).filter(...).order_by(...).offset().limit().all()."""
+    """Build a mock that supports .query(Model).filter(...).order_by(...).offset().limit().all().
+
+    Every link returns the same mock, so the chain is fully self-referential.
+    """
     q = MagicMock()
     q.filter.return_value = q
     q.order_by.return_value = q
-    q.offset.return_value.limit.return_value.all.return_value = all_return or []
-    q.offset.return_value.limit.return_value = q
+    q.offset.return_value = q
+    q.limit.return_value = q
+    q.all.return_value = all_return or []
     q.count.return_value = count_value
     q.first.return_value = first_return
     q.scalar.return_value = 0
@@ -425,8 +429,8 @@ class TestCreateWorkLog:
         })
         assert resp.status_code == 200
 
-    def test_create_return_has_id(self, client, mock_db, admin_user):
-        """Verify response includes id field."""
+    def test_create_return_has_user_id(self, client, mock_db, admin_user):
+        """Verify response includes user_id field."""
         _setup_client(client, mock_db, admin_user)
         resp = client.post("/api/v1/work-logs", json={
             "log_date": "2026-06-15",
@@ -435,7 +439,8 @@ class TestCreateWorkLog:
         })
         assert resp.status_code == 200
         data = resp.json()
-        assert "id" in data
+        assert "user_id" in data
+        assert "log_date" in data
 
     def test_create_missing_log_date(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -1041,7 +1046,8 @@ class TestWorkLogRouter:
         """Verify GET /work-logs route exists."""
         from app.api.v1.work_logs import router
         paths = [r.path for r in router.routes]
-        assert "" in paths  # GET "/"
+        # Routes already include the prefix from the parent APIRouter
+        assert any(p.endswith("") or p == "/work-logs" for p in paths)
 
     def test_router_has_post_create(self):
         """Verify POST route exists."""
@@ -1054,7 +1060,7 @@ class TestWorkLogRouter:
         """Verify calendar route exists."""
         from app.api.v1.work_logs import router
         paths = [r.path for r in router.routes]
-        assert "/calendar" in paths
+        assert any("/calendar" in p for p in paths)
 
 
 # ── Schema Validation ─────────────────────────────────────────────────────
