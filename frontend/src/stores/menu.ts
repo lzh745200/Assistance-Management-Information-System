@@ -50,15 +50,8 @@ export const useMenuStore = defineStore("menu", () => {
   }
 
   function canAccessMenu(menuKey: string): boolean {
-    if (!loaded.value) {
-      console.log(
-        `[menuStore] canAccessMenu("${menuKey}") → false (not loaded)`,
-      );
-      return false;
-    }
-    const ok = allKeys.value.has(menuKey);
-    if (!ok) console.log(`[menuStore] canAccessMenu("${menuKey}") → BLOCKED`);
-    return ok;
+    if (!loaded.value) return false;
+    return allKeys.value.has(menuKey);
   }
 
   /** 从后端加载当前用户可见菜单，更新 store */
