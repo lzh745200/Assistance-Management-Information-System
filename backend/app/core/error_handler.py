@@ -23,7 +23,6 @@ try:
     from app.core.exceptions import (
         AppError,
         NotFoundError,
-        NotFoundException as _NotFoundException,
         AuthenticationException as BadRequestError,
         AuthenticationException as ForbiddenError,
         AuthenticationException as ConflictError,
