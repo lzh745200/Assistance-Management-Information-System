@@ -12,7 +12,6 @@
 
 import logging
 import threading
-import time
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -57,14 +56,15 @@ class ApprovalReminderService:
             return
         self._stop_event.set()
         if self._thread:
-            self._thread.join(timeout=10)
+            self._thread.join(timeout=1)
         self._running = False
         logger.info("审批提醒服务已停止")
 
     def _scan_loop(self):
         """后台扫描循环"""
-        # 首次启动等待30秒，确保数据库已初始化
-        time.sleep(30)
+        # 首次启动等待30秒，确保数据库已初始化（stop 时立即唤醒）
+        if self._stop_event.wait(30):
+            return
 
         while not self._stop_event.is_set():
             try:
