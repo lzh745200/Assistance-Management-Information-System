@@ -112,6 +112,10 @@ export const useAuthStore = defineStore("auth", () => {
           res.data.user,
           res.data.refresh_token,
         );
+        // 登录后立即预加载菜单 — 避免侧边栏渲染时 loaded=false 导致闪烁或泄露
+        import("@/stores/menu").then(({ useMenuStore }) => {
+          useMenuStore().fetchMenus();
+        });
         return true;
       }
 

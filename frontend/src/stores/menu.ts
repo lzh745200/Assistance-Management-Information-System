@@ -50,7 +50,7 @@ export const useMenuStore = defineStore("menu", () => {
   }
 
   function canAccessMenu(menuKey: string): boolean {
-    if (!loaded.value) return true; // 未加载时放行，避免闪烁 — 但加载完成后立即准确
+    if (!loaded.value) return false; // 未加载时隐藏 — 宁可空白不可泄露
     return allKeys.value.has(menuKey);
   }
 
