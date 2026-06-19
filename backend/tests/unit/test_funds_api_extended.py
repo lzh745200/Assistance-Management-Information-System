@@ -216,26 +216,32 @@ def _build_client(user, mock_db):
 
 @pytest.fixture
 def client(admin_user, mock_db):
-    """TestClient with admin privileges."""
-    c, app = _build_client(admin_user, mock_db)
-    yield c
-    app.dependency_overrides.clear()
+    """TestClient with admin privileges. apply_data_scope is patched as no-op."""
+    with patch("app.api.v1.funds.apply_data_scope",
+               side_effect=lambda stmt, *a, **kw: stmt):
+        c, app = _build_client(admin_user, mock_db)
+        yield c
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def client_regular(regular_user, mock_db):
     """TestClient with regular user privileges."""
-    c, app = _build_client(regular_user, mock_db)
-    yield c
-    app.dependency_overrides.clear()
+    with patch("app.api.v1.funds.apply_data_scope",
+               side_effect=lambda stmt, *a, **kw: stmt):
+        c, app = _build_client(regular_user, mock_db)
+        yield c
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def client_manager(manager_user, mock_db):
     """TestClient with manager role."""
-    c, app = _build_client(manager_user, mock_db)
-    yield c
-    app.dependency_overrides.clear()
+    with patch("app.api.v1.funds.apply_data_scope",
+               side_effect=lambda stmt, *a, **kw: stmt):
+        c, app = _build_client(manager_user, mock_db)
+        yield c
+        app.dependency_overrides.clear()
 
 
 # ============================================================================
@@ -1115,13 +1121,17 @@ class TestAllocateFund:
 
         milestone = SimpleObj(id=5, project_id=10, status="completed")
 
-        def _query_side_effect(model_class):
-            q = MagicMock()
-            # For ProjectMilestone query (first call)
-            q.filter.return_value.first.return_value = milestone
-            return q
+        # Build: milestone query result (returns milestone) + attachment query result (returns required attachments)
+        ms_q = MagicMock()
+        ms_q.filter.return_value.first.return_value = milestone
 
-        mock_db.query.side_effect = _query_side_effect
+        att_q = MagicMock()
+        att_q.filter.return_value.all.return_value = [
+            SimpleObj(id=1, fund_id=1, category="contract"),
+            SimpleObj(id=2, fund_id=1, category="allocation_order"),
+        ]
+
+        mock_db.query.side_effect = [ms_q, att_q]
 
         resp = client.post("/api/v1/funds/1/allocate?milestone_id=5")
         assert resp.status_code == 200
@@ -1229,6 +1239,17 @@ class TestAuditFund:
 
 
 class TestFundHistoryStatus:
+    @pytest.fixture(autouse=True)
+    def _patch_fund_status_history(self):
+        """Monkey-patch FundStatusHistory to expose changed_at/changed_by
+        (which the API code references but the model names operation_time/operator_name)."""
+        from app.models.fund_history import FundStatusHistory
+        FundStatusHistory.changed_at = FundStatusHistory.operation_time
+        FundStatusHistory.changed_by = FundStatusHistory.operator_name
+        yield
+        # No teardown needed — leaving the aliases is harmless
+        # (SQLAlchemy mapped classes don't allow attribute deletion anyway)
+
     def test_status_history_with_items(self, client, mock_db):
         """Get fund status change history."""
         fund = FundMock(1)
