@@ -26,6 +26,8 @@ from app.models.supported_village import (
     ConsumptionSupport,
     EmploymentSupport,
     EducationSupport,
+    VillageCommitteeInfo,
+    VillageCommitteeMember,
 )
 from app.core.data_permission import filter_by_data_scope
 from app.schemas.supported_village import SupportedVillageCreate, SupportedVillageUpdate
@@ -62,6 +64,7 @@ _SECTION_MODEL: Dict[str, Any] = {
     "consumption": ConsumptionSupport,
     "employment": EmploymentSupport,
     "education": EducationSupport,
+    "committee": VillageCommitteeInfo,
 }
 
 # ── 导入导出列定义 ──
@@ -109,6 +112,21 @@ def _get_section_data(db: Session, model: Any, village_id: int, year: int) -> Op
             continue
         val = getattr(row, col.name)
         result[col.name] = val
+    # 村委会板块：加载成员列表
+    if model is VillageCommitteeInfo:
+        members = db.query(VillageCommitteeMember).filter(
+            VillageCommitteeMember.committee_info_id == row.id
+        ).all()
+        result["members"] = [
+            dict_keys_to_camel({
+                "name": m.name,
+                "position": m.position,
+                "phone": m.phone,
+                "is_veteran": m.is_veteran,
+                "remark": m.remark,
+            })
+            for m in members
+        ]
     return dict_keys_to_camel(result)
 
 
@@ -143,11 +161,29 @@ def _save_section_data(db: Session, model: Any, village_id: int, year: int, data
         row.supported_village_id = village_id
         row.year = year
         db.add(row)
+    # 处理村委会成员子表
+    members_data = data.pop("members", None)
     for key, value in data.items():
         if key in _SKIP_COLUMNS:
             continue
         if hasattr(row, key):
             setattr(row, key, value)
+    if members_data is not None and model is VillageCommitteeInfo:
+        # 清除旧成员，写入新成员
+        db.query(VillageCommitteeMember).filter(
+            VillageCommitteeMember.committee_info_id == row.id
+        ).delete()
+        for m in members_data:
+            if isinstance(m, dict):
+                member = VillageCommitteeMember(
+                    committee_info_id=row.id,
+                    name=m.get("name", ""),
+                    position=m.get("position", ""),
+                    phone=m.get("phone", ""),
+                    is_veteran=m.get("isVeteran", False) if isinstance(m.get("isVeteran"), bool) else m.get("isVeteran", False),
+                    remark=m.get("remark", ""),
+                )
+                db.add(member)
     return row
 
 
