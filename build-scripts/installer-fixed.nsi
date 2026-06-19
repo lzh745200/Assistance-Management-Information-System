@@ -2,7 +2,7 @@
 ; 生成单文件 .exe 安装程序，集成所有运行时环境
 
 !define PRODUCT_NAME "帮扶管理信息系统"
-!define PRODUCT_VERSION "1.3.0"
+!define PRODUCT_VERSION "1.4.0"
 !define PRODUCT_PUBLISHER "帮扶管理信息系统"
 !define PRODUCT_WEB_SITE "http://127.0.0.1:8000"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\assistance-system.exe"

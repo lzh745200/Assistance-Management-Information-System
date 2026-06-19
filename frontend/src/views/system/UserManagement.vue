@@ -456,16 +456,9 @@ const formData = reactive({
   permissions: [] as string[],
 });
 
-const orgTreeOptions = ref<any[]>([]);
+import { normalizeTreeNodes } from "@/utils/treeNormalizer";
 
-/** 递归转换组织树数据，确保 id 为字符串（防止 el-tree-select setAttribute('0', …) DOM 异常） */
-function normalizeOrgTreeNodes(nodes: any[]): any[] {
-  return nodes.map((node: any) => ({
-    ...node,
-    id: String(node.id ?? node.key ?? ""),
-    children: node.children ? normalizeOrgTreeNodes(node.children) : undefined,
-  }));
-}
+const orgTreeOptions = ref<any[]>([]);
 
 async function loadOrgTree() {
   try {
@@ -473,7 +466,7 @@ async function loadOrgTree() {
       showError: false,
     } as any);
     const raw = res.data?.data || res.data || [];
-    orgTreeOptions.value = Array.isArray(raw) ? normalizeOrgTreeNodes(raw) : [];
+    orgTreeOptions.value = Array.isArray(raw) ? normalizeTreeNodes(raw) : [];
   } catch {
     orgTreeOptions.value = [];
   }

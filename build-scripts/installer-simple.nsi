@@ -3,7 +3,7 @@
 
 !define PRODUCT_NAME "Assistance System"
 !define PRODUCT_VERSION "1.4.0"
-!define PRODUCT_PUBLISHER "Military"
+!define PRODUCT_PUBLISHER "帮扶管理信息系统"
 
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64

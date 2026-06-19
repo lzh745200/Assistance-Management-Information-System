@@ -2,9 +2,9 @@
 !include "MUI2.nsh"
 !include "x64.nsh"
 
-!define PRODUCT_NAME "BumofuAssistance"
+!define PRODUCT_NAME "AssistanceSystem"
 !define PRODUCT_DISPLAY "帮扶管理信息系统"
-!define PRODUCT_VERSION "1.2.0"
+!define PRODUCT_VERSION "1.4.0"
 
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64

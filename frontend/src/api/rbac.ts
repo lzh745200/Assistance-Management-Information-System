@@ -10,11 +10,11 @@ export const rbacApi = {
 
   // ========== 角色管理 ==========
   getRoles: () => api.get("/rbac/roles"),
-  getRole: (id: number) => api.get(`/rbac/roles/${id}`),
+  getRole: (id: string) => api.get(`/rbac/roles/${id}`),
   createRole: (data: any) => api.post("/rbac/roles", data),
-  updateRole: (id: number, data: any) => api.put(`/rbac/roles/${id}`, data),
-  deleteRole: (id: number) => api.delete(`/rbac/roles/${id}`),
-  getRoleUsers: (roleId: number) => api.get(`/rbac/roles/${roleId}/users`),
+  updateRole: (id: string, data: any) => api.put(`/rbac/roles/${id}`, data),
+  deleteRole: (id: string) => api.delete(`/rbac/roles/${id}`),
+  getRoleUsers: (roleId: string) => api.get(`/rbac/roles/${roleId}/users`),
 
   // ========== 权限管理 ==========
   getPermissions: () => api.get("/rbac/permissions"),
@@ -25,11 +25,13 @@ export const rbacApi = {
   getUserRoles: (userId: number) => api.get(`/rbac/user/${userId}/roles`),
 
   // ========== 分配/撤销 ==========
-  assignRole: (userId: number, roleId: number) =>
+  assignRole: (userId: number, roleId: string) =>
     api.post("/rbac/assign/role", { user_id: userId, role_id: roleId }),
   grantPermission: (data: { user_id: number; permissions: string[] }) =>
     api.post("/rbac/grant/permission", data),
-  revokeRole: (data: { user_id: number; role_id: number }) =>
+  revokePermission: (data: { user_id: number; permissions: string[] }) =>
+    api.post("/rbac/revoke/permission", data),
+  revokeRole: (data: { user_id: number; role_id: string }) =>
     api.delete("/rbac/revoke/role", { data }),
 
   // ========== 当前用户权限（前端路由用）==========

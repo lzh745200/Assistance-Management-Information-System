@@ -215,11 +215,32 @@ async function savePermissions() {
   if (!props.user?.id) return;
   savingPermissions.value = true;
   try {
-    await request.post("/rbac/grant/permission", {
+    // 1. 先撤销已有权限（确保取消勾选的被移除）
+    const existingRes = await request.get(
+      `/rbac/user/${props.user.id}/permissions`,
+    );
+    const existingPayload = existingRes.data?.data || existingRes.data;
+    const existingPerms: string[] = existingPayload?.permissions || [];
+    const toRevoke = existingPerms.filter(
+      (p: string) => !currentPermissions.value.includes(p),
+    );
+    if (toRevoke.length > 0) {
+      await request.post("/rbac/revoke/permission", {
+        user_id: props.user.id,
+        permissions: toRevoke,
+      });
+    }
+    // 2. 授予新权限
+    const res = await request.post("/rbac/grant/permission", {
       user_id: props.user.id,
       permissions: currentPermissions.value,
     });
-    ElMessage.success("权限保存成功");
+    const failed = res.data?.failed || [];
+    if (failed.length > 0) {
+      ElMessage.warning(`部分权限保存失败: ${failed.join(", ")}`);
+    } else {
+      ElMessage.success("权限保存成功");
+    }
     emit("saved");
   } catch (err: any) {
     ElMessage.error(err?.response?.data?.detail || "权限保存失败");
