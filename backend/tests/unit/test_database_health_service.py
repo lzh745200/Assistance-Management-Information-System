@@ -278,62 +278,67 @@ class TestDatabaseHealthService:
         with patch.object(service, 'check_integrity') as mock_ci:
             with patch.object(service, 'quick_check') as mock_qc:
                 with patch.object(service, 'vacuum_database') as mock_vd:
-                    with patch('time.sleep', return_value=None):
-                        service.integrity_check_interval = 0
-                        service.quick_check_interval = 0
-                        service.vacuum_interval = 0
+                    service.integrity_check_interval = 0
+                    service.quick_check_interval = 0
+                    service.vacuum_interval = 0
 
-                        def stop_after_one():
-                            service.monitoring = False
+                    # 使用 Event.set() 终止循环（而非 monitoring=False）
+                    service._stop_event.clear()
 
-                        mock_ci.side_effect = stop_after_one
+                    def stop_after_one(*args):
+                        service._stop_event.set()
 
-                        service.monitoring = True
+                    with patch.object(service._stop_event, 'wait',
+                                      side_effect=stop_after_one) as mock_wait:
                         service._monitor_loop()
 
-                        mock_ci.assert_called_once()
-                        mock_qc.assert_called_once()
-                        mock_vd.assert_called_once()
+                    mock_ci.assert_called_once()
+                    mock_qc.assert_called_once()
+                    mock_vd.assert_called_once()
+                    mock_wait.assert_called()
 
     def test_monitor_loop_exception_handling(self, service):
         """测试监控循环异常处理"""
-        with patch('time.sleep') as mock_sleep:
-            service.check_integrity = MagicMock(side_effect=Exception("DB Crash"))
-            service.quick_check = MagicMock()
-            service.vacuum_database = MagicMock()
-            service.integrity_check_interval = 0
+        service.check_integrity = MagicMock(side_effect=Exception("DB Crash"))
+        service.quick_check = MagicMock()
+        service.vacuum_database = MagicMock()
+        service.integrity_check_interval = 0
 
-            def stop_loop(*args):
-                service.monitoring = False
+        service._stop_event.clear()
 
-            mock_sleep.side_effect = stop_loop
+        def stop_after_one(*args):
+            service._stop_event.set()
 
-            service.monitoring = True
+        with patch.object(service._stop_event, 'wait',
+                          side_effect=stop_after_one) as mock_wait:
             service._monitor_loop()
 
-            service.check_integrity.assert_called()
+        service.check_integrity.assert_called()
+        mock_wait.assert_called()
 
     def test_monitor_loop_datetime_min_initial(self, service):
         """测试监控循环 - datetime.min初始值导致首次全触发"""
         with patch.object(service, 'check_integrity') as mock_ci:
             with patch.object(service, 'quick_check') as mock_qc:
                 with patch.object(service, 'vacuum_database') as mock_vd:
-                    with patch('time.sleep', return_value=None):
-                        service.integrity_check_interval = 86400
-                        service.quick_check_interval = 3600
-                        service.vacuum_interval = 604800
+                    service.integrity_check_interval = 86400
+                    service.quick_check_interval = 3600
+                    service.vacuum_interval = 604800
 
-                        def stop_after_one():
-                            service.monitoring = False
+                    service._stop_event.clear()
 
-                        mock_ci.side_effect = stop_after_one
+                    def stop_after_one(*args):
+                        service._stop_event.set()
 
-                        service.monitoring = True
+                    mock_ci.side_effect = stop_after_one
+
+                    with patch.object(service._stop_event, 'wait',
+                                      return_value=None):
                         service._monitor_loop()
 
-                        mock_ci.assert_called_once()
-                        mock_qc.assert_called_once()
-                        mock_vd.assert_called_once()
+                    mock_ci.assert_called_once()
+                    mock_qc.assert_called_once()
+                    mock_vd.assert_called_once()
 
 class TestGlobalInstance:
     """测试全局实例"""
