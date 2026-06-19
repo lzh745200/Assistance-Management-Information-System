@@ -408,7 +408,7 @@ class RBACService:
             expires_at=datetime.fromisoformat(expires_at) if expires_at else None,
         )
         db.add(up)
-        db.commit()
+        db.flush()
         return True
 
     async def revoke_permission(
