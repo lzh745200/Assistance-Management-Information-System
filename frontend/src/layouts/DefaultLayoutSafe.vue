@@ -51,7 +51,11 @@
             <span>核心业务</span>
           </div>
 
-          <el-sub-menu index="village-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="menuStore.canAccessMenu('villages')"
+            index="village-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><Location /></el-icon>
               <span class="menu-title-text">帮扶村管理</span>
@@ -67,7 +71,11 @@
             </el-menu-item>
           </el-sub-menu>
 
-          <el-sub-menu index="project-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="menuStore.canAccessMenu('projects')"
+            index="project-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><Folder /></el-icon>
               <span class="menu-title-text">帮扶项目</span>
@@ -81,7 +89,14 @@
             >
           </el-sub-menu>
 
-          <el-sub-menu index="fund-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="
+              menuStore.canAccessMenu('funds-admin') ||
+              menuStore.canAccessMenu('funds-user')
+            "
+            index="fund-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><Money /></el-icon>
               <span class="menu-title-text">经费管理</span>
@@ -107,7 +122,11 @@
             >
           </el-sub-menu>
 
-          <el-sub-menu index="school-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="menuStore.canAccessMenu('schools')"
+            index="school-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><School /></el-icon>
               <span class="menu-title-text">帮扶学校</span>
@@ -118,7 +137,10 @@
             >
           </el-sub-menu>
 
-          <el-menu-item index="/policies">
+          <el-menu-item
+            v-if="menuStore.canAccessMenu('policies')"
+            index="/policies"
+          >
             <el-icon><Document /></el-icon>
             <template #title>
               <span class="menu-title-text">帮扶政策</span>
@@ -130,7 +152,11 @@
             <span>乡村振兴</span>
           </div>
 
-          <el-sub-menu index="rural-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="menuStore.canAccessMenu('rural-works')"
+            index="rural-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><Stamp /></el-icon>
               <span class="menu-title-text">乡村振兴</span>
@@ -148,7 +174,11 @@
             <span>工作流</span>
           </div>
 
-          <el-sub-menu index="approval-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="menuStore.canAccessMenu('approval')"
+            index="approval-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><Checked /></el-icon>
               <span class="menu-title-text">审批管理</span>
@@ -165,7 +195,10 @@
             >
           </el-sub-menu>
 
-          <el-menu-item index="/work-calendar">
+          <el-menu-item
+            v-if="menuStore.canAccessMenu('work-analysis')"
+            index="/work-calendar"
+          >
             <el-icon><Calendar /></el-icon>
             <template #title>
               <span class="menu-title-text">工作日历</span>
@@ -177,7 +210,14 @@
             <span>数据分析</span>
           </div>
 
-          <el-sub-menu index="data-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="
+              menuStore.canAccessMenu('data') ||
+              menuStore.canAccessMenu('data-overview')
+            "
+            index="data-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><DataAnalysis /></el-icon>
               <span class="menu-title-text">数据分析</span>
@@ -238,7 +278,11 @@
             </template>
           </el-menu-item>
 
-          <el-sub-menu index="system-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="menuStore.canAccessMenu('system')"
+            index="system-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><Setting /></el-icon>
               <span class="menu-title-text">系统管理</span>
@@ -340,9 +384,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useMenuStore } from "@/stores/menu";
 import MobileBottomNav from "@/components/layout/MobileBottomNav.vue";
 import {
   HomeFilled,
@@ -370,6 +415,14 @@ import {
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const menuStore = useMenuStore();
+
+// 挂载时加载用户可见菜单（若未加载）
+onMounted(() => {
+  if (!menuStore.loaded) {
+    menuStore.fetchMenus();
+  }
+});
 
 const isCollapsed = ref(false);
 const username = computed(
