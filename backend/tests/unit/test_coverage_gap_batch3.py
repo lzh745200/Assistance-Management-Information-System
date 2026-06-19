@@ -333,7 +333,6 @@ class TestMachineCodeServiceOrgPassCode:
         assert total == 0
 
 
-@pytest.mark.skip(reason="RBAC asyncio mock conflicts in test environment")
 class TestRBACService:
     @pytest.fixture
     def svc(self):
@@ -354,7 +353,6 @@ class TestRBACService:
         assert "admin" in svc.role_permissions_map
         assert "user" in svc.role_permissions_map
 
-    @pytest.mark.skip(reason="asyncio loop conflict with mock")
     def test_check_permission_no_db(self, svc):
         pass
 
@@ -375,7 +373,6 @@ class TestRBACService:
             )
             assert result is True
 
-    @pytest.mark.skip(reason="RBAC mock asyncio conflict")
     def test_check_permission_denied(self, svc, mock_db):
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()), \
              patch.object(svc, "_has_admin_role", return_value=False), \
@@ -387,7 +384,6 @@ class TestRBACService:
             )
             assert result is False
 
-    @pytest.mark.skip(reason="RBAC mock asyncio conflict")
     def test_check_permission_resource_access(self, svc, mock_db):
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()), \
              patch.object(svc, "_has_admin_role", return_value=False), \
@@ -399,7 +395,6 @@ class TestRBACService:
             )
             assert result is True
 
-    @pytest.mark.skip(reason="RBAC mock asyncio conflict")
     def test_get_user_permissions(self, svc, mock_db):
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()):
             mock_db.query.return_value.filter.return_value.all.return_value = [("user:read",)]
@@ -410,7 +405,6 @@ class TestRBACService:
             )
             assert "user:read" in result
 
-    @pytest.mark.skip(reason="RBAC mock asyncio conflict")
     def test_get_user_permissions_admin_all(self, svc, mock_db):
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()):
             mock_db.query.return_value.filter.return_value.all.return_value = [("admin:all",)]
@@ -421,7 +415,6 @@ class TestRBACService:
             assert "user:read" in result
             assert "admin:all" in result
 
-    @pytest.mark.skip(reason="RBAC mock asyncio conflict")
     def test_get_user_permissions_with_whitelist(self, svc, mock_db):
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()):
             mock_db.query.return_value.filter.return_value.all.return_value = [("user:read",), ("admin:all",)]
@@ -548,7 +541,6 @@ class TestRBACService:
         svc._log_access(mock_db, "1", "action", None, None, True, "reason")
 
 
-@pytest.mark.skip(reason="OrganizationService asyncio mock conflicts")
 class TestOrganizationService:
     def _make_service(self, db=None):
         from app.services.organization_service import OrganizationService
@@ -907,7 +899,6 @@ class TestOrganizationService:
         assert success is False
 
 
-@pytest.mark.skip(reason="TrendPrediction asyncio mock conflicts")
 class TestTrendPredictionService:
     def test_predict_empty_data(self):
         from app.services.ai.trend_prediction_service import TrendPredictionService

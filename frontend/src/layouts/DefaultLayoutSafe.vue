@@ -233,10 +233,7 @@
             </template>
           </el-menu-item>
 
-          <el-menu-item
-            v-if="menuStore.canAccessMenu('todos')"
-            index="/todos"
-          >
+          <el-menu-item v-if="menuStore.canAccessMenu('todos')" index="/todos">
             <el-icon><Select /></el-icon>
             <template #title>
               <span class="menu-title-text">待办事项</span>

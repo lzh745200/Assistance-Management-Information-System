@@ -250,7 +250,8 @@ async function savePermissions() {
       const parts: string[] = ["权限保存成功"];
       if (granted.length > 0) parts.push(`(授予 ${granted.length} 项)`);
       if (revoked.length > 0) parts.push(`(撤销 ${revoked.length} 项)`);
-      if (skipped.length > 0) parts.push(`(${skipped.length} 项已存在，已跳过)`);
+      if (skipped.length > 0)
+        parts.push(`(${skipped.length} 项已存在，已跳过)`);
       ElMessage.success(parts.join(" "));
     } else {
       ElMessage.warning(`权限保存部分失败: ${failed.join(", ")}`);
