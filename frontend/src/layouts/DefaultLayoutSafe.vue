@@ -20,6 +20,11 @@
         </transition>
       </div>
 
+      <!-- DEBUG: 菜单权限状态 -->
+      <div style="color:#ff0;font-size:11px;padding:2px 8px;background:#333;text-align:center">
+        menu:{{ menuStore.loaded ? 'LOADED('+menuStore.accessibleKeys.size+')' : 'WAIT' }}
+        {{ menuStore.loadFailed ? ' FAIL' : '' }}
+      </div>
       <!-- 导航菜单 — 每项带独立 v-if 权限守卫 -->
       <el-scrollbar class="aside-scrollbar">
         <el-menu
