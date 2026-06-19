@@ -411,6 +411,55 @@ class RBACService:
         db.flush()
         return True
 
+    async def grant_permissions_batch(
+        self,
+        user_id: str,
+        permissions: List[str],
+        granted_by: str,
+        expires_at: str = None,
+        db: Session = None,
+    ) -> Dict[str, Any]:
+        """批量授予权限。单次预查询 + 批量 INSERT。
+
+        调用方拥有事务边界（通过 TransactionManager.transaction）。
+        返回 {"granted": [...], "skipped": [...], "failed": []}——
+        skipped 为已存在的权限，failed 当前始终为空（为未来校验预留）。
+        """
+        uid = int(user_id)
+        now = _utcnow()
+        granted_by_int = int(granted_by) if granted_by else None
+        expires = datetime.fromisoformat(expires_at) if expires_at else None
+
+        # 第 1 步：预查询哪些权限已存在且未过期
+        existing_rows = (
+            db.query(UserPermission.permission)
+            .filter(
+                UserPermission.user_id == uid,
+                UserPermission.permission.in_(permissions),
+                (UserPermission.expires_at.is_(None) | (UserPermission.expires_at > now)),
+            )
+            .all()
+        )
+        existing = {row[0] for row in existing_rows}
+        skipped = [p for p in permissions if p in existing]
+        to_grant = [p for p in permissions if p not in existing]
+
+        # 第 2 步：批量 INSERT 新增权限
+        if to_grant:
+            instances = [
+                UserPermission(
+                    user_id=uid,
+                    permission=p,
+                    granted_by=granted_by_int,
+                    expires_at=expires,
+                )
+                for p in to_grant
+            ]
+            db.add_all(instances)
+            db.flush()
+
+        return {"granted": to_grant, "skipped": skipped, "failed": []}
+
     async def revoke_permission(
         self,
         user_id: str,
@@ -424,6 +473,12 @@ class RBACService:
             调用方负责通过 TransactionManager.transaction(db) 包裹事务边界——
             此方法仅调用 db.flush()，不提交。
         """
+        import warnings
+        warnings.warn(
+            "RBACService.revoke_permission 已弃用，请使用 revoke_permissions_batch",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         rows = (
             db.query(UserPermission)
             .filter(

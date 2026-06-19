@@ -207,27 +207,31 @@ async def update_role(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
-    """更新角色"""
-    role = db.query(RbacRole).filter(RbacRole.id == role_id).first()
-    if not role:
-        raise HTTPException(status_code=404, detail="角色不存在")
+    """更新角色（具有事务原子性）"""
+    with TransactionManager.transaction(db) as sess:
+        role = sess.query(RbacRole).filter(RbacRole.id == role_id).first()
+        if not role:
+            raise HTTPException(status_code=404, detail="角色不存在")
 
-    # 更新基本字段
-    if role_data.name is not None:
-        role.name = role_data.name
-    if role_data.description is not None:
-        role.description = role_data.description
-    if role_data.is_active is not None:
-        role.is_active = role_data.is_active
+        # 更新基本字段
+        if role_data.name is not None:
+            role.name = role_data.name
+        if role_data.description is not None:
+            role.description = role_data.description
+        if role_data.is_active is not None:
+            role.is_active = role_data.is_active
 
-    # 更新权限列表（先删后增）
-    if role_data.permissions is not None:
-        db.query(RolePermission).filter(RolePermission.role_id == role_id).delete(synchronize_session=False)
-        for perm in role_data.permissions:
-            db.add(RolePermission(role_id=role_id, permission=perm))
+        # 更新权限列表（先删后增）
+        if role_data.permissions is not None:
+            sess.query(RolePermission).filter(RolePermission.role_id == role_id).delete(
+                synchronize_session=False,
+            )
+            for perm in role_data.permissions:
+                sess.add(RolePermission(role_id=role_id, permission=perm))
 
-    db.commit()
-    db.refresh(role)
+        sess.flush()
+        sess.refresh(role)
+
     return {"success": True, "message": f"角色 '{role.name}' 更新成功"}
 
 
@@ -237,15 +241,16 @@ async def delete_role(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
-    """删除角色（系统角色不可删除）"""
-    role = db.query(RbacRole).filter(RbacRole.id == role_id).first()
-    if not role:
-        raise HTTPException(status_code=404, detail="角色不存在")
-    if role.is_system:
-        raise HTTPException(status_code=400, detail="系统内置角色不可删除")
+    """删除角色（具有事务原子性，系统角色不可删除）"""
+    with TransactionManager.transaction(db) as sess:
+        role = sess.query(RbacRole).filter(RbacRole.id == role_id).first()
+        if not role:
+            raise HTTPException(status_code=404, detail="角色不存在")
+        if role.is_system:
+            raise HTTPException(status_code=400, detail="系统内置角色不可删除")
 
-    db.delete(role)  # cascade 会自动删除关联的 UserRole 和 RolePermission
-    db.commit()
+        sess.delete(role)  # cascade 会自动删除关联的 UserRole 和 RolePermission
+
     return {"success": True, "message": f"角色 '{role.name}' 已删除"}
 
 
@@ -330,32 +335,24 @@ async def grant_permission(
     current_user=Depends(require_admin()),
 ):
     """直接授予用户权限（支持批量，具有事务原子性）"""
-    granted: List[str] = []
-    failed: List[str] = []
-
-    user_id_str = str(grant.user_id)
-    granted_by_str = str(current_user.id)
-    expires_iso = grant.expires_at.isoformat() if grant.expires_at else None
-
     with TransactionManager.transaction(db) as sess:
-        for perm in grant.permissions:
-            success = await rbac_service.grant_permission(
-                user_id=user_id_str,
-                permission=perm,
-                granted_by=granted_by_str,
-                expires_at=expires_iso,
-                db=sess,
-            )
-            if success:
-                granted.append(perm)
-            else:
-                failed.append(perm)
+        result = await rbac_service.grant_permissions_batch(
+            user_id=str(grant.user_id),
+            permissions=grant.permissions,
+            granted_by=str(current_user.id),
+            expires_at=grant.expires_at.isoformat() if grant.expires_at else None,
+            db=sess,
+        )
 
     return {
-        "success": len(failed) == 0,
-        "granted": granted,
-        "failed": failed,
-        "message": f"权限授予完成: 成功 {len(granted)}, 失败 {len(failed)}",
+        "success": True,
+        "granted": result["granted"],
+        "skipped": result["skipped"],
+        "failed": result["failed"],
+        "message": (
+            f"权限授予完成: 新增 {len(result['granted'])}"
+            + (f", 跳过(已存在) {len(result['skipped'])}" if result["skipped"] else "")
+        ),
     }
 
 
