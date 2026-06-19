@@ -5,7 +5,6 @@
 
 import logging
 import threading
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,8 @@ _INTERVAL = 21600
 
 def _run_maintenance():
     """后台线程：定期执行 SQLite 维护操作。"""
-    time.sleep(_INITIAL_DELAY)
+    if _stop_event.wait(_INITIAL_DELAY):  # 用 Event.wait 替代 time.sleep — stop 时立即唤醒
+        return
     while not _stop_event.is_set():
         try:
             _do_maintenance()
@@ -65,5 +65,5 @@ def stop_db_maintenance():
     """停止后台数据库维护线程。"""
     _stop_event.set()
     if _maintenance_thread:
-        _maintenance_thread.join(timeout=5)
+        _maintenance_thread.join(timeout=1)
     logger.info("数据库定期维护已停止")

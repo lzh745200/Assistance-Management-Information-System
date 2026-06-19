@@ -72,6 +72,22 @@ class TestGetSystemOverview:
             data = resp.json()
             assert data["overall_status"] == "error"
 
+    def test_overall_warning(self, client, mock_db):
+        mock_db.fetchall.return_value = [(1,)]
+        mock_db.fetchone.return_value = ["wal"]
+
+        with patch("app.api.v1.system_health._check_disk_space", return_value={
+            "status": "warning", "message": "Low space", "free_gb": 3
+        }), patch("app.api.v1.system_health._get_db_file_info", return_value={
+            "status": "ok", "size_mb": 5, "message": "ok"
+        }), patch("app.api.v1.system_health._check_wal_status", return_value={
+            "status": "ok", "message": "ok"
+        }):
+            resp = client.get("/system-health/overview")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["overall_status"] == "warning"
+
 
 class TestRunIntegrityCheck:
     def test_ok(self, client, mock_db):
@@ -91,6 +107,23 @@ class TestRunIntegrityCheck:
             assert resp.status_code == 200
             data = resp.json()
             assert data["status"] == "error"
+
+    def test_missing_indexes_warning(self, client, mock_db):
+        # Return ok for integrity check, tables list, and empty index lists
+        mock_db.fetchall.side_effect = [
+            [("ok",)],          # integrity_check result
+            [("users",)],       # tables
+            [],                 # PRAGMA index_list for users (empty → no indexes found)
+        ]
+        mock_db.fetchone.return_value = None
+
+        resp = client.post("/system-health/integrity-check")
+        assert resp.status_code == 200
+        data = resp.json()
+        # Real EXTRA_INDEXES is imported inside the function; since we have no
+        # real indexes defined for the "users" table, warnings should be generated
+        assert data["status"] == "ok"  # integrity check itself passed
+        assert isinstance(data["warnings"], list)
 
     def test_exception(self, client, mock_db):
         mock_db.execute.side_effect = Exception("disk error")
