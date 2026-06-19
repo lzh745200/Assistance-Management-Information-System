@@ -427,10 +427,9 @@ async def get_accessible_menus(
     allowed_keys = _get_user_accessible_menu_keys(current_user)
     accessible_menus = _filter_menu_tree(MENU_DEFINITIONS, allowed_keys)
     source = "user" if current_user.allowed_menus_list is not None else "role"
-    logger.info(
-        "菜单查询: user=%s role=%s source=%s allowed_menus_raw=%s keys=%s",
-        current_user.username, current_user.role, source,
-        repr(current_user.allowed_menus)[:100], sorted(allowed_keys),
+    logger.debug(
+        "菜单查询: user=%s role=%s source=%s keys=%s",
+        current_user.username, current_user.role, source, sorted(allowed_keys),
     )
     return {
         "success": True,

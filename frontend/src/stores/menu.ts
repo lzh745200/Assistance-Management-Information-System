@@ -63,17 +63,8 @@ export const useMenuStore = defineStore("menu", () => {
     try {
       const res = await request.get("/menus/accessible");
       const data = res.data?.data || res.data || [];
-      const items = Array.isArray(data) ? data : [];
-      // 诊断：打印加载到的菜单 key 列表
-      const keys = items.map((m: any) => m.key);
-      console.log("[menuStore] 菜单加载完成", {
-        count: items.length,
-        keys,
-        source: res.data?.source,
-        rawData: res.data,
-      });
-      setMenus(items);
-    } catch (e) {
+      setMenus(Array.isArray(data) ? data : []);
+    } catch {
       // 加载失败：保持 loaded=false 允许下次重试，标记失败状态
       loading.value = false;
       loadFailed.value = true;
