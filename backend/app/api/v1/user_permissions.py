@@ -1,24 +1,29 @@
-from app.core.permission_utils import is_superuser
-
 # -*- coding: utf-8 -*-
 """
-用户权限管理 API
-提供用户-组织关联、角色分配、权限管理等接口
+用户权限管理 API（旧版 — 计划废弃）
+
+⚠️ 本模块的端点计划在 v1.6.0 合并到 /api/v1/permissions/*
+   新功能请使用 /rbac/* 端点。
+   旧端点兼容保留至 2027-01-01，届时删除。
 """
 
+import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
+from app.core.permission_utils import is_superuser
 from app.services.user_permission_service import UserPermissionService
 from app.core.error_handler import BusinessLogicError
 from app.core.cache import cache_result
 
-router = APIRouter(prefix="/user-permissions", tags=["用户权限管理"])
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/user-permissions", tags=["用户权限管理（旧版，v1.6.0后合并至/rbac）"])
 
 
 # ==================== Pydantic 模型 ====================

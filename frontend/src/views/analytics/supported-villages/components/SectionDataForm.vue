@@ -57,24 +57,40 @@
         <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="劳动力(人)">
-              <el-input-number v-model="formData.laborForce" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.laborForce"
+                :min="0"
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="外出务工(人)">
-              <el-input-number v-model="formData.migrantWorkers" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.migrantWorkers"
+                :min="0"
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="脱贫人口(人)">
-              <el-input-number v-model="formData.povertyPopulation" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.povertyPopulation"
+                :min="0"
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="脱贫户数(户)">
-              <el-input-number v-model="formData.povertyHouseholds" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.povertyHouseholds"
+                :min="0"
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -955,10 +971,6 @@ function getDefaultFormData(key: string): Record<string, any> {
       suddenDifficultyPopulation: 0,
       veteranVillageSecretary: 0,
       veteranVillageCommittee: 0,
-      laborForce: 0,
-      migrantWorkers: 0,
-      povertyPopulation: 0,
-      povertyHouseholds: 0,
     },
     income: {
       perCapitaIncome: 0,
