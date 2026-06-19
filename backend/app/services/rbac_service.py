@@ -411,6 +411,41 @@ class RBACService:
         db.commit()
         return True
 
+    async def revoke_permission(
+        self,
+        user_id: str,
+        permission: str,
+        db: Session = None,
+    ) -> bool:
+        """撤销用户的单个权限"""
+        rows = (
+            db.query(UserPermission)
+            .filter(
+                UserPermission.user_id == int(user_id),
+                UserPermission.permission == permission,
+            )
+            .delete(synchronize_session=False)
+        )
+        db.commit()
+        return rows > 0
+
+    async def revoke_permissions_batch(
+        self,
+        user_id: str,
+        permissions: List[str],
+        db: Session = None,
+    ) -> tuple:
+        """批量撤销用户权限，返回 (revoked: List[str], failed: List[str])"""
+        revoked: List[str] = []
+        failed: List[str] = []
+        for perm in permissions:
+            success = await self.revoke_permission(user_id=user_id, permission=perm, db=db)
+            if success:
+                revoked.append(perm)
+            else:
+                failed.append(perm)
+        return revoked, failed
+
     async def create_role(
         self,
         name: str,

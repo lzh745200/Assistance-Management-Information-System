@@ -327,12 +327,17 @@ async def grant_permission(
     granted: List[str] = []
     failed: List[str] = []
 
+    # 循环前置不变值 — 避免每次迭代重复计算
+    user_id_str = str(grant.user_id)
+    granted_by_str = str(current_user.id)
+    expires_iso = grant.expires_at.isoformat() if grant.expires_at else None
+
     for perm in grant.permissions:
         success = await rbac_service.grant_permission(
-            user_id=str(grant.user_id),
+            user_id=user_id_str,
             permission=perm,
-            granted_by=str(current_user.id),
-            expires_at=grant.expires_at.isoformat() if grant.expires_at else None,
+            granted_by=granted_by_str,
+            expires_at=expires_iso,
             db=db,
         )
         if success:
@@ -345,6 +350,26 @@ async def grant_permission(
         "granted": granted,
         "failed": failed,
         "message": f"权限授予完成: 成功 {len(granted)}, 失败 {len(failed)}",
+    }
+
+
+@router.post("/revoke/permission")
+async def revoke_permission(
+    revoke: PermissionGrant,  # 复用 PermissionGrant 模型（user_id + permissions: List[str]）
+    db: Session = Depends(get_db),
+    current_user=Depends(require_admin()),
+):
+    """批量撤销用户权限"""
+    revoked, failed = await rbac_service.revoke_permissions_batch(
+        user_id=str(revoke.user_id),
+        permissions=revoke.permissions,
+        db=db,
+    )
+    return {
+        "success": len(failed) == 0,
+        "revoked": revoked,
+        "failed": failed,
+        "message": f"权限撤销完成: 成功 {len(revoked)}, 失败 {len(failed)}",
     }
 
 
