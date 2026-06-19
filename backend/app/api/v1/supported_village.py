@@ -513,7 +513,8 @@ async def get_yearly_data(
 ):
     """获取帮扶村某年度全部数据（所有section）"""
     _get_village_or_404(db, village_id)
-    result = {"village_id": village_id, "year": year}
+    # 统一 camelCase 键名（内层已由 _get_section_data→dict_keys_to_camel 处理）
+    result = {"villageId": village_id, "year": year}
     for section, model in _SECTION_MODEL.items():
         data = _get_section_data(db, model, village_id, year)
         result[section] = data if data else None
