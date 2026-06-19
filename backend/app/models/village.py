@@ -8,6 +8,7 @@ from sqlalchemy import Boolean, Column, Float, ForeignKey, Index, Integer, Strin
 from sqlalchemy.orm import relationship
 
 from .base import Base, TimestampMixin
+from .industry import TeaPlantation, CactusFruitPlot  # noqa: F401 用于 back_populates 解析
 
 
 class Village(Base, TimestampMixin):
@@ -121,7 +122,3 @@ class Industry(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<Industry(id={self.id}, name={self.name})>"
-
-
-# Late imports — 确保 relationship 字符串引用能在 mapper 配置时解析
-from app.models.industry import TeaPlantation, CactusFruitPlot  # noqa: E402, F401

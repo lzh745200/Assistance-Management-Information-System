@@ -380,6 +380,32 @@ async def revoke_permission(
     }
 
 
+@router.post("/save-permissions")
+async def save_permissions(
+    grant: PermissionGrant,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_admin()),
+):
+    """原子性保存用户权限——在单个事务内完成撤销 + 授予（具有事务原子性）"""
+    with TransactionManager.transaction(db) as sess:
+        result = await rbac_service.save_permissions(
+            user_id=str(grant.user_id),
+            permissions=grant.permissions,
+            granted_by=str(current_user.id),
+            db=sess,
+        )
+
+    return {
+        "success": True,
+        **result,
+        "message": (
+            f"权限保存完成: 授予 {len(result['granted'])}"
+            + (f", 撤销 {len(result['revoked'])}" if result["revoked"] else "")
+            + (f", 跳过(已存在) {len(result['skipped'])}" if result["skipped"] else "")
+        ),
+    }
+
+
 # ==================== 权限列表 API ====================
 
 

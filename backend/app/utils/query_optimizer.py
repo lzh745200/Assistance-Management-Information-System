@@ -81,7 +81,7 @@ class QueryOptimizer:
         # ==================== 村庄表索引 ====================
         {
             "table": "villages",
-            "columns": ["province", "city", "district"],
+            "columns": ["province", "city", "county"],
             "name": "idx_village_location",
         },
         {"table": "villages", "columns": ["status"], "name": "idx_village_status"},

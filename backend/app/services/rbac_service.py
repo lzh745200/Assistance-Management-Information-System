@@ -526,6 +526,73 @@ class RBACService:
 
         return list(existing), missing
 
+    async def save_permissions(
+        self,
+        user_id: str,
+        permissions: List[str],
+        granted_by: str,
+        db: Session = None,
+    ) -> dict:
+        """原子性保存用户权限：在单个事务内完成删除旧权限 + 授予新权限。
+
+        接受目标权限集合，与现有权限比对后：
+        - 撤销不再需要的权限
+        - 授予新增权限
+        - 跳过已存在的权限
+
+        调用方拥有事务边界（通过 TransactionManager.transaction）。
+
+        返回 {"revoked": [...], "granted": [...], "skipped": [...], "failed": []}。
+        """
+        uid = int(user_id)
+        granted_by_int = int(granted_by) if granted_by else None
+        now = _utcnow()
+
+        # 第 1 步：获取当前有效权限
+        existing_rows = (
+            db.query(UserPermission.permission)
+            .filter(
+                UserPermission.user_id == uid,
+                (UserPermission.expires_at.is_(None) | (UserPermission.expires_at > now)),
+            )
+            .all()
+        )
+        existing = {row[0] for row in existing_rows}
+        target = set(permissions)
+
+        to_revoke = existing - target
+        to_grant = target - existing
+        skipped = existing & target
+
+        # 第 2 步：批量撤销
+        if to_revoke:
+            db.query(UserPermission).filter(
+                UserPermission.user_id == uid,
+                UserPermission.permission.in_(list(to_revoke)),
+            ).delete(synchronize_session=False)
+
+        # 第 3 步：批量授予
+        if to_grant:
+            instances = [
+                UserPermission(
+                    user_id=uid,
+                    permission=p,
+                    granted_by=granted_by_int,
+                )
+                for p in to_grant
+            ]
+            db.add_all(instances)
+
+        if to_revoke or to_grant:
+            db.flush()
+
+        return {
+            "revoked": sorted(to_revoke),
+            "granted": sorted(to_grant),
+            "skipped": sorted(skipped),
+            "failed": [],
+        }
+
     async def create_role(
         self,
         name: str,

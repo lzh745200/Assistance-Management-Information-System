@@ -281,8 +281,8 @@ async def get_villages_distribution(current_user=Depends(get_current_user), db: 
         by_status = db.query(Village.status, func.count(Village.id)).group_by(Village.status).all()
         status_data = [{"name": status, "value": count} for status, count in by_status]
 
-        top_villages = db.query(Village).order_by(Village.population.desc()).limit(10).all()
-        top_data = [{"name": v.name, "value": v.population or 0} for v in top_villages]
+        top_villages = db.query(Village).order_by(Village.total_population.desc()).limit(10).all()
+        top_data = [{"name": v.name, "value": v.total_population or 0} for v in top_villages]
 
         by_province = db.query(Village.province, func.count(Village.id)).group_by(Village.province).all()
         province_data = [{"name": province or "未知", "value": count} for province, count in by_province if province]

@@ -227,46 +227,33 @@ async function savePermissions() {
   if (!props.user?.id || permissionsLoadFailed.value) return;
   savingPermissions.value = true;
   try {
-    // 1. Revoke removed permissions
-    const existingRes = await request.get(
-      `/rbac/user/${props.user.id}/permissions`,
-    );
-    if (!visible.value) return; // 抽屉已关闭，中止后续操作
-    const existingPayload = existingRes.data?.data || existingRes.data;
-    const existingPerms: string[] = existingPayload?.permissions || [];
-    const toRevoke = existingPerms.filter(
-      (p: string) => !currentPermissions.value.includes(p),
-    );
-    const revokeFailed: string[] = [];
-    if (toRevoke.length > 0) {
-      const revokeRes = await request.post("/rbac/revoke/permission", {
-        user_id: props.user.id,
-        permissions: toRevoke,
-      });
-      const revokeData = revokeRes.data || {};
-      if (revokeData.failed?.length > 0) {
-        revokeFailed.push(...(revokeData.failed as string[]));
-      }
-    }
-    if (!visible.value) return; // 抽屉已关闭，中止后续操作
-    // 2. Grant current permissions
-    const res = await request.post("/rbac/grant/permission", {
+    // 原子性保存：后端在单个事务内完成撤销+授予
+    const res = await request.post("/rbac/save-permissions", {
       user_id: props.user.id,
       permissions: currentPermissions.value,
     });
-    const data = res.data || {};
-    const grantFailed = (data.failed as string[]) || [];
-    const grantSkipped = (data.skipped as string[]) || [];
-    const allFailed = [...revokeFailed, ...grantFailed];
+    if (!visible.value) return; // 抽屉已关闭，中止后续操作
 
-    if (allFailed.length === 0) {
+    const data = res.data || {};
+    if (!data.success) {
+      const detail = data.message || data.detail || "权限保存失败";
+      ElMessage.error(String(detail));
+      return;
+    }
+
+    const granted = (data.granted as string[]) || [];
+    const revoked = (data.revoked as string[]) || [];
+    const skipped = (data.skipped as string[]) || [];
+    const failed = (data.failed as string[]) || [];
+
+    if (failed.length === 0) {
       const parts: string[] = ["权限保存成功"];
-      if (grantSkipped.length > 0) {
-        parts.push(`(${grantSkipped.length} 项已存在，已跳过)`);
-      }
-      ElMessage.success(parts.join(""));
+      if (granted.length > 0) parts.push(`(授予 ${granted.length} 项)`);
+      if (revoked.length > 0) parts.push(`(撤销 ${revoked.length} 项)`);
+      if (skipped.length > 0) parts.push(`(${skipped.length} 项已存在，已跳过)`);
+      ElMessage.success(parts.join(" "));
     } else {
-      ElMessage.warning(`权限保存部分失败: ${allFailed.join(", ")}`);
+      ElMessage.warning(`权限保存部分失败: ${failed.join(", ")}`);
     }
     emit("saved");
   } catch (err: any) {

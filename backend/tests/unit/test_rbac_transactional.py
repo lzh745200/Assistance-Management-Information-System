@@ -415,6 +415,74 @@ class TestGrantPermissionsBatch:
 # 9. revoke_permission（单数）运行时弃用警告
 # ──────────────────────────────────────────────
 
+# ──────────────────────────────────────────────
+# 10. save_permissions — 原子性保存
+# ──────────────────────────────────────────────
+
+class TestSavePermissions:
+    """验证 save_permissions 的原子性：单事务内撤销+授予。"""
+
+    @pytest.fixture
+    def svc(self):
+        return RBACService()
+
+    def test_grants_new_and_revokes_removed(self, svc):
+        """应授予新增权限并撤销已移除的权限。"""
+        db = MagicMock()
+        # 当前存在: user:read, user:write
+        mkq(db, all=[("user:read",), ("user:write",)])
+        result = run(svc.save_permissions(
+            "42", ["user:read", "user:delete"], "1", db,
+        ))
+        assert set(result["granted"]) == {"user:delete"}
+        assert set(result["revoked"]) == {"user:write"}
+        assert set(result["skipped"]) == {"user:read"}
+        assert result["failed"] == []
+
+    def test_no_changes_when_same_permissions(self, svc):
+        """权限集合无变化时应为空操作。"""
+        db = MagicMock()
+        mkq(db, all=[("user:read",), ("user:write",)])
+        result = run(svc.save_permissions(
+            "42", ["user:read", "user:write"], "1", db,
+        ))
+        assert result["granted"] == []
+        assert result["revoked"] == []
+        assert set(result["skipped"]) == {"user:read", "user:write"}
+
+    def test_grants_all_when_no_existing(self, svc):
+        """用户无现有权限时应授予全部。"""
+        db = MagicMock()
+        mkq(db, all=[])
+        result = run(svc.save_permissions("42", ["a", "b", "c"], "1", db))
+        assert set(result["granted"]) == {"a", "b", "c"}
+        assert result["revoked"] == []
+
+    def test_revokes_all_when_empty_target(self, svc):
+        """目标权限为空时应撤销全部现有权限。"""
+        db = MagicMock()
+        mkq(db, all=[("user:read",), ("user:write",)])
+        result = run(svc.save_permissions("42", [], "1", db))
+        assert result["granted"] == []
+        assert set(result["revoked"]) == {"user:read", "user:write"}
+
+    def test_uses_flush_not_commit(self, svc):
+        """save_permissions 应使用 flush 而非 commit。"""
+        db = MagicMock()
+        mkq(db, all=[("user:read",)])
+        run(svc.save_permissions("42", ["user:write"], "1", db))
+        db.flush.assert_called_once()
+        db.commit.assert_not_called()
+
+    def test_no_flush_when_no_changes(self, svc):
+        """无变更时不应调用 flush。"""
+        db = MagicMock()
+        mkq(db, all=[("user:read",)])
+        run(svc.save_permissions("42", ["user:read"], "1", db))
+        db.flush.assert_not_called()
+        db.commit.assert_not_called()
+
+
 class TestRevokePermissionDeprecationWarning:
     """revoke_permission(单数) 应在运行时发出 DeprecationWarning。"""
 
