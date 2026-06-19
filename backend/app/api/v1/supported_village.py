@@ -180,7 +180,10 @@ def _save_section_data(db: Session, model: Any, village_id: int, year: int, data
                     name=m.get("name", ""),
                     position=m.get("position", ""),
                     phone=m.get("phone", ""),
-                    is_veteran=m.get("isVeteran", False) if isinstance(m.get("isVeteran"), bool) else m.get("isVeteran", False),
+                    is_veteran=(
+                        m.get("isVeteran", False) if isinstance(m.get("isVeteran"), bool)
+                        else m.get("isVeteran", False)
+                    ),
                     remark=m.get("remark", ""),
                 )
                 db.add(member)

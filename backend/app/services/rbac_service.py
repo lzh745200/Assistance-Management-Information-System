@@ -366,7 +366,7 @@ class RBACService:
             expires_at=datetime.fromisoformat(expires_at) if expires_at else None,
         )
         db.add(user_role)
-        db.commit()
+        db.flush()  # flush 而非 commit — 由外层 TransactionManager 统一提交
         return True
 
     async def revoke_role(self, user_id: str, role_id: str, db: Session = None) -> bool:
@@ -376,7 +376,7 @@ class RBACService:
             .filter(UserRole.user_id == int(user_id), UserRole.role_id == role_id)
             .delete(synchronize_session=False)
         )
-        db.commit()
+        db.flush()  # flush 而非 commit — 由外层 TransactionManager 统一提交
         return rows > 0
 
     async def grant_permission(
@@ -417,7 +417,13 @@ class RBACService:
         permission: str,
         db: Session = None,
     ) -> bool:
-        """撤销用户的单个权限"""
+        """撤销用户的单个权限。
+
+        .. deprecated::
+            使用 ``revoke_permissions_batch`` 代替。此方法保留仅供向后兼容。
+            调用方负责通过 TransactionManager.transaction(db) 包裹事务边界——
+            此方法仅调用 db.flush()，不提交。
+        """
         rows = (
             db.query(UserPermission)
             .filter(
@@ -478,7 +484,7 @@ class RBACService:
             rp = RolePermission(role_id=role.id, permission=perm)
             db.add(rp)
 
-        db.commit()
+        db.flush()  # flush 而非 commit — 由外层 TransactionManager 统一提交
         return role.id
 
     async def get_user_roles(self, user_id: str, db: Session) -> List[Dict[str, Any]]:

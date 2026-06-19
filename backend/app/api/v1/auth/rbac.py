@@ -147,14 +147,15 @@ async def create_role(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
-    """创建角色"""
-    role_id = await rbac_service.create_role(
-        name=role_data.name,
-        description=role_data.description,
-        permissions=role_data.permissions,
-        is_system=role_data.is_system,
-        db=db,
-    )
+    """创建角色（具有事务原子性）"""
+    with TransactionManager.transaction(db) as sess:
+        role_id = await rbac_service.create_role(
+            name=role_data.name,
+            description=role_data.description,
+            permissions=role_data.permissions,
+            is_system=role_data.is_system,
+            db=sess,
+        )
     return {
         "success": True,
         "role_id": role_id,
@@ -284,14 +285,15 @@ async def assign_role(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
-    """分配角色给用户"""
-    success = await rbac_service.assign_role(
-        user_id=str(assignment.user_id),
-        role_id=assignment.role_id,
-        granted_by=str(current_user.id),
-        expires_at=assignment.expires_at.isoformat() if assignment.expires_at else None,
-        db=db,
-    )
+    """分配角色给用户（具有事务原子性）"""
+    with TransactionManager.transaction(db) as sess:
+        success = await rbac_service.assign_role(
+            user_id=str(assignment.user_id),
+            role_id=assignment.role_id,
+            granted_by=str(current_user.id),
+            expires_at=assignment.expires_at.isoformat() if assignment.expires_at else None,
+            db=sess,
+        )
 
     if success:
         return {
@@ -307,8 +309,11 @@ async def revoke_role(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
-    """撤销用户角色"""
-    success = await rbac_service.revoke_role(user_id=str(revoke.user_id), role_id=revoke.role_id, db=db)
+    """撤销用户角色（具有事务原子性）"""
+    with TransactionManager.transaction(db) as sess:
+        success = await rbac_service.revoke_role(
+            user_id=str(revoke.user_id), role_id=revoke.role_id, db=sess,
+        )
 
     if success:
         return {

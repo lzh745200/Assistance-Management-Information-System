@@ -190,7 +190,7 @@ async function loadCurrentPermissions() {
     permissionsLoadFailed.value = false;
   } catch {
     permissionsLoadFailed.value = true;
-    // Don't overwrite currentPermissions — keep previous value
+    currentPermissions.value = []; // 清空过期数据，防止前一个用户权限残留
   }
 }
 
@@ -231,6 +231,7 @@ async function savePermissions() {
     const existingRes = await request.get(
       `/rbac/user/${props.user.id}/permissions`,
     );
+    if (!visible.value) return; // 抽屉已关闭，中止后续操作
     const existingPayload = existingRes.data?.data || existingRes.data;
     const existingPerms: string[] = existingPayload?.permissions || [];
     const toRevoke = existingPerms.filter(
@@ -242,6 +243,7 @@ async function savePermissions() {
         permissions: toRevoke,
       });
     }
+    if (!visible.value) return; // 抽屉已关闭，中止后续操作
     // 2. Grant current permissions
     const res = await request.post("/rbac/grant/permission", {
       user_id: props.user.id,
