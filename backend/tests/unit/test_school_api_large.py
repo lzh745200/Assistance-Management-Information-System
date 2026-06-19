@@ -1,6 +1,9 @@
 """Comprehensive tests for school.py API — aims for 100% branch/line coverage."""
 
 import io
+
+import pytest
+pytestmark = pytest.mark.xdist_group("school")
 import os
 import sys
 import types

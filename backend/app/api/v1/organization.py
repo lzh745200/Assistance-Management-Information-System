@@ -226,12 +226,12 @@ async def get_organization_tree(
             path = build_path(org.id)
 
             org_map[org.id] = {
-                "id": org.id,
+                "id": str(org.id),  # 字符串 ID — 防止 el-tree setAttribute 数值型 DOM 异常
                 "name": org.name,
                 "code": org.code or "",
                 "org_type": str(org.org_type) if org.org_type else None,
                 "level": level_num,  # 返回数字而不是枚举值
-                "parent_id": org.parent_id,
+                "parent_id": str(org.parent_id) if org.parent_id else None,
                 "is_active": org.is_active,
                 "path": path,
                 "description": org.description or "",
