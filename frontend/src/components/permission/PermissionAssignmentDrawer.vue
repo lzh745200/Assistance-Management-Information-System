@@ -237,11 +237,16 @@ async function savePermissions() {
     const toRevoke = existingPerms.filter(
       (p: string) => !currentPermissions.value.includes(p),
     );
+    const revokeFailed: string[] = [];
     if (toRevoke.length > 0) {
-      await request.post("/rbac/revoke/permission", {
+      const revokeRes = await request.post("/rbac/revoke/permission", {
         user_id: props.user.id,
         permissions: toRevoke,
       });
+      const revokeData = revokeRes.data || {};
+      if (revokeData.failed?.length > 0) {
+        revokeFailed.push(...(revokeData.failed as string[]));
+      }
     }
     if (!visible.value) return; // 抽屉已关闭，中止后续操作
     // 2. Grant current permissions
@@ -250,11 +255,18 @@ async function savePermissions() {
       permissions: currentPermissions.value,
     });
     const data = res.data || {};
-    if (data.success && (!data.failed || data.failed.length === 0)) {
-      ElMessage.success("权限保存成功");
+    const grantFailed = (data.failed as string[]) || [];
+    const grantSkipped = (data.skipped as string[]) || [];
+    const allFailed = [...revokeFailed, ...grantFailed];
+
+    if (allFailed.length === 0) {
+      const parts: string[] = ["权限保存成功"];
+      if (grantSkipped.length > 0) {
+        parts.push(`(${grantSkipped.length} 项已存在，已跳过)`);
+      }
+      ElMessage.success(parts.join(""));
     } else {
-      const failedCount = data.failed?.length || 0;
-      ElMessage.warning(`权限保存部分失败（${failedCount} 项）`);
+      ElMessage.warning(`权限保存部分失败: ${allFailed.join(", ")}`);
     }
     emit("saved");
   } catch (err: any) {

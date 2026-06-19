@@ -184,7 +184,7 @@ class TestGrantPermissionAlwaysTrue:
 
 
 # ──────────────────────────────────────────────
-# 3. assign_role 两条路径均返回 True
+# 3. assign_role 返回 dict 以区分新增与已存在
 # ──────────────────────────────────────────────
 
 class TestAssignRoleBothPathsReturnTrue:
@@ -192,26 +192,26 @@ class TestAssignRoleBothPathsReturnTrue:
     def svc(self):
         return RBACService()
 
-    def test_returns_true_when_already_assigned(self, svc):
-        """角色已分配 → early return，无 flush。"""
+    def test_returns_newly_granted_false_when_already_assigned(self, svc):
+        """角色已分配 → {"success": True, "newly_granted": False}。"""
         db = MagicMock()
         mkq_multi(db, {
             "RbacRole": {"first": MagicMock(id="r1")},
             "UserRole": {"first": MagicMock()},
         })
         result = run(svc.assign_role("42", "r1", "1", None, db))
-        assert result is True
+        assert result == {"success": True, "newly_granted": False}
         db.flush.assert_not_called()
 
-    def test_returns_true_when_newly_assigned(self, svc):
-        """新分配 → flush 一次。"""
+    def test_returns_newly_granted_true_when_new_assignment(self, svc):
+        """新分配 → {"success": True, "newly_granted": True}。"""
         db = MagicMock()
         mkq_multi(db, {
             "RbacRole": {"first": MagicMock(id="r1")},
             "UserRole": {"first": None},
         })
         result = run(svc.assign_role("42", "r1", "1", None, db))
-        assert result is True
+        assert result == {"success": True, "newly_granted": True}
         db.flush.assert_called_once()
         db.commit.assert_not_called()
 
