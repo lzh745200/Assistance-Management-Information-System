@@ -29,20 +29,20 @@ async def get_system_config(key: str = None):
     db = SessionLocal()
     try:
         if key:
-            row = db.query(SystemConfig).filter(SystemConfig.config_key == key).first()
+            row = db.query(SystemConfig).filter(SystemConfig.key == key).first()
             if row:
                 try:
-                    return {key: json.loads(row.config_value)} if row.config_value else {key: None}
+                    return {key: json.loads(row.value)} if row.value else {key: None}
                 except (json.JSONDecodeError, TypeError):
-                    return {key: row.config_value}
+                    return {key: row.value}
             return {}
         rows = db.query(SystemConfig).all()
         result = {}
         for r in rows:
             try:
-                result[r.config_key] = json.loads(r.config_value) if r.config_value else None
+                result[r.key] = json.loads(r.value) if r.value else None
             except (json.JSONDecodeError, TypeError):
-                result[r.config_key] = r.config_value
+                result[r.key] = r.value
         return result
     finally:
         db.close()
@@ -61,11 +61,11 @@ async def set_system_config(key: str, value):
     db = SessionLocal()
     try:
         serialized = json.dumps(value) if not isinstance(value, str) else value
-        row = db.query(SystemConfig).filter(SystemConfig.config_key == key).first()
+        row = db.query(SystemConfig).filter(SystemConfig.key == key).first()
         if row:
-            row.config_value = serialized
+            row.value = serialized
         else:
-            db.add(SystemConfig(config_key=key, config_value=serialized))
+            db.add(SystemConfig(key=key, value=serialized))
         db.commit()
         return True
     except Exception as e:
