@@ -2,7 +2,7 @@
 ; Produces standalone .exe installer with all runtimes bundled
 
 !define PRODUCT_NAME "Assistance System"
-!define PRODUCT_VERSION "1.4.0"
+!define PRODUCT_VERSION "1.2.0"
 !define PRODUCT_PUBLISHER "帮扶管理信息系统"
 
 SetCompressor /SOLID lzma
