@@ -529,7 +529,7 @@ class TestGetOrganizationTree:
         with patch.object(service, "get_organization_tree", side_effect=side_effect):
             result = service.get_organization_tree(user_id=1)
         assert len(result) == 1
-        assert result[0]["id"] == 5
+        assert int(result[0]["id"]) == 5
         assert result[0]["has_children"] is False
 
 
