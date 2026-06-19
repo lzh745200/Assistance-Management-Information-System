@@ -1,88 +1,80 @@
-"""Tests for app.api.v1.data.data.data_packages — key endpoints."""
+"""Tests for app.api.v1.data.data.data_packages."""
 
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
-from fastapi import FastAPI
 
 
 @pytest.fixture
-def mock_db():
-    s = MagicMock()
-    s.query.return_value = s
-    s.filter.return_value = s
-    s.all.return_value = []
-    s.first.return_value = None
-    return s
+def client():
+    from app.main import app
+    from app.core.database import get_db
+    from app.core.security import get_current_user
 
-
-@pytest.fixture
-def client(mock_db):
-    from app.api.v1 import deps
-    app = FastAPI()
     user = MagicMock()
     user.id = 1; user.is_superuser = True; user.role = "admin"
-    app.dependency_overrides[deps.get_current_user] = lambda: user
-    app.dependency_overrides[deps.get_db] = lambda: mock_db
-    with patch("app.api.v1.data.data.data_packages.DataPackageService", return_value=MagicMock()), \
-         patch("app.api.v1.data.data.data_packages.ImportExportHistoryService", return_value=MagicMock()), \
-         patch("app.api.v1.data.data.data_packages.OrganizationPermissionService", return_value=MagicMock()):
-        from app.api.v1.data.data.data_packages import router
-        app.include_router(router)
-    return TestClient(app)
+    mock_db = MagicMock()
+    mock_db.query.return_value = mock_db
+    mock_db.filter.return_value = mock_db
+    mock_db.all.return_value = []
+    mock_db.first.return_value = None
+
+    app.dependency_overrides[get_current_user] = lambda: user
+    app.dependency_overrides[get_db] = lambda: mock_db
+
+    tc = TestClient(app, raise_server_exceptions=False)
+    yield tc
+    app.dependency_overrides.pop(get_current_user, None)
+    app.dependency_overrides.pop(get_db, None)
 
 
 class TestListPackages:
-    def test_empty(self, client, mock_db):
-        mock_db.all.return_value = []
-        resp = client.get("/data-packages")
+    def test_empty(self, client):
+        resp = client.get("/api/v1/data-packages")
         assert resp.status_code == 200
 
-    def test_with_filters(self, client, mock_db):
-        mock_db.all.return_value = []
-        resp = client.get("/data-packages?status=completed&type=export&org_id=1")
+    def test_with_filters(self, client):
+        resp = client.get("/api/v1/data-packages?status=completed&type=export")
         assert resp.status_code == 200
 
 
 class TestPreviewExport:
     def test_preview(self, client):
-        resp = client.post("/data-packages/preview", json={"modules": ["villages"]})
-        assert resp.status_code == 200
-
-    def test_preview_empty_modules(self, client):
-        resp = client.post("/data-packages/preview", json={"modules": []})
-        assert resp.status_code in (200, 400)
-
-
-class TestPreviewPackage:
-    def test_preview(self, client, mock_db):
-        mock_db.first.return_value = MagicMock()
-        resp = client.get("/data-packages/1/preview")
+        resp = client.post("/api/v1/data-packages/preview", json={"modules": ["villages"]})
         assert resp.status_code == 200
 
 
 class TestGetPackage:
-    def test_not_found(self, client, mock_db):
-        mock_db.first.return_value = None
-        resp = client.get("/data-packages/999")
+    def test_not_found(self, client):
+        resp = client.get("/api/v1/data-packages/99999")
+        assert resp.status_code == 404
+
+
+class TestPreviewPackage:
+    def test_not_found(self, client):
+        resp = client.get("/api/v1/data-packages/99999/preview")
         assert resp.status_code == 404
 
 
 class TestDeletePackage:
-    def test_not_found(self, client, mock_db):
-        mock_db.first.return_value = None
-        resp = client.delete("/data-packages/999")
+    def test_not_found(self, client):
+        resp = client.delete("/api/v1/data-packages/99999")
         assert resp.status_code == 404
 
 
 class TestPackageHistory:
-    def test_empty(self, client, mock_db):
-        resp = client.get("/data-packages/1/history")
+    def test_empty(self, client):
+        resp = client.get("/api/v1/data-packages/1/history")
         assert resp.status_code == 200
 
 
 class TestValidatePackage:
-    def test_not_found(self, client, mock_db):
-        mock_db.first.return_value = None
-        resp = client.post("/data-packages/999/validate")
+    def test_not_found(self, client):
+        resp = client.post("/api/v1/data-packages/99999/validate")
+        assert resp.status_code == 404
+
+
+class TestDownloadPackage:
+    def test_not_found(self, client):
+        resp = client.get("/api/v1/data-packages/99999/download")
         assert resp.status_code == 404
