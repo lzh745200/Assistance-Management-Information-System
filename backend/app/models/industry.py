@@ -47,7 +47,7 @@ class TeaPlantation(Base, TimestampMixin):
     quality_score = Column(Float, nullable=True, comment="品质评分（1-10）")
     description = Column(Text, nullable=True, comment="备注说明")
 
-    village = relationship("Village", backref="tea_plantations")
+    village = relationship("Village", back_populates="tea_plantations")
 
     def __repr__(self):
         return f"<TeaPlantation(id={self.id}, name={self.name}, variety={self.tea_variety})>"
@@ -94,7 +94,7 @@ class CactusFruitPlot(Base, TimestampMixin):
     annual_rainfall_mm = Column(Float, nullable=True, comment="年降雨量（毫米）")
     description = Column(Text, nullable=True, comment="备注说明")
 
-    village = relationship("Village", backref="cactus_fruit_plots")
+    village = relationship("Village", back_populates="cactus_fruit_plots")
 
     def __repr__(self):
         return f"<CactusFruitPlot(id={self.id}, name={self.name})>"

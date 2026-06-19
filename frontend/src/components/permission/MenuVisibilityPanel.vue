@@ -60,7 +60,7 @@
       node-key="key"
       :check-strictly="false"
       :default-expand-all="true"
-      :default-checked-keys="selectedMenuKeys"
+      :default-checked-keys="selectedMenuKeys || []"
       :props="{ label: 'label', children: 'children' }"
       style="margin-top: 12px"
       @check="onMenuCheck"
@@ -94,7 +94,7 @@ const emit = defineEmits<{
 
 const menuTreeRef = ref();
 const saving = ref(false);
-const selectedMenuKeys = ref<string[]>([]);
+const selectedMenuKeys = ref<string[] | null>([]);
 const menuTreeData = ref<MenuTreeNode[]>([]);
 
 // 菜单 key → label 映射
@@ -135,8 +135,12 @@ async function loadUserMenuConfig() {
   try {
     const res = await request.get(`/menus/user-menus/${props.userId}`);
     const data = res.data?.data || res.data;
-    if (data && data.menu_keys) {
+    if (data && data.menu_keys !== null && data.menu_keys !== undefined) {
+      // 用户有自定义配置 → 显示当前配置
       selectedMenuKeys.value = data.menu_keys;
+    } else {
+      // 无自定义配置 → 显示角色默认菜单（空数组 = 未自定义）
+      selectedMenuKeys.value = props.roleDefaultKeys || [];
     }
   } catch {
     selectedMenuKeys.value = props.currentMenuKeys || [];
@@ -155,6 +159,7 @@ function resetToDefault() {
 async function saveConfig() {
   saving.value = true;
   try {
+    // null → 恢复角色默认；[] → 清空所有菜单；[...] → 自定义
     await request.put(`/menus/user-menus/${props.userId}`, {
       menu_keys: selectedMenuKeys.value,
     });

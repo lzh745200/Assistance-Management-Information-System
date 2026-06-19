@@ -131,6 +131,12 @@
             <el-menu-item index="/funds/apply"
               ><span>经费申请</span></el-menu-item
             >
+            <el-menu-item index="/funds/report"
+              ><span>经费报表</span></el-menu-item
+            >
+            <el-menu-item index="/funds/settlement"
+              ><span>经费结算</span></el-menu-item
+            >
           </el-sub-menu>
 
           <el-sub-menu
@@ -227,6 +233,16 @@
             </template>
           </el-menu-item>
 
+          <el-menu-item
+            v-if="menuStore.canAccessMenu('todos')"
+            index="/todos"
+          >
+            <el-icon><Select /></el-icon>
+            <template #title>
+              <span class="menu-title-text">待办事项</span>
+            </template>
+          </el-menu-item>
+
           <!-- ════ 数据分析 ════ -->
           <div
             v-show="!isCollapsed"
@@ -265,8 +281,17 @@
             <el-menu-item index="/data-analysis/map"
               ><span>地图可视化</span></el-menu-item
             >
+            <el-menu-item index="/report/templates"
+              ><span>报表模板</span></el-menu-item
+            >
+            <el-menu-item index="/export/report"
+              ><span>报表导出</span></el-menu-item
+            >
             <el-menu-item index="/data-analysis/assessment"
               ><span>成效评估</span></el-menu-item
+            >
+            <el-menu-item index="/effectiveness"
+              ><span>帮扶成效</span></el-menu-item
             >
           </el-sub-menu>
 

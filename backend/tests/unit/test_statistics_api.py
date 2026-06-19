@@ -55,13 +55,13 @@ class TestSummary:
 
 
 class TestOverview:
-    @pytest.mark.skip(reason="Uses Village.status model attr that doesn't exist")
     def test_returns_overview(self, client, mock_db):
-        pass
+        mock_db.first.return_value = None
+        resp = client.get("/statistics/overview")
+        assert resp.status_code == 200
 
 
 class TestVillagesDistribution:
-    @pytest.mark.skip(reason="Village model missing status attribute")
     def test_returns_distribution(self, client, mock_db):
         mock_db.all.return_value = []
         resp = client.get("/statistics/villages/distribution")
