@@ -121,3 +121,7 @@ class Industry(Base, TimestampMixin):
 
     def __repr__(self):
         return f"<Industry(id={self.id}, name={self.name})>"
+
+
+# Late imports — 确保 relationship 字符串引用能在 mapper 配置时解析
+from app.models.industry import TeaPlantation, CactusFruitPlot  # noqa: E402, F401
