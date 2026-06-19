@@ -349,3 +349,91 @@ class TestRegressionFromThirdReview:
         run(svc.create_role("r", "d", ["user:read"], False, db))
         assert db.flush.call_count == 2
         db.commit.assert_not_called()
+
+
+# ──────────────────────────────────────────────
+# 8. grant_permissions_batch — 批量授予
+# ──────────────────────────────────────────────
+
+class TestGrantPermissionsBatch:
+    """验证 grant_permissions_batch 的两步流程"""
+
+    @pytest.fixture
+    def svc(self):
+        return RBACService()
+
+    def test_grants_only_missing_permissions(self, svc):
+        """应仅授予不存在的权限，跳过已存在的。"""
+        db = MagicMock()
+        # 预查询返回 "user:read" 已存在
+        mkq(db, all=[("user:read",)])
+        result = run(svc.grant_permissions_batch(
+            "42", ["user:read", "user:write", "user:delete"], "1", None, db,
+        ))
+        assert result["granted"] == ["user:write", "user:delete"]
+        assert result["skipped"] == ["user:read"]
+        assert result["failed"] == []
+
+    def test_grants_all_when_none_exist(self, svc):
+        """无已存在权限时应授予全部。"""
+        db = MagicMock()
+        mkq(db, all=[])
+        result = run(svc.grant_permissions_batch("42", ["a", "b"], "1", None, db))
+        assert set(result["granted"]) == {"a", "b"}
+        assert result["skipped"] == []
+
+    def test_skips_all_when_all_exist(self, svc):
+        """全部已存在时应全部跳过。"""
+        db = MagicMock()
+        mkq(db, all=[("a",), ("b",)])
+        result = run(svc.grant_permissions_batch("42", ["a", "b"], "1", None, db))
+        assert result["granted"] == []
+        assert set(result["skipped"]) == {"a", "b"}
+
+    def test_uses_batch_insert_when_granting(self, svc):
+        """授予多条权限时应使用 db.add_all() 而非逐条 db.add()。"""
+        db = MagicMock()
+        mkq(db, all=[])  # 无已存在权限
+
+        run(svc.grant_permissions_batch("42", ["a", "b", "c"], "1", None, db))
+
+        # 应调用 add_all 一次
+        db.add_all.assert_called_once()
+        # 不应调用 add（逐条模式）
+        db.add.assert_not_called()
+
+    def test_uses_flush_not_commit(self, svc):
+        """grant_permissions_batch 应使用 flush 而非 commit。"""
+        db = MagicMock()
+        mkq(db, all=[])  # 无已存在 → 新增 → flush
+        run(svc.grant_permissions_batch("42", ["user:read"], "1", None, db))
+        db.flush.assert_called_once()
+        db.commit.assert_not_called()
+
+
+# ──────────────────────────────────────────────
+# 9. revoke_permission（单数）运行时弃用警告
+# ──────────────────────────────────────────────
+
+class TestRevokePermissionDeprecationWarning:
+    """revoke_permission(单数) 应在运行时发出 DeprecationWarning。"""
+
+    @pytest.fixture
+    def svc(self):
+        return RBACService()
+
+    def test_emits_deprecation_warning(self, svc):
+        """调用时应发出 DeprecationWarning。"""
+        import warnings
+        db = MagicMock(); mkq(db, delete=1)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            run(svc.revoke_permission("42", "user:read", db))
+            # 过滤出我们发出的弃用警告（排除运行时的"no event loop"警告）
+            our_warnings = [
+                x for x in w
+                if issubclass(x.category, DeprecationWarning)
+                and "RBACService" in str(x.message)
+            ]
+            assert len(our_warnings) >= 1
+            assert "revoke_permissions_batch" in str(our_warnings[0].message)
