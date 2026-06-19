@@ -455,17 +455,12 @@ class TestSubmitFeedback:
         assert created.category == "other"
 
     def test_type_null_json(self, app, c):
-        """JSON 中 type 显式为 null — Pydantic 转换为 None — code: (None or 'other').lower() → 'other'"""
-        mock_db = _make_mock_db()
-        _setup_db_override(app, mock_db)
-
+        """JSON 中 type 显式为 null — Pydantic schema type:str 不允许 None → 422"""
         resp = c.post("/api/v1/feedback", json={
             "type": None,
             "content": "null type",
         })
-        assert resp.status_code == 200
-        created = mock_db.add.call_args[0][0]
-        assert created.category == "other"
+        assert resp.status_code == 422
 
     # ── content 内容校验 ──
 
@@ -709,12 +704,12 @@ class TestSubmitFeedback:
         assert created.content == special
 
     def test_invalid_json_body(self, app, c):
-        """请求体不是有效 JSON → FastAPI 返回 400"""
+        """请求体不是有效 JSON → FastAPI Pydantic 解析失败 → 422"""
         resp = c.post("/api/v1/feedback",
             content=b"not-json",
             headers={"Content-Type": "application/json"},
         )
-        assert resp.status_code == 400
+        assert resp.status_code == 422
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -752,7 +747,7 @@ class TestGetUserFromToken:
         """authorization='Bearer ' → token 为空字符串 → verify_token('',...) 被调用"""
         from app.api.v1.feedback import _get_user_from_token
 
-        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock) as mock_vt:
+        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock, create=True) as mock_vt:
             mock_vt.return_value = None
             result = await _get_user_from_token("Bearer ")
             assert result is None
@@ -765,7 +760,7 @@ class TestGetUserFromToken:
         """verify_token 返回 dict 含 username → 返回 username"""
         from app.api.v1.feedback import _get_user_from_token
 
-        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock) as mock_vt:
+        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock, create=True) as mock_vt:
             mock_vt.return_value = {"username": "admin", "id": "42"}
             result = await _get_user_from_token("Bearer valid.token.here")
             assert result == "admin"
@@ -776,7 +771,7 @@ class TestGetUserFromToken:
         """verify_token 返回 dict 无 username → 回退返回 id"""
         from app.api.v1.feedback import _get_user_from_token
 
-        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock) as mock_vt:
+        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock, create=True) as mock_vt:
             mock_vt.return_value = {"id": "99"}
             result = await _get_user_from_token("Bearer only.id.token")
             assert result == "99"
@@ -786,7 +781,7 @@ class TestGetUserFromToken:
         """username 优先于 id（两者都存在时返回 username）"""
         from app.api.v1.feedback import _get_user_from_token
 
-        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock) as mock_vt:
+        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock, create=True) as mock_vt:
             mock_vt.return_value = {"username": "张三", "id": "100"}
             result = await _get_user_from_token("Bearer both.token")
             assert result == "张三"
@@ -796,27 +791,27 @@ class TestGetUserFromToken:
         """verify_token 返回 None → 返回 None"""
         from app.api.v1.feedback import _get_user_from_token
 
-        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock) as mock_vt:
+        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock, create=True) as mock_vt:
             mock_vt.return_value = None
             result = await _get_user_from_token("Bearer expired.token")
             assert result is None
 
     @pytest.mark.anyio
     async def test_token_info_empty_dict(self):
-        """verify_token 返回 {} → info.get('username') or info.get('id', '') → ''"""
+        """verify_token 返回 {} — 空字典 falsy → if info: 不进入 → 返回 None"""
         from app.api.v1.feedback import _get_user_from_token
 
-        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock) as mock_vt:
+        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock, create=True) as mock_vt:
             mock_vt.return_value = {}
             result = await _get_user_from_token("Bearer weird.token")
-            assert result == ""
+            assert result is None
 
     @pytest.mark.anyio
     async def test_token_info_surprising_dict(self):
         """verify_token 返回不含 username/id 的 dict → 返回 ''（id fallback 的 default）"""
         from app.api.v1.feedback import _get_user_from_token
 
-        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock) as mock_vt:
+        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock, create=True) as mock_vt:
             mock_vt.return_value = {"role": "admin"}
             result = await _get_user_from_token("Bearer strange.token")
             assert result == ""
@@ -828,7 +823,7 @@ class TestGetUserFromToken:
         """verify_token 抛异常 → try/except 捕获 → 返回 None（不崩溃）"""
         from app.api.v1.feedback import _get_user_from_token
 
-        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock) as mock_vt:
+        with patch("app.api.v1.auth.verify_token", new_callable=AsyncMock, create=True) as mock_vt:
             mock_vt.side_effect = RuntimeError("JWT 解码失败")
             result = await _get_user_from_token("Bearer malformed.token")
             assert result is None
