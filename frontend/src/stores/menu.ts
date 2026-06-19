@@ -50,8 +50,10 @@ export const useMenuStore = defineStore("menu", () => {
   }
 
   function canAccessMenu(menuKey: string): boolean {
-    if (!loaded.value) return false; // 未加载时隐藏 — 宁可空白不可泄露
-    return allKeys.value.has(menuKey);
+    if (!loaded.value) { console.log(`[menuStore] canAccessMenu("${menuKey}") → false (not loaded)`); return false; }
+    const ok = allKeys.value.has(menuKey);
+    if (!ok) console.log(`[menuStore] canAccessMenu("${menuKey}") → BLOCKED`);
+    return ok;
   }
 
   /** 从后端加载当前用户可见菜单，更新 store */
@@ -63,8 +65,12 @@ export const useMenuStore = defineStore("menu", () => {
     try {
       const res = await request.get("/menus/accessible");
       const data = res.data?.data || res.data || [];
-      setMenus(Array.isArray(data) ? data : []);
-    } catch {
+      const items = Array.isArray(data) ? data : [];
+      // 诊断：打印加载到的菜单 key 列表
+      const keys = items.map((m: any) => m.key);
+      console.log("[menuStore] 菜单加载完成", { count: items.length, keys, source: res.data?.source, rawData: res.data });
+      setMenus(items);
+    } catch (e) {
       // 加载失败：保持 loaded=false 允许下次重试，标记失败状态
       loading.value = false;
       loadFailed.value = true;

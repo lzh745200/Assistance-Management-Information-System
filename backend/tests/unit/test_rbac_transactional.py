@@ -166,15 +166,11 @@ class TestGrantPermissionAlwaysTrue:
         db = MagicMock(); mkq(db, first=MagicMock())
         assert run(svc.grant_permission("42", "user:read", "1", None, db)) is True
 
-    @pytest.mark.xfail(
-        reason="UserPermission(...) 构造器触发 SupportedVillage→Fund mapper init——预存问题",
-        raises=Exception,
-    )
     def test_returns_true_when_new(self, svc):
+        """新权限：应调用 flush 而非 commit。"""
         db = MagicMock(); mkq(db, first=None)
         result = run(svc.grant_permission("42", "user:read", "1", None, db))
         assert result is True
-        # 新权限：应调用 flush 而非 commit
         assert db.flush.called
         assert not db.commit.called
 
@@ -203,10 +199,6 @@ class TestAssignRoleBothPathsReturnTrue:
         assert result is True
         db.flush.assert_not_called()
 
-    @pytest.mark.xfail(
-        reason="UserRole(...) 构造器触发 SupportedVillage→Fund mapper init——预存问题",
-        raises=Exception,
-    )
     def test_returns_true_when_newly_assigned(self, svc):
         """新分配 → flush 一次。"""
         db = MagicMock()
@@ -296,10 +288,6 @@ class TestTransactionManagerIntegration:
         db.flush.assert_called_once()
         db.commit.assert_called_once()
 
-    @pytest.mark.xfail(
-        reason="grant_permission→UserPermission(...) 触发 SupportedVillage mapper init——预存问题",
-        raises=Exception,
-    )
     def test_multiple_ops_one_commit(self, svc):
         from app.core.transaction import TransactionManager
 
@@ -324,14 +312,6 @@ class TestRegressionFromThirdReview:
     def svc(self):
         return RBACService()
 
-    @pytest.mark.xfail(
-        reason=(
-            "rbac_service 导入的 NotFoundError 是 error_handler 模块中的别名，"
-            "实际指向 NotFoundException(msg)，仅接受 1 个字符串参数。"
-            "调用 NotFoundError('角色', role_id) 会抛出 TypeError——预存 bug。"
-        ),
-        raises=TypeError,
-    )
     def test_assign_role_not_found_for_inactive_role(self, svc):
         from app.core.exceptions import NotFoundError
 
@@ -359,10 +339,6 @@ class TestRegressionFromThirdReview:
         db.flush.assert_called_once()
         db.commit.assert_not_called()
 
-    @pytest.mark.xfail(
-        reason="RbacRole(...) 构造器触发 SupportedVillage→Fund 映射器初始化错误——预存问题",
-        raises=Exception,
-    )
     def test_create_role_calls_flush_twice(self, svc):
         """create_role 两次 flush：获取 role.id + 权限关联。"""
         db = MagicMock()

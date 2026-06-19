@@ -22,7 +22,8 @@ app_logger = logger  # backward compatibility alias
 try:
     from app.core.exceptions import (
         AppError,
-        NotFoundException as NotFoundError,
+        NotFoundError,
+        NotFoundException as _NotFoundException,
         AuthenticationException as BadRequestError,
         AuthenticationException as ForbiddenError,
         AuthenticationException as ConflictError,
