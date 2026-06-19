@@ -20,11 +20,8 @@
         </transition>
       </div>
 
-      <!-- 导航菜单 — 未加载完前不渲染，杜绝权限泄露 -->
-      <div v-if="!menuStore.loaded" class="menu-loading">
-        <el-icon class="is-loading" :size="24"><Loading /></el-icon>
-      </div>
-      <el-scrollbar v-else class="aside-scrollbar">
+      <!-- 导航菜单 — 每项带独立 v-if 权限守卫 -->
+      <el-scrollbar class="aside-scrollbar">
         <el-menu
           :default-active="route.path"
           :collapse="isCollapsed"
@@ -274,11 +271,30 @@
           </el-sub-menu>
 
           <!-- ════ 数据管理 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label">
+          <div
+            v-show="!isCollapsed"
+            v-if="
+              menuStore.canAccessMenu('data') ||
+              menuStore.canAccessMenu('data-overview') ||
+              menuStore.canAccessMenu('user-backup') ||
+              menuStore.canAccessMenu('data-quality') ||
+              menuStore.canAccessMenu('data-logs') ||
+              menuStore.canAccessMenu('data-package-report') ||
+              menuStore.canAccessMenu('data-package-receive')
+            "
+            class="menu-section-label"
+          >
             <span>数据管理</span>
           </div>
 
-          <el-sub-menu index="datasync-group" popper-class="aside-popper">
+          <el-sub-menu
+            v-if="
+              menuStore.canAccessMenu('data') ||
+              menuStore.canAccessMenu('data-overview')
+            "
+            index="datasync-group"
+            popper-class="aside-popper"
+          >
             <template #title>
               <el-icon><Connection /></el-icon>
               <span class="menu-title-text">数据管理</span>
@@ -358,7 +374,10 @@
             >
           </el-sub-menu>
 
-          <el-menu-item index="/message">
+          <el-menu-item
+            v-if="menuStore.canAccessMenu('messages')"
+            index="/message"
+          >
             <el-icon><Message /></el-icon>
             <template #title>
               <span class="menu-title-text">消息中心</span>
@@ -464,7 +483,6 @@ import {
   ArrowDown,
   Lock,
   SwitchButton,
-  Loading,
 } from "@element-plus/icons-vue";
 
 const route = useRoute();
