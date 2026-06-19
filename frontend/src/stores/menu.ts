@@ -30,6 +30,8 @@ export const useMenuStore = defineStore("menu", () => {
   const menus = ref<MenuItem[]>([]);
   const activeMenu = ref("");
   const loaded = ref(false);
+  const loading = ref(false);
+  const loadFailed = ref(false);
   const allKeys = ref<Set<string>>(new Set());
 
   /** 可访问的菜单 key 集合 */
@@ -39,6 +41,8 @@ export const useMenuStore = defineStore("menu", () => {
     menus.value = items;
     allKeys.value = _extractAllKeys(items);
     loaded.value = true;
+    loading.value = false;
+    loadFailed.value = items.length === 0;
   }
 
   function setActive(key: string) {
@@ -46,21 +50,24 @@ export const useMenuStore = defineStore("menu", () => {
   }
 
   function canAccessMenu(menuKey: string): boolean {
-    if (!loaded.value) return true; // 未加载时放行，避免闪烁
+    if (!loaded.value) return true; // 未加载时放行，避免闪烁 — 但加载完成后立即准确
     return allKeys.value.has(menuKey);
   }
 
   /** 从后端加载当前用户可见菜单，更新 store */
   async function fetchMenus(): Promise<void> {
+    if (loading.value) return; // 防重复调用
     const token = AuthStorage.getToken();
     if (!token) return;
+    loading.value = true;
     try {
       const res = await request.get("/menus/accessible");
       const data = res.data?.data || res.data || [];
       setMenus(Array.isArray(data) ? data : []);
     } catch {
-      // 加载失败保留空菜单，由路由守卫 fallback
-      setMenus([]);
+      // 加载失败：保持 loaded=false 允许下次重试，标记失败状态
+      loading.value = false;
+      loadFailed.value = true;
     }
   }
 
@@ -68,6 +75,8 @@ export const useMenuStore = defineStore("menu", () => {
     menus,
     activeMenu,
     loaded,
+    loading,
+    loadFailed,
     accessibleKeys,
     setMenus,
     setActive,

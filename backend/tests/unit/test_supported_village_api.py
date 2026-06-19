@@ -492,7 +492,7 @@ class TestCopyYearData:
         q = mock_db.query.return_value
         v = _make_mock_village(1)
         src = MagicMock()
-        _SECTION_MODEL_COUNT = 10
+        _SECTION_MODEL_COUNT = 11
         q.first.side_effect = [v] + [src, None] * _SECTION_MODEL_COUNT
 
         resp = client.post("/api/v1/supported-villages/1/yearly/copy", json={
@@ -515,7 +515,7 @@ class TestCopyYearData:
         v = _make_mock_village(1)
         src = MagicMock()
         existing = MagicMock()
-        q.first.side_effect = [v] + [src, existing] * 10
+        q.first.side_effect = [v] + [src, existing] * 11
 
         resp = client.post("/api/v1/supported-villages/1/yearly/copy", json={
             "fromYear": 2024, "toYear": 2025
