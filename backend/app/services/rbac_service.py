@@ -337,8 +337,12 @@ class RBACService:
         granted_by: str,
         expires_at: str = None,
         db: Session = None,
-    ) -> bool:
-        """分配角色给用户"""
+    ) -> dict:
+        """分配角色给用户。
+
+        返回 {"success": True, "newly_granted": bool}——
+        newly_granted 为 True 表示新建分配，False 表示角色已存在。
+        """
         # 检查角色是否存在且激活
         role = db.query(RbacRole).filter(RbacRole.id == role_id, RbacRole.is_active.is_(True)).first()
         if not role:
@@ -356,7 +360,7 @@ class RBACService:
             .first()
         )
         if existing:
-            return True
+            return {"success": True, "newly_granted": False}
 
         # 分配角色
         user_role = UserRole(
@@ -367,7 +371,7 @@ class RBACService:
         )
         db.add(user_role)
         db.flush()  # flush 而非 commit — 由外层 TransactionManager 统一提交
-        return True
+        return {"success": True, "newly_granted": True}
 
     async def revoke_role(self, user_id: str, role_id: str, db: Session = None) -> bool:
         """撤销用户角色"""

@@ -292,7 +292,7 @@ async def assign_role(
 ):
     """分配角色给用户（具有事务原子性）"""
     with TransactionManager.transaction(db) as sess:
-        success = await rbac_service.assign_role(
+        result = await rbac_service.assign_role(
             user_id=str(assignment.user_id),
             role_id=assignment.role_id,
             granted_by=str(current_user.id),
@@ -300,10 +300,12 @@ async def assign_role(
             db=sess,
         )
 
-    if success:
+    if result["success"]:
+        status = "已完成分配" if result["newly_granted"] else "角色已存在（无需操作）"
         return {
             "success": True,
-            "message": f"角色分配成功: 用户 {assignment.user_id} -> 角色 {assignment.role_id}",
+            "newly_granted": result["newly_granted"],
+            "message": f"角色分配成功: 用户 {assignment.user_id} -> 角色 {assignment.role_id} — {status}",
         }
     raise HTTPException(status_code=400, detail="角色分配失败")
 
