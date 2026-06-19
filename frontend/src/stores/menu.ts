@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import request from "@/api/request";
+import { AuthStorage } from "@/utils/authStorage";
 
 export interface MenuItem {
   key: string;
@@ -11,34 +13,65 @@ export interface MenuItem {
   order?: number;
 }
 
-/** 递归查找菜单项（辅助函数） */
-function _findMenuItem(items: MenuItem[], key: string): MenuItem | undefined {
-  for (const item of items) {
-    if (item.key === key) return item;
-    if (item.children?.length) {
-      const found = _findMenuItem(item.children, key);
-      if (found) return found;
+/** 从菜单树中提取所有 key（含子节点） */
+function _extractAllKeys(items: MenuItem[]): Set<string> {
+  const keys = new Set<string>();
+  const walk = (list: MenuItem[]) => {
+    for (const item of list) {
+      keys.add(item.key);
+      if (item.children?.length) walk(item.children);
     }
-  }
-  return undefined;
+  };
+  walk(items);
+  return keys;
 }
 
 export const useMenuStore = defineStore("menu", () => {
   const menus = ref<MenuItem[]>([]);
   const activeMenu = ref("");
+  const loaded = ref(false);
+  const allKeys = ref<Set<string>>(new Set());
+
+  /** 可访问的菜单 key 集合 */
+  const accessibleKeys = computed(() => allKeys.value);
 
   function setMenus(items: MenuItem[]) {
     menus.value = items;
+    allKeys.value = _extractAllKeys(items);
+    loaded.value = true;
   }
 
   function setActive(key: string) {
     activeMenu.value = key;
   }
 
-  /** 检查用户是否可以访问指定菜单 key（菜单树中存在即视为可访问） */
   function canAccessMenu(menuKey: string): boolean {
-    return _findMenuItem(menus.value, menuKey) !== undefined;
+    if (!loaded.value) return true; // 未加载时放行，避免闪烁
+    return allKeys.value.has(menuKey);
   }
 
-  return { menus, activeMenu, setMenus, setActive, canAccessMenu };
+  /** 从后端加载当前用户可见菜单，更新 store */
+  async function fetchMenus(): Promise<void> {
+    const token = AuthStorage.getToken();
+    if (!token) return;
+    try {
+      const res = await request.get("/menus/accessible");
+      const data = res.data?.data || res.data || [];
+      setMenus(Array.isArray(data) ? data : []);
+    } catch {
+      // 加载失败保留空菜单，由路由守卫 fallback
+      setMenus([]);
+    }
+  }
+
+  return {
+    menus,
+    activeMenu,
+    loaded,
+    accessibleKeys,
+    setMenus,
+    setActive,
+    canAccessMenu,
+    fetchMenus,
+  };
 });
