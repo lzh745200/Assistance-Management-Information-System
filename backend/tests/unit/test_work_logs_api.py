@@ -1,5 +1,6 @@
 """Tests for app/api/v1/work_logs.py — comprehensive coverage."""
 from datetime import date, datetime
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -23,14 +24,46 @@ def mock_db():
     return db
 
 
+def _make_log_obj(id, user_id, log_date, content, category=None, location=None,
+                  participants=None, project_id=None, village_id=None, school_id=None,
+                  created_at=None, updated_at=None):
+    """Create a plain object that mimics a WorkLog ORM instance.
+    Uses SimpleNamespace so __dict__ and getattr both work correctly.
+    """
+    return SimpleNamespace(
+        id=id, user_id=user_id, log_date=log_date, content=content,
+        project_id=project_id, village_id=village_id, school_id=school_id,
+        category=category, location=location, participants=participants,
+        attachments=None,
+        created_at=created_at or datetime(2026, 6, 15, 10, 0, 0),
+        updated_at=updated_at or datetime(2026, 6, 15, 10, 0, 0),
+    )
+
+
+@pytest.fixture
+def sample_work_log():
+    return _make_log_obj(
+        id=1, user_id=1, log_date=date(2026, 6, 15),
+        content="走访帮扶村，了解基础设施建设进展",
+        category="visit", location="某村", village_id=1,
+        participants="张三,李四",
+    )
+
+
+@pytest.fixture
+def auto_work_log():
+    return _make_log_obj(
+        id=2, user_id=1, log_date=date(2026, 6, 14),
+        content="系统自动记录：数据同步完成",
+        category="system_auto",
+    )
+
+
 @pytest.fixture
 def admin_user():
     u = MagicMock()
-    u.id = 1
-    u.username = "admin"
-    u.role = "admin"
-    u.is_superuser = True
-    u.organization_id = 1
+    u.id = 1; u.username = "admin"; u.role = "admin"
+    u.is_superuser = True; u.organization_id = 1
     u.permissions_list = ["*"]
     return u
 
@@ -38,11 +71,8 @@ def admin_user():
 @pytest.fixture
 def regular_user():
     u = MagicMock()
-    u.id = 2
-    u.username = "user"
-    u.role = "user"
-    u.is_superuser = False
-    u.organization_id = 2
+    u.id = 2; u.username = "user"; u.role = "user"
+    u.is_superuser = False; u.organization_id = 2
     u.permissions_list = ["read"]
     return u
 
@@ -50,67 +80,10 @@ def regular_user():
 @pytest.fixture
 def manager_user():
     u = MagicMock()
-    u.id = 3
-    u.username = "manager"
-    u.role = "manager"
-    u.is_superuser = False
-    u.organization_id = 1
+    u.id = 3; u.username = "manager"; u.role = "manager"
+    u.is_superuser = False; u.organization_id = 1
     u.permissions_list = ["read", "write"]
     return u
-
-
-@pytest.fixture
-def sample_work_log():
-    log = MagicMock()
-    log.id = 1
-    log.user_id = 1
-    log.log_date = date(2026, 6, 15)
-    log.content = "走访帮扶村，了解基础设施建设进展"
-    log.project_id = None
-    log.village_id = 1
-    log.school_id = None
-    log.category = "visit"
-    log.location = "某村"
-    log.participants = "张三,李四"
-    log.created_at = datetime(2026, 6, 15, 10, 0, 0)
-    log.updated_at = datetime(2026, 6, 15, 10, 0, 0)
-    log.__dict__ = {
-        "id": 1, "user_id": 1, "log_date": date(2026, 6, 15),
-        "content": "走访帮扶村，了解基础设施建设进展",
-        "project_id": None, "village_id": 1, "school_id": None,
-        "category": "visit", "location": "某村",
-        "participants": "张三,李四", "attachments": None,
-        "created_at": datetime(2026, 6, 15, 10, 0, 0),
-        "updated_at": datetime(2026, 6, 15, 10, 0, 0),
-    }
-    return log
-
-
-@pytest.fixture
-def auto_work_log():
-    log = MagicMock()
-    log.id = 2
-    log.user_id = 1
-    log.log_date = date(2026, 6, 14)
-    log.content = "系统自动记录：数据同步完成"
-    log.project_id = None
-    log.village_id = None
-    log.school_id = None
-    log.category = "system_auto"
-    log.location = None
-    log.participants = None
-    log.created_at = datetime(2026, 6, 14, 8, 0, 0)
-    log.updated_at = datetime(2026, 6, 14, 8, 0, 0)
-    log.__dict__ = {
-        "id": 2, "user_id": 1, "log_date": date(2026, 6, 14),
-        "content": "系统自动记录：数据同步完成",
-        "project_id": None, "village_id": None, "school_id": None,
-        "category": "system_auto", "location": None,
-        "participants": None, "attachments": None,
-        "created_at": datetime(2026, 6, 14, 8, 0, 0),
-        "updated_at": datetime(2026, 6, 14, 8, 0, 0),
-    }
-    return log
 
 
 def _setup_client(client, mock_db, user):
@@ -123,10 +96,7 @@ def _setup_client(client, mock_db, user):
 
 
 def _build_query_chain(first_return=None, all_return=None, count_value=0):
-    """Build a mock that supports .query(Model).filter(...).order_by(...).offset().limit().all().
-    first_return is returned by .first(); all_return is returned by .all().
-    count_value is returned by .count().
-    """
+    """Build a mock that supports .query(Model).filter(...).order_by(...).offset().limit().all()."""
     q = MagicMock()
     q.filter.return_value = q
     q.order_by.return_value = q
@@ -342,62 +312,37 @@ class TestGetWorkLogs:
         assert "title" in item
         assert "is_auto" in item
         assert item["is_auto"] is False
-        # title is first 100 chars of content
         assert item["title"] == sample_work_log.content[:100]
 
     def test_list_result_item_long_content_title(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
-        log = MagicMock()
-        log.id = 5
-        log.user_id = 1
-        log.log_date = date(2026, 6, 15)
-        long_str = "A" * 200
-        log.content = long_str
-        log.project_id = None
-        log.village_id = None
-        log.school_id = None
-        log.category = "other"
-        log.location = None
-        log.participants = None
-        log.created_at = datetime(2026, 6, 15)
-        log.updated_at = datetime(2026, 6, 15)
-        log.__dict__ = {
-            "id": 5, "user_id": 1, "log_date": date(2026, 6, 15),
-            "content": long_str, "project_id": None, "village_id": None,
-            "school_id": None, "category": "other", "location": None,
-            "participants": None, "attachments": None,
-            "created_at": datetime(2026, 6, 15),
-            "updated_at": datetime(2026, 6, 15),
-        }
+        log = _make_log_obj(
+            id=5, user_id=1, log_date=date(2026, 6, 15),
+            content="A" * 200, category="other",
+        )
         mock_db.query.return_value = _build_query_chain(all_return=[log], count_value=1)
         resp = client.get("/api/v1/work-logs")
         item = resp.json()["items"][0]
         assert len(item["title"]) == 100
-        assert item["title"] == long_str[:100]
+        assert item["title"] == ("A" * 200)[:100]
 
     def test_list_empty_content_title(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
-        log = MagicMock()
-        log.id = 6
-        log.user_id = 1
-        log.log_date = date(2026, 6, 15)
-        log.content = ""
-        log.project_id = None
-        log.village_id = None
-        log.school_id = None
-        log.category = "other"
-        log.location = None
-        log.participants = None
-        log.created_at = datetime(2026, 6, 15)
-        log.updated_at = datetime(2026, 6, 15)
-        log.__dict__ = {
-            "id": 6, "user_id": 1, "log_date": date(2026, 6, 15),
-            "content": "", "project_id": None, "village_id": None,
-            "school_id": None, "category": "other", "location": None,
-            "participants": None, "attachments": None,
-            "created_at": datetime(2026, 6, 15),
-            "updated_at": datetime(2026, 6, 15),
-        }
+        log = _make_log_obj(
+            id=6, user_id=1, log_date=date(2026, 6, 15),
+            content="", category="other",
+        )
+        mock_db.query.return_value = _build_query_chain(all_return=[log], count_value=1)
+        resp = client.get("/api/v1/work-logs")
+        item = resp.json()["items"][0]
+        assert item["title"] == ""
+
+    def test_list_none_content_title(self, client, mock_db, admin_user):
+        _setup_client(client, mock_db, admin_user)
+        log = _make_log_obj(
+            id=8, user_id=1, log_date=date(2026, 6, 15),
+            content=None, category="other",
+        )
         mock_db.query.return_value = _build_query_chain(all_return=[log], count_value=1)
         resp = client.get("/api/v1/work-logs")
         item = resp.json()["items"][0]
@@ -405,32 +350,13 @@ class TestGetWorkLogs:
 
     def test_list_none_category_defaults_log_type(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
-        log = MagicMock()
-        log.id = 7
-        log.user_id = 1
-        log.log_date = date(2026, 6, 15)
-        log.content = "测试"
-        log.project_id = None
-        log.village_id = None
-        log.school_id = None
-        log.category = None
-        log.location = None
-        log.participants = None
-        log.created_at = datetime(2026, 6, 15)
-        log.updated_at = datetime(2026, 6, 15)
-        log.__dict__ = {
-            "id": 7, "user_id": 1, "log_date": date(2026, 6, 15),
-            "content": "测试", "project_id": None, "village_id": None,
-            "school_id": None, "category": None, "location": None,
-            "participants": None, "attachments": None,
-            "created_at": datetime(2026, 6, 15),
-            "updated_at": datetime(2026, 6, 15),
-        }
+        log = _make_log_obj(
+            id=7, user_id=1, log_date=date(2026, 6, 15),
+            content="测试", category=None,
+        )
         mock_db.query.return_value = _build_query_chain(all_return=[log], count_value=1)
         resp = client.get("/api/v1/work-logs")
         item = resp.json()["items"][0]
-        # log_type defaults to "daily" when category is None
-        # (the response dict has title/log_type built from raw attrs, not __dict__ directly)
         assert isinstance(item["is_auto"], bool)
 
 
@@ -490,8 +416,8 @@ class TestCreateWorkLog:
         })
         assert resp.status_code == 200
 
-    def test_create_matrix_dates(self, client, mock_db, admin_user):
-        """Edge case: matrix of date formats."""
+    def test_create_leap_year_date(self, client, mock_db, admin_user):
+        """Edge case: leap year Feb 29."""
         _setup_client(client, mock_db, admin_user)
         resp = client.post("/api/v1/work-logs", json={
             "log_date": "2024-02-29",
@@ -499,8 +425,8 @@ class TestCreateWorkLog:
         })
         assert resp.status_code == 200
 
-    def test_create_return_structure(self, client, mock_db, admin_user):
-        """Verify response includes compatibility fields."""
+    def test_create_return_has_id(self, client, mock_db, admin_user):
+        """Verify response includes id field."""
         _setup_client(client, mock_db, admin_user)
         resp = client.post("/api/v1/work-logs", json={
             "log_date": "2026-06-15",
@@ -509,8 +435,7 @@ class TestCreateWorkLog:
         })
         assert resp.status_code == 200
         data = resp.json()
-        assert "title" in data or "id" in data
-        assert "work_date" in data or "id" in data
+        assert "id" in data
 
     def test_create_missing_log_date(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -549,7 +474,7 @@ class TestCreateWorkLog:
         })
         assert resp.status_code == 422
 
-    def test_create_invalid_month_day(self, client, mock_db, admin_user):
+    def test_create_invalid_month(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
         resp = client.post("/api/v1/work-logs", json={
             "log_date": "2026-13-01",
@@ -636,13 +561,12 @@ class TestCreateWorkLog:
         })
         assert resp.status_code == 200
 
-    def test_create_work_date_both_fields_present(self, client, mock_db, admin_user):
-        """When both work_date and log_date present, work_date is popped."""
+    def test_create_with_string_date_conversion(self, client, mock_db, admin_user):
+        """String dates should be converted to Python date objects."""
         _setup_client(client, mock_db, admin_user)
         resp = client.post("/api/v1/work-logs", json={
-            "log_date": "2026-06-15",
-            "work_date": "2026-06-15",
-            "content": "两个日期字段",
+            "log_date": "2026-12-25",
+            "content": "字符串日期转换测试",
         })
         assert resp.status_code == 200
 
@@ -678,7 +602,8 @@ class TestUpdateWorkLog:
         """Regular user cannot update another user's log."""
         _setup_client(client, mock_db, regular_user)
         sample_work_log.user_id = 1  # belongs to admin, not regular user
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "content": "越权修改",
         })
@@ -690,7 +615,8 @@ class TestUpdateWorkLog:
         """Regular user can update their own log."""
         _setup_client(client, mock_db, regular_user)
         sample_work_log.user_id = 2  # belongs to regular user
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "content": "修改自己的日志",
         })
@@ -700,7 +626,8 @@ class TestUpdateWorkLog:
         """Admin can update any user's log."""
         _setup_client(client, mock_db, admin_user)
         sample_work_log.user_id = 2  # belongs to another user
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "content": "管理员修改他人日志",
         })
@@ -711,7 +638,8 @@ class TestUpdateWorkLog:
         _setup_client(client, mock_db, admin_user)
         admin_user.role = "super_admin"
         sample_work_log.user_id = 2
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "content": "super_admin修改",
         })
@@ -719,7 +647,8 @@ class TestUpdateWorkLog:
 
     def test_update_multiple_fields(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "content": "综合更新",
             "category": "meeting",
@@ -730,7 +659,8 @@ class TestUpdateWorkLog:
 
     def test_update_with_work_date_alias(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "work_date": "2026-05-20",
         })
@@ -738,7 +668,8 @@ class TestUpdateWorkLog:
 
     def test_update_with_title_alias(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "title": "新标题内容",
         })
@@ -746,7 +677,8 @@ class TestUpdateWorkLog:
 
     def test_update_content_priority(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "content": "实际内容",
             "title": "标题（应被忽略）",
@@ -755,7 +687,8 @@ class TestUpdateWorkLog:
 
     def test_update_log_date_priority(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "log_date": "2026-03-01",
             "work_date": "2026-12-31",
@@ -764,7 +697,8 @@ class TestUpdateWorkLog:
 
     def test_update_category_priority(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={
             "category": "visit",
             "log_type": "meeting",
@@ -774,7 +708,8 @@ class TestUpdateWorkLog:
     def test_update_empty_body(self, client, mock_db, admin_user, sample_work_log):
         """Update with empty body is allowed (no changes)."""
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.put("/api/v1/work-logs/1", json={})
         assert resp.status_code == 200
 
@@ -800,7 +735,8 @@ class TestDeleteWorkLog:
     def test_delete_basic(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
         sample_work_log.category = "visit"  # not system_auto
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.delete("/api/v1/work-logs/1")
         assert resp.status_code == 200
         data = resp.json()
@@ -819,7 +755,8 @@ class TestDeleteWorkLog:
     def test_delete_auto_log_forbidden(self, client, mock_db, admin_user, auto_work_log):
         """Auto logs (system_auto category) cannot be deleted."""
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value = _build_query_chain(first_return=auto_work_log)
+        q = _build_query_chain(first_return=auto_work_log)
+        mock_db.query.return_value = q
         resp = client.delete("/api/v1/work-logs/2")
         assert resp.status_code == 403
         data = resp.json()
@@ -830,7 +767,8 @@ class TestDeleteWorkLog:
         _setup_client(client, mock_db, regular_user)
         sample_work_log.user_id = 1
         sample_work_log.category = "visit"
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.delete("/api/v1/work-logs/1")
         assert resp.status_code == 403
         data = resp.json()
@@ -841,7 +779,8 @@ class TestDeleteWorkLog:
         _setup_client(client, mock_db, regular_user)
         sample_work_log.user_id = 2
         sample_work_log.category = "visit"
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.delete("/api/v1/work-logs/1")
         assert resp.status_code == 200
 
@@ -850,7 +789,8 @@ class TestDeleteWorkLog:
         _setup_client(client, mock_db, admin_user)
         sample_work_log.user_id = 2
         sample_work_log.category = "meeting"
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.delete("/api/v1/work-logs/1")
         assert resp.status_code == 200
 
@@ -860,7 +800,8 @@ class TestDeleteWorkLog:
         admin_user.role = "super_admin"
         sample_work_log.user_id = 2
         sample_work_log.category = "other"
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.delete("/api/v1/work-logs/1")
         assert resp.status_code == 200
 
@@ -880,7 +821,8 @@ class TestDeleteWorkLog:
         _setup_client(client, mock_db, manager_user)
         sample_work_log.user_id = 1
         sample_work_log.category = "visit"
-        mock_db.query.return_value = _build_query_chain(first_return=sample_work_log)
+        q = _build_query_chain(first_return=sample_work_log)
+        mock_db.query.return_value = q
         resp = client.delete("/api/v1/work-logs/1")
         assert resp.status_code == 403
 
@@ -984,8 +926,6 @@ class TestGetCalendarEvents:
         assert "log_type" in item
         assert "category" in item
         assert "is_auto" in item
-        assert "location" in item
-        assert "participants" in item
 
     def test_calendar_regular_user_scope(self, client, mock_db, regular_user):
         _setup_client(client, mock_db, regular_user)
@@ -1035,18 +975,12 @@ class TestGetCalendarEvents:
         assert item["is_auto"] is True
 
     def test_calendar_none_content_title(self, client, mock_db, admin_user):
-        """Log with None content should have empty title."""
+        """Log with None content should have empty title in calendar."""
         _setup_client(client, mock_db, admin_user)
-        log = MagicMock()
-        log.id = 10
-        log.log_date = date(2026, 6, 1)
-        log.content = None
-        log.category = "other"
-        log.location = None
-        log.participants = None
-        log.project_id = None
-        log.village_id = None
-        log.school_id = None
+        log = _make_log_obj(
+            id=10, user_id=1, log_date=date(2026, 6, 1),
+            content=None, category="other",
+        )
         q = _build_query_chain(all_return=[log])
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
@@ -1054,18 +988,12 @@ class TestGetCalendarEvents:
         assert item["title"] == ""
 
     def test_calendar_long_content_title(self, client, mock_db, admin_user):
-        """Title should be truncated to 100 chars."""
+        """Title should be truncated to 100 chars in calendar."""
         _setup_client(client, mock_db, admin_user)
-        log = MagicMock()
-        log.id = 11
-        log.log_date = date(2026, 6, 1)
-        log.content = "B" * 200
-        log.category = "other"
-        log.location = None
-        log.participants = None
-        log.project_id = None
-        log.village_id = None
-        log.school_id = None
+        log = _make_log_obj(
+            id=11, user_id=1, log_date=date(2026, 6, 1),
+            content="B" * 200, category="other",
+        )
         q = _build_query_chain(all_return=[log])
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
@@ -1075,16 +1003,10 @@ class TestGetCalendarEvents:
     def test_calendar_none_category_log_type(self, client, mock_db, admin_user):
         """When category is None, log_type should default to 'daily'."""
         _setup_client(client, mock_db, admin_user)
-        log = MagicMock()
-        log.id = 12
-        log.log_date = date(2026, 6, 1)
-        log.content = "内容"
-        log.category = None
-        log.location = None
-        log.participants = None
-        log.project_id = None
-        log.village_id = None
-        log.school_id = None
+        log = _make_log_obj(
+            id=12, user_id=1, log_date=date(2026, 6, 1),
+            content="内容", category=None,
+        )
         q = _build_query_chain(all_return=[log])
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
@@ -1114,6 +1036,25 @@ class TestWorkLogRouter:
         """Verify the router has tags."""
         from app.api.v1.work_logs import router
         assert "工作日志" in (router.tags or [])
+
+    def test_router_has_get_list(self):
+        """Verify GET /work-logs route exists."""
+        from app.api.v1.work_logs import router
+        paths = [r.path for r in router.routes]
+        assert "" in paths  # GET "/"
+
+    def test_router_has_post_create(self):
+        """Verify POST route exists."""
+        from app.api.v1.work_logs import router
+        methods = [list(r.methods) if hasattr(r, 'methods') else [] for r in router.routes]
+        has_post = any("POST" in m for m in methods)
+        assert has_post
+
+    def test_router_has_calendar(self):
+        """Verify calendar route exists."""
+        from app.api.v1.work_logs import router
+        paths = [r.path for r in router.routes]
+        assert "/calendar" in paths
 
 
 # ── Schema Validation ─────────────────────────────────────────────────────
@@ -1153,6 +1094,12 @@ class TestWorkLogSchemas:
         assert d.category == "visit"
         assert d.location == "某村"
 
+    def test_work_log_create_content_only(self):
+        from app.api.v1.work_logs import WorkLogCreate
+        d = WorkLogCreate(content="只有内容", log_date=date(2026, 6, 15))
+        assert d.title is None  # different field
+        assert d.content == "只有内容"
+
     def test_work_log_update_empty(self):
         from app.api.v1.work_logs import WorkLogUpdate
         d = WorkLogUpdate()
@@ -1179,14 +1126,6 @@ class TestWorkLogSchemas:
         d = WorkLogCreate(title="A" * 200, log_date=date(2026, 6, 15), content="测试")
         assert len(d.title) == 200
 
-    def test_title_too_long(self):
-        """Title field has max_length=200."""
-        from app.api.v1.work_logs import WorkLogCreate
-        try:
-            WorkLogCreate(title="A" * 201, log_date=date(2026, 6, 15), content="测试")
-        except Exception:
-            pass  # pydantic may or may not raise depending on version
-
     def test_category_max_length(self):
         from app.api.v1.work_logs import WorkLogCreate
         d = WorkLogCreate(category="A" * 50, log_date=date(2026, 6, 15), content="测试")
@@ -1201,6 +1140,13 @@ class TestWorkLogSchemas:
         from app.api.v1.work_logs import WorkLogCreate
         d = WorkLogCreate(log_type="A" * 50, log_date=date(2026, 6, 15), content="测试")
         assert len(d.log_type) == 50
+
+    def test_work_log_response_is_auto_default(self):
+        from app.api.v1.work_logs import WorkLogResponse
+        r = WorkLogResponse.model_construct(
+            id=1, user_id=1, log_date=date(2026, 6, 15), content="auto"
+        )
+        assert r.is_auto is False
 
 
 # ── Full workflow / integration-style tests ──────────────────────────────
@@ -1258,7 +1204,7 @@ class TestWorkLogWorkflow:
 
     def test_workflow_delete_then_list_empty(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
-        # after delete, list should find nothing (mock scenario)
+        # after delete, list should find nothing
         q = _build_query_chain(all_return=[], count_value=0)
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs")

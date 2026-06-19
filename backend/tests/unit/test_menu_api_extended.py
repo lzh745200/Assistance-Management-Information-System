@@ -180,8 +180,10 @@ class TestGetAccessibleMenus:
 
     def test_custom_menus_include_children(self, menus_app, client):
         """When parent AND child keys are allowed, children appear in the tree."""
-        menukeys = ["analytics", "analytics-dashboard", "analytics-map",
-                     "work-analysis", "dashboard"]
+        menukeys = [
+            "analytics", "analytics-dashboard", "analytics-map",
+            "work-analysis", "dashboard",
+        ]
         user = _make_user(user_id=7, username="partial", role="viewer",
                           allowed_menus=json.dumps(menukeys))
         _set_user(menus_app, user)
