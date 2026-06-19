@@ -47,7 +47,18 @@
           </el-menu-item>
 
           <!-- ════ 核心业务 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label" v-if="menuStore.canAccessMenu('villages') || menuStore.canAccessMenu('projects') || menuStore.canAccessMenu('schools') || menuStore.canAccessMenu('policies') || menuStore.canAccessMenu('funds-admin') || menuStore.canAccessMenu('funds-user')">
+          <div
+            v-show="!isCollapsed"
+            v-if="
+              menuStore.canAccessMenu('villages') ||
+              menuStore.canAccessMenu('projects') ||
+              menuStore.canAccessMenu('schools') ||
+              menuStore.canAccessMenu('policies') ||
+              menuStore.canAccessMenu('funds-admin') ||
+              menuStore.canAccessMenu('funds-user')
+            "
+            class="menu-section-label"
+          >
             <span>核心业务</span>
           </div>
 
@@ -148,7 +159,11 @@
           </el-menu-item>
 
           <!-- ════ 乡村振兴 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label" v-if="menuStore.canAccessMenu('rural-works')">
+          <div
+            v-show="!isCollapsed"
+            v-if="menuStore.canAccessMenu('rural-works')"
+            class="menu-section-label"
+          >
             <span>乡村振兴</span>
           </div>
 
@@ -170,7 +185,14 @@
           </el-sub-menu>
 
           <!-- ════ 工作流 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label" v-if="menuStore.canAccessMenu('approval') || menuStore.canAccessMenu('work-analysis')">
+          <div
+            v-show="!isCollapsed"
+            v-if="
+              menuStore.canAccessMenu('approval') ||
+              menuStore.canAccessMenu('work-analysis')
+            "
+            class="menu-section-label"
+          >
             <span>工作流</span>
           </div>
 
@@ -206,7 +228,19 @@
           </el-menu-item>
 
           <!-- ════ 数据分析 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label">
+          <div
+            v-show="!isCollapsed"
+            v-if="
+              menuStore.canAccessMenu('data') ||
+              menuStore.canAccessMenu('data-overview') ||
+              menuStore.canAccessMenu('report-templates') ||
+              menuStore.canAccessMenu('report-export') ||
+              menuStore.canAccessMenu('analytics') ||
+              menuStore.canAccessMenu('analytics-dashboard') ||
+              menuStore.canAccessMenu('analytics-map')
+            "
+            class="menu-section-label"
+          >
             <span>数据分析</span>
           </div>
 
@@ -267,7 +301,11 @@
           </el-sub-menu>
 
           <!-- ════ 系统 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label">
+          <div
+            v-show="!isCollapsed"
+            v-if="menuStore.canAccessMenu('system')"
+            class="menu-section-label"
+          >
             <span>系统管理</span>
           </div>
 
