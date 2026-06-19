@@ -426,7 +426,7 @@ class RBACService:
             )
             .delete(synchronize_session=False)
         )
-        db.commit()
+        db.flush()  # flush 而非 commit — 由外层 TransactionManager 统一提交
         return rows > 0
 
     async def revoke_permissions_batch(
