@@ -1,5 +1,5 @@
 !define PRODUCT_NAME "Assistance System"
-!define PRODUCT_VERSION "1.4.0"
+!define PRODUCT_VERSION "1.2.0"
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64
 !include "MUI2.nsh"

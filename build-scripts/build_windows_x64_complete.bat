@@ -18,7 +18,7 @@ title 帮扶管理信息系统 - Windows x64 构建
 
 set "PROJECT_ROOT=%~dp0.."
 cd /d "%PROJECT_ROOT%"
-set "VERSION=1.3.0"
+set "VERSION=1.2.0"
 set "ARCH=x64"
 
 echo ============================================
