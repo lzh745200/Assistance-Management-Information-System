@@ -534,10 +534,10 @@ class UserPermissionService:
 
             result.append(
                 {
-                    "id": org.id,
+                    "id": str(org.id),  # 字符串 ID — 防止 el-tree DOM 异常
                     "name": org.name,
                     "code": org.code,
-                    "parent_id": org.parent_id,
+                    "parent_id": str(org.parent_id) if org.parent_id else None,
                     "level": org.level,
                     "type": org.type,
                     "org_type": org.org_type,

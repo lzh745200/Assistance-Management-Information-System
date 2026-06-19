@@ -1,0 +1,65 @@
+name: Build Windows Installer
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Sync version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: python scripts/sync_version.py ${{ github.ref_name }}
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm config set registry https://registry.npmmirror.com
+          npm install --legacy-peer-deps --network-timeout=600000
+          npm run build
+
+      - name: Build backend
+        run: |
+          pip install -r backend/requirements.txt pyinstaller
+          cd backend
+          python -m PyInstaller assistance-management-backend.spec --clean --noconfirm
+
+      - name: Package installer (NSIS)
+        uses: joncloud/makensis-action@v4
+        with:
+          script-file: build-scripts/installer-simple.nsi
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-x64
+          path: build/dist/*.exe
+          retention-days: 30
+
+      - name: Upload backend exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-exe-x64
+          path: backend/dist/assistance-management-backend.exe
+          retention-days: 30

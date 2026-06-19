@@ -172,8 +172,9 @@ def _ensure_dirs():
 
 
 def _check_database_integrity():
-    """启动时执行 SQLite PRAGMA integrity_check，异常时尝试从最近备份恢复"""
+    """启动时执行 SQLite PRAGMA integrity_check（每24h一次），异常时尝试从最近备份恢复"""
     import sqlite3
+    import time
 
     db_url = os.environ.get("DATABASE_URL", "sqlite:///./data/rural_revitalization.db")
     if not db_url.startswith("sqlite"):
@@ -184,6 +185,17 @@ def _check_database_integrity():
         print(f"数据库文件不存在，将在启动时自动创建: {db_path}")
         return
 
+    # 每 24h 检查一次完整性（避免每次启动都跑全表扫描）
+    _integrity_stamp = Path(db_path + ".integrity_check")
+    if _integrity_stamp.exists():
+        try:
+            age = time.time() - _integrity_stamp.stat().st_mtime
+            if age < 86400:  # 24h
+                print(f"[OK] 数据库完整性检查跳过（上次检查: {age / 3600:.1f}h 前）")
+                return
+        except OSError:
+            pass
+
     try:
         conn = sqlite3.connect(db_path)
         result = conn.execute("PRAGMA integrity_check").fetchone()
@@ -191,6 +203,7 @@ def _check_database_integrity():
 
         if result and result[0] == "ok":
             print("[OK] 数据库完整性检查通过")
+            _integrity_stamp.touch()  # 记录检查时间
         else:
             print(f"[WARN] 数据库完整性检查异常: {result}")
             _try_restore_from_backup(db_path)

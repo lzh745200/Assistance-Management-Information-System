@@ -4,6 +4,8 @@
 
 import pytest
 
+pytestmark = pytest.mark.xdist_group("audit")  # 并行测试隔离：共享 module 级 fixture
+
 
 import os
 import sys

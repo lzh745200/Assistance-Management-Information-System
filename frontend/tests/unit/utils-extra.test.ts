@@ -1,4 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+// 全局 teardown：排空 microtask 队列，消除 RequestDeduplicator 竞态
+afterEach(async () => {
+  await new Promise((r) => setTimeout(r, 0));
+});
 
 // ==================== RequestDeduplicator ====================
 describe('RequestDeduplicator', () => {
