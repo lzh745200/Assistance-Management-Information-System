@@ -1,7 +1,7 @@
 """Tests for app.services.village.mixins - zero coverage → 100%"""
 
 import pytest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 from app.services.village.mixins import (
     VillageQueryMixin,
     VillageExportMixin,
@@ -29,7 +29,7 @@ class TestApplyRegionFilter:
         query = MagicMock()
         query.filter.return_value = "filtered_query"
         model = MagicMock()
-        model.region_code = "some_column"
+        type(model).region_code = "some_column"
         result = VillageQueryMixin.apply_region_filter(query, model, "440000")
         query.filter.assert_called_once()
         assert result == "filtered_query"
@@ -38,8 +38,9 @@ class TestApplyRegionFilter:
         query = MagicMock()
         query.filter.return_value = "county_filtered"
         model = MagicMock()
+        # Remove region_code so it defaults to None; county remains
         del model.region_code
-        model.county = "county_col"
+        type(model).county = "county_col"
         result = VillageQueryMixin.apply_region_filter(query, model, "440100")
         query.filter.assert_called_once()
         assert result == "county_filtered"
@@ -47,11 +48,9 @@ class TestApplyRegionFilter:
     def test_returns_query_when_neither_attr_exists(self):
         query = MagicMock()
         model = MagicMock()
-        # Remove both possible attributes
-        type(model).region_code = PropertyMock(side_effect=AttributeError)
-        type(model).county = PropertyMock(side_effect=AttributeError)
-        # actually getattr returns None for missing attrs since we use getattr with default
-        # for the test we just need model with no matching column
+        # Delete both attributes so getattr with default returns None
+        del model.region_code
+        del model.county
         result = VillageQueryMixin.apply_region_filter(query, model, "440000")
         assert result is query
 
@@ -77,12 +76,13 @@ class TestApplyKeywordSearch:
         query = MagicMock()
         query.filter.return_value = "search_result"
         model = MagicMock()
-        model.name = "name_col"
-        model.name.ilike.return_value = "name_ilike"
-        model.code = "code_col"
-        model.code.ilike.return_value = "code_ilike"
+        # ilike must return a MagicMock that represents a SQL clause
+        name_ilike_clause = MagicMock(name="name_ilike_clause")
+        code_ilike_clause = MagicMock(name="code_ilike_clause")
+        type(model).name = MagicMock(ilike=MagicMock(return_value=name_ilike_clause))
+        type(model).code = MagicMock(ilike=MagicMock(return_value=code_ilike_clause))
 
-        with patch("app.services.village.mixins.or_", return_value="or_clause"):
+        with patch("sqlalchemy.or_", return_value="or_clause"):
             result = VillageQueryMixin.apply_keyword_search(query, model, "test")
             query.filter.assert_called_once_with("or_clause")
             assert result == "search_result"
@@ -91,11 +91,11 @@ class TestApplyKeywordSearch:
         query = MagicMock()
         query.filter.return_value = "name_only_result"
         model = MagicMock()
-        type(model).code = PropertyMock(side_effect=AttributeError)
-        model.name = "name_col"
-        model.name.ilike.return_value = "name_only_ilike"
+        name_ilike_clause = MagicMock(name="name_ilike")
+        type(model).name = MagicMock(ilike=MagicMock(return_value=name_ilike_clause))
+        del model.code
 
-        with patch("app.services.village.mixins.or_", return_value="just_name"):
+        with patch("sqlalchemy.or_", return_value="just_name"):
             result = VillageQueryMixin.apply_keyword_search(query, model, "x")
             query.filter.assert_called_once_with("just_name")
             assert result == "name_only_result"
@@ -103,8 +103,8 @@ class TestApplyKeywordSearch:
     def test_returns_query_when_no_name_or_code(self):
         query = MagicMock()
         model = MagicMock()
-        type(model).name = PropertyMock(side_effect=AttributeError)
-        type(model).code = PropertyMock(side_effect=AttributeError)
+        del model.name
+        del model.code
         result = VillageQueryMixin.apply_keyword_search(query, model, "test")
         assert result is query
 
@@ -141,13 +141,21 @@ class TestToExportDict:
 
     def test_non_ethnic_village(self):
         village = MagicMock()
+        # Provide defaults so getattr works
+        village.name = ""
+        village.code = ""
+        village.province = ""
+        village.city = ""
+        village.county = ""
+        village.township = ""
+        village.ethnic_group = ""
         village.is_ethnic_village = False
+        village.longitude = ""
+        village.latitude = ""
         result = VillageExportMixin.to_export_dict(village)
         assert result["是否民族村寨"] == "否"
 
     def test_missing_attributes_default_to_empty(self):
-        village = MagicMock()
-        # MagicMock auto-creates attributes, so use plain object
         class PlainVillage:
             pass
         v = PlainVillage()

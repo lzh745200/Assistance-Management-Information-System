@@ -57,6 +57,8 @@ async def verify_and_enable(
             return {"message": "双因素认证已启用"}
         else:
             raise HTTPException(status_code=400, detail="验证码错误")
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
