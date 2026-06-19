@@ -508,6 +508,7 @@ import {
   ArrowDown,
   Lock,
   SwitchButton,
+  Select,
 } from "@element-plus/icons-vue";
 
 const route = useRoute();
