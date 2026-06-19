@@ -12,18 +12,23 @@
 /** 生成稳定的、基于内容的回退键 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function makeStableId(node: any): string {
-  return String(
+  const raw = String(
     node.id ??
-    node.key ??
-    `_node_${(node.name || node.label || '').substring(0, 20)}`
+      node.key ??
+      `_node_${(node.name || node.label || "").substring(0, 20)}`,
   );
+  // 确保以字母开头 — 纯数字 id（如 0）会导致 DOM setAttribute('0', …) 异常
+  return /^[0-9]/.test(raw) ? `_${raw}` : raw;
 }
 
 /** 将单节点 id 转为字符串，白名单属性，递归标准化子节点 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeTreeNode(node: any): any {
-  const children = node.children?.length
-    ? normalizeTreeNodes(node.children)
+  const hasChildrenArray = Array.isArray(node.children);
+  const children = hasChildrenArray
+    ? node.children.length
+      ? normalizeTreeNodes(node.children)
+      : []
     : undefined;
 
   return {
@@ -31,12 +36,14 @@ export function normalizeTreeNode(node: any): any {
     name: node.name,
     label: node.label ?? node.name,
     children,
-    leaf: children ? children.length === 0 : (node.leaf ?? !node.children?.length),
+    leaf: hasChildrenArray
+      ? node.children.length === 0
+      : (node.leaf ?? !node.children?.length),
   };
 }
 
 /** 递归规范化整棵树 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeTreeNodes(nodes: any[]): any[] {
-  return nodes.map(node => normalizeTreeNode(node));
+  return nodes.map((node) => normalizeTreeNode(node));
 }
