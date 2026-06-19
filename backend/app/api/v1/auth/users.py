@@ -322,10 +322,16 @@ async def get_staff_list(
     db: Session = Depends(get_db),
 ):
     """获取活跃用户列表，供任务分配等场景使用（任何登录用户均可访问）"""
-    from app.core.data_permission import filter_by_data_scope
+    from app.core.data_permission import get_data_scope, DataScope
 
     query = db.query(User).filter(User.is_active.is_(True))
-    query = filter_by_data_scope(query, User, current_user, db=db)
+    # User 模型无 created_by/department_id 列，仅按组织过滤
+    scope = get_data_scope(current_user)
+    if scope == DataScope.OWN:
+        query = query.filter(User.id == current_user.id)
+    elif scope == DataScope.OWN_DEPT and getattr(current_user, "organization_id", None):
+        query = query.filter(User.organization_id == current_user.organization_id)
+    # DataScope.ALL — 无过滤
     total = query.count()
 
     users = (
