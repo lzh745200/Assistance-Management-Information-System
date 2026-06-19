@@ -148,8 +148,8 @@ function onMenuCheck(_node: any, checked: any) {
 }
 
 function resetToDefault() {
-  selectedMenuKeys.value = [];
-  // 传空数组到后端会重置为 null（继承角色默认）
+  // 设为 null 表示"恢复角色默认菜单"——后端 len==0 会清空所有菜单
+  selectedMenuKeys.value = null as any;
 }
 
 async function saveConfig() {
