@@ -15,6 +15,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
 from app.models.rbac import RbacRole, RolePermission, UserRole
 from app.models.user import User
+from app.core.transaction import TransactionManager
 from app.services.rbac_service import Permission, rbac_service
 
 router = APIRouter(prefix="/rbac", tags=["权限管理"])
@@ -323,27 +324,27 @@ async def grant_permission(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
-    """直接授予权限给用户（支持批量权限）"""
+    """直接授予用户权限（支持批量，具有事务原子性）"""
     granted: List[str] = []
     failed: List[str] = []
 
-    # 循环前置不变值 — 避免每次迭代重复计算
     user_id_str = str(grant.user_id)
     granted_by_str = str(current_user.id)
     expires_iso = grant.expires_at.isoformat() if grant.expires_at else None
 
-    for perm in grant.permissions:
-        success = await rbac_service.grant_permission(
-            user_id=user_id_str,
-            permission=perm,
-            granted_by=granted_by_str,
-            expires_at=expires_iso,
-            db=db,
-        )
-        if success:
-            granted.append(perm)
-        else:
-            failed.append(perm)
+    with TransactionManager.transaction(db) as sess:
+        for perm in grant.permissions:
+            success = await rbac_service.grant_permission(
+                user_id=user_id_str,
+                permission=perm,
+                granted_by=granted_by_str,
+                expires_at=expires_iso,
+                db=sess,
+            )
+            if success:
+                granted.append(perm)
+            else:
+                failed.append(perm)
 
     return {
         "success": len(failed) == 0,
@@ -359,12 +360,14 @@ async def revoke_permission(
     db: Session = Depends(get_db),
     current_user=Depends(require_admin()),
 ):
-    """批量撤销用户权限"""
-    revoked, failed = await rbac_service.revoke_permissions_batch(
-        user_id=str(revoke.user_id),
-        permissions=revoke.permissions,
-        db=db,
-    )
+    """批量撤销用户权限（具有事务原子性）"""
+    with TransactionManager.transaction(db) as sess:
+        revoked, failed = await rbac_service.revoke_permissions_batch(
+            user_id=str(revoke.user_id),
+            permissions=revoke.permissions,
+            db=sess,
+        )
+
     return {
         "success": len(failed) == 0,
         "revoked": revoked,
