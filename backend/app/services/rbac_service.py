@@ -435,16 +435,31 @@ class RBACService:
         permissions: List[str],
         db: Session = None,
     ) -> tuple:
-        """批量撤销用户权限，返回 (revoked: List[str], failed: List[str])"""
-        revoked: List[str] = []
-        failed: List[str] = []
-        for perm in permissions:
-            success = await self.revoke_permission(user_id=user_id, permission=perm, db=db)
-            if success:
-                revoked.append(perm)
-            else:
-                failed.append(perm)
-        return revoked, failed
+        """批量撤销用户权限。返回 (revoked: List[str], failed: List[str])。
+
+        使用预查询确定哪些权限实际存在，然后单条 DELETE 批量删除。
+        调用方拥有事务边界（通过 TransactionManager.transaction）。
+        """
+        uid = int(user_id)
+
+        # 第 1 步：预查询哪些权限对用户实际存在
+        existing_rows = (
+            db.query(UserPermission.permission)
+            .filter(UserPermission.user_id == uid, UserPermission.permission.in_(permissions))
+            .all()
+        )
+        existing = {row[0] for row in existing_rows}
+        missing = [p for p in permissions if p not in existing]
+
+        # 第 2 步：单条批量 DELETE — 仅删除实际存在的权限
+        if existing:
+            db.query(UserPermission).filter(
+                UserPermission.user_id == uid,
+                UserPermission.permission.in_(list(existing)),
+            ).delete(synchronize_session=False)
+            db.flush()
+
+        return list(existing), missing
 
     async def create_role(
         self,
