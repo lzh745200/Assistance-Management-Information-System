@@ -25,8 +25,6 @@ class FundMock:
     """Plain object mimicking a Fund ORM instance. Only attributes set in
     __init__ are accessible — missing ones raise AttributeError, so _safe_val
     does not mistake arbitrary values for datetime/date."""
-    __slots__ = ()
-
     def __init__(self, fund_id=1, **overrides):
         defaults = dict(
             id=fund_id,
@@ -97,7 +95,6 @@ class FundMock:
 
 class SimpleObj:
     """Generic plain-object holder (used for DB row results, attachments, etc.)"""
-    __slots__ = ()
 
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -481,7 +478,7 @@ class TestCreateFund:
         """Admin creates a fund successfully."""
         created = Mock()
         created.id = 100
-        with patch("app.api.v1.funds.FundService") as MockService:
+        with patch("app.services.fund_service.FundService") as MockService:
             mock_svc = MockService.return_value
             mock_svc.create_fund_for_user.return_value = created
 
@@ -503,7 +500,7 @@ class TestCreateFund:
         """Create with all optional fields populated."""
         created = Mock()
         created.id = 101
-        with patch("app.api.v1.funds.FundService") as MockService:
+        with patch("app.services.fund_service.FundService") as MockService:
             mock_svc = MockService.return_value
             mock_svc.create_fund_for_user.return_value = created
 
@@ -530,7 +527,7 @@ class TestCreateFund:
         """Create with minimal fields uses defaults."""
         created = Mock()
         created.id = 102
-        with patch("app.api.v1.funds.FundService") as MockService:
+        with patch("app.services.fund_service.FundService") as MockService:
             mock_svc = MockService.return_value
             mock_svc.create_fund_for_user.return_value = created
 
@@ -548,7 +545,7 @@ class TestApplyFund:
         """Admin user can also apply for funds."""
         created = Mock()
         created.id = 200
-        with patch("app.api.v1.funds.FundService") as MockService:
+        with patch("app.services.fund_service.FundService") as MockService:
             mock_svc = MockService.return_value
             mock_svc.create_fund_for_user.return_value = created
 
@@ -564,7 +561,7 @@ class TestApplyFund:
         """Regular user can apply for funds (no admin required)."""
         created = Mock()
         created.id = 201
-        with patch("app.api.v1.funds.FundService") as MockService:
+        with patch("app.services.fund_service.FundService") as MockService:
             mock_svc = MockService.return_value
             mock_svc.create_fund_for_user.return_value = created
 
@@ -1698,7 +1695,7 @@ class TestManagerRole:
         """Manager (role='manager') can create funds."""
         created = Mock()
         created.id = 300
-        with patch("app.api.v1.funds.FundService") as MockService:
+        with patch("app.services.fund_service.FundService") as MockService:
             mock_svc = MockService.return_value
             mock_svc.create_fund_for_user.return_value = created
 
