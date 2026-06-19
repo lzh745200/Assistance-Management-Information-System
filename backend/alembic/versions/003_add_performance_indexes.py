@@ -29,14 +29,14 @@ def upgrade():
     op.create_index('idx_villages_army_unit_id', 'villages', ['army_unit_id'])
 
     # 项目表索引
-    op.create_index('idx_projects_village_id', 'projects', ['village_id'])
+    op.create_index('idx_projects_village_id', 'projects', ['supported_village_id'])
     op.create_index('idx_projects_status', 'projects', ['status'])
     op.create_index('idx_projects_start_date', 'projects', ['start_date'])
-    op.create_index('idx_projects_village_status', 'projects', ['village_id', 'status'])
+    op.create_index('idx_projects_village_status', 'projects', ['supported_village_id', 'status'])
 
     # 资金表索引
     op.create_index('idx_funds_project_id', 'funds', ['project_id'])
-    op.create_index('idx_funds_village_id', 'funds', ['village_id'])
+    op.create_index('idx_funds_village_id', 'funds', ['supported_village_id'])
     op.create_index('idx_funds_allocation_date', 'funds', ['allocation_date'])
     op.create_index('idx_funds_status', 'funds', ['status'])
 
@@ -57,10 +57,10 @@ def upgrade():
     op.create_index('idx_messages_created_at', 'messages', ['created_at'])
 
     # 年度数据表索引
-    op.create_index('idx_annual_population_village_year', 'annual_population', ['village_id', 'year'])
-    op.create_index('idx_annual_income_village_year', 'annual_income', ['village_id', 'year'])
-    op.create_index('idx_annual_industry_village_year', 'annual_industry', ['village_id', 'year'])
-    op.create_index('idx_annual_infrastructure_village_year', 'annual_infrastructure', ['village_id', 'year'])
+    op.create_index('idx_annual_population_village_year', 'annual_population', ['supported_village_id', 'year'])
+    op.create_index('idx_annual_income_village_year', 'annual_income', ['supported_village_id', 'year'])
+    op.create_index('idx_annual_industry_village_year', 'annual_industry', ['supported_village_id', 'year'])
+    op.create_index('idx_annual_infrastructure_village_year', 'annual_infrastructure', ['supported_village_id', 'year'])
 
 
 def downgrade():
