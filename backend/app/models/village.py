@@ -52,12 +52,16 @@ class Village(Base, TimestampMixin):
     annual_income_per_capita = Column(Float, nullable=True, comment="人均年收入（元）")
 
     # 状态
+    status = Column(String(50), nullable=True, default="active", comment="状态: active/inactive/developing/completed")
     is_active = Column(Boolean, default=True, comment="是否活跃")
     description = Column(Text, nullable=True, comment="备注说明")
 
     # 关系
     villagers = relationship("Villager", back_populates="village", cascade="all, delete-orphan")
     industries = relationship("Industry", back_populates="village", cascade="all, delete-orphan")
+    # industry.py backref 需要显式声明以确保 selectinload 可用
+    tea_plantations = relationship("TeaPlantation", back_populates="village", viewonly=True)
+    cactus_fruit_plots = relationship("CactusFruitPlot", back_populates="village", viewonly=True)
 
     def __repr__(self):
         return f"<Village(id={self.id}, name={self.name})>"

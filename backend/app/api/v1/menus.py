@@ -326,6 +326,14 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
             },
         ],
     },
+    {
+        "key": "messages",
+        "label": "消息中心",
+        "icon": "Message",
+        "path": "/message",
+        "order": 110,
+        "roles": None,
+    },
 ]
 
 
