@@ -746,3 +746,9 @@ class VillageAttachment(Base, TimestampMixin):
         nullable=True,
         comment="上传者ID",
     )
+
+
+# 确保 Fund 模型已注册至 SQLAlchemy 映射器注册表，
+# 以便 SupportedVillage.funds relationship("Fund", ...) 能解析。
+# 放在文件末尾以避免循环导入。
+from .fund import Fund  # noqa: E402, F401
