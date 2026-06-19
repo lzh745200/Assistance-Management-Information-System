@@ -96,8 +96,8 @@ async def export_villages(
             "编码": v.code,
             "省份": v.province or "",
             "城市": v.city or "",
-            "区县": v.district or "",
-            "人口": v.population or 0,
+            "区县": v.county or "",
+            "人口": v.total_population or 0,
             "状态": v.status,
             "创建时间": format_datetime(v.created_at),
         }
@@ -287,7 +287,7 @@ async def export_comprehensive_report(
         {
             "ID": v.id,
             "名称": v.name,
-            "人口": v.population or 0,
+            "人口": v.total_population or 0,
             "项目数": 0,
             "产业数": 0,
         }

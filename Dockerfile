@@ -6,7 +6,7 @@
 # ============================================================
 # 阶段 1: 构建前端 (Node.js 18)
 # ============================================================
-FROM node:18-alpine AS frontend-builder
+FROM localhost/node:18-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
@@ -26,7 +26,7 @@ RUN npm run build
 # ============================================================
 # 阶段 2: 构建后端 (Python 3.11 + PyInstaller)
 # ============================================================
-FROM python:3.11-alpine AS backend-builder
+FROM localhost/python:3.11-alpine AS backend-builder
 
 WORKDIR /app/backend
 
@@ -69,7 +69,7 @@ RUN pyinstaller --name=assistance-backend \
 # ============================================================
 # 阶段 3: 构建 Electron (ARM64 DEB 包)
 # ============================================================
-FROM node:18-alpine AS electron-builder
+FROM localhost/node:18-alpine AS electron-builder
 
 # 安装 Electron 构建依赖（Alpine 需要额外包）
 RUN apk add --no-cache \
@@ -81,7 +81,6 @@ RUN apk add --no-cache \
     libxkbfile-dev \
     libsecret-dev \
     alpine-sdk \
-    # 以下为 electron-builder 可能需要的运行时库（仅用于构建，非必须）
     libxcb \
     libxcb-xinerama0 \
     libxcb-icccm4 \
@@ -126,7 +125,7 @@ RUN npx electron-builder --linux --arm64 --publish never
 # ============================================================
 # 阶段 4: 组装最终运行镜像（可选，用于在容器内运行整套系统）
 # ============================================================
-FROM python:3.11-alpine AS runtime
+FROM localhost/python:3.11-alpine AS runtime
 
 WORKDIR /app
 
@@ -136,7 +135,6 @@ RUN apk add --no-cache \
     npm \
     bash \
     curl \
-    # 以下为 Electron 运行时依赖（如果要在容器中运行 Electron 应用，但此处只作为服务运行，可酌情保留）
     libxcb \
     libxcb-xinerama0 \
     libxcb-icccm4 \
