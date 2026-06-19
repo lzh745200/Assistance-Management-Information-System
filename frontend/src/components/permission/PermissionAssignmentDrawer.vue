@@ -20,6 +20,15 @@
 
       <!-- Tab 2: 权限配置 -->
       <el-tab-pane label="权限配置" name="permissions">
+        <el-alert
+          v-if="permissionsLoadFailed"
+          type="warning"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 12px"
+        >
+          权限数据加载失败，请关闭面板后重试。保存操作已被禁用。
+        </el-alert>
         <PermissionTreePanel
           :permissions="currentPermissions"
           @change="onPermissionsChange"
@@ -28,6 +37,7 @@
           <el-button
             type="primary"
             :loading="savingPermissions"
+            :disabled="permissionsLoadFailed || savingPermissions"
             @click="savePermissions"
           >
             保存权限
@@ -147,6 +157,7 @@ const savingPermissions = ref(false);
 const savingLegacy = ref(false);
 
 const rolePanelRef = ref();
+const permissionsLoadFailed = ref(false);
 const currentPermissions = ref<string[]>([]);
 const allRoles = ref<RbacRole[]>([]);
 const roleDefaultKeys = ref<string[]>([]);
@@ -173,12 +184,13 @@ async function loadCurrentPermissions() {
   if (!props.user?.id) return;
   try {
     const res = await request.get(`/rbac/user/${props.user.id}/permissions`);
-    // 后端返回 UserPermissionsResponse: { user_id, permissions: [...], roles: [...] }
     const payload = res.data?.data || res.data;
     const perms = payload?.permissions || payload || [];
     currentPermissions.value = Array.isArray(perms) ? perms : [];
+    permissionsLoadFailed.value = false;
   } catch {
-    currentPermissions.value = [];
+    permissionsLoadFailed.value = true;
+    // Don't overwrite currentPermissions — keep previous value
   }
 }
 
@@ -212,10 +224,10 @@ function onPermissionsChange(perms: string[]) {
 // ── 保存操作 ──
 
 async function savePermissions() {
-  if (!props.user?.id) return;
+  if (!props.user?.id || permissionsLoadFailed.value) return;
   savingPermissions.value = true;
   try {
-    // 1. 先撤销已有权限（确保取消勾选的被移除）
+    // 1. Revoke removed permissions
     const existingRes = await request.get(
       `/rbac/user/${props.user.id}/permissions`,
     );
@@ -230,16 +242,17 @@ async function savePermissions() {
         permissions: toRevoke,
       });
     }
-    // 2. 授予新权限
+    // 2. Grant current permissions
     const res = await request.post("/rbac/grant/permission", {
       user_id: props.user.id,
       permissions: currentPermissions.value,
     });
-    const failed = res.data?.failed || [];
-    if (failed.length > 0) {
-      ElMessage.warning(`部分权限保存失败: ${failed.join(", ")}`);
-    } else {
+    const data = res.data || {};
+    if (data.success && (!data.failed || data.failed.length === 0)) {
       ElMessage.success("权限保存成功");
+    } else {
+      const failedCount = data.failed?.length || 0;
+      ElMessage.warning(`权限保存部分失败（${failedCount} 项）`);
     }
     emit("saved");
   } catch (err: any) {
