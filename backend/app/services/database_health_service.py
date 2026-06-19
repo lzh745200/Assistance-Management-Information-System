@@ -6,7 +6,6 @@
 import logging
 import sqlite3
 import threading
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
@@ -21,6 +20,7 @@ class DatabaseHealthService:
         self.base_dir = Path(__file__).parent.parent.parent
         self.db_path = self._get_db_path()
         self.monitoring = False
+        self._stop_event = threading.Event()
         self.monitor_thread: Optional[threading.Thread] = None
 
         # 配置参数
@@ -68,16 +68,18 @@ class DatabaseHealthService:
             logger.warning("数据库健康监控已在运行")
             return
 
+        self._stop_event.clear()
         self.monitoring = True
         self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self.monitor_thread.start()
         logger.info("数据库健康监控已启动")
 
     def stop_monitoring(self):
-        """停止健康监控"""
+        """停止健康监控 — 通过 Event 立即唤醒监控线程（不再阻塞 5s）"""
         self.monitoring = False
+        self._stop_event.set()  # 立即唤醒 sleep 中的监控线程
         if self.monitor_thread:
-            self.monitor_thread.join(timeout=5)
+            self.monitor_thread.join(timeout=1)
         logger.info("数据库健康监控已停止")
 
     def _monitor_loop(self):
@@ -86,7 +88,7 @@ class DatabaseHealthService:
         last_quick_check = datetime.min
         last_vacuum = datetime.min
 
-        while self.monitoring:
+        while not self._stop_event.is_set():
             try:
                 now = datetime.now()
 
@@ -105,12 +107,12 @@ class DatabaseHealthService:
                     self.vacuum_database()
                     last_vacuum = now
 
-                # 休眠
-                time.sleep(60)  # 每分钟检查一次是否需要执行任务
+                # 休眠 — 用 Event.wait 替代 time.sleep，stop 时立即唤醒
+                self._stop_event.wait(60)
 
             except Exception as e:
                 logger.error(f"数据库健康监控异常: {e}", exc_info=True)
-                time.sleep(60)
+                self._stop_event.wait(60)
 
     def check_integrity(self) -> Dict:
         """执行完整性检查"""
