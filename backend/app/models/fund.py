@@ -254,3 +254,11 @@ class BudgetRecord(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+# 确保关联模型在映射器配置前注册至 SQLAlchemy，以便
+# relationship("Project"/"SupportedVillage"/"Organization") 字符串引用能解析。
+# 放在文件末尾以避免循环导入。
+from .project import Project          # noqa: E402, F401
+from .organization import Organization  # noqa: E402, F401
+from .supported_village import SupportedVillage  # noqa: E402, F401

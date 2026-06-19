@@ -50,7 +50,12 @@ export const useMenuStore = defineStore("menu", () => {
   }
 
   function canAccessMenu(menuKey: string): boolean {
-    if (!loaded.value) { console.log(`[menuStore] canAccessMenu("${menuKey}") → false (not loaded)`); return false; }
+    if (!loaded.value) {
+      console.log(
+        `[menuStore] canAccessMenu("${menuKey}") → false (not loaded)`,
+      );
+      return false;
+    }
     const ok = allKeys.value.has(menuKey);
     if (!ok) console.log(`[menuStore] canAccessMenu("${menuKey}") → BLOCKED`);
     return ok;
@@ -68,7 +73,12 @@ export const useMenuStore = defineStore("menu", () => {
       const items = Array.isArray(data) ? data : [];
       // 诊断：打印加载到的菜单 key 列表
       const keys = items.map((m: any) => m.key);
-      console.log("[menuStore] 菜单加载完成", { count: items.length, keys, source: res.data?.source, rawData: res.data });
+      console.log("[menuStore] 菜单加载完成", {
+        count: items.length,
+        keys,
+        source: res.data?.source,
+        rawData: res.data,
+      });
       setMenus(items);
     } catch (e) {
       // 加载失败：保持 loaded=false 允许下次重试，标记失败状态

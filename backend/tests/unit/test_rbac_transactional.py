@@ -23,7 +23,10 @@ def run(coro):
     return asyncio.get_event_loop().run_until_complete(coro)
 
 
-def mkq(db, first=None, all=None, delete=None, scalar=None):
+_UNSET = object()  # 哨兵——区分"未配置"与"显式 None"
+
+
+def mkq(db, first=_UNSET, all=_UNSET, delete=_UNSET, scalar=_UNSET):
     """
     在 db mock 上搭建完整 SQLAlchemy query 链。
 
@@ -33,13 +36,13 @@ def mkq(db, first=None, all=None, delete=None, scalar=None):
     因为实际代码中的查询是 db.query(X).filter(...).first()，只有一层 filter。
     """
     mid = MagicMock()
-    if first is not None:
+    if first is not _UNSET:
         mid.first.return_value = first
-    if all is not None:
+    if all is not _UNSET:
         mid.all.return_value = all
-    if delete is not None:
+    if delete is not _UNSET:
         mid.delete.return_value = delete
-    if scalar is not None:
+    if scalar is not _UNSET:
         mid.scalar.return_value = scalar
 
     # .filter().filter() 链也回到 mid（处理双重 filter 的查询）
@@ -75,6 +78,7 @@ def mkq_multi(db, spec: dict):
     chains = {}
     for key, returns in spec.items():
         mid = MagicMock()
+        # 始终设置——mkq_multi 的 spec 始终显式包含所有需要的返回值
         for method, val in returns.items():
             getattr(mid, method).return_value = val
         mid.filter.return_value = mid  # 二次 filter 也回到 mid
