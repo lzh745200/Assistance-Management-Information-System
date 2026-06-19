@@ -231,7 +231,7 @@ async def get_organization_tree(
                 "code": org.code or "",
                 "org_type": str(org.org_type) if org.org_type else None,
                 "level": level_num,  # 返回数字而不是枚举值
-                "parent_id": str(org.parent_id) if org.parent_id else None,
+                "parent_id": str(org.parent_id) if org.parent_id is not None else None,
                 "is_active": org.is_active,
                 "path": path,
                 "description": org.description or "",

@@ -8,6 +8,7 @@ import os
 import sys
 import socket
 import logging
+from pathlib import Path
 
 # ── 关键修复：Windows 中文系统的控制台默认 GBK 编码，无法输出 Unicode 字符 ──
 # 必须在任何 print() 之前执行，否则 PyInstaller 打包后在 GBK 环境会崩溃

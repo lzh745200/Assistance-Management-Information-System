@@ -33,12 +33,18 @@ def get_version():
 def update_config_py(version: str):
     path = PROJECT_ROOT / "backend" / "app" / "core" / "config.py"
     content = path.read_text()
-    new_content = re.sub(
-        r'PROJECT_VERSION:\s*str\s*=\s*"[^"]*"',
+    # 匹配带或不带类型注解（str / Optional[str]）的 PROJECT_VERSION 行
+    pattern = r'PROJECT_VERSION\s*:\s*(?:str\s*)?=\s*"[^"]*"'
+    new_content, n = re.subn(
+        pattern,
         f'PROJECT_VERSION: str = "{version}"',
         content,
     )
-    if new_content != content:
+    if n == 0:
+        print(f"  WARN: {path.relative_to(PROJECT_ROOT)} — PROJECT_VERSION line not matched (format changed?)")
+    elif n > 1:
+        print(f"  WARN: {path.relative_to(PROJECT_ROOT)} — matched {n} PROJECT_VERSION lines (ambiguous)")
+    else:
         path.write_text(new_content)
         print(f"  UPD: {path.relative_to(PROJECT_ROOT)}")
 
