@@ -455,7 +455,7 @@ const treeProps = {
   isLeaf: "leaf",
 };
 
-import { normalizeTreeNode } from "@/utils/treeNormalizer";
+import { normalizeTreeNodes } from "@/utils/treeNormalizer";
 
 /** 懒加载树节点 */
 const loadNode = (node: any, resolve: (data: any[]) => void) => {
@@ -466,7 +466,7 @@ const loadNode = (node: any, resolve: (data: any[]) => void) => {
       .getOrganizationTree()
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
-          resolve(res.data.map(normalizeTreeNode));
+          resolve(normalizeTreeNodes(res.data));
         } else {
           resolve([]);
         }
@@ -484,7 +484,7 @@ const loadNode = (node: any, resolve: (data: any[]) => void) => {
       .getOrganizationTree(node.data.id)
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
-          resolve(res.data.map(normalizeTreeNode));
+          resolve(normalizeTreeNodes(res.data));
         } else {
           resolve([]);
         }
