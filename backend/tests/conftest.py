@@ -28,6 +28,24 @@ import os
 # test_system_api.py 是手动全模块 API 测试脚本，含模块级 sys.exit(1)
 # collect_ignore removed
 
+
+def pytest_collection_modifyitems(config, items):
+    """将依赖 mock 的测试文件移至集合最前，避免跨测试污染。
+
+    test_rbac_transactional.py 使用纯 MagicMock 数据库，
+    一旦其他测试触发 SQLAlchemy mapper 初始化，MagicMock
+    链就会因模型列属性转为真实 InstrumentedAttribute 而失效。
+    提前运行这些测试可免受污染。
+    """
+    mock_first = []
+    rest = []
+    for item in items:
+        if "test_rbac_transactional" in item.nodeid:
+            mock_first.append(item)
+        else:
+            rest.append(item)
+    items[:] = mock_first + rest
+
 # 添加项目根目录到 Python 路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))

@@ -56,7 +56,17 @@ class TestSummary:
 
 class TestOverview:
     def test_returns_overview(self, client, mock_db):
-        mock_db.first.return_value = None
+        # 模拟 count() 和 scalar() 返回整数（非 MagicMock）
+        mock_db.scalar.return_value = None  # lastUpdate → None
+        # count() 返回值——设置 side_effect 以匹配所有 5 次 count() 调用
+        count_mock = MagicMock()
+        count_mock.count.return_value = 0  # 返回 0 测试空数据
+        # 为每次 db.query(X).filter(...) 链调用 count()
+        q_chain = MagicMock()
+        q_chain.filter.return_value = q_chain  # .filter() 返回自身
+        q_chain.count.return_value = 0  # .count() 返回 0
+        q_chain.scalar.return_value = None  # .scalar() 返回 None
+        mock_db.query.return_value = q_chain
         resp = client.get("/statistics/overview")
         assert resp.status_code == 200
 

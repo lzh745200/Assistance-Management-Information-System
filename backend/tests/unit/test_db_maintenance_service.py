@@ -76,10 +76,11 @@ class TestRunMaintenance:
 
         with patch.object(dm, "_stop_event") as mock_event:
             mock_event.is_set.side_effect = [False, True]
+            # Event.wait() 默认返回 truthy → 会在 INITIAL_DELAY 处提前退出
+            mock_event.wait.return_value = False
 
             with patch.object(dm, "_do_maintenance") as mock_do:
-                with patch("time.sleep"):
-                    dm._run_maintenance()
+                dm._run_maintenance()
 
         mock_do.assert_called_once()
         assert mock_event.is_set.call_count >= 2
@@ -90,11 +91,11 @@ class TestRunMaintenance:
 
         with patch.object(dm, "_stop_event") as mock_event:
             mock_event.is_set.side_effect = [False, True]
+            mock_event.wait.return_value = False
 
             with patch.object(dm, "_do_maintenance", side_effect=Exception("err")):
                 with patch.object(dm, "logger") as mock_log:
-                    with patch("time.sleep"):
-                        dm._run_maintenance()
+                    dm._run_maintenance()
 
         mock_log.warning.assert_called_once_with(
             "数据库维护失败", exc_info=True
@@ -147,7 +148,7 @@ class TestStopDbMaintenance:
                     dm.stop_db_maintenance()
 
         mock_event.set.assert_called_once()
-        mock_thread.join.assert_called_once_with(timeout=5)
+        mock_thread.join.assert_called_once_with(timeout=1)
 
     def test_stop_without_thread(self):
         """_maintenance_thread 为 None → set event，不 join"""
