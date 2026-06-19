@@ -334,6 +334,22 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         "order": 110,
         "roles": None,
     },
+    {
+        "key": "effectiveness",
+        "label": "帮扶成效",
+        "icon": "TrendCharts",
+        "path": "/effectiveness",
+        "order": 111,
+        "roles": None,
+    },
+    {
+        "key": "todos",
+        "label": "待办事项",
+        "icon": "Select",
+        "path": "/todos",
+        "order": 112,
+        "roles": None,
+    },
 ]
 
 
