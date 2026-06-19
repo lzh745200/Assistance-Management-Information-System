@@ -6,7 +6,7 @@
 # ============================================================
 # 阶段 1: 构建前端 (Node.js 18)
 # ============================================================
-FROM localhost/node:18-alpine AS frontend-builder
+FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
@@ -26,7 +26,7 @@ RUN npm run build
 # ============================================================
 # 阶段 2: 构建后端 (Python 3.11 + PyInstaller)
 # ============================================================
-FROM localhost/python:3.11-alpine AS backend-builder
+FROM python:3.11-alpine AS backend-builder
 
 WORKDIR /app/backend
 
@@ -69,7 +69,7 @@ RUN pyinstaller --name=assistance-backend \
 # ============================================================
 # 阶段 3: 构建 Electron (ARM64 DEB 包)
 # ============================================================
-FROM localhost/node:18-alpine AS electron-builder
+FROM node:18-alpine AS electron-builder
 
 # 安装 Electron 构建依赖（Alpine 需要额外包）
 RUN apk add --no-cache \
@@ -125,7 +125,7 @@ RUN npx electron-builder --linux --arm64 --publish never
 # ============================================================
 # 阶段 4: 组装最终运行镜像（可选，用于在容器内运行整套系统）
 # ============================================================
-FROM localhost/python:3.11-alpine AS runtime
+FROM python:3.11-alpine AS runtime
 
 WORKDIR /app
 

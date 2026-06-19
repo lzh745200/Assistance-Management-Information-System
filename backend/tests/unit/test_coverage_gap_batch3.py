@@ -438,7 +438,7 @@ class TestRBACService:
         result = asyncio.get_event_loop().run_until_complete(
             svc.assign_role("1", "1", "1", db=mock_db)
         )
-        assert result is True
+        assert result == {"success": True, "newly_granted": False}
 
     def test_assign_role_new(self, svc, mock_db):
         role = MagicMock()
@@ -461,7 +461,7 @@ class TestRBACService:
         result = asyncio.get_event_loop().run_until_complete(
             svc.assign_role("1", "r1", "1", expires_at="2030-01-01T00:00:00", db=mock_db)
         )
-        assert result is True
+        assert result == {"success": True, "newly_granted": True}
 
     def test_revoke_role(self, svc, mock_db):
         mock_db.query.return_value.filter.return_value.delete.return_value = 1
