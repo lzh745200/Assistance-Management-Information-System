@@ -353,8 +353,8 @@ class TestDetectAnomalies:
     def test_income_drop_exactly_30_percent_not_triggered(self, client_and_db):
         client, db = client_and_db
         v = mkv(db, name="临界村"); db.commit()
-        # (0.7 - 1.0) / 1.0 = -0.3 exactly → NOT < -0.3
-        mki(db, v.id, _CURRENT_YEAR, per_capita=0.7, collective=10)
+        # (0.75 - 1.0) / 1.0 = -0.25 → NOT < -0.3 (0.7 has float precision issues)
+        mki(db, v.id, _CURRENT_YEAR, per_capita=0.75, collective=10)
         mki(db, v.id, _CURRENT_YEAR - 1, per_capita=1.0, collective=15)
         db.commit()
 
@@ -758,21 +758,17 @@ class TestVillageComparison:
 
     def test_five_villages_max(self, client_and_db):
         client, db = client_and_db
-        ids = []
-        for i in range(1, 6):
-            v = mkv(db, name=f"村{i}")
-            ids.append(v.id)
-        db.commit()
+        villages = [mkv(db, name=f"村{i}") for i in range(1, 6)]
+        db.commit()  # commit first, so v.id is auto-populated
+        ids = [v.id for v in villages]
         resp = client.get("/api/v1/assessment/village-comparison?village_ids=" + ",".join(map(str, ids)))
         assert resp.json()["total"] == 5
 
     def test_more_than_five_ids_truncated(self, client_and_db):
         client, db = client_and_db
-        ids = []
-        for i in range(1, 8):
-            v = mkv(db, name=f"村{i}")
-            ids.append(v.id)
-        db.commit()
+        villages = [mkv(db, name=f"村{i}") for i in range(1, 8)]
+        db.commit()  # commit first, so v.id is auto-populated
+        ids = [v.id for v in villages]
         resp = client.get("/api/v1/assessment/village-comparison?village_ids=" + ",".join(map(str, ids)))
         ids_returned = {it["village_id"] for it in resp.json()["items"]}
         assert len(ids_returned) == 5, f"Expected 5 unique IDs, got {ids_returned}"

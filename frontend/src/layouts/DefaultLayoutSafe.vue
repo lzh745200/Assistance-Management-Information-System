@@ -47,7 +47,7 @@
           </el-menu-item>
 
           <!-- ════ 核心业务 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label">
+          <div v-show="!isCollapsed" class="menu-section-label" v-if="menuStore.canAccessMenu('villages') || menuStore.canAccessMenu('projects') || menuStore.canAccessMenu('schools') || menuStore.canAccessMenu('policies') || menuStore.canAccessMenu('funds-admin') || menuStore.canAccessMenu('funds-user')">
             <span>核心业务</span>
           </div>
 
@@ -148,7 +148,7 @@
           </el-menu-item>
 
           <!-- ════ 乡村振兴 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label">
+          <div v-show="!isCollapsed" class="menu-section-label" v-if="menuStore.canAccessMenu('rural-works')">
             <span>乡村振兴</span>
           </div>
 
@@ -170,7 +170,7 @@
           </el-sub-menu>
 
           <!-- ════ 工作流 ════ -->
-          <div v-show="!isCollapsed" class="menu-section-label">
+          <div v-show="!isCollapsed" class="menu-section-label" v-if="menuStore.canAccessMenu('approval') || menuStore.canAccessMenu('work-analysis')">
             <span>工作流</span>
           </div>
 
