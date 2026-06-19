@@ -30,21 +30,29 @@ import os
 
 
 def pytest_collection_modifyitems(config, items):
-    """将依赖 mock 的测试文件移至集合最前，避免跨测试污染。
+    """将依赖 mock/TestClient 的测试文件移至集合最前，避免跨测试污染。
 
-    test_rbac_transactional.py 使用纯 MagicMock 数据库，
-    一旦其他测试触发 SQLAlchemy mapper 初始化，MagicMock
-    链就会因模型列属性转为真实 InstrumentedAttribute 而失效。
-    提前运行这些测试可免受污染。
+    test_rbac_transactional.py 使用纯 MagicMock 数据库；
+    test_audit_integration.py 使用 TestClient + 依赖覆盖。
+    一旦其他测试触发 SQLAlchemy mapper 初始化或 FastAPI app 状态变更，
+    这些测试的 mock 链就会失效。提前运行可免受污染。
     """
-    mock_first = []
+    _POLLUTION_SENSITIVE = {
+        "test_rbac_transactional",
+        "test_audit_integration",
+        "test_unified_template",
+        "test_fund_budgets_api",
+        "test_project_milestones_api",
+    }
+    first = []
     rest = []
     for item in items:
-        if "test_rbac_transactional" in item.nodeid:
-            mock_first.append(item)
+        fname = item.nodeid.split("::")[0].split("/")[-1].replace(".py", "")
+        if fname in _POLLUTION_SENSITIVE:
+            first.append(item)
         else:
             rest.append(item)
-    items[:] = mock_first + rest
+    items[:] = first + rest
 
 # 添加项目根目录到 Python 路径
 project_root = Path(__file__).parent.parent

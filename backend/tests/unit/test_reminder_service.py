@@ -50,31 +50,40 @@ class TestApprovalReminderService:
         assert svc._running is False
 
     def test_stop_success(self):
+        # 源码 stop() 使用 join(timeout=1)（见 reminder_service.py:59），
+        # 这里断言匹配生产实现。
         from app.services.reminder_service import ApprovalReminderService
         svc = ApprovalReminderService()
         svc._running = True
         svc._thread = MagicMock()
         svc.stop()
         assert svc._running is False
-        svc._thread.join.assert_called_once_with(timeout=10)
+        svc._thread.join.assert_called_once_with(timeout=1)
 
-    @patch("app.services.reminder_service.time.sleep")
-    def test_scan_loop_stop_event(self, mock_sleep):
+    def test_scan_loop_stop_event(self):
+        # 源码 _scan_loop 使用 self._stop_event.wait()（而非 time.sleep），
+        # 因此通过 mock _stop_event 来控制循环：
+        #   wait(30) 首次返回 False → 进入循环；
+        #   is_set 首次 False → 执行一次 check；
+        #   wait(interval) 再次返回 False；
+        #   is_set 第二次 True → 退出循环。
         from app.services.reminder_service import ApprovalReminderService
         svc = ApprovalReminderService()
         svc._check_overdue_approvals = MagicMock()
         svc._stop_event = MagicMock()
         svc._stop_event.is_set.side_effect = [False, True]
+        svc._stop_event.wait.return_value = False
         svc._scan_loop()
         svc._check_overdue_approvals.assert_called_once()
 
-    @patch("app.services.reminder_service.time.sleep")
-    def test_scan_loop_exception_handled(self, mock_sleep):
+    def test_scan_loop_exception_handled(self):
+        # 同上：_scan_loop 内异常被捕获且循环继续，最终因 stop 事件退出。
         from app.services.reminder_service import ApprovalReminderService
         svc = ApprovalReminderService()
         svc._check_overdue_approvals = MagicMock(side_effect=Exception("test error"))
         svc._stop_event = MagicMock()
         svc._stop_event.is_set.side_effect = [False, True]
+        svc._stop_event.wait.return_value = False
         svc._scan_loop()
         svc._check_overdue_approvals.assert_called_once()
 
