@@ -9,22 +9,34 @@
  * 当前前端侧统一用此工具兜底。
  */
 
-/** 将单节点 id 转为字符串（保留 children 并设置 leaf 标志） */
+/** 生成稳定的、基于内容的回退键 */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function makeStableId(node: any): string {
+  return String(
+    node.id ??
+    node.key ??
+    `_node_${(node.name || node.label || '').substring(0, 20)}`
+  );
+}
+
+/** 将单节点 id 转为字符串，白名单属性，递归标准化子节点 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeTreeNode(node: any): any {
+  const children = node.children?.length
+    ? normalizeTreeNodes(node.children)
+    : undefined;
+
   return {
-    ...node,
-    id: String(node.id ?? ""),
-    leaf: !node.children || node.children.length === 0,
+    id: makeStableId(node),
+    name: node.name,
+    label: node.label ?? node.name,
+    children,
+    leaf: children ? children.length === 0 : (node.leaf ?? !node.children?.length),
   };
 }
 
 /** 递归规范化整棵树 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function normalizeTreeNodes(nodes: any[]): any[] {
-  return nodes.map((node) => ({
-    ...node,
-    id: String(node.id ?? node.key ?? ""),
-    children: node.children ? normalizeTreeNodes(node.children) : undefined,
-  }));
+  return nodes.map(node => normalizeTreeNode(node));
 }
