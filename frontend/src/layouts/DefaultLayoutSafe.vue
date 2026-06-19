@@ -20,8 +20,11 @@
         </transition>
       </div>
 
-      <!-- 导航菜单 -->
-      <el-scrollbar class="aside-scrollbar">
+      <!-- 导航菜单 — 未加载完前不渲染，杜绝权限泄露 -->
+      <div v-if="!menuStore.loaded" class="menu-loading">
+        <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+      </div>
+      <el-scrollbar v-else class="aside-scrollbar">
         <el-menu
           :default-active="route.path"
           :collapse="isCollapsed"
@@ -461,6 +464,7 @@ import {
   ArrowDown,
   Lock,
   SwitchButton,
+  Loading,
 } from "@element-plus/icons-vue";
 
 const route = useRoute();
