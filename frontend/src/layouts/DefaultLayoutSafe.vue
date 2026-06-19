@@ -271,7 +271,10 @@
             <span>系统管理</span>
           </div>
 
-          <el-menu-item index="/organization">
+          <el-menu-item
+            v-if="menuStore.canAccessMenu('users-orgs')"
+            index="/organization"
+          >
             <el-icon><OfficeBuilding /></el-icon>
             <template #title>
               <span class="menu-title-text">组织机构</span>
@@ -287,19 +290,29 @@
               <el-icon><Setting /></el-icon>
               <span class="menu-title-text">系统管理</span>
             </template>
-            <el-menu-item index="/system/users"
+            <el-menu-item
+              v-if="menuStore.canAccessMenu('users-orgs')"
+              index="/system/users"
               ><span>用户与角色</span></el-menu-item
             >
-            <el-menu-item index="/system/audit"
+            <el-menu-item
+              v-if="menuStore.canAccessMenu('audit')"
+              index="/system/audit"
               ><span>审计管理</span></el-menu-item
             >
-            <el-menu-item index="/system/backup"
+            <el-menu-item
+              v-if="menuStore.canAccessMenu('backup')"
+              index="/system/backup"
               ><span>备份管理</span></el-menu-item
             >
-            <el-menu-item index="/system/config"
+            <el-menu-item
+              v-if="menuStore.canAccessMenu('system-config')"
+              index="/system/config"
               ><span>系统配置</span></el-menu-item
             >
-            <el-menu-item index="/system/monitoring"
+            <el-menu-item
+              v-if="menuStore.canAccessMenu('monitor')"
+              index="/system/monitoring"
               ><span>系统监控</span></el-menu-item
             >
           </el-sub-menu>
