@@ -193,16 +193,16 @@ class TestTrackQuery:
             slow = get_slow_queries()
             assert slow[0]["slow"] is False
 
-    @pytest.mark.skip(reason="module-level shared _slow_threshold_ms conflicts with other tests")
     def test_zero_global_threshold_never_flags_slow(self):
         import app.core.query_optimizer as qo
+        saved = qo._slow_threshold_ms
         qo._slow_threshold_ms = 0.0
         try:
             with patch("app.core.query_optimizer.time.perf_counter", side_effect=[0, 10]):
                 track_query("any", lambda: None)
                 assert get_slow_queries()[0]["slow"] is False
         finally:
-            qo._slow_threshold_ms = 200.0
+            qo._slow_threshold_ms = saved
 
     def test_log_truncation(self):
         # Fill log beyond 500 entries
