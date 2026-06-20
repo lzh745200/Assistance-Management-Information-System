@@ -4,6 +4,7 @@ Provides upload path generation, filename sanitisation, and MIME-type
 validation utilities used by upload endpoints.
 """
 
+import mimetypes
 import os
 import re
 import time
@@ -11,10 +12,14 @@ import uuid
 from pathlib import Path
 from typing import Optional, Set
 
-try:
-    import magic  # python-magic (libmagic wrapper)
-except ImportError:
-    magic = None  # type: ignore[assignment]
+# python-magic (libmagic wrapper) is *optional*. On some Windows environments
+# the native libmagic binary triggers a fatal access violation during
+# ``import magic`` that cannot be caught by try/except and crashes the whole
+# process. To keep the module importable everywhere we deliberately avoid the
+# top-level import: ``magic`` stays ``None`` and detection falls back to the
+# stdlib ``mimetypes`` module + extension mapping, which is dependency-free and
+# sufficient for an offline desktop deployment.
+magic = None  # type: ignore[assignment]
 
 # ---------------------------------------------------------------------------
 # MIME helpers
@@ -43,7 +48,12 @@ SAFE_MIME_TYPES: Set[str] = {
 
 
 def detect_mime_type(file_path: str) -> str:
-    """Detect the MIME type of a file using libmagic.
+    """Detect the MIME type of a file.
+
+    Detection order:
+      1. stdlib :func:`mimetypes.guess_type` (extension-based, no native deps)
+      2. optional ``python-magic`` content sniffing (if the library loads)
+      3. internal extension mapping :func:`_guess_mime_from_extension`
 
     Args:
         file_path: Path to the file.
@@ -51,17 +61,30 @@ def detect_mime_type(file_path: str) -> str:
     Returns:
         MIME type string, e.g. ``"image/png"``.
     """
-    try:
-        mime = magic.Magic(mime=True)
-        return mime.from_file(file_path)
-    except Exception:
-        # Fallback: guess from extension
-        suffix = Path(file_path).suffix.lower()
-        return _guess_mime_from_extension(suffix)
+    # 1. stdlib mimetypes — always safe, works on the extension
+    guessed, _ = mimetypes.guess_type(file_path)
+    if guessed:
+        return guessed
+
+    # 2. optional content-based detection via python-magic (if importable)
+    if magic is not None:
+        try:
+            mime = magic.Magic(mime=True)
+            return mime.from_file(file_path)
+        except Exception:
+            pass  # fall through to extension mapping
+
+    # 3. final fallback: internal extension mapping
+    suffix = Path(file_path).suffix.lower()
+    return _guess_mime_from_extension(suffix)
 
 
 def detect_mime_type_from_bytes(content: bytes) -> str:
     """Detect MIME type from raw bytes.
+
+    Uses ``python-magic`` content sniffing when the library is available;
+    otherwise returns ``"application/octet-stream"`` as a safe default (byte-level
+    detection without a filename cannot fall back to extension mapping).
 
     Args:
         content: File content as bytes.
@@ -69,11 +92,13 @@ def detect_mime_type_from_bytes(content: bytes) -> str:
     Returns:
         MIME type string.
     """
-    try:
-        mime = magic.Magic(mime=True)
-        return mime.from_buffer(content)
-    except Exception:
-        return "application/octet-stream"
+    if magic is not None:
+        try:
+            mime = magic.Magic(mime=True)
+            return mime.from_buffer(content)
+        except Exception:
+            pass
+    return "application/octet-stream"
 
 
 def is_allowed_mime(mime_type: str, allowed_types: Optional[Set[str]] = None) -> bool:
