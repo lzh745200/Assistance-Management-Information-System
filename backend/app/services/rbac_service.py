@@ -531,6 +531,7 @@ class RBACService:
         user_id: str,
         permissions: List[str],
         granted_by: str,
+        expires_at: str = None,
         db: Session = None,
     ) -> dict:
         """原子性保存用户权限：在单个事务内完成删除旧权限 + 授予新权限。
@@ -546,6 +547,7 @@ class RBACService:
         """
         uid = int(user_id)
         granted_by_int = int(granted_by) if granted_by else None
+        expires = datetime.fromisoformat(expires_at) if expires_at else None
         now = _utcnow()
 
         # 第 1 步：获取当前有效权限
@@ -578,6 +580,7 @@ class RBACService:
                     user_id=uid,
                     permission=p,
                     granted_by=granted_by_int,
+                    expires_at=expires,
                 )
                 for p in to_grant
             ]

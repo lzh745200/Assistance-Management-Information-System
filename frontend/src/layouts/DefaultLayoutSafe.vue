@@ -514,9 +514,9 @@ const authStore = useAuthStore();
 const menuStore = useMenuStore();
 
 // 挂载时加载用户可见菜单（若未加载）
-onMounted(() => {
+onMounted(async () => {
   if (!menuStore.loaded) {
-    menuStore.fetchMenus();
+    await menuStore.fetchMenus();
   }
 });
 

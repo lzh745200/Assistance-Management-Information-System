@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from functools import wraps
 from typing import Any, Callable, Optional
 
+from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -62,6 +63,9 @@ class TransactionManager:
         try:
             yield db
             db.commit()
+        except HTTPException:
+            db.rollback()
+            raise
         except Exception as e:
             db.rollback()
             logger.error(f"Transaction failed and rolled back: {e}")

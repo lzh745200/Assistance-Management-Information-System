@@ -732,6 +732,10 @@ export const routes: RouteRecordRaw[] = [
       },
       // ── 成效评估 ──
       {
+        path: "/effectiveness",
+        redirect: "/effectiveness/rankings",
+      },
+      {
         path: "/effectiveness/rankings",
         name: "EffectivenessRankings",
         component: () =>

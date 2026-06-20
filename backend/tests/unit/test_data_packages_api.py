@@ -40,7 +40,7 @@ class TestListPackages:
 
 class TestPreviewExport:
     def test_preview(self, client):
-        resp = client.post("/api/v1/data-packages/preview", json={"modules": ["villages"]})
+        resp = client.post("/api/v1/data-packages/preview", json={"data_types": ["villages"]})
         assert resp.status_code in (200, 422, 500)
 
 

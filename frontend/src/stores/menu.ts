@@ -42,7 +42,8 @@ export const useMenuStore = defineStore("menu", () => {
     allKeys.value = _extractAllKeys(items);
     loaded.value = true;
     loading.value = false;
-    loadFailed.value = items.length === 0;
+    // Empty menu is valid — only fetchMenus catch sets loadFailed
+    loadFailed.value = false;
   }
 
   function setActive(key: string) {

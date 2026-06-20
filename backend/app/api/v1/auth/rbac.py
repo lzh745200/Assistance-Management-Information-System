@@ -392,6 +392,7 @@ async def save_permissions(
             user_id=str(grant.user_id),
             permissions=grant.permissions,
             granted_by=str(current_user.id),
+            expires_at=grant.expires_at.isoformat() if grant.expires_at else None,
             db=sess,
         )
 

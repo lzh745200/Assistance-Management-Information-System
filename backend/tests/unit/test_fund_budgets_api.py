@@ -92,12 +92,13 @@ class TestCreateBudget:
         mock_db.add.assert_called_once()
 
     def test_manager_required(self, client):
+        from fastapi import HTTPException
         with patch("app.api.v1.fund_budgets._require_manager",
-                   side_effect=Exception("forbidden")):
+                   side_effect=HTTPException(status_code=403, detail="权限不足")):
             resp = client.post("/fund-budgets", json={
                 "year": 2025, "category": "x", "budget_amount": 100
             })
-            assert resp.status_code == 500
+            assert resp.status_code == 403
 
 
 class TestUpdateBudget:

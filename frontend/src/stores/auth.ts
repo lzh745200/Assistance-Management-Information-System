@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { apiRequest, _setCachedToken } from "@/api/request";
+import { useMenuStore } from "@/stores/menu";
 import { getCurrentUser } from "@/api/queries/user";
 import { AuthStorage } from "@/utils/authStorage";
 import { ADMIN_ROLES } from "@/utils/roleAccess";
@@ -113,9 +114,7 @@ export const useAuthStore = defineStore("auth", () => {
           res.data.refresh_token,
         );
         // 登录后立即预加载菜单 — 避免侧边栏渲染时 loaded=false 导致闪烁或泄露
-        import("@/stores/menu").then(({ useMenuStore }) => {
-          useMenuStore().fetchMenus();
-        });
+        useMenuStore().fetchMenus();
         return true;
       }
 
