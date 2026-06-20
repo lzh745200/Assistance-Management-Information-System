@@ -231,8 +231,10 @@ async def import_schools_excel(
                 )
                 db.add(school)
                 imported += 1
+            except (ValueError, TypeError) as e:
+                errors.append(f"第{row_idx}行: 数据格式错误 — {str(e)}（请检查数字/日期字段格式）")
             except Exception as e:
-                errors.append(f"第{row_idx}行: {str(e)}")
+                errors.append(f"第{row_idx}行({row[1] if row and len(row)>1 else '?'}): {str(e)}")
 
         db.commit()
 
@@ -1042,8 +1044,10 @@ async def import_scholarship_students(
                 )
                 db.add(stu)
                 imported += 1
+            except (ValueError, TypeError) as e:
+                errors.append(f"第{row_idx}行: 数据格式错误 — {str(e)}（请检查年份/金额字段是否为数字）")
             except Exception as e:
-                errors.append(f"第{row_idx}行: {str(e)}")
+                errors.append(f"第{row_idx}行({row[0] if row and len(row)>0 else '?'}): {str(e)}")
         db.commit()
         return {
             "success": True,

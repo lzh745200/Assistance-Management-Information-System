@@ -339,3 +339,37 @@ async def get_system_logs(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"读取日志失败: {str(e)}")
+
+
+@router.post("/db-optimize", summary="一键数据库优化")
+async def optimize_database(
+    current_user=Depends(get_current_user),
+):
+    """执行 WAL checkpoint + PRAGMA optimize，返回优化前后空间对比"""
+    import os
+    import sqlite3
+    from app.core.database import engine
+
+    db_url = str(engine.url)
+    if not db_url.startswith("sqlite"):
+        raise HTTPException(status_code=400, detail="仅支持 SQLite 数据库")
+    db_path = db_url.replace("sqlite:///", "")
+    if not os.path.exists(db_path):
+        raise HTTPException(status_code=404, detail="数据库文件不存在")
+
+    size_before = os.path.getsize(db_path)
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    cursor.execute("PRAGMA optimize")
+    conn.close()
+    size_after = os.path.getsize(db_path)
+
+    saved = size_before - size_after
+    return {
+        "success": True,
+        "message": f"优化完成，{'释放' if saved >= 0 else '增加'} {abs(saved) / 1024:.1f} KB",
+        "size_before_kb": round(size_before / 1024, 1),
+        "size_after_kb": round(size_after / 1024, 1),
+        "saved_kb": round(saved / 1024, 1),
+    }
