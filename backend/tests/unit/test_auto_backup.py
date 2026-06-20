@@ -1,5 +1,6 @@
-"""TDD: 自动备份调度 — 100% 行覆盖."""
+"""TDD: 自动备份调度 — 100% 行覆盖（测试需启用自动备份）."""
 import os
+os.environ["BACKUP_ENABLED"] = "true"  # Enable for backup tests (uses tmp_path)
 import time
 import pytest
 from unittest.mock import patch, MagicMock

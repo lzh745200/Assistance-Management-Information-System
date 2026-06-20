@@ -122,15 +122,6 @@ def get_backup_path(sub_path: str = "") -> Path:
         import tempfile
         return Path(tempfile.gettempdir()) / "bumofu_backups_disabled"
 
-    Args:
-        sub_path: 相对于备份目录的子路径
-
-    返回:
-        Path: 完整的备份文件路径
-
-    Raises:
-        PathTraversalError: 如果子路径试图逃逸基础目录
-    """
     base = get_app_data_dir() / "backups"
     if sub_path:
         path = _safe_join(base, sub_path)
