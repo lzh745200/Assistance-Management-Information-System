@@ -1090,7 +1090,7 @@ async def delete_scholarship_student(
 
 
 @router.post("/{school_id}/scholarship-students/import")
-async def import_scholarship_students(
+async def import_school_scholarship_students(
     school_id: int,
     file: UploadFile = File(...),
     current_user=Depends(get_current_user),
