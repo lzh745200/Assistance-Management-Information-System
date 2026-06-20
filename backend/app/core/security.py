@@ -352,6 +352,16 @@ async def get_current_user(
                 detail="令牌已失效（版本不匹配），请重新登录",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        # 审计归因：将当前用户 ID 写入 ContextVar，供 SQLAlchemy 事件级审计
+        # （audit_event_handler）在 commit/flush 时读取，实现写操作可追责到人。
+        # ContextVar 为请求任务级隔离，请求结束后自动复位为默认值 None。
+        try:
+            from app.middleware.audit_context import set_current_user
+
+            set_current_user(getattr(user, "id", None))
+        except Exception:
+            # 审计归因不应阻断主流程
+            pass
         return user
     finally:
         db.close()

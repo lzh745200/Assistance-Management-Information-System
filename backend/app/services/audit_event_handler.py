@@ -4,8 +4,12 @@
 替代逐个端点手动调用 write_work_log() 的方案——一个事件监听器覆盖全部模型。
 使用方法：应用启动时调用 setup_audit_events() 一次即可。
 
-局限性：SQLAlchemy 事件无法访问 HTTP 请求上下文，因此审计记录中的 user_id
-为 NULL。需要用户归因时，端点应额外调用 write_work_log()。
+用户归因：通过 contextvars.ContextVar（app.middleware.audit_context）传递当前
+操作人 user_id。认证中间件层（app.core.security.get_current_user）在解析出用户
+后写入 ContextVar，本模块在事件触发时读取并填入 work_logs.user_id。
+对于无 HTTP 上下文的异步/后台任务（ContextVar 为空），记为 "system" 归因到
+应用日志（work_logs.user_id 为 NOT NULL 外键，无法存字符串，故系统级操作落日志
+而非 work_logs 表，避免 IntegrityError）。
 """
 
 import logging
@@ -13,6 +17,25 @@ import logging
 from sqlalchemy import event
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_actor_id():
+    """从审计上下文（ContextVar）解析当前操作人 user_id。
+
+    Returns:
+        (user_id, is_system): user_id 为 int 或 None；is_system 标识是否为系统操作。
+    """
+    try:
+        from app.middleware.audit_context import get_current_user as _get_ctx_user_id
+
+        ctx_user_id = _get_ctx_user_id()
+    except Exception:
+        ctx_user_id = None
+
+    if ctx_user_id is not None:
+        return ctx_user_id, False
+    # ContextVar 为空 → 系统/后台任务操作
+    return None, True
 
 
 def _get_entity_name(instance) -> str:
@@ -55,12 +78,26 @@ def _write_audit_from_event(mapper, connection, target, action: str):
         entity_name = _get_entity_name(target)
         content = f"{action}: {entity_name}"
 
+        user_id, is_system = _resolve_actor_id()
+
+        # 系统/后台任务操作：work_logs.user_id 为 NOT NULL 外键，无法存 "system"
+        # 字符串。改为落应用日志保留审计轨迹，跳过 work_logs 写入，避免 IntegrityError。
+        if is_system:
+            logger.info(
+                "审计(系统): action=%s entity=%s#%s name=%s",
+                action,
+                entity_type,
+                getattr(target, "id", "?"),
+                entity_name,
+            )
+            return
+
         connection.execute(
             mapper.local_table.metadata.tables["work_logs"].insert().values(
                 category=entity_type,
                 content=content,
                 log_date=date.today(),
-                user_id=None,  # 事件级审计无 HTTP 上下文——端点级 write_work_log() 可提供用户归因
+                user_id=user_id,  # 来自 ContextVar 的操作人 ID（审计归因）
             )
         )
     except Exception:

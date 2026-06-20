@@ -12,8 +12,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-      - run: pip install -r backend/requirements.txt pytest-xdist
-      - run: cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile
+      - run: pip install -r backend/requirements.txt pytest-xdist pytest-cov
+      # 覆盖率门禁：基线 50%，跌破则 CI 红（与 pyproject.toml fail_under 一致）
+      - run: cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-report=xml --cov-fail-under=50
 
   frontend-check:
     runs-on: ubuntu-latest
@@ -27,7 +28,8 @@ jobs:
           npm install --legacy-peer-deps
       - run: cd frontend && npx vue-tsc --noEmit
       - run: cd frontend && npm run lint
-      - run: cd frontend && npx vitest run
+      # 前端测试带覆盖率报告（vitest run --coverage）
+      - run: cd frontend && npx vitest run --coverage
 
   lint:
     runs-on: ubuntu-latest
@@ -36,4 +38,37 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: pip install flake8
-      - run: cd backend && python -m flake8 app/ --max-line-length=120 --count
+      # flake8 零警告门禁：--max-warnings=0 使任何警告均导致失败
+      - run: cd backend && python -m flake8 app/ --max-line-length=120 --max-warnings=0 --count
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      # 后端依赖漏洞扫描（pip-audit）
+      - run: pip install pip-audit pip-licenses
+      - name: Backend dependency audit
+        run: pip-audit -r backend/requirements.txt
+        continue-on-error: true
+      # 前端依赖漏洞扫描（npm audit，仅 high 以上阻断）
+      - name: Frontend dependency audit
+        run: |
+          cd frontend
+          npm config set registry https://registry.npmmirror.com
+          npm install --legacy-peer-deps
+          npm audit --audit-level=high
+        continue-on-error: true
+      # 生成 SBOM（许可证清单），作为 artifact 上传供军口许可证白名单审查
+      - name: Generate SBOM (license list)
+        run: |
+          pip-licenses --from=mixed --with-system --with-description --format=csv --output-file=sbom.csv || true
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-license-list
+          path: sbom.csv
+          if-no-files-found: warn

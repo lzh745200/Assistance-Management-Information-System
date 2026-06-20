@@ -1,162 +1,287 @@
 #!/usr/bin/env node
 /**
- * 版本号同步脚本
- * 从根目录 package.json 读取 version 字段，自动同步到所有相关文件。
+ * sync-version.js — 版本号统一校验/同步工具
+ *
+ * 以根目录 package.json 的 `version` 字段为唯一版本源，校验/同步以下文件中的版本号：
+ *   - backend/app/core/config.py        PROJECT_VERSION
+ *   - backend/version.txt (若存在) / version.txt
+ *   - README.md                          badge + 文末版本
+ *   - Dockerfile                         echo 版本
+ *   - Dockerfile.runtime                 LABEL version
+ *   - docker-compose.yml                 BUILD_VERSION / image tag / PROJECT_VERSION / 头注释
+ *   - build.ps1                          $Version 默认值
+ *   - build-kylin.sh                     产物文件名版本
+ *   - build-with-check.ps1               $PACKAGE_VERSION
+ *   - electron/main.js                   回退默认版本
+ *   - launch.py                          启动横幅版本
  *
  * 用法:
- *   node scripts/sync-version.js          # 同步当前版本
- *   node scripts/sync-version.js 1.0.4    # 设置并同步到指定版本
+ *   node scripts/sync-version.js --check   # 仅校验，不一致退出码 1
+ *   node scripts/sync-version.js --write   # 自动同步所有文件到 package.json 版本
+ *
+ * 退出码: 0 = 一致/已同步; 1 = 存在不一致（--check 模式）
  */
-'use strict';
 
-const fs = require('fs');
-const path = require('path');
+"use strict";
 
-const ROOT = path.resolve(__dirname, '..');
+const fs = require("fs");
+const path = require("path");
 
-// ─── 读取/设置版本号 ──────────────────────────
-const rootPkgPath = path.join(ROOT, 'package.json');
-const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf-8'));
+const ROOT = path.resolve(__dirname, "..");
+const PKG_PATH = path.join(ROOT, "package.json");
 
-const newVersion = process.argv[2] || rootPkg.version;
-if (!newVersion || !/^\d+\.\d+\.\d+/.test(newVersion)) {
-  console.error('无效的版本号:', newVersion);
-  process.exit(1);
+// ── 读取唯一版本源 ──
+function readSourceVersion() {
+  const pkg = JSON.parse(fs.readFileSync(PKG_PATH, "utf-8"));
+  if (!pkg.version || !/^\d+\.\d+\.\d+/.test(pkg.version)) {
+    console.error(`[sync-version] package.json version 无效: ${pkg.version}`);
+    process.exit(1);
+  }
+  return pkg.version;
 }
 
-// 如果指定了新版本号，先更新根 package.json
-if (process.argv[2] && rootPkg.version !== newVersion) {
-  rootPkg.version = newVersion;
-  fs.writeFileSync(rootPkgPath, JSON.stringify(rootPkg, null, 2) + '\n', 'utf-8');
-  console.log(`  [ROOT] package.json → ${newVersion}`);
+// ── 文件目标定义 ──
+// 每个目标: { file, describe(relativePath), apply(content, ver) -> newContent }
+// describe 返回当前文件中提取的版本号（用于 --check）；找不到返回 null。
+const TARGETS = [
+  {
+    name: "frontend/package.json (version)",
+    file: "frontend/package.json",
+    describe(c) {
+      try {
+        return JSON.parse(c).version || null;
+      } catch (_) {
+        return null;
+      }
+    },
+    apply(c, v) {
+      const pkg = JSON.parse(c);
+      pkg.version = v;
+      return JSON.stringify(pkg, null, 2) + "\n";
+    },
+  },
+  {
+    name: "backend/app/core/config.py (PROJECT_VERSION)",
+    file: "backend/app/core/config.py",
+    describe(c) {
+      const m = c.match(/PROJECT_VERSION:\s*str\s*=\s*"([^"]+)"/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(
+        /(PROJECT_VERSION:\s*str\s*=\s*")([^"]+)(")/,
+        `$1${v}$3`,
+      );
+    },
+  },
+  {
+    name: "backend/version.txt",
+    file: "backend/version.txt",
+    optional: true,
+    describe(c) {
+      const m = c.trim().match(/^(\d+\.\d+\.\d+.*)$/);
+      return m ? m[1] : null;
+    },
+    apply(_c, v) {
+      return `${v}\n`;
+    },
+  },
+  {
+    name: "version.txt (root)",
+    file: "version.txt",
+    optional: true,
+    describe(c) {
+      const m = c.trim().match(/^(\d+\.\d+\.\d+.*)$/);
+      return m ? m[1] : null;
+    },
+    apply(_c, v) {
+      return `${v}\n`;
+    },
+  },
+  {
+    name: "README.md (badge)",
+    file: "README.md",
+    describe(c) {
+      const m = c.match(/version-(\d+\.\d+\.\d+)-blue/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(/(version-)(\d+\.\d+\.\d+)(-blue)/, `$1${v}$3`);
+    },
+  },
+  {
+    name: "Dockerfile (echo banner)",
+    file: "Dockerfile",
+    optional: true,
+    describe(c) {
+      const m = c.match(/帮扶管理信息系统 v(\d+\.\d+\.\d+)/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(/(帮扶管理信息系统 v)(\d+\.\d+\.\d+)/, `$1${v}`);
+    },
+  },
+  {
+    name: "Dockerfile.runtime (LABEL version)",
+    file: "Dockerfile.runtime",
+    describe(c) {
+      const m = c.match(/image\.version="([^"]+)"/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(/(image\.version=")([^"]+)(")/, `$1${v}$3`);
+    },
+  },
+  {
+    name: "docker-compose.yml (BUILD_VERSION)",
+    file: "docker-compose.yml",
+    describe(c) {
+      const m = c.match(/BUILD_VERSION=(\d+\.\d+\.\d+)/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c
+        .replace(/(BUILD_VERSION=)(\d+\.\d+\.\d+)/g, `$1${v}`)
+        .replace(/(\$\{VERSION:-)(\d+\.\d+\.\d+)(\})/g, `$1${v}$3`)
+        .replace(/(PROJECT_VERSION=)(\d+\.\d+\.\d+)/g, `$1${v}`)
+        .replace(/(版本:\s*v)(\d+\.\d+\.\d+)/, `$1${v}`);
+    },
+  },
+  {
+    name: "build.ps1 ($Version)",
+    file: "build.ps1",
+    describe(c) {
+      const m = c.match(/\$Version\s*=\s*"([^"]+)"/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(/(\$Version\s*=\s*")([^"]+)(")/, `$1${v}$3`);
+    },
+  },
+  {
+    name: "build-kylin.sh (artifact name)",
+    file: "build-kylin.sh",
+    describe(c) {
+      const m = c.match(/arm64-v(\d+\.\d+\.\d+)\.tar\.gz/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(/(arm64-v)(\d+\.\d+\.\d+)(\.tar\.gz)/g, `$1${v}$3`);
+    },
+  },
+  {
+    name: "build-with-check.ps1 ($PACKAGE_VERSION)",
+    file: "build-with-check.ps1",
+    describe(c) {
+      const m = c.match(/\$PACKAGE_VERSION\s*=\s*"([^"]+)"/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(/(\$PACKAGE_VERSION\s*=\s*")([^"]+)(")/, `$1${v}$3`);
+    },
+  },
+  {
+    name: "electron/main.js (fallback version)",
+    file: "electron/main.js",
+    describe(c) {
+      // 取回退默认值（出现两次，取第一个）
+      const m = c.match(/\|\|\s*'(\d+\.\d+\.\d+)'/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(/(\|\|\s*')(\d+\.\d+\.\d+)(')/g, `$1${v}$3`).replace(
+        /(return\s*')(\d+\.\d+\.\d+)(')/g,
+        `$1${v}$3`,
+      );
+    },
+  },
+  {
+    name: "launch.py (banner version)",
+    file: "launch.py",
+    describe(c) {
+      const m = c.match(/帮扶管理信息系统 v(\d+\.\d+\.\d+)/);
+      return m ? m[1] : null;
+    },
+    apply(c, v) {
+      return c.replace(/(帮扶管理信息系统 v)(\d+\.\d+\.\d+)/, `$1${v}`);
+    },
+  },
+];
+
+function main() {
+  const argv = process.argv.slice(2);
+  const mode = argv.includes("--write")
+    ? "write"
+    : argv.includes("--check")
+      ? "check"
+      : "check"; // 默认 check
+
+  const sourceVer = readSourceVersion();
+  console.log(`[sync-version] 源版本 (package.json): ${sourceVer}`);
+  console.log(`[sync-version] 模式: ${mode}`);
+  console.log("");
+
+  let mismatches = 0;
+  let missing = 0;
+  let synced = 0;
+
+  for (const t of TARGETS) {
+    const fullPath = path.join(ROOT, t.file);
+    if (!fs.existsSync(fullPath)) {
+      if (t.optional) {
+        console.log(`  - [skip] ${t.name} (文件不存在，可选)`);
+      } else {
+        console.log(`  - [MISSING] ${t.name} -> ${t.file}`);
+        missing++;
+      }
+      continue;
+    }
+    const content = fs.readFileSync(fullPath, "utf-8");
+    const current = t.describe(content);
+    if (current === null) {
+      console.log(`  - [warn] ${t.name}: 未匹配到版本号（可能格式已变）`);
+      continue;
+    }
+    if (current === sourceVer) {
+      console.log(`  - [ok]    ${t.name}: ${current}`);
+    } else {
+      console.log(
+        `  - [diff]  ${t.name}: ${current} 期望 ${sourceVer}`,
+      );
+      mismatches++;
+      if (mode === "write") {
+        const newContent = t.apply(content, sourceVer);
+        if (newContent !== content) {
+          fs.writeFileSync(fullPath, newContent, "utf-8");
+          console.log(`           已同步 -> ${sourceVer}`);
+          synced++;
+        }
+      }
+    }
+  }
+
+  console.log("");
+  if (mode === "write") {
+    console.log(
+      `[sync-version] 同步完成: ${synced} 个文件已更新，${mismatches - synced} 个仍不一致。`,
+    );
+  }
+
+  if (missing > 0) {
+    console.error(`[sync-version] ${missing} 个必需文件缺失`);
+    process.exit(1);
+  }
+
+  // --check 模式下，重新校验一次以确认 write 结果
+  if (mode === "check" && mismatches > 0) {
+    console.error(
+      `[sync-version] 发现 ${mismatches} 处版本不一致。运行 \`node scripts/sync-version.js --write\` 自动同步。`,
+    );
+    process.exit(1);
+  }
+
+  console.log("[sync-version] 校验通过 ✅");
+  process.exit(0);
 }
 
-console.log(`\n同步版本号: ${newVersion}\n`);
-
-let updatedCount = 0;
-
-// ─── 辅助函数 ──────────────────────────────────
-function replaceInFile(relPath, pattern, replacement) {
-  const absPath = path.join(ROOT, relPath);
-  if (!fs.existsSync(absPath)) {
-    console.log(`  [SKIP] ${relPath} (文件不存在)`);
-    return;
-  }
-  let content = fs.readFileSync(absPath, 'utf-8');
-  const newContent = content.replace(pattern, replacement);
-  if (content !== newContent) {
-    fs.writeFileSync(absPath, newContent, 'utf-8');
-    console.log(`  [OK]   ${relPath}`);
-    updatedCount++;
-  } else {
-    console.log(`  [--]   ${relPath} (已是最新)`);
-  }
-}
-
-function updateJsonFile(relPath, jsonPath) {
-  const absPath = path.join(ROOT, relPath);
-  if (!fs.existsSync(absPath)) {
-    console.log(`  [SKIP] ${relPath} (文件不存在)`);
-    return;
-  }
-  const obj = JSON.parse(fs.readFileSync(absPath, 'utf-8'));
-  const keys = jsonPath.split('.');
-  let target = obj;
-  for (let i = 0; i < keys.length - 1; i++) {
-    target = target[keys[i]];
-  }
-  const lastKey = keys[keys.length - 1];
-  if (target[lastKey] !== newVersion) {
-    target[lastKey] = newVersion;
-    fs.writeFileSync(absPath, JSON.stringify(obj, null, 2) + '\n', 'utf-8');
-    console.log(`  [OK]   ${relPath} → ${jsonPath}`);
-    updatedCount++;
-  } else {
-    console.log(`  [--]   ${relPath} (已是最新)`);
-  }
-}
-
-// ─── 执行同步 ──────────────────────────────────
-
-// 1. frontend/package.json
-updateJsonFile('frontend/package.json', 'version');
-
-// 2. resources/config/default.json
-updateJsonFile('resources/config/default.json', 'app.version');
-
-// 3. frontend/src/config/constants.ts
-replaceInFile(
-  'frontend/src/config/constants.ts',
-  /export const SYSTEM_VERSION = "[^"]+"/,
-  `export const SYSTEM_VERSION = "${newVersion}"`
-);
-
-// 4. frontend/src/config/appConfig.ts
-replaceInFile(
-  'frontend/src/config/appConfig.ts',
-  /version: "[^"]+"/,
-  `version: "${newVersion}"`
-);
-
-// 5. frontend/src/stores/app.ts
-replaceInFile(
-  'frontend/src/stores/app.ts',
-  /version: '[^']+'/,
-  `version: '${newVersion}'`
-);
-
-// 6. frontend/src/utils/local-storage.ts
-replaceInFile(
-  'frontend/src/utils/local-storage.ts',
-  /version: '[^']+'/,
-  `version: '${newVersion}'`
-);
-
-// 7. backend/app/core/config.py
-replaceInFile(
-  'backend/app/core/config.py',
-  /PROJECT_VERSION: str = "[^"]+"/,
-  `PROJECT_VERSION: str = "${newVersion}"`
-);
-
-// 8. .env.example
-replaceInFile(
-  '.env.example',
-  /PROJECT_VERSION=.*/,
-  `PROJECT_VERSION=${newVersion}`
-);
-
-// 9. Dockerfile
-replaceInFile(
-  'Dockerfile',
-  /version="[^"]+"/,
-  `version="${newVersion}"`
-);
-
-// 10. LoginSafe.vue 版权行（硬编码版本号）
-replaceInFile(
-  'frontend/src/views/auth/LoginSafe.vue',
-  /V\d+\.\d+\.\d+/,
-  `V${newVersion}`
-);
-
-// 11. SystemConfig.vue DEFAULTS
-replaceInFile(
-  'frontend/src/views/system/SystemConfig.vue',
-  /version: 'V[^']+'/,
-  `version: 'V${newVersion}'`
-);
-
-// 12. generate_ppt.py
-replaceInFile(
-  'scripts/build/generate_ppt.py',
-  /版本 \d+\.\d+\.\d+/g,
-  `版本 ${newVersion}`
-);
-replaceInFile(
-  'scripts/build/generate_ppt.py',
-  /v\d+\.\d+\.\d+/g,
-  `v${newVersion}`
-);
-
-console.log(`\n完成: 更新了 ${updatedCount} 个文件\n`);
+main();

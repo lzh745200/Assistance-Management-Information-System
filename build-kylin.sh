@@ -20,10 +20,10 @@ docker build -f Dockerfile --target export -o output .
 # 打包
 echo "步骤 3/3: 打包安装包..."
 cd output
-tar -czf ../assistance-system-kylin-arm64-v1.2.0.tar.gz *
+tar -czf ../assistance-system-kylin-arm64-v1.4.1.tar.gz *
 cd ..
 
 echo "=========================================="
 echo "构建完成！"
-echo "产物位置: assistance-system-kylin-arm64-v1.2.0.tar.gz"
+echo "产物位置: assistance-system-kylin-arm64-v1.4.1.tar.gz"
 echo "=========================================="

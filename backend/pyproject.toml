@@ -108,7 +108,7 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
-fail_under = 40  # 当前基线 43.39%，逐步提升至 50% → 70%
+fail_under = 50  # 当前基线 50%（与 CI --cov-fail-under=50 一致），目标 70%，新功能建议 80%
 
 exclude_lines = [
     "pragma: no cover",

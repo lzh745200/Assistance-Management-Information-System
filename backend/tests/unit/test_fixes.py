@@ -167,11 +167,11 @@ class TestSecurityConfig:
     """安全配置测试"""
 
     def test_csrf_enabled_by_default(self):
-        """测试 CSRF 默认关闭（本地单机应用无跨域威胁）"""
+        """测试 CSRF 默认开启（军用安全基线要求即使单机部署也应启用）"""
         from app.core.config import Settings
 
         # 检查 Settings 类定义的默认值（而非测试环境已实例化的配置）
-        assert Settings.model_fields["CSRF_ENABLED"].default is False
+        assert Settings.model_fields["CSRF_ENABLED"].default is True
 
     def test_database_url_is_sqlite(self):
         """测试数据库 URL 为 SQLite"""

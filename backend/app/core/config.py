@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "帮扶管理信息系统"
     # 优先从环境变量 PROJECT_VERSION 读取（Electron 从 package.json 注入），
     # 未设置时使用硬编码默认值
-    PROJECT_VERSION: str = "1.2.0"
+    PROJECT_VERSION: str = "1.4.1"
     API_PREFIX: str = "/api/v1"
     SECRET_KEY: str = ""  # 自动生成并持久化到 runtime_secrets.json（无需手动配置）
     ALGORITHM: str = "HS256"
@@ -120,8 +120,9 @@ class Settings(BaseSettings):
     REDIS_MAX_CONNECTIONS: int = 50
 
     # 安全配置
-    # 单机版使用更长的token有效期，提升用户体验（无需频繁重新登录）
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 2880  # 48小时，单机版延长
+    # 单机版 token 有效期收窄至 8 小时（军用安全基线要求 ≤8h）。
+    # 结合 token_version 强制下线可进一步缓解会话泄露风险。
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8小时
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30  # 30天，单机版延长
     BCRYPT_ROUNDS: int = 12  # OWASP 建议 12 轮以上
     PASSWORD_EXPIRE_DAYS: int = 90  # 密码有效期（天）
@@ -140,7 +141,8 @@ class Settings(BaseSettings):
     # 启用后，所有状态变更请求（POST/PUT/DELETE/PATCH）需要携带有效的 CSRF token
     # 前端需先调用 /api/v1/auth/csrf-token 获取 token，并在请求头 X-CSRF-Token 中携带
     # 军用安全基线要求：即使单机部署也应启用 CSRF 保护，防止同源跨站请求攻击
-    CSRF_ENABLED: bool = False  # 单机离线部署默认关闭，网络部署时建议开启
+    # 默认开启；如需临时关闭（如调试），可设置环境变量 CSRF_ENABLED=false
+    CSRF_ENABLED: bool = True  # 军用安全基线：默认开启 CSRF 保护
     CSRF_SECRET_KEY: str = ""  # 留空时自动生成（与 SECRET_KEY 类似持久化到 runtime_secrets.json）
 
     # 速率限制配置
@@ -283,6 +285,16 @@ class Settings(BaseSettings):
         """模型初始化后的钩子"""
         if self.USE_ENCRYPTED_SECRETS:
             self._load_encrypted_secrets()
+
+        # 安全基线：生产环境强制关闭 SQL echo，避免敏感数据（身份证/手机号/资金）
+        # 落入日志。即使 .env 误配 DB_ECHO=true，生产环境也强制降级为 False。
+        if self.ENVIRONMENT == "production" and self.DB_ECHO:
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "DB_ECHO 在生产环境被强制关闭（防止敏感信息泄露到日志）"
+            )
+            self.DB_ECHO = False
 
         # 动态设置数据目录路径（解决 Windows 安装版权限问题）
         # 首先获取默认数据目录，供后续使用

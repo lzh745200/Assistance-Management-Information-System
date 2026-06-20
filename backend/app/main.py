@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+import logging
 import time as _time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
@@ -38,7 +39,7 @@ from starlette.types import Scope
 from app.core.audit_middleware import AuditMiddleware
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
-from app.core.logging import SafeLogger
+from app.core.logging_config import init_logging
 from app.core.security import SecurityHeadersMiddleware, hash_password
 from app.core.static_files import setup_static_files
 from app.middleware.camel_to_snake import CamelToSnakeMiddleware
@@ -48,7 +49,9 @@ from app.middleware.request_id import RequestIDMiddleware
 from app.middleware.request_logger import RequestLoggerMiddleware
 
 env = os.getenv("ENV", "dev")
-logger = SafeLogger(env=env).logger
+# P2-1: 统一日志入口——移除 SafeLogger，走 logging_config.init_logging()
+init_logging()
+logger = logging.getLogger("assistance_management")
 
 
 @asynccontextmanager
@@ -63,9 +66,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     _start_resource_monitoring()
     _start_database_health_monitoring()
     _start_approval_reminder()
+    # 每日凌晨 3 点 WAL checkpoint（轻量，不含 VACUUM，防止 -wal 文件膨胀）
+    _start_wal_checkpoint_scheduler()
     # _start_db_maintenance() — 已禁用，VACUUM 会生成大量临时文件
     yield
     # _stop_db_maintenance()
+    _stop_wal_checkpoint_scheduler()
     _stop_approval_reminder()
     _stop_resource_monitoring()
     _stop_database_health_monitoring()
@@ -775,6 +781,24 @@ def _stop_db_maintenance():
         stop_db_maintenance()
     except Exception as e:
         logger.warning("数据库维护停止失败: %s", e)
+
+
+def _start_wal_checkpoint_scheduler():
+    """启动每日凌晨 3 点 WAL checkpoint 调度（额外10）。"""
+    try:
+        from app.services.db_maintenance import start_wal_checkpoint_scheduler
+        start_wal_checkpoint_scheduler()
+    except Exception as e:
+        logger.warning("WAL checkpoint 调度启动失败: %s", e)
+
+
+def _stop_wal_checkpoint_scheduler():
+    """停止每日 WAL checkpoint 调度。"""
+    try:
+        from app.services.db_maintenance import stop_wal_checkpoint_scheduler
+        stop_wal_checkpoint_scheduler()
+    except Exception as e:
+        logger.warning("WAL checkpoint 调度停止失败: %s", e)
 
 
 __all__ = ["app"]

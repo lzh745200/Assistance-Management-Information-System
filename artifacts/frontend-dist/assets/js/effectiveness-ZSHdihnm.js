@@ -1,1 +1,0 @@
-import e from"./request-CRn4oK_o.js";const r="/effectiveness";function t(t){return e.post(`${r}/evaluate`,t)}function a(t,a,n){return e.get(`${r}/compare/${t}`,{params:{year1:a,year2:n}})}function n(t,a){return e.get(`${r}/rankings`,{params:{year:t,limit:a??20}})}export{a as c,t as e,n as g};

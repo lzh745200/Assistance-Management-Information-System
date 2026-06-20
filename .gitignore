@@ -1,24 +1,36 @@
-# Corrupted git data (pending chkdsk cleanup)
+# ===== Git / OS / Editor =====
 .git-corrupted/
 .git_backup/
+.DS_Store
+Thumbs.db
+desktop.ini
+nul
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.vs/
+.idea/
 
 # ===== Python =====
 __pycache__/
-*.pyc_compiled
 *.py[cod]
 *$py.class
+*.pyc_compiled
 *.so
 *.egg-info/
 *.egg
-dist/
-/build/
-# 但保留 build/linux/（DEB 安装脚本需要版本控制）
-!/build/linux/
-!/build/linux/**
-# 保留 scripts/build/ 目录下的构建脚本
-!/scripts/build/
-!/scripts/build/**
 .eggs/
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+coverage_report.txt
 
 # Virtual environments
 **/.venv*/
@@ -26,17 +38,6 @@ dist/
 venv_*/
 new_venv/
 test_venv/
-
-# Testing & Coverage
-.coverage
-htmlcov/
-coverage.xml
-*.cover
-.pytest_cache/
-.hypothesis/
-
-# Type checking
-.mypy_cache/
 
 # ===== Node.js =====
 node_modules/
@@ -46,112 +47,62 @@ npm-debug.log*
 .npm
 nodejs/
 
-# Test artifacts
-**/MagicMock/
+# ===== Build artifacts =====
+dist/
+/build/
+# 保留 build/linux/（DEB 安装脚本需版本控制）
+!/build/linux/
+!/build/linux/**
+artifacts/
+.cache/
+.audit/
+frontend/temp_build/
+frontend/coverage/
+backend/build/
+resources/frontend/
+resources/frontend_corrupted/
 
-# ===== IDE & Editor =====
-.vscode/
-.vs/
-.idea/
-*.swp
-*.swo
-*~
-
-# ===== OS =====
-.DS_Store
-Thumbs.db
-desktop.ini
-nul
-
-# ===== Project Specific =====
-# Environment files (keep .example)
+# ===== Environment & Secrets =====
 .env
 .env.dev
 .env.backup*
 .env.development
 .env.production
-
-# Databases
-*.db
-*.db-shm
-*.db-wal
-
-# Security & Secrets
+config/.env
 *.key
 *.pem
 *.crt
 secrets/
 
-# Logs (keep logs directory structure)
+# ===== Databases =====
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# ===== Logs =====
 *.log
 logs/*.json
 logs/.coverage
 *.gz
 
-# Test reports and coverage
+# ===== Runtime data =====
+data/cache/
+data/offline_tiles/
+data/archives/
+data/*.json
+exports/
+uploads/
+backups/
+backend/data_sync/*.zip
+backend/data_sync/*.rrs
+
+# ===== Reports & temp docs (root-level generated) =====
 *_report.txt
-coverage_report.txt
 flake8_report.txt
 black_report.txt
 test_full_results_*.txt
 TEST_REPORT_*.md
-
-# Build cache
-.cache/
-.audit/
-frontend/temp_build/
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.doctor.bak
-
-# Exports & Data
-exports/
-uploads/
-backups/
-data/cache/
-backend/data_sync/*.zip
-backend/data_sync/*.rrs
-
-# Claude Code worktrees and large directories
-.worktrees/
-.claude/
-.superpowers/
-
-# Conversation logs and text files (root-level only)
-/*.txt
-!requirements.txt
-!LICENSE.txt
-
-# Debug HTML files
-test-*.html
-debug-*.html
-
-# Frontend test coverage & temp output
-frontend/coverage/
-
-# Backend test/coverage artifacts
-backend/htmlcov/
-backend/coverage.xml
-backend/.coverage
-backend/test_full_results.txt
-backend/test_results.txt
-backend/test_integration.db*
-backend/coverage.json
-
-# Backend temporary scripts
-backend/test_*.py
-backend/check_*.py
-backend/diagnose_*.py
-backend/fix_*.py
-backend/reset_*.py
-backend/cleanup_*.py
-backend/comprehensive_*.py
-backend/monitor_*.py
-
-# Temporary report documents (root-level generated reports, not docs/)
 /*_REPORT.md
 /*_STATUS.md
 /*_GUIDE.md
@@ -159,105 +110,51 @@ backend/monitor_*.py
 /*_FIX*.md
 /*修复*.md
 /*报告*.md
-/*指南*.md
 /*诊断*.md
 /*_NOW.md
 /*_HERE.md
 /*_MANUAL.md
 /*_COMPLETE.md
-/*_SUMMARY.md
-/AGENT*.md
-/API*.md
-/ARM64_*.md
-/BACKEND_*.md
-/BUILD*.md
-/CODE_*.md
-/DELIVERY*.md
-/EXECUT*.md
-/FINAL*.md
-/LOGIN*.md
-/MANUAL_*.md
+# 根级生成的大写前缀报告文档统一用 [A-Z][A-Z]*_*.md 覆盖
+# （README/CHANGELOG/CONTRIBUTING 等已跟踪文件不受影响）
+/[A-Z][A-Z]*_*.md
 /MRRMS-*.md
-/PATCH*.md
-/PROJECT_*.md
-/QUICK_*.md
-/REBUILD*.md
-/SYSTEM_*.md
-/USER_*.md
-/WINDOWS_*.md
-/WORK_*.md
 
-# Runtime data directories (keep structure, exclude generated content)
-data/*.db
-data/*.db-shm
-data/*.db-wal
-data/*.json
-data/cache/
-data/offline_tiles/
-data/archives/
-config/.env
-
-# Root-level temporary Python scripts
-/fix_*.py
-/temp_*.py
-# Temporary geo/region data files
-/temp_*.json
-# Auto-generated padding tests (background process that creates bulk tests
-# without real assertions; to verify a file is padding, run
-#   python scripts/maintenance/audit_padding_tests.py backend/tests/unit/test_xxx.py
-backend/tests/unit/test_bulk_*.py
-backend/tests/unit/test_coverage_deep*.py
-backend/tests/unit/test_cover_*.py
-backend/tests/unit/test_target_*.py
-backend/tests/unit/test_zero_*.py
-backend/tests/unit/test_exec_batch*.py
-backend/tests/unit/test_quality_coverage_*.py
-backend/tests/unit/test_services_*.py
-# Single-letter pattern padding tests (test_aa..zz, test_a1..z1, etc.)
-backend/tests/unit/test_[a-z][a-z].py
-backend/tests/unit/test_[a-z]1.py
-backend/tests/unit/test_0pct_batch.py
-# Test backup artifacts
-backend/tests/unit/backup_*.zip
-# Coverage artifacts
-*.cover
-# Workflow summaries
-.workflow-summary.md
-backend/tests/unit/test_all_services_*.py
-backend/tests/unit/test_pass_*.py
-backend/tests/unit/test_push_*.py
-backend/tests/unit/test_unique*.py
-backend/tests/unit/test_more_unique.py
-backend/tests/unit/test_model_columns*.py
-backend/tests/unit/test_models_*.py
-backend/tests/unit/test_enum_*.py
-backend/tests/unit/test_fund_lifecycle_models.py
-backend/tests/unit/test_core_safe.py
-backend/tests/unit/test_domain_safe.py
-backend/tests/unit/test_utils_safe.py
-backend/tests/unit/test_api_batch*.py
-backend/tests/unit/test_api_routes_batch*.py
-backend/tests/unit/z_final_push.py
-backend/gen_cover*.py
-backend/scripts/verify_db.py
-
-# Corrupted resources + old git backup
-resources/frontend_corrupted/
-.git_corrupted_backup/
-
-# Debug files
-frontend/src/main_debug.ts
-frontend/src/AppDebug.vue
-.gstack/
-.arts/
-
-# Frontend build output — generated by `npm run build`, DO NOT TRACK
-resources/frontend/
-
-# Runtime snapshots
-*_snapshot_*/
+# ===== Conversation / debug files =====
+conversation-*.txt
+/*_snapshot_*/
 *.snapshot_*
 *.db.snapshot_*
+test-*.html
+debug-*.html
+
+# ===== Backend temp scripts & artifacts =====
+backend/test_full_results.txt
+backend/test_results.txt
+backend/test_integration.db*
+backend/test_*.py
+backend/check_*.py
+backend/diagnose_*.py
+backend/fix_*.py
+backend/reset_*.py
+backend/cleanup_*.py
+backend/gen_cover*.py
+/fix_*.py
+/temp_*.py
+
+# ===== Misc =====
+.workflow-summary.md
+.claude/
+.superpowers/
+.worktrees/
+
+# 工具缓存目录（不应入库）
+.arts/
+.gstack/
 claude-code/
-*.db-journal
-backend/build/
+backend/MagicMock/
+backend/uploads_snapshot_*/
+backend/requirements.txt.tmp
+backend/tests/unit/backup_*.zip
+csrf_cookies*.txt
+docs/系统功能三维优化方案.md

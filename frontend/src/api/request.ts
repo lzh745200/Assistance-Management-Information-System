@@ -11,6 +11,9 @@ const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
+  // 携带凭证（Cookie）：CSRF Double Submit Cookie 模式需要跨域/同源均能携带
+  // csrftoken Cookie，服务端 CORS 已开启 allow_credentials。
+  withCredentials: true,
 });
 
 export type RequestConfig = AxiosRequestConfig;
@@ -20,6 +23,73 @@ const pendingRequests = new Map<string, Canceler>();
 
 /** 内存缓存 token，避免每条请求都读 sessionStorage */
 let _cachedToken: string | null = null;
+
+// ── CSRF Token 管理（Double Submit Cookie 模式）──
+// 后端开启 CSRF 保护后，POST/PUT/DELETE/PATCH 需在 X-CSRF-Token 头回填 token。
+// token 来源：优先从 csrftoken Cookie 读取；若无则懒加载 GET /auth/csrf-token 获取
+// （响应会同时 Set-Cookie）。测试环境（MODE=test）不发起自动获取，避免影响单测。
+const _CSRF_COOKIE_NAME = "csrftoken";
+const _CSRF_HEADER_NAME = "X-CSRF-Token";
+const _CSRF_TOKEN_ENDPOINT = "/auth/csrf-token";
+const _UNSAFE_METHODS = new Set(["post", "put", "delete", "patch"]);
+const _isTestEnv = import.meta.env.MODE === "test";
+let _csrfToken: string | null = null;
+let _csrfFetchInFlight: Promise<string | null> | null = null;
+
+/** 从 document.cookie 读取指定 cookie 值 */
+function _readCookie(name: string): string | null {
+  if (typeof document === "undefined" || !document.cookie) return null;
+  const match = document.cookie.match(
+    new RegExp(
+      "(?:^|; )" +
+        name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") +
+        "=([^;]*)",
+    ),
+  );
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * 确保已获取 CSRF token（cookie 优先，缺失时懒加载一次）。
+ * 测试环境直接返回 null，不发起网络请求。
+ */
+async function _ensureCsrfToken(): Promise<string | null> {
+  if (_csrfToken) return _csrfToken;
+  // 1. 优先从 cookie 读取（Double Submit Cookie）
+  const fromCookie = _readCookie(_CSRF_COOKIE_NAME);
+  if (fromCookie) {
+    _csrfToken = fromCookie;
+    return _csrfToken;
+  }
+  // 2. 测试环境不自动获取，避免单测触发真实网络请求
+  if (_isTestEnv || typeof document === "undefined") return null;
+  // 3. 懒加载获取（去重并发请求）
+  if (!_csrfFetchInFlight) {
+    _csrfFetchInFlight = (async () => {
+      try {
+        // 用裸 axios.get 绕过自身拦截器，避免递归（GET 为安全方法本就不会触发 CSRF 分支）
+        const res = await axios.get(
+          (import.meta.env.VITE_API_BASE_URL || "/api/v1") +
+            _CSRF_TOKEN_ENDPOINT,
+          { withCredentials: true },
+        );
+        const token =
+          (res.data && (res.data as any)?.data?.csrf_token) ||
+          (res.data && (res.data as any)?.csrf_token) ||
+          _readCookie(_CSRF_COOKIE_NAME);
+        if (token) _csrfToken = token as string;
+        return _csrfToken;
+      } catch {
+        // 获取失败不阻断请求；服务端会返回 403 由响应拦截器处理
+        return null;
+      } finally {
+        _csrfFetchInFlight = null;
+      }
+    })();
+  }
+  await _csrfFetchInFlight;
+  return _csrfToken;
+}
 
 /** 生成稳定排序的请求标识 key */
 function _makeRequestKey(
@@ -34,12 +104,20 @@ function _makeRequestKey(
   return `${method}:${url}:${serialized}`;
 }
 
-request.interceptors.request.use((config) => {
+request.interceptors.request.use(async (config) => {
   if (_cachedToken === null) {
     _cachedToken = AuthStorage.getToken();
   }
   if (_cachedToken) {
     config.headers.Authorization = `Bearer ${_cachedToken}`;
+  }
+  // ── CSRF：不安全方法自动回填 X-CSRF-Token ──
+  const method = (config.method || "get").toLowerCase();
+  if (_UNSAFE_METHODS.has(method)) {
+    const token = await _ensureCsrfToken();
+    if (token) {
+      config.headers[_CSRF_HEADER_NAME] = token;
+    }
   }
   const requestKey = _makeRequestKey(config.method, config.url, config.params);
   if (pendingRequests.has(requestKey)) {
@@ -131,12 +209,31 @@ request.interceptors.response.use(
         _cachedToken = null;
         AuthStorage.clear();
         ElMessage.error("登录已过期，请重新登录");
+        // 跳转登录页：避免在测试环境/已登录页重复跳转
+        if (
+          typeof window !== "undefined" &&
+          !_isTestEnv &&
+          !window.location.pathname.startsWith("/login")
+        ) {
+          window.location.href = "/login";
+        }
       } else if (status === 403) {
-        ElMessage.error(data?.detail || "权限不足，无法执行此操作");
+        // CSRF 校验失败时重置 token 缓存，下次不安全请求重新获取
+        const msg: string = data?.detail || data?.message || "";
+        if (msg.includes("CSRF") || msg.includes("csrf")) {
+          _csrfToken = null;
+          ElMessage.error("安全校验已过期，请重试（CSRF）");
+        } else {
+          ElMessage.error(msg || "权限不足，无法执行此操作");
+        }
+      } else if (status === 404) {
+        // 404 资源不存在：弹窗提示（避免静默失败）
+        const url = error.config?.url || "";
+        ElMessage.warning(
+          data?.detail || data?.message || `请求的资源不存在: ${url}`,
+        );
       } else if (status >= 500) {
         ElMessage.error("服务器错误，请稍后重试");
-      } else if (status === 404) {
-        console.warn(`[API] 404: ${error.config?.url}`);
       } else {
         console.error(
           "[API] Request failed:",
@@ -174,6 +271,11 @@ request.interceptors.response.use(
 /** 更新 token 缓存（登录/登出时由 auth store 调用） */
 export function _setCachedToken(t: string | null) {
   _cachedToken = t;
+}
+
+/** 主动获取并缓存 CSRF token（应用初始化/登录后可调用以预热） */
+export async function prefetchCsrfToken(): Promise<string | null> {
+  return _ensureCsrfToken();
 }
 
 // ── 泛型核心请求函数 ──

@@ -1,0 +1,23 @@
+[flake8]
+# 帮扶管理信息系统 Python 代码风格配置（与 CI/pre-commit 一致）
+max-line-length = 120
+# 扩展选中：E/W(pycodestyle) F(pyflakes) B(bugbear) C4(comprehensions)
+extend-select = E,W,F,B,C4
+# 忽略：E203(切片空格，与 black 冲突) W503(换行运算符，与 black 冲突) E501(行长由 max-line-length+per-file 控制)
+ignore = E203,W503,E501
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    artifacts,
+    backend/build
+# 测试文件允许 assert (S101)、魔术字面量等
+per-file-ignores =
+    tests/*:S101,B011
+    */tests/*:S101,B011
+# 复杂度与文档
+max-complexity = 15
+docstring-convention = google

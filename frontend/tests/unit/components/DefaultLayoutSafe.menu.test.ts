@@ -21,7 +21,13 @@ describe('DefaultLayoutSafe 侧边栏回归校验', () => {
   })
 
   it('侧边栏配置的菜单路径均存在于路由定义中', () => {
-    const menuPaths = [...layoutSource.matchAll(/path:\s*'([^']+)'/g)].map(m => m[1])
+    // Extract menu paths from layout source. Filter out '/' which is a
+    // breadcrumb home link (el-breadcrumb-item :to="{ path: '/' }"), not a
+    // sidebar menu item — the regex cannot distinguish menu paths from
+    // breadcrumb/router-link destinations by pattern alone.
+    const menuPaths = [...layoutSource.matchAll(/path:\s*'([^']+)'/g)]
+      .map(m => m[1])
+      .filter(p => p !== '/')
     const routePaths = [...routerSource.matchAll(/path:\s*\"([^\"]+)\"/g)].map(m => m[1])
     const fullRoutes = new Set<string>(routePaths.filter(p => p.startsWith('/')))
     routePaths

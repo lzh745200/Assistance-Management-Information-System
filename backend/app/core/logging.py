@@ -1,53 +1,23 @@
-"""Structured application logging with rotating file handler and console output."""
+"""日志模块 — 向后兼容入口。
+
+P2-1 整改：移除旧的 SafeLogger 实现（与 logging_config.py 重复），统一走
+``logging_config.configure_logging`` / ``init_logging``。本模块仅保留模块级
+``logger`` 句柄，供 ``from app.core.logging import logger`` 的既有调用方使用。
+
+新代码应直接 ``import logging; logger = logging.getLogger(__name__)``，
+或调用 ``app.core.logging_config.init_logging()`` 完成初始化。
+"""
 import logging
-import os
-import sys
-from logging.handlers import RotatingFileHandler
 
-
-class SafeLogger:
-    """Application logger that writes to both console and a rotating file."""
-
-    def __init__(self, env: str = "dev", level: str = "INFO"):
-        self.env = env
-        self.level = getattr(logging, level.upper(), logging.INFO)
-        self.logger = logging.getLogger("assistance_management")
-        self.logger.setLevel(self.level)
-        if not self.logger.handlers:
-            self._setup_handlers()
-
-    def _setup_handlers(self):
-        fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        formatter = logging.Formatter(fmt)
-
-        console = logging.StreamHandler(sys.stdout)
-        console.setLevel(logging.DEBUG if self.env == "dev" else self.level)
-        console.setFormatter(formatter)
-        self.logger.addHandler(console)
-
-        log_dir = os.path.join(os.getcwd(), "logs")
-        os.makedirs(log_dir, exist_ok=True)
-        file_handler = RotatingFileHandler(
-            os.path.join(log_dir, "app.log"),
-            maxBytes=50 * 1024 * 1024,
-            backupCount=5,
-            encoding="utf-8",
-        )
-        file_handler.setLevel(self.level)
-        file_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
-
-    def info(self, msg, *args, **kwargs):
-        self.logger.info(msg, *args, **kwargs)
-
-    def warning(self, msg, *args, **kwargs):
-        self.logger.warning(msg, *args, **kwargs)
-
-    def error(self, msg, *args, **kwargs):
-        self.logger.error(msg, *args, **kwargs)
-
-    def debug(self, msg, *args, **kwargs):
-        self.logger.debug(msg, *args, **kwargs)
-
-
+# 兼容既有 ``from app.core.logging import logger`` 调用方
 logger = logging.getLogger("assistance_management")
+
+
+def init_logging() -> None:
+    """代理到 logging_config.init_logging（统一入口）。"""
+    from app.core.logging_config import init_logging as _init
+
+    _init()
+
+
+__all__ = ["logger", "init_logging"]

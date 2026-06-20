@@ -1,8 +1,12 @@
 """SQLite 定期维护 — VACUUM + PRAGMA optimize + WAL checkpoint。
 
 在后台线程中定期执行，不阻塞主请求处理。
+
+额外10：新增独立的每日凌晨 3 点 WAL checkpoint 调度（仅 TRUNCATE，不做 VACUUM，
+避免 VACUUM 产生大量临时文件），主动回收 -wal 文件，防止长时间运行膨胀。
 """
 
+import datetime
 import logging
 import threading
 
@@ -67,3 +71,72 @@ def stop_db_maintenance():
     if _maintenance_thread:
         _maintenance_thread.join(timeout=1)
     logger.info("数据库定期维护已停止")
+
+
+# ══════════════════════════════════════════════════════════════
+#  额外10：每日凌晨 3 点 WAL checkpoint 调度（轻量，不含 VACUUM）
+# ══════════════════════════════════════════════════════════════
+_wal_thread: threading.Thread | None = None
+_wal_stop_event = threading.Event()
+
+
+def _seconds_until_next_3am(now: datetime.datetime | None = None) -> int:
+    """计算距离下一个凌晨 3 点的秒数。"""
+    now = now or datetime.datetime.now()
+    next_run = now.replace(hour=3, minute=0, second=0, microsecond=0)
+    if next_run <= now:
+        next_run += datetime.timedelta(days=1)
+    return max(int((next_run - now).total_seconds()), 1)
+
+
+def _run_wal_checkpoint():
+    """后台线程：每天凌晨 3 点执行 PRAGMA wal_checkpoint(TRUNCATE)。"""
+    # 等待到首个 3 点
+    if _wal_stop_event.wait(_seconds_until_next_3am()):
+        return
+    while not _wal_stop_event.is_set():
+        try:
+            _do_wal_checkpoint()
+        except Exception:
+            logger.warning("WAL checkpoint 调度执行失败", exc_info=True)
+        # 等待到下一个 3 点（约 24 小时后）
+        if _wal_stop_event.wait(_seconds_until_next_3am()):
+            return
+
+
+def _do_wal_checkpoint():
+    """执行单次 WAL checkpoint（TRUNCATE），不执行 VACUUM 以避免临时文件膨胀。"""
+    from app.core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        conn = db.connection().connection  # raw sqlite3 connection
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        result = cursor.fetchone()
+        cursor.close()
+        logger.info("每日 WAL checkpoint 完成 (3:00) result=%s", result)
+    except Exception as e:
+        logger.warning("WAL checkpoint 失败: %s", e)
+    finally:
+        db.close()
+
+
+def start_wal_checkpoint_scheduler():
+    """启动每日凌晨 3 点的 WAL checkpoint 调度线程。"""
+    global _wal_thread
+    if _wal_thread is not None:
+        return
+    _wal_stop_event.clear()
+    _wal_thread = threading.Thread(
+        target=_run_wal_checkpoint, daemon=True, name="db-wal-checkpoint"
+    )
+    _wal_thread.start()
+    logger.info("每日 WAL checkpoint 调度已启动 (凌晨 3:00)")
+
+
+def stop_wal_checkpoint_scheduler():
+    """停止每日 WAL checkpoint 调度线程。"""
+    _wal_stop_event.set()
+    if _wal_thread:
+        _wal_thread.join(timeout=1)
+    logger.info("每日 WAL checkpoint 调度已停止")

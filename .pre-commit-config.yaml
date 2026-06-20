@@ -26,7 +26,14 @@ repos:
     hooks:
       - id: flake8
         name: flake8
-        entry: bash -c 'cd backend && python -m flake8 app/ --max-line-length=120 --count'
+        entry: bash -c 'cd backend && python -m flake8 app/ --max-line-length=120 --max-warnings=0 --count'
+        language: system
+        files: ^backend/app/
+        pass_filenames: false
+
+      - id: bandit
+        name: bandit (security)
+        entry: bash -c 'cd backend && python -m bandit -r app/ -c ../.bandit || true'
         language: system
         files: ^backend/app/
         pass_filenames: false

@@ -33,9 +33,9 @@ const appVersion = (() => {
     const pkgPath = app.isPackaged
       ? path.join(process.resourcesPath, '..', 'package.json')
       : path.join(__dirname, '..', 'package.json');
-    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version || '1.1.0';
+    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version || '1.4.1';
   } catch (_) {
-    return '1.1.0';
+    return '1.4.1';
   }
 })();
 
@@ -985,9 +985,18 @@ if (process.platform === 'win32') {
   app.commandLine.appendSwitch('disable-background-timer-throttling');
 }
 
-// Linux：部分发行版 chrome-sandbox 未设置 SUID，需要 no-sandbox
+// Linux：chrome-sandbox 需要 SUID 位才能启用 Chromium 沙箱。
+// 打包脚本（deploy/kylin/DEBIAN/postinst）安装时已对 chrome-sandbox 执行
+// `chmod 4755 && chown root:root`，普通用户正常启动无需 --no-sandbox。
+// 仅当以 root 运行（部分嵌入式/定制环境）时回退禁用沙箱（root 下 SUID 无效），
+// 并打印告警日志便于安全审计追溯。
 if (process.platform === 'linux') {
-  app.commandLine.appendSwitch('no-sandbox');
+  const isLinuxRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+  if (isLinuxRoot) {
+    console.warn('[Main][security] 以 root 运行 Linux Electron，回退使用 --no-sandbox（chrome-sandbox SUID 在 root 下无效）。建议以普通用户运行以启用完整沙箱。');
+    app.commandLine.appendSwitch('no-sandbox');
+  }
+  // 普通用户：不传 --no-sandbox，依赖 chrome-sandbox SUID 启用渲染进程沙箱
 }
 
 // 主进程级未捕获异常和 Promise 拒绝处理，防止底层错误导致白屏

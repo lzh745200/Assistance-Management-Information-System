@@ -1,1 +1,0 @@
-import a from"./request-CRn4oK_o.js";const o=o=>a.get("/organizations",{params:o}),s=o=>a.get("/organizations/"+o),t=o=>a.post("/organizations",o),i=(o,s)=>a.put("/organizations/"+o,s),n=o=>a.post("/organizations/batch-update-sort",o);export{o as a,n as b,t as c,s as g,i as u};
