@@ -17,10 +17,11 @@ class NLPQueryService:
     """自然语言查询服务"""
 
     # 查询模板映射（按匹配优先级排序，更具体的模式在前）
+    # SQL 全部使用参数化占位符 (:param) 防止注入
     QUERY_TEMPLATES = {
         "village_by_province": {
             "patterns": [r"(.+?省)有多少个?村", r"(.+?的)村庄"],
-            "sql": "SELECT COUNT(*) as count FROM villages WHERE province = '{province}'",
+            "sql": "SELECT COUNT(*) as count FROM villages WHERE province = :province",
             "description": "查询指定省份的村庄数量",
         },
         "village_count": {
@@ -35,7 +36,7 @@ class NLPQueryService:
         },
         "project_by_status": {
             "patterns": [r"(.+?)状态的项目", r"(.+?)的项目有多少"],
-            "sql": "SELECT COUNT(*) as count FROM projects WHERE status = '{status}'",
+            "sql": "SELECT COUNT(*) as count FROM projects WHERE status = :status",
             "description": "查询指定状态的项目数量",
         },
         "total_funds": {
@@ -49,7 +50,7 @@ class NLPQueryService:
                 SELECT v.name, ai.per_capita_income, ai.year
                 FROM villages v
                 JOIN annual_income ai ON v.id = ai.village_id
-                WHERE v.name LIKE '%{village_name}%'
+                WHERE v.name LIKE '%' || :village_name || '%'
                 ORDER BY ai.year DESC
                 LIMIT 1
             """,
@@ -63,7 +64,7 @@ class NLPQueryService:
                 JOIN annual_income ai ON v.id = ai.village_id
                 WHERE ai.year = (SELECT MAX(year) FROM annual_income)
                 ORDER BY ai.per_capita_income DESC
-                LIMIT {limit}
+                LIMIT :limit
             """,
             "description": "查询收入最高的村庄",
         },
@@ -114,13 +115,14 @@ class NLPQueryService:
                     else:
                         params["limit"] = 10
 
-                    # 生成SQL
-                    sql = template["sql"].format(**params)
+                    # 只保留 SQL 模板中的命名参数（非 limit 等辅助参数）
+                    sql_params = {k: v for k, v in params.items()
+                                  if f':{k}' in template["sql"]}
 
                     return {
                         "template": template_name,
-                        "sql": sql,
-                        "params": params,
+                        "sql": template["sql"],
+                        "params": sql_params,
                         "description": template["description"],
                     }
 
@@ -155,8 +157,9 @@ class NLPQueryService:
             }
 
         try:
-            # 执行SQL
-            result = db.execute(text(parsed["sql"]))
+            # 执行SQL（参数化查询防止注入）
+            stmt = text(parsed["sql"])
+            result = db.execute(stmt, parsed["params"])
             rows = result.fetchall()
 
             # 转换结果

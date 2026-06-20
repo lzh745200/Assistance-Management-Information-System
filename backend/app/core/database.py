@@ -108,7 +108,7 @@ def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
             if key_file.exists():
                 key = key_file.read_text(encoding="utf-8").strip()
                 if key:
-                    cursor.execute(f"PRAGMA key = '{key}'")
+                    cursor.execute("PRAGMA key = ?", [key])
                     logger.info("SQLCipher 数据库加密已启用")
             else:
                 logger.warning("未找到数据库加密密钥文件: %s", key_file)

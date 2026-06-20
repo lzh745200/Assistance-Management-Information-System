@@ -51,4 +51,5 @@ class AuditMiddleware(BaseHTTPMiddleware):
             )
             return payload.get("sub", "unknown")
         except Exception:
+            logger.debug("审计中间件: token 解析失败（可能是未认证请求）", exc_info=True)
             return "unauthenticated"
