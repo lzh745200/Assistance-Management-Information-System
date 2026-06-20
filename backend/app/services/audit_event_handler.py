@@ -75,7 +75,6 @@ def _write_audit_from_event(mapper, connection, target, action: str):
     try:
         entity_type = _get_entity_type(target)
         entity_name = _get_entity_name(target)
-        entity_id = getattr(target, "id", None)
 
         # 使用原始 DB-API 连接直接插入，避免与业务 session 冲突
         from datetime import date

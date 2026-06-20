@@ -170,6 +170,15 @@ TYPE_DISPLAY = {
 }
 
 
+def _parse_scholarship_status(row):
+    """安全解析奖学金状态。"""
+    from app.models.scholarship import ScholarshipStatus
+    status_map = {"pending": "pending", "approved": "approved", "rejected": "rejected"}
+    if len(row) > 8 and row[8]:
+        return ScholarshipStatus(status_map.get(str(row[8]), "pending"))
+    return ScholarshipStatus.PENDING
+
+
 # ==================== 导入导出API（放在动态路由之前）====================
 
 
@@ -288,7 +297,7 @@ async def import_scholarship_students(
                     school_name=str(row[5]) if len(row) > 5 and row[5] else None,
                     grade=str(row[6]) if len(row) > 6 and row[6] else None,
                     reason=str(row[7]) if len(row) > 7 and row[7] else None,
-                    status=ScholarshipStatus(status_map.get(str(row[8]), "pending")) if len(row) > 8 and row[8] else ScholarshipStatus.PENDING,
+                    status=_parse_scholarship_status(row),
                 )
                 db.add(stu)
                 imported += 1
@@ -531,6 +540,15 @@ async def list_schools(
     db: Session = Depends(get_db),
 ):
     """获取学校列表"""
+    # 缓存：学校数据日级更新，TTL 120s
+    from app.core.cache import get_cache_service
+    import hashlib, json
+    _cache = await get_cache_service()
+    _ckey = f"schools:list:{page}:{page_size}:{hashlib.md5(json.dumps([keyword,name,type,status_filter],default=str).encode()).hexdigest()}"
+    _cached = await _cache.get(_ckey)
+    if _cached is not None:
+        return _cached
+
     query = db.query(School).filter(School.is_active == True)  # noqa: E712
 
     # 数据范围过滤：非管理员只能看到自己组织及下级组织的帮扶学校
@@ -557,12 +575,14 @@ async def list_schools(
     total = query.count()
     items = query.order_by(School.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
+    _result = {
         "items": [s.to_dict() for s in items],
         "total": total,
         "page": page,
         "page_size": page_size,
     }
+    await _cache.set(_ckey, _result, ttl=120)
+    return _result
 
 
 @router.get("/{school_id}")
