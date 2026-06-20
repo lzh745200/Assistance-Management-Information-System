@@ -192,7 +192,7 @@ def calculate_file_checksum(file_path: str, algorithm: str = "sha256") -> str:
     if algorithm == "md5":
         hash_func = hashlib.md5()
     elif algorithm == "sha1":
-        hash_func = hashlib.sha1()
+        hash_func = hashlib.sha1(usedforsecurity=False)
     elif algorithm == "sha256":
         hash_func = hashlib.sha256()
     else:

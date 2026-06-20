@@ -37,6 +37,7 @@ def _get_settings():
         from app.core.config import settings  # type: ignore[import-untyped]
         return settings
     except Exception:
+        logger.warning("Token设置加载异常", exc_info=True)
         return None
 
 

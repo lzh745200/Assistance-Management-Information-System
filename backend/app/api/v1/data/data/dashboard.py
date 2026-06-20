@@ -62,6 +62,7 @@ def _get_cached(key: str):
     try:
         return _cache.get(key)
     except Exception:
+        logger.warning("仪表盘缓存读取失败", exc_info=True)
         return None
 
 

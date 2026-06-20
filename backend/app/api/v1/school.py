@@ -40,6 +40,12 @@ from ...services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
+
+def _fmt_row_error(row_idx: int, exc: Exception, hint: str, record_ident: str = "?") -> str:
+    """统一格式化 Excel 导入行错误信息。"""
+    return f"第{row_idx}行({record_ident}): {hint} — {exc}"
+
+
 router = APIRouter(prefix="/schools", tags=["帮扶学校管理"])
 
 
@@ -232,15 +238,70 @@ async def import_schools_excel(
                 db.add(school)
                 imported += 1
             except (ValueError, TypeError) as e:
-                errors.append(f"第{row_idx}行: 数据格式错误 — {str(e)}（请检查数字/日期字段格式）")
+                errors.append(_fmt_row_error(row_idx, e, "数据格式错误（请检查数字/日期字段格式）",
+                                             row[1] if row and len(row) > 1 else "?"))
             except Exception as e:
-                errors.append(f"第{row_idx}行({row[1] if row and len(row)>1 else '?'}): {str(e)}")
-
+                errors.append(_fmt_row_error(row_idx, e, str(e),
+                                             row[1] if row and len(row) > 1 else "?"))
         db.commit()
-
         return {
             "success": True,
             "message": f"成功导入 {imported} 所学校",
+            "imported": imported,
+            "failed": len(errors),
+            "errors": errors,
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"导入失败: {str(e)}")
+
+
+# ── 奖学金学生导入 ──
+
+@router.post("/scholarship/import", summary="导入奖学金学生Excel")
+async def import_scholarship_students(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """从 Excel 导入奖学金资助学生"""
+    content = await validate_excel_upload(file)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+        tmp.write(content)
+        tmp_path = tmp.name
+    try:
+        with open(tmp_path, "rb") as _f:
+            wb = load_workbook(_f)
+        ws = wb.active
+        imported = 0
+        errors = []
+        status_map = {"pending": "pending", "approved": "approved", "rejected": "rejected"}
+        for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            if not row or len(row) < 2 or not row[1]:
+                continue
+            try:
+                stu = ScholarshipStudent(
+                    name=str(row[1]),
+                    student_id=str(row[2]) if len(row) > 2 and row[2] else None,
+                    year=int(row[3]) if len(row) > 3 and row[3] else None,
+                    amount=float(row[4]) if len(row) > 4 and row[4] else 0.0,
+                    school_name=str(row[5]) if len(row) > 5 and row[5] else None,
+                    grade=str(row[6]) if len(row) > 6 and row[6] else None,
+                    reason=str(row[7]) if len(row) > 7 and row[7] else None,
+                    status=ScholarshipStatus(status_map.get(str(row[8]), "pending")) if len(row) > 8 and row[8] else ScholarshipStatus.PENDING,
+                )
+                db.add(stu)
+                imported += 1
+            except (ValueError, TypeError) as e:
+                errors.append(_fmt_row_error(row_idx, e, "数据格式错误（请检查年份/金额字段是否为数字）",
+                                             row[0] if row and len(row) > 0 else "?"))
+            except Exception as e:
+                errors.append(_fmt_row_error(row_idx, e, str(e),
+                                             row[0] if row and len(row) > 0 else "?"))
+        db.commit()
+        return {
+            "success": True,
+            "message": f"成功导入 {imported} 名资助学生",
             "imported": imported,
             "failed": len(errors),
             "errors": errors,
@@ -1045,9 +1106,11 @@ async def import_scholarship_students(
                 db.add(stu)
                 imported += 1
             except (ValueError, TypeError) as e:
-                errors.append(f"第{row_idx}行: 数据格式错误 — {str(e)}（请检查年份/金额字段是否为数字）")
+                errors.append(_fmt_row_error(row_idx, e, "数据格式错误（请检查年份/金额字段是否为数字）",
+                                             row[0] if row and len(row) > 0 else "?"))
             except Exception as e:
-                errors.append(f"第{row_idx}行({row[0] if row and len(row)>0 else '?'}): {str(e)}")
+                errors.append(_fmt_row_error(row_idx, e, str(e),
+                                             row[0] if row and len(row) > 0 else "?"))
         db.commit()
         return {
             "success": True,

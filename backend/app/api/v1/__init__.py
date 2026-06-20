@@ -111,7 +111,8 @@ except Exception as e:
 # 使用列表而非 dict（key==value 无需 dict 映射）
 _BUSINESS_MODULES = [
     'organization', 'policy', 'projects', 'school',
-    'supported_village', 'supported_village_export', 'rural_works', 'rural_tasks',
+    'supported_village', 'supported_village_export',  # WIP: 501占位，Service待实现
+    'rural_works', 'rural_tasks',
     'villages', 'village_templates', 'validation', 'report_templates', 'approval',
     'messages', 'feedback', 'todos', 'ai', 'map', 'project_milestones',
     'funds', 'fund_budgets', 'fund_lifecycle', 'work_logs', 'assessment',

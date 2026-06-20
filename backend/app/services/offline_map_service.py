@@ -42,6 +42,7 @@ class OfflineMapService:
             async with aiofiles.open(tile_path, "rb") as f:
                 return await f.read()
         except Exception:
+            logger.warning("离线地图瓦片读取失败: %s", tile_path, exc_info=True)
             return None
 
     async def save_tile(self, z: int, x: int, y: int, data: bytes) -> bool:

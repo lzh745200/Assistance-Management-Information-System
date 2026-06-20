@@ -308,6 +308,7 @@ async def verify_token(token: str, token_type: str = "access_token") -> Optional
             return None
         return {"username": username, "token_type": token_type}
     except Exception:
+        logger.warning("Token验证失败", exc_info=True)
         return None
 
 

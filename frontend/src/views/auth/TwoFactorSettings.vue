@@ -60,6 +60,7 @@
       <el-card v-if="setupStep === 1" class="setup-card">
         <h3 class="section-title">第 1 步：扫描二维码</h3>
         <div class="qr-section">
+          <!-- eslint-disable-next-line vue/no-v-html -->
           <div class="qr-container" v-html="qrCodeSvg"></div>
           <div class="secret-info">
             <p class="secret-label">或手动输入密钥：</p>

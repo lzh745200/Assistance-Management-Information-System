@@ -9,6 +9,7 @@ Requirements: 10.3 - 实现分页查询优化（游标分页）
 
 import base64
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -17,6 +18,8 @@ from typing import Any, Generic, List, Optional, Tuple, TypeVar
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, asc, desc, or_
 from sqlalchemy.orm import Query
+
+logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
@@ -72,6 +75,7 @@ class CursorData:
                 direction=data.get("d", "next"),
             )
         except Exception:
+            logger.warning("游标解析失败", exc_info=True)
             return None
 
 

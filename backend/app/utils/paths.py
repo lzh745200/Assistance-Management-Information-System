@@ -112,16 +112,9 @@ def get_backup_path(sub_path: str = "") -> Path:
     """
     获取备份文件路径
 
-    自动备份默认关闭——设置环境变量 BACKUP_ENABLED=true 启用。
-    防止测试/开发过程中无意间创建大量备份占用磁盘。
+    自动备份调度由 BACKUP_ENABLED 环境变量控制（见 auto_backup.py）。
+    手动备份（管理员 API）始终使用此目录，不受该环境变量影响。
     """
-    import os as _os
-    _backup_enabled = _os.environ.get("BACKUP_ENABLED", "").lower() in ("1", "true", "yes")
-    if not _backup_enabled:
-        # 返回临时目录以避免备份写入项目目录
-        import tempfile
-        return Path(tempfile.gettempdir()) / "bumofu_backups_disabled"
-
     base = get_app_data_dir() / "backups"
     if sub_path:
         path = _safe_join(base, sub_path)

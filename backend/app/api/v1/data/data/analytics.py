@@ -32,6 +32,7 @@ async def _get_cached(key: str):
         cache = await get_cache_service()
         return await cache.get(f"{ANALYTICS_CACHE_PREFIX}{key}")
     except Exception:
+        logger.warning("分析缓存读取失败", exc_info=True)
         return None
 
 

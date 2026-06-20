@@ -348,16 +348,30 @@ async def optimize_database(
     """执行 WAL checkpoint + PRAGMA optimize，返回优化前后空间对比"""
     import os
     import sqlite3
+    from urllib.parse import unquote
     from app.core.database import engine
 
     db_url = str(engine.url)
     if not db_url.startswith("sqlite"):
         raise HTTPException(status_code=400, detail="仅支持 SQLite 数据库")
-    # 安全提取路径——handle sqlite:///C:/..., sqlite:///./data/..., sqlite:./data/...
+
+    # 提取文件路径：sqlite:///path/to/db, sqlite://path, sqlite:path
     if ":///" in db_url:
         db_path = db_url.split(":///", 1)[1]
+    elif "://" in db_url:
+        db_path = db_url.split("://", 1)[1]
+    elif ":" in db_url:
+        db_path = db_url.split(":", 1)[1]
     else:
-        db_path = db_url.split(":", 1)[1] if ":" in db_url else db_url
+        db_path = db_url
+
+    # :memory: 不支持文件级优化
+    if db_path == ":memory:" or db_path.startswith(":memory"):
+        raise HTTPException(status_code=400, detail="内存数据库不支持文件优化")
+
+    # 解码 URL 编码字符（空格、中文路径等）
+    db_path = unquote(db_path)
+
     if not os.path.exists(db_path):
         raise HTTPException(status_code=404, detail="数据库文件不存在")
 
