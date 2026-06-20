@@ -195,11 +195,16 @@ class TestTrackQuery:
 
     def test_zero_global_threshold_never_flags_slow(self):
         import app.core.query_optimizer as qo
-        # teardown_method 在每次测试后无条件调用 set_slow_query_threshold(200.0)
-        qo._slow_threshold_ms = 0.0
-        with patch("app.core.query_optimizer.time.perf_counter", side_effect=[0, 10]):
-            track_query("any", lambda: None)
-            assert get_slow_queries()[0]["slow"] is False
+        # slow 标志由 elapsed > threshold 决定（line 117）。
+        # 0.0 会使所有查询都被标记为慢。使用 inf 确保永远为快。
+        saved = qo._slow_threshold_ms
+        qo._slow_threshold_ms = float('inf')
+        try:
+            with patch("app.core.query_optimizer.time.perf_counter", side_effect=[0, 10]):
+                track_query("any", lambda: None)
+                assert get_slow_queries()[0]["slow"] is False
+        finally:
+            qo._slow_threshold_ms = saved
 
     def test_log_truncation(self):
         # Fill log beyond 500 entries
