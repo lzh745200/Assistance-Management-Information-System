@@ -653,8 +653,13 @@ class AnalyticsService:
             app_logger.error(f"获取筛选选项失败: {e}")
             return {"provinces": [], "tiers": [], "departments": []}
 
-    def filter_villages(self, filters: Dict[str, Any], page: int = 1, page_size: int = 20) -> Dict[str, Any]:
-        """多维度筛选帮扶村（同步，供 reports 路由使用）"""
+    def filter_villages(self, filters: Dict[str, Any], page: int = 1, page_size: int = 20) -> tuple:
+        """多维度筛选帮扶村（同步，供 reports 路由使用）。
+
+        Returns:
+            元组 ``(items, total)``：items 为 SupportedVillage ORM 对象列表
+            （由路由层负责字段序列化），total 为符合条件的总记录数。
+        """
         try:
             db = self.db
             query = db.query(SupportedVillage)
@@ -665,27 +670,20 @@ class AnalyticsService:
                 query = query.filter(SupportedVillage.is_revitalization_tier == (filters["tier"] == "是"))
             if filters.get("region"):
                 query = query.filter(SupportedVillage.region_scope == filters["region"])
+            if filters.get("department"):
+                query = query.filter(SupportedVillage.department == filters["department"])
+            if "is_three_regions" in filters and filters["is_three_regions"] is not None:
+                query = query.filter(SupportedVillage.is_three_regions == filters["is_three_regions"])
+            if "is_key_county" in filters and filters["is_key_county"] is not None:
+                query = query.filter(SupportedVillage.is_key_county == filters["is_key_county"])
 
             total = query.count()
             items = query.offset((page - 1) * page_size).limit(page_size).all()
-            pages = (total + page_size - 1) // page_size
 
-            return {
-                "total": total,
-                "page": page,
-                "page_size": page_size,
-                "pages": pages,
-                "items": [{"id": v.id, "name": v.village_name, "province": v.province} for v in items],
-            }
+            return items, total
         except Exception as e:
             app_logger.error(f"筛选帮扶村失败: {e}")
-            return {
-                "total": 0,
-                "page": page,
-                "page_size": page_size,
-                "pages": 0,
-                "items": [],
-            }
+            return [], 0
 
     def export_data(self, db: Session, export_type: str, data: Dict[str, Any]) -> bytes:
         """导出数据，返回文件字节流"""

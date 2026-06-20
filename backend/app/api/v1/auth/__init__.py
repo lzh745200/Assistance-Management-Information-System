@@ -7,6 +7,7 @@ from fastapi import APIRouter
 
 from .auth import create_access_token
 from .auth import router as auth_router
+from .auth import verify_token
 from .rbac import router as rbac_router
 from .user_management import router as user_management_router
 from .users import router as users_router
@@ -18,4 +19,4 @@ router.include_router(users_router)
 router.include_router(user_management_router)
 router.include_router(rbac_router)
 
-__all__ = ["router", "create_access_token"]
+__all__ = ["router", "create_access_token", "verify_token"]

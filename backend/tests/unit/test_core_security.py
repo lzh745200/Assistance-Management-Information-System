@@ -53,19 +53,22 @@ from app.core.security import (
 
 
 class TestEnsureSecretKey:
-    def test_returns_from_env_jwt_secret_key(self):
-        with patch.dict(os.environ, {"JWT_SECRET_KEY": "jwt-key"}, clear=False):
-            assert _ensure_secret_key() == "jwt-key"
+    # 使用 pytest 的 monkeypatch fixture 而非 patch.dict(os.environ, clear=False)：
+    # patch.dict 在 teardown 时会清空整个 environ 再逐个还原，当环境中存在超长
+    # 变量（如 WorkBuddy 注入的 ACC_PRODUCT_CONFIG_V3 > 32767 字符）时会触发
+    # Windows 的 ValueError。monkeypatch 只动指定变量，teardown 逐个还原，更健壮。
+    def test_returns_from_env_jwt_secret_key(self, monkeypatch):
+        monkeypatch.setenv("JWT_SECRET_KEY", "jwt-key")
+        assert _ensure_secret_key() == "jwt-key"
 
-    def test_returns_from_env_secret_key(self):
-        with patch.dict(os.environ, {"SECRET_KEY": "sec-key"}, clear=False):
-            assert _ensure_secret_key() == "sec-key"
+    def test_returns_from_env_secret_key(self, monkeypatch):
+        monkeypatch.setenv("SECRET_KEY", "sec-key")
+        assert _ensure_secret_key() == "sec-key"
 
-    def test_raises_critical_when_missing(self):
-        with (
-            patch.dict(os.environ, {"JWT_SECRET_KEY": "", "SECRET_KEY": ""}, clear=False),
-            patch("app.core.security.logger.critical") as mock_crit,
-        ):
+    def test_raises_critical_when_missing(self, monkeypatch):
+        monkeypatch.setenv("JWT_SECRET_KEY", "")
+        monkeypatch.setenv("SECRET_KEY", "")
+        with patch("app.core.security.logger.critical") as mock_crit:
             key = _ensure_secret_key()
             assert len(key) == 64
             mock_crit.assert_called_once()

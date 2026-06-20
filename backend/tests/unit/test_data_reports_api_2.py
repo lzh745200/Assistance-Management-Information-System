@@ -53,9 +53,11 @@ class TestExportExcel:
     def test_success(self, client):
         test_client, db = client
         from app.api.v1.data.data.reports import get_report_service
+        # ReportService.export_to_excel / get_export_filename 均为 async def，
+        # 测试需用 AsyncMock 反映真实异步契约（路由层 await 这些调用）。
         mock_svc = Mock()
-        mock_svc.export_to_excel.return_value = b"excel content"
-        mock_svc.get_export_filename.return_value = "report_2024.xlsx"
+        mock_svc.export_to_excel = AsyncMock(return_value=b"excel content")
+        mock_svc.get_export_filename = AsyncMock(return_value="report_2024.xlsx")
         test_client.app.dependency_overrides[get_report_service] = lambda: mock_svc
 
         resp = test_client.post("/api/v1/reports/export/excel", json={"year": 2024})
@@ -66,7 +68,8 @@ class TestExportExcel:
         test_client, db = client
         from app.api.v1.data.data.reports import get_report_service
         mock_svc = Mock()
-        mock_svc.export_to_excel.side_effect = RuntimeError("excel error")
+        mock_svc.export_to_excel = AsyncMock(side_effect=RuntimeError("excel error"))
+        mock_svc.get_export_filename = AsyncMock(return_value="report.xlsx")
         test_client.app.dependency_overrides[get_report_service] = lambda: mock_svc
 
         resp = test_client.post("/api/v1/reports/export/excel", json={"year": 2024})
@@ -77,14 +80,14 @@ class TestExportPdf:
     def _setup(self, test_client):
         from app.api.v1.data.data.reports import get_report_service
         mock_svc = Mock()
-        mock_svc.get_export_filename = Mock(return_value="report_2024.pdf")
+        mock_svc.get_export_filename = AsyncMock(return_value="report_2024.pdf")
         test_client.app.dependency_overrides[get_report_service] = lambda: mock_svc
         return mock_svc
 
     def test_success(self, client):
         test_client, db = client
         mock_svc = self._setup(test_client)
-        mock_svc.export_to_pdf.return_value = b"pdf content"
+        mock_svc.export_to_pdf = AsyncMock(return_value=b"pdf content")
 
         resp = test_client.post("/api/v1/reports/export/pdf", json={"year": 2024})
         assert resp.status_code == 200
@@ -93,7 +96,7 @@ class TestExportPdf:
     def test_import_error(self, client):
         test_client, db = client
         mock_svc = self._setup(test_client)
-        mock_svc.export_to_pdf.side_effect = ImportError("no reportlab")
+        mock_svc.export_to_pdf = AsyncMock(side_effect=ImportError("no reportlab"))
 
         resp = test_client.post("/api/v1/reports/export/pdf", json={"year": 2024})
         assert resp.status_code == 501
@@ -101,7 +104,7 @@ class TestExportPdf:
     def test_value_error(self, client):
         test_client, db = client
         mock_svc = self._setup(test_client)
-        mock_svc.export_to_pdf.side_effect = ValueError("invalid params")
+        mock_svc.export_to_pdf = AsyncMock(side_effect=ValueError("invalid params"))
 
         resp = test_client.post("/api/v1/reports/export/pdf", json={"year": 2024})
         assert resp.status_code == 400
@@ -109,7 +112,7 @@ class TestExportPdf:
     def test_generic_exception(self, client):
         test_client, db = client
         mock_svc = self._setup(test_client)
-        mock_svc.export_to_pdf.side_effect = RuntimeError("generic fail")
+        mock_svc.export_to_pdf = AsyncMock(side_effect=RuntimeError("generic fail"))
 
         resp = test_client.post("/api/v1/reports/export/pdf", json={"year": 2024})
         assert resp.status_code == 500
@@ -119,8 +122,9 @@ class TestExportComprehensiveReport:
     def test_without_village_ids(self, client):
         test_client, db = client
         from app.api.v1.data.data.reports import get_report_service
+        # export_comprehensive_report 为 async def，需 AsyncMock。
         mock_svc = Mock()
-        mock_svc.export_comprehensive_report.return_value = b"comprehensive"
+        mock_svc.export_comprehensive_report = AsyncMock(return_value=b"comprehensive")
         test_client.app.dependency_overrides[get_report_service] = lambda: mock_svc
 
         resp = test_client.get("/api/v1/reports/export/comprehensive/2024")
@@ -132,7 +136,7 @@ class TestExportComprehensiveReport:
         test_client, db = client
         from app.api.v1.data.data.reports import get_report_service
         mock_svc = Mock()
-        mock_svc.export_comprehensive_report.return_value = b"filtered"
+        mock_svc.export_comprehensive_report = AsyncMock(return_value=b"filtered")
         test_client.app.dependency_overrides[get_report_service] = lambda: mock_svc
 
         resp = test_client.get("/api/v1/reports/export/comprehensive/2024?village_ids=1,2,3")
@@ -143,7 +147,7 @@ class TestExportComprehensiveReport:
         test_client, db = client
         from app.api.v1.data.data.reports import get_report_service
         mock_svc = Mock()
-        mock_svc.export_comprehensive_report.side_effect = RuntimeError("fail")
+        mock_svc.export_comprehensive_report = AsyncMock(side_effect=RuntimeError("fail"))
         test_client.app.dependency_overrides[get_report_service] = lambda: mock_svc
 
         resp = test_client.get("/api/v1/reports/export/comprehensive/2024")

@@ -226,11 +226,11 @@ async def get_system_config(current_user=Depends(get_current_user), db: Session 
         "success": True,
         "data": {
             "system_name": svc.get("system_name", "帮扶管理信息系统"),
-            # ``svc.get`` may return None when the config row exists but holds a
-            # NULL value — guard with ``or`` so int() never receives None.
-            "max_login_attempts": int(svc.get("max_login_attempts") or "5"),
-            "session_timeout": int(svc.get("session_timeout") or "480"),
-            "password_expiry_days": int(svc.get("password_expiry_days") or "90"),
+            # svc.get(key, default) 保留两参数调用契约（兼容 mock）；
+            # 额外用 ``or`` 防御配置值显式为 None 时 int(None) 抛 TypeError。
+            "max_login_attempts": int(svc.get("max_login_attempts", "5") or "5"),
+            "session_timeout": int(svc.get("session_timeout", "480") or "480"),
+            "password_expiry_days": int(svc.get("password_expiry_days", "90") or "90"),
         },
     }
 

@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import decode_token, get_current_user
+from app.core.security import get_current_user
 from app.models.issue_tracking import Feedback
 
 logger = logging.getLogger(__name__)
@@ -33,10 +33,14 @@ async def _get_user_from_token(authorization: Optional[str] = None) -> Optional[
         return None
     token = authorization.replace("Bearer ", "").strip()
     try:
-        # decode_token is a sync JWT helper from app.core.security; the previous
-        # code imported a non-existent ``verify_token`` from ``app.api.v1.auth``
-        # which raised ImportError at runtime whenever a user submitted feedback.
-        info = decode_token(token)
+        # verify_token (from app.api.v1.auth.auth) performs JWT decoding with
+        # blacklist + LRU cache checks via token_manager. It is re-exported from
+        # the app.api.v1.auth package __init__. Previously this import failed at
+        # runtime because verify_token was not exported, so logged-in users'
+        # feedback never recorded their identity (silently caught by except).
+        from app.api.v1.auth import verify_token
+
+        info = await verify_token(token, "access_token")
         if info:
             return info.get("username") or str(info.get("id", ""))
     except Exception:

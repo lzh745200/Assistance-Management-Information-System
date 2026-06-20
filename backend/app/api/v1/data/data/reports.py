@@ -183,12 +183,9 @@ async def filter_villages(
         筛选结果
     """
     try:
-        # filter_villages returns a dict ({"total", "page", "page_size",
-        # "pages", "items"}), NOT a tuple. Previously unpacking it as
-        # ``villages, total = ...`` raised "too many values to unpack".
-        result = service.filter_villages(filters, page, page_size)
-        villages = result.get("items", []) if isinstance(result, dict) else []
-        total = result.get("total", 0) if isinstance(result, dict) else 0
+        # filter_villages 返回元组 (items, total)：items 为 ORM 对象列表，
+        # total 为总记录数。由路由层负责字段序列化。
+        villages, total = service.filter_villages(filters, page, page_size)
         pages = (total + page_size - 1) // page_size
 
         return {
@@ -591,8 +588,16 @@ def _subscription_to_response(subscription: ReportSubscription) -> dict:
         "report_type": subscription.report_type,
         "format": subscription.format,
         "year": subscription.year,
-        "village_ids": json.loads(subscription.village_ids) if subscription.village_ids else None,  # type: ignore[arg-type]
-        "include_sections": json.loads(subscription.include_sections) if subscription.include_sections else None,  # type: ignore[arg-type]
+        "village_ids": (
+            json.loads(subscription.village_ids)  # type: ignore[arg-type]
+            if subscription.village_ids
+            else None
+        ),
+        "include_sections": (
+            json.loads(subscription.include_sections)  # type: ignore[arg-type]
+            if subscription.include_sections
+            else None
+        ),
         "frequency": subscription.frequency,
         "send_day": subscription.send_day,
         "send_time": subscription.send_time,

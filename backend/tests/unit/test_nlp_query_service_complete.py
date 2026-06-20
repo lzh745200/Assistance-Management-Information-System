@@ -17,7 +17,10 @@ class TestNLPQueryServiceParseQuery:
 
         assert result["template"] == "village_count"
         assert "COUNT(*)" in result["sql"]
-        assert result["params"] == {"limit": 10}
+        # village_count 的 SQL (SELECT COUNT(*) FROM villages) 不含 :limit 占位符，
+        # parse_query 按设计只保留 SQL 中实际使用的命名参数（line 118-120 注释），
+        # 因此 params 为空 dict。limit 作为辅助参数不进入 SQL 执行参数。
+        assert result["params"] == {}
 
     def test_parse_village_by_province(self):
         """测试解析按省份查询村庄"""
