@@ -419,7 +419,9 @@ async def budget_aggregation(
     db: Session = Depends(get_db),
 ):
     """多维度预算汇总（按年度/类型/村/单位/组织），含可视化预计算数据"""
+    from app.core.data_permission import apply_data_scope
     query = db.query(Fund)
+    query = apply_data_scope(query, Fund, current_user)
     if year:
         query = query.filter(sa_func.strftime("%Y", Fund.date) == str(year))
 
