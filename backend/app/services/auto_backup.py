@@ -1,4 +1,6 @@
-"""自动定时备份 — 间隔调度 + 完整性校验 + 过期清理."""
+"""自动定时备份 — 已禁用（生产环境手动备份，测试环境磁盘保护）.
+如需恢复，将 BACKUP_ENABLED 环境变量设为 "true"。
+"""
 import hashlib
 import logging
 import os
@@ -8,13 +10,15 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_INTERVAL_MINUTES = 1440  # 默认 24 小时（每日一次）
-DEFAULT_RETENTION_DAYS = 7      # 保留 7 天
-DEFAULT_KEEP_MIN = 3            # 最少保留 3 个备份
+BACKUP_ENABLED = os.environ.get("BACKUP_ENABLED", "").lower() in ("1", "true", "yes")
+
+DEFAULT_INTERVAL_MINUTES = 1440
+DEFAULT_RETENTION_DAYS = 7
+DEFAULT_KEEP_MIN = 3
 
 
 class BackupScheduler:
-    """定时备份调度器."""
+    """定时备份调度器（已禁用——BACKUP_ENABLED 环境变量未设置）."""
 
     def __init__(
         self,
@@ -26,17 +30,24 @@ class BackupScheduler:
         self.backup_dir = backup_dir
         self.source_db_path = source_db_path
         self._last_backup: float = 0.0
-        os.makedirs(backup_dir, exist_ok=True)
+        if BACKUP_ENABLED:
+            os.makedirs(backup_dir, exist_ok=True)
+            logger.info("自动备份已启用（BACKUP_ENABLED=true）——间隔 %d 分钟", interval_minutes)
+        else:
+            logger.info("自动备份已禁用——BACKUP_ENABLED 未设置")
 
     def should_backup(self) -> bool:
-        """检查是否到达备份间隔."""
+        if not BACKUP_ENABLED:
+            return False
         if self._last_backup == 0.0:
             return True
         elapsed = time.time() - self._last_backup
         return elapsed >= self.interval * 60
 
     def run_backup(self) -> Optional[str]:
-        """执行一次备份（压缩格式），返回备份文件路径."""
+        if not BACKUP_ENABLED:
+            logger.debug("自动备份跳过（已禁用）")
+            return None
         if not os.path.exists(self.source_db_path):
             logger.warning("源数据库不存在: %s", self.source_db_path)
             return None
@@ -51,8 +62,6 @@ class BackupScheduler:
                 zf.write(self.source_db_path, "rural_revitalization.db")
             self._last_backup = time.time()
             logger.info("备份完成: %s (%d bytes)", dest, os.path.getsize(dest))
-
-            # 清理过期备份
             cleanup_old_backups(
                 self.backup_dir,
                 max_age_days=DEFAULT_RETENTION_DAYS,
@@ -64,7 +73,8 @@ class BackupScheduler:
             return None
 
     def verify_last_backup(self) -> bool:
-        """校验最近备份的完整性."""
+        if not BACKUP_ENABLED:
+            return True
         backups = sorted(
             [f for f in os.listdir(self.backup_dir) if f.startswith("backup_")],
             reverse=True,
@@ -78,7 +88,6 @@ class BackupScheduler:
 
 
 def compute_file_checksum(filepath: str, chunk_size: int = 8192) -> str:
-    """计算文件的 SHA-256 校验和."""
     sha = hashlib.sha256()
     try:
         with open(filepath, "rb") as f:
@@ -94,7 +103,8 @@ def cleanup_old_backups(
     max_age_days: int = DEFAULT_RETENTION_DAYS,
     keep_min: int = DEFAULT_KEEP_MIN,
 ) -> int:
-    """清理过期备份文件，最少保留 keep_min 个."""
+    if not BACKUP_ENABLED:
+        return 0
     cutoff = time.time() - max_age_days * 86400
     backups = sorted(
         [f for f in os.listdir(backup_dir) if f.startswith("backup_")],
