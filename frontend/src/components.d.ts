@@ -173,6 +173,7 @@ declare module 'vue' {
     ReportReviewDialog: typeof import('./components/report/ReviewDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SkeletonList: typeof import('./components/SkeletonList.vue')['default']
     StatusTag: typeof import('./components/StatusTag.vue')['default']
     TemplatesTemplateDownload: typeof import('./components/templates/TemplateDownload.vue')['default']
     UiMilitaryBadge: typeof import('./components/ui/MilitaryBadge.vue')['default']
