@@ -16,6 +16,7 @@ def mock_db():
     s.all.return_value = []
     s.first.return_value = None
     s.scalar.return_value = 0
+    s.count.return_value = 0
     return s
 
 

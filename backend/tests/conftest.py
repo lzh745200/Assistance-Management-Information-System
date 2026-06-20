@@ -43,6 +43,7 @@ def pytest_collection_modifyitems(config, items):
         "test_unified_template",
         "test_fund_budgets_api",
         "test_project_milestones_api",
+        "test_statistics_api",
     }
     first = []
     rest = []
