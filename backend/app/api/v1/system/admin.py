@@ -343,7 +343,7 @@ async def get_system_logs(
 
 @router.post("/db-optimize", summary="一键数据库优化")
 async def optimize_database(
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_admin()),
 ):
     """执行 WAL checkpoint + PRAGMA optimize，返回优化前后空间对比"""
     import os
@@ -353,7 +353,11 @@ async def optimize_database(
     db_url = str(engine.url)
     if not db_url.startswith("sqlite"):
         raise HTTPException(status_code=400, detail="仅支持 SQLite 数据库")
-    db_path = db_url.replace("sqlite:///", "")
+    # 安全提取路径——handle sqlite:///C:/..., sqlite:///./data/..., sqlite:./data/...
+    if ":///" in db_url:
+        db_path = db_url.split(":///", 1)[1]
+    else:
+        db_path = db_url.split(":", 1)[1] if ":" in db_url else db_url
     if not os.path.exists(db_path):
         raise HTTPException(status_code=404, detail="数据库文件不存在")
 
