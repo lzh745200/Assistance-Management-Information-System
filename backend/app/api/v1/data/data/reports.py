@@ -64,8 +64,12 @@ async def export_excel(
         Excel文件流
     """
     try:
-        excel_bytes = service.export_to_excel(query)
-        filename = service.get_export_filename(query)
+        # ReportService methods are async (return coroutines) and expect a plain
+        # dict — previously the ExportQuery pydantic model was passed without
+        # ``await``, which would crash with TypeError at runtime.
+        query_params = query.model_dump()
+        excel_bytes = await service.export_to_excel(query_params)
+        filename = await service.get_export_filename(query_params)
 
         return StreamingResponse(
             io.BytesIO(excel_bytes),
@@ -92,8 +96,9 @@ async def export_pdf(
     try:
         # 强制设置格式为PDF
         query.format = "pdf"
-        pdf_bytes = service.export_to_pdf(query)
-        filename = service.get_export_filename(query)
+        query_params = query.model_dump()
+        pdf_bytes = await service.export_to_pdf(query_params)
+        filename = await service.get_export_filename(query_params)
 
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
@@ -130,7 +135,8 @@ async def export_comprehensive_report(
         if village_ids:
             ids = [int(id.strip()) for id in village_ids.split(",") if id.strip()]
 
-        excel_bytes = service.export_comprehensive_report(year, ids)
+        # export_comprehensive_report is async — must be awaited
+        excel_bytes = await service.export_comprehensive_report(year, ids)
         filename = f"帮扶村综合报表_{year}年_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
         return StreamingResponse(
@@ -177,7 +183,12 @@ async def filter_villages(
         筛选结果
     """
     try:
-        villages, total = service.filter_villages(filters, page, page_size)
+        # filter_villages returns a dict ({"total", "page", "page_size",
+        # "pages", "items"}), NOT a tuple. Previously unpacking it as
+        # ``villages, total = ...`` raised "too many values to unpack".
+        result = service.filter_villages(filters, page, page_size)
+        villages = result.get("items", []) if isinstance(result, dict) else []
+        total = result.get("total", 0) if isinstance(result, dict) else 0
         pages = (total + page_size - 1) // page_size
 
         return {
@@ -221,7 +232,8 @@ async def drill_down(
         钻取结果
     """
     try:
-        return service.drill_down(query)
+        # drill_down expects a plain dict, not a pydantic model
+        return service.drill_down(query.model_dump())
     except Exception as e:
         logger.error("数据钻取查询失败: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"查询失败：{str(e)}")
@@ -308,7 +320,8 @@ async def get_summary_statistics(
         汇总统计结果
     """
     try:
-        filters = {}
+        # Explicit ``dict`` annotation so mypy accepts both str and bool values
+        filters: dict = {}
         if department:
             filters["department"] = department
         if is_three_regions is not None:
@@ -553,7 +566,7 @@ async def toggle_subscription(
         if not subscription:
             raise HTTPException(status_code=404, detail="订阅不存在")
 
-        subscription.is_active = not subscription.is_active
+        subscription.is_active = not subscription.is_active  # type: ignore[assignment]
         db.commit()
 
         return {
@@ -705,8 +718,8 @@ async def download_generated_report(
                     headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
                 )
             elif format == "excel":
-                # 生成Excel报表
-                excel_bytes = service.export_comprehensive_report(subscription.year or datetime.now().year, None)
+                # 生成Excel报表 (async service call — must be awaited)
+                excel_bytes = await service.export_comprehensive_report(subscription.year or datetime.now().year, None)
                 filename = f"report_{subscription.name}_{datetime.now().strftime('%Y%m%d')}.xlsx"
                 return StreamingResponse(
                     io.BytesIO(excel_bytes),
