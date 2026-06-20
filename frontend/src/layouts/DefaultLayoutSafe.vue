@@ -339,6 +339,12 @@
             <el-menu-item index="/data-package"
               ><span>数据包管理</span></el-menu-item
             >
+            <el-menu-item index="/import/batch"
+              ><span>批量导入</span></el-menu-item
+            >
+            <el-menu-item index="/data-verify"
+              ><span>数据校验</span></el-menu-item
+            >
           </el-sub-menu>
 
           <!-- ════ 系统 ════ -->
@@ -393,6 +399,11 @@
               v-if="menuStore.canAccessMenu('monitor')"
               index="/system/monitoring"
               ><span>系统监控</span></el-menu-item
+            >
+            <el-menu-item
+              v-if="menuStore.canAccessMenu('help')"
+              index="/system/help"
+              ><span>帮助文档</span></el-menu-item
             >
           </el-sub-menu>
 

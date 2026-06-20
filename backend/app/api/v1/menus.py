@@ -189,7 +189,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         ],
     },
     {
-        "key": "reportExport",
+        "key": "data-upload",
         "label": "数据上报",
         "icon": "Upload",
         "order": 12,
