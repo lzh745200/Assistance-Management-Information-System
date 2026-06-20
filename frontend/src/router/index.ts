@@ -709,6 +709,10 @@ export const routes: RouteRecordRaw[] = [
       },
       // ── 帮助 ──
       {
+        path: "/system/help",
+        redirect: "/help",
+      },
+      {
         path: "/help",
         name: "HelpCenter",
         component: () =>
@@ -788,6 +792,10 @@ export const routes: RouteRecordRaw[] = [
         component: () =>
           retryImport(() => import("@/views/reportTemplates/Index.vue")),
         meta: { title: "报告模板" },
+      },
+      {
+        path: "/data-verify",
+        redirect: "/data-verify/rules",
       },
       {
         path: "/data-verify/rules",

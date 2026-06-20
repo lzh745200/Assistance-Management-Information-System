@@ -339,10 +339,14 @@
             <el-menu-item index="/data-package"
               ><span>数据包管理</span></el-menu-item
             >
-            <el-menu-item index="/import/batch"
+            <el-menu-item
+              v-if="menuStore.canAccessMenu('batch-import')"
+              index="/data-import/batch"
               ><span>批量导入</span></el-menu-item
             >
-            <el-menu-item index="/data-verify"
+            <el-menu-item
+              v-if="menuStore.canAccessMenu('data-verify')"
+              index="/data-verify"
               ><span>数据校验</span></el-menu-item
             >
           </el-sub-menu>
@@ -402,7 +406,7 @@
             >
             <el-menu-item
               v-if="menuStore.canAccessMenu('help')"
-              index="/system/help"
+              index="/help"
               ><span>帮助文档</span></el-menu-item
             >
           </el-sub-menu>

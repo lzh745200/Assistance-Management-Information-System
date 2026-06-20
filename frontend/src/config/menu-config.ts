@@ -189,7 +189,7 @@ export const MENU_CONFIG: MenuItem[] = [
       {
         key: "data-verify",
         label: "数据校验审核",
-        path: "/funds",
+        path: "/data-verify",
         roles: ["admin", "super_admin", "manager"],
       },
       {
@@ -255,7 +255,7 @@ export const MENU_CONFIG: MenuItem[] = [
     ],
   },
   {
-    key: "reportExport",
+    key: "data-upload",
     label: "数据上报",
     icon: "Upload",
     order: 14,
