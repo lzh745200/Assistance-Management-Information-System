@@ -591,8 +591,8 @@ def _subscription_to_response(subscription: ReportSubscription) -> dict:
         "report_type": subscription.report_type,
         "format": subscription.format,
         "year": subscription.year,
-        "village_ids": json.loads(subscription.village_ids) if subscription.village_ids else None,
-        "include_sections": json.loads(subscription.include_sections) if subscription.include_sections else None,
+        "village_ids": json.loads(subscription.village_ids) if subscription.village_ids else None,  # type: ignore[arg-type]
+        "include_sections": json.loads(subscription.include_sections) if subscription.include_sections else None,  # type: ignore[arg-type]
         "frequency": subscription.frequency,
         "send_day": subscription.send_day,
         "send_time": subscription.send_time,
