@@ -608,7 +608,12 @@ class TestAnalyticsService:
     # ════════════════════════════════════════════
 
     def test_filter_villages_all_filters(self):
-        """province + tier + region filters all apply together (region_scope bug fixed)."""
+        """province + tier + region filters all apply together (region_scope bug fixed).
+
+        filter_villages 按重构后契约返回 (items, total) 元组：items 为 ORM 对象
+        列表（字段序列化由路由层负责），total 为总记录数。page/page_size/pages
+        的计算职责已上移到路由层，不再出现在 service 返回值中。
+        """
         db = MagicMock()
         q = _make_query_mock()
         q.count.return_value = 1
@@ -616,15 +621,15 @@ class TestAnalyticsService:
         db.query.return_value = q
 
         svc = AnalyticsService(db)
-        result = svc.filter_villages({
+        items, total = svc.filter_villages({
             "province": "\u8d35\u5dde",
             "tier": "\u662f",
             "region": "\u67d0\u5730\u533a",
         }, page=2, page_size=10)
 
-        assert result["total"] == 1
-        assert len(result["items"]) == 1
-        assert result["page"] == 2
+        assert total == 1
+        assert len(items) == 1
+        assert items[0].id == 1
 
     def test_filter_villages_province_tier(self):
         """province + tier filters (no region) -> success."""
@@ -636,14 +641,11 @@ class TestAnalyticsService:
         db.query.return_value = q
 
         svc = AnalyticsService(db)
-        result = svc.filter_villages({"province": "\u8d35\u5dde", "tier": "1"},
-                                     page=1, page_size=10)
+        items, total = svc.filter_villages({"province": "\u8d35\u5dde", "tier": "1"},
+                                           page=1, page_size=10)
 
-        assert result["total"] == 3
-        assert result["page"] == 1
-        assert result["page_size"] == 10
-        assert result["pages"] == 1
-        assert len(result["items"]) == 2
+        assert total == 3
+        assert len(items) == 2
 
     def test_filter_villages_no_filters(self):
         db = MagicMock()
@@ -653,15 +655,17 @@ class TestAnalyticsService:
         db.query.return_value = q
 
         svc = AnalyticsService(db)
-        result = svc.filter_villages({})
-        assert result["total"] == 0
+        items, total = svc.filter_villages({})
+        assert total == 0
+        assert items == []
 
     def test_filter_villages_exception(self):
         db = MagicMock()
         db.query.side_effect = RuntimeError("filter villages fail")
         svc = AnalyticsService(db)
-        result = svc.filter_villages({"province": "X"})
-        assert result["total"] == 0
+        items, total = svc.filter_villages({"province": "X"})
+        assert total == 0
+        assert items == []
 
     # ════════════════════════════════════════════
     #  export_data
