@@ -112,7 +112,7 @@ class RuralWorkListResponse(BaseModel):
     """乡村工作列表响应"""
 
     total: int = 0
-    items: list = []
+    items: list = Field(default_factory=list)
     skip: int = 0
     limit: int = 10
 
@@ -125,5 +125,5 @@ class RuralWorkStatistics(BaseModel):
     in_progress: int = 0
     completed: int = 0
     delayed: int = 0
-    by_type: Dict[str, Any] = {}
+    by_type: Dict[str, Any] = Field(default_factory=dict)
     completion_rate: float = 0.0

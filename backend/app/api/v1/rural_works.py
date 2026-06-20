@@ -131,7 +131,7 @@ async def get_rural_work(
     work = service.get_rural_work_by_id(work_id)
     if not work:
         raise NotFoundException("工作不存在")
-    return ResponseModel(code=200, data=work.model_dump(), message="success")
+    return ResponseModel(code=200, data=work, message="success")
 
 
 @router.post("", response_model=ResponseModel)
@@ -143,7 +143,7 @@ async def create_rural_work(
     """创建乡村工作"""
     service = RuralWorkService(db)
     work = service.create_rural_work(data, current_user.id)
-    return ResponseModel(code=200, data=work.model_dump(), message="创建成功")
+    return ResponseModel(code=200, data=work, message="创建成功")
 
 
 @router.put("/{work_id}", response_model=ResponseModel)
@@ -158,7 +158,7 @@ async def update_rural_work(
     work = service.update_rural_work(work_id, data, current_user.id)
     if not work:
         raise NotFoundException("工作不存在")
-    return ResponseModel(code=200, data=work.model_dump(), message="更新成功")
+    return ResponseModel(code=200, data=work, message="更新成功")
 
 
 @router.delete("/{work_id}", response_model=ResponseModel)
@@ -169,7 +169,7 @@ async def delete_rural_work(
 ):
     """删除乡村工作"""
     service = RuralWorkService(db)
-    result = service.delete_rural_work(work_id)
+    result = service.delete_rural_work(work_id, current_user.id)
     if not result:
         raise NotFoundException("工作不存在")
     return ResponseModel(code=200, message="删除成功")
@@ -177,21 +177,28 @@ async def delete_rural_work(
 
 @router.post("/batch-delete", response_model=ResponseModel)
 async def batch_delete_rural_works(
-    ids: List[int],
+    payload: dict,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """批量删除乡村工作"""
+    """批量删除乡村工作
+
+    前端发送 ``{"ids": [1, 2, 3]}``，此处兼容该格式。
+    """
+    ids: List[int] = payload.get("ids", []) if isinstance(payload, dict) else []
+    if not ids:
+        return ResponseModel(code=200, data={"deleted": 0}, message="无待删除记录")
     service = RuralWorkService(db)
     deleted = service.batch_delete(ids)
 
     # 批量记录工作日志
     try:
-        from app.services.work_log_service import get_work_log_recorder
+        from app.services.work_log_service import write_work_log
 
-        recorder = get_work_log_recorder(db)
-        recorder.record_batch_delete(
-            "rural_work", deleted, user_id=current_user.id, username=getattr(current_user, "username", None) or "系统"
+        write_work_log(
+            db, "rural_work", "batch_delete", 0, f"批量删除{deleted}条",
+            user_id=current_user.id,
+            detail=f"批量删除乡村工作: ids={ids}",
         )
     except Exception:
         logger.debug("记录工作日志失败")

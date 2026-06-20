@@ -149,7 +149,9 @@ async def get_system_status(current_user=Depends(get_current_user)):
     # 检查缓存
     try:
         from app.core.cache import cache_manager
-        cache_manager.get("system_status_check")
+        # cache_manager.get 是 async def，必须 await —— 否则协程体不执行，
+        # 缓存健康检查永远是假阳性（且产生 "coroutine never awaited" 警告）。
+        await cache_manager.get("system_status_check")
         status_info["services"].append({"name": "cache", "status": "connected"})
     except Exception:
         status_info["services"].append({"name": "cache", "status": "unavailable"})

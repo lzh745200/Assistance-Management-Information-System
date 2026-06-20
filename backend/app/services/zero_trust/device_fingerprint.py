@@ -12,7 +12,11 @@ from enum import Enum
 import re
 
 from app.core.logging import logger
-from app.core.cache import cache
+# 注意：本模块所有方法为同步 def，必须使用同步的 SimpleCache（default_cache）。
+# 不能用 async 的 cache_manager / cache 别名 —— 那会让 cache.get/set 返回协程对象，
+# 导致 is_device_blocked 永远为 True、get_trust_score 返回协程而非 float，
+# 并产生 "coroutine was never awaited" RuntimeWarning。
+from app.core.cache import default_cache
 
 
 class DeviceRiskLevel(str, Enum):
@@ -199,12 +203,12 @@ class DeviceFingerprintService:
     def _save_device(self, device: DeviceFingerprint):
         """保存设备信息到缓存"""
         cache_key = f"{self.CACHE_PREFIX}{device.fingerprint_id}"
-        cache.set(cache_key, device.to_dict(), expire=86400 * 30)  # 30天
+        default_cache.set(cache_key, device.to_dict(), ttl=86400 * 30)  # 30天
 
     def get_device(self, fingerprint_id: str) -> Optional[DeviceFingerprint]:
         """获取设备信息"""
         cache_key = f"{self.CACHE_PREFIX}{fingerprint_id}"
-        data = cache.get(cache_key)
+        data = default_cache.get(cache_key)
 
         if not data:
             return None
@@ -273,7 +277,7 @@ class DeviceFingerprintService:
 
         # 缓存信任评分（用于快速查询）
         trust_key = f"{self.TRUST_CACHE_PREFIX}{fingerprint_id}"
-        cache.set(trust_key, device.trust_score, expire=3600)
+        default_cache.set(trust_key, device.trust_score, ttl=3600)
 
         return device.trust_score
 
@@ -289,27 +293,31 @@ class DeviceFingerprintService:
 
         # 添加到封禁列表
         block_key = f"{self.BLOCKLIST_PREFIX}{fingerprint_id}"
-        cache.set(block_key, {"reason": reason, "blocked_at": datetime.now(timezone.utc).isoformat()}, expire=86400 * 7)
+        block_record = {
+            "reason": reason,
+            "blocked_at": datetime.now(timezone.utc).isoformat(),
+        }
+        default_cache.set(block_key, block_record, ttl=86400 * 7)
 
         logger.warning(f"设备被封禁: {fingerprint_id}, 原因: {reason}")
 
     def is_device_blocked(self, fingerprint_id: str) -> bool:
         """检查设备是否被封禁"""
         block_key = f"{self.BLOCKLIST_PREFIX}{fingerprint_id}"
-        return cache.get(block_key) is not None
+        return default_cache.get(block_key) is not None
 
     def get_trust_score(self, fingerprint_id: str) -> float:
         """获取设备信任评分（带缓存）"""
         # 先查缓存
         trust_key = f"{self.TRUST_CACHE_PREFIX}{fingerprint_id}"
-        cached_score = cache.get(trust_key)
+        cached_score = default_cache.get(trust_key)
         if cached_score is not None:
             return cached_score
 
         # 查数据库
         device = self.get_device(fingerprint_id)
         if device:
-            cache.set(trust_key, device.trust_score, expire=3600)
+            default_cache.set(trust_key, device.trust_score, ttl=3600)
             return device.trust_score
 
         return 0.5  # 默认中等信任

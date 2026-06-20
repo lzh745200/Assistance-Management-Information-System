@@ -136,7 +136,7 @@ async def one_click_report(
 
         # 记录导出历史
         try:
-            await history_service.record_export(
+            history_service.record_export(
                 package_id=result.package_id,
                 org_id=org_id,
                 user_id=current_user.id,
@@ -314,7 +314,7 @@ async def export_data_package(
 
         # 记录导出历史
         try:
-            await history_service.record_export(
+            history_service.record_export(
                 package_id=result.package_id,
                 org_id=org_id,
                 user_id=current_user.id,
@@ -408,7 +408,7 @@ async def import_data_package(
         if not result.validation.is_valid:
             error_msg = "; ".join([e.message for e in result.validation.errors[:3]])
 
-        await history_service.record_import(
+        history_service.record_import(
             package_id=result.package_id,
             org_id=target_org_id,
             user_id=current_user.id,
@@ -467,7 +467,7 @@ async def validate_data_package(
 
     # 记录验证历史
     op_result = OperationResult.SUCCESS if result.is_valid else OperationResult.FAILED
-    await history_service.record_validate(
+    history_service.record_validate(
         package_id=package_id,
         org_id=package.org_id,
         user_id=current_user.id,
@@ -500,7 +500,7 @@ async def preview_data_package(
     preview = await service.preview_package_data(package_id)
 
     # 记录预览历史
-    await history_service.record_preview(
+    history_service.record_preview(
         package_id=package_id, org_id=package.org_id, user_id=current_user.id, ip_address=get_client_ip(request)
     )
 
@@ -542,7 +542,7 @@ async def confirm_import(
         op_result = OperationResult.SUCCESS if result.success else OperationResult.FAILED
         total_imported = sum(result.imported_counts.values())
 
-        await history_service.record_confirm(
+        history_service.record_confirm(
             package_id=package_id,
             org_id=package.org_id,
             user_id=current_user.id,
@@ -613,7 +613,7 @@ async def delete_data_package(
     org_id = package.org_id
 
     # 记录删除历史
-    await history_service.record_delete(
+    history_service.record_delete(
         package_id=package_id,
         org_id=org_id,
         user_id=current_user.id,
@@ -726,29 +726,35 @@ async def export_encrypted_package(
 
         # 记录历史
         duration_ms = int((time.time() - start_time) * 1000)
-        history_service.create_history(
-            package_id=result.package_id,
-            operation_type="export_encrypted" if password else "export",
-            result=OperationResult.SUCCESS,
-            user_id=current_user.id,
-            duration_ms=duration_ms,
-            client_ip=client_ip,
-        )
+        try:
+            history_service.create_history(
+                package_id=result.package_id,
+                operation_type="export_encrypted" if password else "export",
+                result=OperationResult.SUCCESS,
+                user_id=current_user.id,
+                duration_ms=duration_ms,
+                client_ip=client_ip,
+            )
+        except Exception as e:
+            logger.warning(f"记录导出加密历史失败: {e}")
 
         return result
 
     except Exception as e:
         logger.error(f"导出加密数据包失败: {str(e)}", exc_info=True)
         duration_ms = int((time.time() - start_time) * 1000)
-        history_service.create_history(
-            package_id=None,
-            operation_type="export_encrypted" if password else "export",
-            result=OperationResult.FAILURE,
-            user_id=current_user.id,
-            duration_ms=duration_ms,
-            client_ip=client_ip,
-            error_message=str(e),
-        )
+        try:
+            history_service.create_history(
+                package_id=None,
+                operation_type="export_encrypted" if password else "export",
+                result=OperationResult.FAILED,
+                user_id=current_user.id,
+                duration_ms=duration_ms,
+                client_ip=client_ip,
+                error_message=str(e),
+            )
+        except Exception as hist_err:
+            logger.warning(f"记录导出加密历史失败: {hist_err}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 

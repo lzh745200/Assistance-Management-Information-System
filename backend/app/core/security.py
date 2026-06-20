@@ -731,13 +731,17 @@ class AuditLogService:
         try:
             from app.models.audit import AuditLog
 
+            # 字段名映射：方法签名用业务友好名，AuditLog 模型用规范列名
+            # - resource → resource_type（模型列名）
+            # - ip_address → user_ip（模型列名）
+            # - details → metadata_（JSON 字段，存储额外详情；模型无 details 列）
             log_entry = AuditLog(
                 user_id=user_id,
                 action=action,
-                resource=resource,
-                resource_id=resource_id,
-                details=details,
-                ip_address=ip_address,
+                resource_type=resource,
+                resource_id=str(resource_id) if resource_id else None,
+                metadata_={"details": details} if details else None,
+                user_ip=ip_address or None,
             )
             db.add(log_entry)
             db.commit()

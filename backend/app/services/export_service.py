@@ -84,6 +84,32 @@ class ExcelExportService:
         wb = self._create_workbook("经费列表", headers, data)
         return self._to_bytes(wb)
 
+    def export_organization_pass_codes(
+        self, pass_codes: list[dict], filename: str = "组织通行证码列表"
+    ) -> bytes:
+        """导出组织通行证码列表为 Excel。
+
+        Args:
+            pass_codes: 通行证码记录列表，每项为 dict，包含 organization_name /
+                verification_code / pass_code / allow_subordinate_generation /
+                status / created_time 等键。
+            filename: 工作表名称（同时用作导出文件名提示）。
+        """
+        headers = ["组织名称", "校验码", "通行证码", "允许下级生成", "状态", "创建时间"]
+        rows = [
+            {
+                "组织名称": item.get("organization_name", ""),
+                "校验码": item.get("verification_code", ""),
+                "通行证码": item.get("pass_code", ""),
+                "允许下级生成": "是" if item.get("allow_subordinate_generation") else "否",
+                "状态": item.get("status", ""),
+                "创建时间": item.get("created_at", ""),
+            }
+            for item in pass_codes
+        ]
+        wb = self._create_workbook(filename, headers, rows)
+        return self._to_bytes(wb)
+
     def export_comprehensive_report(
         self,
         summary: dict,

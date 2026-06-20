@@ -753,12 +753,13 @@ async def create_project(
 
     audit = AuditLogService(db)
     await audit.log(
+        db=db,
         action="create_project",
         user_id=getattr(current_user, "id", None),
         username=getattr(current_user, "username", None),
         resource="project",
         resource_id=str(project.id),
-        detail=f"创建项目: {project.name} ({project.code})",
+        details=f"创建项目: {project.name} ({project.code})",
         ip_address=get_client_ip(request),
     )
 
@@ -875,12 +876,13 @@ async def update_project(
     if changed_fields:
         audit = AuditLogService(db)
         await audit.log(
+            db=db,
             action="update_project",
             user_id=getattr(current_user, "id", None),
             username=getattr(current_user, "username", None),
             resource="project",
             resource_id=str(project_id),
-            detail=f"更新字段: {', '.join(changed_fields)}",
+            details=f"更新字段: {', '.join(changed_fields)}",
             ip_address=get_client_ip(request),
         )
 
@@ -954,12 +956,13 @@ async def delete_project(
 
     audit = AuditLogService(db)
     await audit.log(
+        db=db,
         action="delete_project",
         user_id=getattr(current_user, "id", None),
         username=getattr(current_user, "username", None),
         resource="project",
         resource_id=str(project_id),
-        detail=f"删除(软)项目: {project.name}",
+        details=f"删除(软)项目: {project.name}",
         ip_address=get_client_ip(request),
     )
 

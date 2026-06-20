@@ -539,7 +539,15 @@ async function handleSave() {
       ElMessage.success("保存成功");
     }
     dialogVisible.value = false;
-    fetchData();
+    await fetchData();
+  } catch (error: any) {
+    console.error("保存失败:", error);
+    const msg =
+      error?.response?.data?.detail ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "保存失败，请稍后重试";
+    ElMessage.error(msg);
   } finally {
     saving.value = false;
   }
