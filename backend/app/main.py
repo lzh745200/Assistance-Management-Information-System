@@ -6,7 +6,7 @@ import os
 import sys
 import time as _time
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 from pathlib import Path
 
@@ -274,9 +274,9 @@ if _frontend_dir:
 
     # index.html 路径（每次请求时重新读取，避免 rebuild 后缓存旧版本）
     _index_path = Path(_frontend_dir) / "index.html"
-    _favicon_path = Path(_frontend_dir) / "favicon.ico"
+    _favicon_path: Optional[Path] = Path(_frontend_dir) / "favicon.ico"
     _favicon_path = _favicon_path if _favicon_path.exists() else None
-    _version_json_path = Path(_frontend_dir) / "version.json"
+    _version_json_path: Optional[Path] = Path(_frontend_dir) / "version.json"
     _version_json_path = _version_json_path if _version_json_path.exists() else None
 
     @app.get("/favicon.ico")

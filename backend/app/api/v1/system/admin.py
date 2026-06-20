@@ -226,9 +226,11 @@ async def get_system_config(current_user=Depends(get_current_user), db: Session 
         "success": True,
         "data": {
             "system_name": svc.get("system_name", "帮扶管理信息系统"),
-            "max_login_attempts": int(svc.get("max_login_attempts", "5")),
-            "session_timeout": int(svc.get("session_timeout", "480")),
-            "password_expiry_days": int(svc.get("password_expiry_days", "90")),
+            # ``svc.get`` may return None when the config row exists but holds a
+            # NULL value — guard with ``or`` so int() never receives None.
+            "max_login_attempts": int(svc.get("max_login_attempts") or "5"),
+            "session_timeout": int(svc.get("session_timeout") or "480"),
+            "password_expiry_days": int(svc.get("password_expiry_days") or "90"),
         },
     }
 
