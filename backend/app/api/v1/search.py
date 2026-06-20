@@ -34,7 +34,7 @@ def _append_village_results(items: List, q: str, each: int, db: Session, current
             db.query(SupportedVillage),
             SupportedVillage,
             current_user,
-            org_id_column="organization_id",
+            org_field="organization_id",
             db=db,
         ).filter(
             or_(
@@ -63,7 +63,7 @@ def _append_project_results(items: List, q: str, each: int, db: Session, current
             db.query(Project),
             Project,
             current_user,
-            org_id_column="organization_id",
+            org_field="organization_id",
             db=db,
         ).filter(
             or_(
@@ -121,7 +121,7 @@ def _append_school_results(items: List, q: str, each: int, db: Session, current_
             db.query(School),
             School,
             current_user,
-            org_id_column="organization_id",
+            org_field="organization_id",
             db=db,
         ).filter(School.name.ilike(f"%{q}%"))
         for r in school_q.limit(each).all():

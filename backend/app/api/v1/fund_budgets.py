@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.data_permission import apply_data_scope
 from app.core.security import get_current_user
 from app.models.fund_budget import FundBudget, FundTransaction, check_budget_alerts
 from app.api.v1.deps import require_manager_role as _require_manager
@@ -108,6 +109,7 @@ async def get_budgets(
 ):
     """获取预算列表"""
     query = db.query(FundBudget)
+    query = apply_data_scope(query, FundBudget, current_user)
     if year:
         query = query.filter(FundBudget.year == year)
     if category:
@@ -202,6 +204,7 @@ async def get_budget_alerts(
 ):
     """获取预算预警信息（首页仪表板用）"""
     query = db.query(FundBudget)
+    query = apply_data_scope(query, FundBudget, current_user)
     if year:
         query = query.filter(FundBudget.year == year)
     else:

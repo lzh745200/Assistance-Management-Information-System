@@ -11,16 +11,10 @@ Requirements: 14.1, 14.2, 14.3
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 
 from app.core.security import get_current_user
-from app.services.supported_village_export_service import (
-    MODULE_NAMES,
-    ExportFormat,
-    ExportModule,
-)
-
 router = APIRouter(prefix="/supported-villages/export", tags=["帮扶村数据导出"])
 
 
