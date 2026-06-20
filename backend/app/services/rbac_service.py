@@ -348,8 +348,8 @@ class RBACService:
         user_id: str,
         role_id: str,
         granted_by: str,
-        expires_at: str = None,
         db: Session = None,
+        expires_at: str = None,
     ) -> dict:
         """分配角色给用户。
 
@@ -544,8 +544,8 @@ class RBACService:
         user_id: str,
         permissions: List[str],
         granted_by: str,
-        expires_at: str = None,
         db: Session = None,
+        expires_at: str = None,
     ) -> dict:
         """原子性保存用户权限：在单个事务内完成删除旧权限 + 授予新权限。
 

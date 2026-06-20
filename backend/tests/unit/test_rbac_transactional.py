@@ -199,7 +199,7 @@ class TestAssignRoleBothPathsReturnTrue:
             "RbacRole": {"first": MagicMock(id="r1")},
             "UserRole": {"first": MagicMock()},
         })
-        result = run(svc.assign_role("42", "r1", "1", None, db))
+        result = run(svc.assign_role("42", "r1", "1", db=db))
         assert result == {"success": True, "newly_granted": False}
         db.flush.assert_not_called()
 
@@ -210,7 +210,7 @@ class TestAssignRoleBothPathsReturnTrue:
             "RbacRole": {"first": MagicMock(id="r1")},
             "UserRole": {"first": None},
         })
-        result = run(svc.assign_role("42", "r1", "1", None, db))
+        result = run(svc.assign_role("42", "r1", "1", db=db))
         assert result == {"success": True, "newly_granted": True}
         db.flush.assert_called_once()
         db.commit.assert_not_called()
@@ -323,7 +323,7 @@ class TestRegressionFromThirdReview:
         mkq_multi(db, {"RbacRole": {"first": None}})
 
         with pytest.raises(NotFoundError):
-            run(svc.assign_role("42", "inactive-role", "1", None, db))
+            run(svc.assign_role("42", "inactive-role", "1", db=db))
 
     def test_grant_permission_always_returns_true(self, svc):
         assert run(svc.grant_permission("42", "a", "1", None, mkq(MagicMock(), first=MagicMock()))) is True
