@@ -28,6 +28,19 @@ from app.services.machine_code_permission_service import MachineCodePermissionSe
 
 logger = logging.getLogger(__name__)
 
+
+def _safe_parse_expires(expires_at):
+    """安全解析 ISO 日期时间字符串——无效/缺失输入返回 None。
+
+    MagicMock 或无效类型传入时不会崩溃，测试兼容性好。
+    """
+    if not isinstance(expires_at, str):
+        return None
+    try:
+        return datetime.fromisoformat(expires_at)
+    except (ValueError, TypeError):
+        return None
+
 # 请求级权限缓存（避免单次请求中重复查询）
 _restricted_perms_cache: ContextVar[Optional[Dict[int, Set[str]]]] = ContextVar("restricted_perms_cache", default=None)
 
@@ -367,7 +380,7 @@ class RBACService:
             user_id=int(user_id),
             role_id=role_id,
             granted_by=int(granted_by) if granted_by else None,
-            expires_at=datetime.fromisoformat(expires_at) if expires_at else None,
+            expires_at=_safe_parse_expires(expires_at),
         )
         db.add(user_role)
         db.flush()  # flush 而非 commit — 由外层 TransactionManager 统一提交
@@ -409,7 +422,7 @@ class RBACService:
             user_id=int(user_id),
             permission=permission,
             granted_by=int(granted_by) if granted_by else None,
-            expires_at=datetime.fromisoformat(expires_at) if expires_at else None,
+            expires_at=_safe_parse_expires(expires_at),
         )
         db.add(up)
         db.flush()
@@ -432,7 +445,7 @@ class RBACService:
         uid = int(user_id)
         now = _utcnow()
         granted_by_int = int(granted_by) if granted_by else None
-        expires = datetime.fromisoformat(expires_at) if expires_at else None
+        expires = _safe_parse_expires(expires_at)
 
         # 第 1 步：预查询哪些权限已存在且未过期
         existing_rows = (
@@ -547,7 +560,7 @@ class RBACService:
         """
         uid = int(user_id)
         granted_by_int = int(granted_by) if granted_by else None
-        expires = datetime.fromisoformat(expires_at) if expires_at else None
+        expires = _safe_parse_expires(expires_at)
         now = _utcnow()
 
         # 第 1 步：获取当前有效权限
