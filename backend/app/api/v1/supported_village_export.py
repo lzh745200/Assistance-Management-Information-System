@@ -49,10 +49,15 @@ async def export_supported_villages(
     content, filename, stats = svc.export(
         year=year, modules=mod_list, format=format,
         village_ids=vid_list, department=department, support_unit=support_unit,
+        tiered_level=tiered_level,
+    )
+    content_type = (
+        "text/csv; charset=utf-8" if format == "csv"
+        else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     return StreamingResponse(
         io.BytesIO(content),
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        media_type=content_type,
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
     )
 
@@ -75,7 +80,11 @@ async def preview_export(
     mod_list = [m.strip() for m in modules.split(",") if m.strip()] if modules else None
     vid_list = [int(x.strip()) for x in village_ids.split(",") if x.strip()] if village_ids else None
 
-    villages = svc._query_villages(year=year, village_ids=vid_list, department=department, support_unit=support_unit)
+    villages = svc._query_villages(
+        year=year, village_ids=vid_list,
+        department=department, support_unit=support_unit,
+        tiered_level=tiered_level,
+    )
     data = svc._collect_export_data(villages, modules=mod_list, year=year)
     stats = svc._generate_statistics(data)
 

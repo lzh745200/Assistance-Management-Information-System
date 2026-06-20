@@ -70,6 +70,7 @@ class SupportedVillageExportService:
         village_ids: Optional[List[int]] = None,
         department: Optional[str] = None,
         support_unit: Optional[str] = None,
+        tiered_level: Optional[str] = None,
     ) -> List[Any]:
         """查询要导出的帮扶村列表。"""
         from app.models.supported_village import SupportedVillage
@@ -81,6 +82,8 @@ class SupportedVillageExportService:
             query = query.filter(SupportedVillage.department == department)
         if support_unit:
             query = query.filter(SupportedVillage.support_unit == support_unit)
+        if tiered_level:
+            query = query.filter(SupportedVillage.tiered_level == tiered_level)
         return query.order_by(SupportedVillage.id).all()
 
     def _collect_export_data(
@@ -106,6 +109,15 @@ class SupportedVillageExportService:
     ) -> List[Dict[str, Any]]:
         """收集单个模块的数据。"""
         from app.models.supported_village import (
+            ConsumptionSupport,
+            EducationSupport,
+            EmploymentSupport,
+            ForceInvestment,
+            IndustrySupport,
+            InfrastructureImprovement,
+            MedicalSupport,
+            PartyBuildingSupport,
+            SupportFunding,
             VillageIncome,
             VillagePopulation,
         )
@@ -115,30 +127,79 @@ class SupportedVillageExportService:
             base = {"id": v.id, "village_name": v.village_name, "county": v.county or ""}
 
             if module == "population":
-                pop = (
-                    self.db.query(VillagePopulation)
-                    .filter(VillagePopulation.village_id == v.id)
-                    .first()
-                )
-                base["households"] = pop.households if pop else 0
-                base["total_population"] = pop.total_population if pop else 0
-                base["labor_force"] = pop.labor_force if pop else 0
-                rows.append(base)
+                row = self.db.query(VillagePopulation).filter(
+                    VillagePopulation.village_id == v.id
+                ).first()
+                base["households"] = row.households if row else 0
+                base["total_population"] = row.total_population if row else 0
+                base["labor_force"] = row.labor_force if row else 0
 
             elif module == "income":
-                income = (
-                    self.db.query(VillageIncome)
-                    .filter(VillageIncome.village_id == v.id)
-                    .first()
-                )
-                base["collective_income"] = income.collective_income if income else 0
-                base["per_capita_income"] = income.per_capita_income if income else 0
-                rows.append(base)
+                row = self.db.query(VillageIncome).filter(
+                    VillageIncome.village_id == v.id
+                ).first()
+                base["collective_income"] = row.collective_income if row else 0
+                base["per_capita_income"] = row.per_capita_income if row else 0
+
+            elif module == "funding":
+                row = self.db.query(SupportFunding).filter(
+                    SupportFunding.village_id == v.id
+                ).first()
+                base["total_funding"] = row.total_amount if row else 0
+
+            elif module == "force":
+                row = self.db.query(ForceInvestment).filter(
+                    ForceInvestment.village_id == v.id
+                ).first()
+                base["cadre_count"] = row.cadre_count if row else 0
+
+            elif module == "industry":
+                row = self.db.query(IndustrySupport).filter(
+                    IndustrySupport.village_id == v.id
+                ).first()
+                base["industry_type"] = row.industry_type if row else ""
+
+            elif module == "infrastructure":
+                row = self.db.query(InfrastructureImprovement).filter(
+                    InfrastructureImprovement.village_id == v.id
+                ).first()
+                base["project_name"] = row.project_name if row else ""
+
+            elif module == "party":
+                row = self.db.query(PartyBuildingSupport).filter(
+                    PartyBuildingSupport.village_id == v.id
+                ).first()
+                base["party_member_count"] = row.party_member_count if row else 0
+
+            elif module == "medical":
+                row = self.db.query(MedicalSupport).filter(
+                    MedicalSupport.village_id == v.id
+                ).first()
+                base["clinic_count"] = row.clinic_count if row else 0
+
+            elif module == "consumption":
+                row = self.db.query(ConsumptionSupport).filter(
+                    ConsumptionSupport.village_id == v.id
+                ).first()
+                base["sales_amount"] = row.sales_amount if row else 0
+
+            elif module == "employment":
+                row = self.db.query(EmploymentSupport).filter(
+                    EmploymentSupport.village_id == v.id
+                ).first()
+                base["employed_count"] = row.employed_count if row else 0
+
+            elif module == "education":
+                row = self.db.query(EducationSupport).filter(
+                    EducationSupport.village_id == v.id
+                ).first()
+                base["student_count"] = row.student_count if row else 0
 
             else:
-                # 其他模块：返回基本信息作为占位
+                # 未知模块：返回基本信息作为占位
                 base["module"] = MODULE_NAMES.get(module, module)
-                rows.append(base)
+
+            rows.append(base)
 
         return rows
 
@@ -209,11 +270,13 @@ class SupportedVillageExportService:
         village_ids: Optional[List[int]] = None,
         department: Optional[str] = None,
         support_unit: Optional[str] = None,
+        tiered_level: Optional[str] = None,
     ) -> Tuple[bytes, str, Dict[str, Any]]:
         """导出帮扶村数据，返回 (文件内容, 文件名, 统计信息)。"""
         villages = self._query_villages(
             year=year, village_ids=village_ids,
             department=department, support_unit=support_unit,
+            tiered_level=tiered_level,
         )
         data = self._collect_export_data(villages, modules=modules, year=year)
         statistics = self._generate_statistics(data)

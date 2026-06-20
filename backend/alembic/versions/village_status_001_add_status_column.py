@@ -1,7 +1,7 @@
 """add status column to villages
 
 Revision ID: village_status_001
-Revises: merge_all_heads_20260530
+Revises: rev_tier_bool_001
 Create Date: 2026-06-19 18:00:00
 
 迁移 _migrate_missing_columns 的职责至纯 Alembic——
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "village_status_001"
-down_revision = "merge_all_heads_20260530"
+down_revision = "rev_tier_bool_001"
 branch_labels = None
 depends_on = None
 
