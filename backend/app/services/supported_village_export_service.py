@@ -101,107 +101,67 @@ class SupportedVillageExportService:
             data[mod] = self._collect_module_data(villages, mod, year)
         return data
 
+    # ── 模块 → (Model, field_map) 映射 — 批量查询用 ──
+    _MODULE_CONFIG = {
+        "population": ("VillagePopulation", {"households": "households", "total_population": "total_population", "labor_force": "labor_force"}),
+        "income": ("VillageIncome", {"collective_income": "collective_income", "per_capita_income": "per_capita_income"}),
+        "support_funding": ("SupportFunding", {"total_funding": "total_amount"}),
+        "force_investment": ("ForceInvestment", {"cadre_count": "cadre_count"}),
+        "industry_support": ("IndustrySupport", {"industry_type": "industry_type"}),
+        "infrastructure": ("InfrastructureImprovement", {"project_name": "project_name"}),
+        "party_building": ("PartyBuildingSupport", {"party_member_count": "party_member_count"}),
+        "medical": ("MedicalSupport", {"clinic_count": "clinic_count"}),
+        "consumption": ("ConsumptionSupport", {"sales_amount": "sales_amount"}),
+        "employment": ("EmploymentSupport", {"employed_count": "employed_count"}),
+        "education": ("EducationSupport", {"student_count": "student_count"}),
+    }
+
     def _collect_module_data(
         self,
         villages: List[Any],
         module: str,
         year: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        """收集单个模块的数据。"""
-        from app.models.supported_village import (
-            ConsumptionSupport,
-            EducationSupport,
-            EmploymentSupport,
-            ForceInvestment,
-            IndustrySupport,
-            InfrastructureImprovement,
-            MedicalSupport,
-            PartyBuildingSupport,
-            SupportFunding,
-            VillageIncome,
-            VillagePopulation,
-        )
+        """收集单个模块的数据——批量查询，单次 DB 往返。"""
+        from app.models import supported_village as _sv_models
 
-        rows = []
+        if not villages:
+            return []
+
+        village_ids = [v.id for v in villages]
+        config = self._MODULE_CONFIG.get(module)
+
+        if config is None:
+            # 未知模块：返回基本信息作为占位
+            return [
+                {"id": v.id, "village_name": v.village_name, "county": v.county or "",
+                 "module": MODULE_NAMES.get(module, module)}
+                for v in villages
+            ]
+
+        model_name, field_map = config
+        model_cls = getattr(_sv_models, model_name, None)
+        if model_cls is None:
+            return [
+                {"id": v.id, "village_name": v.village_name, "county": v.county or ""}
+                for v in villages
+            ]
+
+        # 批量查询：单次 IN 查询替代 N 次单独查询
+        rows = self.db.query(model_cls).filter(
+            model_cls.village_id.in_(village_ids)
+        ).all()
+        row_map = {r.village_id: r for r in rows}
+
+        result = []
         for v in villages:
-            base = {"id": v.id, "village_name": v.village_name, "county": v.county or ""}
+            item = {"id": v.id, "village_name": v.village_name, "county": v.county or ""}
+            row = row_map.get(v.id)
+            for out_key, model_attr in field_map.items():
+                item[out_key] = getattr(row, model_attr, None) if row else (0 if out_key != "industry_type" and out_key != "project_name" else "")
+            result.append(item)
 
-            if module == "population":
-                row = self.db.query(VillagePopulation).filter(
-                    VillagePopulation.village_id == v.id
-                ).first()
-                base["households"] = row.households if row else 0
-                base["total_population"] = row.total_population if row else 0
-                base["labor_force"] = row.labor_force if row else 0
-
-            elif module == "income":
-                row = self.db.query(VillageIncome).filter(
-                    VillageIncome.village_id == v.id
-                ).first()
-                base["collective_income"] = row.collective_income if row else 0
-                base["per_capita_income"] = row.per_capita_income if row else 0
-
-            elif module == "funding":
-                row = self.db.query(SupportFunding).filter(
-                    SupportFunding.village_id == v.id
-                ).first()
-                base["total_funding"] = row.total_amount if row else 0
-
-            elif module == "force":
-                row = self.db.query(ForceInvestment).filter(
-                    ForceInvestment.village_id == v.id
-                ).first()
-                base["cadre_count"] = row.cadre_count if row else 0
-
-            elif module == "industry":
-                row = self.db.query(IndustrySupport).filter(
-                    IndustrySupport.village_id == v.id
-                ).first()
-                base["industry_type"] = row.industry_type if row else ""
-
-            elif module == "infrastructure":
-                row = self.db.query(InfrastructureImprovement).filter(
-                    InfrastructureImprovement.village_id == v.id
-                ).first()
-                base["project_name"] = row.project_name if row else ""
-
-            elif module == "party":
-                row = self.db.query(PartyBuildingSupport).filter(
-                    PartyBuildingSupport.village_id == v.id
-                ).first()
-                base["party_member_count"] = row.party_member_count if row else 0
-
-            elif module == "medical":
-                row = self.db.query(MedicalSupport).filter(
-                    MedicalSupport.village_id == v.id
-                ).first()
-                base["clinic_count"] = row.clinic_count if row else 0
-
-            elif module == "consumption":
-                row = self.db.query(ConsumptionSupport).filter(
-                    ConsumptionSupport.village_id == v.id
-                ).first()
-                base["sales_amount"] = row.sales_amount if row else 0
-
-            elif module == "employment":
-                row = self.db.query(EmploymentSupport).filter(
-                    EmploymentSupport.village_id == v.id
-                ).first()
-                base["employed_count"] = row.employed_count if row else 0
-
-            elif module == "education":
-                row = self.db.query(EducationSupport).filter(
-                    EducationSupport.village_id == v.id
-                ).first()
-                base["student_count"] = row.student_count if row else 0
-
-            else:
-                # 未知模块：返回基本信息作为占位
-                base["module"] = MODULE_NAMES.get(module, module)
-
-            rows.append(base)
-
-        return rows
+        return result
 
     def _generate_statistics(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """生成导出统计信息。"""

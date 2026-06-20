@@ -3,21 +3,16 @@
 
 替代逐个端点手动调用 write_work_log() 的方案——一个事件监听器覆盖全部模型。
 使用方法：应用启动时调用 setup_audit_events() 一次即可。
+
+局限性：SQLAlchemy 事件无法访问 HTTP 请求上下文，因此审计记录中的 user_id
+为 NULL。需要用户归因时，端点应额外调用 write_work_log()。
 """
 
 import logging
-from typing import Optional
 
 from sqlalchemy import event
-from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
-
-# ── 配置哪些模型需要审计 ──
-_AUDITABLE_MODELS: set = set()  # 延迟注册，避免循环导入
-
-# 操作对应的中文描述
-_ACTION_NAMES = {"insert": "create", "update": "update", "delete": "delete"}
 
 
 def _get_entity_name(instance) -> str:
@@ -32,7 +27,6 @@ def _get_entity_name(instance) -> str:
 def _get_entity_type(instance) -> str:
     """从 ORM 实例提取实体类型标识。"""
     cls_name = type(instance).__name__
-    # 常见缩写映射
     mapping = {
         "SupportedVillage": "village",
         "FundBudget": "fund_budget",
@@ -52,48 +46,26 @@ def _get_entity_type(instance) -> str:
     return mapping.get(cls_name, cls_name.lower())
 
 
-def _find_db_session(target) -> Optional[Session]:
-    """尝试从 ORM 实例的关联中提取数据库 session。"""
-    for attr in ("_sa_instance_state",):
-        state = getattr(target, attr, None)
-        if state is not None:
-            sess = getattr(state, "session", None)
-            if sess is not None:
-                return sess
-    # SQLAlchemy 2.x 风格
-    from sqlalchemy import inspect
-
-    try:
-        insp = inspect(target)
-        return insp.session if insp else None
-    except Exception:
-        return None
-
-
 def _write_audit_from_event(mapper, connection, target, action: str):
-    """从 SQLAlchemy 事件写入审计日志——使用原始 connection 避免 session 冲突。"""
+    """从 SQLAlchemy 事件写入审计日志。"""
     try:
-        entity_type = _get_entity_type(target)
-        entity_name = _get_entity_name(target)
-
-        # 使用原始 DB-API 连接直接插入，避免与业务 session 冲突
         from datetime import date
 
+        entity_type = _get_entity_type(target)
+        entity_name = _get_entity_name(target)
         content = f"{action}: {entity_name}"
+
         connection.execute(
             mapper.local_table.metadata.tables["work_logs"].insert().values(
                 category=entity_type,
                 content=content,
                 log_date=date.today(),
-                user_id=1,  # 兜底 system user；端点若已设置则覆盖
+                user_id=None,  # 事件级审计无 HTTP 上下文——端点级 write_work_log() 可提供用户归因
             )
         )
     except Exception:
-        # 审计日志失败不应中断主业务
         logger.debug("审计日志写入失败 (non-critical): %s %s", action, type(target).__name__, exc_info=True)
 
-
-# ── 事件监听器 ──
 
 def _after_insert(mapper, connection, target):
     _write_audit_from_event(mapper, connection, target, "create")
@@ -107,16 +79,9 @@ def _after_delete(mapper, connection, target):
     _write_audit_from_event(mapper, connection, target, "delete")
 
 
-# ── 公开 API ──
-
 def setup_audit_events(models: list = None):
-    """注册 SQLAlchemy 审计事件监听器——应用启动时调用一次。
-
-    Args:
-        models: 可选——要审计的模型列表。若为 None，则审计项目中所有核心业务模型。
-    """
+    """注册 SQLAlchemy 审计事件监听器——应用启动时调用一次。"""
     if models is None:
-        # 延迟导入以避免循环
         from app.models.assessment import AssessmentRecord
         from app.models.fund import Fund
         from app.models.fund_allocation_order import FundAllocationOrder
@@ -131,24 +96,10 @@ def setup_audit_events(models: list = None):
         from app.models.rbac import RbacRole, UserPermission, UserRole
 
         models = [
-            AssessmentRecord,
-            Fund,
-            FundAllocationOrder,
-            FundBudget,
-            FundTransaction,
-            Organization,
-            Policy,
-            PolicyCategory,
-            Project,
-            ScholarshipStudent,
-            School,
-            SchoolProject,
-            SupportedVillage,
-            Todo,
-            User,
-            RbacRole,
-            UserPermission,
-            UserRole,
+            AssessmentRecord, Fund, FundAllocationOrder, FundBudget, FundTransaction,
+            Organization, Policy, PolicyCategory, Project, ScholarshipStudent,
+            School, SchoolProject, SupportedVillage, Todo, User,
+            RbacRole, UserPermission, UserRole,
         ]
 
     registered = 0
@@ -170,8 +121,15 @@ def teardown_audit_events(models: list = None):
         from app.models.school import School
         from app.models.supported_village import SupportedVillage
         from app.models.user import User
+        from app.models.fund_budget import FundBudget
+        from app.models.organization import Organization
+        from app.models.policy import Policy
+        from app.models.todo import Todo
+        from app.models.rbac import RbacRole, UserPermission, UserRole
 
-        models = [Fund, Project, School, SupportedVillage, User]
+        models = [Fund, Project, School, SupportedVillage, User,
+                  FundBudget, Organization, Policy, Todo,
+                  RbacRole, UserPermission, UserRole]
 
     for model in models:
         event.remove(model, "after_insert", _after_insert)
