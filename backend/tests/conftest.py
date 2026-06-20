@@ -44,6 +44,7 @@ def pytest_collection_modifyitems(config, items):
         "test_fund_budgets_api",
         "test_project_milestones_api",
         "test_statistics_api",
+        "test_coverage_gap_batch3",  # asyncio 事件循环敏感——其他测试破坏 loop 后失败
     }
     first = []
     rest = []
