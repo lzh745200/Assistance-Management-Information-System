@@ -357,6 +357,40 @@ class TestRuralWorkServiceMethods:
 
 
 # ──────────────────────────────────────────────────────────────
+# Fix 8: Schema mutable default values
+# ──────────────────────────────────────────────────────────────
+
+
+class TestSchemaMutableDefaults:
+    """Verify schemas use Field(default_factory=...) not mutable literals."""
+
+    def test_list_response_default_factory_list(self):
+        """RuralWorkListResponse.items must not share a mutable default list."""
+        from app.schemas.rural_work import RuralWorkListResponse
+
+        r1 = RuralWorkListResponse()
+        r2 = RuralWorkListResponse()
+        # If default_factory is used, the lists are independent objects
+        assert r1.items is not r2.items, (
+            "items 应使用 Field(default_factory=list)，不应共享可变默认值"
+        )
+        assert r1.items == []
+        assert r2.items == []
+
+    def test_statistics_default_factory_dict(self):
+        """RuralWorkStatistics.by_type must not share a mutable default dict."""
+        from app.schemas.rural_work import RuralWorkStatistics
+
+        s1 = RuralWorkStatistics()
+        s2 = RuralWorkStatistics()
+        assert s1.by_type is not s2.by_type, (
+            "by_type 应使用 Field(default_factory=dict)，不应共享可变默认值"
+        )
+        assert s1.by_type == {}
+        assert s2.by_type == {}
+
+
+# ──────────────────────────────────────────────────────────────
 # Fix 3: AuditLogService.log persists to DB (db= + details=)
 # ──────────────────────────────────────────────────────────────
 

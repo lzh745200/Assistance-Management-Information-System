@@ -1,0 +1,482 @@
+
+> assistance-management-information-frontend@1.2.0 build
+> vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+node_modules/@vueuse/core/dist/index.js (3362:0): A comment
+
+"/* #__PURE__ */"
+
+in "node_modules/@vueuse/core/dist/index.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/@vueuse/core/dist/index.js (5780:22): A comment
+
+"/* #__PURE__ */"
+
+in "node_modules/@vueuse/core/dist/index.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+[32m✓[39m 2864 modules transformed.
+rendering chunks...
+[1m[33m[plugin:vite:reporter][39m[22m [33m[plugin vite:reporter] 
+(!) C:/military-Rural Revitalization-system/frontend/src/api/systemMonitor.ts is dynamically imported by C:/military-Rural Revitalization-system/frontend/src/components/business/SystemStatus.vue?vue&type=script&setup=true&lang.ts but also statically imported by C:/military-Rural Revitalization-system/frontend/src/components/business/SystemStatus.vue?vue&type=script&setup=true&lang.ts, dynamic import will not move module into another chunk.
+[39m
+computing gzip size...
+[2mdist/[22m[32mversion.json                                     [39m[1m[2m    0.07 kB[22m[1m[22m[2m │ gzip:   0.08 kB[22m
+[2mdist/[22m[32mindex.html                                       [39m[1m[2m    1.25 kB[22m[1m[22m[2m │ gzip:   0.50 kB[22m
+[2mdist/[22m[35massets/css/BaseChart-DQtu7fQu.css                [39m[1m[2m    0.05 kB[22m[1m[22m[2m │ gzip:   0.07 kB[22m
+[2mdist/[22m[35massets/css/OfflineMap-D5xc3gov.css               [39m[1m[2m    0.12 kB[22m[1m[22m[2m │ gzip:   0.13 kB[22m
+[2mdist/[22m[35massets/css/PackageVersion-Bf81kH5m.css           [39m[1m[2m    0.14 kB[22m[1m[22m[2m │ gzip:   0.13 kB[22m
+[2mdist/[22m[35massets/css/IncrementalUpdate-DyDuqEmy.css        [39m[1m[2m    0.14 kB[22m[1m[22m[2m │ gzip:   0.13 kB[22m
+[2mdist/[22m[35massets/css/MapPicker-C7R4KQiZ.css                [39m[1m[2m    0.16 kB[22m[1m[22m[2m │ gzip:   0.13 kB[22m
+[2mdist/[22m[35massets/css/Menu-DQpthpEL.css                     [39m[1m[2m    0.19 kB[22m[1m[22m[2m │ gzip:   0.15 kB[22m
+[2mdist/[22m[35massets/css/Edit--L0SIuUW.css                     [39m[1m[2m    0.20 kB[22m[1m[22m[2m │ gzip:   0.16 kB[22m
+[2mdist/[22m[35massets/css/EmailSettings-C2eZa0eH.css            [39m[1m[2m    0.20 kB[22m[1m[22m[2m │ gzip:   0.16 kB[22m
+[2mdist/[22m[35massets/css/Backup-7Rjk4BOT.css                   [39m[1m[2m    0.23 kB[22m[1m[22m[2m │ gzip:   0.16 kB[22m
+[2mdist/[22m[35massets/css/CacheManagement-BJKOr5Wv.css          [39m[1m[2m    0.24 kB[22m[1m[22m[2m │ gzip:   0.17 kB[22m
+[2mdist/[22m[35massets/css/Detail-DwlG9QUD.css                   [39m[1m[2m    0.25 kB[22m[1m[22m[2m │ gzip:   0.17 kB[22m
+[2mdist/[22m[35massets/css/FundApply-BHwCi03D.css                [39m[1m[2m    0.25 kB[22m[1m[22m[2m │ gzip:   0.16 kB[22m
+[2mdist/[22m[35massets/css/Assessment-D7Qh5X4W.css               [39m[1m[2m    0.26 kB[22m[1m[22m[2m │ gzip:   0.17 kB[22m
+[2mdist/[22m[35massets/css/ContractManage-mwO-ZUIl.css           [39m[1m[2m    0.28 kB[22m[1m[22m[2m │ gzip:   0.18 kB[22m
+[2mdist/[22m[35massets/css/YearlyIndex-DfuJ5sBl.css              [39m[1m[2m    0.28 kB[22m[1m[22m[2m │ gzip:   0.16 kB[22m
+[2mdist/[22m[35massets/css/Settlement-Do7sdtBd.css               [39m[1m[2m    0.28 kB[22m[1m[22m[2m │ gzip:   0.18 kB[22m
+[2mdist/[22m[35massets/css/BackupManagement-BKOnRAxW.css         [39m[1m[2m    0.30 kB[22m[1m[22m[2m │ gzip:   0.19 kB[22m
+[2mdist/[22m[35massets/css/TransferVoucher-6RUrJttj.css          [39m[1m[2m    0.32 kB[22m[1m[22m[2m │ gzip:   0.19 kB[22m
+[2mdist/[22m[35massets/css/Feedback-tV3KtM_w.css                 [39m[1m[2m    0.33 kB[22m[1m[22m[2m │ gzip:   0.20 kB[22m
+[2mdist/[22m[35massets/css/Logs-DfCoIXnp.css                     [39m[1m[2m    0.37 kB[22m[1m[22m[2m │ gzip:   0.22 kB[22m
+[2mdist/[22m[35massets/css/AnomalyList-CJBltAQc.css              [39m[1m[2m    0.39 kB[22m[1m[22m[2m │ gzip:   0.22 kB[22m
+[2mdist/[22m[35massets/css/List-CRb1fDMR.css                     [39m[1m[2m    0.45 kB[22m[1m[22m[2m │ gzip:   0.26 kB[22m
+[2mdist/[22m[35massets/css/NotFound-pr7yHXg8.css                 [39m[1m[2m    0.51 kB[22m[1m[22m[2m │ gzip:   0.29 kB[22m
+[2mdist/[22m[35massets/css/ConfigPackage-Cylz36Qq.css            [39m[1m[2m    0.51 kB[22m[1m[22m[2m │ gzip:   0.26 kB[22m
+[2mdist/[22m[35massets/css/ProjectManagement-2tEGOS6c.css        [39m[1m[2m    0.55 kB[22m[1m[22m[2m │ gzip:   0.26 kB[22m
+[2mdist/[22m[35massets/css/DataImport-CV7wuifQ.css               [39m[1m[2m    0.59 kB[22m[1m[22m[2m │ gzip:   0.25 kB[22m
+[2mdist/[22m[35massets/css/Index-BAAb55Hf.css                    [39m[1m[2m    0.68 kB[22m[1m[22m[2m │ gzip:   0.36 kB[22m
+[2mdist/[22m[35massets/css/RulesManagement-DwgLf5I4.css          [39m[1m[2m    0.71 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+[2mdist/[22m[35massets/css/403-C9ji1_vv.css                      [39m[1m[2m    0.72 kB[22m[1m[22m[2m │ gzip:   0.35 kB[22m
+[2mdist/[22m[35massets/css/SecretsManagement-BitvRM-k.css        [39m[1m[2m    0.72 kB[22m[1m[22m[2m │ gzip:   0.30 kB[22m
+[2mdist/[22m[35massets/css/500-C9-WBdOS.css                      [39m[1m[2m    0.73 kB[22m[1m[22m[2m │ gzip:   0.36 kB[22m
+[2mdist/[22m[35massets/css/Overview-CKGZcaEo.css                 [39m[1m[2m    0.74 kB[22m[1m[22m[2m │ gzip:   0.32 kB[22m
+[2mdist/[22m[35massets/css/MyApplications-oUMB4Klu.css           [39m[1m[2m    0.77 kB[22m[1m[22m[2m │ gzip:   0.33 kB[22m
+[2mdist/[22m[35massets/css/Lifecycle-BGqzk43M.css                [39m[1m[2m    0.79 kB[22m[1m[22m[2m │ gzip:   0.31 kB[22m
+[2mdist/[22m[35massets/css/Analysis-DlZXGfqM.css                 [39m[1m[2m    0.79 kB[22m[1m[22m[2m │ gzip:   0.34 kB[22m
+[2mdist/[22m[35massets/css/index-CkNmWuAP.css                    [39m[1m[2m    0.82 kB[22m[1m[22m[2m │ gzip:   0.38 kB[22m
+[2mdist/[22m[35massets/css/Index-BOevDHN4.css                    [39m[1m[2m    0.98 kB[22m[1m[22m[2m │ gzip:   0.41 kB[22m
+[2mdist/[22m[35massets/css/Evaluation-BhnqL_Na.css               [39m[1m[2m    1.01 kB[22m[1m[22m[2m │ gzip:   0.44 kB[22m
+[2mdist/[22m[35massets/css/ChunkedUploadManager-CICLBGYN.css     [39m[1m[2m    1.08 kB[22m[1m[22m[2m │ gzip:   0.47 kB[22m
+[2mdist/[22m[35massets/css/List-CGiZSyG4.css                     [39m[1m[2m    1.11 kB[22m[1m[22m[2m │ gzip:   0.48 kB[22m
+[2mdist/[22m[35massets/css/I18nManagement-CCH-BZG8.css           [39m[1m[2m    1.14 kB[22m[1m[22m[2m │ gzip:   0.42 kB[22m
+[2mdist/[22m[35massets/css/InteractiveResult-BaLVQUpw.css        [39m[1m[2m    1.17 kB[22m[1m[22m[2m │ gzip:   0.43 kB[22m
+[2mdist/[22m[35massets/css/Edit-CY3qWQEv.css                     [39m[1m[2m    1.29 kB[22m[1m[22m[2m │ gzip:   0.51 kB[22m
+[2mdist/[22m[35massets/css/Report-B_tbWIwu.css                   [39m[1m[2m    1.33 kB[22m[1m[22m[2m │ gzip:   0.47 kB[22m
+[2mdist/[22m[35massets/css/Detail-DZAG3GcF.css                   [39m[1m[2m    1.33 kB[22m[1m[22m[2m │ gzip:   0.47 kB[22m
+[2mdist/[22m[35massets/css/AuditManagement-Bc_NJcx9.css          [39m[1m[2m    1.41 kB[22m[1m[22m[2m │ gzip:   0.52 kB[22m
+[2mdist/[22m[35massets/css/Budget-BEgZM_cb.css                   [39m[1m[2m    1.42 kB[22m[1m[22m[2m │ gzip:   0.52 kB[22m
+[2mdist/[22m[35massets/css/Rankings-BkCYRUjE.css                 [39m[1m[2m    1.50 kB[22m[1m[22m[2m │ gzip:   0.55 kB[22m
+[2mdist/[22m[35massets/css/EnvCheck-_uS7Ljbx.css                 [39m[1m[2m    1.52 kB[22m[1m[22m[2m │ gzip:   0.55 kB[22m
+[2mdist/[22m[35massets/css/Index-Bc-QOt6l.css                    [39m[1m[2m    1.69 kB[22m[1m[22m[2m │ gzip:   0.54 kB[22m
+[2mdist/[22m[35massets/css/EnhancedList-C3JtPIAp.css             [39m[1m[2m    1.70 kB[22m[1m[22m[2m │ gzip:   0.61 kB[22m
+[2mdist/[22m[35massets/css/Index-D-uUgV4C.css                    [39m[1m[2m    1.71 kB[22m[1m[22m[2m │ gzip:   0.60 kB[22m
+[2mdist/[22m[35massets/css/index-Cw42EQSD.css                    [39m[1m[2m    1.73 kB[22m[1m[22m[2m │ gzip:   0.60 kB[22m
+[2mdist/[22m[35massets/css/Index-CBdjHhTT.css                    [39m[1m[2m    1.77 kB[22m[1m[22m[2m │ gzip:   0.61 kB[22m
+[2mdist/[22m[35massets/css/ComprehensiveEntry-B6thGW-z.css       [39m[1m[2m    1.86 kB[22m[1m[22m[2m │ gzip:   0.60 kB[22m
+[2mdist/[22m[35massets/css/List-wOeGNutT.css                     [39m[1m[2m    1.89 kB[22m[1m[22m[2m │ gzip:   0.66 kB[22m
+[2mdist/[22m[35massets/css/DataTier-nO-8-CYc.css                 [39m[1m[2m    1.94 kB[22m[1m[22m[2m │ gzip:   0.60 kB[22m
+[2mdist/[22m[35massets/css/List-BffP0Btk.css                     [39m[1m[2m    1.95 kB[22m[1m[22m[2m │ gzip:   0.68 kB[22m
+[2mdist/[22m[35massets/css/TaskManager-CrupUtr7.css              [39m[1m[2m    2.01 kB[22m[1m[22m[2m │ gzip:   0.65 kB[22m
+[2mdist/[22m[35massets/css/Index-CFOf0qYE.css                    [39m[1m[2m    2.05 kB[22m[1m[22m[2m │ gzip:   0.65 kB[22m
+[2mdist/[22m[35massets/css/ErrorReports-BoLzU6kS.css             [39m[1m[2m    2.27 kB[22m[1m[22m[2m │ gzip:   0.71 kB[22m
+[2mdist/[22m[35massets/css/Detail-DnUUxlyz.css                   [39m[1m[2m    2.36 kB[22m[1m[22m[2m │ gzip:   0.83 kB[22m
+[2mdist/[22m[35massets/css/Detail-DLi1pe2g.css                   [39m[1m[2m    2.47 kB[22m[1m[22m[2m │ gzip:   0.76 kB[22m
+[2mdist/[22m[35massets/css/UserPermissions-eKIncbW9.css          [39m[1m[2m    2.53 kB[22m[1m[22m[2m │ gzip:   0.72 kB[22m
+[2mdist/[22m[35massets/css/WorkAnalysis-mAgsyLFw.css             [39m[1m[2m    2.97 kB[22m[1m[22m[2m │ gzip:   0.82 kB[22m
+[2mdist/[22m[35massets/css/Profile-eieYyPol.css                  [39m[1m[2m    3.03 kB[22m[1m[22m[2m │ gzip:   0.85 kB[22m
+[2mdist/[22m[35massets/css/YearlyOverview-DCK_ir_m.css           [39m[1m[2m    3.11 kB[22m[1m[22m[2m │ gzip:   0.92 kB[22m
+[2mdist/[22m[35massets/css/ChangePassword-CqdomLlR.css           [39m[1m[2m    3.53 kB[22m[1m[22m[2m │ gzip:   1.03 kB[22m
+[2mdist/[22m[35massets/css/AdminDashboard-DUqnI1Cu.css           [39m[1m[2m    6.22 kB[22m[1m[22m[2m │ gzip:   1.48 kB[22m
+[2mdist/[22m[35massets/css/LoginEnhanced-Dm3fL0W8.css            [39m[1m[2m    6.39 kB[22m[1m[22m[2m │ gzip:   1.80 kB[22m
+[2mdist/[22m[35massets/css/MonitoringDashboard-D7QQ_Z0N.css      [39m[1m[2m    7.62 kB[22m[1m[22m[2m │ gzip:   1.75 kB[22m
+[2mdist/[22m[35massets/css/DefaultLayoutSafe-FaUJOX1W.css        [39m[1m[2m    9.93 kB[22m[1m[22m[2m │ gzip:   2.08 kB[22m
+[2mdist/[22m[35massets/css/ExportSection-DYEW2gvg.css            [39m[1m[2m   10.83 kB[22m[1m[22m[2m │ gzip:   2.89 kB[22m
+[2mdist/[22m[35massets/css/Index-CfIAD2JO.css                    [39m[1m[2m   10.99 kB[22m[1m[22m[2m │ gzip:   2.93 kB[22m
+[2mdist/[22m[35massets/css/ImportSection-CtLV3P0V.css            [39m[1m[2m   11.04 kB[22m[1m[22m[2m │ gzip:   2.95 kB[22m
+[2mdist/[22m[35massets/css/SupportedVillageForm-Cy9I5O8G.css     [39m[1m[2m   11.10 kB[22m[1m[22m[2m │ gzip:   2.99 kB[22m
+[2mdist/[22m[35massets/css/BackupSection-DgNXo5I4.css            [39m[1m[2m   11.11 kB[22m[1m[22m[2m │ gzip:   2.97 kB[22m
+[2mdist/[22m[35massets/css/PendingList-D8KmaMll.css              [39m[1m[2m   11.16 kB[22m[1m[22m[2m │ gzip:   2.98 kB[22m
+[2mdist/[22m[35massets/css/History-DtRd0vGG.css                  [39m[1m[2m   11.18 kB[22m[1m[22m[2m │ gzip:   2.99 kB[22m
+[2mdist/[22m[35massets/css/Export-D2q0OrSx.css                   [39m[1m[2m   11.19 kB[22m[1m[22m[2m │ gzip:   2.97 kB[22m
+[2mdist/[22m[35massets/css/EncryptionSettings-CebHDTFl.css       [39m[1m[2m   11.20 kB[22m[1m[22m[2m │ gzip:   2.97 kB[22m
+[2mdist/[22m[35massets/css/MachineCode-D2b2PySq.css              [39m[1m[2m   11.23 kB[22m[1m[22m[2m │ gzip:   2.96 kB[22m
+[2mdist/[22m[35massets/css/List-C-R9Nc7Q.css                     [39m[1m[2m   11.30 kB[22m[1m[22m[2m │ gzip:   2.98 kB[22m
+[2mdist/[22m[35massets/css/List-LTjhE9Wo.css                     [39m[1m[2m   11.31 kB[22m[1m[22m[2m │ gzip:   3.04 kB[22m
+[2mdist/[22m[35massets/css/QualitySection-DYbtikxl.css           [39m[1m[2m   11.35 kB[22m[1m[22m[2m │ gzip:   3.01 kB[22m
+[2mdist/[22m[35massets/css/Import-DQfJJdUS.css                   [39m[1m[2m   11.48 kB[22m[1m[22m[2m │ gzip:   3.03 kB[22m
+[2mdist/[22m[35massets/css/MachineCodeManagement-BUCs2i6m.css    [39m[1m[2m   11.50 kB[22m[1m[22m[2m │ gzip:   3.08 kB[22m
+[2mdist/[22m[35massets/css/ConflictResolution-DqxcGsVl.css       [39m[1m[2m   11.51 kB[22m[1m[22m[2m │ gzip:   3.02 kB[22m
+[2mdist/[22m[35massets/css/Edit-BvZ0aUMF.css                     [39m[1m[2m   11.57 kB[22m[1m[22m[2m │ gzip:   3.11 kB[22m
+[2mdist/[22m[35massets/css/MessageCenter-CWR7AFRi.css            [39m[1m[2m   11.60 kB[22m[1m[22m[2m │ gzip:   3.10 kB[22m
+[2mdist/[22m[35massets/css/ProgressGallery-BSlOfCsN.css          [39m[1m[2m   11.70 kB[22m[1m[22m[2m │ gzip:   3.18 kB[22m
+[2mdist/[22m[35massets/css/Register-Dz9vD0-U.css                 [39m[1m[2m   11.96 kB[22m[1m[22m[2m │ gzip:   3.21 kB[22m
+[2mdist/[22m[35massets/css/TwoFactorSettings-Ct4G3mKy.css        [39m[1m[2m   12.02 kB[22m[1m[22m[2m │ gzip:   3.20 kB[22m
+[2mdist/[22m[35massets/css/UpdateLogs-BugJLqBE.css               [39m[1m[2m   12.10 kB[22m[1m[22m[2m │ gzip:   3.18 kB[22m
+[2mdist/[22m[35massets/css/List-BRKYx8oX.css                     [39m[1m[2m   12.41 kB[22m[1m[22m[2m │ gzip:   3.28 kB[22m
+[2mdist/[22m[35massets/css/HelpCenter-8p--hinv.css               [39m[1m[2m   12.91 kB[22m[1m[22m[2m │ gzip:   3.43 kB[22m
+[2mdist/[22m[35massets/css/Edit-DfaAJC2C.css                     [39m[1m[2m   13.34 kB[22m[1m[22m[2m │ gzip:   3.46 kB[22m
+[2mdist/[22m[35massets/css/Dashboard-DUXitG6M.css                [39m[1m[2m   13.40 kB[22m[1m[22m[2m │ gzip:   3.57 kB[22m
+[2mdist/[22m[35massets/css/ReportExport-ChiKSXIz.css             [39m[1m[2m   13.69 kB[22m[1m[22m[2m │ gzip:   3.39 kB[22m
+[2mdist/[22m[35massets/css/ForgotPassword-Cbk0TXsT.css           [39m[1m[2m   13.69 kB[22m[1m[22m[2m │ gzip:   3.67 kB[22m
+[2mdist/[22m[35massets/css/GetMachineCode-BQ6bqs1q.css           [39m[1m[2m   14.65 kB[22m[1m[22m[2m │ gzip:   3.83 kB[22m
+[2mdist/[22m[35massets/css/ZeroTrust-Cv4gpXgQ.css                [39m[1m[2m   15.40 kB[22m[1m[22m[2m │ gzip:   3.71 kB[22m
+[2mdist/[22m[35massets/css/Analysis-B0PqDRan.css                 [39m[1m[2m   17.52 kB[22m[1m[22m[2m │ gzip:   4.17 kB[22m
+[2mdist/[22m[35massets/css/Import-CLRoolY-.css                   [39m[1m[2m   18.70 kB[22m[1m[22m[2m │ gzip:   4.12 kB[22m
+[2mdist/[22m[35massets/css/Index-Dp8EXsz1.css                    [39m[1m[2m   18.76 kB[22m[1m[22m[2m │ gzip:   4.30 kB[22m
+[2mdist/[22m[35massets/css/UserManagement-DKKV2zP1.css           [39m[1m[2m   45.30 kB[22m[1m[22m[2m │ gzip:   4.29 kB[22m
+[2mdist/[22m[35massets/css/index-HRIGq1kR.css                    [39m[1m[2m   65.11 kB[22m[1m[22m[2m │ gzip:  11.94 kB[22m
+[2mdist/[22m[35massets/css/index-Byx48T6d.css                    [39m[1m[2m   73.04 kB[22m[1m[22m[2m │ gzip:   6.03 kB[22m
+[2mdist/[22m[35massets/css/element-plus-DCx7nwan.css             [39m[1m[2m  279.83 kB[22m[1m[22m[2m │ gzip:  37.70 kB[22m
+[2mdist/[22m[36massets/js/badge-DaCfZyEk.js                      [39m[1m[2m    0.05 kB[22m[1m[22m[2m │ gzip:   0.06 kB[22m
+[2mdist/[22m[36massets/js/_plugin-vue_export-helper-BCo6x5W8.js  [39m[1m[2m    0.09 kB[22m[1m[22m[2m │ gzip:   0.10 kB[22m
+[2mdist/[22m[36massets/js/unwrapData-Q9MM0lJO.js                 [39m[1m[2m    0.10 kB[22m[1m[22m[2m │ gzip:   0.11 kB[22m
+[2mdist/[22m[36massets/js/organization-BXcWMRPf.js               [39m[1m[2m    0.28 kB[22m[1m[22m[2m │ gzip:   0.18 kB[22m
+[2mdist/[22m[36massets/js/effectiveness-XuXF6kZj.js              [39m[1m[2m    0.30 kB[22m[1m[22m[2m │ gzip:   0.21 kB[22m
+[2mdist/[22m[36massets/js/useRouterSafe-CSfEy6qQ.js              [39m[1m[2m    0.41 kB[22m[1m[22m[2m │ gzip:   0.28 kB[22m
+[2mdist/[22m[36massets/js/treeNormalizer-BGVyrsja.js             [39m[1m[2m    0.41 kB[22m[1m[22m[2m │ gzip:   0.28 kB[22m
+[2mdist/[22m[36massets/js/fundStatistics-CzhpmRcZ.js             [39m[1m[2m    0.62 kB[22m[1m[22m[2m │ gzip:   0.40 kB[22m
+[2mdist/[22m[36massets/js/audit-Csgpj3LR.js                      [39m[1m[2m    0.62 kB[22m[1m[22m[2m │ gzip:   0.28 kB[22m
+[2mdist/[22m[36massets/js/dataSync-CKbCT9Tk.js                   [39m[1m[2m    0.73 kB[22m[1m[22m[2m │ gzip:   0.34 kB[22m
+[2mdist/[22m[36massets/js/index-NKaHcT_i.js                      [39m[1m[2m    0.79 kB[22m[1m[22m[2m │ gzip:   0.41 kB[22m
+[2mdist/[22m[36massets/js/import-CinxtxxN.js                     [39m[1m[2m    1.03 kB[22m[1m[22m[2m │ gzip:   0.52 kB[22m
+[2mdist/[22m[36massets/js/Detail-D6eUao57.js                     [39m[1m[2m    1.05 kB[22m[1m[22m[2m │ gzip:   0.62 kB[22m
+[2mdist/[22m[36massets/js/NotFound-DAgDwrDW.js                   [39m[1m[2m    1.05 kB[22m[1m[22m[2m │ gzip:   0.63 kB[22m
+[2mdist/[22m[36massets/js/logger-qofcKznY.js                     [39m[1m[2m    1.05 kB[22m[1m[22m[2m │ gzip:   0.51 kB[22m
+[2mdist/[22m[36massets/js/clipboard-Szu2Az0o.js                  [39m[1m[2m    1.07 kB[22m[1m[22m[2m │ gzip:   0.69 kB[22m
+[2mdist/[22m[36massets/js/BaseChart-BAX7xvc7.js                  [39m[1m[2m    1.07 kB[22m[1m[22m[2m │ gzip:   0.63 kB[22m
+[2mdist/[22m[36massets/js/Backup-Cfiq2E1b.js                     [39m[1m[2m    1.10 kB[22m[1m[22m[2m │ gzip:   0.63 kB[22m
+[2mdist/[22m[36massets/js/Analysis-D0OBorf2.js                   [39m[1m[2m    1.13 kB[22m[1m[22m[2m │ gzip:   0.59 kB[22m
+[2mdist/[22m[36massets/js/Detail-D1Vr5loR.js                     [39m[1m[2m    1.14 kB[22m[1m[22m[2m │ gzip:   0.60 kB[22m
+[2mdist/[22m[36massets/js/ruralWork-I4MJpFXc.js                  [39m[1m[2m    1.17 kB[22m[1m[22m[2m │ gzip:   0.48 kB[22m
+[2mdist/[22m[36massets/js/export-CXAWgp0W.js                     [39m[1m[2m    1.23 kB[22m[1m[22m[2m │ gzip:   0.58 kB[22m
+[2mdist/[22m[36massets/js/approval--m3zi9RS.js                   [39m[1m[2m    1.28 kB[22m[1m[22m[2m │ gzip:   0.51 kB[22m
+[2mdist/[22m[36massets/js/projects-U6G7jCTk.js                   [39m[1m[2m    1.29 kB[22m[1m[22m[2m │ gzip:   0.52 kB[22m
+[2mdist/[22m[36massets/js/403-AJw6Pcds.js                        [39m[1m[2m    1.30 kB[22m[1m[22m[2m │ gzip:   0.72 kB[22m
+[2mdist/[22m[36massets/js/500-CTILlb-q.js                        [39m[1m[2m    1.46 kB[22m[1m[22m[2m │ gzip:   0.78 kB[22m
+[2mdist/[22m[36massets/js/funds-cv15iRxe.js                      [39m[1m[2m    1.56 kB[22m[1m[22m[2m │ gzip:   0.72 kB[22m
+[2mdist/[22m[36massets/js/policy-CKCTLJoi.js                     [39m[1m[2m    1.57 kB[22m[1m[22m[2m │ gzip:   0.72 kB[22m
+[2mdist/[22m[36massets/js/exportUtil-BDmEbPGw.js                 [39m[1m[2m    1.65 kB[22m[1m[22m[2m │ gzip:   0.88 kB[22m
+[2mdist/[22m[36massets/js/schools-rLh2Dpsu.js                    [39m[1m[2m    1.84 kB[22m[1m[22m[2m │ gzip:   0.58 kB[22m
+[2mdist/[22m[36massets/js/auth-XDXCnw3t.js                       [39m[1m[2m    1.92 kB[22m[1m[22m[2m │ gzip:   0.97 kB[22m
+[2mdist/[22m[36massets/js/EmailSettings-CwUeLV7P.js              [39m[1m[2m    2.25 kB[22m[1m[22m[2m │ gzip:   1.04 kB[22m
+[2mdist/[22m[36massets/js/YearlyIndex-BmBOhLV8.js                [39m[1m[2m    2.25 kB[22m[1m[22m[2m │ gzip:   1.18 kB[22m
+[2mdist/[22m[36massets/js/funds-BYX-Lv2F.js                      [39m[1m[2m    2.63 kB[22m[1m[22m[2m │ gzip:   0.82 kB[22m
+[2mdist/[22m[36massets/js/user-Dwq19d79.js                       [39m[1m[2m    2.64 kB[22m[1m[22m[2m │ gzip:   1.08 kB[22m
+[2mdist/[22m[36massets/js/supportedVillage-BWpgJmnK.js           [39m[1m[2m    2.86 kB[22m[1m[22m[2m │ gzip:   1.10 kB[22m
+[2mdist/[22m[36massets/js/Menu-cxuODP29.js                       [39m[1m[2m    2.88 kB[22m[1m[22m[2m │ gzip:   1.30 kB[22m
+[2mdist/[22m[36massets/js/vendor/echarts-W-krdbRh.js             [39m[1m[2m    3.04 kB[22m[1m[22m[2m │ gzip:   1.05 kB[22m
+[2mdist/[22m[36massets/js/MapPicker-CpY8ThYK.js                  [39m[1m[2m    3.09 kB[22m[1m[22m[2m │ gzip:   1.38 kB[22m
+[2mdist/[22m[36massets/js/Detail-CY3-54hO.js                     [39m[1m[2m    3.13 kB[22m[1m[22m[2m │ gzip:   1.32 kB[22m
+[2mdist/[22m[36massets/js/vendor/pinia-DMhuaob8.js               [39m[1m[2m    3.56 kB[22m[1m[22m[2m │ gzip:   1.76 kB[22m
+[2mdist/[22m[36massets/js/CacheManagement-CVMIrB0e.js            [39m[1m[2m    3.63 kB[22m[1m[22m[2m │ gzip:   1.49 kB[22m
+[2mdist/[22m[36massets/js/errorHandler-dXXWhmbb.js               [39m[1m[2m    3.94 kB[22m[1m[22m[2m │ gzip:   1.33 kB[22m
+[2mdist/[22m[36massets/js/Feedback-Doojigkl.js                   [39m[1m[2m    4.26 kB[22m[1m[22m[2m │ gzip:   1.80 kB[22m
+[2mdist/[22m[36massets/js/ConflictResolution-DHUovRpU.js         [39m[1m[2m    4.37 kB[22m[1m[22m[2m │ gzip:   1.92 kB[22m
+[2mdist/[22m[36massets/js/OfflineMap-BhnMgTC6.js                 [39m[1m[2m    4.39 kB[22m[1m[22m[2m │ gzip:   2.08 kB[22m
+[2mdist/[22m[36massets/js/menu-config-BGgLo20b.js                [39m[1m[2m    4.49 kB[22m[1m[22m[2m │ gzip:   1.45 kB[22m
+[2mdist/[22m[36massets/js/Index-vLcsNcie.js                      [39m[1m[2m    4.68 kB[22m[1m[22m[2m │ gzip:   1.75 kB[22m
+[2mdist/[22m[36massets/js/fundLifecycle-CoYzild_.js              [39m[1m[2m    4.73 kB[22m[1m[22m[2m │ gzip:   0.95 kB[22m
+[2mdist/[22m[36massets/js/Assessment-B6NO2fs6.js                 [39m[1m[2m    4.90 kB[22m[1m[22m[2m │ gzip:   2.12 kB[22m
+[2mdist/[22m[36massets/js/Index-DDs3AcWS.js                      [39m[1m[2m    4.90 kB[22m[1m[22m[2m │ gzip:   1.99 kB[22m
+[2mdist/[22m[36massets/js/FundApply-DQ6r2viB.js                  [39m[1m[2m    4.95 kB[22m[1m[22m[2m │ gzip:   1.87 kB[22m
+[2mdist/[22m[36massets/js/MyApplications-ibAMJEFL.js             [39m[1m[2m    5.43 kB[22m[1m[22m[2m │ gzip:   2.09 kB[22m
+[2mdist/[22m[36massets/js/LoginEnhanced-D0sYWAia.js              [39m[1m[2m    5.53 kB[22m[1m[22m[2m │ gzip:   2.32 kB[22m
+[2mdist/[22m[36massets/js/Rankings-D9_4w91h.js                   [39m[1m[2m    5.57 kB[22m[1m[22m[2m │ gzip:   2.32 kB[22m
+[2mdist/[22m[36massets/js/AnomalyList-C_hBumGF.js                [39m[1m[2m    5.59 kB[22m[1m[22m[2m │ gzip:   2.27 kB[22m
+[2mdist/[22m[36massets/js/Edit-35ZMgkmu.js                       [39m[1m[2m    5.90 kB[22m[1m[22m[2m │ gzip:   2.10 kB[22m
+[2mdist/[22m[36massets/js/ConfigPackage-D6RkOCmM.js              [39m[1m[2m    5.92 kB[22m[1m[22m[2m │ gzip:   2.39 kB[22m
+[2mdist/[22m[36massets/js/Register-DY8yr0q7.js                   [39m[1m[2m    6.13 kB[22m[1m[22m[2m │ gzip:   2.21 kB[22m
+[2mdist/[22m[36massets/js/EnvCheck-CJ7JLtfB.js                   [39m[1m[2m    6.18 kB[22m[1m[22m[2m │ gzip:   2.55 kB[22m
+[2mdist/[22m[36massets/js/UpdateLogs-HGEtQUJi.js                 [39m[1m[2m    6.49 kB[22m[1m[22m[2m │ gzip:   2.56 kB[22m
+[2mdist/[22m[36massets/js/QualitySection-BTmne8wr.js             [39m[1m[2m    6.53 kB[22m[1m[22m[2m │ gzip:   2.42 kB[22m
+[2mdist/[22m[36massets/js/ForgotPassword-v9m7emrV.js             [39m[1m[2m    6.61 kB[22m[1m[22m[2m │ gzip:   2.38 kB[22m
+[2mdist/[22m[36massets/js/ImportSection-C1TKozqL.js              [39m[1m[2m    6.74 kB[22m[1m[22m[2m │ gzip:   2.74 kB[22m
+[2mdist/[22m[36massets/js/GetMachineCode-CBq3II-S.js             [39m[1m[2m    6.77 kB[22m[1m[22m[2m │ gzip:   2.38 kB[22m
+[2mdist/[22m[36massets/js/Evaluation-ClwY_LBO.js                 [39m[1m[2m    6.81 kB[22m[1m[22m[2m │ gzip:   2.54 kB[22m
+[2mdist/[22m[36massets/js/Index-XhB9DIIm.js                      [39m[1m[2m    6.82 kB[22m[1m[22m[2m │ gzip:   2.35 kB[22m
+[2mdist/[22m[36massets/js/TransferVoucher-CXmkBEFT.js            [39m[1m[2m    6.95 kB[22m[1m[22m[2m │ gzip:   2.52 kB[22m
+[2mdist/[22m[36massets/js/ExportSection-DfY1xAjX.js              [39m[1m[2m    7.08 kB[22m[1m[22m[2m │ gzip:   2.58 kB[22m
+[2mdist/[22m[36massets/js/Settlement-Bl9RoSiG.js                 [39m[1m[2m    7.09 kB[22m[1m[22m[2m │ gzip:   2.46 kB[22m
+[2mdist/[22m[36massets/js/History-DBBaPMvW.js                    [39m[1m[2m    7.24 kB[22m[1m[22m[2m │ gzip:   2.77 kB[22m
+[2mdist/[22m[36massets/js/Import-BfPACnAD.js                     [39m[1m[2m    7.74 kB[22m[1m[22m[2m │ gzip:   2.73 kB[22m
+[2mdist/[22m[36massets/js/MessageCenter-DGpnq65B.js              [39m[1m[2m    7.87 kB[22m[1m[22m[2m │ gzip:   2.95 kB[22m
+[2mdist/[22m[36massets/js/AdminDashboard-Dh3LU5qr.js             [39m[1m[2m    7.98 kB[22m[1m[22m[2m │ gzip:   2.77 kB[22m
+[2mdist/[22m[36massets/js/I18nManagement-y_DIz40G.js             [39m[1m[2m    8.10 kB[22m[1m[22m[2m │ gzip:   3.00 kB[22m
+[2mdist/[22m[36massets/js/ContractManage-DEfj11fx.js             [39m[1m[2m    8.40 kB[22m[1m[22m[2m │ gzip:   2.80 kB[22m
+[2mdist/[22m[36massets/js/TwoFactorSettings-Cvl9511L.js          [39m[1m[2m    8.49 kB[22m[1m[22m[2m │ gzip:   2.94 kB[22m
+[2mdist/[22m[36massets/js/HelpCenter-B9A2_hON.js                 [39m[1m[2m    8.52 kB[22m[1m[22m[2m │ gzip:   3.10 kB[22m
+[2mdist/[22m[36massets/js/IncrementalUpdate-CyYOEMch.js          [39m[1m[2m    8.58 kB[22m[1m[22m[2m │ gzip:   2.70 kB[22m
+[2mdist/[22m[36massets/js/ChunkedUploadManager-DG9i-5f7.js       [39m[1m[2m    8.58 kB[22m[1m[22m[2m │ gzip:   3.21 kB[22m
+[2mdist/[22m[36massets/js/Logs-Bf8MPZi_.js                       [39m[1m[2m    8.67 kB[22m[1m[22m[2m │ gzip:   3.47 kB[22m
+[2mdist/[22m[36massets/js/ChangePassword-DAXKAR4w.js             [39m[1m[2m    8.69 kB[22m[1m[22m[2m │ gzip:   3.14 kB[22m
+[2mdist/[22m[36massets/js/SecretsManagement-v9ayFA0o.js          [39m[1m[2m    8.80 kB[22m[1m[22m[2m │ gzip:   3.00 kB[22m
+[2mdist/[22m[36massets/js/Export-Bc1jy3xL.js                     [39m[1m[2m    8.85 kB[22m[1m[22m[2m │ gzip:   3.03 kB[22m
+[2mdist/[22m[36massets/js/MachineCode-DM1uqmDr.js                [39m[1m[2m    8.87 kB[22m[1m[22m[2m │ gzip:   2.60 kB[22m
+[2mdist/[22m[36massets/js/EncryptionSettings-TpSOCDpj.js         [39m[1m[2m    8.95 kB[22m[1m[22m[2m │ gzip:   2.52 kB[22m
+[2mdist/[22m[36massets/js/BackupManagement-CdsT1i2M.js           [39m[1m[2m    8.97 kB[22m[1m[22m[2m │ gzip:   3.07 kB[22m
+[2mdist/[22m[36massets/js/List-BqfY0zRs.js                       [39m[1m[2m    9.06 kB[22m[1m[22m[2m │ gzip:   3.50 kB[22m
+[2mdist/[22m[36massets/js/Report-CD72du8M.js                     [39m[1m[2m    9.16 kB[22m[1m[22m[2m │ gzip:   3.37 kB[22m
+[2mdist/[22m[36massets/js/Index-BeLtgs4J.js                      [39m[1m[2m    9.19 kB[22m[1m[22m[2m │ gzip:   3.20 kB[22m
+[2mdist/[22m[36massets/js/MachineCodeManagement-C1sXUTEO.js      [39m[1m[2m    9.51 kB[22m[1m[22m[2m │ gzip:   3.44 kB[22m
+[2mdist/[22m[36massets/js/ProgressGallery-CPvCtR_N.js            [39m[1m[2m    9.52 kB[22m[1m[22m[2m │ gzip:   3.58 kB[22m
+[2mdist/[22m[36massets/js/Overview-DD8YXd7S.js                   [39m[1m[2m    9.52 kB[22m[1m[22m[2m │ gzip:   3.36 kB[22m
+[2mdist/[22m[36massets/js/Index-BP4ieTbz.js                      [39m[1m[2m    9.55 kB[22m[1m[22m[2m │ gzip:   3.27 kB[22m
+[2mdist/[22m[36massets/js/Edit-0Lk5nv8W.js                       [39m[1m[2m    9.64 kB[22m[1m[22m[2m │ gzip:   3.15 kB[22m
+[2mdist/[22m[36massets/js/PackageVersion-BMAnZEVe.js             [39m[1m[2m    9.75 kB[22m[1m[22m[2m │ gzip:   2.92 kB[22m
+[2mdist/[22m[36massets/js/DataImport-DxZ2V1kI.js                 [39m[1m[2m    9.85 kB[22m[1m[22m[2m │ gzip:   3.68 kB[22m
+[2mdist/[22m[36massets/js/Budget-CAjt4i8a.js                     [39m[1m[2m    9.88 kB[22m[1m[22m[2m │ gzip:   3.45 kB[22m
+[2mdist/[22m[36massets/js/Analysis-CD87D5CZ.js                   [39m[1m[2m   10.37 kB[22m[1m[22m[2m │ gzip:   3.72 kB[22m
+[2mdist/[22m[36massets/js/AuditManagement-2AzAQYyR.js            [39m[1m[2m   10.48 kB[22m[1m[22m[2m │ gzip:   3.38 kB[22m
+[2mdist/[22m[36massets/js/PendingList-DcGNG4BC.js                [39m[1m[2m   10.49 kB[22m[1m[22m[2m │ gzip:   3.46 kB[22m
+[2mdist/[22m[36massets/js/List-Bm13jnsr.js                       [39m[1m[2m   10.91 kB[22m[1m[22m[2m │ gzip:   3.61 kB[22m
+[2mdist/[22m[36massets/js/ProjectManagement-DLVYhkcs.js          [39m[1m[2m   11.05 kB[22m[1m[22m[2m │ gzip:   3.45 kB[22m
+[2mdist/[22m[36massets/js/Detail-CDfvy3B7.js                     [39m[1m[2m   11.56 kB[22m[1m[22m[2m │ gzip:   3.92 kB[22m
+[2mdist/[22m[36massets/js/index-CZQjgY6w.js                      [39m[1m[2m   11.58 kB[22m[1m[22m[2m │ gzip:   4.33 kB[22m
+[2mdist/[22m[36massets/js/Profile-DV1TurGH.js                    [39m[1m[2m   11.59 kB[22m[1m[22m[2m │ gzip:   3.59 kB[22m
+[2mdist/[22m[36massets/js/WorkAnalysis-BRyBASPV.js               [39m[1m[2m   11.76 kB[22m[1m[22m[2m │ gzip:   4.43 kB[22m
+[2mdist/[22m[36massets/js/Index-Rd-kOMhu.js                      [39m[1m[2m   11.86 kB[22m[1m[22m[2m │ gzip:   3.56 kB[22m
+[2mdist/[22m[36massets/js/Detail-jxAFqP8-.js                     [39m[1m[2m   11.88 kB[22m[1m[22m[2m │ gzip:   4.12 kB[22m
+[2mdist/[22m[36massets/js/Edit-HyMf7Ylt.js                       [39m[1m[2m   12.00 kB[22m[1m[22m[2m │ gzip:   3.88 kB[22m
+[2mdist/[22m[36massets/js/List-w-q06n_6.js                       [39m[1m[2m   12.03 kB[22m[1m[22m[2m │ gzip:   4.04 kB[22m
+[2mdist/[22m[36massets/js/List-BDMGs85B.js                       [39m[1m[2m   12.50 kB[22m[1m[22m[2m │ gzip:   4.20 kB[22m
+[2mdist/[22m[36massets/js/List-DAT35KFW.js                       [39m[1m[2m   12.52 kB[22m[1m[22m[2m │ gzip:   4.36 kB[22m
+[2mdist/[22m[36massets/js/ErrorReports-B-xZN7K4.js               [39m[1m[2m   12.70 kB[22m[1m[22m[2m │ gzip:   3.92 kB[22m
+[2mdist/[22m[36massets/js/index-BkMfFy0F.js                      [39m[1m[2m   13.10 kB[22m[1m[22m[2m │ gzip:   4.94 kB[22m
+[2mdist/[22m[36massets/js/DataTier-DeG0j2xV.js                   [39m[1m[2m   13.13 kB[22m[1m[22m[2m │ gzip:   3.80 kB[22m
+[2mdist/[22m[36massets/js/BackupSection-C0Y-tNI7.js              [39m[1m[2m   13.16 kB[22m[1m[22m[2m │ gzip:   4.18 kB[22m
+[2mdist/[22m[36massets/js/RulesManagement-OrtjWAfN.js            [39m[1m[2m   13.59 kB[22m[1m[22m[2m │ gzip:   4.16 kB[22m
+[2mdist/[22m[36massets/js/ReportExport-BmZOuW8O.js               [39m[1m[2m   13.62 kB[22m[1m[22m[2m │ gzip:   4.44 kB[22m
+[2mdist/[22m[36massets/js/TaskManager-BefV3XKA.js                [39m[1m[2m   13.68 kB[22m[1m[22m[2m │ gzip:   4.40 kB[22m
+[2mdist/[22m[36massets/js/EnhancedList-EddqjfOq.js               [39m[1m[2m   14.66 kB[22m[1m[22m[2m │ gzip:   4.80 kB[22m
+[2mdist/[22m[36massets/js/InteractiveResult-CgsvG5ym.js          [39m[1m[2m   14.83 kB[22m[1m[22m[2m │ gzip:   4.64 kB[22m
+[2mdist/[22m[36massets/js/Import-B-0HswZ9.js                     [39m[1m[2m   15.34 kB[22m[1m[22m[2m │ gzip:   4.92 kB[22m
+[2mdist/[22m[36massets/js/MonitoringDashboard-P_8_5RdM.js        [39m[1m[2m   15.58 kB[22m[1m[22m[2m │ gzip:   5.43 kB[22m
+[2mdist/[22m[36massets/js/Lifecycle-CAE9TJVm.js                  [39m[1m[2m   15.58 kB[22m[1m[22m[2m │ gzip:   4.22 kB[22m
+[2mdist/[22m[36massets/js/List-Be-CSNir.js                       [39m[1m[2m   16.32 kB[22m[1m[22m[2m │ gzip:   4.83 kB[22m
+[2mdist/[22m[36massets/js/DefaultLayoutSafe-DL3qXFej.js          [39m[1m[2m   17.00 kB[22m[1m[22m[2m │ gzip:   4.47 kB[22m
+[2mdist/[22m[36massets/js/ZeroTrust-DbT5ThwF.js                  [39m[1m[2m   18.45 kB[22m[1m[22m[2m │ gzip:   5.53 kB[22m
+[2mdist/[22m[36massets/js/UserPermissions-CREYHcyJ.js            [39m[1m[2m   18.70 kB[22m[1m[22m[2m │ gzip:   5.25 kB[22m
+[2mdist/[22m[36massets/js/SupportedVillageForm-HmUlgXPR.js       [39m[1m[2m   20.56 kB[22m[1m[22m[2m │ gzip:   5.51 kB[22m
+[2mdist/[22m[36massets/js/Analysis-kIpaQhoP.js                   [39m[1m[2m   20.68 kB[22m[1m[22m[2m │ gzip:   5.95 kB[22m
+[2mdist/[22m[36massets/js/Index-1Rdv0Pzg.js                      [39m[1m[2m   21.93 kB[22m[1m[22m[2m │ gzip:   6.08 kB[22m
+[2mdist/[22m[36massets/js/Dashboard-CMlDRTSv.js                  [39m[1m[2m   23.46 kB[22m[1m[22m[2m │ gzip:   7.17 kB[22m
+[2mdist/[22m[36massets/js/vendor/vue-router--l1quIw7.js          [39m[1m[2m   24.96 kB[22m[1m[22m[2m │ gzip:   9.45 kB[22m
+[2mdist/[22m[36massets/js/vendor/lodash-DfCbb37o.js              [39m[1m[2m   25.66 kB[22m[1m[22m[2m │ gzip:   8.79 kB[22m
+[2mdist/[22m[36massets/js/vendor/security-DgKvyKeH.js            [39m[1m[2m   26.27 kB[22m[1m[22m[2m │ gzip:   9.61 kB[22m
+[2mdist/[22m[36massets/js/Detail-BLKDaEse.js                     [39m[1m[2m   26.34 kB[22m[1m[22m[2m │ gzip:   6.77 kB[22m
+[2mdist/[22m[36massets/js/index-DyhL98gI.js                      [39m[1m[2m   29.32 kB[22m[1m[22m[2m │ gzip:   8.72 kB[22m
+[2mdist/[22m[36massets/js/Edit-BSaS0vp1.js                       [39m[1m[2m   32.89 kB[22m[1m[22m[2m │ gzip:   8.54 kB[22m
+[2mdist/[22m[36massets/js/sortable-DbvC5CPk.js                   [39m[1m[2m   36.51 kB[22m[1m[22m[2m │ gzip:  12.52 kB[22m
+[2mdist/[22m[36massets/js/List-BLy41_ZD.js                       [39m[1m[2m   36.55 kB[22m[1m[22m[2m │ gzip:   8.07 kB[22m
+[2mdist/[22m[36massets/js/Index-BAKWmU_2.js                      [39m[1m[2m   37.40 kB[22m[1m[22m[2m │ gzip:  10.16 kB[22m
+[2mdist/[22m[36massets/js/YearlyOverview-DPoEOvQe.js             [39m[1m[2m   38.23 kB[22m[1m[22m[2m │ gzip:   8.34 kB[22m
+[2mdist/[22m[36massets/js/vendor/axios-C4NBEVWH.js               [39m[1m[2m   41.87 kB[22m[1m[22m[2m │ gzip:  15.87 kB[22m
+[2mdist/[22m[36massets/js/element-plus-icons-Ah37wsQo.js         [39m[1m[2m   42.47 kB[22m[1m[22m[2m │ gzip:  10.08 kB[22m
+[2mdist/[22m[36massets/js/ComprehensiveEntry-DukcsjGy.js         [39m[1m[2m   43.18 kB[22m[1m[22m[2m │ gzip:   8.71 kB[22m
+[2mdist/[22m[36massets/js/UserManagement-CZW_Whi5.js             [39m[1m[2m   50.03 kB[22m[1m[22m[2m │ gzip:  13.47 kB[22m
+[2mdist/[22m[36massets/js/index-CWB5WbjB.js                      [39m[1m[2m   60.79 kB[22m[1m[22m[2m │ gzip:  17.21 kB[22m
+[2mdist/[22m[36massets/js/vendor/vue-core-BDhFS4q8.js            [39m[1m[2m   82.13 kB[22m[1m[22m[2m │ gzip:  31.37 kB[22m
+[2mdist/[22m[36massets/js/chartjs-CgQqLdFW.js                    [39m[1m[2m  197.14 kB[22m[1m[22m[2m │ gzip:  65.30 kB[22m
+[2mdist/[22m[36massets/js/vendor/vendor-BTIwI4sw.js              [39m[1m[2m  428.49 kB[22m[1m[22m[2m │ gzip: 141.60 kB[22m
+[2mdist/[22m[36massets/js/guizhou-C_9C4Ka8.js                    [39m[1m[2m  552.09 kB[22m[1m[22m[2m │ gzip: 146.58 kB[22m
+[2mdist/[22m[36massets/js/element-plus-C4JuYqgv.js               [39m[1m[2m  773.43 kB[22m[1m[22m[2m │ gzip: 232.84 kB[22m
+[2mdist/[22m[36massets/js/vendor/echarts-DKIGhT4P.js             [39m[1m[2m1,030.60 kB[22m[1m[22m[2m │ gzip: 334.10 kB[22m
+[32m✓ built in 1m 19s[39m
+
+✨ [vite-plugin-compression]:algorithm=gzip - compressed file successfully: 
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ConflictResolution-DqxcGsVl.css.gz      11.24kb / gzip: 2.90kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Analysis-B0PqDRan.css.gz                17.11kb / gzip: 4.02kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/BackupSection-DgNXo5I4.css.gz           10.85kb / gzip: 2.85kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Edit-DfaAJC2C.css.gz                    13.03kb / gzip: 3.33kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Dashboard-DUXitG6M.css.gz               13.09kb / gzip: 3.44kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Edit-BvZ0aUMF.css.gz                    11.30kb / gzip: 2.99kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/EncryptionSettings-CebHDTFl.css.gz      10.94kb / gzip: 2.85kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ExportSection-DYEW2gvg.css.gz           10.58kb / gzip: 2.77kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Export-D2q0OrSx.css.gz                  10.93kb / gzip: 2.86kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/HelpCenter-8p--hinv.css.gz              12.60kb / gzip: 3.30kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/GetMachineCode-BQ6bqs1q.css.gz          14.30kb / gzip: 3.70kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ForgotPassword-Cbk0TXsT.css.gz          13.37kb / gzip: 3.54kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/History-DtRd0vGG.css.gz                 10.92kb / gzip: 2.87kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Import-DQfJJdUS.css.gz                  11.21kb / gzip: 2.91kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ImportSection-CtLV3P0V.css.gz           10.78kb / gzip: 2.83kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Index-CfIAD2JO.css.gz                   10.73kb / gzip: 2.81kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Import-CLRoolY-.css.gz                  18.26kb / gzip: 3.96kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/index-Byx48T6d.css.gz                   71.33kb / gzip: 5.78kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/List-BRKYx8oX.css.gz                    12.12kb / gzip: 3.15kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Index-Dp8EXsz1.css.gz                   18.32kb / gzip: 4.15kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/List-C-R9Nc7Q.css.gz                    11.03kb / gzip: 2.86kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/List-LTjhE9Wo.css.gz                    11.04kb / gzip: 2.92kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/MachineCodeManagement-BUCs2i6m.css.gz   11.23kb / gzip: 2.96kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/MachineCode-D2b2PySq.css.gz             10.97kb / gzip: 2.84kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/PendingList-D8KmaMll.css.gz             10.89kb / gzip: 2.86kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/MessageCenter-CWR7AFRi.css.gz           11.33kb / gzip: 2.98kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ProgressGallery-BSlOfCsN.css.gz         11.43kb / gzip: 3.06kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/QualitySection-DYbtikxl.css.gz          11.09kb / gzip: 2.89kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ReportExport-ChiKSXIz.css.gz            13.36kb / gzip: 3.25kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Register-Dz9vD0-U.css.gz                11.68kb / gzip: 3.08kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/SupportedVillageForm-Cy9I5O8G.css.gz    10.84kb / gzip: 2.87kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/TwoFactorSettings-Ct4G3mKy.css.gz       11.74kb / gzip: 3.08kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/UpdateLogs-BugJLqBE.css.gz              11.81kb / gzip: 3.05kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Analysis-CD87D5CZ.js.gz                  10.12kb / gzip: 3.63kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/UserManagement-DKKV2zP1.css.gz          44.23kb / gzip: 4.11kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/index-HRIGq1kR.css.gz                   63.59kb / gzip: 11.56kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ZeroTrust-Cv4gpXgQ.css.gz               15.03kb / gzip: 3.57kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/AuditManagement-2AzAQYyR.js.gz           10.24kb / gzip: 3.30kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/BackupSection-C0Y-tNI7.js.gz             12.85kb / gzip: 4.08kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Analysis-kIpaQhoP.js.gz                  20.19kb / gzip: 5.79kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Detail-BLKDaEse.js.gz                    25.72kb / gzip: 6.58kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Dashboard-CMlDRTSv.js.gz                 22.91kb / gzip: 6.99kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Detail-CDfvy3B7.js.gz                    11.29kb / gzip: 3.83kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ComprehensiveEntry-DukcsjGy.js.gz        42.16kb / gzip: 8.48kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Detail-jxAFqP8-.js.gz                    11.60kb / gzip: 4.02kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/DefaultLayoutSafe-DL3qXFej.js.gz         16.60kb / gzip: 4.32kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/DataTier-DeG0j2xV.js.gz                  12.82kb / gzip: 3.70kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Edit-HyMf7Ylt.js.gz                      11.72kb / gzip: 3.79kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Edit-BSaS0vp1.js.gz                      32.12kb / gzip: 8.33kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/element-plus-icons-Ah37wsQo.js.gz        41.48kb / gzip: 9.80kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/EnhancedList-EddqjfOq.js.gz              14.31kb / gzip: 4.68kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ErrorReports-B-xZN7K4.js.gz              12.40kb / gzip: 3.82kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Import-B-0HswZ9.js.gz                    14.98kb / gzip: 4.79kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Index-1Rdv0Pzg.js.gz                     21.42kb / gzip: 5.93kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Index-BAKWmU_2.js.gz                     36.52kb / gzip: 9.89kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/index-CZQjgY6w.js.gz                     11.30kb / gzip: 4.23kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/index-BkMfFy0F.js.gz                     12.79kb / gzip: 4.82kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/index-DyhL98gI.js.gz                     28.63kb / gzip: 8.48kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Index-Rd-kOMhu.js.gz                     11.58kb / gzip: 3.48kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/InteractiveResult-CgsvG5ym.js.gz         14.48kb / gzip: 4.52kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Lifecycle-CAE9TJVm.js.gz                 15.22kb / gzip: 4.11kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-Be-CSNir.js.gz                      15.94kb / gzip: 4.71kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-BDMGs85B.js.gz                      12.21kb / gzip: 4.10kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-Bm13jnsr.js.gz                      10.65kb / gzip: 3.52kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-w-q06n_6.js.gz                      11.75kb / gzip: 3.94kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-DAT35KFW.js.gz                      12.22kb / gzip: 4.25kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/MonitoringDashboard-P_8_5RdM.js.gz       15.21kb / gzip: 5.30kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/PendingList-DcGNG4BC.js.gz               10.25kb / gzip: 3.37kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ReportExport-BmZOuW8O.js.gz              13.30kb / gzip: 4.33kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-BLy41_ZD.js.gz                      35.69kb / gzip: 7.86kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Profile-DV1TurGH.js.gz                   11.31kb / gzip: 3.51kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ProjectManagement-DLVYhkcs.js.gz         10.79kb / gzip: 3.37kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/TaskManager-BefV3XKA.js.gz               13.36kb / gzip: 4.29kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/SupportedVillageForm-HmUlgXPR.js.gz      20.08kb / gzip: 5.38kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/RulesManagement-OrtjWAfN.js.gz           13.27kb / gzip: 4.06kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/sortable-DbvC5CPk.js.gz                  35.65kb / gzip: 12.22kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/UserPermissions-CREYHcyJ.js.gz           18.26kb / gzip: 5.12kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/security-DgKvyKeH.js.gz           25.65kb / gzip: 9.39kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/lodash-DfCbb37o.js.gz             25.06kb / gzip: 8.56kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/WorkAnalysis-BRyBASPV.js.gz              11.48kb / gzip: 4.33kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/UserManagement-CZW_Whi5.js.gz            48.86kb / gzip: 13.11kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/vue-router--l1quIw7.js.gz         24.37kb / gzip: 9.23kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/axios-C4NBEVWH.js.gz              40.88kb / gzip: 15.48kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ZeroTrust-DbT5ThwF.js.gz                 18.02kb / gzip: 5.38kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/YearlyOverview-DPoEOvQe.js.gz            37.33kb / gzip: 8.14kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/index-CWB5WbjB.js.gz                     59.36kb / gzip: 16.70kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/vue-core-BDhFS4q8.js.gz           80.20kb / gzip: 30.62kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/element-plus-DCx7nwan.css.gz            273.27kb / gzip: 36.52kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/chartjs-CgQqLdFW.js.gz                   192.52kb / gzip: 63.63kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/vendor-BTIwI4sw.js.gz             418.45kb / gzip: 137.97kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/guizhou-C_9C4Ka8.js.gz                   539.15kb / gzip: 142.32kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/element-plus-C4JuYqgv.js.gz              755.30kb / gzip: 227.04kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/echarts-DKIGhT4P.js.gz            1006.45kb / gzip: 325.42kb
+
+
+
+✨ [vite-plugin-compression]:algorithm=brotliCompress - compressed file successfully: 
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Analysis-B0PqDRan.css.br                17.11kb / brotliCompress: 3.34kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ConflictResolution-DqxcGsVl.css.br      11.24kb / brotliCompress: 2.36kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/BackupSection-DgNXo5I4.css.br           10.85kb / brotliCompress: 2.31kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Dashboard-DUXitG6M.css.br               13.09kb / brotliCompress: 2.84kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Edit-BvZ0aUMF.css.br                    11.30kb / brotliCompress: 2.45kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Edit-DfaAJC2C.css.br                    13.03kb / brotliCompress: 2.75kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/EncryptionSettings-CebHDTFl.css.br      10.94kb / brotliCompress: 2.31kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ExportSection-DYEW2gvg.css.br           10.58kb / brotliCompress: 2.27kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Export-D2q0OrSx.css.br                  10.93kb / brotliCompress: 2.33kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/HelpCenter-8p--hinv.css.br              12.60kb / brotliCompress: 2.71kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ForgotPassword-Cbk0TXsT.css.br          13.37kb / brotliCompress: 2.91kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/GetMachineCode-BQ6bqs1q.css.br          14.30kb / brotliCompress: 3.04kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/History-DtRd0vGG.css.br                 10.92kb / brotliCompress: 2.34kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Import-CLRoolY-.css.br                  18.26kb / brotliCompress: 3.30kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ImportSection-CtLV3P0V.css.br           10.78kb / brotliCompress: 2.31kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Import-DQfJJdUS.css.br                  11.21kb / brotliCompress: 2.36kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Index-CfIAD2JO.css.br                   10.73kb / brotliCompress: 2.30kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Index-Dp8EXsz1.css.br                   18.32kb / brotliCompress: 3.46kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/index-Byx48T6d.css.br                   71.33kb / brotliCompress: 4.46kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/List-BRKYx8oX.css.br                    12.12kb / brotliCompress: 2.60kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/List-C-R9Nc7Q.css.br                    11.03kb / brotliCompress: 2.34kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/MachineCode-D2b2PySq.css.br             10.97kb / brotliCompress: 2.31kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/List-LTjhE9Wo.css.br                    11.04kb / brotliCompress: 2.36kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/index-HRIGq1kR.css.br                   63.59kb / brotliCompress: 9.99kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/MachineCodeManagement-BUCs2i6m.css.br   11.23kb / brotliCompress: 2.41kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/MessageCenter-CWR7AFRi.css.br           11.33kb / brotliCompress: 2.43kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ProgressGallery-BSlOfCsN.css.br         11.43kb / brotliCompress: 2.47kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/PendingList-D8KmaMll.css.br             10.89kb / brotliCompress: 2.32kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/Register-Dz9vD0-U.css.br                11.68kb / brotliCompress: 2.53kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/QualitySection-DYbtikxl.css.br          11.09kb / brotliCompress: 2.36kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ReportExport-ChiKSXIz.css.br            13.36kb / brotliCompress: 2.67kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/UpdateLogs-BugJLqBE.css.br              11.81kb / brotliCompress: 2.51kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/SupportedVillageForm-Cy9I5O8G.css.br    10.84kb / brotliCompress: 2.33kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/TwoFactorSettings-Ct4G3mKy.css.br       11.74kb / brotliCompress: 2.52kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/ZeroTrust-Cv4gpXgQ.css.br               15.03kb / brotliCompress: 2.94kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/UserManagement-DKKV2zP1.css.br          44.23kb / brotliCompress: 3.03kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Analysis-CD87D5CZ.js.br                  10.12kb / brotliCompress: 3.22kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/AuditManagement-2AzAQYyR.js.br           10.24kb / brotliCompress: 2.90kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Analysis-kIpaQhoP.js.br                  20.19kb / brotliCompress: 5.07kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/BackupSection-C0Y-tNI7.js.br             12.85kb / brotliCompress: 3.58kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/DataTier-DeG0j2xV.js.br                  12.82kb / brotliCompress: 3.21kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Dashboard-CMlDRTSv.js.br                 22.91kb / brotliCompress: 6.05kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/DefaultLayoutSafe-DL3qXFej.js.br         16.60kb / brotliCompress: 3.62kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Detail-jxAFqP8-.js.br                    11.60kb / brotliCompress: 3.50kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ComprehensiveEntry-DukcsjGy.js.br        42.16kb / brotliCompress: 7.15kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Detail-BLKDaEse.js.br                    25.72kb / brotliCompress: 5.70kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Detail-CDfvy3B7.js.br                    11.29kb / brotliCompress: 3.31kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Edit-HyMf7Ylt.js.br                      11.72kb / brotliCompress: 3.32kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Edit-BSaS0vp1.js.br                      32.12kb / brotliCompress: 7.13kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/EnhancedList-EddqjfOq.js.br              14.31kb / brotliCompress: 4.13kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/element-plus-icons-Ah37wsQo.js.br        41.48kb / brotliCompress: 8.62kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ErrorReports-B-xZN7K4.js.br              12.40kb / brotliCompress: 3.38kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Import-B-0HswZ9.js.br                    14.98kb / brotliCompress: 4.19kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/index-BkMfFy0F.js.br                     12.79kb / brotliCompress: 4.20kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Index-1Rdv0Pzg.js.br                     21.42kb / brotliCompress: 5.16kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/index-CZQjgY6w.js.br                     11.30kb / brotliCompress: 3.77kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Index-BAKWmU_2.js.br                     36.52kb / brotliCompress: 8.64kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/index-DyhL98gI.js.br                     28.63kb / brotliCompress: 7.25kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-BDMGs85B.js.br                      12.21kb / brotliCompress: 3.54kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/index-CWB5WbjB.js.br                     59.36kb / brotliCompress: 14.17kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Index-Rd-kOMhu.js.br                     11.58kb / brotliCompress: 3.06kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/InteractiveResult-CgsvG5ym.js.br         14.48kb / brotliCompress: 3.93kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Lifecycle-CAE9TJVm.js.br                 15.22kb / brotliCompress: 3.59kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-BLy41_ZD.js.br                      35.69kb / brotliCompress: 6.63kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-Be-CSNir.js.br                      15.94kb / brotliCompress: 4.10kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-Bm13jnsr.js.br                      10.65kb / brotliCompress: 3.09kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-DAT35KFW.js.br                      12.22kb / brotliCompress: 3.70kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/List-w-q06n_6.js.br                      11.75kb / brotliCompress: 3.50kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/MonitoringDashboard-P_8_5RdM.js.br       15.21kb / brotliCompress: 4.71kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/Profile-DV1TurGH.js.br                   11.31kb / brotliCompress: 3.06kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/PendingList-DcGNG4BC.js.br               10.25kb / brotliCompress: 2.97kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/RulesManagement-OrtjWAfN.js.br           13.27kb / brotliCompress: 3.55kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ProjectManagement-DLVYhkcs.js.br         10.79kb / brotliCompress: 2.93kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ReportExport-BmZOuW8O.js.br              13.30kb / brotliCompress: 3.74kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/SupportedVillageForm-HmUlgXPR.js.br      20.08kb / brotliCompress: 4.66kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/TaskManager-BefV3XKA.js.br               13.36kb / brotliCompress: 3.78kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/sortable-DbvC5CPk.js.br                  35.65kb / brotliCompress: 11.00kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/lodash-DfCbb37o.js.br             25.06kb / brotliCompress: 7.88kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/UserManagement-CZW_Whi5.js.br            48.86kb / brotliCompress: 11.32kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/security-DgKvyKeH.js.br           25.65kb / brotliCompress: 8.34kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/axios-C4NBEVWH.js.br              40.88kb / brotliCompress: 13.96kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/WorkAnalysis-BRyBASPV.js.br              11.48kb / brotliCompress: 3.82kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/vue-router--l1quIw7.js.br         24.37kb / brotliCompress: 8.42kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/YearlyOverview-DPoEOvQe.js.br            37.33kb / brotliCompress: 6.89kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/UserPermissions-CREYHcyJ.js.br           18.26kb / brotliCompress: 4.45kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/ZeroTrust-DbT5ThwF.js.br                 18.02kb / brotliCompress: 4.68kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/vue-core-BDhFS4q8.js.br           80.20kb / brotliCompress: 27.76kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/css/element-plus-DCx7nwan.css.br            273.27kb / brotliCompress: 28.14kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/chartjs-CgQqLdFW.js.br                   192.52kb / brotliCompress: 55.04kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/guizhou-C_9C4Ka8.js.br                   539.15kb / brotliCompress: 87.74kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/vendor-BTIwI4sw.js.br             418.45kb / brotliCompress: 116.12kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/element-plus-C4JuYqgv.js.br              755.30kb / brotliCompress: 182.96kb
+dist/C:/military-Rural Revitalization-system/frontend/assets/js/vendor/echarts-DKIGhT4P.js.br            1006.45kb / brotliCompress: 263.83kb
+
+
