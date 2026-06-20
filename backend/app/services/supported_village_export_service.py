@@ -72,7 +72,15 @@ class SupportedVillageExportService:
         support_unit: Optional[str] = None,
         tiered_level: Optional[str] = None,
     ) -> List[Any]:
-        """查询要导出的帮扶村列表。"""
+        """查询要导出的帮扶村列表。
+
+        注：``tiered_level`` 字段在 schema 重构后已删除（改为布尔
+        ``is_revitalization_tier``）。这里将传入的梯次等级字符串映射为
+        对应的布尔筛选，以保持 API 兼容：
+            - "示范级" / "达标级" → is_revitalization_tier = True
+            - "基础级"          → is_revitalization_tier = False
+            - 其它/未传        → 不筛选
+        """
         from app.models.supported_village import SupportedVillage
 
         query = self.db.query(SupportedVillage)
@@ -83,7 +91,8 @@ class SupportedVillageExportService:
         if support_unit:
             query = query.filter(SupportedVillage.support_unit == support_unit)
         if tiered_level:
-            query = query.filter(SupportedVillage.tiered_level == tiered_level)
+            is_tier = tiered_level in ("示范级", "达标级")
+            query = query.filter(SupportedVillage.is_revitalization_tier.is_(is_tier))
         return query.order_by(SupportedVillage.id).all()
 
     def _collect_export_data(
@@ -102,18 +111,63 @@ class SupportedVillageExportService:
         return data
 
     # ── 模块 → (Model, field_map) 映射 — 批量查询用 ──
+    # field_map: {导出列名: 模型属性名}，属性名必须真实存在于对应 model。
     _MODULE_CONFIG = {
-        "population": ("VillagePopulation", {"households": "households", "total_population": "total_population", "labor_force": "labor_force"}),
-        "income": ("VillageIncome", {"collective_income": "collective_income", "per_capita_income": "per_capita_income"}),
-        "support_funding": ("SupportFunding", {"total_funding": "total_amount"}),
-        "force_investment": ("ForceInvestment", {"cadre_count": "cadre_count"}),
-        "industry_support": ("IndustrySupport", {"industry_type": "industry_type"}),
-        "infrastructure": ("InfrastructureImprovement", {"project_name": "project_name"}),
-        "party_building": ("PartyBuildingSupport", {"party_member_count": "party_member_count"}),
-        "medical": ("MedicalSupport", {"clinic_count": "clinic_count"}),
-        "consumption": ("ConsumptionSupport", {"sales_amount": "sales_amount"}),
-        "employment": ("EmploymentSupport", {"employed_count": "employed_count"}),
-        "education": ("EducationSupport", {"student_count": "student_count"}),
+        "population": ("VillagePopulation", {
+            "households": "total_households",
+            "total_population": "total_population",
+            "labor_force": "labor_force",
+        }),
+        "income": ("VillageIncome", {
+            "collective_income": "collective_income",
+            "per_capita_income": "per_capita_income",
+        }),
+        "support_funding": ("SupportFunding", {
+            "military_investment": "military_investment",
+            "local_investment": "local_investment",
+        }),
+        "force_investment": ("ForceInvestment", {
+            "senior_leader_visits": "senior_leader_visits",
+            "unit_soldier_visits": "unit_soldier_visits",
+        }),
+        "industry_support": ("IndustrySupport", {
+            "investment": "investment",
+            "planting_breeding": "planting_breeding",
+            "rural_tourism": "rural_tourism",
+        }),
+        "infrastructure": ("InfrastructureImprovement", {
+            "investment": "investment",
+            "road_km": "road_km",
+            "housing_renovation": "housing_renovation",
+        }),
+        "party_building": ("PartyBuildingSupport", {
+            "investment": "investment",
+            "paired_branches": "paired_branches",
+            "party_instructors": "party_instructors",
+        }),
+        "medical": ("MedicalSupport", {
+            "investment": "investment",
+            "clinics_built": "clinics_built",
+            "patients_served": "patients_served",
+        }),
+        "consumption": ("ConsumptionSupport", {
+            "village_products_purchase": "village_products_purchase",
+            "benefited_population": "benefited_population",
+        }),
+        "employment": ("EmploymentSupport", {
+            "hired_population": "hired_population",
+            "trained_population": "trained_population",
+        }),
+        "education": ("EducationSupport", {
+            "investment": "investment",
+            "aided_students": "aided_students",
+            "donated_schools": "donated_schools",
+        }),
+        "committee": ("VillageCommitteeInfo", {
+            "overview": "overview",
+            "special_industry": "special_industry",
+            "collective_income_amount": "collective_income_amount",
+        }),
     }
 
     def _collect_module_data(
@@ -147,18 +201,32 @@ class SupportedVillageExportService:
                 for v in villages
             ]
 
-        # 批量查询：单次 IN 查询替代 N 次单独查询
-        rows = self.db.query(model_cls).filter(
-            model_cls.village_id.in_(village_ids)
-        ).all()
-        row_map = {r.village_id: r for r in rows}
+        # 批量查询：单次 IN 查询替代 N 次单独查询。
+        # 所有关联表的外键字段均为 supported_village_id（非 village_id）。
+        fk_col = getattr(model_cls, "supported_village_id", None)
+        if fk_col is None:
+            # 该模型未声明 supported_village_id 外键，降级为基本信息
+            return [
+                {"id": v.id, "village_name": v.village_name, "county": v.county or ""}
+                for v in villages
+            ]
+
+        query = self.db.query(model_cls).filter(fk_col.in_(village_ids))
+        # 若模型含 year 字段且调用方指定了 year，则按年份过滤
+        if year is not None and hasattr(model_cls, "year"):
+            query = query.filter(model_cls.year == year)
+        rows = query.all()
+        # 一个村同一年可能有多条记录时，取第一条（键去重）
+        row_map = {}
+        for r in rows:
+            row_map.setdefault(getattr(r, "supported_village_id", None), r)
 
         result = []
         for v in villages:
             item = {"id": v.id, "village_name": v.village_name, "county": v.county or ""}
             row = row_map.get(v.id)
             for out_key, model_attr in field_map.items():
-                item[out_key] = getattr(row, model_attr, None) if row else (0 if out_key != "industry_type" and out_key != "project_name" else "")
+                item[out_key] = getattr(row, model_attr, None) if row else None
             result.append(item)
 
         return result
@@ -176,6 +244,41 @@ class SupportedVillageExportService:
                 stats["total_villages"] = max(stats["total_villages"], len(rows))
         return stats
 
+    @staticmethod
+    def _coerce_cell(value: Any) -> Any:
+        """将任意值转换为 openpyxl 可安全写入的类型。
+
+        openpyxl 仅支持 str/int/float/bool/datetime/date/time/None，
+        其它类型（Decimal、enum、object 等）需转换，否则序列化时会抛
+        SerialisationError。这是真实数据里常见的健壮性问题。
+        """
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float, str)):
+            return value
+        # datetime/date/time 直接支持
+        import datetime as _dt
+        if isinstance(value, (_dt.datetime, _dt.date, _dt.time)):
+            return value
+        # Decimal → float
+        try:
+            from decimal import Decimal
+            if isinstance(value, Decimal):
+                return float(value)
+        except Exception:
+            pass
+        # enum.Enum → 取 .value
+        try:
+            import enum
+            if isinstance(value, enum.Enum):
+                return value.value
+        except Exception:
+            pass
+        # 其它一律转字符串（兜底，保证不会因类型问题崩溃）
+        return str(value)
+
     def _build_excel(self, data: Dict[str, Any], statistics: Dict[str, Any]) -> bytes:
         """将导出数据构建为 Excel 文件。"""
         wb = Workbook()
@@ -192,7 +295,7 @@ class SupportedVillageExportService:
             if rows:
                 headers = list(rows[0].keys())
                 for col_idx, header in enumerate(headers, 1):
-                    cell = ws.cell(row=1, column=col_idx, value=header)
+                    cell = ws.cell(row=1, column=col_idx, value=self._coerce_cell(header))
                     cell.fill = HEADER_FILL
                     cell.font = HEADER_FONT
                     cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -200,7 +303,11 @@ class SupportedVillageExportService:
                 # 数据行
                 for row_idx, row_data in enumerate(rows, 2):
                     for col_idx, header in enumerate(headers, 1):
-                        cell = ws.cell(row=row_idx, column=col_idx, value=row_data.get(header, ""))
+                        cell = ws.cell(
+                            row=row_idx,
+                            column=col_idx,
+                            value=self._coerce_cell(row_data.get(header, "")),
+                        )
                         cell.font = DATA_FONT
 
                 # 自适应列宽
@@ -214,8 +321,8 @@ class SupportedVillageExportService:
         # 统计 sheet
         ws_stats = wb.create_sheet(title="统计信息")
         for i, (key, val) in enumerate(statistics.items(), 1):
-            ws_stats.cell(row=i, column=1, value=key).font = Font(bold=True)
-            ws_stats.cell(row=i, column=2, value=str(val))
+            ws_stats.cell(row=i, column=1, value=self._coerce_cell(key)).font = Font(bold=True)
+            ws_stats.cell(row=i, column=2, value=self._coerce_cell(val))
 
         output = io.BytesIO()
         wb.save(output)
@@ -262,8 +369,10 @@ class SupportedVillageExportService:
         for mod_name, rows in data.items():
             if not rows:
                 continue
-            writer = csv.DictWriter(output, fieldnames=rows[0].keys())
+            writer = csv.DictWriter(output, fieldnames=list(rows[0].keys()))
             writer.writeheader()
-            writer.writerows(rows)
+            for row in rows:
+                # 用 _coerce_cell 统一类型，避免 Decimal/enum 等产生非预期输出
+                writer.writerow({k: self._coerce_cell(v) for k, v in row.items()})
             break
         return output.getvalue().encode("utf-8-sig")
