@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
@@ -284,7 +284,6 @@ async def import_scholarship_students(
         ws = wb.active
         imported = 0
         errors = []
-        status_map = {"pending": "pending", "approved": "approved", "rejected": "rejected"}
         for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
             if not row or len(row) < 2 or not row[1]:
                 continue
@@ -540,15 +539,22 @@ async def list_schools(
     db: Session = Depends(get_db),
 ):
     """获取学校列表"""
+    status_filter = support_status or supportStatus
+
     # 缓存：学校数据日级更新，TTL 120s
     # 跳过测试环境——模块级缓存单例会在测试间泄漏状态
-    import hashlib, json, os
+    import hashlib
+    import json
+    import os
     _ckey = None
     if not os.environ.get("PYTEST_CURRENT_TEST"):
         from app.core.cache import get_cache_service
         _cache = await get_cache_service()
         try:
-            _ckey = f"schools:list:{page}:{page_size}:{hashlib.md5(json.dumps([keyword,name,type,status_filter],default=str).encode()).hexdigest()}"
+            _key_data = json.dumps(
+                [keyword, name, type, status_filter], default=str
+            ).encode()
+            _ckey = f"schools:list:{page}:{page_size}:{hashlib.md5(_key_data).hexdigest()}"
             _cached = await _cache.get(_ckey)
             if _cached is not None:
                 return _cached
@@ -559,9 +565,6 @@ async def list_schools(
 
     # 数据范围过滤：非管理员只能看到自己组织及下级组织的帮扶学校
     query = data_scope.filter_by_org_ids(query, School.organization_id, created_by_column=School.created_by)
-
-    # 支持两种参数名
-    status_filter = support_status or supportStatus
 
     if keyword or name:
         search = keyword or name

@@ -240,13 +240,19 @@ async def list_villages(
     """获取帮扶村列表（分页、筛选）"""
     # 缓存：帮扶村日级更新，TTL 120s
     # 跳过测试环境——模块级缓存单例会在测试间泄漏状态
-    import hashlib, json, os
+    import hashlib
+    import json
+    import os
     _ckey = None
     if not os.environ.get("PYTEST_CURRENT_TEST"):
         from app.core.cache import get_cache_service
         _cache = await get_cache_service()
         try:
-            _ckey = f"villages:list:{page}:{page_size}:{hashlib.md5(json.dumps([keyword,department,county,isRevitalizationTier,isThreeRegions],default=str).encode()).hexdigest()}"
+            _key_data = json.dumps(
+                [keyword, department, county, isRevitalizationTier, isThreeRegions],
+                default=str,
+            ).encode()
+            _ckey = f"villages:list:{page}:{page_size}:{hashlib.md5(_key_data).hexdigest()}"
             _cached = await _cache.get(_ckey)
             if _cached is not None:
                 return _cached

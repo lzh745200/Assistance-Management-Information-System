@@ -1,40 +1,30 @@
 """
-帮扶村数据导出API
-
-WIP: 路由已注册为501占位 — SupportedVillageExportService 待完整实现。
-完整实现约需 300-400 行（openpyxl 多 sheet、数据查询聚合、统计计算）。
-前端 API 接线已完成（getExportModules / getExportFormats / previewExport），
-产品未启用此功能前 501 是最低风险的兜底策略。
-
-Requirements: 14.1, 14.2, 14.3
+帮扶村数据导出API — 完整实现（基于 SupportedVillageExportService）。
 """
 
+import io
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
 
+from app.core.database import get_db
 from app.core.security import get_current_user
 router = APIRouter(prefix="/supported-villages/export", tags=["帮扶村数据导出"])
 
 
-def _wip_response():
-    return JSONResponse(
-        status_code=501,
-        content={"detail": "该功能正在开发中", "code": "WIP"},
-    )
-
-
 @router.get("/modules")
 async def get_export_modules(current_user=Depends(get_current_user)):
-    """获取可导出的模块列表（WIP: 501 占位）"""
-    return _wip_response()
+    """获取可导出的模块列表"""
+    from app.services.supported_village_export_service import MODULE_NAMES
+    return {"modules": [{"key": k, "label": v} for k, v in MODULE_NAMES.items()]}
 
 
 @router.get("/formats")
 async def get_export_formats(current_user=Depends(get_current_user)):
-    """获取支持的导出格式（WIP: 501 占位）"""
-    return _wip_response()
+    """获取支持的导出格式"""
+    return {"formats": [{"key": "xlsx", "label": "Excel (.xlsx)"}, {"key": "csv", "label": "CSV (.csv)"}]}
 
 
 @router.get("")
@@ -47,9 +37,24 @@ async def export_supported_villages(
     support_unit: Optional[str] = Query(None, description="帮扶单位筛选"),
     tiered_level: Optional[str] = Query(None, description="梯次等级筛选: 示范级 / 达标级 / 基础级"),
     current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    """导出帮扶村数据（WIP: 501 占位）"""
-    return _wip_response()
+    """导出帮扶村数据，返回 Excel 文件下载。"""
+    from app.services.supported_village_export_service import SupportedVillageExportService
+
+    svc = SupportedVillageExportService(db)
+    mod_list = [m.strip() for m in modules.split(",") if m.strip()] if modules else None
+    vid_list = [int(x.strip()) for x in village_ids.split(",") if x.strip()] if village_ids else None
+
+    content, filename, stats = svc.export(
+        year=year, modules=mod_list, format=format,
+        village_ids=vid_list, department=department, support_unit=support_unit,
+    )
+    return StreamingResponse(
+        io.BytesIO(content),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+    )
 
 
 @router.get("/preview")
@@ -61,6 +66,17 @@ async def preview_export(
     support_unit: Optional[str] = Query(None, description="帮扶单位筛选"),
     tiered_level: Optional[str] = Query(None, description="梯次等级筛选"),
     current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    """预览导出数据（WIP: 501 占位）"""
-    return _wip_response()
+    """预览导出数据——返回行数统计，不生成文件。"""
+    from app.services.supported_village_export_service import SupportedVillageExportService
+
+    svc = SupportedVillageExportService(db)
+    mod_list = [m.strip() for m in modules.split(",") if m.strip()] if modules else None
+    vid_list = [int(x.strip()) for x in village_ids.split(",") if x.strip()] if village_ids else None
+
+    villages = svc._query_villages(year=year, village_ids=vid_list, department=department, support_unit=support_unit)
+    data = svc._collect_export_data(villages, modules=mod_list, year=year)
+    stats = svc._generate_statistics(data)
+
+    return {"success": True, "statistics": stats}
