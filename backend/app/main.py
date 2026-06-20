@@ -134,6 +134,14 @@ app.add_middleware(SecurityHeadersMiddleware)
 # 7. 请求ID链路追踪中间件（最外层，最先执行）
 app.add_middleware(RequestIDMiddleware)
 
+# ── 启用审计事件监听（SQLAlchemy 事件自动记录所有写操作）──
+try:
+    from app.services.audit_event_handler import setup_audit_events
+
+    setup_audit_events()
+except Exception:
+    pass  # 审计启动失败不影响主应用
+
 # ── 加载路由（懒模型已提速，模块级加载安全可靠）──
 print("  加载路由模块...", flush=True)
 _rt0 = _time.time()
