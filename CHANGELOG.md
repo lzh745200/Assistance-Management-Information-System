@@ -5,6 +5,44 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.4.1] - 2026-06-20
+
+### 修复（生产崩溃）
+
+- 🐛 **RuralWorkService.create_rural_work 缺失** — 生产环境 `AttributeError: 'RuralWorkService' object has no attribute 'create_rural_work'`，补全 create_rural_work + update_rural_work 签名修正 + 5 个缺失方法（get_statistics/get_villages_for_select/generate_work_report/get_available_years/batch_delete）
+- 🐛 **UserCascadeDeleteService 是 stub** — 删除用户始终 500，用 SQLite Pragma 反射重写级联删除
+- 🐛 **ExcelExportService.export_organization_pass_codes 缺失** — 组织通行证码导出始终 500，补全方法
+- 🐛 **reports 端点 5 处 async 服务调用漏 await** — export_to_excel/export_to_pdf/export_comprehensive_report/get_export_filename 把协程传给 BytesIO 运行时崩溃
+- 🐛 **feedback verify_token 导出缺失** — `from app.api.v1.auth import verify_token` 永远 ImportError，登录用户提交反馈不记录身份
+- 🐛 **analytics_service.filter_villages 契约不匹配** — service 返回 dict 路由期望元组，统一为 (items_orm, total) 元组
+
+### 修复（功能 BUG）
+
+- 🐛 **工作列表新增数据不显示（根因）** — `rural_work_service._to_dict` 漏 `village_name` 字段，前端"所属村庄"列显示空白。通过 ORM relationship 懒加载补全
+- 🐛 **batch-delete body 契约不匹配** — 前端发 `{ids: [...]}` 后端期望 bare `[...]`，改为 `payload: dict` 提取 ids
+- 🐛 **AuditLogService.log 字段名错误** — `AuditLog(resource=..., details=..., ip_address=...)` 三个字段名与模型列不匹配（resource_type/user_ip/metadata_），审计日志静默丢失
+- 🐛 **projects.py audit.log 未传 db** — 3 处审计日志调用未传 db 参数，日志从未写入
+- 🐛 **admin.py int(None) 崩溃** — 配置值为 None 时 int(None) 抛 TypeError，加 `or` 防御
+
+### 修复（测试健壮性）
+
+- 🔧 **file_upload magic 安全导入** — Windows libmagic 触发不可捕获的 access violation 导致全部后端测试崩溃，改用 stdlib mimetypes + 扩展名映射
+- 🔧 **patch.dict(os.environ) → monkeypatch.setenv** — 超长环境变量（ACC_PRODUCT_CONFIG_V3 > 32767 字符）触发 Windows 限制导致 teardown 崩溃
+- 🔧 **Schema 可变默认值** — `items: list = []` → `Field(default_factory=list)`，Pydantic v2 最佳实践
+- 🔧 **前端 handleSave 加 catch** — API 失败时错误不再静默丢失，显示 ElMessage.error
+
+### 文档
+
+- 📝 更新项目文件结构说明.md：新增 v1.4.1 版本记录、services 层补充 rural_work_service/user_cascade_delete_service 说明、新增开发约定章节（Service 序列化/async 调用/Pydantic 默认值/AuditLog 字段映射/Windows libmagic/测试环境变量/路由-service 契约/batch-delete body）
+
+## [1.4.0] - 2026-06
+
+### 新增
+
+- ✨ RBAC 批量权限（事务原子性）、权限撤销端点
+- ✨ treeNormalizer 共享工具、E2E 冒烟测试
+- ✨ PR 门禁 CI、64-bit 迁移脚本、pre-commit hooks、统一版本管理
+
 ## [1.2.0] - 2026-05-31
 
 ### 修复
