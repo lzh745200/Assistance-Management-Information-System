@@ -326,8 +326,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useMenuStore } from "@/stores/menu";
+
+const menuStore = useMenuStore();
+
+onMounted(() => {
+  if (!menuStore.loaded) {
+    menuStore.fetchMenus();
+  }
+});
 
 defineProps<{
   isManager: boolean;

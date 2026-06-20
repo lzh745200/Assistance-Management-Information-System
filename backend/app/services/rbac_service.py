@@ -41,6 +41,7 @@ def _safe_parse_expires(expires_at):
     except (ValueError, TypeError):
         return None
 
+
 # 请求级权限缓存（避免单次请求中重复查询）
 _restricted_perms_cache: ContextVar[Optional[Dict[int, Set[str]]]] = ContextVar("restricted_perms_cache", default=None)
 

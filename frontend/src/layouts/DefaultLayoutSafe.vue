@@ -404,9 +404,7 @@
               index="/system/monitoring"
               ><span>系统监控</span></el-menu-item
             >
-            <el-menu-item
-              v-if="menuStore.canAccessMenu('help')"
-              index="/help"
+            <el-menu-item v-if="menuStore.canAccessMenu('help')" index="/help"
               ><span>帮助文档</span></el-menu-item
             >
           </el-sub-menu>

@@ -377,7 +377,7 @@ class ExcelTemplateService:
 
         # ── 第4行：信息栏 ──
         ws.merge_cells(f"A4:{max_col}4")
-        today = date.today().strftime("%Y年%m月%d日")
+        today = f"{date.today().year}年{date.today().month:02d}月{date.today().day:02d}日"
         c = ws["A4"]
         c.value = f"填报单位：____________________    填报人：__________    填报日期：{today}    年度：__________"
         c.font = Font(name="SimSun", size=10, color=MILITARY_DARK_TEXT)
