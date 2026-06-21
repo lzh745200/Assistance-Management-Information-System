@@ -1,6 +1,6 @@
 {
   "name": "Assistance-Management-Information-System",
-  "version": "1.4.1",
+  "version": "1.2.0",
   "private": true,
   "description": "帮扶管理系统 - 贵州省版 Standalone桌面应用",
   "main": "electron/main.js",
@@ -41,8 +41,13 @@
     ],
     "extraResources": [
       {
-        "from": "backend/dist/assistance-backend",
-        "to": "resources/backend/assistance-management-backend"
+        "from": "backend",
+        "to": "resources/backend-source",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc"
+        ]
       },
       {
         "from": "frontend/dist",
@@ -74,6 +79,9 @@
         "Name": "帮扶管理系统",
         "Comment": "帮扶管理系统 - 贵州省版",
         "Categories": ["Office", "Utility"]
+      },
+      "deb": {
+        "depends": ["python3", "python3-pip", "python3-venv"]
       }
     }
   }
