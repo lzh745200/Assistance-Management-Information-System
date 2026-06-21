@@ -8,54 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-backend:
-    name: Build Backend (ARM64)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Build Backend in ARM64 Container
-        run: |
-          # 在 ARM64 容器内执行 PyInstaller
-          docker run --rm --platform linux/arm64 \
-            -v $(pwd):/workspace \
-            -w /workspace/backend \
-            arm64v8/python:3.11 \
-            bash -c "
-              pip install --upgrade pip
-              pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir
-              pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib bcrypt python-multipart httpx python-dotenv aiofiles Pillow openpyxl loguru pyinstaller
-              pyinstaller --name=assistance-backend \
-                --onefile \
-                --add-data 'app:app' \
-                --add-data 'alembic:alembic' \
-                --add-data 'alembic.ini:.' \
-                --hidden-import=uvicorn \
-                --hidden-import=sqlalchemy \
-                --hidden-import=alembic \
-                --hidden-import=bcrypt \
-                --hidden-import=passlib \
-                --hidden-import=python_jose \
-                --hidden-import=multipart \
-                --hidden-import=contourpy \
-                --hidden-import=pkg_resources \
-                start.py
-            "
-          # 将产物复制到 backend/dist 供后续使用
-          mkdir -p backend/dist
-          cp backend/dist/assistance-backend backend/dist/ 2>/dev/null || echo "产物不存在，请检查容器构建"
-
-      - name: Upload Backend Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-arm64
-          path: backend/dist/assistance-backend
-          if-no-files-found: error
-
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
@@ -84,7 +36,7 @@ jobs:
   build-electron:
     name: Build Debian Package (ARM64)
     runs-on: ubuntu-latest
-    needs: [build-backend, build-frontend]
+    needs: [build-frontend]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -102,22 +54,11 @@ jobs:
           npm install --legacy-peer-deps --registry=https://registry.npmmirror.com || \
             npm install --legacy-peer-deps --registry=https://registry.npmjs.org
 
-      - name: Download Backend
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-arm64
-          path: ./backend/dist
-
       - name: Download Frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: ./frontend/dist
-
-      - name: Prepare Sources
-        run: |
-          chmod +x backend/dist/assistance-backend
-          ls -la frontend/dist/
 
       - name: Build Debian Package (ARM64)
         run: |
