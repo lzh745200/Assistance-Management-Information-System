@@ -50,6 +50,11 @@
         ]
       },
       {
+        "from": "backend-deps",
+        "to": "resources/backend-libs",
+        "filter": ["**/*"]
+      },
+      {
         "from": "frontend/dist",
         "to": "resources/frontend",
         "filter": ["**/*"]
@@ -81,7 +86,7 @@
         "Categories": ["Office", "Utility"]
       },
       "deb": {
-        "depends": ["python3", "python3-pip", "python3-venv"]
+        "depends": ["python3"]
       }
     }
   }
