@@ -27,7 +27,6 @@ const WINDOW_STATE_FILE = path.join(getUserDataPath(), 'window-state.json');
 const SECRETS_FILE = path.join(getUserDataPath(), 'secrets.json');
 const CRASH_LOG_FILE = path.join(getUserDataPath(), 'crash.log');
 
-// 版本号
 const appVersion = (() => {
   try {
     const pkgPath = app.isPackaged
@@ -41,42 +40,39 @@ const appVersion = (() => {
 
 // ─── 路径解析 ───
 function getUserDataPath() {
-  if (process.env.ELECTRON_USER_DATA_PATH) {
-    return process.env.ELECTRON_USER_DATA_PATH;
-  }
-  if (!app.isPackaged) {
-    return path.join(__dirname, '..', 'data');
-  }
+  if (process.env.ELECTRON_USER_DATA_PATH) return process.env.ELECTRON_USER_DATA_PATH;
+  if (!app.isPackaged) return path.join(__dirname, '..', 'data');
   return app.getPath('userData');
 }
 
 function getResourcePath(...segments) {
-  if (app.isPackaged) {
-    return path.join(process.resourcesPath, ...segments);
-  }
+  if (app.isPackaged) return path.join(process.resourcesPath, ...segments);
   return path.join(__dirname, '..', ...segments);
 }
 
 function getBackendScriptPath() {
-  // 后端源码目录
   if (app.isPackaged) {
     return path.join(process.resourcesPath, 'backend-source', 'start.py');
   }
   return path.join(__dirname, '..', 'backend', 'start.py');
 }
 
-function getFrontendPath() {
+function getBackendLibsPath() {
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'frontend');
+    return path.join(process.resourcesPath, 'backend-libs');
   }
+  // 开发模式不使用捆绑库，使用系统环境
+  return null;
+}
+
+function getFrontendPath() {
+  if (app.isPackaged) return path.join(process.resourcesPath, 'frontend');
   return path.join(__dirname, '..', 'frontend', 'dist');
 }
 
 function getIconPath() {
   const iconName = process.platform === 'win32' ? 'app-circle.ico' : 'bz-circle.png';
-  if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'icons', iconName);
-  }
+  if (app.isPackaged) return path.join(process.resourcesPath, 'icons', iconName);
   return path.join(__dirname, '..', 'resources', 'icons', iconName);
 }
 
@@ -91,24 +87,18 @@ function getOrCreateSecrets() {
         try {
           const decrypted = safeStorage.decryptString(raw);
           data = JSON.parse(decrypted);
-        } catch (_decryptErr) {
+        } catch (_) {
           try {
             data = JSON.parse(raw.toString('utf-8'));
             _writeSecrets(data, true);
-            console.log('[Secrets] 迁移到加密存储');
-          } catch (parseErr) {
-            console.error('[Secrets] 密钥文件解析失败:', parseErr.message);
-            data = {};
-          }
+          } catch (__) { data = {}; }
         }
       } else {
         data = JSON.parse(raw.toString('utf-8'));
       }
       if (data.SECRET_KEY && data.CSRF_SECRET_KEY) return data;
     }
-  } catch (e) {
-    console.warn('[Secrets] 读取失败，重新生成:', e.message);
-  }
+  } catch (e) { console.warn('[Secrets] 读取失败:', e.message); }
   const secrets = {
     SECRET_KEY: crypto.randomBytes(32).toString('hex'),
     CSRF_SECRET_KEY: crypto.randomBytes(32).toString('hex'),
@@ -122,14 +112,10 @@ function _writeSecrets(secrets, encrypt) {
     if (encrypt) {
       const encrypted = safeStorage.encryptString(JSON.stringify(secrets));
       fs.writeFileSync(SECRETS_FILE, encrypted);
-      console.log('[Secrets] 已加密持久化');
     } else {
       fs.writeFileSync(SECRETS_FILE, JSON.stringify(secrets), 'utf-8');
-      console.log('[Secrets] 明文持久化');
     }
-  } catch (e) {
-    console.error('[Secrets] 写入失败:', e.message);
-  }
+  } catch (e) { console.error('[Secrets] 写入失败:', e.message); }
 }
 
 function getDatabasePath() {
@@ -138,19 +124,13 @@ function getDatabasePath() {
     const homeDir = process.env.HOME || '/root';
     dbDir = path.join(homeDir, '.bumofu', 'data');
   } else {
-    const userDataPath = getUserDataPath();
-    dbDir = path.join(userDataPath, 'database');
+    dbDir = path.join(getUserDataPath(), 'database');
   }
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
   const dbPath = path.join(dbDir, 'bumofu.db');
   if (!fs.existsSync(dbPath)) {
     const sourceDb = getResourcePath('database', 'bumofu.db');
-    if (fs.existsSync(sourceDb)) {
-      fs.copyFileSync(sourceDb, dbPath);
-      console.log('[DB] 初始数据库已复制');
-    }
+    if (fs.existsSync(sourceDb)) fs.copyFileSync(sourceDb, dbPath);
   }
   return dbPath;
 }
@@ -160,29 +140,23 @@ function checkPortInUse(port) {
   return new Promise((resolve) => {
     const net = require('net');
     const server = net.createServer();
-    server.once('error', (err) => {
-      if (err.code === 'EADDRINUSE') resolve(true);
-      else resolve(false);
-    });
-    server.once('listening', () => {
-      server.close();
-      resolve(false);
-    });
+    server.once('error', (err) => { resolve(err.code === 'EADDRINUSE'); });
+    server.once('listening', () => { server.close(); resolve(false); });
     server.listen(port, '127.0.0.1');
   });
 }
 
 function killProcessOnPort(port) {
   return new Promise((resolve) => {
-    console.warn(`[Port] 强制终止端口 ${port} 的进程`);
+    console.warn(`[Port] 强制终止端口 ${port}`);
     writeDiagnosticLog(`强制终止端口 ${port}`);
-    const onExit = () => { setTimeout(resolve, 500); };
+    const onExit = () => setTimeout(resolve, 500);
     if (process.platform === 'win32') {
-      const findProc = spawn('cmd.exe', ['/c', `for /f "tokens=5" %a in ('netstat -aon ^| findstr :${port} ^| findstr LISTENING') do taskkill /f /pid %a`], { windowsHide: true });
-      findProc.on('exit', onExit);
+      const proc = spawn('cmd.exe', ['/c', `for /f "tokens=5" %a in ('netstat -aon ^| findstr :${port} ^| findstr LISTENING') do taskkill /f /pid %a`], { windowsHide: true });
+      proc.on('exit', onExit);
     } else {
-      const findProc = spawn('sh', ['-c', `lsof -ti:${port} | xargs kill -9 2>/dev/null`]);
-      findProc.on('exit', onExit);
+      const proc = spawn('sh', ['-c', `lsof -ti:${port} | xargs kill -9 2>/dev/null`]);
+      proc.on('exit', onExit);
     }
   });
 }
@@ -192,11 +166,10 @@ async function findAvailablePort(startPort, maxAttempts) {
     const port = startPort + i;
     const inUse = await checkPortInUse(port);
     if (!inUse) return port;
-    console.log(`[Port] 端口 ${port} 被占用`);
     if (i === 0) {
       await killProcessOnPort(port);
-      const stillInUse = await checkPortInUse(port);
-      if (!stillInUse) return port;
+      const still = await checkPortInUse(port);
+      if (!still) return port;
     }
   }
   return null;
@@ -204,66 +177,51 @@ async function findAvailablePort(startPort, maxAttempts) {
 
 function analyzeStartupError(stderrCapture) {
   const logs = stderrCapture.join('\n').toLowerCase();
-  if (logs.includes('vcruntime') || logs.includes('msvcp')) {
-    return '【缺少 Visual C++ 运行时库】请安装 VC++ Redistributable。';
-  }
-  if (logs.includes('address already in use') || logs.includes('eaddrinuse')) {
-    return '【端口被占用】请关闭占用 8000-8010 端口的程序。';
-  }
-  if (logs.includes('database') || logs.includes('sqlite') || logs.includes('locked')) {
-    return '【数据库错误】可能文件损坏或被锁定。';
-  }
-  if (logs.includes('permission denied') || logs.includes('eacces')) {
-    return '【权限不足】请以管理员身份运行。';
-  }
-  if (logs.includes('importerror') || logs.includes('modulenotfounderror')) {
-    return '【Python 依赖缺失】请检查网络或手动安装依赖。';
-  }
-  if (logs.includes('timeout') || stderrCapture.length === 0) {
-    return '【后端启动超时】请检查系统资源或网络。';
-  }
-  return '【未知错误】请查看诊断日志。';
+  if (logs.includes('vcruntime') || logs.includes('msvcp')) return '缺少 VC++ 运行时库。';
+  if (logs.includes('address already in use') || logs.includes('eaddrinuse')) return '端口被占用。';
+  if (logs.includes('database') || logs.includes('sqlite')) return '数据库错误。';
+  if (logs.includes('permission denied') || logs.includes('eacces')) return '权限不足。';
+  if (logs.includes('importerror') || logs.includes('modulenotfounderror')) return 'Python 依赖缺失。';
+  if (logs.includes('timeout') || stderrCapture.length === 0) return '启动超时。';
+  return '未知错误，请查看日志。';
 }
 
 function writeDiagnosticLog(message) {
   try {
-    const timestamp = new Date().toISOString();
-    fs.appendFileSync(CRASH_LOG_FILE, `[${timestamp}] [DIAG] ${message}\n`);
+    fs.appendFileSync(CRASH_LOG_FILE, `[${new Date().toISOString()}] ${message}\n`);
   } catch (_) {}
 }
 
-// ─── 后端启动（使用 Python 源码） ───
+// ─── 后端启动（使用系统 Python + 捆绑库） ───
 async function startBackend(stderrCapture = null) {
   const scriptPath = getBackendScriptPath();
   const scriptDir = path.dirname(scriptPath);
   console.log('[Backend] 脚本路径:', scriptPath);
-  writeDiagnosticLog(`后端脚本路径: ${scriptPath}`);
+  writeDiagnosticLog(`脚本路径: ${scriptPath}`);
 
   // 检查 Python3
-  let pythonCmd = 'python3';
   try {
     execSync('which python3', { stdio: 'ignore' });
   } catch (_) {
-    dialog.showErrorBox('缺少 Python', '系统未安装 Python3，请运行:\nsudo apt install python3 python3-pip');
+    dialog.showErrorBox('缺少 Python', '未安装 Python3，请运行: sudo apt install python3');
     app.quit();
     return null;
   }
 
-  // 检查脚本是否存在
   if (!fs.existsSync(scriptPath)) {
     const msg = `后端脚本不存在:\n${scriptPath}`;
     console.error('[Backend]', msg);
-    writeDiagnosticLog(`错误: ${msg}`);
+    writeDiagnosticLog(msg);
     dialog.showErrorBox('启动失败', msg);
     app.quit();
     return null;
   }
 
-  // 动态查找可用端口
+  // 获取可用端口
   const availablePort = await findAvailablePort(DEFAULT_BACKEND_PORT, MAX_PORT_ATTEMPTS);
   if (availablePort === null) {
     const msg = `端口 ${DEFAULT_BACKEND_PORT}-${DEFAULT_BACKEND_PORT + MAX_PORT_ATTEMPTS - 1} 均被占用。`;
-    writeDiagnosticLog(`错误: ${msg}`);
+    writeDiagnosticLog(msg);
     dialog.showErrorBox('端口冲突', msg);
     app.quit();
     return null;
@@ -271,7 +229,7 @@ async function startBackend(stderrCapture = null) {
   backendPort = availablePort;
   if (backendPort !== DEFAULT_BACKEND_PORT) {
     console.log(`[Backend] 使用备用端口 ${backendPort}`);
-    writeDiagnosticLog(`使用备用端口: ${backendPort}`);
+    writeDiagnosticLog(`备用端口: ${backendPort}`);
   }
 
   // 创建必要目录
@@ -284,28 +242,7 @@ async function startBackend(stderrCapture = null) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   });
 
-  // 首次运行：安装依赖
-  const reqFile = path.join(scriptDir, 'requirements.txt');
-  if (fs.existsSync(reqFile)) {
-    console.log('[Backend] 检查 Python 依赖...');
-    // 检查是否已安装（简单判断，可更精确）
-    const check = spawn(pythonCmd, ['-c', 'import fastapi'], { stdio: 'ignore' });
-    await new Promise((resolve) => {
-      check.on('exit', (code) => {
-        if (code !== 0) {
-          console.log('[Backend] 安装依赖...');
-          const install = spawn(pythonCmd, ['-m', 'pip', 'install', '-r', reqFile, '--user'], {
-            cwd: scriptDir,
-            stdio: 'inherit',
-          });
-          install.on('exit', resolve);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
-
+  // 构建环境变量
   const env = {
     ...process.env,
     PYTHONIOENCODING: 'utf-8',
@@ -316,21 +253,31 @@ async function startBackend(stderrCapture = null) {
     UPLOAD_DIR: uploadsDir,
     CACHE_DIR: cacheDir,
     EXPORT_DIR: exportsDir,
-    FRONTEND_DIST_PATH: app.isPackaged
-      ? getResourcePath('frontend')
-      : getResourcePath('frontend', 'dist'),
+    FRONTEND_DIST_PATH: getFrontendPath(),
     ENVIRONMENT: 'production',
     PROJECT_VERSION: appVersion,
-    INTERNAL_BACKUP_KEY: INTERNAL_BACKUP_KEY,
-    INTERNAL_SHUTDOWN_KEY: INTERNAL_SHUTDOWN_KEY,
+    INTERNAL_BACKUP_KEY,
+    INTERNAL_SHUTDOWN_KEY,
     ...getOrCreateSecrets(),
   };
 
-  const proc = spawn(pythonCmd, [scriptPath], {
+  // 设置 PYTHONPATH 指向捆绑的库目录（如果存在）
+  const libsPath = getBackendLibsPath();
+  if (libsPath && fs.existsSync(libsPath)) {
+    const existing = env.PYTHONPATH || '';
+    env.PYTHONPATH = libsPath + (existing ? ':' + existing : '');
+    console.log('[Backend] PYTHONPATH 设置为:', env.PYTHONPATH);
+    writeDiagnosticLog(`PYTHONPATH: ${env.PYTHONPATH}`);
+  } else {
+    console.log('[Backend] 未找到捆绑库目录，使用系统 Python 环境');
+    writeDiagnosticLog('未使用捆绑库');
+  }
+
+  const proc = spawn('python3', [scriptPath], {
     cwd: scriptDir,
     env,
     stdio: ['ignore', 'pipe', 'pipe'],
-    ...{ windowsHide: process.platform === 'win32' },
+    windowsHide: process.platform === 'win32',
   });
 
   proc.stdout.on('data', (data) => {
@@ -354,20 +301,16 @@ async function startBackend(stderrCapture = null) {
     console.error('[Backend] 启动错误:', err);
     writeDiagnosticLog(`启动错误: ${err.message}`);
     let userMsg = err.message;
-    if (err.code === 'ENOENT') {
-      userMsg = `Python 或脚本不存在。\n请确保已安装 python3。`;
-    } else if (err.code === 'EACCES') {
-      userMsg = `权限不足，请以管理员身份运行。`;
-    }
+    if (err.code === 'ENOENT') userMsg = 'Python 或脚本不存在。';
+    else if (err.code === 'EACCES') userMsg = '权限不足，请以管理员身份运行。';
     dialog.showErrorBox('后端启动失败', userMsg);
   });
 
   proc.on('exit', (code) => {
-    console.log('[Backend] 进程退出, code:', code);
+    console.log('[Backend] 退出, code:', code);
     writeDiagnosticLog(`后端退出, code: ${code}`);
     backendProcess = null;
     if (!isQuitting && code !== 0) {
-      // 自动重启
       if (backendRestartCount < MAX_BACKEND_RESTARTS) {
         backendRestartCount++;
         console.log(`[Backend] 自动重启 (${backendRestartCount}/${MAX_BACKEND_RESTARTS})...`);
@@ -378,7 +321,7 @@ async function startBackend(stderrCapture = null) {
       } else {
         const logPath = path.join(getUserDataPath(), 'logs', 'app.log');
         dialog.showErrorBox('后端异常退出',
-          `后端进程已重启 ${MAX_BACKEND_RESTARTS} 次后仍然失败。\n诊断日志: ${CRASH_LOG_FILE}\n应用日志: ${logPath}`);
+          `后端已重启 ${MAX_BACKEND_RESTARTS} 次仍失败。\n诊断日志: ${CRASH_LOG_FILE}\n应用日志: ${logPath}`);
       }
     }
   });
@@ -389,7 +332,7 @@ async function startBackend(stderrCapture = null) {
 function stopBackend() {
   return new Promise((resolve) => {
     if (!backendProcess) { resolve(); return; }
-    console.log('[Backend] 正在停止后端...');
+    console.log('[Backend] 停止...');
     const pid = backendProcess.pid;
     let resolved = false;
     const done = () => { if (!resolved) { resolved = true; resolve(); } };
@@ -400,11 +343,10 @@ function stopBackend() {
         } else {
           process.kill(pid, 'SIGKILL');
         }
-      } catch (_e) {}
+      } catch (_) {}
     };
     const proc = backendProcess;
     proc.once('exit', () => { backendProcess = null; done(); });
-    // 尝试优雅关闭
     const req = http.request({
       hostname: '127.0.0.1',
       port: backendPort,
@@ -412,10 +354,8 @@ function stopBackend() {
       method: 'POST',
       timeout: 3000,
       headers: { 'X-Internal-Shutdown': INTERNAL_SHUTDOWN_KEY },
-    }, () => {
-      setTimeout(forceKill, 3000);
-    });
-    req.on('error', () => { forceKill(); });
+    }, () => { setTimeout(forceKill, 3000); });
+    req.on('error', forceKill);
     req.on('timeout', () => { req.destroy(); forceKill(); });
     req.end();
     setTimeout(() => { backendProcess = null; done(); }, 5000);
@@ -433,22 +373,18 @@ function waitForBackend(stderrCapture = []) {
         console.log(`[Backend] 等待就绪... ${(elapsed / 1000).toFixed(1)}s`);
       }
       if (elapsed > BACKEND_READY_TIMEOUT) {
-        const recentLogs = stderrCapture.slice(-10).join('\n');
-        reject(new Error(`后端启动超时 (${(elapsed / 1000).toFixed(0)}秒)\n\n后端日志:\n${recentLogs || '无日志输出'}`));
+        const recent = stderrCapture.slice(-10).join('\n');
+        reject(new Error(`后端启动超时 (${(elapsed / 1000).toFixed(0)}秒)\n日志:\n${recent || '无日志'}`));
         return;
       }
       const req = http.get(`http://127.0.0.1:${backendPort}/health`, (res) => {
         if (res.statusCode === 200) {
           console.log(`[Backend] 就绪，耗时 ${(elapsed / 1000).toFixed(1)}s`);
           resolve();
-        } else {
-          setTimeout(check, 300);
-        }
+        } else setTimeout(check, 300);
       });
       req.on('error', () => {
-        if (checkCount <= 3 || elapsed > 10000) {
-          console.log(`[Backend] 健康检查失败 (${(elapsed / 1000).toFixed(1)}s)`);
-        }
+        if (checkCount <= 3 || elapsed > 10000) console.log(`[Backend] 健康检查失败 (${(elapsed / 1000).toFixed(1)}s)`);
         setTimeout(check, 300);
       });
       req.setTimeout(3000, () => { req.destroy(); setTimeout(check, 300); });
@@ -457,33 +393,32 @@ function waitForBackend(stderrCapture = []) {
   });
 }
 
-// ─── 窗口管理（不变） ───
+// ─── 窗口管理 ───
 function loadWindowState() {
   try {
     if (fs.existsSync(WINDOW_STATE_FILE)) {
       return JSON.parse(fs.readFileSync(WINDOW_STATE_FILE, 'utf-8'));
     }
-  } catch (e) { console.warn('[WindowState] 读取失败:', e.message); }
+  } catch (e) {}
   return null;
 }
-
 function saveWindowState() {
   if (!mainWindow) return;
   try {
     const bounds = mainWindow.getBounds();
     const isMaximized = mainWindow.isMaximized();
     fs.writeFileSync(WINDOW_STATE_FILE, JSON.stringify({ bounds, isMaximized }), 'utf-8');
-  } catch (e) { console.warn('[WindowState] 保存失败:', e.message); }
+  } catch (e) {}
 }
 
 function createMainWindow() {
   const iconPath = getIconPath();
-  const savedState = loadWindowState();
-  const windowOptions = {
-    width: savedState?.bounds?.width || 1400,
-    height: savedState?.bounds?.height || 900,
-    x: savedState?.bounds?.x,
-    y: savedState?.bounds?.y,
+  const saved = loadWindowState();
+  const winOptions = {
+    width: saved?.bounds?.width || 1400,
+    height: saved?.bounds?.height || 900,
+    x: saved?.bounds?.x,
+    y: saved?.bounds?.y,
     minWidth: 1024,
     minHeight: 768,
     title: APP_TITLE,
@@ -497,23 +432,19 @@ function createMainWindow() {
     show: false,
     autoHideMenuBar: true,
   };
-  mainWindow = new BrowserWindow(windowOptions);
-  if (savedState?.isMaximized) mainWindow.maximize();
-  const frontendUrl = `http://127.0.0.1:${backendPort}`;
-  mainWindow.loadURL(frontendUrl).catch((err) => {
-    const msg = `无法加载页面：${frontendUrl}\n错误：${err?.message || err}`;
+  mainWindow = new BrowserWindow(winOptions);
+  if (saved?.isMaximized) mainWindow.maximize();
+  const url = `http://127.0.0.1:${backendPort}`;
+  mainWindow.loadURL(url).catch((err) => {
+    const msg = `加载页面失败: ${url}\n${err?.message || err}`;
     console.error('[Window]', msg);
     writeDiagnosticLog(msg);
     dialog.showErrorBox('页面加载失败', msg);
   });
   mainWindow.once('ready-to-show', () => { mainWindow.show(); mainWindow.focus(); });
-  let _saveStateTimer = null;
-  function debouncedSave() {
-    clearTimeout(_saveStateTimer);
-    _saveStateTimer = setTimeout(saveWindowState, 500);
-  }
-  mainWindow.on('resize', debouncedSave);
-  mainWindow.on('move', debouncedSave);
+  let timer = null;
+  mainWindow.on('resize', () => { clearTimeout(timer); timer = setTimeout(saveWindowState, 500); });
+  mainWindow.on('move', () => { clearTimeout(timer); timer = setTimeout(saveWindowState, 500); });
   mainWindow.on('close', (e) => {
     saveWindowState();
     if (!isQuitting) { e.preventDefault(); mainWindow.hide(); }
@@ -521,7 +452,7 @@ function createMainWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
   mainWindow.webContents.on('render-process-gone', (event, details) => {
     console.error('[Renderer] 崩溃:', details.reason);
-    dialog.showErrorBox('页面异常', `渲染进程因 ${details.reason} 崩溃，请重启程序。`);
+    dialog.showErrorBox('页面异常', `渲染进程崩溃 (${details.reason})，请重启程序。`);
   });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -531,15 +462,15 @@ function createMainWindow() {
 
 async function restartBackend() {
   await stopBackend();
-  const restartStderr = [];
-  backendProcess = await startBackend(restartStderr);
+  const stderr = [];
+  backendProcess = await startBackend(stderr);
 }
 
 function createTray() {
   const iconPath = getIconPath();
   if (!fs.existsSync(iconPath)) return;
   tray = new Tray(iconPath);
-  const contextMenu = Menu.buildFromTemplate([
+  const menu = Menu.buildFromTemplate([
     { label: '显示主窗口', click: () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
     { type: 'separator' },
     { label: '立即备份', click: () => { performAutoBackup(); showTrayNotification('备份任务', '执行中...'); } },
@@ -548,7 +479,7 @@ function createTray() {
     { label: '退出', click: () => { isQuitting = true; app.quit(); } },
   ]);
   tray.setToolTip(APP_TITLE);
-  tray.setContextMenu(contextMenu);
+  tray.setContextMenu(menu);
   tray.on('double-click', () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } });
 }
 
@@ -565,19 +496,20 @@ function showTrayNotification(title, body) {
 app.whenReady().then(async () => {
   console.log('[App] 启动...');
   setupIpcHandlers();
-  // 启动后端
+
   const stderrCapture = [];
   backendProcess = await startBackend(stderrCapture);
-  // 显示 splash
-  let splashWin = null;
+
+  let splash = null;
   try {
     const splashPath = path.join(__dirname, 'splash.html');
     if (fs.existsSync(splashPath)) {
-      splashWin = new BrowserWindow({ width: 400, height: 300, frame: false, transparent: true, alwaysOnTop: true, resizable: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
-      splashWin.loadFile(splashPath);
-      splashWin.center();
+      splash = new BrowserWindow({ width: 400, height: 300, frame: false, transparent: true, alwaysOnTop: true, resizable: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
+      splash.loadFile(splashPath);
+      splash.center();
     }
-  } catch (e) { console.warn('[Splash] 加载失败:', e.message); }
+  } catch (e) {}
+
   try {
     console.log('[App] 等待后端就绪...');
     await waitForBackend(stderrCapture);
@@ -585,25 +517,25 @@ app.whenReady().then(async () => {
     backendRestartCount = 0;
   } catch (err) {
     console.error('[App] 后端启动失败:', err.message);
-    const errorAnalysis = analyzeStartupError(stderrCapture);
+    const analysis = analyzeStartupError(stderrCapture);
     const logPath = path.join(getUserDataPath(), 'logs', 'app.log');
-    const result = dialog.showMessageBoxSync({
+    const choice = dialog.showMessageBoxSync({
       type: 'error',
       title: '后端启动失败',
-      message: `后端服务无法启动。\n\n${errorAnalysis}\n\n诊断日志: ${CRASH_LOG_FILE}\n应用日志: ${logPath}\n\n是否查看详细日志？`,
+      message: `后端启动失败。\n${analysis}\n诊断日志: ${CRASH_LOG_FILE}\n应用日志: ${logPath}\n查看详细日志？`,
       buttons: ['退出', '查看日志', '继续'],
       defaultId: 0,
     });
-    if (result === 0) { isQuitting = true; stopBackend(); app.quit(); return; }
-    if (result === 1) {
-      const fullLogs = stderrCapture.join('\n') || '无日志';
-      dialog.showMessageBoxSync({ type: 'info', title: '后端日志', message: '后端输出：', detail: fullLogs.substring(0, 2000) });
+    if (choice === 0) { isQuitting = true; stopBackend(); app.quit(); return; }
+    if (choice === 1) {
+      const logs = stderrCapture.join('\n') || '无日志';
+      dialog.showMessageBoxSync({ type: 'info', title: '后端日志', message: '后端输出：', detail: logs.substring(0, 2000) });
       isQuitting = true; stopBackend(); app.quit(); return;
     }
-    // result 2: 继续
   }
+
   createMainWindow();
-  if (splashWin && !splashWin.isDestroyed()) { splashWin.close(); splashWin = null; }
+  if (splash && !splash.isDestroyed()) { splash.close(); splash = null; }
   createTray();
   startAutoBackup();
 });
@@ -611,20 +543,17 @@ app.whenReady().then(async () => {
 app.on('before-quit', () => { isQuitting = true; stopBackend(); });
 app.on('activate', () => { if (!mainWindow) createMainWindow(); else mainWindow.show(); });
 
-// Chromium 稳定性
 app.disableHardwareAcceleration();
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('disable-features', 'CacheControl');
-  const gpuCacheDir = path.join(getUserDataPath(), 'gpu-cache');
-  if (!fs.existsSync(gpuCacheDir)) fs.mkdirSync(gpuCacheDir, { recursive: true });
-  app.commandLine.appendSwitch('gpu-disk-cache-dir', gpuCacheDir);
+  const gpuCache = path.join(getUserDataPath(), 'gpu-cache');
+  if (!fs.existsSync(gpuCache)) fs.mkdirSync(gpuCache, { recursive: true });
+  app.commandLine.appendSwitch('gpu-disk-cache-dir', gpuCache);
   app.commandLine.appendSwitch('disable-background-timer-throttling');
 }
-if (process.platform === 'linux') {
-  if (typeof process.getuid === 'function' && process.getuid() === 0) {
-    console.warn('[Main] root 用户，启用 --no-sandbox');
-    app.commandLine.appendSwitch('no-sandbox');
-  }
+if (process.platform === 'linux' && typeof process.getuid === 'function' && process.getuid() === 0) {
+  console.warn('[Main] root 用户，启用 --no-sandbox');
+  app.commandLine.appendSwitch('no-sandbox');
 }
 
 process.on('uncaughtException', (err) => {
@@ -636,8 +565,8 @@ process.on('unhandledRejection', (reason) => {
   writeDiagnosticLog(`未处理的拒绝: ${String(reason)}`);
 });
 
-const gotTheLock = app.requestSingleInstanceLock();
-if (!gotTheLock) { app.quit(); } else {
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) { app.quit(); } else {
   app.on('second-instance', () => {
     if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show(); mainWindow.focus(); }
   });
@@ -651,23 +580,23 @@ function setupIpcHandlers() {
   ipcMain.on('window-minimize', () => { if (mainWindow) mainWindow.minimize(); });
   ipcMain.on('window-maximize', () => { if (mainWindow) { mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize(); } });
   ipcMain.on('window-close', () => { if (mainWindow) mainWindow.close(); });
-  ipcMain.handle('show-save-dialog', async (_event, options) => {
+  ipcMain.handle('show-save-dialog', async (_, opts) => {
     if (!mainWindow) return { canceled: true };
-    return dialog.showSaveDialog(mainWindow, options || { title: '保存文件', filters: [{ name: '所有文件', extensions: ['*'] }] });
+    return dialog.showSaveDialog(mainWindow, opts || { title: '保存文件', filters: [{ name: '所有文件', extensions: ['*'] }] });
   });
-  ipcMain.handle('show-open-dialog', async (_event, options) => {
+  ipcMain.handle('show-open-dialog', async (_, opts) => {
     if (!mainWindow) return { canceled: true };
-    return dialog.showOpenDialog(mainWindow, options || { title: '选择文件', properties: ['openFile'] });
+    return dialog.showOpenDialog(mainWindow, opts || { title: '选择文件', properties: ['openFile'] });
   });
-  ipcMain.handle('send-notification', (_event, title, body) => { showTrayNotification(title, body); });
-  ipcMain.handle('open-path', async (_event, targetPath) => { shell.openPath(targetPath); });
+  ipcMain.handle('send-notification', (_, title, body) => { showTrayNotification(title, body); });
+  ipcMain.handle('open-path', async (_, p) => { shell.openPath(p); });
   const { workerPool } = require('./worker-pool');
-  ipcMain.handle('worker-exec', async (_event, task, payload, timeout) => {
+  ipcMain.handle('worker-exec', async (_, task, payload, timeout) => {
     try { const result = await workerPool.exec(task, payload, timeout); return { success: true, data: result }; }
     catch (err) { return { success: false, error: err.message }; }
   });
   ipcMain.handle('worker-stats', () => workerPool.stats);
-  ipcMain.handle('read-file-chunked', async (_event, filePath, chunkSize) => {
+  ipcMain.handle('read-file-chunked', async (_, filePath, chunkSize) => {
     return new Promise((resolve) => {
       const chunks = [];
       const stream = fs.createReadStream(filePath, { highWaterMark: chunkSize || 256 * 1024, encoding: 'base64' });
@@ -679,12 +608,15 @@ function setupIpcHandlers() {
   ipcMain.on('window-force-redraw', () => {
     if (mainWindow) { mainWindow.webContents.invalidate(); mainWindow.focus(); mainWindow.webContents.focus(); }
   });
-  console.log('[IPC] 已注册');
+  console.log('[IPC] 注册完成');
 }
 
 // ─── 自动备份 ───
 function startAutoBackup() {
-  setTimeout(() => { performAutoBackup(); setInterval(performAutoBackup, AUTO_BACKUP_INTERVAL); }, 5 * 60 * 1000);
+  setTimeout(() => {
+    performAutoBackup();
+    setInterval(performAutoBackup, AUTO_BACKUP_INTERVAL);
+  }, 5 * 60 * 1000);
   console.log('[AutoBackup] 已调度');
 }
 
@@ -704,9 +636,7 @@ function performAutoBackup() {
         console.log('[AutoBackup] 成功');
         showTrayNotification('备份完成', '自动备份成功');
         cleanupOldBackups();
-      } else {
-        console.warn(`[AutoBackup] 状态码 ${res.statusCode}`);
-      }
+      } else console.warn(`[AutoBackup] 状态码 ${res.statusCode}`);
     });
   });
   req.on('error', (err) => { console.warn('[AutoBackup] 请求失败:', err.message); });
