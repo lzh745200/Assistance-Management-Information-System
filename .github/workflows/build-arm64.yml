@@ -1,4 +1,4 @@
-﻿name: Build Self-Contained ARM64 Kylin Installer
+name: Build Self-Contained ARM64 Kylin Installer
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-backend:
-    name: Build Backend
+    name: Build Backend (ARM64)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install System Dependencies
+      - name: Install Cross-Compilation Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -41,8 +41,10 @@ jobs:
           pip install -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir --no-deps
           pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib bcrypt python-multipart httpx python-dotenv aiofiles Pillow openpyxl loguru || true
           pip install pyinstaller
-
           cd backend
+          # 强制使用交叉编译环境
+          export CC=aarch64-linux-gnu-gcc
+          export CXX=aarch64-linux-gnu-g++
           pyinstaller --name=assistance-backend \
             --onefile \
             --add-data "app:app" \
@@ -57,16 +59,14 @@ jobs:
             --hidden-import=multipart \
             --hidden-import=contourpy \
             --hidden-import=pkg_resources \
-            start.py || echo "PyInstaller build failed, but continuing"
-
-          ls -la backend/dist/ || echo "No dist directory"
-
-      - name: Upload Backend
+            start.py
+          ls -la dist/
+      - name: Upload Backend Artifact
         uses: actions/upload-artifact@v4
         with:
           name: backend-arm64
           path: backend/dist/assistance-backend
-          if-no-files-found: warn
+          if-no-files-found: error
 
   build-frontend:
     name: Build Frontend
@@ -83,16 +83,11 @@ jobs:
       - name: Build Frontend
         working-directory: ./frontend
         run: |
-          echo "🚀 尝试使用国内镜像安装依赖（带重试）..."
           npm config set registry https://registry.npmmirror.com
-          npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 || \
-          ( echo "⚠️  国内镜像安装失败，切换到官方源并重试..." && \
-            npm config set registry https://registry.npmjs.org && \
-            npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 ) || \
-          ( echo "❌ 两次安装均失败，请检查网络" && exit 1 )
+          npm install --legacy-peer-deps
           npm run build
 
-      - name: Upload Frontend
+      - name: Upload Frontend Artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
@@ -111,128 +106,141 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Dependencies (Root)
+      - name: Install Dependencies
         run: |
           npm config set registry https://registry.npmmirror.com
-          if [ -f package-lock.json ]; then
-            echo "⚠️  发现 package-lock.json，将其移除以避免旧镜像 URL 干扰"
-            rm -f package-lock.json
-          fi
-          npm cache clean --force || echo "缓存清理完成"
-          echo "🚀 开始安装依赖（使用国内镜像）..."
-          npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 --registry=https://registry.npmmirror.com || \
-          ( echo "⚠️  国内镜像安装失败，尝试官方源..." && \
-            npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 --registry=https://registry.npmjs.org ) || \
-          ( echo "❌ 安装仍然失败，请检查网络或依赖版本" && exit 1 )
-          echo "✅ 安装完成，关键包版本："
-          npx electron-builder --version || echo "electron-builder 未全局安装，将在构建时使用 npx"
+          if [ -f package-lock.json ]; then rm -f package-lock.json; fi
+          npm cache clean --force || true
+          npm install --legacy-peer-deps --registry=https://registry.npmmirror.com || \
+            npm install --legacy-peer-deps --registry=https://registry.npmjs.org
 
-      - name: Download Artifacts (Backend)
+      - name: Download Backend
         uses: actions/download-artifact@v4
         with:
           name: backend-arm64
-          path: ./artifacts/backend
+          path: ./backend/dist
 
-      - name: Download Artifacts (Frontend)
+      - name: Download Frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: ./artifacts/frontend
+          path: ./frontend/dist
 
-      - name: Prepare Resources
+      - name: Prepare Application Sources
         run: |
-          mkdir -p backend/dist frontend
-          if [ -f artifacts/backend/assistance-backend ]; then
-            cp artifacts/backend/assistance-backend backend/dist/
-            chmod +x backend/dist/assistance-backend
-            echo "✅ Backend binary placed in backend/dist/"
-          else
-            echo "❌ Backend binary not found!"
-            exit 1
-          fi
+          # 确保后端二进制可执行
+          chmod +x backend/dist/assistance-backend
+          # 确保前端目录存在
+          ls -la frontend/dist/
 
-          if [ -d artifacts/frontend ]; then
-            rm -rf frontend/dist
-            cp -r artifacts/frontend frontend/dist
-            echo "✅ Frontend files placed in frontend/dist/"
-          else
-            echo "❌ Frontend dist not found!"
-            exit 1
-          fi
-
-      # ---- 构建自包含应用 ----
-      - name: Build un-packaged app (ARM64)
+      # 构建未打包的应用（包含 Electron 和前端资源）
+      - name: Build Unpacked App (ARM64)
         run: |
-          npx electron-builder --linux --arm64 --dir --publish never
+          # 使用 electron-builder 生成 unpacked 目录，便于后期处理
+          npx electron-builder --linux --arm64 --dir --publish never -c.compression=store
 
-      # 调试：列出 dist 目录内容
-      - name: Debug dist directory
-        run: |
-          echo "📂 dist 目录内容："
-          ls -la dist/ || echo "dist 目录不存在"
-          echo "查找 unpacked 目录："
-          find dist -type d -name "*unpacked*" 2>/dev/null || echo "未找到 unpacked 目录"
-
-      - name: Setup QEMU for ARM64 container
-        uses: docker/setup-qemu-action@v3
-
-      - name: Collect dependencies and set RPATH in ARM64 container
+      - name: Prepare Self-Contained Directory
         run: |
           APP_NAME=$(node -p "require('./package.json').name")
           APP_VERSION=$(node -p "require('./package.json').version")
-          
-          # 动态查找 unpacked 目录（可能是 linux-arm64-unpacked 或 linux-unpacked）
-          UNPACKED_DIR=$(find dist -type d -name "*unpacked*" | head -n1)
+          UNPACKED_DIR=$(find dist -maxdepth 1 -type d -name "*unpacked" | head -n1)
           if [ -z "$UNPACKED_DIR" ]; then
-            echo "❌ 未找到 unpacked 目录，请检查 electron-builder 输出"
+            echo "❌ 未找到 unpacked 目录"
             exit 1
           fi
-          echo "✅ 找到 unpacked 目录: $UNPACKED_DIR"
-          
-          SELF_CONTAINED_DIR="dist/self-contained"
-          mkdir -p "$SELF_CONTAINED_DIR/opt/$APP_NAME"
-          mkdir -p "$SELF_CONTAINED_DIR/DEBIAN"
-          
-          # 使用 . 复制所有内容（包括隐藏文件），避免通配符问题
-          cp -r "$UNPACKED_DIR"/. "$SELF_CONTAINED_DIR/opt/$APP_NAME/"
-          
-          cat > "$SELF_CONTAINED_DIR/DEBIAN/control" << EOF
+          echo "✅ 使用 unpacked 目录: $UNPACKED_DIR"
+
+          # 创建自包含包目录结构
+          SELF_DIR="dist/self-contained"
+          mkdir -p "$SELF_DIR/opt/$APP_NAME"
+          mkdir -p "$SELF_DIR/DEBIAN"
+
+          # 复制应用所有文件（包括 Electron 可执行文件、资源、前端等）
+          cp -r "$UNPACKED_DIR"/. "$SELF_DIR/opt/$APP_NAME/"
+
+          # 将后端二进制复制到 resources/backend/ 下（主程序会通过 process.resourcesPath 查找）
+          mkdir -p "$SELF_DIR/opt/$APP_NAME/resources/backend"
+          cp backend/dist/assistance-backend "$SELF_DIR/opt/$APP_NAME/resources/backend/"
+          chmod +x "$SELF_DIR/opt/$APP_NAME/resources/backend/assistance-backend"
+
+          # 创建启动脚本（设置 LD_LIBRARY_PATH 并启动主程序）
+          cat > "$SELF_DIR/opt/$APP_NAME/start.sh" << 'EOF'
+          #!/bin/bash
+          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          export LD_LIBRARY_PATH="$SCRIPT_DIR/lib:$LD_LIBRARY_PATH"
+          exec "$SCRIPT_DIR/$(find . -maxdepth 1 -type f -executable -name 'bumofu-assistance-system' | head -n1)" "$@"
+          EOF
+          chmod +x "$SELF_DIR/opt/$APP_NAME/start.sh"
+
+          # 创建 desktop 文件（用于菜单启动）
+          mkdir -p "$SELF_DIR/usr/share/applications"
+          cat > "$SELF_DIR/usr/share/applications/$APP_NAME.desktop" << EOF
+          [Desktop Entry]
+          Name=帮扶管理系统
+          Comment=帮扶管理系统 - 贵州省版
+          Exec=/opt/$APP_NAME/start.sh
+          Icon=/opt/$APP_NAME/resources/icon.png
+          Terminal=false
+          Type=Application
+          Categories=Office;Utility;
+          EOF
+
+          # 创建 DEBIAN/control
+          cat > "$SELF_DIR/DEBIAN/control" << EOF
           Package: $APP_NAME
           Version: $APP_VERSION
           Architecture: arm64
-          Maintainer: Your Name <your.email@example.com>
-          Description: Self-contained application for Kylin V10 ARM64
+          Maintainer: Development Team <dev@bumofu.com>
+          Description: Self-contained Bumofu Assistance System for Kylin V10 ARM64
            This package includes all runtime dependencies and requires no external libraries.
           EOF
-          
+
+      - name: Collect Dependencies in ARM64 Container
+        run: |
+          APP_NAME=$(node -p "require('./package.json').name")
+          SELF_DIR="dist/self-contained"
+          # 使用 Ubuntu 20.04 ARM64 容器收集动态库
           docker run --rm --platform linux/arm64 \
-            -v $(pwd)/$SELF_CONTAINED_DIR/opt/$APP_NAME:/app \
+            -v $(pwd)/$SELF_DIR/opt/$APP_NAME:/app \
             arm64v8/ubuntu:20.04 \
             bash -c "
               set -e
               apt update && apt install -y patchelf file
               cd /app
+              # 找到主可执行文件（Electron 主程序）
               MAIN_EXEC=\$(find . -maxdepth 1 -type f -executable | head -n1)
               if [ -z \"\$MAIN_EXEC\" ]; then
                 echo '❌ 未找到主可执行文件'
                 exit 1
               fi
-              echo \"主程序: \$MAIN_EXEC\"
+              echo '主程序:' \$MAIN_EXEC
               mkdir -p lib
-              echo '📦 正在复制依赖库...'
+              # 复制所有依赖库（包括 libgtk、libxcb 等）
               ldd \"\$MAIN_EXEC\" | grep '=> /' | awk '{print \$3}' | while read lib; do
                 if [ -f \"\$lib\" ]; then
                   cp -a \"\$lib\" lib/ 2>/dev/null || echo \"复制 \$lib 失败\"
                 fi
               done
-              echo '🔧 修改 RPATH...'
+              # 修改 RPATH
               find . -type f -executable -exec patchelf --set-rpath '\$ORIGIN/lib' {} \; 2>/dev/null || true
-              echo '✅ 依赖收集和 RPATH 修改完成'
+              # 复制必要的系统库（如 libgtk、libxcb）可能未被 ldd 列出，但 Electron 需要
+              # 这里安装一些常用 GUI 库并复制
+              apt install -y libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 xdg-utils libatspi2.0-0 libdrm2 libgbm1 libxcb-util1
+              cp -a /usr/lib/aarch64-linux-gnu/libgtk-3.so* lib/ 2>/dev/null || true
+              cp -a /usr/lib/aarch64-linux-gnu/libgdk-3.so* lib/ 2>/dev/null || true
+              cp -a /usr/lib/aarch64-linux-gnu/libnotify.so* lib/ 2>/dev/null || true
+              cp -a /usr/lib/aarch64-linux-gnu/libnss3.so* lib/ 2>/dev/null || true
+              # ... 可按需添加其他库
+              echo '✅ 依赖收集完成'
             "
-          
-          echo "📦 正在打包成 .deb ..."
-          dpkg-deb --build "$SELF_CONTAINED_DIR" "${APP_NAME}_${APP_VERSION}_arm64.deb"
-          
+
+      - name: Build Debian Package
+        run: |
+          APP_NAME=$(node -p "require('./package.json').name")
+          APP_VERSION=$(node -p "require('./package.json').version")
+          SELF_DIR="dist/self-contained"
+          # 打包 .deb
+          dpkg-deb --build "$SELF_DIR" "${APP_NAME}_${APP_VERSION}_arm64.deb"
           mkdir -p deb-artifacts
           cp "${APP_NAME}_${APP_VERSION}_arm64.deb" deb-artifacts/
 
@@ -257,20 +265,16 @@ jobs:
       - name: Package Installer
         run: |
           mkdir -p release
-          if [ -n "$(find deb-package -maxdepth 1 -name '*.deb' -print -quit)" ]; then
-            DEB_FILE=$(ls deb-package/*.deb | head -n1)
+          DEB_FILE=$(ls deb-package/*.deb | head -n1)
+          if [ -f "$DEB_FILE" ]; then
             VERSION=$(echo "$DEB_FILE" | sed -n 's/.*_\(.*\)_arm64\.deb/\1/p')
-            if [ -z "$VERSION" ]; then
-              VERSION="1.2.0"
-            fi
-            tar -czf "release/assistance-system-kylin-arm64-v${VERSION}.tar.gz" deb-package/*.deb
+            [ -z "$VERSION" ] && VERSION="1.2.0"
+            tar -czf "release/assistance-system-kylin-arm64-v${VERSION}.tar.gz" -C deb-package .
             echo "✅ 安装包创建完成"
           else
-            echo "❌ 未找到 DEB 包，构建失败"
-            ls -la deb-package/ || echo "deb-package 目录不存在"
+            echo "❌ 未找到 DEB 包"
             exit 1
           fi
-          ls -la release/
 
       - name: Upload Installer
         uses: actions/upload-artifact@v4
