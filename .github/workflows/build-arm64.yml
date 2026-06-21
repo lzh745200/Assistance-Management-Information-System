@@ -42,7 +42,6 @@ jobs:
           pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib bcrypt python-multipart httpx python-dotenv aiofiles Pillow openpyxl loguru || true
           pip install pyinstaller
           cd backend
-          # 强制使用交叉编译环境
           export CC=aarch64-linux-gnu-gcc
           export CXX=aarch64-linux-gnu-g++
           pyinstaller --name=assistance-backend \
@@ -61,6 +60,7 @@ jobs:
             --hidden-import=pkg_resources \
             start.py
           ls -la dist/
+
       - name: Upload Backend Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -128,51 +128,84 @@ jobs:
 
       - name: Prepare Application Sources
         run: |
-          # 确保后端二进制可执行
           chmod +x backend/dist/assistance-backend
-          # 确保前端目录存在
           ls -la frontend/dist/
 
-      # 构建未打包的应用（包含 Electron 和前端资源）
+      # 构建未打包的应用（生成 unpacked 目录）
       - name: Build Unpacked App (ARM64)
         run: |
-          # 使用 electron-builder 生成 unpacked 目录，便于后期处理
           npx electron-builder --linux --arm64 --dir --publish never -c.compression=store
+
+      # 调试：列出 dist 目录所有内容，找出 unpacked 目录
+      - name: Debug dist directory
+        run: |
+          echo "📂 dist 目录完整内容："
+          find dist -type d | sort
+          echo "✅ 查找可能的 unpacked 目录："
+          find dist -type d -name "*unpacked*" || echo "未找到包含 unpacked 的目录"
+          echo "📁 尝试列出所有一级子目录："
+          ls -la dist/
 
       - name: Prepare Self-Contained Directory
         run: |
           APP_NAME=$(node -p "require('./package.json').name")
           APP_VERSION=$(node -p "require('./package.json').version")
-          UNPACKED_DIR=$(find dist -maxdepth 1 -type d -name "*unpacked" | head -n1)
+
+          # 智能查找 unpacked 目录（支持多种可能名称）
+          # 优先查找包含 "unpacked" 的目录，如果找不到则取 dist 下第一个非空目录（通常就是应用目录）
+          UNPACKED_DIR=""
+          for pattern in "*unpacked*" "*linux-arm64*" "*linux*"; do
+            DIR=$(find dist -maxdepth 1 -type d -name "$pattern" | head -n1)
+            if [ -n "$DIR" ]; then
+              UNPACKED_DIR="$DIR"
+              echo "✅ 通过模式 $pattern 找到目录: $UNPACKED_DIR"
+              break
+            fi
+          done
+
+          # 如果还是没有，则取 dist 下第一个子目录（排除自身）
           if [ -z "$UNPACKED_DIR" ]; then
-            echo "❌ 未找到 unpacked 目录"
+            UNPACKED_DIR=$(find dist -maxdepth 1 -type d ! -path dist | head -n1)
+            echo "⚠️ 未找到特定模式，使用第一个子目录: $UNPACKED_DIR"
+          fi
+
+          if [ -z "$UNPACKED_DIR" ]; then
+            echo "❌ 无法找到 unpacked 目录，请检查 electron-builder 输出"
+            echo "📂 dist 目录内容："
+            ls -la dist/
             exit 1
           fi
+
           echo "✅ 使用 unpacked 目录: $UNPACKED_DIR"
 
-          # 创建自包含包目录结构
           SELF_DIR="dist/self-contained"
           mkdir -p "$SELF_DIR/opt/$APP_NAME"
           mkdir -p "$SELF_DIR/DEBIAN"
 
-          # 复制应用所有文件（包括 Electron 可执行文件、资源、前端等）
+          # 复制应用所有文件
           cp -r "$UNPACKED_DIR"/. "$SELF_DIR/opt/$APP_NAME/"
 
-          # 将后端二进制复制到 resources/backend/ 下（主程序会通过 process.resourcesPath 查找）
+          # 复制后端到 resources/backend/
           mkdir -p "$SELF_DIR/opt/$APP_NAME/resources/backend"
           cp backend/dist/assistance-backend "$SELF_DIR/opt/$APP_NAME/resources/backend/"
           chmod +x "$SELF_DIR/opt/$APP_NAME/resources/backend/assistance-backend"
 
-          # 创建启动脚本（设置 LD_LIBRARY_PATH 并启动主程序）
+          # 创建启动脚本
           cat > "$SELF_DIR/opt/$APP_NAME/start.sh" << 'EOF'
           #!/bin/bash
           SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
           export LD_LIBRARY_PATH="$SCRIPT_DIR/lib:$LD_LIBRARY_PATH"
-          exec "$SCRIPT_DIR/$(find . -maxdepth 1 -type f -executable -name 'bumofu-assistance-system' | head -n1)" "$@"
+          # 查找主可执行文件（通常是应用名称）
+          MAIN_EXEC=$(find "$SCRIPT_DIR" -maxdepth 1 -type f -executable ! -name "start.sh" | head -n1)
+          if [ -z "$MAIN_EXEC" ]; then
+            echo "错误：找不到主程序"
+            exit 1
+          fi
+          exec "$MAIN_EXEC" "$@"
           EOF
           chmod +x "$SELF_DIR/opt/$APP_NAME/start.sh"
 
-          # 创建 desktop 文件（用于菜单启动）
+          # 创建 desktop 文件
           mkdir -p "$SELF_DIR/usr/share/applications"
           cat > "$SELF_DIR/usr/share/applications/$APP_NAME.desktop" << EOF
           [Desktop Entry]
@@ -199,7 +232,6 @@ jobs:
         run: |
           APP_NAME=$(node -p "require('./package.json').name")
           SELF_DIR="dist/self-contained"
-          # 使用 Ubuntu 20.04 ARM64 容器收集动态库
           docker run --rm --platform linux/arm64 \
             -v $(pwd)/$SELF_DIR/opt/$APP_NAME:/app \
             arm64v8/ubuntu:20.04 \
@@ -207,30 +239,24 @@ jobs:
               set -e
               apt update && apt install -y patchelf file
               cd /app
-              # 找到主可执行文件（Electron 主程序）
-              MAIN_EXEC=\$(find . -maxdepth 1 -type f -executable | head -n1)
+              MAIN_EXEC=\$(find . -maxdepth 1 -type f -executable ! -name 'start.sh' | head -n1)
               if [ -z \"\$MAIN_EXEC\" ]; then
                 echo '❌ 未找到主可执行文件'
                 exit 1
               fi
               echo '主程序:' \$MAIN_EXEC
               mkdir -p lib
-              # 复制所有依赖库（包括 libgtk、libxcb 等）
               ldd \"\$MAIN_EXEC\" | grep '=> /' | awk '{print \$3}' | while read lib; do
                 if [ -f \"\$lib\" ]; then
                   cp -a \"\$lib\" lib/ 2>/dev/null || echo \"复制 \$lib 失败\"
                 fi
               done
-              # 修改 RPATH
               find . -type f -executable -exec patchelf --set-rpath '\$ORIGIN/lib' {} \; 2>/dev/null || true
-              # 复制必要的系统库（如 libgtk、libxcb）可能未被 ldd 列出，但 Electron 需要
-              # 这里安装一些常用 GUI 库并复制
               apt install -y libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 xdg-utils libatspi2.0-0 libdrm2 libgbm1 libxcb-util1
               cp -a /usr/lib/aarch64-linux-gnu/libgtk-3.so* lib/ 2>/dev/null || true
               cp -a /usr/lib/aarch64-linux-gnu/libgdk-3.so* lib/ 2>/dev/null || true
               cp -a /usr/lib/aarch64-linux-gnu/libnotify.so* lib/ 2>/dev/null || true
               cp -a /usr/lib/aarch64-linux-gnu/libnss3.so* lib/ 2>/dev/null || true
-              # ... 可按需添加其他库
               echo '✅ 依赖收集完成'
             "
 
@@ -239,7 +265,6 @@ jobs:
           APP_NAME=$(node -p "require('./package.json').name")
           APP_VERSION=$(node -p "require('./package.json').version")
           SELF_DIR="dist/self-contained"
-          # 打包 .deb
           dpkg-deb --build "$SELF_DIR" "${APP_NAME}_${APP_VERSION}_arm64.deb"
           mkdir -p deb-artifacts
           cp "${APP_NAME}_${APP_VERSION}_arm64.deb" deb-artifacts/
