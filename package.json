@@ -42,7 +42,11 @@
     "extraResources": [
       {
         "from": "backend/dist/assistance-backend",
-        "to": "resources/backend/",
+        "to": "resources/backend/assistance-management-backend"
+      },
+      {
+        "from": "frontend/dist",
+        "to": "resources/frontend",
         "filter": ["**/*"]
       }
     ],
