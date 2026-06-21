@@ -151,8 +151,7 @@ jobs:
           APP_NAME=$(node -p "require('./package.json').name")
           APP_VERSION=$(node -p "require('./package.json').version")
 
-          # 智能查找 unpacked 目录（支持多种可能名称）
-          # 优先查找包含 "unpacked" 的目录，如果找不到则取 dist 下第一个非空目录（通常就是应用目录）
+          # 智能查找 unpacked 目录
           UNPACKED_DIR=""
           for pattern in "*unpacked*" "*linux-arm64*" "*linux*"; do
             DIR=$(find dist -maxdepth 1 -type d -name "$pattern" | head -n1)
@@ -163,7 +162,6 @@ jobs:
             fi
           done
 
-          # 如果还是没有，则取 dist 下第一个子目录（排除自身）
           if [ -z "$UNPACKED_DIR" ]; then
             UNPACKED_DIR=$(find dist -maxdepth 1 -type d ! -path dist | head -n1)
             echo "⚠️ 未找到特定模式，使用第一个子目录: $UNPACKED_DIR"
@@ -195,7 +193,6 @@ jobs:
           #!/bin/bash
           SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
           export LD_LIBRARY_PATH="$SCRIPT_DIR/lib:$LD_LIBRARY_PATH"
-          # 查找主可执行文件（通常是应用名称）
           MAIN_EXEC=$(find "$SCRIPT_DIR" -maxdepth 1 -type f -executable ! -name "start.sh" | head -n1)
           if [ -z "$MAIN_EXEC" ]; then
             echo "错误：找不到主程序"
@@ -227,6 +224,9 @@ jobs:
           Description: Self-contained Bumofu Assistance System for Kylin V10 ARM64
            This package includes all runtime dependencies and requires no external libraries.
           EOF
+
+      - name: Setup QEMU for ARM64
+        uses: docker/setup-qemu-action@v3
 
       - name: Collect Dependencies in ARM64 Container
         run: |
