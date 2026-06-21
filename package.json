@@ -42,7 +42,7 @@
     "extraResources": [
       {
         "from": "backend/dist/assistance-backend",
-        "to": "backend/",
+        "to": "resources/backend/",
         "filter": ["**/*"]
       }
     ],
@@ -58,7 +58,7 @@
       "target": [
         {
           "target": "deb",
-          "arch": ["x64", "arm64", "armv7l"]
+          "arch": ["arm64"]
         }
       ],
       "icon": "resources/icon.png",
