@@ -33,10 +33,44 @@ jobs:
           name: frontend-dist
           path: frontend/dist/
 
+  build-backend-deps:
+    name: Build Backend Dependencies (ARM64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Install Python dependencies in ARM64 container
+        run: |
+          # 创建临时目录存放依赖
+          mkdir -p backend-deps
+          docker run --rm --platform linux/arm64 \
+            -v $(pwd):/workspace \
+            -w /workspace \
+            arm64v8/python:3.11 \
+            bash -c "
+              pip install --upgrade pip
+              pip install -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --target /workspace/backend-deps
+            "
+          # 确保目录存在（即使requirements为空）
+          mkdir -p backend-deps
+          # 清理缓存减少体积
+          find backend-deps -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+          find backend-deps -name "*.pyc" -delete 2>/dev/null || true
+
+      - name: Upload Backend Dependencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-deps
+          path: backend-deps
+
   build-electron:
     name: Build Debian Package (ARM64)
     runs-on: ubuntu-latest
-    needs: [build-frontend]
+    needs: [build-frontend, build-backend-deps]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,6 +93,19 @@ jobs:
         with:
           name: frontend-dist
           path: ./frontend/dist
+
+      - name: Download Backend Dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-deps
+          path: ./backend-deps
+
+      - name: Prepare Sources
+        run: |
+          # 确保 backend 源码存在（已由 checkout 提供）
+          ls -la backend/
+          # 确保依赖目录存在
+          ls -la backend-deps/
 
       - name: Build Debian Package (ARM64)
         run: |
