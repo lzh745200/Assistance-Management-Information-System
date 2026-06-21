@@ -84,9 +84,6 @@
         "Name": "帮扶管理系统",
         "Comment": "帮扶管理系统 - 贵州省版",
         "Categories": ["Office", "Utility"]
-      },
-      "deb": {
-        "depends": ["python3"]
       }
     }
   }
