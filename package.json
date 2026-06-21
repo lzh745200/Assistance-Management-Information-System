@@ -37,8 +37,14 @@
     "files": [
       "electron/**/*",
       "frontend/dist/**/*",
-      "backend/dist/**/*",
       "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/dist/assistance-backend",
+        "to": "backend/",
+        "filter": ["**/*"]
+      }
     ],
     "win": {
       "target": ["nsis"],
