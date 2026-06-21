@@ -1,4 +1,4 @@
-name: Build ARM64 Debian Package
+name: Build Self-Contained ARM64 Debian Package
 
 on:
   push:
@@ -15,51 +15,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Install Cross-Compilation Tools
+      - name: Build Backend in ARM64 Container
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            gcc-aarch64-linux-gnu \
-            binutils-aarch64-linux-gnu \
-            python3-dev \
-            patchelf \
-            libc6-dev-arm64-cross \
-            libxml2-dev \
-            libxslt1-dev \
-            libjpeg-dev \
-            zlib1g-dev \
-            libpng-dev
-
-      - name: Build Backend
-        run: |
-          pip install --upgrade pip
-          pip install -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir --no-deps
-          pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib bcrypt python-multipart httpx python-dotenv aiofiles Pillow openpyxl loguru || true
-          pip install pyinstaller
-          cd backend
-          export CC=aarch64-linux-gnu-gcc
-          export CXX=aarch64-linux-gnu-g++
-          pyinstaller --name=assistance-backend \
-            --onefile \
-            --add-data "app:app" \
-            --add-data "alembic:alembic" \
-            --add-data "alembic.ini:." \
-            --hidden-import=uvicorn \
-            --hidden-import=sqlalchemy \
-            --hidden-import=alembic \
-            --hidden-import=bcrypt \
-            --hidden-import=passlib \
-            --hidden-import=python_jose \
-            --hidden-import=multipart \
-            --hidden-import=contourpy \
-            --hidden-import=pkg_resources \
-            start.py
-          ls -la dist/
+          # 在 ARM64 容器内执行 PyInstaller
+          docker run --rm --platform linux/arm64 \
+            -v $(pwd):/workspace \
+            -w /workspace/backend \
+            arm64v8/python:3.11 \
+            bash -c "
+              pip install --upgrade pip
+              pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir
+              pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib bcrypt python-multipart httpx python-dotenv aiofiles Pillow openpyxl loguru pyinstaller
+              pyinstaller --name=assistance-backend \
+                --onefile \
+                --add-data 'app:app' \
+                --add-data 'alembic:alembic' \
+                --add-data 'alembic.ini:.' \
+                --hidden-import=uvicorn \
+                --hidden-import=sqlalchemy \
+                --hidden-import=alembic \
+                --hidden-import=bcrypt \
+                --hidden-import=passlib \
+                --hidden-import=python_jose \
+                --hidden-import=multipart \
+                --hidden-import=contourpy \
+                --hidden-import=pkg_resources \
+                start.py
+            "
+          # 将产物复制到 backend/dist 供后续使用
+          mkdir -p backend/dist
+          cp backend/dist/assistance-backend backend/dist/ 2>/dev/null || echo "产物不存在，请检查容器构建"
 
       - name: Upload Backend Artifact
         uses: actions/upload-artifact@v4
@@ -126,7 +114,7 @@ jobs:
           name: frontend-dist
           path: ./frontend/dist
 
-      - name: Prepare Application Sources
+      - name: Prepare Sources
         run: |
           chmod +x backend/dist/assistance-backend
           ls -la frontend/dist/
