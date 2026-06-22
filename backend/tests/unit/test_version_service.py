@@ -216,7 +216,12 @@ class TestUpgrade:
         assert result["status"] == "success"
 
     def test_exception(self, service):
-        with patch.object(service, "_save_version", side_effect=Exception("upgrade fail")):
+        # upgrade() 默认 backup_before_upgrade=True，会触发真实的 create_backup
+        # （压缩整个数据库/上传目录），在测试环境下导致超时。此处 mock 掉备份服务，
+        # 与 test_backup_returns_none 一致，聚焦验证 _save_version 异常的错误处理路径。
+        with patch("app.services.backup_service.get_backup_service") as mock_get, \
+                patch.object(service, "_save_version", side_effect=Exception("upgrade fail")):
+            mock_get.return_value.create_backup.return_value = None
             result = service.upgrade("5.0.0", "fails")
         assert result["status"] == "error"
 

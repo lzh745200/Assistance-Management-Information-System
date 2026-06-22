@@ -358,7 +358,7 @@ class SupportedVillageExportService:
         else:
             content = self._build_excel(data, statistics)
 
-        logger.info("导出完成: %s, %d 模块, %d 村", filename, len(data), statistics.get("total_villages", 0))
+        logger.info("导出完成: %s, %d 模块, %d 村", filename, len(data), statistics.get("total_villages") or 0)
         return content, filename, statistics
 
     def _build_csv(self, data: Dict[str, Any]) -> bytes:

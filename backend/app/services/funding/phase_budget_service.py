@@ -28,7 +28,8 @@ class PhaseBudgetService:
         self.db.add(baseline)
         await self.db.commit()
         await self.db.refresh(baseline)
-        logger.info("Budget baseline created for fund %d", kwargs.get("fund_id"))
+        # 用 %s 兼容 kwargs.get 返回 None 的情况(%d 遇 None 会抛 TypeError)
+        logger.info("Budget baseline created for fund %s", kwargs.get("fund_id"))
         return baseline
 
     async def get_budget_summary(self, fund_id: int) -> dict:

@@ -119,10 +119,12 @@ class FundService:
         if auto_commit:
             self.db.commit()
             self.db.refresh(fund)
-            logger.info("Fund %d created and committed", fund.id)
+            # NOTE: 用 %s 而非 %d —— fund.id 在 refresh 未填值(测试 mock / 驱动延迟)
+            # 时可能为 None，%d 会抛 TypeError 导致经费创建失败。%s 对 None 安全。
+            logger.info("Fund %s created and committed", fund.id)
         else:
             self.db.flush()  # flush 可以生成 ID 但不提交事务
-            logger.info("Fund %d created (flushed, not committed)", fund.id)
+            logger.info("Fund %s created (flushed, not committed)", fund.id)
         return fund
 
     def create_fund_for_user(
@@ -175,10 +177,10 @@ class FundService:
         if auto_commit:
             self.db.commit()
             self.db.refresh(fund)
-            logger.info("Fund %d created by user %d", fund.id, created_by)
+            logger.info("Fund %s created by user %d", fund.id, created_by)
         else:
             self.db.flush()
-            logger.info("Fund %d created by user %d (flushed, not committed)", fund.id, created_by)
+            logger.info("Fund %s created by user %d (flushed, not committed)", fund.id, created_by)
         return fund
 
     def update_fund(self, fund_id: int, *, auto_commit: bool = True, **kwargs) -> Optional[Fund]:
