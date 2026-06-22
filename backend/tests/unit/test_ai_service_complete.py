@@ -268,7 +268,10 @@ class TestAnalyzeProjectProgress:
             [],
         ]
 
-        result = service.analyze_project_progress(mock_db)
+        # 传入 admin user 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+        admin_user = MagicMock()
+        admin_user.is_superuser = True
+        result = service.analyze_project_progress(mock_db, user=admin_user)
         assert result["overdue_count"] == 1
         assert result["overdue_projects"][0]["overdue_days"] == 0
 
@@ -534,7 +537,10 @@ class TestGetRecommendations:
             [],  # over budget
         ]
 
-        result = await service.get_recommendations({}, db=mock_db)
+        # 传入 admin user 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+        admin_user = MagicMock()
+        admin_user.is_superuser = True
+        result = await service.get_recommendations({}, db=mock_db, user=admin_user)
         assert len(result) == 1
         assert result[0]["type"] == "warning"
         assert "逾期" in result[0]["content"]
@@ -551,7 +557,10 @@ class TestGetRecommendations:
             [MagicMock(), MagicMock()],  # over budget
         ]
 
-        result = await service.get_recommendations({}, db=mock_db)
+        # 传入 admin user 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+        admin_user = MagicMock()
+        admin_user.is_superuser = True
+        result = await service.get_recommendations({}, db=mock_db, user=admin_user)
         assert len(result) == 1
         assert "超支" in result[0]["content"]
 
@@ -567,7 +576,10 @@ class TestGetRecommendations:
             [],  # no over budget
         ]
 
-        result = await service.get_recommendations({}, db=mock_db)
+        # 传入 admin user 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+        admin_user = MagicMock()
+        admin_user.is_superuser = True
+        result = await service.get_recommendations({}, db=mock_db, user=admin_user)
         assert len(result) == 1
         assert result[0]["type"] == "suggestion"
 
