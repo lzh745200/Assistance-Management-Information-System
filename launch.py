@@ -79,4 +79,15 @@ print("  ================================================")
 print()
 
 os.chdir(BACKEND_DIR)
-sys.exit(subprocess.run([sys.executable, "start.py"]).returncode)
+_start_time = time.time()
+_ret = subprocess.run([sys.executable, "start.py"]).returncode
+_elapsed = time.time() - _start_time
+if _ret != 0 and _elapsed < 10:
+    print()
+    print("  [ERROR] 后端启动后立即退出（存活 %.1f 秒），可能原因：" % _elapsed)
+    print("  1. 端口 %d 被占用 — 运行: netstat -ano | findstr :%d" % (PORT, PORT))
+    print("  2. 数据库损坏 — 检查 backend/data/ 目录")
+    print("  3. 前端资源校验失败 — 运行: cd frontend && npm run build")
+    print("  4. 查看详细日志: backend/logs/app.log")
+    print()
+sys.exit(_ret)

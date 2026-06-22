@@ -89,7 +89,7 @@ class TestLoadFromDb:
     def test_loads_entries(self):
         mock_session = MagicMock()
         mock_entry = MagicMock()
-        mock_entry.jti = "db-jti"
+        mock_entry.token_jti = "db-jti"
         mock_entry.expires_at = datetime.now(timezone.utc).replace(year=2099)
         mock_session.query.return_value.filter.return_value.all.return_value = [mock_entry]
 
@@ -101,7 +101,7 @@ class TestLoadFromDb:
         token_blacklist.add("existing-jti")
         mock_session = MagicMock()
         mock_entry = MagicMock()
-        mock_entry.jti = "existing-jti"
+        mock_entry.token_jti = "existing-jti"
         mock_entry.expires_at = datetime.now(timezone.utc).replace(year=2099)
         mock_session.query.return_value.filter.return_value.all.return_value = [mock_entry]
 
@@ -111,7 +111,7 @@ class TestLoadFromDb:
     def test_entry_with_no_expiry_uses_default_ttl(self):
         mock_session = MagicMock()
         mock_entry = MagicMock()
-        mock_entry.jti = "no-expiry"
+        mock_entry.token_jti = "no-expiry"
         mock_entry.expires_at = None
         mock_session.query.return_value.filter.return_value.all.return_value = [mock_entry]
 

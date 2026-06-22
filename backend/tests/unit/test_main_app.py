@@ -59,22 +59,55 @@ class TestShutdownRoute:
 
     @pytest.mark.asyncio
     async def test_from_local_no_key(self):
+        """未配置 INTERNAL_SHUTDOWN_KEY 时应拒绝关闭请求（返回 403）"""
         transport = httpx.ASGITransport(app=app, client=("127.0.0.1", 8000))
         async with httpx.AsyncClient(transport=transport) as hclient:
-            with patch("threading.Timer") as mock_timer:
-                resp = await hclient.post(
-                    "http://test/api/v1/shutdown",
-                    headers={"Content-Type": "application/json"},
-                )
-                assert resp.status_code == 200
-                assert resp.json()["status"] == "shutting_down"
-                mock_timer.assert_called_once()
+            resp = await hclient.post(
+                "http://test/api/v1/shutdown",
+                headers={"Content-Type": "application/json"},
+            )
+            assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_from_local_correct_key(self):
+        """配置了正确的 INTERNAL_SHUTDOWN_KEY 时应允许关闭"""
+        import app.main as main_mod
+        original_getenv = os.getenv
+
+        def _mock_getenv(key, default=""):
+            if key == "INTERNAL_SHUTDOWN_KEY":
+                return "secret"
+            return original_getenv(key, default)
+
+        with patch.object(main_mod.os, "getenv", side_effect=_mock_getenv):
+            transport = httpx.ASGITransport(app=app, client=("127.0.0.1", 8000))
+            async with httpx.AsyncClient(transport=transport) as hclient:
+                with patch("threading.Timer") as mock_timer:
+                    resp = await hclient.post(
+                        "http://test/api/v1/shutdown",
+                        headers={
+                            "Content-Type": "application/json",
+                            "X-Internal-Shutdown": "secret",
+                        },
+                    )
+                    assert resp.status_code == 200
+                    assert resp.json()["status"] == "shutting_down"
+                    mock_timer.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_from_local_wrong_key(self):
-        transport = httpx.ASGITransport(app=app, client=("127.0.0.1", 8000))
-        async with httpx.AsyncClient(transport=transport) as hclient:
-            with patch.dict(os.environ, {"INTERNAL_SHUTDOWN_KEY": "secret"}):
+        """配置了错误的 INTERNAL_SHUTDOWN_KEY 时应返回 403"""
+        import app.main as main_mod
+        original_getenv = os.getenv
+
+        def _mock_getenv(key, default=""):
+            if key == "INTERNAL_SHUTDOWN_KEY":
+                return "secret"
+            return original_getenv(key, default)
+
+        with patch.object(main_mod.os, "getenv", side_effect=_mock_getenv):
+            transport = httpx.ASGITransport(app=app, client=("127.0.0.1", 8000))
+            async with httpx.AsyncClient(transport=transport) as hclient:
                 resp = await hclient.post(
                     "http://test/api/v1/shutdown",
                     headers={
@@ -84,25 +117,6 @@ class TestShutdownRoute:
                 )
                 assert resp.status_code == 403
                 assert "内部密钥验证失败" in resp.json()["detail"]
-
-    @pytest.mark.asyncio
-    async def test_from_local_correct_key(self):
-        transport = httpx.ASGITransport(app=app, client=("127.0.0.1", 8000))
-        async with httpx.AsyncClient(transport=transport) as hclient:
-            with (
-                patch.dict(os.environ, {"INTERNAL_SHUTDOWN_KEY": "mykey"}),
-                patch("threading.Timer") as mock_timer,
-            ):
-                resp = await hclient.post(
-                    "http://test/api/v1/shutdown",
-                    headers={
-                        "Content-Type": "application/json",
-                        "X-Internal-Shutdown": "mykey",
-                    },
-                )
-                assert resp.status_code == 200
-                assert resp.json()["status"] == "shutting_down"
-                mock_timer.assert_called_once()
 
 
 class TestTrailingSlashRedirect:

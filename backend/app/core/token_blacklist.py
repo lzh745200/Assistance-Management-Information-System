@@ -75,9 +75,9 @@ def load_from_db(db_session) -> int:
             .all()
         )
         for entry in entries:
-            if entry.jti not in _blacklist:
+            if entry.token_jti not in _blacklist:
                 expiry = entry.expires_at.timestamp() if entry.expires_at else now + 86400
-                _blacklist[entry.jti] = expiry
+                _blacklist[entry.token_jti] = expiry
         if entries:
             logger.info("从数据库加载 %d 条黑名单记录", len(entries))
         return len(entries)
@@ -112,21 +112,26 @@ def _cleanup_expired() -> None:
 # ---------------------------------------------------------------------------
 
 
-def add_to_db(token_jti: str, db_session, *, reason: str = "") -> None:
+def add_to_db(token_jti: str, db_session, *, reason: str = "",
+              expires_at: Optional[datetime] = None,
+              user_id: Optional[int] = None) -> None:
     """Persist a blacklist entry to the database.
 
     Args:
         token_jti: The JWT ID.
         db_session: An active SQLAlchemy session.
         reason: Optional reason for revocation.
+        expires_at: Optional token expiry datetime.
+        user_id: Optional user ID associated with the token.
     """
     try:
         from app.models.token_blacklist import TokenBlacklist  # type: ignore[import-untyped]
 
         entry = TokenBlacklist(
-            jti=token_jti,
-            revoked_at=datetime.now(timezone.utc),
+            token_jti=token_jti,
             reason=reason or "manual_revoke",
+            expires_at=expires_at,
+            user_id=user_id,
         )
         db_session.add(entry)
         db_session.commit()

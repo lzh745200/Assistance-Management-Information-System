@@ -12,14 +12,16 @@ from typing import Any, Dict, Optional, Tuple
 logger = logging.getLogger(__name__)
 
 
-def _persist_revocation(jti: str, reason: str = "") -> None:
+def _persist_revocation(jti: str, reason: str = "",
+                        expires_at: Optional[datetime] = None,
+                        user_id: Optional[int] = None) -> None:
     """将吊销的 token JTI 持久化到数据库（后台安全操作，失败不影响主流程）。"""
     try:
         from app.core.database import SessionLocal
         from app.core.token_blacklist import add_to_db
         db = SessionLocal()
         try:
-            add_to_db(jti, db, reason=reason)
+            add_to_db(jti, db, reason=reason, expires_at=expires_at, user_id=user_id)
         finally:
             db.close()
     except Exception:
@@ -199,7 +201,7 @@ def revoke_token(token: str, *, reason: str = "") -> bool:
 
         add(jti, expires_at=expires_at)
         # 持久化到数据库，确保重启后吊销仍然有效
-        _persist_revocation(jti, reason)
+        _persist_revocation(jti, reason, expires_at=expires_at)
         logger.info("Token 已吊销 jti=%s reason=%s", jti[:12], reason)
         return True
     except Exception as e:

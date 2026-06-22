@@ -34,7 +34,10 @@ class TestPersistRevocation:
         _persist_revocation("some-jti", reason="logout")
 
         mock_session_local.assert_called_once_with()
-        mock_add_to_db.assert_called_once_with("some-jti", mock_db, reason="logout")
+        mock_add_to_db.assert_called_once_with(
+            "some-jti", mock_db, reason="logout",
+            expires_at=None, user_id=None,
+        )
         mock_db.close.assert_called_once()
 
     @patch("app.core.token_blacklist.add_to_db")
@@ -267,7 +270,11 @@ class TestRevokeToken:
         result = revoke_token("some-token", reason="logout")
         assert result is True
         mock_add.assert_called_once()
-        mock_persist.assert_called_once_with("abc123", "logout")
+        # expires_at is passed through from the token's exp claim
+        call_kwargs = mock_persist.call_args
+        assert call_kwargs[0][0] == "abc123"
+        assert call_kwargs[0][1] == "logout"
+        assert "expires_at" in call_kwargs[1]
 
     @patch("app.core.token_manager._get_secret_key", return_value="s")
     @patch("app.core.token_manager._get_algorithm", return_value="HS256")

@@ -27,7 +27,7 @@ class TokenBlacklist(Base):
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         index=True,
-        nullable=False,
+        nullable=True,
         comment="用户ID",
     )
     blacklisted_at = Column(
@@ -39,7 +39,7 @@ class TokenBlacklist(Base):
     )
     expires_at = Column(
         DateTime,
-        nullable=False,
+        nullable=True,
         index=True,
         comment="Token 原始过期时间",
     )

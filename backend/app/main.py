@@ -227,13 +227,15 @@ async def shutdown(request: Request):
     # 内部密钥验证：防止本机恶意进程关闭服务
     import os
 
-    expected_key = os.getenv("INTERNAL_SHUTDOWN_KEY", "")
-    if expected_key:
-        from fastapi import HTTPException
+    from fastapi import HTTPException
 
-        request_key = request.headers.get("X-Internal-Shutdown", "")
-        if request_key != expected_key:
-            raise HTTPException(status_code=403, detail="内部密钥验证失败")
+    expected_key = os.getenv("INTERNAL_SHUTDOWN_KEY", "")
+    if not expected_key:
+        # 未配置关闭密钥时拒绝所有关闭请求（非 Electron 启动场景）
+        raise HTTPException(status_code=403, detail="未配置内部关闭密钥，拒绝关闭请求")
+    request_key = request.headers.get("X-Internal-Shutdown", "")
+    if request_key != expected_key:
+        raise HTTPException(status_code=403, detail="内部密钥验证失败")
     logger.info("收到 shutdown 请求，正在关闭...")
     # 在后台线程中延迟关闭，使用 sys.exit 以触发正常清理流程
     import signal
