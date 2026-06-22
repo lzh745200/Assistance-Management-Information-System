@@ -123,7 +123,9 @@ async def forecast_income(
 
     - `forecast_years`: 预测未来年数（默认2年，最多5年）
     """
-    result = await run_in_threadpool(ai_service_manager.forecast_income_trend, db, forecast_years=forecast_years)
+    result = await run_in_threadpool(
+        ai_service_manager.forecast_income_trend, db, forecast_years=forecast_years, user=current_user
+    )
     return {"success": True, "data": result}
 
 
@@ -136,5 +138,5 @@ async def forecast_funds(
     根据当前时间进度和已使用经费，线性外推预测年末经费使用率，
     并给出资金执行风险评级（低/中/高）。
     """
-    result = await run_in_threadpool(ai_service_manager.forecast_fund_completion, db)
+    result = await run_in_threadpool(ai_service_manager.forecast_fund_completion, db, user=current_user)
     return {"success": True, "data": result}

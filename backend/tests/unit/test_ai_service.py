@@ -6,11 +6,11 @@ AI 服务测试
 
 import pytest
 
-import numpy as np
 from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from app.services.ai_service import AIServiceManager
+
 
 class TestAIServiceManager:
     """AI 服务管理器测试类"""
@@ -24,41 +24,48 @@ class TestAIServiceManager:
         """模拟数据库会话"""
         return Mock()
 
-    def test_forecast_income_trend_insufficient_data(self, ai_service, mock_db):
+    @pytest.fixture
+    def admin_user(self):
+        """管理员用户（使 filter_by_data_scope 跳过过滤，保持 mock 链不变）"""
+        admin = MagicMock()
+        admin.is_superuser = True
+        return admin
+
+    def test_forecast_income_trend_insufficient_data(self, ai_service, mock_db, admin_user):
         """测试数据不足时返回错误"""
         # 模拟空查询结果
-        mock_db.query.return_value.group_by.return_value.order_by.return_value.all.return_value = []
+        mock_db.query.return_value.join.return_value.group_by.return_value.order_by.return_value.all.return_value = []
 
-        result = ai_service.forecast_income_trend(mock_db, forecast_years=2)
+        result = ai_service.forecast_income_trend(mock_db, forecast_years=2, user=admin_user)
 
         assert result["status"] == "insufficient_data"
         assert "历史数据不足" in result["message"]
         assert result["historical"] == []
         assert result["forecast"] == []
 
-    def test_forecast_income_trend_single_point(self, ai_service, mock_db):
+    def test_forecast_income_trend_single_point(self, ai_service, mock_db, admin_user):
         """测试单点数据无法拟合"""
         # 模拟只有1条数据
-        mock_db.query.return_value.group_by.return_value.order_by.return_value.all.return_value = [
+        mock_db.query.return_value.join.return_value.group_by.return_value.order_by.return_value.all.return_value = [
             (2023, 5000.0, 10000.0)
         ]
 
-        result = ai_service.forecast_income_trend(mock_db, forecast_years=2)
+        result = ai_service.forecast_income_trend(mock_db, forecast_years=2, user=admin_user)
 
         assert result["status"] == "insufficient_data"
         assert "历史数据不足" in result["message"]
 
-    def test_forecast_income_trend_success(self, ai_service, mock_db):
+    def test_forecast_income_trend_success(self, ai_service, mock_db, admin_user):
         """测试收入趋势预测成功"""
         # 模拟线性增长数据
-        mock_db.query.return_value.group_by.return_value.order_by.return_value.all.return_value = [
+        mock_db.query.return_value.join.return_value.group_by.return_value.order_by.return_value.all.return_value = [
             (2020, 4000.0, 8000.0),
             (2021, 4500.0, 9000.0),
             (2022, 5000.0, 10000.0),
             (2023, 5500.0, 11000.0),
         ]
 
-        result = ai_service.forecast_income_trend(mock_db, forecast_years=2)
+        result = ai_service.forecast_income_trend(mock_db, forecast_years=2, user=admin_user)
 
         assert result["type"] == "income_forecast"
         assert result["status"] == "completed"
@@ -71,24 +78,24 @@ class TestAIServiceManager:
         # R² 应该比较高（线性数据）
         assert result["model_confidence"]["per_capita_income_r2"] > 0.9
 
-    def test_forecast_income_trend_declining_trend(self, ai_service, mock_db):
+    def test_forecast_income_trend_declining_trend(self, ai_service, mock_db, admin_user):
         """测试下降趋势预测"""
-        mock_db.query.return_value.group_by.return_value.order_by.return_value.all.return_value = [
+        mock_db.query.return_value.join.return_value.group_by.return_value.order_by.return_value.all.return_value = [
             (2020, 5500.0, 11000.0),
             (2021, 5000.0, 10000.0),
             (2022, 4500.0, 9000.0),
             (2023, 4000.0, 8000.0),
         ]
 
-        result = ai_service.forecast_income_trend(mock_db, forecast_years=2)
+        result = ai_service.forecast_income_trend(mock_db, forecast_years=2, user=admin_user)
 
         assert result["status"] == "completed"
         # 预测值应该继续下降趋势
         assert result["forecast"][0]["avg_per_capita_income"] < 4000.0
 
-    def test_forecast_income_trend_invalid_years(self, ai_service, mock_db):
+    def test_forecast_income_trend_invalid_years(self, ai_service, mock_db, admin_user):
         """测试预测年份为0时返回空预测"""
-        mock_db.query.return_value.group_by.return_value.order_by.return_value.all.return_value = [
+        mock_db.query.return_value.join.return_value.group_by.return_value.order_by.return_value.all.return_value = [
             (2020, 4000.0, 8000.0),
             (2021, 4500.0, 9000.0),
         ]
@@ -96,7 +103,7 @@ class TestAIServiceManager:
         # 实现没有处理 forecast_years=0 的情况，会抛出异常
         # 这里测试实际行为：应该抛出 ValueError
         try:
-            result = ai_service.forecast_income_trend(mock_db, forecast_years=0)
+            result = ai_service.forecast_income_trend(mock_db, forecast_years=0, user=admin_user)
             # 如果实现修复了，验证返回结果
             assert result["status"] == "completed"
             assert len(result["forecast"]) == 0
@@ -104,7 +111,7 @@ class TestAIServiceManager:
             # 当前实现会抛出异常，这也是可接受的行为
             pass
 
-    def test_forecast_fund_completion_normal(self, ai_service, mock_db):
+    def test_forecast_fund_completion_normal(self, ai_service, mock_db, admin_user):
         """测试经费使用正常情况"""
         # 模拟年中，50%使用率
         mock_row = (100000.0, 100000.0, 50000.0)  # total, allocated, used
@@ -113,7 +120,7 @@ class TestAIServiceManager:
         with patch('app.services.ai_service.date') as mock_date:
             mock_date.today.return_value = datetime(2024, 6, 30).date()
             mock_date.side_effect = lambda *args, **kw: datetime(*args, **kw).date()
-            result = ai_service.forecast_fund_completion(mock_db)
+            result = ai_service.forecast_fund_completion(mock_db, user=admin_user)
 
         assert result["type"] == "fund_completion_forecast"
         assert result["status"] == "completed"
@@ -122,7 +129,7 @@ class TestAIServiceManager:
         # 年中50%使用率，预计年末100%，应该是低风险
         assert result["risk_level"] == "low"
 
-    def test_forecast_fund_completion_high_risk(self, ai_service, mock_db):
+    def test_forecast_fund_completion_high_risk(self, ai_service, mock_db, admin_user):
         """测试经费高风险情况"""
         # 模拟年中，使用率很低
         mock_row = (100000.0, 100000.0, 10000.0)  # 仅使用10%
@@ -131,14 +138,14 @@ class TestAIServiceManager:
         with patch('app.services.ai_service.date') as mock_date:
             mock_date.today.return_value = datetime(2024, 6, 30).date()
             mock_date.side_effect = lambda *args, **kw: datetime(*args, **kw).date()
-            result = ai_service.forecast_fund_completion(mock_db)
+            result = ai_service.forecast_fund_completion(mock_db, user=admin_user)
 
         assert result["current"]["usage_rate"] == 0.1
         # 年中仅使用10%，预计年末使用率不足70%，应该是高风险
         assert result["risk_level"] == "high"
         assert "高风险" in result["risk_label"]
 
-    def test_forecast_fund_completion_over_budget(self, ai_service, mock_db):
+    def test_forecast_fund_completion_over_budget(self, ai_service, mock_db, admin_user):
         """测试经费超支情况"""
         mock_row = (110000.0, 100000.0, 110000.0)  # 已超支
         mock_db.query.return_value.filter.return_value.first.return_value = mock_row
@@ -146,11 +153,11 @@ class TestAIServiceManager:
         with patch('app.services.ai_service.date') as mock_date:
             mock_date.today.return_value = datetime(2024, 6, 30).date()
             mock_date.side_effect = lambda *args, **kw: datetime(*args, **kw).date()
-            result = ai_service.forecast_fund_completion(mock_db)
+            result = ai_service.forecast_fund_completion(mock_db, user=admin_user)
 
         assert result["current"]["usage_rate"] == 1.1
 
-    def test_forecast_fund_completion_zero_allocated(self, ai_service, mock_db):
+    def test_forecast_fund_completion_zero_allocated(self, ai_service, mock_db, admin_user):
         """测试分配金额为0的情况"""
         mock_row = (0.0, 0.0, 0.0)
         mock_db.query.return_value.filter.return_value.first.return_value = mock_row
@@ -158,12 +165,12 @@ class TestAIServiceManager:
         with patch('app.services.ai_service.date') as mock_date:
             mock_date.today.return_value = datetime(2024, 6, 30).date()
             mock_date.side_effect = lambda *args, **kw: datetime(*args, **kw).date()
-            result = ai_service.forecast_fund_completion(mock_db)
+            result = ai_service.forecast_fund_completion(mock_db, user=admin_user)
 
         # 应该处理除零情况
         assert result["current"]["usage_rate"] == 0.0
 
-    def test_forecast_fund_completion_year_start(self, ai_service, mock_db):
+    def test_forecast_fund_completion_year_start(self, ai_service, mock_db, admin_user):
         """测试年初第一天"""
         mock_row = (100000.0, 100000.0, 0.0)
         mock_db.query.return_value.filter.return_value.first.return_value = mock_row
@@ -171,9 +178,10 @@ class TestAIServiceManager:
         with patch('app.services.ai_service.date') as mock_date:
             mock_date.today.return_value = datetime(2024, 1, 1).date()
             mock_date.side_effect = lambda *args, **kw: datetime(*args, **kw).date()
-            result = ai_service.forecast_fund_completion(mock_db)
+            result = ai_service.forecast_fund_completion(mock_db, user=admin_user)
 
         assert result["year_progress"] > 0  # 应该有进度
+
 
 class TestAIServiceEdgeCases:
     """AI 服务边界情况测试"""
@@ -186,44 +194,51 @@ class TestAIServiceEdgeCases:
     def mock_db(self):
         return Mock()
 
-    def test_forecast_with_fluctuating_data(self, ai_service, mock_db):
+    @pytest.fixture
+    def admin_user(self):
+        """管理员用户（使 filter_by_data_scope 跳过过滤，保持 mock 链不变）"""
+        admin = MagicMock()
+        admin.is_superuser = True
+        return admin
+
+    def test_forecast_with_fluctuating_data(self, ai_service, mock_db, admin_user):
         """测试波动数据的预测"""
         # 非线性波动数据
-        mock_db.query.return_value.group_by.return_value.order_by.return_value.all.return_value = [
+        mock_db.query.return_value.join.return_value.group_by.return_value.order_by.return_value.all.return_value = [
             (2020, 4000.0, 8000.0),
             (2021, 4800.0, 9600.0),
             (2022, 4200.0, 8400.0),
             (2023, 5000.0, 10000.0),
         ]
 
-        result = ai_service.forecast_income_trend(mock_db, forecast_years=1)
+        result = ai_service.forecast_income_trend(mock_db, forecast_years=1, user=admin_user)
 
         assert result["status"] == "completed"
         # 波动数据应该也能给出预测
         assert len(result["forecast"]) == 1
 
-    def test_forecast_with_many_years(self, ai_service, mock_db):
+    def test_forecast_with_many_years(self, ai_service, mock_db, admin_user):
         """测试多年数据预测"""
         rows = [(2010 + i, 3000.0 + i * 200, 6000.0 + i * 400) for i in range(14)]
-        mock_db.query.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
+        mock_db.query.return_value.join.return_value.group_by.return_value.order_by.return_value.all.return_value = rows
 
-        result = ai_service.forecast_income_trend(mock_db, forecast_years=5)
+        result = ai_service.forecast_income_trend(mock_db, forecast_years=5, user=admin_user)
 
         assert result["status"] == "completed"
         assert len(result["forecast"]) == 5
         # 完美线性数据应该有很高的 R²
         assert result["model_confidence"]["per_capita_income_r2"] > 0.99
 
-    def test_forecast_with_null_values(self, ai_service, mock_db):
+    def test_forecast_with_null_values(self, ai_service, mock_db, admin_user):
         """测试包含NULL值的数据"""
-        mock_db.query.return_value.group_by.return_value.order_by.return_value.all.return_value = [
+        mock_db.query.return_value.join.return_value.group_by.return_value.order_by.return_value.all.return_value = [
             (2020, None, None),  # NULL值
             (2021, 4500.0, 9000.0),
             (2022, 5000.0, None),  # 部分NULL
             (2023, 5500.0, 11000.0),
         ]
 
-        result = ai_service.forecast_income_trend(mock_db, forecast_years=1)
+        result = ai_service.forecast_income_trend(mock_db, forecast_years=1, user=admin_user)
 
         # 应该能处理NULL值
         assert result["status"] == "completed"

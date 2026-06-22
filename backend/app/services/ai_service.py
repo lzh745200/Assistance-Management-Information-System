@@ -51,13 +51,13 @@ class AIServiceManager:
             if analysis_type == "summary":
                 return self._generate_summary(data)
             elif analysis_type == "trend" and db:
-                return self.analyze_income_trend(db)
+                return self.analyze_income_trend(db, user=user)
             elif analysis_type == "project_progress" and db:
                 return self.analyze_project_progress(db, user=user)
             elif analysis_type == "fund_efficiency" and db:
-                return self.analyze_fund_efficiency(db)
+                return self.analyze_fund_efficiency(db, user=user)
             elif analysis_type == "compare" and db:
-                return self.compare_villages(db)
+                return self.compare_villages(db, user=user)
             else:
                 return {
                     "result": "unsupported",
@@ -71,16 +71,31 @@ class AIServiceManager:
     # 1. 收入趋势分析
     # ------------------------------------------------------------------
 
-    def analyze_income_trend(self, db: Session) -> Dict[str, Any]:
-        """查询 VillageIncome 按年份聚合，计算年均增长率"""
-        from app.models.supported_village import VillageIncome
+    def analyze_income_trend(self, db: Session, user: Any = None) -> Dict[str, Any]:
+        """查询 VillageIncome 按年份聚合，计算年均增长率
 
+        Args:
+            db: 数据库会话。
+            user: 当前用户，用于数据权限过滤。
+        """
+        from app.core.data_permission import filter_by_data_scope
+        from app.models.supported_village import SupportedVillage, VillageIncome
+
+        # VillageIncome 无 organization_id/created_by，需 join SupportedVillage 后按数据权限过滤
         rows = (
-            db.query(
-                VillageIncome.year,
-                func.avg(VillageIncome.per_capita_income),
-                func.avg(VillageIncome.collective_income),
-                func.count(VillageIncome.id),
+            filter_by_data_scope(
+                db.query(
+                    VillageIncome.year,
+                    func.avg(VillageIncome.per_capita_income),
+                    func.avg(VillageIncome.collective_income),
+                    func.count(VillageIncome.id),
+                ).join(
+                    SupportedVillage,
+                    VillageIncome.supported_village_id == SupportedVillage.id,
+                ),
+                SupportedVillage,
+                user,
+                db=db,
             )
             .group_by(VillageIncome.year)
             .order_by(VillageIncome.year)
@@ -185,19 +200,29 @@ class AIServiceManager:
     # 3. 经费效率分析
     # ------------------------------------------------------------------
 
-    def analyze_fund_efficiency(self, db: Session) -> Dict[str, Any]:
-        """按帮扶村/单位维度计算拨付率和使用率"""
+    def analyze_fund_efficiency(self, db: Session, user: Any = None) -> Dict[str, Any]:
+        """按帮扶村/单位维度计算拨付率和使用率
+
+        Args:
+            db: 数据库会话。
+            user: 当前用户，用于数据权限过滤。
+        """
+        from app.core.data_permission import filter_by_data_scope
         from app.models.fund import Fund
 
-        # 按帮扶村聚合
+        # 按帮扶村聚合（受数据权限约束）
         village_rows = (
-            db.query(
-                Fund.village_id,
-                func.coalesce(func.sum(Fund.amount), 0),
-                func.coalesce(func.sum(Fund.allocated_amount), 0),
-                func.coalesce(func.sum(Fund.used_amount), 0),
+            filter_by_data_scope(
+                db.query(
+                    Fund.village_id,
+                    func.coalesce(func.sum(Fund.amount), 0),
+                    func.coalesce(func.sum(Fund.allocated_amount), 0),
+                    func.coalesce(func.sum(Fund.used_amount), 0),
+                ).filter(Fund.village_id.isnot(None)),
+                Fund,
+                user,
+                db=db,
             )
-            .filter(Fund.village_id.isnot(None))
             .group_by(Fund.village_id)
             .all()
         )
@@ -218,11 +243,16 @@ class AIServiceManager:
                 }
             )
 
-        # 全局汇总
-        global_row = db.query(
-            func.coalesce(func.sum(Fund.amount), 0),
-            func.coalesce(func.sum(Fund.allocated_amount), 0),
-            func.coalesce(func.sum(Fund.used_amount), 0),
+        # 全局汇总（受数据权限约束）
+        global_row = filter_by_data_scope(
+            db.query(
+                func.coalesce(func.sum(Fund.amount), 0),
+                func.coalesce(func.sum(Fund.allocated_amount), 0),
+                func.coalesce(func.sum(Fund.used_amount), 0),
+            ),
+            Fund,
+            user,
+            db=db,
         ).first()
         g_total = float(global_row[0])
         g_alloc = float(global_row[1])
@@ -245,24 +275,43 @@ class AIServiceManager:
     # 4. 村庄横向对比
     # ------------------------------------------------------------------
 
-    def compare_villages(self, db: Session) -> Dict[str, Any]:
-        """按县维度横向对比收入、人口变化"""
+    def compare_villages(self, db: Session, user: Any = None) -> Dict[str, Any]:
+        """按县维度横向对比收入、人口变化
+
+        Args:
+            db: 数据库会话。
+            user: 当前用户，用于数据权限过滤。
+        """
+        from app.core.data_permission import filter_by_data_scope
         from app.models.supported_village import (
             SupportedVillage,
             VillageIncome,
             VillagePopulation,
         )
 
-        # 按县聚合最新年份收入
-        latest_income_year = db.query(func.max(VillageIncome.year)).scalar()
+        # 按县聚合最新年份收入（受数据权限约束）
+        latest_income_year = filter_by_data_scope(
+            db.query(func.max(VillageIncome.year)).join(
+                SupportedVillage,
+                VillageIncome.supported_village_id == SupportedVillage.id,
+            ),
+            SupportedVillage,
+            user,
+            db=db,
+        ).scalar()
         county_income = []
         if latest_income_year:
             rows = (
-                db.query(
-                    SupportedVillage.county,
-                    func.count(SupportedVillage.id),
-                    func.avg(VillageIncome.per_capita_income),
-                    func.avg(VillageIncome.collective_income),
+                filter_by_data_scope(
+                    db.query(
+                        SupportedVillage.county,
+                        func.count(SupportedVillage.id),
+                        func.avg(VillageIncome.per_capita_income),
+                        func.avg(VillageIncome.collective_income),
+                    ),
+                    SupportedVillage,
+                    user,
+                    db=db,
                 )
                 .join(
                     VillageIncome,
@@ -282,15 +331,28 @@ class AIServiceManager:
                     }
                 )
 
-        # 按县聚合最新年份人口
-        latest_pop_year = db.query(func.max(VillagePopulation.year)).scalar()
+        # 按县聚合最新年份人口（受数据权限约束）
+        latest_pop_year = filter_by_data_scope(
+            db.query(func.max(VillagePopulation.year)).join(
+                SupportedVillage,
+                VillagePopulation.supported_village_id == SupportedVillage.id,
+            ),
+            SupportedVillage,
+            user,
+            db=db,
+        ).scalar()
         county_population = []
         if latest_pop_year:
             rows = (
-                db.query(
-                    SupportedVillage.county,
-                    func.sum(VillagePopulation.total_population),
-                    func.sum(VillagePopulation.total_households),
+                filter_by_data_scope(
+                    db.query(
+                        SupportedVillage.county,
+                        func.sum(VillagePopulation.total_population),
+                        func.sum(VillagePopulation.total_households),
+                    ),
+                    SupportedVillage,
+                    user,
+                    db=db,
                 )
                 .join(
                     VillagePopulation,
@@ -322,18 +384,36 @@ class AIServiceManager:
     # 5. 收入趋势预测（线性回归）
     # ------------------------------------------------------------------
 
-    def forecast_income_trend(self, db: Session, forecast_years: int = 2) -> Dict[str, Any]:
-        """基于历史收入数据用线性回归预测未来年份人均收入"""
+    def forecast_income_trend(
+        self, db: Session, forecast_years: int = 2, user: Any = None
+    ) -> Dict[str, Any]:
+        """基于历史收入数据用线性回归预测未来年份人均收入
+
+        Args:
+            db: 数据库会话。
+            forecast_years: 预测未来年数。
+            user: 当前用户，用于数据权限过滤。
+        """
         import numpy as np
         from sklearn.linear_model import LinearRegression
 
-        from app.models.supported_village import VillageIncome
+        from app.core.data_permission import filter_by_data_scope
+        from app.models.supported_village import SupportedVillage, VillageIncome
 
+        # VillageIncome 无 organization_id/created_by，需 join SupportedVillage 后按数据权限过滤
         rows = (
-            db.query(
-                VillageIncome.year,
-                func.avg(VillageIncome.per_capita_income),
-                func.avg(VillageIncome.collective_income),
+            filter_by_data_scope(
+                db.query(
+                    VillageIncome.year,
+                    func.avg(VillageIncome.per_capita_income),
+                    func.avg(VillageIncome.collective_income),
+                ).join(
+                    SupportedVillage,
+                    VillageIncome.supported_village_id == SupportedVillage.id,
+                ),
+                SupportedVillage,
+                user,
+                db=db,
             )
             .group_by(VillageIncome.year)
             .order_by(VillageIncome.year)
@@ -401,8 +481,14 @@ class AIServiceManager:
     # 6. 经费完成率预测
     # ------------------------------------------------------------------
 
-    def forecast_fund_completion(self, db: Session) -> Dict[str, Any]:
-        """根据当年进度预测年末经费使用率，评估资金风险"""
+    def forecast_fund_completion(self, db: Session, user: Any = None) -> Dict[str, Any]:
+        """根据当年进度预测年末经费使用率，评估资金风险
+
+        Args:
+            db: 数据库会话。
+            user: 当前用户，用于数据权限过滤。
+        """
+        from app.core.data_permission import filter_by_data_scope
         from app.models.fund import Fund
 
         today = date.today()
@@ -414,16 +500,20 @@ class AIServiceManager:
         year_progress = days_elapsed / days_total  # 0~1
 
         # 当年资金汇总（使用业务日期 Fund.date 而非 created_at，允许索引命中）
-        # 使用半开区间 [Jan 1, Jan 1 next year) 查询全年数据
+        # 使用半开区间 [Jan 1, Jan 1 next year) 查询全年数据（受数据权限约束）
         query_year_start = date(current_year, 1, 1)
         query_year_end = date(current_year + 1, 1, 1)
         row = (
-            db.query(
-                func.coalesce(func.sum(Fund.amount), 0),
-                func.coalesce(func.sum(Fund.allocated_amount), 0),
-                func.coalesce(func.sum(Fund.used_amount), 0),
+            filter_by_data_scope(
+                db.query(
+                    func.coalesce(func.sum(Fund.amount), 0),
+                    func.coalesce(func.sum(Fund.allocated_amount), 0),
+                    func.coalesce(func.sum(Fund.used_amount), 0),
+                ).filter(Fund.date >= query_year_start, Fund.date < query_year_end),
+                Fund,
+                user,
+                db=db,
             )
-            .filter(Fund.date >= query_year_start, Fund.date < query_year_end)
             .first()
         )
         total = float(row[0])

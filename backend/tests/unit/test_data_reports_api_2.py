@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, call, PropertyMock
+from unittest.mock import Mock, patch, AsyncMock, MagicMock, call, ANY, PropertyMock
 from datetime import datetime
 from fastapi.testclient import TestClient
 
@@ -130,7 +130,7 @@ class TestExportComprehensiveReport:
         resp = test_client.get("/api/v1/reports/export/comprehensive/2024")
         assert resp.status_code == 200
         assert resp.content == b"comprehensive"
-        mock_svc.export_comprehensive_report.assert_called_once_with(2024, None)
+        mock_svc.export_comprehensive_report.assert_called_once_with(2024, None, user=ANY)
 
     def test_with_village_ids(self, client):
         test_client, db = client
@@ -141,7 +141,7 @@ class TestExportComprehensiveReport:
 
         resp = test_client.get("/api/v1/reports/export/comprehensive/2024?village_ids=1,2,3")
         assert resp.status_code == 200
-        mock_svc.export_comprehensive_report.assert_called_once_with(2024, [1, 2, 3])
+        mock_svc.export_comprehensive_report.assert_called_once_with(2024, [1, 2, 3], user=ANY)
 
     def test_exception(self, client):
         test_client, db = client

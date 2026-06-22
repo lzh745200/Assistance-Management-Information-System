@@ -189,6 +189,8 @@ backend/batch_*.txt
 *.test-results.*
 frontend/test_results.txt
 frontend/vitest.json
+backend/test_output.txt
+backend/bandit_tmp.json
 
 # ===== requirements 备份与临时文件 =====
 **/requirements.txt.backup

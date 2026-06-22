@@ -2,26 +2,36 @@
 """
 PyInstaller 完整打包配置 - 跨平台通用版
 将 FastAPI 后端打包为单文件可执行程序，包含所有依赖
-版本: 1.1.0
+版本: 1.2.0 (路径防御增强版)
 """
 
 import os
 import sys
 from pathlib import Path
 
-block_cipher = None
-backend_dir = os.path.dirname(os.path.abspath(SPEC))
-
 from PyInstaller.compat import is_win
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
-# 数据文件列表
+# ---------- 路径定义 ----------
+backend_dir = os.path.dirname(os.path.abspath(SPEC))  # 使用 PyInstaller 预定义的 SPEC 变量
+project_root = os.path.dirname(backend_dir)               # 项目根目录
+resources_dir = os.path.join(project_root, 'resources')
+frontend_dir = os.path.join(resources_dir, 'frontend')
+
+# ---------- 检查前端资源（必须存在） ----------
+if not os.path.isdir(frontend_dir):
+    raise FileNotFoundError(
+        f"前端资源目录不存在: {frontend_dir}\n"
+        "请确保在运行 PyInstaller 之前执行了 'npm run build' 并将产物复制到 resources/frontend"
+    )
+
+# ---------- 数据文件列表 ----------
 datas = [
     (os.path.join(backend_dir, 'alembic'), 'alembic'),
     (os.path.join(backend_dir, '.env.example'), '.'),
     (os.path.join(backend_dir, 'app'), 'app'),
-    # 前端静态文件 — 必须包含，否则打包后 GET / 返回 404
-    (os.path.join(backend_dir, '..', 'resources', 'frontend'), 'resources/frontend'),
+    # 前端静态文件 – 使用绝对路径确保添加
+    (frontend_dir, 'resources/frontend'),
 ]
 
 # 自动收集 prophet 包数据
@@ -40,11 +50,10 @@ if _snownlp_spec and _snownlp_spec.submodule_search_locations:
 # 自动收集 prometheus_client 包数据（包含 HTML 模板等静态文件）
 datas += collect_data_files('prometheus_client')
 
-# 二进制文件列表
+# ---------- 二进制文件 ----------
 binaries = []
 
-# 优化的 hidden imports - 只保留关键框架级导入
-# 使用 collect_submodules 自动收集 app 包下的所有模块
+# ---------- 隐藏导入（保持原有，并补充必要模块） ----------
 hiddenimports = [
     # FastAPI 和 Web 框架核心
     'uvicorn',
@@ -188,30 +197,27 @@ hiddenimports += [
     'app.api.v1.search',
 ]
 
-# 排除不需要的模块（避免 Analysis 时间过长）
+# ---------- 排除不需要的模块 ----------
 excludes = [
     'pytest', 'pytest_asyncio', 'pytest_cov', 'pytest_mock',
     'hypothesis', 'flake8', 'black', 'mypy',
     'tkinter', 'test', 'tests',
     'matplotlib', 'IPython', 'jupyter',
     'notebook', 'spyder', 'pylint',
-    # 可选依赖（未安装的不需要导入）
     'docx', 'mammoth', 'apscheduler',
-    # 不必要的 jose 后端
     'jose.backends.native_types',
     'jose.backends.pycryptodome_backend',
-    # 不存在的旧路径
     'app.api.v1.users',
     'app.api.v1.user_management',
     'app.api.v1.rbac',
     'app.api.v1.analytics',
     'app.api.v1.statistics',
-    # magic 模块导致 PyInstaller 子进程崩溃（需要 libmagic DLL）
-    # file_upload.py 中已用 try/except 保护，运行时自动降级
     'magic',
 ]
 
-analysis_kwargs = dict(
+# ---------- Analysis ----------
+a = Analysis(
+    [os.path.join(backend_dir, 'start.py')],
     pathex=[backend_dir],
     binaries=binaries,
     datas=datas,
@@ -220,21 +226,16 @@ analysis_kwargs = dict(
     hooksconfig={},
     runtime_hooks=[],
     excludes=excludes,
-    cipher=block_cipher,
+    cipher=None,
     noarchive=False,
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
 )
 
-if is_win:
-    analysis_kwargs['win_no_prefer_redirects'] = False
-    analysis_kwargs['win_private_assemblies'] = False
+# ---------- PYZ ----------
+pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
-a = Analysis(
-    [os.path.join(backend_dir, 'start.py')],
-    **analysis_kwargs,
-)
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
-
+# ---------- EXE ----------
 exe = EXE(
     pyz,
     a.scripts,
@@ -255,5 +256,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=os.path.join(backend_dir, '..', 'resources', 'icons', 'app.ico'),
+    icon=os.path.join(resources_dir, 'icons', 'app.ico'),
 )

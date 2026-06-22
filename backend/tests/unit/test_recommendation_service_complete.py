@@ -6,6 +6,11 @@ import pytest
 from unittest.mock import MagicMock, patch
 from sqlalchemy import and_
 
+# admin user mock — 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+_admin = MagicMock()
+_admin.is_superuser = True
+
+
 class TestRecommendProjects:
     """测试 recommend_projects 方法"""
 
@@ -34,7 +39,7 @@ class TestRecommendProjects:
         mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = [mock_similar_village]
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_project]
 
-        result = RecommendationService.recommend_projects(mock_db, 1, limit=5)
+        result = RecommendationService.recommend_projects(mock_db, 1, limit=5, user=_admin)
 
         assert len(result) > 0
         assert result[0]["project_type"] == "agriculture"
@@ -47,7 +52,7 @@ class TestRecommendProjects:
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        result = RecommendationService.recommend_projects(mock_db, 999)
+        result = RecommendationService.recommend_projects(mock_db, 999, user=_admin)
 
         assert result == []
 
@@ -64,7 +69,7 @@ class TestRecommendProjects:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_village
         mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = []
 
-        result = RecommendationService.recommend_projects(mock_db, 1)
+        result = RecommendationService.recommend_projects(mock_db, 1, user=_admin)
 
         assert result == []
 
@@ -85,7 +90,7 @@ class TestRecommendProjects:
         mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = [mock_similar_village]
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        result = RecommendationService.recommend_projects(mock_db, 1)
+        result = RecommendationService.recommend_projects(mock_db, 1, user=_admin)
 
         assert result == []
 
@@ -127,7 +132,7 @@ class TestRecommendProjects:
         mock_db.query.return_value.filter.return_value.limit.return_value.all.return_value = [mock_similar_village]
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_project1, mock_project2, mock_project3]
 
-        result = RecommendationService.recommend_projects(mock_db, 1, limit=5)
+        result = RecommendationService.recommend_projects(mock_db, 1, limit=5, user=_admin)
 
         assert len(result) > 0
         # 验证按分数排序
@@ -143,7 +148,7 @@ class TestRecommendFundAllocation:
 
         mock_db = MagicMock()
 
-        result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [])
+        result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [], user=_admin)
 
         assert result["allocations"] == []
         assert "error" in result
@@ -155,7 +160,7 @@ class TestRecommendFundAllocation:
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1])
+        result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1], user=_admin)
 
         assert result["allocations"] == []
         assert "error" in result
@@ -166,7 +171,7 @@ class TestRecommendFundAllocation:
 
         mock_db = MagicMock()
 
-        result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [])
+        result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [], user=_admin)
 
         assert result["allocations"] == []
         assert "error" in result
@@ -178,7 +183,7 @@ class TestRecommendFundAllocation:
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1])
+        result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1], user=_admin)
 
         assert result["allocations"] == []
         assert "error" in result
@@ -263,7 +268,7 @@ class TestRecommendFundAllocationComplete:
         mock_db.query.side_effect = mock_query
 
         try:
-            result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1])
+            result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1], user=_admin)
         finally:
             for mod in ['app.models.annual_population', 'app.models.annual_income']:
                 if mod in sys.modules:
@@ -313,7 +318,7 @@ class TestRecommendFundAllocationComplete:
         mock_db.query.side_effect = mock_query
 
         try:
-            result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1])
+            result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1], user=_admin)
         finally:
             for mod in ['app.models.annual_population', 'app.models.annual_income']:
                 if mod in sys.modules:
@@ -360,7 +365,7 @@ class TestRecommendFundAllocationComplete:
         mock_db.query.side_effect = mock_query
 
         try:
-            result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1])
+            result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1], user=_admin)
         finally:
             for mod in ['app.models.annual_population', 'app.models.annual_income']:
                 if mod in sys.modules:
@@ -429,7 +434,7 @@ class TestRecommendFundAllocationComplete:
         mock_db.query.side_effect = mock_query
 
         try:
-            result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1, 2])
+            result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1, 2], user=_admin)
         finally:
             for mod in ['app.models.annual_population', 'app.models.annual_income']:
                 if mod in sys.modules:
@@ -470,7 +475,7 @@ class TestMatchPolicies:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_village
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_policy]
 
-        result = RecommendationService.match_policies(mock_db, 1)
+        result = RecommendationService.match_policies(mock_db, 1, user=_admin)
 
         assert len(result) > 0
         assert result[0]["policy_id"] == 1
@@ -483,7 +488,7 @@ class TestMatchPolicies:
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None
 
-        result = RecommendationService.match_policies(mock_db, 999)
+        result = RecommendationService.match_policies(mock_db, 999, user=_admin)
 
         assert result == []
 
@@ -498,7 +503,7 @@ class TestMatchPolicies:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_village
         mock_db.query.return_value.filter.return_value.all.return_value = []
 
-        result = RecommendationService.match_policies(mock_db, 1)
+        result = RecommendationService.match_policies(mock_db, 1, user=_admin)
 
         assert result == []
 
@@ -527,7 +532,7 @@ class TestMatchPolicies:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_village
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_policy]
 
-        result = RecommendationService.match_policies(mock_db, 1)
+        result = RecommendationService.match_policies(mock_db, 1, user=_admin)
 
         assert len(result) > 0
         assert "全国性政策" in result[0]["reasons"]
@@ -557,7 +562,7 @@ class TestMatchPolicies:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_village
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_policy]
 
-        result = RecommendationService.match_policies(mock_db, 1)
+        result = RecommendationService.match_policies(mock_db, 1, user=_admin)
 
         assert len(result) > 0
         assert any("深圳" in reason for reason in result[0]["reasons"])
@@ -587,7 +592,7 @@ class TestMatchPolicies:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_village
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_policy]
 
-        result = RecommendationService.match_policies(mock_db, 1)
+        result = RecommendationService.match_policies(mock_db, 1, user=_admin)
 
         # 由于省份不匹配，应该没有匹配结果
         assert len(result) == 0
@@ -618,7 +623,7 @@ class TestMatchPolicies:
         mock_db.query.return_value.filter.return_value.first.return_value = mock_village
         mock_db.query.return_value.filter.return_value.all.return_value = [mock_policy]
 
-        result = RecommendationService.match_policies(mock_db, 1)
+        result = RecommendationService.match_policies(mock_db, 1, user=_admin)
 
         assert len(result) > 0
         assert result[0]["effective_date"] == "2024-01-01"

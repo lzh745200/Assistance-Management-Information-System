@@ -1,4 +1,3 @@
-import io
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from datetime import datetime
