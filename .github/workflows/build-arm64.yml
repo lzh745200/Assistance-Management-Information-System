@@ -1,4 +1,4 @@
-﻿name: Build Self-Contained ARM64 Kylin Installer
+﻿name: Build Self-Contained ARM64 Debian Package
 
 on:
   push:
@@ -9,64 +9,51 @@ on:
 
 jobs:
   build-backend:
-    name: Build Backend
+    name: Build Backend Binary (ARM64)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Install System Dependencies
+      - name: Build Backend with PyInstaller in ARM64 Container
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            gcc-aarch64-linux-gnu \
-            binutils-aarch64-linux-gnu \
-            python3-dev \
-            patchelf \
-            libc6-dev-arm64-cross \
-            libxml2-dev \
-            libxslt1-dev \
-            libjpeg-dev \
-            zlib1g-dev \
-            libpng-dev
+          mkdir -p backend/dist
+          docker run --rm --platform linux/arm64 \
+            -v $(pwd):/workspace \
+            -w /workspace/backend \
+            arm64v8/python:3.11 \
+            bash -c "
+              pip install --upgrade pip
+              pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+              pip install pyinstaller
+              pyinstaller --name=assistance-backend \
+                --onefile \
+                --add-data 'app:app' \
+                --add-data 'alembic:alembic' \
+                --add-data 'alembic.ini:.' \
+                --hidden-import=uvicorn \
+                --hidden-import=sqlalchemy \
+                --hidden-import=alembic \
+                --hidden-import=bcrypt \
+                --hidden-import=passlib \
+                --hidden-import=python_jose \
+                --hidden-import=multipart \
+                --hidden-import=contourpy \
+                --hidden-import=pkg_resources \
+                start.py
+            "
+          cp backend/dist/assistance-backend backend/dist/ || echo "未找到产物"
+          file backend/dist/assistance-backend
 
-      - name: Build Backend
-        run: |
-          pip install --upgrade pip
-          pip install -r backend/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir --no-deps
-          pip install fastapi uvicorn sqlalchemy alembic pydantic python-jose passlib bcrypt python-multipart httpx python-dotenv aiofiles Pillow openpyxl loguru || true
-          pip install pyinstaller
-
-          cd backend
-          pyinstaller --name=assistance-backend \
-            --onefile \
-            --add-data "app:app" \
-            --add-data "alembic:alembic" \
-            --add-data "alembic.ini:." \
-            --hidden-import=uvicorn \
-            --hidden-import=sqlalchemy \
-            --hidden-import=alembic \
-            --hidden-import=bcrypt \
-            --hidden-import=passlib \
-            --hidden-import=python_jose \
-            --hidden-import=multipart \
-            --hidden-import=contourpy \
-            --hidden-import=pkg_resources \
-            start.py || echo "PyInstaller build failed, but continuing"
-
-          ls -la backend/dist/ || echo "No dist directory"
-
-      - name: Upload Backend
+      - name: Upload Backend Binary
         uses: actions/upload-artifact@v4
         with:
           name: backend-arm64
           path: backend/dist/assistance-backend
-          if-no-files-found: warn
+          if-no-files-found: error
 
   build-frontend:
     name: Build Frontend
@@ -83,23 +70,18 @@ jobs:
       - name: Build Frontend
         working-directory: ./frontend
         run: |
-          echo "🚀 尝试使用国内镜像安装依赖（带重试）..."
           npm config set registry https://registry.npmmirror.com
-          npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 || \
-          ( echo "⚠️  国内镜像安装失败，切换到官方源并重试..." && \
-            npm config set registry https://registry.npmjs.org && \
-            npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 ) || \
-          ( echo "❌ 两次安装均失败，请检查网络" && exit 1 )
+          npm install --legacy-peer-deps
           npm run build
 
-      - name: Upload Frontend
+      - name: Upload Frontend Artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist/
 
   build-electron:
-    name: Build Self-Contained Electron DEB
+    name: Build Debian Package (ARM64)
     runs-on: ubuntu-latest
     needs: [build-backend, build-frontend]
     steps:
@@ -111,136 +93,50 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Dependencies (Root)
+      - name: Install Dependencies
         run: |
           npm config set registry https://registry.npmmirror.com
-          if [ -f package-lock.json ]; then
-            echo "⚠️  发现 package-lock.json，将其移除以避免旧镜像 URL 干扰"
-            rm -f package-lock.json
-          fi
-          npm cache clean --force || echo "缓存清理完成"
-          echo "🚀 开始安装依赖（使用国内镜像）..."
-          npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 --registry=https://registry.npmmirror.com || \
-          ( echo "⚠️  国内镜像安装失败，尝试官方源..." && \
-            npm install --legacy-peer-deps --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 --registry=https://registry.npmjs.org ) || \
-          ( echo "❌ 安装仍然失败，请检查网络或依赖版本" && exit 1 )
-          echo "✅ 安装完成，关键包版本："
-          npx electron-builder --version || echo "electron-builder 未全局安装，将在构建时使用 npx"
+          if [ -f package-lock.json ]; then rm -f package-lock.json; fi
+          npm cache clean --force || true
+          npm install --legacy-peer-deps --registry=https://registry.npmmirror.com || \
+            npm install --legacy-peer-deps --registry=https://registry.npmjs.org
 
-      - name: Download Artifacts (Backend)
+      - name: Download Backend Binary
         uses: actions/download-artifact@v4
         with:
           name: backend-arm64
-          path: ./artifacts/backend
+          path: ./backend/dist
 
-      - name: Download Artifacts (Frontend)
+      - name: Download Frontend
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: ./artifacts/frontend
+          path: ./frontend/dist
 
-      - name: Prepare Resources
+      - name: Prepare Sources
         run: |
-          mkdir -p backend/dist frontend
-          if [ -f artifacts/backend/assistance-backend ]; then
-            cp artifacts/backend/assistance-backend backend/dist/
-            chmod +x backend/dist/assistance-backend
-            echo "✅ Backend binary placed in backend/dist/"
-          else
-            echo "❌ Backend binary not found!"
-            exit 1
+          chmod +x backend/dist/assistance-backend
+          file backend/dist/assistance-backend
+          ls -la frontend/dist/
+          # 确保 resources/icon.png 存在（可在仓库中放置默认图标）
+          mkdir -p resources
+          if [ ! -f resources/icon.png ]; then
+            # 如果没有图标，创建一个简单的占位图（实际应预先放入仓库）
+            echo "警告：未找到 resources/icon.png，将使用 electron-builder 默认图标"
           fi
 
-          if [ -d artifacts/frontend ]; then
-            rm -rf frontend/dist
-            cp -r artifacts/frontend frontend/dist
-            echo "✅ Frontend files placed in frontend/dist/"
-          else
-            echo "❌ Frontend dist not found!"
-            exit 1
-          fi
-
-      # ---- 构建自包含应用 ----
-      - name: Build un-packaged app (ARM64)
+      - name: Build Debian Package (ARM64)
         run: |
-          npx electron-builder --linux --arm64 --dir --publish never
+          npx electron-builder --linux deb --arm64 --publish never
+        env:
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
 
-      # 调试：列出 dist 目录内容
-      - name: Debug dist directory
-        run: |
-          echo "📂 dist 目录内容："
-          ls -la dist/ || echo "dist 目录不存在"
-          echo "查找 unpacked 目录："
-          find dist -type d -name "*unpacked*" 2>/dev/null || echo "未找到 unpacked 目录"
-
-      - name: Setup QEMU for ARM64 container
-        uses: docker/setup-qemu-action@v3
-
-      - name: Collect dependencies and set RPATH in ARM64 container
-        run: |
-          APP_NAME=$(node -p "require('./package.json').name")
-          APP_VERSION=$(node -p "require('./package.json').version")
-          
-          # 动态查找 unpacked 目录（可能是 linux-arm64-unpacked 或 linux-unpacked）
-          UNPACKED_DIR=$(find dist -type d -name "*unpacked*" | head -n1)
-          if [ -z "$UNPACKED_DIR" ]; then
-            echo "❌ 未找到 unpacked 目录，请检查 electron-builder 输出"
-            exit 1
-          fi
-          echo "✅ 找到 unpacked 目录: $UNPACKED_DIR"
-          
-          SELF_CONTAINED_DIR="dist/self-contained"
-          mkdir -p "$SELF_CONTAINED_DIR/opt/$APP_NAME"
-          mkdir -p "$SELF_CONTAINED_DIR/DEBIAN"
-          
-          # 使用 . 复制所有内容（包括隐藏文件），避免通配符问题
-          cp -r "$UNPACKED_DIR"/. "$SELF_CONTAINED_DIR/opt/$APP_NAME/"
-          
-          cat > "$SELF_CONTAINED_DIR/DEBIAN/control" << EOF
-          Package: $APP_NAME
-          Version: $APP_VERSION
-          Architecture: arm64
-          Maintainer: Your Name <your.email@example.com>
-          Description: Self-contained application for Kylin V10 ARM64
-           This package includes all runtime dependencies and requires no external libraries.
-          EOF
-          
-          docker run --rm --platform linux/arm64 \
-            -v $(pwd)/$SELF_CONTAINED_DIR/opt/$APP_NAME:/app \
-            arm64v8/ubuntu:20.04 \
-            bash -c "
-              set -e
-              apt update && apt install -y patchelf file
-              cd /app
-              MAIN_EXEC=\$(find . -maxdepth 1 -type f -executable | head -n1)
-              if [ -z \"\$MAIN_EXEC\" ]; then
-                echo '❌ 未找到主可执行文件'
-                exit 1
-              fi
-              echo \"主程序: \$MAIN_EXEC\"
-              mkdir -p lib
-              echo '📦 正在复制依赖库...'
-              ldd \"\$MAIN_EXEC\" | grep '=> /' | awk '{print \$3}' | while read lib; do
-                if [ -f \"\$lib\" ]; then
-                  cp -a \"\$lib\" lib/ 2>/dev/null || echo \"复制 \$lib 失败\"
-                fi
-              done
-              echo '🔧 修改 RPATH...'
-              find . -type f -executable -exec patchelf --set-rpath '\$ORIGIN/lib' {} \; 2>/dev/null || true
-              echo '✅ 依赖收集和 RPATH 修改完成'
-            "
-          
-          echo "📦 正在打包成 .deb ..."
-          dpkg-deb --build "$SELF_CONTAINED_DIR" "${APP_NAME}_${APP_VERSION}_arm64.deb"
-          
-          mkdir -p deb-artifacts
-          cp "${APP_NAME}_${APP_VERSION}_arm64.deb" deb-artifacts/
-
-      - name: Upload Self-Contained DEB
+      - name: Upload Debian Package
         uses: actions/upload-artifact@v4
         with:
-          name: kylin-arm64-self-contained-deb
-          path: deb-artifacts/*.deb
+          name: kylin-arm64-deb
+          path: dist/electron/*.deb
           if-no-files-found: error
 
   build-installer:
@@ -248,29 +144,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-electron]
     steps:
-      - name: Download Self-Contained DEB
+      - name: Download Debian Package
         uses: actions/download-artifact@v4
         with:
-          name: kylin-arm64-self-contained-deb
+          name: kylin-arm64-deb
           path: ./deb-package
 
       - name: Package Installer
         run: |
           mkdir -p release
-          if [ -n "$(find deb-package -maxdepth 1 -name '*.deb' -print -quit)" ]; then
-            DEB_FILE=$(ls deb-package/*.deb | head -n1)
+          DEB_FILE=$(ls deb-package/*.deb | head -n1)
+          if [ -f "$DEB_FILE" ]; then
             VERSION=$(echo "$DEB_FILE" | sed -n 's/.*_\(.*\)_arm64\.deb/\1/p')
-            if [ -z "$VERSION" ]; then
-              VERSION="1.2.0"
-            fi
-            tar -czf "release/assistance-system-kylin-arm64-v${VERSION}.tar.gz" deb-package/*.deb
+            [ -z "$VERSION" ] && VERSION="1.2.0"
+            tar -czf "release/assistance-system-kylin-arm64-v${VERSION}.tar.gz" -C deb-package .
             echo "✅ 安装包创建完成"
           else
-            echo "❌ 未找到 DEB 包，构建失败"
-            ls -la deb-package/ || echo "deb-package 目录不存在"
+            echo "❌ 未找到 DEB 包"
             exit 1
           fi
-          ls -la release/
 
       - name: Upload Installer
         uses: actions/upload-artifact@v4
