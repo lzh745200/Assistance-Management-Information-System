@@ -17,7 +17,9 @@ class RecommendationService:
     """智能推荐服务"""
 
     @staticmethod
-    def recommend_projects(db: Session, village_id: int, limit: int = 5) -> List[Dict[str, Any]]:
+    def recommend_projects(
+        db: Session, village_id: int, limit: int = 5, user: Any = None
+    ) -> List[Dict[str, Any]]:
         """
         为村庄推荐项目
 
@@ -25,49 +27,57 @@ class RecommendationService:
             db: 数据库会话
             village_id: 村庄ID
             limit: 推荐数量
+            user: 当前用户，用于数据权限过滤
 
         Returns:
             推荐项目列表
         """
+        from app.core.data_permission import filter_by_data_scope
         from app.models.project import Project
         from app.models.village import Village
 
-        # 获取村庄信息
-        village = db.query(Village).filter(Village.id == village_id).first()
+        # 获取村庄信息（受数据权限约束）
+        village_query = filter_by_data_scope(
+            db.query(Village).filter(Village.id == village_id), Village, user, db=db
+        )
+        village = village_query.first()
         if not village:
             return []
 
-        # 查询相似村庄的成功项目
-        similar_villages = (
-            db.query(Village)
-            .filter(
+        # 查询相似村庄的成功项目（受数据权限约束）
+        similar_villages_query = filter_by_data_scope(
+            db.query(Village).filter(
                 and_(
                     Village.id != village_id,
                     Village.province == village.province,
                     Village.city == village.city,
                 )
-            )
-            .limit(10)
-            .all()
+            ),
+            Village,
+            user,
+            db=db,
         )
+        similar_villages = similar_villages_query.limit(10).all()
 
         if not similar_villages:
             return []
 
         similar_village_ids = [v.id for v in similar_villages]
 
-        # 查询这些村庄的成功项目
-        successful_projects = (
-            db.query(Project)
-            .filter(
+        # 查询这些村庄的成功项目（受数据权限约束）
+        successful_projects_query = filter_by_data_scope(
+            db.query(Project).filter(
                 and_(
                     Project.village_id.in_(similar_village_ids),
                     Project.status == "completed",
                     Project.progress >= 90,
                 )
-            )
-            .all()
+            ),
+            Project,
+            user,
+            db=db,
         )
+        successful_projects = successful_projects_query.all()
 
         # 统计项目类型和成功率
         project_stats = {}
@@ -120,7 +130,9 @@ class RecommendationService:
         return recommendations[:limit]
 
     @staticmethod
-    def recommend_fund_allocation(db: Session, total_budget: float, village_ids: List[int]) -> Dict[str, Any]:
+    def recommend_fund_allocation(
+        db: Session, total_budget: float, village_ids: List[int], user: Any = None
+    ) -> Dict[str, Any]:
         """
         推荐资金分配方案
 
@@ -128,10 +140,12 @@ class RecommendationService:
             db: 数据库会话
             total_budget: 总预算
             village_ids: 村庄ID列表
+            user: 当前用户，用于数据权限过滤
 
         Returns:
             资金分配建议
         """
+        from app.core.data_permission import filter_by_data_scope
         from app.models.annual_income import AnnualIncome
         from app.models.annual_population import AnnualPopulation
         from app.models.village import Village
@@ -139,8 +153,10 @@ class RecommendationService:
         if not village_ids:
             return {"allocations": [], "error": "村庄列表为空"}
 
-        # 获取村庄信息
-        villages = db.query(Village).filter(Village.id.in_(village_ids)).all()
+        # 获取村庄信息（受数据权限约束）
+        villages = filter_by_data_scope(
+            db.query(Village).filter(Village.id.in_(village_ids)), Village, user, db=db
+        ).all()
 
         if not villages:
             return {"allocations": [], "error": "未找到村庄"}
@@ -232,7 +248,9 @@ class RecommendationService:
         }
 
     @staticmethod
-    def match_policies(db: Session, village_id: int, limit: int = 5) -> List[Dict[str, Any]]:
+    def match_policies(
+        db: Session, village_id: int, limit: int = 5, user: Any = None
+    ) -> List[Dict[str, Any]]:
         """
         为村庄匹配相关政策
 
@@ -240,15 +258,19 @@ class RecommendationService:
             db: 数据库会话
             village_id: 村庄ID
             limit: 推荐数量
+            user: 当前用户，用于数据权限过滤
 
         Returns:
             匹配的政策列表
         """
+        from app.core.data_permission import filter_by_data_scope
         from app.models.policy import Policy
         from app.models.village import Village
 
-        # 获取村庄信息
-        village = db.query(Village).filter(Village.id == village_id).first()
+        # 获取村庄信息（受数据权限约束）
+        village = filter_by_data_scope(
+            db.query(Village).filter(Village.id == village_id), Village, user, db=db
+        ).first()
         if not village:
             return []
 

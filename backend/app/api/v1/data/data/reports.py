@@ -68,7 +68,7 @@ async def export_excel(
         # dict — previously the ExportQuery pydantic model was passed without
         # ``await``, which would crash with TypeError at runtime.
         query_params = query.model_dump()
-        excel_bytes = await service.export_to_excel(query_params)
+        excel_bytes = await service.export_to_excel(query_params, user=current_user)
         filename = await service.get_export_filename(query_params)
 
         return StreamingResponse(
@@ -97,7 +97,7 @@ async def export_pdf(
         # 强制设置格式为PDF
         query.format = "pdf"
         query_params = query.model_dump()
-        pdf_bytes = await service.export_to_pdf(query_params)
+        pdf_bytes = await service.export_to_pdf(query_params, user=current_user)
         filename = await service.get_export_filename(query_params)
 
         return StreamingResponse(
@@ -136,7 +136,7 @@ async def export_comprehensive_report(
             ids = [int(id.strip()) for id in village_ids.split(",") if id.strip()]
 
         # export_comprehensive_report is async — must be awaited
-        excel_bytes = await service.export_comprehensive_report(year, ids)
+        excel_bytes = await service.export_comprehensive_report(year, ids, user=current_user)
         filename = f"帮扶村综合报表_{year}年_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
         return StreamingResponse(
@@ -185,7 +185,7 @@ async def filter_villages(
     try:
         # filter_villages 返回元组 (items, total)：items 为 ORM 对象列表，
         # total 为总记录数。由路由层负责字段序列化。
-        villages, total = service.filter_villages(filters, page, page_size)
+        villages, total = service.filter_villages(filters, page, page_size, user=current_user)
         pages = (total + page_size - 1) // page_size
 
         return {
@@ -724,7 +724,9 @@ async def download_generated_report(
                 )
             elif format == "excel":
                 # 生成Excel报表 (async service call — must be awaited)
-                excel_bytes = await service.export_comprehensive_report(subscription.year or datetime.now().year, None)
+                excel_bytes = await service.export_comprehensive_report(
+                    subscription.year or datetime.now().year, None, user=current_user
+                )
                 filename = f"report_{subscription.name}_{datetime.now().strftime('%Y%m%d')}.xlsx"
                 return StreamingResponse(
                     io.BytesIO(excel_bytes),

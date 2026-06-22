@@ -22,37 +22,43 @@ class ReportService:
         self.db = db
 
     async def get_reports(self, user_id: Optional[int] = None) -> List[Dict[str, Any]]:
-        """List available report templates / recent exports."""
-        return [
-            {
-                "id": 1,
-                "name": "村庄数据综合报表",
-                "type": "comprehensive",
-                "formats": ["excel", "pdf"],
-                "created_at": datetime.now().isoformat(),
-            },
-            {
-                "id": 2,
-                "name": "资金使用统计报表",
-                "type": "fund_summary",
-                "formats": ["excel"],
-                "created_at": datetime.now().isoformat(),
-            },
-        ]
+        """List available report templates / recent exports.
+
+        .. warning::
+            此前返回硬编码的 2 条字典（非真实数据），且无任何路由调用本方法
+            （路由层直接使用 ``DataReportService`` / ``db.query`` 查询）。
+            完整实现需查询真实的报表模板/导出记录表，超出本次 BugFix 范围。
+
+        Raises:
+            NotImplementedError: 本方法为硬编码占位，未接入路由。
+        """
+        raise NotImplementedError(
+            "ReportService.get_reports 尚未实现（此前返回硬编码 2 条字典，"
+            "非真实数据，未接入路由）。完整实现需查询报表模板/导出记录表，"
+            "超出本次 BugFix 范围。"
+        )
 
     async def get_report(self, report_id: int) -> Optional[Dict[str, Any]]:
-        """Get a single report by ID."""
-        reports = await self.get_reports()
-        for r in reports:
-            if r["id"] == report_id:
-                return r
-        return None
+        """Get a single report by ID.
 
-    async def export_to_excel(self, query_params: Dict[str, Any] = None) -> bytes:
+        .. warning::
+            此前基于 ``get_reports`` 的硬编码列表查找，非真实数据，且无路由调用。
+
+        Raises:
+            NotImplementedError: 本方法为硬编码占位，未接入路由。
+        """
+        raise NotImplementedError(
+            "ReportService.get_report 尚未实现（此前基于硬编码列表查找，"
+            "非真实数据，未接入路由）。完整实现需查询报表模板/导出记录表，"
+            "超出本次 BugFix 范围。"
+        )
+
+    async def export_to_excel(self, query_params: Dict[str, Any] = None, user: Any = None) -> bytes:
         """Generate an Excel report based on query parameters.
 
         Args:
             query_params: Filters (year, village_ids, report_type, etc.)
+            user: 当前用户，用于数据权限过滤。
 
         Returns:
             Excel file as bytes.
@@ -73,7 +79,7 @@ class ReportService:
                 cell.alignment = Alignment(horizontal="center")
 
             # Data rows (placeholder for real data queries)
-            data_rows = await self._fetch_report_data(query_params)
+            data_rows = await self._fetch_report_data(query_params, user=user)
             for row_idx, row_data in enumerate(data_rows, 2):
                 for col_idx, value in enumerate(row_data, 1):
                     ws.cell(row=row_idx, column=col_idx, value=value)
@@ -94,11 +100,12 @@ class ReportService:
             logger.error("Excel export failed: %s", e)
             raise
 
-    async def export_to_pdf(self, query_params: Dict[str, Any] = None) -> bytes:
+    async def export_to_pdf(self, query_params: Dict[str, Any] = None, user: Any = None) -> bytes:
         """Generate a PDF report.
 
         Args:
             query_params: Filters (year, village_ids, report_type, etc.)
+            user: 当前用户，用于数据权限过滤。
 
         Returns:
             PDF file as bytes.
@@ -132,7 +139,7 @@ class ReportService:
             # Data rows
             c.setFont("Helvetica", 10)
             y -= 20
-            data_rows = await self._fetch_report_data(query_params)
+            data_rows = await self._fetch_report_data(query_params, user=user)
             for idx, row_data in enumerate(data_rows[:50], 1):  # Limit to 50 rows for PDF
                 c.drawString(50, y, str(idx))
                 c.drawString(90, y, str(row_data[1])[:20] if len(row_data) > 1 else "")
@@ -155,13 +162,14 @@ class ReportService:
             raise
 
     async def export_comprehensive_report(
-        self, year: int = None, village_ids: List[int] = None
+        self, year: int = None, village_ids: List[int] = None, user: Any = None
     ) -> bytes:
         """Generate a comprehensive multi-section report.
 
         Args:
             year: Report year.
             village_ids: List of village IDs to include.
+            user: 当前用户，用于数据权限过滤。
 
         Returns:
             Excel file as bytes (comprehensive reports are Excel).
@@ -170,7 +178,7 @@ class ReportService:
             "year": year or datetime.now().year,
             "village_ids": village_ids,
             "report_type": "comprehensive",
-        })
+        }, user=user)
 
     async def get_export_filename(self, query_params: Dict[str, Any] = None) -> str:
         """Generate a suitable filename for the export.
@@ -186,34 +194,89 @@ class ReportService:
         return f"{report_type}_{timestamp}.xlsx"
 
     async def get_report_subscriptions(self, user_id: int) -> List[Dict[str, Any]]:
-        """List report subscriptions for a user."""
-        return []
+        """List report subscriptions for a user.
+
+        .. warning::
+            此前恒返回空列表（stub），且无路由调用本方法（路由层直接通过
+            ``db.query(ReportSubscription)`` 查询订阅）。完整实现需查询
+            ``ReportSubscription`` 模型，超出本次 BugFix 范围。
+
+        Raises:
+            NotImplementedError: 本方法为占位 stub，未接入路由。
+        """
+        raise NotImplementedError(
+            "ReportService.get_report_subscriptions 尚未实现（此前恒返回空列表，"
+            "未接入路由；路由层直接查询 ReportSubscription 模型）。"
+            "超出本次 BugFix 范围。"
+        )
 
     async def create_subscription(self, user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a new report subscription."""
-        return {"id": 1, "user_id": user_id, **data}
+        """Create a new report subscription.
+
+        .. warning::
+            此前仅返回拼接字典（不持久化），且无路由调用本方法。
+
+        Raises:
+            NotImplementedError: 本方法为占位 stub，未接入路由。
+        """
+        raise NotImplementedError(
+            "ReportService.create_subscription 尚未实现（此前不持久化，"
+            "未接入路由；路由层直接操作 ReportSubscription 模型）。"
+            "超出本次 BugFix 范围。"
+        )
 
     async def update_subscription(
         self, subscription_id: int, data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
-        """Update an existing subscription."""
-        return {"id": subscription_id, **data}
+        """Update an existing subscription.
+
+        .. warning::
+            此前仅返回拼接字典（不持久化），且无路由调用本方法。
+
+        Raises:
+            NotImplementedError: 本方法为占位 stub，未接入路由。
+        """
+        raise NotImplementedError(
+            "ReportService.update_subscription 尚未实现（此前不持久化，"
+            "未接入路由；路由层直接操作 ReportSubscription 模型）。"
+            "超出本次 BugFix 范围。"
+        )
 
     async def cancel_subscription(self, subscription_id: int) -> bool:
-        """Cancel a subscription."""
-        return True
+        """Cancel a subscription.
+
+        .. warning::
+            此前恒返回 ``True``（不持久化），且无路由调用本方法。
+
+        Raises:
+            NotImplementedError: 本方法为占位 stub，未接入路由。
+        """
+        raise NotImplementedError(
+            "ReportService.cancel_subscription 尚未实现（此前恒返回 True，"
+            "未接入路由；路由层直接操作 ReportSubscription 模型）。"
+            "超出本次 BugFix 范围。"
+        )
 
     # ── Internal helpers ──
 
-    async def _fetch_report_data(self, query_params: Dict[str, Any] = None) -> List[List[Any]]:
+    async def _fetch_report_data(
+        self, query_params: Dict[str, Any] = None, user: Any = None
+    ) -> List[List[Any]]:
         """Fetch report data from the database.
+
+        Args:
+            query_params: 可选的查询过滤参数。
+            user: 当前用户，用于数据权限过滤。
 
         Override this in production to query real models.
         """
         try:
+            from app.core.data_permission import filter_by_data_scope
             from app.models.supported_village import SupportedVillage
 
             query = self.db.query(SupportedVillage)
+            # 数据权限过滤（参照 villages.py:50 范式）
+            query = filter_by_data_scope(query, SupportedVillage, user, db=self.db)
             rows = query.limit(100).all()
             return [
                 [i + 1, r.village_name or "", r.province or "", r.county or "",

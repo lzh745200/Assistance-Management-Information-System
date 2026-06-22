@@ -32,29 +32,23 @@ class TestReportService:
 
     @pytest.mark.asyncio
     async def test_get_reports(self, svc):
-        reports = await svc.get_reports()
-        assert len(reports) == 2
-        assert reports[0]["id"] == 1
-        assert reports[0]["name"] == "村庄数据综合报表"
-        assert reports[0]["type"] == "comprehensive"
-        assert reports[1]["id"] == 2
-        assert reports[1]["name"] == "资金使用统计报表"
+        with pytest.raises(NotImplementedError):
+            await svc.get_reports()
 
     @pytest.mark.asyncio
     async def test_get_reports_with_user_id(self, svc):
-        reports = await svc.get_reports(user_id=123)
-        assert len(reports) == 2
+        with pytest.raises(NotImplementedError):
+            await svc.get_reports(user_id=123)
 
     @pytest.mark.asyncio
     async def test_get_report_found(self, svc):
-        report = await svc.get_report(1)
-        assert report is not None
-        assert report["id"] == 1
+        with pytest.raises(NotImplementedError):
+            await svc.get_report(1)
 
     @pytest.mark.asyncio
     async def test_get_report_not_found(self, svc):
-        report = await svc.get_report(999)
-        assert report is None
+        with pytest.raises(NotImplementedError):
+            await svc.get_report(999)
 
     @pytest.mark.asyncio
     async def test_export_to_excel_success(self, svc):
@@ -145,7 +139,7 @@ class TestReportService:
                 "year": 2025,
                 "village_ids": [1, 2, 3],
                 "report_type": "comprehensive",
-            })
+            }, user=None)
 
     @pytest.mark.asyncio
     async def test_export_comprehensive_report_default_year(self, svc):
@@ -177,26 +171,23 @@ class TestReportService:
 
     @pytest.mark.asyncio
     async def test_get_report_subscriptions(self, svc):
-        result = await svc.get_report_subscriptions(user_id=1)
-        assert result == []
+        with pytest.raises(NotImplementedError):
+            await svc.get_report_subscriptions(user_id=1)
 
     @pytest.mark.asyncio
     async def test_create_subscription(self, svc):
-        result = await svc.create_subscription(user_id=1, data={"name": "Weekly"})
-        assert result["id"] == 1
-        assert result["user_id"] == 1
-        assert result["name"] == "Weekly"
+        with pytest.raises(NotImplementedError):
+            await svc.create_subscription(user_id=1, data={"name": "Weekly"})
 
     @pytest.mark.asyncio
     async def test_update_subscription(self, svc):
-        result = await svc.update_subscription(subscription_id=5, data={"name": "Updated"})
-        assert result["id"] == 5
-        assert result["name"] == "Updated"
+        with pytest.raises(NotImplementedError):
+            await svc.update_subscription(subscription_id=5, data={"name": "Updated"})
 
     @pytest.mark.asyncio
     async def test_cancel_subscription(self, svc):
-        result = await svc.cancel_subscription(subscription_id=10)
-        assert result is True
+        with pytest.raises(NotImplementedError):
+            await svc.cancel_subscription(subscription_id=10)
 
     @pytest.mark.asyncio
     async def test_fetch_report_data_success(self, svc, mock_db):
@@ -208,7 +199,10 @@ class TestReportService:
             updated_at=datetime(2025, 6, 1, 10, 0, 0),
         )
         mock_db.query.return_value.limit.return_value.all.return_value = [mock_village]
-        result = await svc._fetch_report_data({"year": 2025})
+        # 传入 admin user 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+        admin_user = MagicMock()
+        admin_user.is_superuser = True
+        result = await svc._fetch_report_data({"year": 2025}, user=admin_user)
         assert len(result) == 1
         assert result[0][0] == 1
         assert result[0][1] == "TestV"
@@ -239,7 +233,10 @@ class TestReportService:
             id=5,
         )
         mock_db.query.return_value.limit.return_value.all.return_value = [mock_village]
-        result = await svc._fetch_report_data({})
+        # 传入 admin user 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+        admin_user = MagicMock()
+        admin_user.is_superuser = True
+        result = await svc._fetch_report_data({}, user=admin_user)
         assert len(result) == 1
         assert result[0][0] == 1
         assert result[0][1] == ""

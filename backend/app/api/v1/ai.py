@@ -72,6 +72,8 @@ async def analyze_data(
     result = await ai_service_manager.analyze_data(
         data=request.data,
         analysis_type=request.analysis_type,
+        db=db,
+        user=current_user,
     )
 
     if "error" in result:
@@ -98,6 +100,7 @@ async def get_recommendations(
     recommendations = await ai_service_manager.get_recommendations(
         context=request.context,
         db=db,
+        user=current_user,
     )
 
     return {

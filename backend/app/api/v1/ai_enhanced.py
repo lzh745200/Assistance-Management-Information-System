@@ -117,7 +117,7 @@ async def recommend_projects(
 ) -> Dict[str, Any]:
     """项目推荐 - 根据村庄特征推荐适合的项目"""
     service = _get_recommendation_service()
-    return service.recommend_projects(db=db, village_id=village_id, limit=limit)
+    return service.recommend_projects(db=db, village_id=village_id, limit=limit, user=current_user)
 
 
 @router.post("/recommendations/fund-allocation")
@@ -129,7 +129,7 @@ async def recommend_fund_allocation(
     """资金分配建议 - 智能分配资金到多个村庄"""
     service = _get_recommendation_service()
     return service.recommend_fund_allocation(
-        db=db, total_budget=request.total_budget, village_ids=request.village_ids
+        db=db, total_budget=request.total_budget, village_ids=request.village_ids, user=current_user
     )
 
 

@@ -10,7 +10,9 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
+from app.core.database import get_db
 from app.core.security import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -56,15 +58,34 @@ class SecurityEvent(BaseModel):
     details: Optional[dict] = Field(None, description="事件详情")
 
 
-# ==================== 安全事件存储 ====================
-
-_security_events: List[dict] = []
+# ==================== 安全事件存储（数据库持久化） ====================
 
 
-def _record_security_event(event_type: str, source: str, severity: str, message: str, details: dict = None) -> dict:
-    """记录安全事件"""
-    event = {
-        "id": len(_security_events) + 1,
+def _record_security_event(
+    db: Session,
+    event_type: str,
+    source: str,
+    severity: str,
+    message: str,
+    details: dict = None,
+) -> dict:
+    """记录安全事件到数据库（持久化，参考 TokenBlacklist 模式）。
+
+    Args:
+        db: 数据库会话。
+        event_type: 事件类型。
+        source: 事件来源（如 ``user:<username>``）。
+        severity: 严重程度。
+        message: 事件描述。
+        details: 事件详情。
+
+    Returns:
+        与历史内存实现结构一致的字典，保证 API 响应契约不变。
+    """
+    from app.models.audit import SecurityEvent
+
+    event_dict = {
+        "id": None,
         "event_type": event_type,
         "source": source,
         "severity": severity,
@@ -72,10 +93,49 @@ def _record_security_event(event_type: str, source: str, severity: str, message:
         "details": details,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
-    _security_events.append(event)
+    try:
+        # 从 source（格式 "user:<username>"）中提取用户名
+        username = source.replace("user:", "", 1) if source.startswith("user:") else None
+        event = SecurityEvent(
+            event_type=event_type,
+            severity=severity,
+            username=username,
+            description=message,
+            details={"source": source, **(details or {})},
+        )
+        db.add(event)
+        db.commit()
+        db.refresh(event)
+        event_dict["id"] = event.id
+        event_dict["timestamp"] = (
+            event.created_at.isoformat() if event.created_at else event_dict["timestamp"]
+        )
+    except Exception:
+        logger.exception("安全事件持久化失败: %s/%s", severity, event_type)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+
     if severity in ("high", "critical"):
         logger.warning("安全事件 [%s/%s]: %s", severity, event_type, message)
-    return event
+    return event_dict
+
+
+def _event_to_dict(event) -> dict:
+    """将 SecurityEvent ORM 对象转换为 API 响应字典（保持历史契约）。"""
+    details = event.details or {}
+    # 还原历史 details（去掉持久化时合并的 source 字段）
+    restored_details = {k: v for k, v in details.items() if k != "source"} or None
+    return {
+        "id": event.id,
+        "event_type": event.event_type,
+        "source": details.get("source", event.username or ""),
+        "severity": event.severity,
+        "message": event.description,
+        "details": restored_details,
+        "timestamp": event.created_at.isoformat() if event.created_at else "",
+    }
 
 
 # ==================== 预定义安全策略 ====================
@@ -327,6 +387,7 @@ async def evaluate_access_request(
     body: AccessRequest,
     request: Request,
     current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """评估对指定资源的访问请求是否符合零信任策略
 
@@ -339,6 +400,7 @@ async def evaluate_access_request(
     sensitive_actions = ["delete", "admin"]
     if body.action in sensitive_actions:
         _record_security_event(
+            db=db,
             event_type="sensitive_access",
             source=f"user:{username}",
             severity="medium",
@@ -352,6 +414,7 @@ async def evaluate_access_request(
         if not is_superuser:
             assessment_result = "denied"
             _record_security_event(
+                db=db,
                 event_type="unauthorized_admin_access",
                 source=f"user:{username}",
                 severity="high",
@@ -379,25 +442,32 @@ async def get_security_events(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    """获取记录的安全事件列表"""
-    events = _security_events
+    """获取记录的安全事件列表（从数据库读取，持久化存储）"""
+    from app.models.audit import SecurityEvent
+
+    query = db.query(SecurityEvent)
 
     if severity:
-        events = [e for e in events if e["severity"] == severity]
+        query = query.filter(SecurityEvent.severity == severity)
     if event_type:
-        events = [e for e in events if e["event_type"] == event_type]
+        query = query.filter(SecurityEvent.event_type == event_type)
 
-    events.sort(key=lambda x: x["timestamp"], reverse=True)
-
-    total = len(events)
+    total = query.count()
     start = (page - 1) * page_size
-    end = start + page_size
+    rows = (
+        query
+        .order_by(SecurityEvent.created_at.desc())
+        .offset(start)
+        .limit(page_size)
+        .all()
+    )
 
     return {
         "success": True,
         "data": {
-            "items": events[start:end],
+            "items": [_event_to_dict(e) for e in rows],
             "total": total,
             "page": page,
             "page_size": page_size,
@@ -409,12 +479,14 @@ async def get_security_events(
 async def report_security_event(
     body: SecurityEvent,
     current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """手动记录一个安全事件
 
     用于外部安全工具或前端异常检测上报安全事件。
     """
     event = _record_security_event(
+        db=db,
         event_type=body.event_type,
         source=body.source,
         severity=body.severity,
@@ -430,17 +502,22 @@ async def report_security_event(
 
 
 @router.get("/events/stats", summary="获取安全事件统计")
-async def get_security_event_stats(current_user=Depends(get_current_user)):
-    """获取安全事件的统计分析数据"""
-    events = _security_events
+async def get_security_event_stats(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取安全事件的统计分析数据（从数据库读取）"""
+    from app.models.audit import SecurityEvent
+
+    events = db.query(SecurityEvent).all()
 
     by_severity = {}
     by_type = {}
     for e in events:
-        by_severity[e["severity"]] = by_severity.get(e["severity"], 0) + 1
-        by_type[e["event_type"]] = by_type.get(e["event_type"], 0) + 1
+        by_severity[e.severity] = by_severity.get(e.severity, 0) + 1
+        by_type[e.event_type] = by_type.get(e.event_type, 0) + 1
 
-    high_severity_count = len([e for e in events if e["severity"] in ("high", "critical")])
+    high_severity_count = len([e for e in events if e.severity in ("high", "critical")])
 
     return {
         "success": True,

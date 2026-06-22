@@ -1,13 +1,18 @@
-"""Tests for app.services.package_version_service - zero coverage → 100%"""
+"""Tests for app.services.package_version_service
+
+check_version / get_version / _parse_version 已改为 raise NotImplementedError
+（此前为硬编码 "1.0.0" 占位 stub，未接入路由）。
+parse_version 为纯工具函数，保留可用。
+"""
 
 import pytest
 from app.services.package_version_service import PackageVersionService
 
 
 class TestCheckVersion:
-    def test_returns_stub_version_dict(self):
-        result = PackageVersionService.check_version()
-        assert result == {"latest": "1.0.0", "current": "1.0.0"}
+    def test_raises_not_implemented(self):
+        with pytest.raises(NotImplementedError):
+            PackageVersionService.check_version()
 
 
 class TestParseVersion:
@@ -42,22 +47,14 @@ class TestParseVersion:
 
 
 class TestGetVersion:
-    def test_backward_compat_returns_dict_with_version_key(self):
-        # get_version is monkey-patched as instance method (has self)
+    def test_raises_not_implemented(self):
         svc = PackageVersionService()
-        result = svc.get_version()
-        assert result == {"latest": "1.0.0", "current": "1.0.0", "version": "1.0.0"}
-
-    def test_backward_compat_is_callable(self):
-        svc = PackageVersionService()
-        result = svc.get_version()
-        assert isinstance(result, dict)
-        assert "version" in result
+        with pytest.raises(NotImplementedError):
+            svc.get_version()
 
 
 class TestParseVersionCompat:
-    def test_backward_compat_returns_input_unchanged(self):
+    def test_raises_not_implemented(self):
         svc = PackageVersionService()
-        assert svc._parse_version("1.2.3") == "1.2.3"
-        assert svc._parse_version("anything") == "anything"
-        assert svc._parse_version(42) == 42
+        with pytest.raises(NotImplementedError):
+            svc._parse_version("1.2.3")

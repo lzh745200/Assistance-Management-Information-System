@@ -146,7 +146,7 @@ try:
 
     setup_audit_events()
 except Exception:
-    pass  # 审计启动失败不影响主应用
+    logger.exception("审计事件钩子启动失败")  # 不影响主应用启动，但必须记录错误
 
 # ── 加载路由（懒模型已提速，模块级加载安全可靠）──
 print("  加载路由模块...", flush=True)

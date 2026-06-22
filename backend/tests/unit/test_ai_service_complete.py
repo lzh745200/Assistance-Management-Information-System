@@ -223,7 +223,10 @@ class TestAnalyzeProjectProgress:
             [mock_project],  # over budget
         ]
 
-        result = service.analyze_project_progress(mock_db)
+        # 传入 admin user 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+        admin_user = MagicMock()
+        admin_user.is_superuser = True
+        result = service.analyze_project_progress(mock_db, user=admin_user)
         assert result["type"] == "project_progress"
         assert result["overdue_count"] == 1
         assert result["over_budget_count"] == 1
@@ -241,7 +244,10 @@ class TestAnalyzeProjectProgress:
             [],  # no over budget
         ]
 
-        result = service.analyze_project_progress(mock_db)
+        # 传入 admin user 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
+        admin_user = MagicMock()
+        admin_user.is_superuser = True
+        result = service.analyze_project_progress(mock_db, user=admin_user)
         assert result["overdue_count"] == 0
         assert result["over_budget_count"] == 0
 

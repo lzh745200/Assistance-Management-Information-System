@@ -45,6 +45,7 @@ class AIServiceManager:
         data: Dict[str, Any],
         analysis_type: str = "summary",
         db: Optional[Session] = None,
+        user: Any = None,
     ) -> Dict[str, Any]:
         try:
             if analysis_type == "summary":
@@ -52,7 +53,7 @@ class AIServiceManager:
             elif analysis_type == "trend" and db:
                 return self.analyze_income_trend(db)
             elif analysis_type == "project_progress" and db:
-                return self.analyze_project_progress(db)
+                return self.analyze_project_progress(db, user=user)
             elif analysis_type == "fund_efficiency" and db:
                 return self.analyze_fund_efficiency(db)
             elif analysis_type == "compare" and db:
@@ -118,21 +119,29 @@ class AIServiceManager:
     # 2. 项目进度分析
     # ------------------------------------------------------------------
 
-    def analyze_project_progress(self, db: Session) -> Dict[str, Any]:
-        """分析逾期项目、预算超支项目"""
+    def analyze_project_progress(self, db: Session, user: Any = None) -> Dict[str, Any]:
+        """分析逾期项目、预算超支项目
+
+        Args:
+            db: 数据库会话。
+            user: 当前用户，用于数据权限过滤。
+        """
+        from app.core.data_permission import filter_by_data_scope
         from app.models.project import Project
 
         today = date.today()
 
-        # 逾期项目：end_date < today 且 status 不是 completed/cancelled
-        overdue = (
-            db.query(Project)
-            .filter(
+        # 逾期项目：end_date < today 且 status 不是 completed/cancelled（受数据权限约束）
+        overdue_query = filter_by_data_scope(
+            db.query(Project).filter(
                 Project.end_date < today,
                 Project.status.notin_(["completed", "cancelled"]),
-            )
-            .all()
+            ),
+            Project,
+            user,
+            db=db,
         )
+        overdue = overdue_query.all()
         overdue_list = [
             {
                 "id": p.id,
@@ -144,8 +153,14 @@ class AIServiceManager:
             for p in overdue
         ]
 
-        # 预算超支项目：actual_cost > budget 且 budget > 0
-        over_budget = db.query(Project).filter(Project.budget > 0, Project.actual_cost > Project.budget).all()
+        # 预算超支项目：actual_cost > budget 且 budget > 0（受数据权限约束）
+        over_budget_query = filter_by_data_scope(
+            db.query(Project).filter(Project.budget > 0, Project.actual_cost > Project.budget),
+            Project,
+            user,
+            db=db,
+        )
+        over_budget = over_budget_query.all()
         over_budget_list = [
             {
                 "id": p.id,
@@ -462,13 +477,14 @@ class AIServiceManager:
         self,
         context: Dict[str, Any],
         db: Optional[Session] = None,
+        user: Any = None,
     ) -> List[Dict[str, Any]]:
         """基于数据生成智能建议"""
         suggestions: List[Dict[str, Any]] = []
 
         if db:
             try:
-                progress = self.analyze_project_progress(db)
+                progress = self.analyze_project_progress(db, user=user)
                 if progress.get("overdue_count", 0) > 0:
                     suggestions.append(
                         {

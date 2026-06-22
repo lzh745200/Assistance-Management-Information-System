@@ -653,16 +653,32 @@ class AnalyticsService:
             app_logger.error(f"获取筛选选项失败: {e}")
             return {"provinces": [], "tiers": [], "departments": []}
 
-    def filter_villages(self, filters: Dict[str, Any], page: int = 1, page_size: int = 20) -> tuple:
+    def filter_villages(
+        self,
+        filters: Dict[str, Any],
+        page: int = 1,
+        page_size: int = 20,
+        user: Any = None,
+    ) -> tuple:
         """多维度筛选帮扶村（同步，供 reports 路由使用）。
+
+        Args:
+            filters: 筛选条件字典。
+            page: 页码（从 1 开始）。
+            page_size: 每页记录数。
+            user: 当前用户，用于数据权限过滤。
 
         Returns:
             元组 ``(items, total)``：items 为 SupportedVillage ORM 对象列表
             （由路由层负责字段序列化），total 为符合条件的总记录数。
         """
         try:
+            from app.core.data_permission import filter_by_data_scope
+
             db = self.db
             query = db.query(SupportedVillage)
+            # 数据权限过滤（参照 villages.py:50 范式）
+            query = filter_by_data_scope(query, SupportedVillage, user, db=db)
 
             if filters.get("province"):
                 query = query.filter(SupportedVillage.province == filters["province"])
