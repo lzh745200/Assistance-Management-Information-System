@@ -119,7 +119,6 @@ def _after_delete(mapper, connection, target):
 def setup_audit_events(models: list = None):
     """注册 SQLAlchemy 审计事件监听器——应用启动时调用一次。"""
     if models is None:
-        from app.models.assessment import AssessmentRecord
         from app.models.fund import Fund
         from app.models.fund_allocation_order import FundAllocationOrder
         from app.models.fund_budget import FundBudget, FundTransaction
@@ -133,7 +132,7 @@ def setup_audit_events(models: list = None):
         from app.models.rbac import RbacRole, UserPermission, UserRole
 
         models = [
-            AssessmentRecord, Fund, FundAllocationOrder, FundBudget, FundTransaction,
+            Fund, FundAllocationOrder, FundBudget, FundTransaction,
             Organization, Policy, PolicyCategory, Project, ScholarshipStudent,
             School, SchoolProject, SupportedVillage, Todo, User,
             RbacRole, UserPermission, UserRole,
