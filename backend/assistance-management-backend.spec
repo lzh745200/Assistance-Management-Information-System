@@ -12,29 +12,30 @@ from pathlib import Path
 from PyInstaller.compat import is_win
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
-# ---------- 路径定义 ----------
-backend_dir = os.path.dirname(os.path.abspath(SPEC))  # 使用 PyInstaller 预定义的 SPEC 变量
-project_root = os.path.dirname(backend_dir)               # 项目根目录
+# ========== 路径定义（使用 PyInstaller 预定义的 SPEC） ==========
+# SPEC 是 PyInstaller 在解析 spec 文件时自动注入的变量，表示 spec 文件的完整路径
+backend_dir = os.path.dirname(os.path.abspath(SPEC))          # backend 目录
+project_root = os.path.dirname(backend_dir)                  # 项目根目录
 resources_dir = os.path.join(project_root, 'resources')
 frontend_dir = os.path.join(resources_dir, 'frontend')
 
-# ---------- 检查前端资源（必须存在） ----------
+# ========== 强制检查前端资源是否存在 ==========
+# 如果前端资源缺失，构建立即失败并给出清晰提示
 if not os.path.isdir(frontend_dir):
     raise FileNotFoundError(
         f"前端资源目录不存在: {frontend_dir}\n"
-        "请确保在运行 PyInstaller 之前执行了 'npm run build' 并将产物复制到 resources/frontend"
+        "请在运行 PyInstaller 之前执行 'npm run build' 并将产物复制到 resources/frontend"
     )
 
-# ---------- 数据文件列表 ----------
+# ========== 数据文件列表 ==========
 datas = [
     (os.path.join(backend_dir, 'alembic'), 'alembic'),
     (os.path.join(backend_dir, '.env.example'), '.'),
     (os.path.join(backend_dir, 'app'), 'app'),
-    # 前端静态文件 – 使用绝对路径确保添加
-    (frontend_dir, 'resources/frontend'),
+    (frontend_dir, 'resources/frontend'),   # 使用绝对路径，确保打包时能找到
 ]
 
-# 自动收集 prophet 包数据
+# 自动收集 prophet 包数据（如果存在）
 import importlib.util as _ilu
 _prophet_spec = _ilu.find_spec('prophet')
 if _prophet_spec and _prophet_spec.submodule_search_locations:
@@ -50,10 +51,10 @@ if _snownlp_spec and _snownlp_spec.submodule_search_locations:
 # 自动收集 prometheus_client 包数据（包含 HTML 模板等静态文件）
 datas += collect_data_files('prometheus_client')
 
-# ---------- 二进制文件 ----------
+# ========== 二进制文件列表 ==========
 binaries = []
 
-# ---------- 隐藏导入（保持原有，并补充必要模块） ----------
+# ========== 隐藏导入（保持原有，并补充必要模块） ==========
 hiddenimports = [
     # FastAPI 和 Web 框架核心
     'uvicorn',
@@ -136,26 +137,22 @@ hiddenimports = [
 if is_win:
     hiddenimports.append('psutil._pswindows')
 
-# 自动收集 app 包下的所有子模块
+# 自动收集 app 包下的所有子模块（避免手动添加遗漏）
 hiddenimports += collect_submodules('app')
 
 # 显式添加所有 API v1 路由模块（确保 PyInstaller 能正确打包）
 hiddenimports += [
-    # 子模块包
     'app.api.v1.auth',
     'app.api.v1.data',
     'app.api.v1.import_export',
     'app.api.v1.system',
-    # System 子模块
     'app.api.v1.system.health',
     'app.api.v1.system.env',
     'app.api.v1.system.config_package',
-    # Monitoring 子模块
     'app.api.v1.monitoring',
     'app.api.v1.monitoring.metrics',
     'app.api.v1.monitoring.secrets',
     'app.api.v1.monitoring.data_tier',
-    # 业务模块
     'app.api.v1.organization',
     'app.api.v1.policy',
     'app.api.v1.projects',
@@ -197,7 +194,7 @@ hiddenimports += [
     'app.api.v1.search',
 ]
 
-# ---------- 排除不需要的模块 ----------
+# ========== 排除不需要的模块（减少打包体积，避免冲突） ==========
 excludes = [
     'pytest', 'pytest_asyncio', 'pytest_cov', 'pytest_mock',
     'hypothesis', 'flake8', 'black', 'mypy',
@@ -207,15 +204,15 @@ excludes = [
     'docx', 'mammoth', 'apscheduler',
     'jose.backends.native_types',
     'jose.backends.pycryptodome_backend',
-    'app.api.v1.users',
-    'app.api.v1.user_management',
-    'app.api.v1.rbac',
-    'app.api.v1.analytics',
-    'app.api.v1.statistics',
-    'magic',
+    'app.api.v1.users',           # 旧路径，已不存在
+    'app.api.v1.user_management', # 旧路径
+    'app.api.v1.rbac',            # 旧路径
+    'app.api.v1.analytics',       # 旧路径
+    'app.api.v1.statistics',      # 旧路径
+    'magic',                      # 需要 libmagic DLL，若未安装则避免导入
 ]
 
-# ---------- Analysis ----------
+# ========== Analysis 阶段 ==========
 a = Analysis(
     [os.path.join(backend_dir, 'start.py')],
     pathex=[backend_dir],
@@ -226,16 +223,17 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=excludes,
-    cipher=None,
+    cipher=None,                     # 不加密字节码
     noarchive=False,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
 )
 
-# ---------- PYZ ----------
+# ========== PYZ 阶段 ==========
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
-# ---------- EXE ----------
+# ========== EXE 阶段 ==========
+icon_path = os.path.join(resources_dir, 'icons', 'app.ico')
 exe = EXE(
     pyz,
     a.scripts,
@@ -247,14 +245,14 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=False,
+    upx=False,                       # 禁用 UPX 压缩以避免某些兼容性问题
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=False,                   # 不显示控制台窗口（适合 GUI 服务）
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=os.path.join(resources_dir, 'icons', 'app.ico'),
+    icon=icon_path if os.path.exists(icon_path) else None,
 )
