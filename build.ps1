@@ -36,7 +36,7 @@ Write-Host "✅ 清理完成" -ForegroundColor Green
 
 # 构建镜像
 Write-Host "`n步骤 4/6: 构建 Docker 镜像（这可能需要 10-20 分钟）..." -ForegroundColor Yellow
-docker build -f Dockerfile -t assistance-system:$Tag .
+docker build -f docker/Dockerfile -t assistance-system:$Tag .
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ 构建失败！" -ForegroundColor Red
     exit 1

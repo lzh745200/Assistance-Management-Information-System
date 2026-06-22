@@ -56,7 +56,7 @@ Write-Host ""
 # 6. 构建
 $startTime = Get-Date
 
-docker build -f Dockerfile.fpm `
+docker build -f docker/Dockerfile.fpm `
     --target output `
     --platform linux/arm64 `
     --build-arg PACKAGE_NAME=$PACKAGE_NAME `

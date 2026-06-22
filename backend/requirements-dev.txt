@@ -1,105 +1,56 @@
-omponent
-     * @param {Number} y Y component
-     * @param {Number} z Z component
-     * @param {Number} w W component
-     * @returns {quat} out
-     * @function
-     */
-    export const set: typeof vec4.set;
-    /**
-     * Adds two quat's
-     *
-     * @param {quat} out the receiving quaternion
-     * @param {ReadonlyQuat} a the first operand
-     * @param {ReadonlyQuat} b the second operand
-     * @returns {quat} out
-     * @function
-     */
-    export const add: typeof vec4.add;
-    /**
-     * Multiplies two quat's
-     *
-     * @param {quat} out the receiving quaternion
-     * @param {ReadonlyQuat} a the first operand
-     * @param {ReadonlyQuat} b the second operand
-     * @returns {quat} out
-     */
-    export function mul(out: quat, a: ReadonlyQuat, b: ReadonlyQuat): quat;
-    /**
-     * Scales a quat by a scalar number
-     *
-     * @param {quat} out the receiving vector
-     * @param {ReadonlyQuat} a the vector to scale
-     * @param {Number} b amount to scale the vector by
-     * @returns {quat} out
-     * @function
-     */
-    export const scale: typeof vec4.scale;
-    /**
-     * Calculates the dot product of two quat's
-     *
-     * @param {ReadonlyQuat} a the first operand
-     * @param {ReadonlyQuat} b the second operand
-     * @returns {Number} dot product of a and b
-     * @function
-     */
-    export const dot: typeof vec4.dot;
-    /**
-     * Performs a linear interpolation between two quat's
-     *
-     * @param {quat} out the receiving quaternion
-     * @param {ReadonlyQuat} a the first operand
-     * @param {ReadonlyQuat} b the second operand
-     * @param {Number} t interpolation amount, in the range [0-1], between the two inputs
-     * @returns {quat} out
-     * @function
-     */
-    export const lerp: typeof vec4.lerp;
-    /**
-     * Calculates the length of a quat
-     *
-     * @param {ReadonlyQuat} a vector to calculate length of
-     * @returns {Number} length of a
-     */
-    export const length: typeof vec4.length;
-    /**
-     * Alias for {@link quat.length}
-     * @function
-     */
-    export const len: typeof vec4.length;
-    /**
-     * Calculates the squared length of a quat
-     *
-     * @param {ReadonlyQuat} a vector to calculate squared length of
-     * @returns {Number} squared length of a
-     * @function
-     */
-    export const squaredLength: typeof vec4.squaredLength;
-    /**
-     * Alias for {@link quat.squaredLength}
-     * @function
-     */
-    export const sqrLen: typeof vec4.squaredLength;
-    /**
-     * Normalize a quat
-     *
-     * @param {quat} out the receiving quaternion
-     * @param {ReadonlyQuat} a quaternion to normalize
-     * @returns {quat} out
-     * @function
-     */
-    export const normalize: typeof vec4.normalize;
-    /**
-     * Returns whether or not the quaternions have exactly the same elements in the same position (when compared with ===)
-     *
-     * @param {ReadonlyQuat} a The first quaternion.
-     * @param {ReadonlyQuat} b The second quaternion.
-     * @returns {Boolean} True if the vectors are equal, false otherwise.
-     */
-    export const exactEquals: typeof vec4.exactEquals;
-    export function rotationTo(out: any, a: any, b: any): any;
-    export function sqlerp(out: any, a: any, b: any, c: any, d: any, t: any): any;
-    export function setAxes(out: any, view: any, right: any, up: any): vec4;
+# ============================================================
+# 开发与测试工具依赖
+# 安装: pip install -r requirements-dev.txt
+# ============================================================
 
-}
-export namespa
+# ============================================================
+# 测试框架
+# ============================================================
+pytest==9.0.2
+pytest-asyncio==1.3.0
+pytest-cov==7.0.0
+coverage==7.13.4
+iniconfig==2.3.0
+pluggy==1.6.0
+
+# ============================================================
+# 代码风格与静态检查
+# ============================================================
+black==26.3.1
+flake8==7.3.0
+pycodestyle==2.14.0
+pyflakes==3.4.0
+mccabe==0.7.0
+mypy==1.19.1
+mypy_extensions==1.1.0
+isort==5.13.2
+autoflake==2.3.3
+pylint==3.0.3
+astroid==3.0.3
+dill==0.4.1
+tomlkit==0.14.0
+pathspec==1.0.4
+
+# ============================================================
+# 安全与复杂度分析
+# ============================================================
+bandit==1.7.6
+stevedore==5.7.0
+radon==6.0.1
+mando==0.7.1
+
+# ============================================================
+# PyInstaller 打包工具
+# ============================================================
+pyinstaller==6.19.0
+pyinstaller-hooks-contrib==2026.1
+pefile==2024.8.26
+pywin32-ctypes==0.2.3
+altgraph==0.17.5
+
+# ============================================================
+# Git 工具
+# ============================================================
+GitPython==3.1.46
+gitdb==4.0.12
+smmap==5.0.3

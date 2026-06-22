@@ -11,11 +11,11 @@ mkdir -p output
 
 # 构建 Docker 镜像
 echo "步骤 1/3: 构建 Docker 镜像..."
-docker build -f Dockerfile -t assistance-system:arm64 .
+docker build -f docker/Dockerfile -t assistance-system:arm64 .
 
 # 导出产物
 echo "步骤 2/3: 导出安装包..."
-docker build -f Dockerfile --target export -o output .
+docker build -f docker/Dockerfile --target export -o output .
 
 # 打包
 echo "步骤 3/3: 打包安装包..."

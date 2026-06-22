@@ -92,18 +92,21 @@ class DatabaseHealthService:
             try:
                 now = datetime.now()
 
-                # 完整性检查（每天一次）
-                if (now - last_integrity_check).total_seconds() >= self.integrity_check_interval:
+                # 完整性检查（每天一次）— 关闭中跳过
+                if not self._stop_event.is_set() and \
+                   (now - last_integrity_check).total_seconds() >= self.integrity_check_interval:
                     self.check_integrity()
                     last_integrity_check = now
 
-                # 快速检查（每小时一次）
-                if (now - last_quick_check).total_seconds() >= self.quick_check_interval:
+                # 快速检查（每小时一次）— 关闭中跳过
+                if not self._stop_event.is_set() and \
+                   (now - last_quick_check).total_seconds() >= self.quick_check_interval:
                     self.quick_check()
                     last_quick_check = now
 
-                # VACUUM优化（每周一次）
-                if (now - last_vacuum).total_seconds() >= self.vacuum_interval:
+                # VACUUM优化（每周一次）— 关闭中跳过，避免生成临时文件
+                if not self._stop_event.is_set() and \
+                   (now - last_vacuum).total_seconds() >= self.vacuum_interval:
                     self.vacuum_database()
                     last_vacuum = now
 

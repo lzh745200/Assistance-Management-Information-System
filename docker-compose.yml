@@ -16,7 +16,7 @@ services:
   assistance-system:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
       target: runtime  # 使用 runtime 阶段运行
       args:
         - BUILD_VERSION=1.4.1
@@ -34,7 +34,7 @@ services:
     environment:
       - PROJECT_VERSION=1.4.1
       - DATABASE_URL=sqlite:///./data/rural_revitalization.db
-      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - SECRET_KEY=${SECRET_KEY:?必须设置 SECRET_KEY 环境变量}
       - DEBUG=${DEBUG:-false}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - TZ=Asia/Shanghai
@@ -92,7 +92,7 @@ services:
     
     environment:
       - POSTGRES_USER=${DB_USER:-assistance}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-assistance123}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?必须设置 DB_PASSWORD 环境变量}
       - POSTGRES_DB=${DB_NAME:-assistance_system}
       - TZ=Asia/Shanghai
       - PGTZ=Asia/Shanghai

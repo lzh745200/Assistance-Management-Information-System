@@ -162,3 +162,42 @@ docs/系统功能三维优化方案.md
 # 工具工作目录与运行时日志
 .workbuddy/
 backend/logs/
+
+# ===== AI 工具目录（停止跟踪后补充）=====
+.agents/
+.context/
+
+# ===== PyInstaller 临时构建产物 =====
+backend/dist/
+*.spec.bak
+
+# ===== Electron 构建产物 =====
+electron/dist/
+electron/release/
+
+# ===== 前端额外产物 =====
+frontend/.vite/
+frontend/stats.html
+
+# ===== 根级误创建文件防范（Windows nul 重定向）=====
+/nul
+/backend/nul
+/backend/app/nul
+
+# ===== 测试相关临时文件 =====
+backend/batch_*.txt
+*.test-results.*
+frontend/test_results.txt
+frontend/vitest.json
+
+# ===== requirements 备份与临时文件 =====
+**/requirements.txt.backup
+**/requirements.txt.tmp
+
+# ===== .pyc_compiled 无扩展名垃圾 =====
+.pyc_compiled
+**/.pyc_compiled
+
+# ===== OS 特定 =====
+ehthumbs.db
+*.lnk
