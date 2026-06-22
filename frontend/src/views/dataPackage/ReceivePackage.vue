@@ -2,20 +2,12 @@
   <div class="receive-package">
     <el-card class="page-header">
       <div class="header-content">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          "
-        >
+        <div style="display: flex; justify-content: space-between; align-items: center">
           <div>
             <h2>接收下级数据包</h2>
             <p class="description">接收并处理下级单位上报的数据包</p>
           </div>
-          <el-button type="primary" @click="showLocalImport = true"
-            >📁 从本地文件导入</el-button
-          >
+          <el-button type="primary" @click="showLocalImport = true">📁 从本地文件导入</el-button>
         </div>
       </div>
     </el-card>
@@ -44,39 +36,31 @@
           :on-change="handleLocalFileChange"
           drag
         >
-          <el-icon style="font-size: 36px; color: #909399"
-            ><UploadFilled
-          /></el-icon>
+          <el-icon style="font-size: 36px; color: #909399"><UploadFilled /></el-icon>
           <div style="margin-top: 8px">拖放或点击选择数据包ZIP文件</div>
         </el-upload>
       </template>
 
       <template v-if="localImportStep === 1">
         <el-descriptions title="数据包信息" :column="1" border size="small">
-          <el-descriptions-item label="文件名">{{
-            localImportInfo.fileName
-          }}</el-descriptions-item>
+          <el-descriptions-item label="文件名">{{ localImportInfo.fileName }}</el-descriptions-item>
           <el-descriptions-item label="包编号">{{
-            localImportInfo.packageId || "-"
+            localImportInfo.packageId || '-'
           }}</el-descriptions-item>
         </el-descriptions>
       </template>
 
       <template v-if="localImportStep === 2">
-        <el-result
-          icon="success"
-          title="导入成功"
-          sub-title="数据包已成功导入，请在列表中查看"
-        />
+        <el-result icon="success" title="导入成功" sub-title="数据包已成功导入，请在列表中查看" />
       </template>
 
       <template #footer>
         <el-button
           @click="
-            clearLocalImport();
-            showLocalImport = false;
+            clearLocalImport()
+            showLocalImport = false
           "
-          >{{ localImportStep === 2 ? "关闭" : "取消" }}</el-button
+          >{{ localImportStep === 2 ? '关闭' : '取消' }}</el-button
         >
         <el-button
           v-if="localImportStep === 1"
@@ -109,12 +93,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select
-            v-model="filters.status"
-            placeholder="全部状态"
-            clearable
-            style="width: 150px"
-          >
+          <el-select v-model="filters.status" placeholder="全部状态" clearable style="width: 150px">
             <el-option label="待接收" value="pending" />
             <el-option label="已接收" value="received" />
             <el-option label="已拒绝" value="rejected" />
@@ -142,14 +121,12 @@
       <el-table v-loading="loading" :data="reports" stripe>
         <el-table-column label="上报单位" min-width="150">
           <template #default="{ row }">
-            {{
-              row.source_org_name || row.title || `单位#${row.source_org_id}`
-            }}
+            {{ row.source_org_name || row.title || `单位#${row.source_org_id}` }}
           </template>
         </el-table-column>
         <el-table-column label="数据包编码" width="200">
           <template #default="{ row }">
-            {{ row.package_code || row.report_code || "-" }}
+            {{ row.package_code || row.report_code || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="数据类型" width="150">
@@ -169,7 +146,7 @@
         </el-table-column>
         <el-table-column label="记录数" width="100">
           <template #default="{ row }">
-            {{ row.record_count ?? "-" }}
+            {{ row.record_count ?? '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -186,50 +163,25 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              size="small"
-              @click="handlePreview(row)"
-            >
+            <el-button link type="primary" size="small" @click="handlePreview(row)">
               预览
             </el-button>
-            <template
-              v-if="row.status === 'pending' || row.status === 'submitted'"
-            >
-              <el-button
-                link
-                type="success"
-                size="small"
-                @click="handleReceive(row)"
-              >
+            <template v-if="row.status === 'pending' || row.status === 'submitted'">
+              <el-button link type="success" size="small" @click="handleReceive(row)">
                 接收
               </el-button>
-              <el-button
-                link
-                type="danger"
-                size="small"
-                @click="handleReject(row)"
-              >
+              <el-button link type="danger" size="small" @click="handleReject(row)">
                 拒绝
               </el-button>
             </template>
-            <el-button
-              link
-              type="primary"
-              size="small"
-              @click="handleDownload(row)"
-            >
+            <el-button link type="primary" size="small" @click="handleDownload(row)">
               下载
             </el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <el-empty
-        v-if="!loading && reports.length === 0"
-        description="暂无数据包"
-      />
+      <el-empty v-if="!loading && reports.length === 0" description="暂无数据包" />
 
       <div v-if="total > 0" class="pagination">
         <el-pagination
@@ -245,22 +197,17 @@
     </el-card>
 
     <!-- 预览对话框 -->
-    <el-dialog
-      v-model="showPreviewDialog"
-      title="数据预览"
-      width="900px"
-      destroy-on-close
-    >
+    <el-dialog v-model="showPreviewDialog" title="数据预览" width="900px" destroy-on-close>
       <div v-if="previewData.length" class="preview-content">
         <el-descriptions :column="2" border class="preview-info">
           <el-descriptions-item label="上报单位">{{
-            currentReport?.source_org_name || currentReport?.title || "-"
+            currentReport?.source_org_name || currentReport?.title || '-'
           }}</el-descriptions-item>
           <el-descriptions-item label="数据包编码">{{
-            currentReport?.package_code || currentReport?.report_code || "-"
+            currentReport?.package_code || currentReport?.report_code || '-'
           }}</el-descriptions-item>
           <el-descriptions-item label="记录总数">{{
-            currentReport?.record_count ?? "-"
+            currentReport?.record_count ?? '-'
           }}</el-descriptions-item>
           <el-descriptions-item label="上报时间">{{
             formatDate(currentReport?.submitted_at || currentReport?.created_at)
@@ -302,18 +249,12 @@
       </el-form>
       <template #footer>
         <el-button @click="showRejectDialog = false">取消</el-button>
-        <el-button type="danger" :loading="rejecting" @click="confirmReject">
-          确认拒绝
-        </el-button>
+        <el-button type="danger" :loading="rejecting" @click="confirmReject"> 确认拒绝 </el-button>
       </template>
     </el-dialog>
     <!-- 组件异常回退 -->
     <el-card v-if="componentError" class="error-fallback">
-      <el-result
-        icon="warning"
-        title="页面加载异常"
-        :sub-title="componentError"
-      >
+      <el-result icon="warning" title="页面加载异常" :sub-title="componentError">
         <template #extra>
           <el-button type="primary" @click="handleRetry">重试</el-button>
         </template>
@@ -324,96 +265,93 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, computed, onMounted, onErrorCaptured } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { UploadFilled } from "@element-plus/icons-vue";
-import { useDataReportStore } from "@/stores/dataReport";
-import { useOrganizationStore } from "@/stores/organization";
-import type { DataReport, DataPackagePreviewData } from "@/types/organization";
-import request from "@/api/request";
+import { ref, reactive, computed, onMounted, onErrorCaptured } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { UploadFilled } from '@element-plus/icons-vue'
+import { useDataReportStore } from '@/stores/dataReport'
+import { useOrganizationStore } from '@/stores/organization'
+import type { DataReport, DataPackagePreviewData } from '@/types/organization'
+import request from '@/api/request'
 
-const reportStore = useDataReportStore();
-const orgStore = useOrganizationStore();
+const reportStore = useDataReportStore()
+const orgStore = useOrganizationStore()
 
 // 错误边界
-const componentError = ref("");
+const componentError = ref('')
 onErrorCaptured((err: Error) => {
-  logger.error("[ReceivePackage] 组件异常:", err);
-  componentError.value = err?.message || "未知错误，请重试";
-  return false;
-});
+  logger.error('[ReceivePackage] 组件异常:', err)
+  componentError.value = err?.message || '未知错误，请重试'
+  return false
+})
 function handleRetry() {
-  componentError.value = "";
-  loadReports();
+  componentError.value = ''
+  loadReports()
 }
 
 // 状态
-const loading = ref(false);
-const showPreviewDialog = ref(false);
-const showRejectDialog = ref(false);
-const rejecting = ref(false);
-const currentReport = ref<DataReport | null>(null);
-const previewData = ref<DataPackagePreviewData[]>([]);
+const loading = ref(false)
+const showPreviewDialog = ref(false)
+const showRejectDialog = ref(false)
+const rejecting = ref(false)
+const currentReport = ref<DataReport | null>(null)
+const previewData = ref<DataPackagePreviewData[]>([])
 
 const filters = reactive({
   sourceOrgId: null as number | null,
-  status: "",
+  status: '',
   dateRange: null as [Date, Date] | null,
-});
+})
 
 const pagination = reactive({
   page: 1,
   pageSize: 20,
-});
+})
 
 const rejectForm = reactive({
-  reason: "",
-});
+  reason: '',
+})
 
 // 计算属性
-const reports = computed(() => reportStore.receivedReports);
-const total = computed(() => reportStore.receivedTotal);
-const subordinateOrgs = computed(() => orgStore.subordinateOrganizations);
+const reports = computed(() => reportStore.receivedReports)
+const total = computed(() => reportStore.receivedTotal)
+const subordinateOrgs = computed(() => orgStore.subordinateOrganizations)
 
 // 标签映射
 const statusLabels: Record<string, string> = {
-  pending: "待接收",
-  received: "已接收",
-  rejected: "已拒绝",
-  submitted: "已提交",
-};
+  pending: '待接收',
+  received: '已接收',
+  rejected: '已拒绝',
+  submitted: '已提交',
+}
 
-const statusTypes: Record<
-  string,
-  "info" | "primary" | "success" | "warning" | "danger"
-> = {
-  pending: "warning",
-  received: "success",
-  rejected: "danger",
-  submitted: "info",
-};
+const statusTypes: Record<string, 'info' | 'primary' | 'success' | 'warning' | 'danger'> = {
+  pending: 'warning',
+  received: 'success',
+  rejected: 'danger',
+  submitted: 'info',
+}
 
 const dataTypeLabels: Record<string, string> = {
-  villages: "村庄数据",
-  projects: "项目数据",
-  funds: "资金数据",
-  schools: "学校数据",
-};
+  villages: '村庄数据',
+  projects: '项目数据',
+  funds: '资金数据',
+  schools: '学校数据',
+}
 
 const columnLabels: Record<string, string> = {
-  id: "编号",
-  name: "名称",
-  code: "编码",
-  status: "状态",
-  created_at: "创建时间",
-  updated_at: "更新时间",
-};
+  id: '编号',
+  name: '名称',
+  code: '编码',
+  status: '状态',
+  created_at: '创建时间',
+  updated_at: '更新时间',
+}
 
 // 方法
 async function loadReports() {
-  loading.value = true;
+  loading.value = true
   try {
     await reportStore.fetchReceivedReports({
       page: pagination.page,
@@ -422,180 +360,175 @@ async function loadReports() {
       status: filters.status || undefined,
       start_date: filters.dateRange?.[0]?.toISOString(),
       end_date: filters.dateRange?.[1]?.toISOString(),
-    });
+    })
   } catch (error) {
-    ElMessage.error("加载数据失败");
+    ElMessage.error('加载数据失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function resetFilters() {
-  filters.sourceOrgId = null;
-  filters.status = "";
-  filters.dateRange = null;
-  pagination.page = 1;
-  loadReports();
+  filters.sourceOrgId = null
+  filters.status = ''
+  filters.dateRange = null
+  pagination.page = 1
+  loadReports()
 }
 
 function getStatusLabel(status: string): string {
-  return statusLabels[status] || status;
+  return statusLabels[status] || status
 }
 
-function getStatusType(
-  status: string,
-): "success" | "info" | "warning" | "danger" | "primary" {
-  return statusTypes[status] || "info";
+function getStatusType(status: string): 'success' | 'info' | 'warning' | 'danger' | 'primary' {
+  return statusTypes[status] || 'info'
 }
 
 function getDataTypeLabel(type: string): string {
-  return dataTypeLabels[type] || type;
+  return dataTypeLabels[type] || type
 }
 
 function getColumnLabel(col: string): string {
-  return columnLabels[col] || col;
+  return columnLabels[col] || col
 }
 
 function parseDataTypes(types: string | string[]): string[] {
-  if (Array.isArray(types)) return types;
+  if (Array.isArray(types)) return types
   try {
-    return JSON.parse(types);
+    return JSON.parse(types)
   } catch {
-    return [];
+    return []
   }
 }
 
 function formatDate(dateStr?: string): string {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleString("zh-CN");
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 async function handlePreview(report: DataReport) {
-  currentReport.value = report;
+  currentReport.value = report
   try {
-    const data = await reportStore.previewReport(report.id);
+    const data = await reportStore.previewReport(report.id)
     // 兼容不同 API 返回格式
-    previewData.value = Array.isArray(data) ? data : (data as any)?.data || [];
-    showPreviewDialog.value = true;
+    previewData.value = Array.isArray(data) ? data : (data as any)?.data || []
+    showPreviewDialog.value = true
   } catch (error) {
-    logger.error("[ReceivePackage] 预览失败:", error);
-    ElMessage.error("加载预览数据失败");
+    logger.error('[ReceivePackage] 预览失败:', error)
+    ElMessage.error('加载预览数据失败')
   }
 }
 
 async function handleReceive(report: DataReport) {
-  const orgName =
-    report.source_org_name || report.title || `单位#${report.source_org_id}`;
+  const orgName = report.source_org_name || report.title || `单位#${report.source_org_id}`
   try {
-    await ElMessageBox.confirm(
-      `确定要接收来自"${orgName}"的数据包吗？`,
-      "确认接收",
-      { type: "info" },
-    );
-    await reportStore.receiveReport(report.id);
-    ElMessage.success("接收成功");
-    loadReports();
+    await ElMessageBox.confirm(`确定要接收来自"${orgName}"的数据包吗？`, '确认接收', {
+      type: 'info',
+    })
+    await reportStore.receiveReport(report.id)
+    ElMessage.success('接收成功')
+    loadReports()
   } catch (error: any) {
-    if (error !== "cancel" && error?.toString?.() !== "cancel") {
-      ElMessage.error(error?.message || "接收失败");
+    if (error !== 'cancel' && error?.toString?.() !== 'cancel') {
+      ElMessage.error(error?.message || '接收失败')
     }
   }
 }
 
 function handleReject(report: DataReport) {
-  currentReport.value = report;
-  rejectForm.reason = "";
-  showRejectDialog.value = true;
+  currentReport.value = report
+  rejectForm.reason = ''
+  showRejectDialog.value = true
 }
 
 async function confirmReject() {
   if (!rejectForm.reason.trim()) {
-    ElMessage.warning("请输入拒绝原因");
-    return;
+    ElMessage.warning('请输入拒绝原因')
+    return
   }
 
-  rejecting.value = true;
+  rejecting.value = true
   try {
-    await reportStore.rejectReport(currentReport.value!.id, rejectForm.reason);
-    ElMessage.success("已拒绝该数据包");
-    showRejectDialog.value = false;
-    loadReports();
+    await reportStore.rejectReport(currentReport.value!.id, rejectForm.reason)
+    ElMessage.success('已拒绝该数据包')
+    showRejectDialog.value = false
+    loadReports()
   } catch (error) {
-    ElMessage.error((error as Error).message || "操作失败");
+    ElMessage.error((error as Error).message || '操作失败')
   } finally {
-    rejecting.value = false;
+    rejecting.value = false
   }
 }
 
 async function handleDownload(report: DataReport) {
   try {
-    await reportStore.downloadReport(report.id);
-    ElMessage.success("下载已开始");
+    await reportStore.downloadReport(report.id)
+    ElMessage.success('下载已开始')
   } catch (error) {
-    ElMessage.error("下载失败");
+    ElMessage.error('下载失败')
   }
 }
 
 // ========== 本地文件导入 ==========
-const showLocalImport = ref(false);
-const localImportStep = ref(0);
-const localImporting = ref(false);
-const localUploadRef = ref<any>(null);
-const localImportInfo = reactive({ fileName: "", packageId: "" });
+const showLocalImport = ref(false)
+const localImportStep = ref(0)
+const localImporting = ref(false)
+const localUploadRef = ref<any>(null)
+const localImportInfo = reactive({ fileName: '', packageId: '' })
 
 async function handleLocalFileChange(file: any) {
-  const raw = file?.raw || file;
-  if (!raw) return;
-  const formData = new FormData();
-  formData.append("file", raw);
+  const raw = file?.raw || file
+  if (!raw) return
+  const formData = new FormData()
+  formData.append('file', raw)
   try {
-    const { data } = await request.post("/data-packages/import", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const { data } = await request.post('/data-packages/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     if (data?.errors?.length) {
-      ElMessage.error(`数据包验证失败: ${data.errors[0]}`);
-      return;
+      ElMessage.error(`数据包验证失败: ${data.errors[0]}`)
+      return
     }
-    localImportInfo.fileName = raw.name;
-    localImportInfo.packageId = String(data?.package_id || "");
-    localImportStep.value = 1;
+    localImportInfo.fileName = raw.name
+    localImportInfo.packageId = String(data?.package_id || '')
+    localImportStep.value = 1
   } catch {
-    ElMessage.error("数据包上传失败，请检查文件格式");
+    ElMessage.error('数据包上传失败，请检查文件格式')
   }
 }
 
 async function confirmLocalImport() {
-  if (!localImportInfo.packageId) return;
-  localImporting.value = true;
+  if (!localImportInfo.packageId) return
+  localImporting.value = true
   try {
     await request.post(`/data-packages/${localImportInfo.packageId}/confirm`, {
       package_id: Number(localImportInfo.packageId),
       confirm: true,
-    });
-    localImportStep.value = 2;
-    ElMessage.success("数据包导入成功");
-    loadReports();
+    })
+    localImportStep.value = 2
+    ElMessage.success('数据包导入成功')
+    loadReports()
   } catch {
-    ElMessage.error("导入确认失败");
+    ElMessage.error('导入确认失败')
   } finally {
-    localImporting.value = false;
+    localImporting.value = false
   }
 }
 
 function clearLocalImport() {
-  localImportStep.value = 0;
-  localImportInfo.fileName = "";
-  localImportInfo.packageId = "";
-  localUploadRef.value?.clearFiles?.();
+  localImportStep.value = 0
+  localImportInfo.fileName = ''
+  localImportInfo.packageId = ''
+  localUploadRef.value?.clearFiles?.()
 }
 
 // 生命周期
 onMounted(() => {
-  loadReports();
+  loadReports()
   orgStore.fetchSubordinateOrganizations().catch((err) => {
-    console.error("[ReceivePackage] 加载组织失败:", err);
-  });
-});
+    console.error('[ReceivePackage] 加载组织失败:', err)
+  })
+})
 </script>
 
 <style scoped lang="scss">

@@ -1,17 +1,15 @@
 <template>
-  <a href="#main-content" class="skip-link" @click.prevent="handleSkip">
-    跳转到主要内容
-  </a>
+  <a href="#main-content" class="skip-link" @click.prevent="handleSkip"> 跳转到主要内容 </a>
 </template>
 
 <script setup lang="ts">
-import { useSkipLink } from "@/composables/useAccessibility";
+import { useSkipLink } from '@/composables/useAccessibility'
 
-const { skipToMainContent } = useSkipLink();
+const { skipToMainContent } = useSkipLink()
 
 const handleSkip = () => {
-  skipToMainContent();
-};
+  skipToMainContent()
+}
 </script>
 
 <style scoped>

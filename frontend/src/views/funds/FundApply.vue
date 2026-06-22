@@ -23,11 +23,7 @@
         </el-form-item>
 
         <el-form-item label="经费类型" prop="type">
-          <el-select
-            v-model="form.type"
-            placeholder="请选择经费类型"
-            style="width: 100%"
-          >
+          <el-select v-model="form.type" placeholder="请选择经费类型" style="width: 100%">
             <el-option label="项目经费" value="project" />
             <el-option label="运营经费" value="operation" />
             <el-option label="教育帮扶" value="education" />
@@ -48,10 +44,7 @@
         </el-form-item>
 
         <el-form-item label="关联项目" prop="project_name">
-          <el-input
-            v-model="form.project_name"
-            placeholder="请输入关联项目名称（可选）"
-          />
+          <el-input v-model="form.project_name" placeholder="请输入关联项目名称（可选）" />
         </el-form-item>
 
         <el-form-item label="经费来源" prop="source">
@@ -92,49 +85,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import request from "@/api/request";
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import request from '@/api/request'
 
-defineOptions({ name: "FundApply" });
+defineOptions({ name: 'FundApply' })
 
-const router = useRouter();
-const { pushSafe } = useRouterSafe();
-const formRef = ref<FormInstance>();
-const submitting = ref(false);
+const router = useRouter()
+const { pushSafe } = useRouterSafe()
+const formRef = ref<FormInstance>()
+const submitting = ref(false)
 
 const form = reactive({
-  name: "",
-  type: "",
+  name: '',
+  type: '',
   amount: 0,
-  project_name: "",
-  source: "",
-  purpose: "",
-  remarks: "",
-});
+  project_name: '',
+  source: '',
+  purpose: '',
+  remarks: '',
+})
 
 const rules: FormRules = {
-  name: [{ required: true, message: "请输入经费名称", trigger: "blur" }],
-  type: [{ required: true, message: "请选择经费类型", trigger: "change" }],
-  amount: [{ required: true, message: "请输入申请金额", trigger: "blur" }],
-  purpose: [{ required: true, message: "请填写用途说明", trigger: "blur" }],
-};
+  name: [{ required: true, message: '请输入经费名称', trigger: 'blur' }],
+  type: [{ required: true, message: '请选择经费类型', trigger: 'change' }],
+  amount: [{ required: true, message: '请输入申请金额', trigger: 'blur' }],
+  purpose: [{ required: true, message: '请填写用途说明', trigger: 'blur' }],
+}
 
 async function handleSubmit() {
-  if (!formRef.value) return;
-  const valid = await formRef.value.validate().catch(() => false);
-  if (!valid) return;
+  if (!formRef.value) return
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
 
   if (form.amount <= 0) {
-    ElMessage.warning("申请金额必须大于0");
-    return;
+    ElMessage.warning('申请金额必须大于0')
+    return
   }
 
-  submitting.value = true;
+  submitting.value = true
   try {
-    await request.post("/funds/apply", {
+    await request.post('/funds/apply', {
       name: form.name,
       type: form.type,
       amount: form.amount,
@@ -142,17 +135,15 @@ async function handleSubmit() {
       source: form.source || undefined,
       purpose: form.purpose,
       remarks: form.remarks || undefined,
-      status: "pending",
-    });
-    ElMessage.success("经费申请提交成功，已进入审批流程");
-    pushSafe("/funds/user");
+      status: 'pending',
+    })
+    ElMessage.success('经费申请提交成功，已进入审批流程')
+    pushSafe('/funds/user')
   } catch (e: any) {
-    const detail = e?.response?.data?.detail;
-    ElMessage.error(
-      typeof detail === "string" ? detail : "提交失败，请稍后重试",
-    );
+    const detail = e?.response?.data?.detail
+    ElMessage.error(typeof detail === 'string' ? detail : '提交失败，请稍后重试')
   } finally {
-    submitting.value = false;
+    submitting.value = false
   }
 }
 </script>

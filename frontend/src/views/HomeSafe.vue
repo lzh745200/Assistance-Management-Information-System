@@ -3,17 +3,13 @@
     <!-- 欢迎横幅 -->
     <div class="welcome-banner">
       <div class="banner-content">
-        <h2 class="welcome-title">
-          欢迎回来，{{ authStore.user?.name || userRoleName }}
-        </h2>
+        <h2 class="welcome-title">欢迎回来，{{ authStore.user?.name || userRoleName }}</h2>
         <p class="welcome-date">{{ currentDate }}</p>
         <p v-if="dashStats" class="welcome-summary">
-          当前共有 <strong>{{ dashStats.total_projects }}</strong> 个帮扶项目，
-          覆盖 <strong>{{ dashStats.total_villages }}</strong> 个帮扶村、
+          当前共有 <strong>{{ dashStats.total_projects }}</strong> 个帮扶项目， 覆盖
+          <strong>{{ dashStats.total_villages }}</strong> 个帮扶村、
           <strong>{{ dashStats.total_schools }}</strong> 所学校， 惠及
-          <strong>{{
-            (dashStats.total_population || 0).toLocaleString()
-          }}</strong>
+          <strong>{{ (dashStats.total_population || 0).toLocaleString() }}</strong>
           人
         </p>
       </div>
@@ -31,9 +27,7 @@
     <div v-if="showLayoutEditor" class="layout-editor-panel">
       <div class="layout-editor-header">
         <span>⚙️ 自定义工作台布局</span>
-        <button class="layout-close-btn" @click="showLayoutEditor = false">
-          ✕
-        </button>
+        <button class="layout-close-btn" @click="showLayoutEditor = false">✕</button>
       </div>
       <!-- 预设布局 -->
       <div class="layout-presets">
@@ -68,7 +62,7 @@
             size="small"
             @change="
               (val: any) => {
-                cardVisibility[card.key] = !!val;
+                cardVisibility[card.key] = !!val
               }
             "
           />
@@ -82,37 +76,23 @@
         <span class="layout-status">
           已显示 {{ visibleCount }} / {{ DASHBOARD_CARDS.length }} 个面板
         </span>
-        <button class="layout-reset-btn" @click="resetLayout">
-          恢复默认布局
-        </button>
+        <button class="layout-reset-btn" @click="resetLayout">恢复默认布局</button>
       </div>
     </div>
 
     <!-- 恢复数据弹窗 -->
-    <div
-      v-if="showRestoreDialog"
-      class="modal-overlay"
-      @click.self="showRestoreDialog = false"
-    >
+    <div v-if="showRestoreDialog" class="modal-overlay" @click.self="showRestoreDialog = false">
       <div class="modal-dialog">
         <div class="modal-header">
           <h3>🔄 恢复数据</h3>
-          <button class="modal-close" @click="showRestoreDialog = false">
-            &times;
-          </button>
+          <button class="modal-close" @click="showRestoreDialog = false">&times;</button>
         </div>
         <div class="modal-body">
           <div class="restore-section">
             <h4>从已有备份恢复</h4>
-            <div v-if="restoreBackups.length === 0" class="empty-tip">
-              暂无备份文件
-            </div>
+            <div v-if="restoreBackups.length === 0" class="empty-tip">暂无备份文件</div>
             <div v-else class="backup-list">
-              <div
-                v-for="backup in restoreBackups"
-                :key="backup.filename"
-                class="backup-item"
-              >
+              <div v-for="backup in restoreBackups" :key="backup.filename" class="backup-item">
                 <div class="backup-info">
                   <span class="backup-name">{{ backup.filename }}</span>
                   <span class="backup-meta"
@@ -125,7 +105,7 @@
                   :disabled="restoring"
                   @click="restoreFromBackup(backup.filename)"
                 >
-                  {{ restoring ? "恢复中..." : "恢复" }}
+                  {{ restoring ? '恢复中...' : '恢复' }}
                 </button>
               </div>
             </div>
@@ -163,10 +143,7 @@
           class="stat-card"
           @click="stat.path && pushSafe(stat.path)"
         >
-          <div
-            class="stat-icon-wrapper"
-            :style="{ backgroundColor: stat.bgColor }"
-          >
+          <div class="stat-icon-wrapper" :style="{ backgroundColor: stat.bgColor }">
             <!-- eslint-disable-next-line vue/no-v-html -->
             <span class="stat-icon" v-html="stat.icon"></span>
           </div>
@@ -178,18 +155,11 @@
             <span class="stat-extra-text">{{ stat.extra }}</span>
           </div>
         </div>
-        <div
-          class="stat-refresh"
-          title="刷新统计数据"
-          @click="refreshDashboard"
-        >
+        <div class="stat-refresh" title="刷新统计数据" @click="refreshDashboard">
           <span :class="{ refreshing: dashRefreshing }">🔄</span>
         </div>
       </div>
-      <div
-        v-else-if="!dashLoading && coreStats.length === 0"
-        class="empty-state"
-      >
+      <div v-else-if="!dashLoading && coreStats.length === 0" class="empty-state">
         <div class="empty-icon">📊</div>
         <div class="empty-text">暂无统计数据</div>
         <div class="empty-hint">请先添加帮扶项目、村庄或学校数据</div>
@@ -214,12 +184,7 @@
         <h3>⚡ 快捷导航</h3>
       </div>
       <div class="nav-grid">
-        <div
-          v-for="nav in quickNavItems"
-          :key="nav.path"
-          class="nav-item"
-          @click="navigateTo(nav)"
-        >
+        <div v-for="nav in quickNavItems" :key="nav.path" class="nav-item" @click="navigateTo(nav)">
           <span class="nav-icon">{{ nav.icon }}</span>
           <span class="nav-label">{{ nav.label }}</span>
         </div>
@@ -234,9 +199,7 @@
         <div v-show="cardVisibility.projects" class="section-card">
           <div class="section-header">
             <h3>📌 项目进度</h3>
-            <button class="text-btn" @click="pushSafe('/projects')">
-              查看全部 ›
-            </button>
+            <button class="text-btn" @click="pushSafe('/projects')">查看全部 ›</button>
           </div>
           <div class="section-body">
             <div v-if="dashLoading" class="skeleton-table">
@@ -257,22 +220,14 @@
                 </thead>
                 <tbody>
                   <tr v-for="project in recentProjects" :key="project.id">
-                    <td
-                      class="project-name"
-                      @click="pushSafe(`/projects/${project.id}`)"
-                    >
+                    <td class="project-name" @click="pushSafe(`/projects/${project.id}`)">
                       {{ project.name }}
                     </td>
                     <td>
-                      <span class="type-tag">{{
-                        translateType(project.type)
-                      }}</span>
+                      <span class="type-tag">{{ translateType(project.type) }}</span>
                     </td>
                     <td>
-                      <span
-                        class="status-badge"
-                        :class="getStatusClass(project.status)"
-                      >
+                      <span class="status-badge" :class="getStatusClass(project.status)">
                         {{ translateStatus(project.status) }}
                       </span>
                     </td>
@@ -283,15 +238,11 @@
                             class="progress-bar-fill"
                             :style="{
                               width: project.progress + '%',
-                              backgroundColor: getProgressColor(
-                                project.progress,
-                              ),
+                              backgroundColor: getProgressColor(project.progress),
                             }"
                           ></div>
                         </div>
-                        <span class="progress-text"
-                          >{{ project.progress }}%</span
-                        >
+                        <span class="progress-text">{{ project.progress }}%</span>
                       </div>
                     </td>
                   </tr>
@@ -306,9 +257,7 @@
         <div v-show="cardVisibility.funds" class="section-card">
           <div class="section-header">
             <h3>💰 经费概况</h3>
-            <button class="text-btn" @click="pushSafe('/funds')">
-              查看全部 ›
-            </button>
+            <button class="text-btn" @click="pushSafe('/funds')">查看全部 ›</button>
           </div>
           <div class="section-body">
             <div class="fund-summary-row">
@@ -342,29 +291,14 @@
               </div>
             </div>
             <div v-if="dashStats?.total_funds" class="fund-progress-bar">
-              <div
-                class="fund-bar-allocated"
-                :style="{ width: fundAllocatedPercent + '%' }"
-              ></div>
-              <div
-                class="fund-bar-pending"
-                :style="{ width: fundPendingPercent + '%' }"
-              ></div>
-              <div
-                class="fund-bar-planned"
-                :style="{ width: fundPlannedPercent + '%' }"
-              ></div>
+              <div class="fund-bar-allocated" :style="{ width: fundAllocatedPercent + '%' }"></div>
+              <div class="fund-bar-pending" :style="{ width: fundPendingPercent + '%' }"></div>
+              <div class="fund-bar-planned" :style="{ width: fundPlannedPercent + '%' }"></div>
             </div>
             <div class="fund-legend">
-              <span class="legend-item"
-                ><i class="legend-dot green"></i>已拨付</span
-              >
-              <span class="legend-item"
-                ><i class="legend-dot orange"></i>待审批</span
-              >
-              <span class="legend-item"
-                ><i class="legend-dot blue"></i>规划中</span
-              >
+              <span class="legend-item"><i class="legend-dot green"></i>已拨付</span>
+              <span class="legend-item"><i class="legend-dot orange"></i>待审批</span>
+              <span class="legend-item"><i class="legend-dot blue"></i>规划中</span>
             </div>
           </div>
         </div>
@@ -373,11 +307,8 @@
         <div v-show="cardVisibility.activities" class="section-card">
           <div class="section-header">
             <h3>🕐 近期动态</h3>
-            <button
-              class="text-btn"
-              @click="showActivityForm = !showActivityForm"
-            >
-              {{ showActivityForm ? "取消" : "+ 添加动态" }}
+            <button class="text-btn" @click="showActivityForm = !showActivityForm">
+              {{ showActivityForm ? '取消' : '+ 添加动态' }}
             </button>
           </div>
           <div class="section-body">
@@ -404,9 +335,7 @@
                 />
                 <button
                   class="activity-add-btn"
-                  :disabled="
-                    !newActivity.action.trim() || !newActivity.target.trim()
-                  "
+                  :disabled="!newActivity.action.trim() || !newActivity.target.trim()"
                   @click="addActivity"
                 >
                   添加
@@ -414,19 +343,12 @@
               </div>
             </div>
             <div class="activity-list">
-              <div
-                v-for="act in recentActivities"
-                :key="act.id"
-                class="activity-item"
-              >
+              <div v-for="act in recentActivities" :key="act.id" class="activity-item">
                 <div class="activity-dot" :class="'dot-' + act.type"></div>
                 <!-- 编辑模式 -->
                 <template v-if="editingActivityId === act.id">
                   <div class="activity-edit-form">
-                    <select
-                      v-model="editingActivity.type"
-                      class="activity-select-sm"
-                    >
+                    <select v-model="editingActivity.type" class="activity-select-sm">
                       <option value="project">项目</option>
                       <option value="fund">经费</option>
                       <option value="import">导入</option>
@@ -446,20 +368,12 @@
                     />
                     <button
                       class="activity-save-btn"
-                      :disabled="
-                        !editingActivity.action.trim() ||
-                        !editingActivity.target.trim()
-                      "
+                      :disabled="!editingActivity.action.trim() || !editingActivity.target.trim()"
                       @click="saveActivity(act.id)"
                     >
                       保存
                     </button>
-                    <button
-                      class="activity-cancel-btn"
-                      @click="cancelEditActivity"
-                    >
-                      取消
-                    </button>
+                    <button class="activity-cancel-btn" @click="cancelEditActivity">取消</button>
                   </div>
                 </template>
                 <!-- 显示模式 -->
@@ -473,11 +387,7 @@
                     <span class="activity-time">{{ act.time }}</span>
                   </div>
                   <div class="activity-actions">
-                    <button
-                      class="activity-edit-btn"
-                      title="编辑"
-                      @click="startEditActivity(act)"
-                    >
+                    <button class="activity-edit-btn" title="编辑" @click="startEditActivity(act)">
                       ✎
                     </button>
                     <button
@@ -490,9 +400,7 @@
                   </div>
                 </template>
               </div>
-              <div v-if="recentActivities.length === 0" class="activity-empty">
-                暂无近期动态
-              </div>
+              <div v-if="recentActivities.length === 0" class="activity-empty">暂无近期动态</div>
             </div>
           </div>
         </div>
@@ -504,9 +412,7 @@
         <div v-show="cardVisibility.todos" class="section-card">
           <div class="section-header">
             <h3>📝 待办事项</h3>
-            <span v-if="pendingTodos > 0" class="badge-count">{{
-              pendingTodos
-            }}</span>
+            <span v-if="pendingTodos > 0" class="badge-count">{{ pendingTodos }}</span>
           </div>
           <div class="section-body">
             <div class="task-add-row">
@@ -521,43 +427,25 @@
                 <option value="medium">重要</option>
                 <option value="low">普通</option>
               </select>
-              <button
-                class="task-add-btn"
-                :disabled="!newTaskTitle.trim()"
-                @click="addTask"
-              >
+              <button class="task-add-btn" :disabled="!newTaskTitle.trim()" @click="addTask">
                 添加
               </button>
             </div>
             <div class="task-list">
               <div v-for="task in tasks" :key="task.id" class="task-item">
                 <label class="checkbox-wrapper">
-                  <input
-                    type="checkbox"
-                    :checked="task.completed"
-                    @change="toggleTask(task.id)"
-                  />
+                  <input type="checkbox" :checked="task.completed" @change="toggleTask(task.id)" />
                   <span class="checkmark"></span>
-                  <span class="task-text" :class="{ done: task.completed }">{{
-                    task.title
-                  }}</span>
+                  <span class="task-text" :class="{ done: task.completed }">{{ task.title }}</span>
                 </label>
                 <div class="task-actions">
-                  <span class="priority-tag" :class="task.priority">{{
-                    task.priorityText
-                  }}</span>
-                  <button
-                    class="task-delete-btn"
-                    title="删除"
-                    @click="removeTask(task.id)"
-                  >
+                  <span class="priority-tag" :class="task.priority">{{ task.priorityText }}</span>
+                  <button class="task-delete-btn" title="删除" @click="removeTask(task.id)">
                     ✕
                   </button>
                 </div>
               </div>
-              <div v-if="tasks.length === 0" class="task-empty">
-                暂无待办事项
-              </div>
+              <div v-if="tasks.length === 0" class="task-empty">暂无待办事项</div>
             </div>
           </div>
         </div>
@@ -572,35 +460,24 @@
               <div class="data-overview-item">
                 <span class="do-label">帮扶村人口</span>
                 <span class="do-value"
-                  >{{
-                    (dashStats?.total_population || 0).toLocaleString()
-                  }}
-                  人</span
+                  >{{ (dashStats?.total_population || 0).toLocaleString() }} 人</span
                 >
               </div>
               <div class="data-overview-item">
                 <span class="do-label">帮扶村户数</span>
                 <span class="do-value"
-                  >{{
-                    (dashStats?.total_households || 0).toLocaleString()
-                  }}
-                  户</span
+                  >{{ (dashStats?.total_households || 0).toLocaleString() }} 户</span
                 >
               </div>
               <div class="data-overview-item">
                 <span class="do-label">在校学生</span>
                 <span class="do-value"
-                  >{{
-                    (dashStats?.total_students || 0).toLocaleString()
-                  }}
-                  人</span
+                  >{{ (dashStats?.total_students || 0).toLocaleString() }} 人</span
                 >
               </div>
               <div class="data-overview-item">
                 <span class="do-label">师资力量</span>
-                <span class="do-value"
-                  >{{ dashStats?.total_teachers || 0 }} 人</span
-                >
+                <span class="do-value">{{ dashStats?.total_teachers || 0 }} 人</span>
               </div>
               <div class="data-overview-item">
                 <span class="do-label">数据完整度</span>
@@ -618,9 +495,7 @@
               </div>
               <div class="data-overview-item">
                 <span class="do-label">待审批</span>
-                <span class="do-value text-orange"
-                  >{{ dashStats?.pending_approvals || 0 }} 条</span
-                >
+                <span class="do-value text-orange">{{ dashStats?.pending_approvals || 0 }} 条</span>
               </div>
             </div>
           </div>
@@ -631,323 +506,307 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import QuickActions from "@/views/dashboard/components/QuickActions.vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { useAuthStore } from "@/stores/auth";
-import request from "@/api/request";
-import { useOnboarding } from "@/composables/useOnboarding";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { enhancedStorage, STORAGE_KEYS } from "@/utils/enhancedStorage";
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import QuickActions from '@/views/dashboard/components/QuickActions.vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useAuthStore } from '@/stores/auth'
+import request from '@/api/request'
+import { useOnboarding } from '@/composables/useOnboarding'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { enhancedStorage, STORAGE_KEYS } from '@/utils/enhancedStorage'
 
 // 新手引导（首次访问时自动展示）
-const { startTour: _startTour } = useOnboarding();
-void _startTour; // 保留引用供后续使用
+const { startTour: _startTour } = useOnboarding()
+void _startTour // 保留引用供后续使用
 
-const { pushSafe } = useRouterSafe();
-const authStore = useAuthStore();
+const { pushSafe } = useRouterSafe()
+const authStore = useAuthStore()
 
-const backingUp = ref(false);
-const showRestoreDialog = ref(false);
+const backingUp = ref(false)
+const showRestoreDialog = ref(false)
 
 // ─── 仪表板布局个性化 ───
 const DASHBOARD_CARDS = [
   {
-    key: "stats",
-    label: "核心统计指标",
-    description: "项目数、村庄数、学校数、人口等关键数字",
+    key: 'stats',
+    label: '核心统计指标',
+    description: '项目数、村庄数、学校数、人口等关键数字',
   },
-  { key: "quickNav", label: "快捷导航", description: "常用功能快捷入口按钮组" },
-  { key: "projects", label: "项目进度", description: "帮扶项目列表与完成进度" },
-  { key: "funds", label: "经费概况", description: "经费分配与使用情况概览" },
+  { key: 'quickNav', label: '快捷导航', description: '常用功能快捷入口按钮组' },
+  { key: 'projects', label: '项目进度', description: '帮扶项目列表与完成进度' },
+  { key: 'funds', label: '经费概况', description: '经费分配与使用情况概览' },
   {
-    key: "activities",
-    label: "近期动态",
-    description: "最新帮扶活动与工作动态",
+    key: 'activities',
+    label: '近期动态',
+    description: '最新帮扶活动与工作动态',
   },
-  { key: "todos", label: "待办事项", description: "待审批、待处理的工作任务" },
+  { key: 'todos', label: '待办事项', description: '待审批、待处理的工作任务' },
   {
-    key: "dataOverview",
-    label: "数据概览",
-    description: "年度帮扶数据汇总统计",
+    key: 'dataOverview',
+    label: '数据概览',
+    description: '年度帮扶数据汇总统计',
   },
-] as const;
-type CardKey = (typeof DASHBOARD_CARDS)[number]["key"];
+] as const
+type CardKey = (typeof DASHBOARD_CARDS)[number]['key']
 const DEFAULT_CARD_VISIBILITY = Object.fromEntries(
-  DASHBOARD_CARDS.map((c) => [c.key, true]),
-) as Record<CardKey, boolean>;
+  DASHBOARD_CARDS.map((c) => [c.key, true])
+) as Record<CardKey, boolean>
 
 const cardVisibility = ref<Record<CardKey, boolean>>({
   ...DEFAULT_CARD_VISIBILITY,
-  ...(enhancedStorage.get<Partial<Record<CardKey, boolean>>>(
-    STORAGE_KEYS.DASHBOARD_LAYOUT,
-  ) ?? {}),
-});
-const showLayoutEditor = ref(false);
+  ...(enhancedStorage.get<Partial<Record<CardKey, boolean>>>(STORAGE_KEYS.DASHBOARD_LAYOUT) ?? {}),
+})
+const showLayoutEditor = ref(false)
 
 watch(
   cardVisibility,
   (v) => {
-    enhancedStorage.set(STORAGE_KEYS.DASHBOARD_LAYOUT, v);
+    enhancedStorage.set(STORAGE_KEYS.DASHBOARD_LAYOUT, v)
   },
-  { deep: true },
-);
+  { deep: true }
+)
 
 function resetLayout() {
-  cardVisibility.value = { ...DEFAULT_CARD_VISIBILITY };
-  orderedCards.value = [...DASHBOARD_CARDS];
-  currentPreset.value = "default";
-  enhancedStorage.remove(STORAGE_KEYS.DASHBOARD_ORDER);
+  cardVisibility.value = { ...DEFAULT_CARD_VISIBILITY }
+  orderedCards.value = [...DASHBOARD_CARDS]
+  currentPreset.value = 'default'
+  enhancedStorage.remove(STORAGE_KEYS.DASHBOARD_ORDER)
 }
 
 // ── 布局预设 ──
 const LAYOUT_PRESETS = [
-  { key: "all", label: "全部显示" },
-  { key: "manager", label: "管理员视角" },
-  { key: "operator", label: "操作员视角" },
-  { key: "minimal", label: "简约模式" },
-] as const;
-type PresetKey = (typeof LAYOUT_PRESETS)[number]["key"];
-const currentPreset = ref<PresetKey | "default">("default");
+  { key: 'all', label: '全部显示' },
+  { key: 'manager', label: '管理员视角' },
+  { key: 'operator', label: '操作员视角' },
+  { key: 'minimal', label: '简约模式' },
+] as const
+type PresetKey = (typeof LAYOUT_PRESETS)[number]['key']
+const currentPreset = ref<PresetKey | 'default'>('default')
 
-const visibleCount = computed(
-  () => Object.values(cardVisibility.value).filter(Boolean).length,
-);
+const visibleCount = computed(() => Object.values(cardVisibility.value).filter(Boolean).length)
 
 function applyPreset(key: PresetKey) {
-  currentPreset.value = key;
-  const allKeys = DASHBOARD_CARDS.map((c) => c.key);
-  const reset: Record<string, boolean> = {};
+  currentPreset.value = key
+  const allKeys = DASHBOARD_CARDS.map((c) => c.key)
+  const reset: Record<string, boolean> = {}
   switch (key) {
-    case "all":
-      allKeys.forEach((k) => (reset[k] = true));
-      break;
-    case "manager":
+    case 'all':
+      allKeys.forEach((k) => (reset[k] = true))
+      break
+    case 'manager':
       // 管理员：全部显示
-      allKeys.forEach((k) => (reset[k] = true));
-      break;
-    case "operator":
+      allKeys.forEach((k) => (reset[k] = true))
+      break
+    case 'operator':
       // 操作员：隐藏数据概览、待办事项
-      allKeys.forEach(
-        (k) => (reset[k] = k !== "dataOverview" && k !== "todos"),
-      );
-      break;
-    case "minimal":
+      allKeys.forEach((k) => (reset[k] = k !== 'dataOverview' && k !== 'todos'))
+      break
+    case 'minimal':
       // 简约：仅核心统计 + 快捷导航 + 项目进度
-      allKeys.forEach(
-        (k) => (reset[k] = ["stats", "quickNav", "projects"].includes(k)),
-      );
-      break;
+      allKeys.forEach((k) => (reset[k] = ['stats', 'quickNav', 'projects'].includes(k)))
+      break
   }
-  cardVisibility.value = reset as Record<CardKey, boolean>;
+  cardVisibility.value = reset as Record<CardKey, boolean>
 }
 
 // ── 拖拽排序 ──
-const savedOrder = enhancedStorage.get<CardKey[]>(STORAGE_KEYS.DASHBOARD_ORDER);
+const savedOrder = enhancedStorage.get<CardKey[]>(STORAGE_KEYS.DASHBOARD_ORDER)
 const orderedCards = ref<(typeof DASHBOARD_CARDS)[number][]>(
   (() => {
-    if (!savedOrder) return [...DASHBOARD_CARDS];
+    if (!savedOrder) return [...DASHBOARD_CARDS]
     // 以保存的顺序为基准，追加新增卡片（避免新卡片被静默丢弃）
-    const savedKeys = new Set(savedOrder);
+    const savedKeys = new Set(savedOrder)
     const merged = savedOrder
       .map((k) => DASHBOARD_CARDS.find((c) => c.key === k))
-      .filter(Boolean) as (typeof DASHBOARD_CARDS)[number][];
+      .filter(Boolean) as (typeof DASHBOARD_CARDS)[number][]
     // 追加未在保存顺序中的新卡片
     for (const card of DASHBOARD_CARDS) {
-      if (!savedKeys.has(card.key)) merged.push(card);
+      if (!savedKeys.has(card.key)) merged.push(card)
     }
-    return merged;
-  })(),
-);
+    return merged
+  })()
+)
 
-let dragIndex = -1;
+let dragIndex = -1
 
 function onDragStart(_e: DragEvent, index: number) {
-  dragIndex = index;
+  dragIndex = index
 }
 
 function onDragOver(_e: DragEvent, index: number) {
-  if (dragIndex === -1 || dragIndex === index) return;
-  const items = [...orderedCards.value];
-  const [moved] = items.splice(dragIndex, 1);
-  items.splice(index, 0, moved);
-  orderedCards.value = items;
-  dragIndex = index;
+  if (dragIndex === -1 || dragIndex === index) return
+  const items = [...orderedCards.value]
+  const [moved] = items.splice(dragIndex, 1)
+  items.splice(index, 0, moved)
+  orderedCards.value = items
+  dragIndex = index
 }
 
 function onDrop(_e: DragEvent, _index: number) {
-  dragIndex = -1;
+  dragIndex = -1
   // 持久化顺序
   enhancedStorage.set(
     STORAGE_KEYS.DASHBOARD_ORDER,
-    orderedCards.value.map((c) => c.key),
-  );
+    orderedCards.value.map((c) => c.key)
+  )
 }
 
 function onDragEnd() {
-  dragIndex = -1;
+  dragIndex = -1
 }
 
-const restoreBackups = ref<any[]>([]);
-const restoring = ref(false);
+const restoreBackups = ref<any[]>([])
+const restoring = ref(false)
 // const restoreFileInput = ref<HTMLInputElement | null>(null);
-const messages = ref<any[]>([]);
+const messages = ref<any[]>([])
 
-const dashLoading = ref(true);
-const dashRefreshing = ref(false);
-const dashStats = ref<any>(null);
-const recentProjects = ref<any[]>([]);
-const recentActivities = ref<any[]>([]);
+const dashLoading = ref(true)
+const dashRefreshing = ref(false)
+const dashStats = ref<any>(null)
+const recentProjects = ref<any[]>([])
+const recentActivities = ref<any[]>([])
 
 // 近期动态编辑状态
-const showActivityForm = ref(false);
-const newActivity = ref({ type: "project", action: "", target: "" });
-const editingActivityId = ref<number | string | null>(null);
-const editingActivity = ref({ type: "", action: "", target: "" });
+const showActivityForm = ref(false)
+const newActivity = ref({ type: 'project', action: '', target: '' })
+const editingActivityId = ref<number | string | null>(null)
+const editingActivity = ref({ type: '', action: '', target: '' })
 
 const priorityTextMap: Record<string, string> = {
-  high: "紧急",
-  medium: "重要",
-  low: "普通",
-};
+  high: '紧急',
+  medium: '重要',
+  low: '普通',
+}
 
-const tasks = ref<any[]>([]);
-const newTaskTitle = ref("");
-const newTaskPriority = ref("medium");
-const tasksLoading = ref(false);
+const tasks = ref<any[]>([])
+const newTaskTitle = ref('')
+const newTaskPriority = ref('medium')
+const tasksLoading = ref(false)
 
-const pendingTodos = computed(
-  () => tasks.value.filter((t: any) => !t.completed).length,
-);
+const pendingTodos = computed(() => tasks.value.filter((t: any) => !t.completed).length)
 
 function mapTaskItem(item: any) {
   return {
     ...item,
-    priorityText: priorityTextMap[item.priority] || "普通",
-  };
+    priorityText: priorityTextMap[item.priority] || '普通',
+  }
 }
 
 async function loadTasks() {
-  tasksLoading.value = true;
+  tasksLoading.value = true
   try {
-    const res = await request.get("/todos", {
+    const res = await request.get('/todos', {
       params: { page: 1, page_size: 50 },
       showError: false,
-    } as any);
-    const data = res.data?.data || res.data;
-    const items = data?.items || (Array.isArray(data) ? data : []);
-    tasks.value = items.map(mapTaskItem);
+    } as any)
+    const data = res.data?.data || res.data
+    const items = data?.items || (Array.isArray(data) ? data : [])
+    tasks.value = items.map(mapTaskItem)
   } catch (e) {
-    logger.error("加载待办失败:", e);
-    tasks.value = [];
+    logger.error('加载待办失败:', e)
+    tasks.value = []
   } finally {
-    tasksLoading.value = false;
+    tasksLoading.value = false
   }
 }
 
 async function addTask() {
-  const title = newTaskTitle.value.trim();
-  if (!title) return;
+  const title = newTaskTitle.value.trim()
+  if (!title) return
   try {
-    const res = await request.post("/todos", {
+    const res = await request.post('/todos', {
       title,
       priority: newTaskPriority.value,
-    });
-    const created = res.data?.data || res.data;
+    })
+    const created = res.data?.data || res.data
     if (created?.id) {
-      tasks.value.unshift(mapTaskItem(created));
+      tasks.value.unshift(mapTaskItem(created))
     } else {
-      await loadTasks();
+      await loadTasks()
     }
-    newTaskTitle.value = "";
+    newTaskTitle.value = ''
   } catch (e: any) {
-    logger.error("添加待办失败:", e);
-    ElMessage.error(
-      "添加待办失败: " + (e?.response?.data?.detail || e.message),
-    );
+    logger.error('添加待办失败:', e)
+    ElMessage.error('添加待办失败: ' + (e?.response?.data?.detail || e.message))
   }
 }
 
 async function toggleTask(id: number) {
-  const task = tasks.value.find((t: any) => t.id === id);
-  if (!task) return;
+  const task = tasks.value.find((t: any) => t.id === id)
+  if (!task) return
   try {
-    const res = await request.patch(`/todos/${id}/toggle`);
-    const updated = res.data?.data || res.data;
+    const res = await request.patch(`/todos/${id}/toggle`)
+    const updated = res.data?.data || res.data
     if (updated) {
-      task.completed = updated.completed;
+      task.completed = updated.completed
     } else {
-      task.completed = !task.completed;
+      task.completed = !task.completed
     }
   } catch (e) {
-    logger.error("切换待办状态失败:", e);
+    logger.error('切换待办状态失败:', e)
   }
 }
 
 async function removeTask(id: number) {
   try {
-    await request.delete(`/todos/${id}`);
-    tasks.value = tasks.value.filter((t: any) => t.id !== id);
+    await request.delete(`/todos/${id}`)
+    tasks.value = tasks.value.filter((t: any) => t.id !== id)
   } catch (e) {
-    logger.error("删除待办失败:", e);
+    logger.error('删除待办失败:', e)
   }
 }
 
 // 近期动态 CRUD
 async function addActivity() {
-  const { type, action, target } = newActivity.value;
-  if (!action.trim() || !target.trim()) return;
+  const { type, action, target } = newActivity.value
+  if (!action.trim() || !target.trim()) return
   try {
-    const res = await request.post("/dashboard/recent-activities", {
+    const res = await request.post('/dashboard/recent-activities', {
       type,
       action: action.trim(),
       target: target.trim(),
-    });
-    const created = res.data;
+    })
+    const created = res.data
     if (created?.id) {
-      recentActivities.value.unshift(created);
+      recentActivities.value.unshift(created)
     } else {
-      await reloadActivities();
+      await reloadActivities()
     }
-    newActivity.value = { type: "project", action: "", target: "" };
-    showActivityForm.value = false;
+    newActivity.value = { type: 'project', action: '', target: '' }
+    showActivityForm.value = false
   } catch (e: any) {
-    logger.error("添加动态失败:", e);
-    ElMessage.error(
-      "添加动态失败: " + (e?.response?.data?.detail || e.message),
-    );
+    logger.error('添加动态失败:', e)
+    ElMessage.error('添加动态失败: ' + (e?.response?.data?.detail || e.message))
   }
 }
 
 function startEditActivity(act: any) {
-  editingActivityId.value = act.id;
+  editingActivityId.value = act.id
   editingActivity.value = {
     type: act.type,
     action: act.action,
     target: act.target,
-  };
+  }
 }
 
 function cancelEditActivity() {
-  editingActivityId.value = null;
-  editingActivity.value = { type: "", action: "", target: "" };
+  editingActivityId.value = null
+  editingActivity.value = { type: '', action: '', target: '' }
 }
 
 async function saveActivity(id: number | string) {
-  const { type, action, target } = editingActivity.value;
-  if (!action.trim() || !target.trim()) return;
+  const { type, action, target } = editingActivity.value
+  if (!action.trim() || !target.trim()) return
   try {
     const res = await request.put(`/dashboard/recent-activities/${id}`, {
       type,
       action: action.trim(),
       target: target.trim(),
-    });
-    const updated = res.data;
-    const idx = recentActivities.value.findIndex(
-      (a: any) => String(a.id) === String(id),
-    );
+    })
+    const updated = res.data
+    const idx = recentActivities.value.findIndex((a: any) => String(a.id) === String(id))
     if (idx !== -1) {
       recentActivities.value[idx] = {
         ...recentActivities.value[idx],
@@ -955,222 +814,209 @@ async function saveActivity(id: number | string) {
         type,
         action: action.trim(),
         target: target.trim(),
-      };
+      }
     }
-    cancelEditActivity();
+    cancelEditActivity()
   } catch (e: any) {
-    logger.error("更新动态失败:", e);
+    logger.error('更新动态失败:', e)
     // 即使API失败，也进行本地更新
-    const idx = recentActivities.value.findIndex(
-      (a: any) => String(a.id) === String(id),
-    );
+    const idx = recentActivities.value.findIndex((a: any) => String(a.id) === String(id))
     if (idx !== -1) {
       recentActivities.value[idx] = {
         ...recentActivities.value[idx],
         type,
         action: action.trim(),
         target: target.trim(),
-      };
+      }
     }
-    cancelEditActivity();
+    cancelEditActivity()
   }
 }
 
 async function deleteActivity(id: number | string) {
   try {
-    await ElMessageBox.confirm("确定删除这条动态吗？", "确认删除", {
-      type: "warning",
-    });
+    await ElMessageBox.confirm('确定删除这条动态吗？', '确认删除', {
+      type: 'warning',
+    })
   } catch {
-    return;
+    return
   }
   try {
-    await request.delete(`/dashboard/recent-activities/${id}`);
+    await request.delete(`/dashboard/recent-activities/${id}`)
     // 使用宽松比较确保 string/number id 都能匹配
-    recentActivities.value = recentActivities.value.filter(
-      (a: any) => String(a.id) !== String(id),
-    );
+    recentActivities.value = recentActivities.value.filter((a: any) => String(a.id) !== String(id))
   } catch (e: any) {
-    logger.error("删除动态失败:", e);
+    logger.error('删除动态失败:', e)
     // 即使API调用失败，也从本地列表中移除（前端优先更新）
-    recentActivities.value = recentActivities.value.filter(
-      (a: any) => String(a.id) !== String(id),
-    );
+    recentActivities.value = recentActivities.value.filter((a: any) => String(a.id) !== String(id))
   }
 }
 
 async function reloadActivities() {
   try {
-    const res = await request.get("/dashboard/recent-activities", {
+    const res = await request.get('/dashboard/recent-activities', {
       showError: false,
-    } as any);
-    const d = res.data;
-    recentActivities.value = (d?.items || (Array.isArray(d) ? d : [])).slice(
-      0,
-      8,
-    );
+    } as any)
+    const d = res.data
+    recentActivities.value = (d?.items || (Array.isArray(d) ? d : [])).slice(0, 8)
   } catch {
-    logger.error("加载动态失败");
+    logger.error('加载动态失败')
   }
 }
 
-const userRole = computed(() => authStore.user?.role || "viewer");
-const isAdminRole = computed(() =>
-  ["admin", "super_admin"].includes(userRole.value),
-);
-const isManagerRole = computed(() =>
-  ["admin", "super_admin", "manager"].includes(userRole.value),
-);
+const userRole = computed(() => authStore.user?.role || 'viewer')
+const isAdminRole = computed(() => ['admin', 'super_admin'].includes(userRole.value))
+const isManagerRole = computed(() => ['admin', 'super_admin', 'manager'].includes(userRole.value))
 
 const userRoleName = computed(() => {
   const roleMap: Record<string, string> = {
-    super_admin: "超级管理员",
-    admin: "系统管理员",
-    approval_leader: "审批领导",
-    manager: "管理人员",
-    operator: "操作员",
-    viewer: "查看者",
-  };
-  return roleMap[userRole.value] || "用户";
-});
+    super_admin: '超级管理员',
+    admin: '系统管理员',
+    approval_leader: '审批领导',
+    manager: '管理人员',
+    operator: '操作员',
+    viewer: '查看者',
+  }
+  return roleMap[userRole.value] || '用户'
+})
 
 // ─── 快捷导航类型定义 ───
 interface NavItem {
-  icon: string;
-  label: string;
-  path: string;
+  icon: string
+  label: string
+  path: string
   /** 需要的角色，空数组表示所有人可见 */
-  roles?: string[];
+  roles?: string[]
   /** 是否需要管理员权限 */
-  requiresAdmin?: boolean;
+  requiresAdmin?: boolean
 }
 
 // 公共快捷导航项（所有人可见）
 const commonNavItems: NavItem[] = [
-  { icon: "📁", label: "帮扶项目", path: "/projects", roles: [] },
-  { icon: "🏨️", label: "帮扶村", path: "/villages", roles: [] },
-  { icon: "🏫", label: "学校管理", path: "/schools", roles: [] },
-  { icon: "📜", label: "政策法规", path: "/policies", roles: [] },
-  { icon: "🌾", label: "乡村工作", path: "/rural-works", roles: [] },
-  { icon: "📊", label: "统计分析", path: "/data-analysis", roles: [] },
-  { icon: "🗺️", label: "地图可视化", path: "/data-analysis/map", roles: [] },
+  { icon: '📁', label: '帮扶项目', path: '/projects', roles: [] },
+  { icon: '🏨️', label: '帮扶村', path: '/villages', roles: [] },
+  { icon: '🏫', label: '学校管理', path: '/schools', roles: [] },
+  { icon: '📜', label: '政策法规', path: '/policies', roles: [] },
+  { icon: '🌾', label: '乡村工作', path: '/rural-works', roles: [] },
+  { icon: '📊', label: '统计分析', path: '/data-analysis', roles: [] },
+  { icon: '🗺️', label: '地图可视化', path: '/data-analysis/map', roles: [] },
   {
-    icon: "🎯",
-    label: "考核评估",
-    path: "/data-analysis/assessment",
+    icon: '🎯',
+    label: '考核评估',
+    path: '/data-analysis/assessment',
     roles: [],
   },
-  { icon: "📅", label: "工作日历", path: "/work-calendar", roles: [] },
-];
+  { icon: '📅', label: '工作日历', path: '/work-calendar', roles: [] },
+]
 
 // 管理员专属导航项
 const adminNavItems: NavItem[] = [
   {
-    icon: "💰",
-    label: "经费管理",
-    path: "/funds",
-    roles: ["admin", "super_admin", "manager"],
+    icon: '💰',
+    label: '经费管理',
+    path: '/funds',
+    roles: ['admin', 'super_admin', 'manager'],
   },
   {
-    icon: "📋",
-    label: "审批管理",
-    path: "/approval/pending",
-    roles: ["admin", "super_admin", "approval_leader", "manager"],
+    icon: '📋',
+    label: '审批管理',
+    path: '/approval/pending',
+    roles: ['admin', 'super_admin', 'approval_leader', 'manager'],
   },
   {
-    icon: "📈",
-    label: "数据录入",
-    path: "/data-entry/comprehensive",
+    icon: '📈',
+    label: '数据录入',
+    path: '/data-entry/comprehensive',
     roles: [],
   },
   {
-    icon: "💾",
-    label: "数据备份",
-    path: "/data-management/backup",
-    roles: ["admin", "super_admin"],
+    icon: '💾',
+    label: '数据备份',
+    path: '/data-management/backup',
+    roles: ['admin', 'super_admin'],
     requiresAdmin: true,
   },
   {
-    icon: "📄",
-    label: "报表导出",
-    path: "/report-export",
-    roles: ["admin", "super_admin", "manager"],
+    icon: '📄',
+    label: '报表导出',
+    path: '/report-export',
+    roles: ['admin', 'super_admin', 'manager'],
   },
   {
-    icon: "📥",
-    label: "数据导入",
-    path: "/data-import/batch",
-    roles: ["admin", "super_admin", "manager"],
+    icon: '📥',
+    label: '数据导入',
+    path: '/data-import/batch',
+    roles: ['admin', 'super_admin', 'manager'],
   },
   {
-    icon: "📩",
-    label: "接收数据包",
-    path: "/data-package/receive",
-    roles: ["admin", "super_admin", "manager"],
+    icon: '📩',
+    label: '接收数据包',
+    path: '/data-package/receive',
+    roles: ['admin', 'super_admin', 'manager'],
   },
   {
-    icon: "🔗",
-    label: "配置包管理",
-    path: "/system/config-package",
-    roles: ["admin", "super_admin"],
+    icon: '🔗',
+    label: '配置包管理',
+    path: '/system/config-package',
+    roles: ['admin', 'super_admin'],
   },
   {
-    icon: "🔧",
-    label: "系统监控",
-    path: "/system/monitoring",
-    roles: ["admin", "super_admin"],
+    icon: '🔧',
+    label: '系统监控',
+    path: '/system/monitoring',
+    roles: ['admin', 'super_admin'],
     requiresAdmin: true,
   },
-];
+]
 
 // 普通用户专属导航项
 const userNavItems: NavItem[] = [
-  { icon: "💰", label: "经费申请", path: "/funds/user", roles: [] },
-  { icon: "📝", label: "经费申请", path: "/funds/apply", roles: [] },
+  { icon: '💰', label: '经费申请', path: '/funds/user', roles: [] },
+  { icon: '📝', label: '经费申请', path: '/funds/apply', roles: [] },
   {
-    icon: "📈",
-    label: "数据录入",
-    path: "/data-entry/comprehensive",
+    icon: '📈',
+    label: '数据录入',
+    path: '/data-entry/comprehensive',
     roles: [],
   },
-  { icon: "📤", label: "数据上报", path: "/data-package/report", roles: [] },
+  { icon: '📤', label: '数据上报', path: '/data-package/report', roles: [] },
   {
-    icon: "📝",
-    label: "我的申请",
-    path: "/approval/my-applications",
+    icon: '📝',
+    label: '我的申请',
+    path: '/approval/my-applications',
     roles: [],
   },
-];
+]
 
 /** 检查用户是否有权限访问导航项 */
 function hasNavPermission(item: NavItem): boolean {
   // 不需要特定角色
-  if (!item.roles || item.roles.length === 0) return true;
+  if (!item.roles || item.roles.length === 0) return true
   // 需要管理员权限
-  if (item.requiresAdmin && !isAdminRole.value) return false;
+  if (item.requiresAdmin && !isAdminRole.value) return false
   // 检查角色匹配
-  return item.roles.includes(userRole.value);
+  return item.roles.includes(userRole.value)
 }
 
 /** 导航到指定路径，带权限检查 */
 function navigateTo(item: NavItem) {
   if (!hasNavPermission(item)) {
-    ElMessage.warning("您没有权限访问此功能");
-    return;
+    ElMessage.warning('您没有权限访问此功能')
+    return
   }
-  pushSafe(item.path);
+  pushSafe(item.path)
 }
 
 const quickNavItems = computed(() => {
-  let items: NavItem[];
+  let items: NavItem[]
   if (isManagerRole.value) {
-    items = [...commonNavItems, ...adminNavItems];
+    items = [...commonNavItems, ...adminNavItems]
   } else {
-    items = [...commonNavItems, ...userNavItems];
+    items = [...commonNavItems, ...userNavItems]
   }
   // 过滤掉无权限的项
-  return items.filter(hasNavPermission);
-});
+  return items.filter(hasNavPermission)
+})
 
 const svgIcons = {
   folder:
@@ -1181,154 +1027,154 @@ const svgIcons = {
     '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2"><path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-9a4 4 0 014-4h0a4 4 0 014 4v9"></path></svg>',
   money:
     '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>',
-};
+}
 
 const coreStats = computed(() => {
-  const s = dashStats.value;
+  const s = dashStats.value
   // 如果没有数据，返回空数组
-  if (!s) return [];
+  if (!s) return []
 
   return [
     {
-      label: "帮扶项目",
+      label: '帮扶项目',
       value: s.total_projects || 0,
       icon: svgIcons.folder,
-      bgColor: "#40916c",
+      bgColor: '#40916c',
       extra: `进行中 ${s.active_projects || 0}`,
-      path: "/projects",
+      path: '/projects',
     },
     {
-      label: "帮扶村庄",
+      label: '帮扶村庄',
       value: s.total_villages || 0,
       icon: svgIcons.location,
-      bgColor: "#2196f3",
+      bgColor: '#2196f3',
       extra: `覆盖 ${(s.total_population || 0).toLocaleString()} 人`,
-      path: "/villages",
+      path: '/villages',
     },
     {
-      label: "援建学校",
+      label: '援建学校',
       value: s.total_schools || 0,
       icon: svgIcons.school,
-      bgColor: "#ff9800",
+      bgColor: '#ff9800',
       extra: `帮扶中 ${s.schools_active || 0}`,
-      path: "/schools",
+      path: '/schools',
     },
     {
-      label: "投入资金(万)",
+      label: '投入资金(万)',
       value: s.total_funds || 0,
       icon: svgIcons.money,
-      bgColor: "#e91e63",
+      bgColor: '#e91e63',
       extra: `已拨付 ${s.funds_allocated || 0}万`,
-      path: isManagerRole.value ? "/funds" : "/funds/user",
+      path: isManagerRole.value ? '/funds' : '/funds/user',
     },
-  ];
-});
+  ]
+})
 
 const fundAllocatedPercent = computed(() => {
-  const t = dashStats.value?.total_funds || 1;
-  return Math.round(((dashStats.value?.funds_allocated || 0) / t) * 100);
-});
+  const t = dashStats.value?.total_funds || 1
+  return Math.round(((dashStats.value?.funds_allocated || 0) / t) * 100)
+})
 const fundPendingPercent = computed(() => {
-  const t = dashStats.value?.total_funds || 1;
-  return Math.round(((dashStats.value?.funds_pending || 0) / t) * 100);
-});
+  const t = dashStats.value?.total_funds || 1
+  return Math.round(((dashStats.value?.funds_pending || 0) / t) * 100)
+})
 const fundPlannedPercent = computed(() => {
-  const t = dashStats.value?.total_funds || 1;
-  return Math.round(((dashStats.value?.funds_planned || 0) / t) * 100);
-});
+  const t = dashStats.value?.total_funds || 1
+  return Math.round(((dashStats.value?.funds_planned || 0) / t) * 100)
+})
 
 function formatCurrentDate() {
-  return new Date().toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  });
+  return new Date().toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  })
 }
-const currentDate = ref(formatCurrentDate());
-let dateTimer: ReturnType<typeof setInterval> | null = null;
+const currentDate = ref(formatCurrentDate())
+let dateTimer: ReturnType<typeof setInterval> | null = null
 
 const statusMap: Record<string, string> = {
-  in_progress: "进行中",
-  completed: "已完成",
-  planning: "规划中",
-  pending: "待审批",
-  cancelled: "已取消",
-  suspended: "已暂停",
-};
+  in_progress: '进行中',
+  completed: '已完成',
+  planning: '规划中',
+  pending: '待审批',
+  cancelled: '已取消',
+  suspended: '已暂停',
+}
 
 const typeMap: Record<string, string> = {
-  infrastructure: "基础设施",
-  education: "教育帮扶",
-  medical: "医疗卫生",
-  industry: "产业发展",
-  agriculture: "农业发展",
-  culture: "文化建设",
-  ecology: "生态保护",
-  training: "技能培训",
-  other: "其他",
-};
+  infrastructure: '基础设施',
+  education: '教育帮扶',
+  medical: '医疗卫生',
+  industry: '产业发展',
+  agriculture: '农业发展',
+  culture: '文化建设',
+  ecology: '生态保护',
+  training: '技能培训',
+  other: '其他',
+}
 
 function translateStatus(status: string) {
-  return statusMap[status] || status;
+  return statusMap[status] || status
 }
 
 function translateType(type: string) {
-  return typeMap[type] || type;
+  return typeMap[type] || type
 }
 
 function getStatusClass(status: string) {
-  if (status === "进行中" || status === "in_progress") return "in-progress";
-  if (status === "已完成" || status === "completed") return "completed";
-  if (status === "规划中" || status === "planning") return "planning";
-  return "";
+  if (status === '进行中' || status === 'in_progress') return 'in-progress'
+  if (status === '已完成' || status === 'completed') return 'completed'
+  if (status === '规划中' || status === 'planning') return 'planning'
+  return ''
 }
 
 function getProgressColor(val: number) {
-  if (val >= 80) return "#40916c";
-  if (val >= 50) return "#ff9800";
-  return "#f56c6c";
+  if (val >= 80) return '#40916c'
+  if (val >= 50) return '#ff9800'
+  return '#f56c6c'
 }
 
 function formatBackupSize(bytes: number) {
-  if (!bytes) return "0 B";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  if (!bytes) return '0 B'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`
 }
 
 function formatBackupTime(iso: string) {
-  if (!iso) return "-";
+  if (!iso) return '-'
   try {
-    return new Date(iso).toLocaleString("zh-CN");
+    return new Date(iso).toLocaleString('zh-CN')
   } catch {
-    return iso;
+    return iso
   }
 }
 
 async function handleOneKeyBackup() {
-  backingUp.value = true;
+  backingUp.value = true
   try {
-    await request.post("/system/backup", {
-      description: `一键备份 ${new Date().toLocaleString("zh-CN")}`,
-    });
-    ElMessage.success("备份创建成功！");
+    await request.post('/system/backup', {
+      description: `一键备份 ${new Date().toLocaleString('zh-CN')}`,
+    })
+    ElMessage.success('备份创建成功！')
   } catch {
-    ElMessage.error("备份失败，请稍后重试");
+    ElMessage.error('备份失败，请稍后重试')
   } finally {
-    backingUp.value = false;
+    backingUp.value = false
   }
 }
 
 async function loadRestoreBackups() {
   try {
-    const res = await request.get("/system/backup", {
+    const res = await request.get('/system/backup', {
       showError: false,
-    } as any);
-    const d = res.data;
-    restoreBackups.value = Array.isArray(d) ? d : d?.items || d?.data || [];
+    } as any)
+    const d = res.data
+    restoreBackups.value = Array.isArray(d) ? d : d?.items || d?.data || []
   } catch {
-    restoreBackups.value = [];
+    restoreBackups.value = []
   }
 }
 
@@ -1336,163 +1182,154 @@ async function restoreFromBackup(filename: string) {
   try {
     await ElMessageBox.confirm(
       `确定从备份 "${filename}" 恢复数据吗？此操作将覆盖当前数据库。`,
-      "确认恢复",
-      { type: "warning" },
-    );
+      '确认恢复',
+      { type: 'warning' }
+    )
   } catch {
-    return;
+    return
   }
-  restoring.value = true;
+  restoring.value = true
   try {
-    await request.post(`/system/backup/restore/${filename}`);
-    ElMessage.success("数据恢复成功！请刷新页面。");
-    showRestoreDialog.value = false;
+    await request.post(`/system/backup/restore/${filename}`)
+    ElMessage.success('数据恢复成功！请刷新页面。')
+    showRestoreDialog.value = false
   } catch {
-    ElMessage.error("恢复失败，请稍后重试");
+    ElMessage.error('恢复失败，请稍后重试')
   } finally {
-    restoring.value = false;
+    restoring.value = false
   }
 }
 
 async function handleUploadRestore(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input?.files?.[0];
-  if (!file) return;
+  const input = event.target as HTMLInputElement
+  const file = input?.files?.[0]
+  if (!file) return
   try {
     await ElMessageBox.confirm(
       `确定使用上传的文件 "${file.name}" 恢复数据吗？此操作将覆盖当前数据库。`,
-      "确认恢复",
-      { type: "warning" },
-    );
+      '确认恢复',
+      { type: 'warning' }
+    )
   } catch {
-    input.value = "";
-    return;
+    input.value = ''
+    return
   }
-  restoring.value = true;
+  restoring.value = true
   try {
-    const formData = new FormData();
-    formData.append("file", file);
-    await request.post("/system/backup/upload-restore", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    ElMessage.success("数据恢复成功！请刷新页面。");
-    showRestoreDialog.value = false;
+    const formData = new FormData()
+    formData.append('file', file)
+    await request.post('/system/backup/upload-restore', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    ElMessage.success('数据恢复成功！请刷新页面。')
+    showRestoreDialog.value = false
   } catch {
-    ElMessage.error("上传恢复失败");
+    ElMessage.error('上传恢复失败')
   } finally {
-    restoring.value = false;
-    input.value = "";
+    restoring.value = false
+    input.value = ''
   }
 }
 
 // 自动刷新定时器
-let refreshTimer: ReturnType<typeof setInterval> | null = null;
-const REFRESH_INTERVAL = 2 * 60 * 1000; // 2分钟自动刷新
+let refreshTimer: ReturnType<typeof setInterval> | null = null
+const REFRESH_INTERVAL = 2 * 60 * 1000 // 2分钟自动刷新
 
 async function refreshDashboard() {
-  dashRefreshing.value = true;
+  dashRefreshing.value = true
   try {
-    const res = await request.get("/dashboard/stats", {
+    const res = await request.get('/dashboard/stats', {
       params: { refresh: true },
       showError: false,
-    } as any);
+    } as any)
     // 只有当数据不为空且至少有一个非零值时才设置
-    if (
-      res.data &&
-      Object.values(res.data).some((v) => typeof v === "number" && v > 0)
-    ) {
-      dashStats.value = res.data;
+    if (res.data && Object.values(res.data).some((v) => typeof v === 'number' && v > 0)) {
+      dashStats.value = res.data
     } else {
-      dashStats.value = null;
+      dashStats.value = null
     }
   } catch (error) {
-    console.error("刷新仪表板数据失败:", error);
-    dashStats.value = null;
-    ElMessage.error("仪表板数据加载失败，请刷新页面重试");
+    console.error('刷新仪表板数据失败:', error)
+    dashStats.value = null
+    ElMessage.error('仪表板数据加载失败，请刷新页面重试')
   } finally {
-    dashRefreshing.value = false;
+    dashRefreshing.value = false
   }
 }
 
 async function loadDashboard() {
-  dashLoading.value = true;
-  const silentConfig = { showError: false } as any;
+  dashLoading.value = true
+  const silentConfig = { showError: false } as any
   try {
     const results = await Promise.allSettled([
-      request.get("/dashboard/stats", silentConfig),
-      request.get("/projects", {
+      request.get('/dashboard/stats', silentConfig),
+      request.get('/projects', {
         params: { page: 1, page_size: 5 },
         ...silentConfig,
       }),
-      request.get("/dashboard/recent-activities", silentConfig),
-      request.get("/messages", silentConfig),
-    ]);
+      request.get('/dashboard/recent-activities', silentConfig),
+      request.get('/messages', silentConfig),
+    ])
 
     // 统计数据（拦截器已自动解包 response => response）
-    if (results[0].status === "fulfilled") {
-      const d = results[0].value.data;
+    if (results[0].status === 'fulfilled') {
+      const d = results[0].value.data
       // 只有当数据不为空且至少有一个非零值时才设置
-      if (d && Object.values(d).some((v) => typeof v === "number" && v > 0)) {
-        dashStats.value = d;
+      if (d && Object.values(d).some((v) => typeof v === 'number' && v > 0)) {
+        dashStats.value = d
       } else {
-        dashStats.value = null;
+        dashStats.value = null
       }
     }
     // 项目列表
-    if (results[1].status === "fulfilled") {
-      const d = results[1].value.data;
-      recentProjects.value = (d?.items || (Array.isArray(d) ? d : [])).slice(
-        0,
-        5,
-      );
+    if (results[1].status === 'fulfilled') {
+      const d = results[1].value.data
+      recentProjects.value = (d?.items || (Array.isArray(d) ? d : [])).slice(0, 5)
     }
     // 近期动态
-    if (results[2].status === "fulfilled") {
-      const d = results[2].value.data;
-      recentActivities.value = (d?.items || (Array.isArray(d) ? d : [])).slice(
-        0,
-        8,
-      );
+    if (results[2].status === 'fulfilled') {
+      const d = results[2].value.data
+      recentActivities.value = (d?.items || (Array.isArray(d) ? d : [])).slice(0, 8)
     }
     // 消息
-    if (results[3].status === "fulfilled") {
-      const d = results[3].value.data;
-      messages.value = (d?.items || (Array.isArray(d) ? d : [])).slice(0, 5);
+    if (results[3].status === 'fulfilled') {
+      const d = results[3].value.data
+      messages.value = (d?.items || (Array.isArray(d) ? d : [])).slice(0, 5)
     }
   } finally {
-    dashLoading.value = false;
+    dashLoading.value = false
   }
 }
 
 // 打开恢复弹窗时加载备份列表
 watch(showRestoreDialog, (val: boolean) => {
-  if (val) loadRestoreBackups();
-});
+  if (val) loadRestoreBackups()
+})
 
 onMounted(() => {
-  loadDashboard();
-  loadTasks();
+  loadDashboard()
+  loadTasks()
   // 定时刷新数据
   refreshTimer = setInterval(() => {
-    loadDashboard();
-    loadTasks();
-  }, REFRESH_INTERVAL);
+    loadDashboard()
+    loadTasks()
+  }, REFRESH_INTERVAL)
   // 每分钟更新日期显示（跨日自动刷新）
   dateTimer = setInterval(() => {
-    currentDate.value = formatCurrentDate();
-  }, 60_000);
-});
+    currentDate.value = formatCurrentDate()
+  }, 60_000)
+})
 
 onUnmounted(() => {
   if (refreshTimer) {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
+    clearInterval(refreshTimer)
+    refreshTimer = null
   }
   if (dateTimer) {
-    clearInterval(dateTimer);
-    dateTimer = null;
+    clearInterval(dateTimer)
+    dateTimer = null
   }
-});
+})
 </script>
 
 <style scoped>
@@ -2315,7 +2152,7 @@ onUnmounted(() => {
   border-color: #40916c;
 }
 .checkbox-wrapper input:checked + .checkmark::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 4px;
   top: 1px;

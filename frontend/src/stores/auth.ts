@@ -1,38 +1,34 @@
-import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import { apiRequest, _setCachedToken } from "@/api/request";
-import { useMenuStore } from "@/stores/menu";
-import { getCurrentUser } from "@/api/queries/user";
-import { AuthStorage } from "@/utils/authStorage";
-import { ADMIN_ROLES } from "@/utils/roleAccess";
-import type { AuthData } from "@/utils/authStorage";
-import type { ApiResponse } from "@/types/api";
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { apiRequest, _setCachedToken } from '@/api/request'
+import { useMenuStore } from '@/stores/menu'
+import { getCurrentUser } from '@/api/queries/user'
+import { AuthStorage } from '@/utils/authStorage'
+import { ADMIN_ROLES } from '@/utils/roleAccess'
+import type { AuthData } from '@/utils/authStorage'
+import type { ApiResponse } from '@/types/api'
 
-export type UserInfo = AuthData["user"];
+export type UserInfo = AuthData['user']
 
 /** Wire-format login response (snake_case, matches backend JSON) */
 interface LoginPayload {
-  access_token: string;
-  refresh_token?: string;
-  token_type: string;
-  user: UserInfo;
-  must_change_password?: boolean;
+  access_token: string
+  refresh_token?: string
+  token_type: string
+  user: UserInfo
+  must_change_password?: boolean
 }
 
-export const useAuthStore = defineStore("auth", () => {
-  const token = ref(AuthStorage.getToken() || "");
-  const user = ref<UserInfo | null>(AuthStorage.getUser());
-  const error = ref("");
+export const useAuthStore = defineStore('auth', () => {
+  const token = ref(AuthStorage.getToken() || '')
+  const user = ref<UserInfo | null>(AuthStorage.getUser())
+  const error = ref('')
 
-  const isAuthenticated = computed(() => !!token.value);
+  const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(
-    () =>
-      user.value?.is_superuser === true ||
-      ADMIN_ROLES.includes(user.value?.role ?? ""),
-  );
-  const mustChangePassword = computed(
-    () => user.value?.must_change_password ?? false,
-  );
+    () => user.value?.is_superuser === true || ADMIN_ROLES.includes(user.value?.role ?? '')
+  )
+  const mustChangePassword = computed(() => user.value?.must_change_password ?? false)
 
   /**
    * 模块级权限映射：将用户权限列表（如 ["village:read", "village:write"]）
@@ -40,90 +36,79 @@ export const useAuthStore = defineStore("auth", () => {
    * 用于 v-permission 指令的 view/edit 粒度控制
    */
   const modulePermissions = computed(() => {
-    const perms: string[] = user.value?.permissions || [];
+    const perms: string[] = user.value?.permissions || []
     // super_admin 拥有所有模块的全部权限 — 不使用硬编码列表，任何模块皆可
-    if (user.value?.is_superuser || user.value?.role === "super_admin") {
-      return new Proxy<Record<string, { view: boolean; edit: boolean }>>(
-        Object.create(null),
-        {
-          get(_target, prop: string) {
-            if (prop === "then" || prop === "toJSON") return undefined;
-            return { view: true, edit: true };
-          },
-          has(_target, _prop: string) {
-            return true;
-          },
+    if (user.value?.is_superuser || user.value?.role === 'super_admin') {
+      return new Proxy<Record<string, { view: boolean; edit: boolean }>>(Object.create(null), {
+        get(_target, prop: string) {
+          if (prop === 'then' || prop === 'toJSON') return undefined
+          return { view: true, edit: true }
         },
-      );
+        has(_target, _prop: string) {
+          return true
+        },
+      })
     }
-    const result: Record<string, { view: boolean; edit: boolean }> = {};
+    const result: Record<string, { view: boolean; edit: boolean }> = {}
     for (const p of perms) {
-      const parts = p.split(":");
+      const parts = p.split(':')
       if (parts.length >= 2) {
-        const module = parts[0];
-        const action = parts.slice(1).join(":");
+        const module = parts[0]
+        const action = parts.slice(1).join(':')
         if (!result[module]) {
-          result[module] = { view: false, edit: false };
+          result[module] = { view: false, edit: false }
         }
-        if (action === "read") result[module].view = true;
-        if (
-          action === "write" ||
-          action === "delete" ||
-          action === "manage_roles"
-        ) {
-          result[module].edit = true;
+        if (action === 'read') result[module].view = true
+        if (action === 'write' || action === 'delete' || action === 'manage_roles') {
+          result[module].edit = true
         }
       }
     }
-    return result;
-  });
+    return result
+  })
 
   function persistAuth(t: string, u: UserInfo, refreshToken?: string) {
-    token.value = t;
-    user.value = u;
-    _setCachedToken(t);
-    AuthStorage.setAuthData({ token: t, user: u, refreshToken });
+    token.value = t
+    user.value = u
+    _setCachedToken(t)
+    AuthStorage.setAuthData({ token: t, user: u, refreshToken })
   }
 
   function logout() {
-    token.value = "";
-    user.value = null;
-    error.value = "";
-    _setCachedToken(null);
-    AuthStorage.clear();
+    token.value = ''
+    user.value = null
+    error.value = ''
+    _setCachedToken(null)
+    AuthStorage.clear()
   }
 
   /**
    * 登录；返回 true 表示登录成功，false 表示失败。
    */
   async function login(username: string, password: string): Promise<boolean> {
-    error.value = "";
+    error.value = ''
 
     try {
       const res = await apiRequest<ApiResponse<LoginPayload>>({
-        method: "POST",
-        url: "/auth/login",
+        method: 'POST',
+        url: '/auth/login',
         data: { username, password },
         timeout: 60000, // 登录超时 60s，bcrypt 纯 Python 回退时仍需安全兜底
-      });
+      })
 
       if (res.code === 200 && res.data) {
-        persistAuth(
-          res.data.access_token,
-          res.data.user,
-          res.data.refresh_token,
-        );
+        persistAuth(res.data.access_token, res.data.user, res.data.refresh_token)
         // 登录后立即预加载菜单 — 避免侧边栏渲染时 loaded=false 导致闪烁或泄露
-        useMenuStore().fetchMenus();
-        return true;
+        useMenuStore().fetchMenus()
+        return true
       }
 
-      error.value = res.message || "登录失败";
-      return false;
+      error.value = res.message || '登录失败'
+      return false
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || "登录失败";
-      error.value = msg;
-      return false;
+      const msg = err?.response?.data?.message || err?.message || '登录失败'
+      error.value = msg
+      return false
     }
   }
 
@@ -132,12 +117,12 @@ export const useAuthStore = defineStore("auth", () => {
    * 仅在有 token 但无 user 时调用。
    */
   async function fetchUser() {
-    if (!token.value || user.value) return;
+    if (!token.value || user.value) return
     try {
-      const res = await getCurrentUser();
+      const res = await getCurrentUser()
       if (res.code === 200 && res.data) {
-        user.value = res.data as UserInfo;
-        AuthStorage.setUser(res.data as UserInfo);
+        user.value = res.data as UserInfo
+        AuthStorage.setUser(res.data as UserInfo)
       }
     } catch {
       // 401 已由 api/request.ts 拦截器 + 路由守卫处理跳转
@@ -155,5 +140,5 @@ export const useAuthStore = defineStore("auth", () => {
     logout,
     login,
     fetchUser,
-  };
-});
+  }
+})

@@ -3,7 +3,7 @@
     <el-card v-loading="loading" class="edit-card">
       <template #header>
         <div class="card-header">
-          <span class="title">{{ isEdit ? "编辑政策" : "新增政策" }}</span>
+          <span class="title">{{ isEdit ? '编辑政策' : '新增政策' }}</span>
           <div class="actions">
             <el-button @click="handleBack">
               <el-icon><Back /></el-icon>
@@ -13,12 +13,7 @@
         </div>
       </template>
 
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="rules"
-        label-width="120px"
-      >
+      <el-form ref="formRef" :model="formData" :rules="rules" label-width="120px">
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="政策标题" prop="title">
@@ -172,11 +167,7 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="submitLoading"
-            @click="handleSubmit"
-          >
+          <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
             <el-icon><Check /></el-icon>
             保存
           </el-button>
@@ -189,17 +180,12 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, reactive, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
-import {
-  ElMessage,
-  type FormInstance,
-  type FormRules,
-  type UploadFile,
-} from "element-plus";
-import { Back, Upload, Check } from "@element-plus/icons-vue";
-import { usePolicyStore } from "@/stores/policy";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { ElMessage, type FormInstance, type FormRules, type UploadFile } from 'element-plus'
+import { Back, Upload, Check } from '@element-plus/icons-vue'
+import { usePolicyStore } from '@/stores/policy'
 import {
   getLevelOptions,
   type PolicyCategory,
@@ -207,174 +193,167 @@ import {
   type OrganizationLevel,
   type PolicyCreate,
   type PolicyUpdate,
-} from "@/api/policy";
+} from '@/api/policy'
 
-const route = useRoute();
-const { pushSafe } = useRouterSafe();
-const policyStore = usePolicyStore();
+const route = useRoute()
+const { pushSafe } = useRouterSafe()
+const policyStore = usePolicyStore()
 
-const loading = ref(false);
-const submitLoading = ref(false);
-const isEdit = computed(() => !!route.params.id);
+const loading = ref(false)
+const submitLoading = ref(false)
+const isEdit = computed(() => !!route.params.id)
 
 // 表单数据
 const formData = reactive({
-  title: "",
-  category: "" as PolicyCategory | "",
-  organization_level: "" as OrganizationLevel | "",
-  publish_date: "",
-  effective_date: "",
-  issuing_authority: "",
-  content: "",
-  summary: "",
-  document_number: "",
-  keywords: "",
+  title: '',
+  category: '' as PolicyCategory | '',
+  organization_level: '' as OrganizationLevel | '',
+  publish_date: '',
+  effective_date: '',
+  issuing_authority: '',
+  content: '',
+  summary: '',
+  document_number: '',
+  keywords: '',
   attachment_urls: [] as string[],
-  status: "active" as PolicyStatus,
-});
+  status: 'active' as PolicyStatus,
+})
 
-const fileList = ref<UploadFile[]>([]);
-const uploadAction = ref(
-  `${import.meta.env.VITE_API_BASE_URL || "/api/v1"}/files/upload`,
-);
+const fileList = ref<UploadFile[]>([])
+const uploadAction = ref(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/files/upload`)
 
 // 层级选项（根据分类动态变化）
 const levelOptions = computed(() => {
-  if (!formData.category) return [];
-  return getLevelOptions(formData.category as PolicyCategory);
-});
+  if (!formData.category) return []
+  return getLevelOptions(formData.category as PolicyCategory)
+})
 
 // 表单验证规则
 const rules: FormRules = {
   title: [
-    { required: true, message: "请输入政策标题", trigger: "blur" },
+    { required: true, message: '请输入政策标题', trigger: 'blur' },
     {
       min: 2,
       max: 500,
-      message: "标题长度在 2 到 500 个字符",
-      trigger: "blur",
+      message: '标题长度在 2 到 500 个字符',
+      trigger: 'blur',
     },
   ],
-  category: [{ required: true, message: "请选择政策分类", trigger: "change" }],
-  organization_level: [
-    { required: true, message: "请选择组织层级", trigger: "change" },
-  ],
-  publish_date: [
-    { required: true, message: "请选择发布日期", trigger: "change" },
-  ],
+  category: [{ required: true, message: '请选择政策分类', trigger: 'change' }],
+  organization_level: [{ required: true, message: '请选择组织层级', trigger: 'change' }],
+  publish_date: [{ required: true, message: '请选择发布日期', trigger: 'change' }],
   content: [
-    { required: true, message: "请输入政策内容", trigger: "blur" },
-    { max: 100000, message: "政策内容不能超过10万字符", trigger: "blur" },
+    { required: true, message: '请输入政策内容', trigger: 'blur' },
+    { max: 100000, message: '政策内容不能超过10万字符', trigger: 'blur' },
   ],
-};
+}
 
-const formRef = ref<FormInstance>();
+const formRef = ref<FormInstance>()
 
 // 分类变化时清空层级选择
 const handleCategoryChange = () => {
-  formData.organization_level = "";
-};
+  formData.organization_level = ''
+}
 
 // 加载政策数据（编辑模式）
 const loadData = async () => {
-  const id = safeRouteParam(route.params.id);
-  if (!id || isNaN(id)) return;
+  const id = safeRouteParam(route.params.id)
+  if (!id || isNaN(id)) return
 
-  loading.value = true;
+  loading.value = true
   try {
-    await policyStore.fetchPolicyById(id);
-    const policy = policyStore.currentPolicy;
+    await policyStore.fetchPolicyById(id)
+    const policy = policyStore.currentPolicy
 
     if (policy) {
-      formData.title = policy.title;
-      formData.category = policy.category;
-      formData.organization_level = policy.organization_level;
-      formData.publish_date = policy.publish_date;
-      formData.effective_date = (policy as any).effective_date || "";
-      formData.issuing_authority =
-        policy.department || (policy as any).issuing_authority || "";
-      formData.content = policy.content;
-      formData.summary = policy.summary || "";
-      formData.document_number = policy.document_number || "";
-      formData.keywords = (policy as any).keywords || "";
-      formData.attachment_urls = policy.attachment_urls || [];
-      formData.status = policy.status;
+      formData.title = policy.title
+      formData.category = policy.category
+      formData.organization_level = policy.organization_level
+      formData.publish_date = policy.publish_date
+      formData.effective_date = (policy as any).effective_date || ''
+      formData.issuing_authority = policy.department || (policy as any).issuing_authority || ''
+      formData.content = policy.content
+      formData.summary = policy.summary || ''
+      formData.document_number = policy.document_number || ''
+      formData.keywords = (policy as any).keywords || ''
+      formData.attachment_urls = policy.attachment_urls || []
+      formData.status = policy.status
 
       // 处理附件列表
       if (policy.attachment_urls && policy.attachment_urls.length > 0) {
         fileList.value = policy.attachment_urls.map((url, index) => ({
-          name: url.split("/").pop() || `附件${index + 1}`,
+          name: url.split('/').pop() || `附件${index + 1}`,
           url: url,
           uid: index,
-        })) as UploadFile[];
+        })) as UploadFile[]
       }
     } else {
-      ElMessage.error("未找到该政策");
-      pushSafe("/policies");
+      ElMessage.error('未找到该政策')
+      pushSafe('/policies')
     }
   } catch (error: any) {
-    ElMessage.error(error.message || "加载政策数据失败");
-    pushSafe("/policies");
+    ElMessage.error(error.message || '加载政策数据失败')
+    pushSafe('/policies')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // 返回列表
 const handleBack = () => {
-  pushSafe("/policies");
-};
+  pushSafe('/policies')
+}
 
 // 上传成功处理
 const handleUploadSuccess = (response: any, _file: UploadFile) => {
   if (response?.url) {
-    formData.attachment_urls.push(response.url);
+    formData.attachment_urls.push(response.url)
   }
-  ElMessage.success("上传成功");
-};
+  ElMessage.success('上传成功')
+}
 
 // 上传移除处理
 const handleUploadRemove = (file: UploadFile) => {
   if (file.url) {
-    const index = formData.attachment_urls.indexOf(file.url);
+    const index = formData.attachment_urls.indexOf(file.url)
     if (index > -1) {
-      formData.attachment_urls.splice(index, 1);
+      formData.attachment_urls.splice(index, 1)
     }
   }
-};
+}
 
 // 上传前检查
 const beforeUpload = (file: File) => {
   const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ];
-  const maxSize = 10 * 1024 * 1024; // 10MB
+    'image/jpeg',
+    'image/png',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ]
+  const maxSize = 10 * 1024 * 1024 // 10MB
 
   if (!allowedTypes.includes(file.type)) {
-    ElMessage.error("只能上传 jpg/png/pdf/doc/docx 文件!");
-    return false;
+    ElMessage.error('只能上传 jpg/png/pdf/doc/docx 文件!')
+    return false
   }
 
   if (file.size > maxSize) {
-    ElMessage.error("文件大小不能超过 10MB!");
-    return false;
+    ElMessage.error('文件大小不能超过 10MB!')
+    return false
   }
 
-  return true;
-};
+  return true
+}
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!formRef.value) return;
+  if (!formRef.value) return
 
   await formRef.value.validate(async (valid) => {
-    if (!valid) return;
+    if (!valid) return
 
-    submitLoading.value = true;
+    submitLoading.value = true
     try {
       const data = {
         title: formData.title,
@@ -388,34 +367,34 @@ const handleSubmit = async () => {
         document_number: formData.document_number || undefined,
         keywords: formData.keywords || undefined,
         status: formData.status,
-      };
+      }
 
       if (isEdit.value) {
         // 更新政策
-        const id = safeRouteParam(route.params.id);
-        await policyStore.editPolicy(id, data as PolicyUpdate);
-        ElMessage.success("更新成功");
+        const id = safeRouteParam(route.params.id)
+        await policyStore.editPolicy(id, data as PolicyUpdate)
+        ElMessage.success('更新成功')
       } else {
         // 新增政策
-        await policyStore.addPolicy(data as PolicyCreate);
-        ElMessage.success("新增成功");
+        await policyStore.addPolicy(data as PolicyCreate)
+        ElMessage.success('新增成功')
       }
 
-      pushSafe("/policies");
+      pushSafe('/policies')
     } catch (error: any) {
-      ElMessage.error(error.message || "保存失败");
+      ElMessage.error(error.message || '保存失败')
     } finally {
-      submitLoading.value = false;
+      submitLoading.value = false
     }
-  });
-};
+  })
+}
 
 // 初始化
 onMounted(async () => {
   if (isEdit.value) {
-    await loadData();
+    await loadData()
   }
-});
+})
 </script>
 
 <style scoped lang="scss">

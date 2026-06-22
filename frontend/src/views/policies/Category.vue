@@ -7,25 +7,14 @@
           <div class="header-left">
             <el-icon class="category-icon military"><Aim /></el-icon>
             <span class="title">军队政策</span>
-            <el-tag type="danger" size="small"
-              >{{ statistics.military.total }} 条</el-tag
-            >
+            <el-tag type="danger" size="small">{{ statistics.military.total }} 条</el-tag>
           </div>
         </div>
       </template>
 
       <el-row :gutter="20">
-        <el-col
-          v-for="level in militaryLevels"
-          :key="level.value"
-          :xs="24"
-          :sm="12"
-          :md="6"
-        >
-          <div
-            class="level-card"
-            @click="handleLevelClick('military', level.value)"
-          >
+        <el-col v-for="level in militaryLevels" :key="level.value" :xs="24" :sm="12" :md="6">
+          <div class="level-card" @click="handleLevelClick('military', level.value)">
             <div class="level-icon">
               <el-icon><Flag /></el-icon>
             </div>
@@ -48,33 +37,20 @@
           <div class="header-left">
             <el-icon class="category-icon local"><OfficeBuilding /></el-icon>
             <span class="title">地方政策</span>
-            <el-tag type="primary" size="small"
-              >{{ statistics.local.total }} 条</el-tag
-            >
+            <el-tag type="primary" size="small">{{ statistics.local.total }} 条</el-tag>
           </div>
         </div>
       </template>
 
       <el-row :gutter="20">
-        <el-col
-          v-for="level in localLevels"
-          :key="level.value"
-          :xs="24"
-          :sm="12"
-          :md="6"
-        >
-          <div
-            class="level-card local"
-            @click="handleLevelClick('local', level.value)"
-          >
+        <el-col v-for="level in localLevels" :key="level.value" :xs="24" :sm="12" :md="6">
+          <div class="level-card local" @click="handleLevelClick('local', level.value)">
             <div class="level-icon">
               <el-icon><Location /></el-icon>
             </div>
             <div class="level-info">
               <div class="level-name">{{ level.label }}</div>
-              <div class="level-count">
-                {{ statistics.local.levels[level.value] || 0 }} 条政策
-              </div>
+              <div class="level-count">{{ statistics.local.levels[level.value] || 0 }} 条政策</div>
             </div>
             <el-icon class="arrow-icon"><ArrowRight /></el-icon>
           </div>
@@ -92,34 +68,19 @@
 
       <el-row :gutter="20">
         <el-col :xs="24" :sm="8">
-          <el-button
-            type="primary"
-            size="large"
-            class="action-btn"
-            @click="handleViewAll"
-          >
+          <el-button type="primary" size="large" class="action-btn" @click="handleViewAll">
             <el-icon><List /></el-icon>
             查看全部政策
           </el-button>
         </el-col>
         <el-col :xs="24" :sm="8">
-          <el-button
-            type="success"
-            size="large"
-            class="action-btn"
-            @click="handleViewMilitary"
-          >
+          <el-button type="success" size="large" class="action-btn" @click="handleViewMilitary">
             <el-icon><Aim /></el-icon>
             查看军队政策
           </el-button>
         </el-col>
         <el-col :xs="24" :sm="8">
-          <el-button
-            type="warning"
-            size="large"
-            class="action-btn"
-            @click="handleViewLocal"
-          >
+          <el-button type="warning" size="large" class="action-btn" @click="handleViewLocal">
             <el-icon><OfficeBuilding /></el-icon>
             查看地方政策
           </el-button>
@@ -131,30 +92,23 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import {
-  Aim,
-  OfficeBuilding,
-  Flag,
-  Location,
-  ArrowRight,
-  List,
-} from "@element-plus/icons-vue";
-import { usePolicyStore } from "@/stores/policy";
+import { ref, reactive, onMounted } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { Aim, OfficeBuilding, Flag, Location, ArrowRight, List } from '@element-plus/icons-vue'
+import { usePolicyStore } from '@/stores/policy'
 import {
   getLevelOptions,
   type PolicyCategory,
   type OrganizationLevel,
   type LevelConfig,
-} from "@/api/policy";
+} from '@/api/policy'
 
-const { pushSafe } = useRouterSafe();
-const policyStore = usePolicyStore();
+const { pushSafe } = useRouterSafe()
+const policyStore = usePolicyStore()
 
-const loading = ref(false);
+const loading = ref(false)
 
 // 统计数据
 const statistics = reactive({
@@ -166,63 +120,60 @@ const statistics = reactive({
     total: 0,
     levels: {} as Record<string, number>,
   },
-});
+})
 
 // 层级配置
-const militaryLevels: LevelConfig[] = getLevelOptions("military");
-const localLevels: LevelConfig[] = getLevelOptions("local");
+const militaryLevels: LevelConfig[] = getLevelOptions('military')
+const localLevels: LevelConfig[] = getLevelOptions('local')
 
 // 加载统计数据
 const loadStatistics = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const data = await policyStore.fetchStatistics();
-    statistics.military = data.military;
-    statistics.local = data.local;
+    const data = await policyStore.fetchStatistics()
+    statistics.military = data.military
+    statistics.local = data.local
   } catch (error: any) {
-    logger.error("加载统计数据失败:", error);
+    logger.error('加载统计数据失败:', error)
     // 静默处理错误，使用默认值
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // 点击层级卡片
-const handleLevelClick = (
-  category: PolicyCategory,
-  level: OrganizationLevel,
-) => {
+const handleLevelClick = (category: PolicyCategory, level: OrganizationLevel) => {
   pushSafe({
-    path: "/policies",
+    path: '/policies',
     query: { category, level },
-  });
-};
+  })
+}
 
 // 查看全部政策
 const handleViewAll = () => {
-  pushSafe("/policies");
-};
+  pushSafe('/policies')
+}
 
 // 查看军队政策
 const handleViewMilitary = () => {
   pushSafe({
-    path: "/policies",
-    query: { category: "military" },
-  });
-};
+    path: '/policies',
+    query: { category: 'military' },
+  })
+}
 
 // 查看地方政策
 const handleViewLocal = () => {
   pushSafe({
-    path: "/policies",
-    query: { category: "local" },
-  });
-};
+    path: '/policies',
+    query: { category: 'local' },
+  })
+}
 
 // 初始化
 onMounted(() => {
-  loadStatistics();
-});
+  loadStatistics()
+})
 </script>
 
 <style scoped lang="scss">

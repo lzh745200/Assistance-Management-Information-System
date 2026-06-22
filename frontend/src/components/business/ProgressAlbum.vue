@@ -50,46 +50,41 @@
 <script setup lang="ts">
 // @ts-nocheck
 interface AlbumItem {
-  id?: number;
-  title?: string;
-  name?: string;
-  status: string;
-  progress?: number;
-  description?: string;
-  images?: string[];
+  id?: number
+  title?: string
+  name?: string
+  status: string
+  progress?: number
+  description?: string
+  images?: string[]
 }
 
 withDefaults(
   defineProps<{
-    items: AlbumItem[];
-    colSpan?: number;
-    strokeWidth?: number;
-    emptyText?: string;
+    items: AlbumItem[]
+    colSpan?: number
+    strokeWidth?: number
+    emptyText?: string
   }>(),
   {
     colSpan: 8,
     strokeWidth: 16,
-    emptyText: "暂无进度数据",
-  },
-);
+    emptyText: '暂无进度数据',
+  }
+)
 
-function getStatusType(
-  status: string,
-): "success" | "warning" | "danger" | "info" | "primary" | "" {
-  const map: Record<
-    string,
-    "success" | "warning" | "danger" | "info" | "primary" | ""
-  > = {
-    completed: "success",
-    in_progress: "warning",
-    进行中: "warning",
-    已完成: "success",
-    delayed: "danger",
-    延期: "danger",
-    cancelled: "info",
-    已取消: "info",
-  };
-  return map[status] || "";
+function getStatusType(status: string): 'success' | 'warning' | 'danger' | 'info' | 'primary' | '' {
+  const map: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'primary' | ''> = {
+    completed: 'success',
+    in_progress: 'warning',
+    进行中: 'warning',
+    已完成: 'success',
+    delayed: 'danger',
+    延期: 'danger',
+    cancelled: 'info',
+    已取消: 'info',
+  }
+  return map[status] || ''
 }
 </script>
 

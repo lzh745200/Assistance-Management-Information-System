@@ -29,19 +29,10 @@
               :value="lang.code"
             />
           </el-select>
-          <el-button
-            type="warning"
-            :loading="checkingMissing"
-            @click="checkMissingKeys"
-          >
+          <el-button type="warning" :loading="checkingMissing" @click="checkMissingKeys">
             检查缺失键
           </el-button>
-          <el-button
-            type="primary"
-            :icon="Refresh"
-            :loading="loading"
-            @click="loadTranslations"
-          >
+          <el-button type="primary" :icon="Refresh" :loading="loading" @click="loadTranslations">
             刷新
           </el-button>
         </div>
@@ -78,10 +69,7 @@
           missingReport.extra_keys?.length || 0
         }}</el-descriptions-item>
       </el-descriptions>
-      <div
-        v-if="missingReport.missing_keys?.length"
-        class="missing-keys-section"
-      >
+      <div v-if="missingReport.missing_keys?.length" class="missing-keys-section">
         <h4>缺失的翻译键 ({{ missingReport.missing_keys.length }})</h4>
         <div class="missing-keys-list">
           <el-tag
@@ -123,7 +111,7 @@
         <el-table-column label="翻译值" min-width="300">
           <template #default="{ row }">
             <span :class="{ 'missing-value': !row.value }">
-              {{ row.value || "(缺失)" }}
+              {{ row.value || '(缺失)' }}
             </span>
           </template>
         </el-table-column>
@@ -135,12 +123,7 @@
         </el-table-column>
         <el-table-column label="操作" width="120" align="center">
           <template #default="{ row }">
-            <el-button
-              size="small"
-              type="primary"
-              link
-              @click="viewTranslationDetail(row.key)"
-            >
+            <el-button size="small" type="primary" link @click="viewTranslationDetail(row.key)">
               详情
             </el-button>
           </template>
@@ -161,11 +144,7 @@
           <el-input :value="detailValue" readonly type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item v-if="detailFallback" label="注意">
-          <el-alert
-            type="warning"
-            :closable="false"
-            title="此翻译为回退值（使用默认语言结果）"
-          />
+          <el-alert type="warning" :closable="false" title="此翻译为回退值（使用默认语言结果）" />
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -173,120 +152,114 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Refresh, Search } from "@element-plus/icons-vue";
-import { i18nApi } from "@/api/i18n";
-import type { Language, MissingKeysReport } from "@/api/i18n";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Refresh, Search } from '@element-plus/icons-vue'
+import { i18nApi } from '@/api/i18n'
+import type { Language, MissingKeysReport } from '@/api/i18n'
 
-const loading = ref(false);
-const checkingMissing = ref(false);
-const selectedLanguage = ref("en");
-const languages = ref<Language[]>([]);
-const currentLang = ref<{ language: string; name: string } | null>(null);
-const translations = ref<Record<string, string>>({});
-const missingReport = ref<MissingKeysReport | null>(null);
-const searchKeyword = ref("");
+const loading = ref(false)
+const checkingMissing = ref(false)
+const selectedLanguage = ref('en')
+const languages = ref<Language[]>([])
+const currentLang = ref<{ language: string; name: string } | null>(null)
+const translations = ref<Record<string, string>>({})
+const missingReport = ref<MissingKeysReport | null>(null)
+const searchKeyword = ref('')
 
-const detailDialogVisible = ref(false);
-const detailKey = ref("");
-const detailValue = ref("");
-const detailFallback = ref(false);
+const detailDialogVisible = ref(false)
+const detailKey = ref('')
+const detailValue = ref('')
+const detailFallback = ref(false)
 
 const filteredTranslations = computed(() => {
   const entries = Object.entries(translations.value).map(([key, value]) => ({
     key,
     value,
-  }));
-  if (!searchKeyword.value) return entries;
-  const kw = searchKeyword.value.toLowerCase();
+  }))
+  if (!searchKeyword.value) return entries
+  const kw = searchKeyword.value.toLowerCase()
   return entries.filter(
-    (e) =>
-      e.key.toLowerCase().includes(kw) ||
-      (e.value || "").toLowerCase().includes(kw),
-  );
-});
+    (e) => e.key.toLowerCase().includes(kw) || (e.value || '').toLowerCase().includes(kw)
+  )
+})
 
 async function loadLanguages() {
   try {
-    const res = await i18nApi.getLanguages();
-    languages.value = res.data || [];
+    const res = await i18nApi.getLanguages()
+    languages.value = res.data || []
   } catch {
-    ElMessage.error("加载语言列表失败");
+    ElMessage.error('加载语言列表失败')
   }
 }
 
 async function loadCurrentLanguage() {
   try {
-    const res = await i18nApi.getCurrentLanguage();
-    currentLang.value = res.data || null;
+    const res = await i18nApi.getCurrentLanguage()
+    currentLang.value = res.data || null
   } catch {
     // 忽略
   }
 }
 
 async function loadTranslations() {
-  if (!selectedLanguage.value) return;
-  loading.value = true;
+  if (!selectedLanguage.value) return
+  loading.value = true
   try {
-    const res = await i18nApi.getTranslations(selectedLanguage.value);
-    translations.value = res.data?.translations || {};
-    ElMessage.success(
-      `已加载 ${Object.keys(translations.value).length} 条翻译`,
-    );
+    const res = await i18nApi.getTranslations(selectedLanguage.value)
+    translations.value = res.data?.translations || {}
+    ElMessage.success(`已加载 ${Object.keys(translations.value).length} 条翻译`)
   } catch {
-    ElMessage.error("加载翻译资源失败");
+    ElMessage.error('加载翻译资源失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function checkMissingKeys() {
-  checkingMissing.value = true;
+  checkingMissing.value = true
   try {
-    const res = await i18nApi.getMissingKeys("zh-CN", selectedLanguage.value);
-    missingReport.value = res.data || null;
+    const res = await i18nApi.getMissingKeys('zh-CN', selectedLanguage.value)
+    missingReport.value = res.data || null
     if (missingReport.value?.missing_count) {
-      ElMessage.warning(
-        `发现 ${missingReport.value.missing_count} 个缺失翻译键`,
-      );
+      ElMessage.warning(`发现 ${missingReport.value.missing_count} 个缺失翻译键`)
     } else {
-      ElMessage.success("翻译覆盖完整！");
+      ElMessage.success('翻译覆盖完整！')
     }
   } catch {
-    ElMessage.error("检查缺失键失败");
+    ElMessage.error('检查缺失键失败')
   } finally {
-    checkingMissing.value = false;
+    checkingMissing.value = false
   }
 }
 
 async function viewTranslationDetail(key: string) {
-  detailKey.value = key;
-  detailDialogVisible.value = true;
+  detailKey.value = key
+  detailDialogVisible.value = true
   try {
-    const res = await i18nApi.translate(key, selectedLanguage.value);
-    detailValue.value = res.data?.value || "";
-    detailFallback.value = res.data?.fallback || false;
+    const res = await i18nApi.translate(key, selectedLanguage.value)
+    detailValue.value = res.data?.value || ''
+    detailFallback.value = res.data?.fallback || false
   } catch {
-    detailValue.value = translations.value[key] || "(未找到)";
-    detailFallback.value = false;
+    detailValue.value = translations.value[key] || '(未找到)'
+    detailFallback.value = false
   }
 }
 
 function addTranslationDialog(key: string) {
-  ElMessage.info(`翻译键 "${key}" 需要添加翻译值 - 请通过后端接口添加`);
+  ElMessage.info(`翻译键 "${key}" 需要添加翻译值 - 请通过后端接口添加`)
 }
 
 function onLanguageChange() {
-  searchKeyword.value = "";
-  missingReport.value = null;
-  loadTranslations();
+  searchKeyword.value = ''
+  missingReport.value = null
+  loadTranslations()
 }
 
 onMounted(() => {
-  loadLanguages();
-  loadCurrentLanguage();
-});
+  loadLanguages()
+  loadCurrentLanguage()
+})
 </script>
 
 <style scoped>

@@ -6,6 +6,6 @@
   />
 </template>
 <script setup lang="ts">
-defineProps<{ modelValue?: string; placeholder?: string }>();
-const emit = defineEmits<{ (e: "update:modelValue", v: string): void }>();
+defineProps<{ modelValue?: string; placeholder?: string }>()
+const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()
 </script>

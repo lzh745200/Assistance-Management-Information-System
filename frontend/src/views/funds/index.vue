@@ -20,11 +20,7 @@
     <div class="search-filters">
       <el-form :model="searchForm" inline>
         <el-form-item label="项目名称">
-          <el-input
-            v-model="searchForm.project_name"
-            placeholder="输入项目名称"
-            clearable
-          />
+          <el-input v-model="searchForm.project_name" placeholder="输入项目名称" clearable />
         </el-form-item>
         <el-form-item label="经费类型">
           <el-select v-model="searchForm.type" clearable>
@@ -79,12 +75,7 @@
             {{ getFundTypeText(row.type) }}
           </template>
         </el-table-column>
-        <el-table-column
-          prop="amount"
-          label="金额(元)"
-          width="120"
-          align="right"
-        >
+        <el-table-column prop="amount" label="金额(元)" width="120" align="right">
           <template #default="{ row }">
             {{ formatCurrency(row.amount) }}
           </template>
@@ -100,16 +91,14 @@
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 'approved' ? 'success' : 'warning'">
-              {{ row.status === "approved" ? "已审核" : "待审核" }}
+              {{ row.status === 'approved' ? '已审核' : '待审核' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="approver" label="审核人" width="100" />
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="viewDetail(row)">
-              详情
-            </el-button>
+            <el-button link type="primary" @click="viewDetail(row)"> 详情 </el-button>
             <el-button
               v-if="row.status === 'pending'"
               link
@@ -149,48 +138,48 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, reactive, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Plus, Printer, Download } from "@element-plus/icons-vue";
-import { useFundsStore } from "@/stores/funds";
-import FundSummary from "@/components/common/FundSummary.vue";
-import PrintTable from "@/components/common/PrintTable.vue";
-import { exportToExcel } from "@/utils/export";
-import { SearchForm } from "@/types/index";
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Printer, Download } from '@element-plus/icons-vue'
+import { useFundsStore } from '@/stores/funds'
+import FundSummary from '@/components/common/FundSummary.vue'
+import PrintTable from '@/components/common/PrintTable.vue'
+import { exportToExcel } from '@/utils/export'
+import { SearchForm } from '@/types/index'
 
-const router = useRouter();
-const fundStore = useFundsStore();
+const router = useRouter()
+const fundStore = useFundsStore()
 
 // 定义SearchForm扩展接口以包含dateRange
 interface ExtendedSearchForm extends SearchForm {
-  project_name: string;
-  type: string;
-  dateRange: [string, string];
+  project_name: string
+  type: string
+  dateRange: [string, string]
 }
 
 // 使用明确的类型定义
 const searchForm = reactive<ExtendedSearchForm>({
-  project_name: "",
-  type: "",
-  dateRange: ["", ""] as [string, string],
-});
+  project_name: '',
+  type: '',
+  dateRange: ['', ''] as [string, string],
+})
 
-const loading = ref(false);
-const showPrint = ref(false);
+const loading = ref(false)
+const showPrint = ref(false)
 
 const pagination = reactive({
   page: 1,
   page_size: 10,
   total: 0,
-});
+})
 
 // 定义汇总数据类型
 interface SummaryData {
-  totalBudget: number;
-  totalExpenditure: number;
-  remainingBudget: number;
-  byType: Array<{ type: string; amount: number }>;
+  totalBudget: number
+  totalExpenditure: number
+  remainingBudget: number
+  byType: Array<{ type: string; amount: number }>
 }
 
 const summaryData = ref<SummaryData>({
@@ -198,152 +187,152 @@ const summaryData = ref<SummaryData>({
   totalExpenditure: 0,
   remainingBudget: 0,
   byType: [],
-});
+})
 
 // 定义fundList的类型
 interface FundItem {
-  id: number;
-  voucher_number: string;
-  project_name: string;
-  type: string;
-  amount: number;
-  payment_date: string;
-  payee: string;
-  payment_method: string;
-  description: string;
-  status: "approved" | "pending";
-  approver?: string;
+  id: number
+  voucher_number: string
+  project_name: string
+  type: string
+  amount: number
+  payment_date: string
+  payee: string
+  payment_method: string
+  description: string
+  status: 'approved' | 'pending'
+  approver?: string
 }
 
-const fundList = ref<FundItem[]>([]);
+const fundList = ref<FundItem[]>([])
 
-const printData = computed(() => fundList.value);
+const printData = computed(() => fundList.value)
 const printColumns = ref([
-  { key: "voucher_number", label: "凭证号" },
-  { key: "project_name", label: "项目名称" },
-  { key: "type", label: "经费类型" },
-  { key: "amount", label: "金额(元)" },
-  { key: "payment_date", label: "支付日期" },
-  { key: "payee", label: "收款方" },
-  { key: "payment_method", label: "支付方式" },
-  { key: "description", label: "用途说明" },
-]);
+  { key: 'voucher_number', label: '凭证号' },
+  { key: 'project_name', label: '项目名称' },
+  { key: 'type', label: '经费类型' },
+  { key: 'amount', label: '金额(元)' },
+  { key: 'payment_date', label: '支付日期' },
+  { key: 'payee', label: '收款方' },
+  { key: 'payment_method', label: '支付方式' },
+  { key: 'description', label: '用途说明' },
+])
 
 onMounted(() => {
-  loadFunds();
-  loadSummary();
-});
+  loadFunds()
+  loadSummary()
+})
 
 const loadFunds = async () => {
-  loading.value = true;
+  loading.value = true
   try {
     const params: any = {
       page: pagination.page,
       page_size: pagination.page_size,
-    };
-    if (searchForm.project_name) params.keyword = searchForm.project_name;
-    if (searchForm.type) params.fund_type = searchForm.type;
-    if (searchForm.dateRange?.[0]) params.start_date = searchForm.dateRange[0];
-    if (searchForm.dateRange?.[1]) params.end_date = searchForm.dateRange[1];
-    await fundStore.fetchFunds(params);
-    fundList.value = fundStore.fundList as any;
-    pagination.total = fundStore.total;
+    }
+    if (searchForm.project_name) params.keyword = searchForm.project_name
+    if (searchForm.type) params.fund_type = searchForm.type
+    if (searchForm.dateRange?.[0]) params.start_date = searchForm.dateRange[0]
+    if (searchForm.dateRange?.[1]) params.end_date = searchForm.dateRange[1]
+    await fundStore.fetchFunds(params)
+    fundList.value = fundStore.fundList as any
+    pagination.total = fundStore.total
   } catch {
-    ElMessage.error("加载经费明细失败");
+    ElMessage.error('加载经费明细失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const loadSummary = async () => {
   try {
-    const data = await fundStore.getSummary();
-    summaryData.value = data;
+    const data = await fundStore.getSummary()
+    summaryData.value = data
   } catch (error) {
-    ElMessage.error("加载经费汇总失败");
+    ElMessage.error('加载经费汇总失败')
   }
-};
+}
 
 const handleSearch = () => {
-  pagination.page = 1;
-  loadFunds();
-};
+  pagination.page = 1
+  loadFunds()
+}
 
 const handleReset = () => {
   Object.assign(searchForm, {
-    project_name: "",
-    type: "",
+    project_name: '',
+    type: '',
     dateRange: [],
-  });
-  pagination.page = 1;
-  loadFunds();
-};
+  })
+  pagination.page = 1
+  loadFunds()
+}
 
 const handleSizeChange = (size: number) => {
-  pagination.page_size = size;
-  loadFunds();
-};
+  pagination.page_size = size
+  loadFunds()
+}
 
 const handleCurrentChange = (page: number) => {
-  pagination.page = page;
-  loadFunds();
-};
+  pagination.page = page
+  loadFunds()
+}
 
 const formatCurrency = (value: number): string => {
-  if (!value) return "0.00";
-  return value.toLocaleString("zh-CN", {
+  if (!value) return '0.00'
+  return value.toLocaleString('zh-CN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
-};
+  })
+}
 
 const getFundTypeText = (type: string): string => {
   const types: Record<string, string> = {
-    construction: "建设经费",
-    equipment: "设备经费",
-    labor: "人工经费",
-    material: "材料经费",
-    other: "其他经费",
-  };
-  return types[type] || type;
-};
+    construction: '建设经费',
+    equipment: '设备经费',
+    labor: '人工经费',
+    material: '材料经费',
+    other: '其他经费',
+  }
+  return types[type] || type
+}
 
 const getPaymentMethodText = (method: string): string => {
   const methods: Record<string, string> = {
-    bank_transfer: "银行转账",
-    cash: "现金",
-    check: "支票",
-    online: "在线支付",
-  };
-  return methods[method] || method;
-};
+    bank_transfer: '银行转账',
+    cash: '现金',
+    check: '支票',
+    online: '在线支付',
+  }
+  return methods[method] || method
+}
 
 const viewDetail = (fund: FundItem) => {
   router.push({
     path: `/funds/${fund.id}`,
-  });
-};
+  })
+}
 
 const approveFund = async (fund: FundItem) => {
   try {
     await ElMessageBox.confirm(
       `确定要审核通过这笔经费吗？\n金额：${formatCurrency(fund.amount)}元`,
-      "审核确认",
+      '审核确认',
       {
-        type: "warning",
-      },
-    );
-    await fundStore.approveFund(fund.id);
-    ElMessage.success("审核通过");
-    loadFunds();
+        type: 'warning',
+      }
+    )
+    await fundStore.approveFund(fund.id)
+    ElMessage.success('审核通过')
+    loadFunds()
   } catch {
     // 用户取消
   }
-};
+}
 
 const handlePrint = () => {
-  showPrint.value = true;
-};
+  showPrint.value = true
+}
 
 // 重命名函数以避免与导入的exportToExcel冲突
 const handleExportToExcel = () => {
@@ -351,17 +340,17 @@ const handleExportToExcel = () => {
     凭证号: item.voucher_number,
     项目名称: item.project_name,
     经费类型: getFundTypeText(item.type),
-    "金额(元)": item.amount,
+    '金额(元)': item.amount,
     支付日期: item.payment_date,
     收款方: item.payee,
     支付方式: getPaymentMethodText(item.payment_method),
     用途说明: item.description,
-    状态: item.status === "approved" ? "已审核" : "待审核",
-    审核人: item.approver || "",
-  }));
+    状态: item.status === 'approved' ? '已审核' : '待审核',
+    审核人: item.approver || '',
+  }))
   // 使用从@/utils/export导入的exportToExcel函数
-  exportToExcel(data, "经费明细表");
-};
+  exportToExcel(data, '经费明细表')
+}
 </script>
 
 <style scoped>

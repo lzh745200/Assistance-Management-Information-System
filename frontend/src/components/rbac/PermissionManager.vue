@@ -10,8 +10,8 @@
 <script setup lang="ts">
 // @ts-nocheck
 defineProps<{
-  modelValue?: string[];
-  permissions: { key: string; label: string }[];
-}>();
-defineEmits<{ (e: "update:modelValue", v: string[]): void }>();
+  modelValue?: string[]
+  permissions: { key: string; label: string }[]
+}>()
+defineEmits<{ (e: 'update:modelValue', v: string[]): void }>()
 </script>

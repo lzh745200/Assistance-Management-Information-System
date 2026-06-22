@@ -8,11 +8,7 @@
           <p class="description">零信任安全态势感知与策略管理</p>
         </div>
         <div class="header-right">
-          <el-button
-            :icon="Refresh"
-            :loading="refreshingAll"
-            @click="refreshAll"
-          >
+          <el-button :icon="Refresh" :loading="refreshingAll" @click="refreshAll">
             刷新全部
           </el-button>
         </div>
@@ -59,49 +55,26 @@
         <!-- 评估因子 -->
         <div class="factors-section">
           <h4>评估因子</h4>
-          <el-table
-            :data="assessment.factors"
-            size="small"
-            border
-            style="width: 100%"
-          >
+          <el-table :data="assessment.factors" size="small" border style="width: 100%">
             <el-table-column prop="factor" label="因子" min-width="140" />
-            <el-table-column
-              prop="score"
-              label="评分"
-              width="80"
-              align="center"
-            >
+            <el-table-column prop="score" label="评分" width="80" align="center">
               <template #default="{ row }">
                 <span :class="getScoreClass(row.score)">{{ row.score }}</span>
               </template>
             </el-table-column>
-            <el-table-column
-              prop="status"
-              label="状态"
-              width="100"
-              align="center"
-            >
+            <el-table-column prop="status" label="状态" width="100" align="center">
               <template #default="{ row }">
                 <el-tag :type="getFactorStatusType(row.status)" size="small">
                   {{ row.status }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column
-              prop="detail"
-              label="说明"
-              min-width="200"
-              show-overflow-tooltip
-            />
+            <el-table-column prop="detail" label="说明" min-width="200" show-overflow-tooltip />
           </el-table>
         </div>
 
         <!-- 建议 -->
-        <div
-          v-if="assessment.recommendations.length > 0"
-          class="recommendations-section"
-        >
+        <div v-if="assessment.recommendations.length > 0" class="recommendations-section">
           <h4>安全建议</h4>
           <ul class="recommendation-list">
             <li v-for="(rec, idx) in assessment.recommendations" :key="idx">
@@ -120,12 +93,7 @@
       <template #header>
         <div class="section-header">
           <span class="section-title">安全事件统计</span>
-          <el-button
-            :icon="Refresh"
-            size="small"
-            :loading="loadingStats"
-            @click="loadStats"
-          >
+          <el-button :icon="Refresh" size="small" :loading="loadingStats" @click="loadStats">
             刷新
           </el-button>
         </div>
@@ -149,8 +117,7 @@
                 title="高危事件"
                 :value="eventStats.high_severity_count"
                 :value-style="{
-                  color:
-                    eventStats.high_severity_count > 0 ? '#f56c6c' : '#67c23a',
+                  color: eventStats.high_severity_count > 0 ? '#f56c6c' : '#67c23a',
                 }"
               />
             </el-card>
@@ -180,10 +147,7 @@
             >
               {{ severity }}: {{ count }}
             </el-tag>
-            <el-tag
-              v-if="Object.keys(eventStats.by_severity).length === 0"
-              type="info"
-            >
+            <el-tag v-if="Object.keys(eventStats.by_severity).length === 0" type="info">
               暂无数据
             </el-tag>
           </div>
@@ -202,10 +166,7 @@
             >
               {{ type }}: {{ count }}
             </el-tag>
-            <el-tag
-              v-if="Object.keys(eventStats.by_type).length === 0"
-              type="info"
-            >
+            <el-tag v-if="Object.keys(eventStats.by_type).length === 0" type="info">
               暂无数据
             </el-tag>
           </div>
@@ -261,7 +222,7 @@
             <div class="policy-expand-detail">
               <el-descriptions :column="2" border size="small">
                 <el-descriptions-item label="描述">
-                  {{ row.description || "无" }}
+                  {{ row.description || '无' }}
                 </el-descriptions-item>
                 <el-descriptions-item label="类别">
                   <el-tag size="small">{{ row.category }}</el-tag>
@@ -290,22 +251,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="name" label="策略名称" min-width="180" />
-        <el-table-column
-          prop="category"
-          label="类别"
-          width="120"
-          align="center"
-        >
+        <el-table-column prop="category" label="类别" width="120" align="center">
           <template #default="{ row }">
             <el-tag size="small">{{ row.category }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="severity"
-          label="严重程度"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="severity" label="严重程度" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getSeverityTagType(row.severity)" size="small">
               {{ row.severity }}
@@ -315,16 +266,11 @@
         <el-table-column prop="enabled" label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.enabled ? 'success' : 'info'" size="small">
-              {{ row.enabled ? "启用" : "禁用" }}
+              {{ row.enabled ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="description"
-          label="描述"
-          min-width="250"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="description" label="描述" min-width="250" show-overflow-tooltip />
       </el-table>
     </el-card>
 
@@ -343,18 +289,12 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="资源" prop="resource">
-              <el-input
-                v-model="evaluateForm.resource"
-                placeholder="例如: /api/v1/funds"
-              />
+              <el-input v-model="evaluateForm.resource" placeholder="例如: /api/v1/funds" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="操作" prop="action">
-              <el-input
-                v-model="evaluateForm.action"
-                placeholder="例如: read, write, delete"
-              />
+              <el-input v-model="evaluateForm.action" placeholder="例如: read, write, delete" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -367,11 +307,7 @@
           />
         </el-form-item>
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="evaluating"
-            @click="handleEvaluate"
-          >
+          <el-button type="primary" :loading="evaluating" @click="handleEvaluate">
             评估访问
           </el-button>
           <el-button @click="resetEvaluateForm">重置</el-button>
@@ -406,12 +342,7 @@
       <template #header>
         <div class="section-header">
           <span class="section-title">最近安全事件</span>
-          <el-button
-            :icon="Refresh"
-            size="small"
-            :loading="loadingEvents"
-            @click="loadEvents"
-          >
+          <el-button :icon="Refresh" size="small" :loading="loadingEvents" @click="loadEvents">
             刷新
           </el-button>
         </div>
@@ -450,13 +381,7 @@
         </el-select>
       </div>
 
-      <el-table
-        v-loading="loadingEvents"
-        :data="events"
-        border
-        stripe
-        style="width: 100%"
-      >
+      <el-table v-loading="loadingEvents" :data="events" border stripe style="width: 100%">
         <el-table-column
           prop="timestamp"
           label="时间"
@@ -469,24 +394,14 @@
           </template>
         </el-table-column>
         <el-table-column prop="source" label="来源" width="140" />
-        <el-table-column
-          prop="severity"
-          label="严重程度"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="severity" label="严重程度" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getSeverityTagType(row.severity)" size="small">
               {{ row.severity }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="message"
-          label="消息"
-          min-width="300"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="message" label="消息" min-width="300" show-overflow-tooltip />
       </el-table>
 
       <!-- 分页 -->
@@ -506,9 +421,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
-import { ElMessage } from "element-plus";
-import { Refresh, Check } from "@element-plus/icons-vue";
+import { ref, reactive, onMounted, computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Refresh, Check } from '@element-plus/icons-vue'
 import {
   zeroTrustApi,
   type TrustAssessment,
@@ -516,302 +431,284 @@ import {
   type SecurityEvent,
   type SecurityEventStats,
   type AccessEvaluationResult,
-} from "@/api/zeroTrust";
+} from '@/api/zeroTrust'
 
 // ==================== 刷新全部 ====================
 
-const refreshingAll = ref(false);
+const refreshingAll = ref(false)
 
 async function refreshAll() {
-  refreshingAll.value = true;
+  refreshingAll.value = true
   try {
-    await Promise.all([
-      loadAssessment(),
-      loadStats(),
-      loadPolicies(),
-      loadEvents(),
-    ]);
-    ElMessage.success("刷新完成");
+    await Promise.all([loadAssessment(), loadStats(), loadPolicies(), loadEvents()])
+    ElMessage.success('刷新完成')
   } catch {
-    ElMessage.error("刷新失败");
+    ElMessage.error('刷新失败')
   } finally {
-    refreshingAll.value = false;
+    refreshingAll.value = false
   }
 }
 
 // ==================== 第1部分: 信任评估 ====================
 
-const loadingAssessment = ref(false);
-const assessment = ref<TrustAssessment | null>(null);
+const loadingAssessment = ref(false)
+const assessment = ref<TrustAssessment | null>(null)
 
 const scoreColorClass = computed(() => {
-  if (!assessment.value) return "score-green";
-  const s = assessment.value.score;
-  if (s < 40) return "score-red";
-  if (s <= 70) return "score-yellow";
-  return "score-green";
-});
+  if (!assessment.value) return 'score-green'
+  const s = assessment.value.score
+  if (s < 40) return 'score-red'
+  if (s <= 70) return 'score-yellow'
+  return 'score-green'
+})
 
 const levelTagType = computed(() => {
-  if (!assessment.value) return "info";
-  const s = assessment.value.score;
-  if (s < 40) return "danger";
-  if (s <= 70) return "warning";
-  return "success";
-});
+  if (!assessment.value) return 'info'
+  const s = assessment.value.score
+  if (s < 40) return 'danger'
+  if (s <= 70) return 'warning'
+  return 'success'
+})
 
 function getScoreClass(score: number): string {
-  if (score < 40) return "score-text-red";
-  if (score <= 70) return "score-text-yellow";
-  return "score-text-green";
+  if (score < 40) return 'score-text-red'
+  if (score <= 70) return 'score-text-yellow'
+  return 'score-text-green'
 }
 
-function getFactorStatusType(
-  status: string,
-): "success" | "warning" | "danger" | "info" {
-  const s = status.toLowerCase();
-  if (s === "pass" || s === "passed" || s === "ok" || s === "good")
-    return "success";
-  if (s === "warn" || s === "warning") return "warning";
-  if (s === "fail" || s === "failed" || s === "error") return "danger";
-  return "info";
+function getFactorStatusType(status: string): 'success' | 'warning' | 'danger' | 'info' {
+  const s = status.toLowerCase()
+  if (s === 'pass' || s === 'passed' || s === 'ok' || s === 'good') return 'success'
+  if (s === 'warn' || s === 'warning') return 'warning'
+  if (s === 'fail' || s === 'failed' || s === 'error') return 'danger'
+  return 'info'
 }
 
 async function loadAssessment() {
-  loadingAssessment.value = true;
+  loadingAssessment.value = true
   try {
-    const res = await zeroTrustApi.getAssessment();
+    const res = await zeroTrustApi.getAssessment()
     if (res.success && res.data) {
-      assessment.value = res.data;
+      assessment.value = res.data
     } else {
-      assessment.value = null;
+      assessment.value = null
     }
   } catch (e: any) {
-    assessment.value = null;
-    ElMessage.error(
-      e?.response?.data?.detail || e?.message || "加载信任评估失败",
-    );
+    assessment.value = null
+    ElMessage.error(e?.response?.data?.detail || e?.message || '加载信任评估失败')
   } finally {
-    loadingAssessment.value = false;
+    loadingAssessment.value = false
   }
 }
 
 // ==================== 第2部分: 事件统计 ====================
 
-const loadingStats = ref(false);
-const eventStats = ref<SecurityEventStats | null>(null);
+const loadingStats = ref(false)
+const eventStats = ref<SecurityEventStats | null>(null)
 
 const postureTagType = computed(() => {
-  if (!eventStats.value) return "info";
-  const posture = eventStats.value.security_posture;
-  if (posture === "secure") return "success";
-  if (posture === "warning") return "danger";
-  return "warning";
-});
+  if (!eventStats.value) return 'info'
+  const posture = eventStats.value.security_posture
+  if (posture === 'secure') return 'success'
+  if (posture === 'warning') return 'danger'
+  return 'warning'
+})
 
 const postureLabel = computed(() => {
-  if (!eventStats.value) return "未知";
-  const posture = eventStats.value.security_posture;
-  if (posture === "secure") return "安全";
-  if (posture === "warning") return "警告";
-  return "一般";
-});
+  if (!eventStats.value) return '未知'
+  const posture = eventStats.value.security_posture
+  if (posture === 'secure') return '安全'
+  if (posture === 'warning') return '警告'
+  return '一般'
+})
 
-function getSeverityTagType(
-  severity: string,
-): "danger" | "warning" | "success" | "info" {
-  const s = severity.toLowerCase();
-  if (s === "critical") return "danger";
-  if (s === "high") return "warning";
-  if (s === "medium") return "info";
-  if (s === "low") return "success";
-  return "info";
+function getSeverityTagType(severity: string): 'danger' | 'warning' | 'success' | 'info' {
+  const s = severity.toLowerCase()
+  if (s === 'critical') return 'danger'
+  if (s === 'high') return 'warning'
+  if (s === 'medium') return 'info'
+  if (s === 'low') return 'success'
+  return 'info'
 }
 
 async function loadStats() {
-  loadingStats.value = true;
+  loadingStats.value = true
   try {
-    const res = await zeroTrustApi.getEventStats();
+    const res = await zeroTrustApi.getEventStats()
     if (res.success && res.data) {
-      eventStats.value = res.data;
+      eventStats.value = res.data
     } else {
-      eventStats.value = null;
+      eventStats.value = null
     }
   } catch (e: any) {
-    eventStats.value = null;
-    ElMessage.error(
-      e?.response?.data?.detail || e?.message || "加载安全事件统计失败",
-    );
+    eventStats.value = null
+    ElMessage.error(e?.response?.data?.detail || e?.message || '加载安全事件统计失败')
   } finally {
-    loadingStats.value = false;
+    loadingStats.value = false
   }
 }
 
 // ==================== 第3部分: 安全策略 ====================
 
-const loadingPolicies = ref(false);
-const policies = ref<SecurityPolicy[]>([]);
-const policyTotal = ref(0);
-const policyEnabledCount = ref(0);
-const policyFilterCategory = ref("");
-const policyFilterEnabledOnly = ref(false);
+const loadingPolicies = ref(false)
+const policies = ref<SecurityPolicy[]>([])
+const policyTotal = ref(0)
+const policyEnabledCount = ref(0)
+const policyFilterCategory = ref('')
+const policyFilterEnabledOnly = ref(false)
 
 async function loadPolicies() {
-  loadingPolicies.value = true;
+  loadingPolicies.value = true
   try {
-    const params: Record<string, any> = {};
+    const params: Record<string, any> = {}
     if (policyFilterCategory.value) {
-      params.category = policyFilterCategory.value;
+      params.category = policyFilterCategory.value
     }
     if (policyFilterEnabledOnly.value) {
-      params.enabled_only = true;
+      params.enabled_only = true
     }
-    const res = await zeroTrustApi.listPolicies(params);
+    const res = await zeroTrustApi.listPolicies(params)
     if (res.success && res.data) {
-      policies.value = res.data.policies || [];
-      policyTotal.value = res.data.total || 0;
-      policyEnabledCount.value = res.data.enabled_count || 0;
+      policies.value = res.data.policies || []
+      policyTotal.value = res.data.total || 0
+      policyEnabledCount.value = res.data.enabled_count || 0
     } else {
-      policies.value = [];
-      policyTotal.value = 0;
-      policyEnabledCount.value = 0;
+      policies.value = []
+      policyTotal.value = 0
+      policyEnabledCount.value = 0
     }
   } catch (e: any) {
-    policies.value = [];
-    policyTotal.value = 0;
-    policyEnabledCount.value = 0;
-    ElMessage.error(
-      e?.response?.data?.detail || e?.message || "加载安全策略失败",
-    );
+    policies.value = []
+    policyTotal.value = 0
+    policyEnabledCount.value = 0
+    ElMessage.error(e?.response?.data?.detail || e?.message || '加载安全策略失败')
   } finally {
-    loadingPolicies.value = false;
+    loadingPolicies.value = false
   }
 }
 
 // ==================== 第4部分: 访问评估 ====================
 
-const evaluateFormRef = ref();
-const evaluating = ref(false);
-const evaluateResult = ref<AccessEvaluationResult | null>(null);
+const evaluateFormRef = ref()
+const evaluating = ref(false)
+const evaluateResult = ref<AccessEvaluationResult | null>(null)
 
 const evaluateForm = reactive({
-  resource: "",
-  action: "",
-  contextText: "",
-});
+  resource: '',
+  action: '',
+  contextText: '',
+})
 
 const evaluateRules = {
-  resource: [{ required: true, message: "请输入资源路径", trigger: "blur" }],
-  action: [{ required: true, message: "请输入操作类型", trigger: "blur" }],
-};
+  resource: [{ required: true, message: '请输入资源路径', trigger: 'blur' }],
+  action: [{ required: true, message: '请输入操作类型', trigger: 'blur' }],
+}
 
 function parseContextJson(text: string): Record<string, any> | undefined {
-  if (!text || !text.trim()) return undefined;
+  if (!text || !text.trim()) return undefined
   try {
-    return JSON.parse(text);
+    return JSON.parse(text)
   } catch {
-    ElMessage.warning("上下文JSON格式无效，已忽略");
-    return undefined;
+    ElMessage.warning('上下文JSON格式无效，已忽略')
+    return undefined
   }
 }
 
 async function handleEvaluate() {
-  const valid = await evaluateFormRef.value?.validate().catch(() => false);
-  if (!valid) return;
+  const valid = await evaluateFormRef.value?.validate().catch(() => false)
+  if (!valid) return
 
-  evaluating.value = true;
-  evaluateResult.value = null;
+  evaluating.value = true
+  evaluateResult.value = null
   try {
-    const context = parseContextJson(evaluateForm.contextText);
+    const context = parseContextJson(evaluateForm.contextText)
     const res = await zeroTrustApi.evaluateAccess({
       resource: evaluateForm.resource,
       action: evaluateForm.action,
       context,
-    });
+    })
     if (res.success && res.data) {
-      evaluateResult.value = res.data;
+      evaluateResult.value = res.data
     }
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || e?.message || "访问评估失败");
+    ElMessage.error(e?.response?.data?.detail || e?.message || '访问评估失败')
   } finally {
-    evaluating.value = false;
+    evaluating.value = false
   }
 }
 
 function resetEvaluateForm() {
-  evaluateFormRef.value?.resetFields();
-  evaluateResult.value = null;
+  evaluateFormRef.value?.resetFields()
+  evaluateResult.value = null
 }
 
 // ==================== 第5部分: 安全事件 ====================
 
-const loadingEvents = ref(false);
-const events = ref<SecurityEvent[]>([]);
-const eventTotal = ref(0);
-const eventPage = ref(1);
-const eventPageSize = ref(20);
-const eventFilterSeverity = ref("");
-const eventFilterType = ref("");
+const loadingEvents = ref(false)
+const events = ref<SecurityEvent[]>([])
+const eventTotal = ref(0)
+const eventPage = ref(1)
+const eventPageSize = ref(20)
+const eventFilterSeverity = ref('')
+const eventFilterType = ref('')
 
 function handleEventFilterChange() {
-  eventPage.value = 1;
-  loadEvents();
+  eventPage.value = 1
+  loadEvents()
 }
 
 async function loadEvents() {
-  loadingEvents.value = true;
+  loadingEvents.value = true
   try {
     const params: Record<string, any> = {
       page: eventPage.value,
       page_size: eventPageSize.value,
-    };
+    }
     if (eventFilterSeverity.value) {
-      params.severity = eventFilterSeverity.value;
+      params.severity = eventFilterSeverity.value
     }
     if (eventFilterType.value) {
-      params.event_type = eventFilterType.value;
+      params.event_type = eventFilterType.value
     }
-    const res = await zeroTrustApi.listEvents(params);
+    const res = await zeroTrustApi.listEvents(params)
     if (res.success && res.data) {
-      events.value = res.data.items || [];
-      eventTotal.value = res.data.total || 0;
+      events.value = res.data.items || []
+      eventTotal.value = res.data.total || 0
     } else {
-      events.value = [];
-      eventTotal.value = 0;
+      events.value = []
+      eventTotal.value = 0
     }
   } catch (e: any) {
-    events.value = [];
-    eventTotal.value = 0;
-    ElMessage.error(
-      e?.response?.data?.detail || e?.message || "加载安全事件失败",
-    );
+    events.value = []
+    eventTotal.value = 0
+    ElMessage.error(e?.response?.data?.detail || e?.message || '加载安全事件失败')
   } finally {
-    loadingEvents.value = false;
+    loadingEvents.value = false
   }
 }
 
 // ==================== 工具函数 ====================
 
 function formatDateTime(dateStr: string): string {
-  if (!dateStr) return "-";
+  if (!dateStr) return '-'
   try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
   } catch {
-    return dateStr;
+    return dateStr
   }
 }
 
 // ==================== 初始化 ====================
 
 onMounted(() => {
-  loadAssessment();
-  loadStats();
-  loadPolicies();
-  loadEvents();
-});
+  loadAssessment()
+  loadStats()
+  loadPolicies()
+  loadEvents()
+})
 </script>
 
 <style scoped lang="scss">

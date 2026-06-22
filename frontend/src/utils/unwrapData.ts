@@ -11,16 +11,13 @@
  *   // 新（推荐）:
  *   const village = await getSupportedVillage(id);
  */
-export function unwrapData<T = Record<string, unknown>>(
-  raw: unknown,
-  fallback: T = {} as T,
-): T {
-  if (raw && typeof raw === "object" && "data" in raw) {
-    const inner = (raw as Record<string, unknown>).data;
+export function unwrapData<T = Record<string, unknown>>(raw: unknown, fallback: T = {} as T): T {
+  if (raw && typeof raw === 'object' && 'data' in raw) {
+    const inner = (raw as Record<string, unknown>).data
     // 使用 || 而非 ?? 保持向后兼容：data=null/0/\"\"/false 时回退到 raw
-    return (inner || raw) as T;
+    return (inner || raw) as T
   }
-  return (raw || fallback) as T;
+  return (raw || fallback) as T
 }
 
-export default unwrapData;
+export default unwrapData

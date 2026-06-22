@@ -7,5 +7,5 @@
   />
 </template>
 <script setup lang="ts">
-defineProps<{ data: any[] }>();
+defineProps<{ data: any[] }>()
 </script>

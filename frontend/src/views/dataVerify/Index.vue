@@ -29,10 +29,7 @@
         <div class="card-header">
           <span>待审核数据列表</span>
           <div>
-            <el-button
-              type="primary"
-              :loading="batchChecking"
-              @click="handleBatchCheck"
+            <el-button type="primary" :loading="batchChecking" @click="handleBatchCheck"
               >批量校验</el-button
             >
             <el-button @click="loadData">刷新</el-button>
@@ -68,9 +65,7 @@
               size="small"
               :style="row.verifyStatus === 'fail' ? 'cursor:pointer' : ''"
               @click="
-                row.verifyStatus === 'fail' && row.verifyErrors?.length
-                  ? showErrors(row)
-                  : null
+                row.verifyStatus === 'fail' && row.verifyErrors?.length ? showErrors(row) : null
               "
             >
               {{ getVerifyStatusText(row.verifyStatus) }}
@@ -79,38 +74,16 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button
-              type="primary"
-              link
-              size="small"
-              @click="handleReview(row)"
-              >审核</el-button
-            >
-            <el-button
-              type="success"
-              link
-              size="small"
-              @click="handleApprove(row)"
-              >通过</el-button
-            >
-            <el-button
-              type="danger"
-              link
-              size="small"
-              @click="handleReject(row)"
-              >驳回</el-button
-            >
+            <el-button type="primary" link size="small" @click="handleReview(row)">审核</el-button>
+            <el-button type="success" link size="small" @click="handleApprove(row)">通过</el-button>
+            <el-button type="danger" link size="small" @click="handleReject(row)">驳回</el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
 
     <!-- 校验错误详情弹窗 -->
-    <el-dialog
-      v-model="errorDialogVisible"
-      :title="`${errorDialogTitle} - 校验问题`"
-      width="520px"
-    >
+    <el-dialog v-model="errorDialogVisible" :title="`${errorDialogTitle} - 校验问题`" width="520px">
       <div v-if="currentErrors.length">
         <div v-for="(err, idx) in currentErrors" :key="idx" class="error-item">
           <el-tag type="danger" size="small" style="margin-right: 8px">{{
@@ -165,184 +138,169 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
-const loading = ref(false);
-const batchChecking = ref(false);
-const stats = reactive({ pending: 0, approved: 0, rejected: 0, issues: 0 });
-const dataList = ref<any[]>([]);
+const loading = ref(false)
+const batchChecking = ref(false)
+const stats = reactive({ pending: 0, approved: 0, rejected: 0, issues: 0 })
+const dataList = ref<any[]>([])
 
 // 原始村庄数据（用于后端校验）
-const rawVillages = ref<any[]>([]);
+const rawVillages = ref<any[]>([])
 
 // 错误详情弹窗
-const errorDialogVisible = ref(false);
-const errorDialogTitle = ref("");
-const currentErrors = ref<any[]>([]);
+const errorDialogVisible = ref(false)
+const errorDialogTitle = ref('')
+const currentErrors = ref<any[]>([])
 
 // 批量校验结果弹窗
-const batchResultVisible = ref(false);
+const batchResultVisible = ref(false)
 const batchResult = reactive({
   total: 0,
   passed: 0,
   failed: 0,
   failedRows: [] as any[],
-});
+})
 
 // 状态文本映射
 const getVerifyStatusText = (status: string): string => {
   const statusMap: Record<string, string> = {
-    pass: "通过",
-    fail: "未通过",
-    pending: "待校验",
-  };
-  return statusMap[status] || status;
-};
+    pass: '通过',
+    fail: '未通过',
+    pending: '待校验',
+  }
+  return statusMap[status] || status
+}
 
 async function loadData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await request.get("/supported-villages", {
+    const res = await request.get('/supported-villages', {
       params: { page: 1, page_size: 50 },
-    });
-    const data = res.data;
-    const items = data?.items || (Array.isArray(data) ? data : []);
-    rawVillages.value = items;
+    })
+    const data = res.data
+    const items = data?.items || (Array.isArray(data) ? data : [])
+    rawVillages.value = items
     dataList.value = items.map((v: any) => {
       const fields = [
-        "department",
-        "support_unit",
-        "village_name",
-        "county",
-        "transition_fund_military_total",
-      ];
-      const filled = fields.filter(
-        (f) => v[f] != null && v[f] !== "" && v[f] !== 0,
-      ).length;
-      const completeness = Math.round((filled / fields.length) * 100);
+        'department',
+        'support_unit',
+        'village_name',
+        'county',
+        'transition_fund_military_total',
+      ]
+      const filled = fields.filter((f) => v[f] != null && v[f] !== '' && v[f] !== 0).length
+      const completeness = Math.round((filled / fields.length) * 100)
       return {
         id: v.id,
-        villageName: v.village_name || v.name || "",
-        department: v.department || "",
-        submitter: v.support_unit || "",
-        submitTime: v.created_at
-          ? String(v.created_at).replace("T", " ").slice(0, 16)
-          : "",
+        villageName: v.village_name || v.name || '',
+        department: v.department || '',
+        submitter: v.support_unit || '',
+        submitTime: v.created_at ? String(v.created_at).replace('T', ' ').slice(0, 16) : '',
         completeness,
-        verifyStatus:
-          completeness >= 80 ? "pass" : completeness >= 50 ? "pending" : "fail",
+        verifyStatus: completeness >= 80 ? 'pass' : completeness >= 50 ? 'pending' : 'fail',
         verifyErrors: [] as any[],
-      };
-    });
-    updateStats();
+      }
+    })
+    updateStats()
   } catch (e) {
-    logger.error("加载审核数据失败:", e);
+    logger.error('加载审核数据失败:', e)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function updateStats() {
-  stats.pending = dataList.value.filter(
-    (d) => d.verifyStatus === "pending",
-  ).length;
-  stats.approved = dataList.value.filter(
-    (d) => d.verifyStatus === "pass",
-  ).length;
-  stats.rejected = dataList.value.filter(
-    (d) => d.verifyStatus === "fail",
-  ).length;
-  stats.issues = dataList.value.filter((d) => d.completeness < 60).length;
+  stats.pending = dataList.value.filter((d) => d.verifyStatus === 'pending').length
+  stats.approved = dataList.value.filter((d) => d.verifyStatus === 'pass').length
+  stats.rejected = dataList.value.filter((d) => d.verifyStatus === 'fail').length
+  stats.issues = dataList.value.filter((d) => d.completeness < 60).length
 }
 
 async function handleBatchCheck() {
   if (!rawVillages.value.length) {
-    await loadData();
+    await loadData()
   }
-  batchChecking.value = true;
-  let passed = 0;
-  let failed = 0;
-  const failedRows: any[] = [];
+  batchChecking.value = true
+  let passed = 0
+  let failed = 0
+  const failedRows: any[] = []
 
   for (let i = 0; i < rawVillages.value.length; i++) {
-    const raw = rawVillages.value[i];
-    const row = dataList.value[i];
-    if (!row) continue;
+    const raw = rawVillages.value[i]
+    const row = dataList.value[i]
+    if (!row) continue
 
     try {
-      const resp = await request.post("/validation/validate", raw, {
-        params: { module: "village" },
-      });
-      const result = resp.data;
+      const resp = await request.post('/validation/validate', raw, {
+        params: { module: 'village' },
+      })
+      const result = resp.data
       if (result?.valid) {
         // 后端规则通过，再检查完整度
-        row.verifyStatus = row.completeness >= 80 ? "pass" : "pending";
-        row.verifyErrors = [];
-        passed++;
+        row.verifyStatus = row.completeness >= 80 ? 'pass' : 'pending'
+        row.verifyErrors = []
+        passed++
       } else {
-        row.verifyStatus = "fail";
-        row.verifyErrors = result?.errors || [];
-        failed++;
+        row.verifyStatus = 'fail'
+        row.verifyErrors = result?.errors || []
+        failed++
         failedRows.push({
           villageName: row.villageName,
           errors: result?.errors || [],
-        });
+        })
       }
     } catch {
       // 后端无校验规则时回退到完整度判断
       row.verifyStatus =
-        row.completeness >= 80
-          ? "pass"
-          : row.completeness >= 50
-            ? "pending"
-            : "fail";
-      row.verifyErrors = [];
-      if (row.verifyStatus === "pass") passed++;
-      else failed++;
+        row.completeness >= 80 ? 'pass' : row.completeness >= 50 ? 'pending' : 'fail'
+      row.verifyErrors = []
+      if (row.verifyStatus === 'pass') passed++
+      else failed++
     }
   }
 
-  batchChecking.value = false;
-  updateStats();
+  batchChecking.value = false
+  updateStats()
 
-  batchResult.total = rawVillages.value.length;
-  batchResult.passed = passed;
-  batchResult.failed = failed;
-  batchResult.failedRows = failedRows;
+  batchResult.total = rawVillages.value.length
+  batchResult.passed = passed
+  batchResult.failed = failed
+  batchResult.failedRows = failedRows
 
   if (failed === 0) {
-    ElMessage.success(`批量校验完成，全部 ${passed} 条数据通过`);
+    ElMessage.success(`批量校验完成，全部 ${passed} 条数据通过`)
   } else {
-    ElMessage.warning(`校验完成：${passed} 条通过，${failed} 条未通过`);
-    batchResultVisible.value = true;
+    ElMessage.warning(`校验完成：${passed} 条通过，${failed} 条未通过`)
+    batchResultVisible.value = true
   }
 }
 
 function showErrors(row: any) {
-  errorDialogTitle.value = row.villageName;
-  currentErrors.value = row.verifyErrors || [];
-  errorDialogVisible.value = true;
+  errorDialogTitle.value = row.villageName
+  currentErrors.value = row.verifyErrors || []
+  errorDialogVisible.value = true
 }
 
 const handleReview = (row: any) => {
-  showErrors(row);
-};
+  showErrors(row)
+}
 const handleApprove = (row: any) => {
-  row.verifyStatus = "pass";
-  updateStats();
-  ElMessage.success("已通过");
-};
+  row.verifyStatus = 'pass'
+  updateStats()
+  ElMessage.success('已通过')
+}
 const handleReject = (row: any) => {
-  row.verifyStatus = "fail";
-  updateStats();
-  ElMessage.warning("已驳回");
-};
+  row.verifyStatus = 'fail'
+  updateStats()
+  ElMessage.warning('已驳回')
+}
 
-onMounted(() => loadData());
+onMounted(() => loadData())
 </script>
 
 <style scoped>

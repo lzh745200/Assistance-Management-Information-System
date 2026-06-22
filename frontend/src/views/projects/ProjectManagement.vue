@@ -19,11 +19,7 @@
     </div>
 
     <div class="filter-bar">
-      <el-form
-        :inline="true"
-        :model="filterForm"
-        @submit.prevent="handleSearch"
-      >
+      <el-form :inline="true" :model="filterForm" @submit.prevent="handleSearch">
         <el-form-item label="项目名称">
           <el-input
             v-model="filterForm.search"
@@ -65,19 +61,10 @@
     </div>
 
     <div class="table-container">
-      <el-table
-        v-loading="loading"
-        :data="projects"
-        @selection-change="handleSelectionChange"
-      >
+      <el-table v-loading="loading" :data="projects" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="name" label="项目名称" min-width="200" />
-        <el-table-column
-          prop="description"
-          label="描述"
-          min-width="300"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)">
@@ -96,15 +83,9 @@
         <el-table-column prop="end_date" label="结束日期" width="120" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="handleView(row)">
-              查看
-            </el-button>
-            <el-button link type="primary" @click="handleEdit(row)">
-              编辑
-            </el-button>
-            <el-button link type="danger" @click="handleDelete(row)">
-              删除
-            </el-button>
+            <el-button link type="primary" @click="handleView(row)"> 查看 </el-button>
+            <el-button link type="primary" @click="handleEdit(row)"> 编辑 </el-button>
+            <el-button link type="danger" @click="handleDelete(row)"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -128,12 +109,7 @@
       width="600px"
       @close="handleDialogClose"
     >
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="100px"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
         <el-form-item label="项目名称" prop="name">
           <el-input v-model="formData.name" placeholder="请输入项目名称" />
         </el-form-item>
@@ -188,14 +164,8 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button :disabled="submitting" @click="dialogVisible = false"
-          >取消</el-button
-        >
-        <el-button
-          type="primary"
-          :loading="submitting"
-          :disabled="submitting"
-          @click="handleSubmit"
+        <el-button :disabled="submitting" @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit"
           >确定</el-button
         >
       </template>
@@ -213,113 +183,102 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from "vue";
-import {
-  ElMessage,
-  ElMessageBox,
-  type FormInstance,
-  type FormRules,
-} from "element-plus";
-import { Plus, Download, Upload } from "@element-plus/icons-vue";
-import {
-  projectApi,
-  type Project,
-  type CreateProjectRequest,
-} from "@/api/projects";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { Plus, Download, Upload } from '@element-plus/icons-vue'
+import { projectApi, type Project, type CreateProjectRequest } from '@/api/projects'
 
-const loading = ref(false);
-const submitting = ref(false);
-const projects = ref<Project[]>([]);
-const selectedProjects = ref<Project[]>([]);
-const dialogVisible = ref(false);
-const dialogTitle = ref("新增项目");
-const dialogMode = ref<"create" | "edit" | "view">("create");
-const currentProject = ref<Project | null>(null);
-const fileInput = ref<HTMLInputElement>();
+const loading = ref(false)
+const submitting = ref(false)
+const projects = ref<Project[]>([])
+const selectedProjects = ref<Project[]>([])
+const dialogVisible = ref(false)
+const dialogTitle = ref('新增项目')
+const dialogMode = ref<'create' | 'edit' | 'view'>('create')
+const currentProject = ref<Project | null>(null)
+const fileInput = ref<HTMLInputElement>()
 
 const filterForm = reactive({
-  search: "",
-  status: "",
-  priority: "",
-});
+  search: '',
+  status: '',
+  priority: '',
+})
 
 const pagination = reactive({
   page: 1,
   page_size: 20,
   total: 0,
-});
+})
 
-const formRef = ref<FormInstance>();
+const formRef = ref<FormInstance>()
 const formData = reactive<CreateProjectRequest>({
-  name: "",
-  description: "",
-  status: "pending",
-  priority: "medium",
-  start_date: "",
-  end_date: "",
-});
+  name: '',
+  description: '',
+  status: 'pending',
+  priority: 'medium',
+  start_date: '',
+  end_date: '',
+})
 
 const formRules: FormRules = {
   name: [
-    { required: true, message: "请输入项目名称", trigger: "blur" },
-    { min: 2, max: 100, message: "长度在 2 到 100 个字符", trigger: "blur" },
+    { required: true, message: '请输入项目名称', trigger: 'blur' },
+    { min: 2, max: 100, message: '长度在 2 到 100 个字符', trigger: 'blur' },
   ],
   description: [
-    { required: true, message: "请输入项目描述", trigger: "blur" },
-    { min: 10, max: 500, message: "长度在 10 到 500 个字符", trigger: "blur" },
+    { required: true, message: '请输入项目描述', trigger: 'blur' },
+    { min: 10, max: 500, message: '长度在 10 到 500 个字符', trigger: 'blur' },
   ],
-  status: [{ required: true, message: "请选择状态", trigger: "change" }],
-  priority: [{ required: true, message: "请选择优先级", trigger: "change" }],
-  start_date: [
-    { required: true, message: "请选择开始日期", trigger: "change" },
-  ],
-  end_date: [{ required: true, message: "请选择结束日期", trigger: "change" }],
-};
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }],
+  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
+  start_date: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
+  end_date: [{ required: true, message: '请选择结束日期', trigger: 'change' }],
+}
 
 const loadProjects = async () => {
-  loading.value = true;
+  loading.value = true
   try {
     const response = await projectApi.list({
       page: pagination.page,
       page_size: pagination.page_size,
       keyword: filterForm.search || undefined,
       status: filterForm.status || undefined,
-    });
-    projects.value = response.data.items || [];
-    pagination.total = response.data.total || 0;
+    })
+    projects.value = response.data.items || []
+    pagination.total = response.data.total || 0
   } catch (error) {
-    ElMessage.error("加载项目列表失败");
+    ElMessage.error('加载项目列表失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const handleSearch = () => {
-  pagination.page = 1;
-  loadProjects();
-};
+  pagination.page = 1
+  loadProjects()
+}
 
 const handleReset = () => {
-  filterForm.search = "";
-  filterForm.status = "";
-  filterForm.priority = "";
-  handleSearch();
-};
+  filterForm.search = ''
+  filterForm.status = ''
+  filterForm.priority = ''
+  handleSearch()
+}
 
 const handleCreate = () => {
-  dialogMode.value = "create";
-  dialogTitle.value = "新增项目";
-  dialogVisible.value = true;
-  resetForm();
-};
+  dialogMode.value = 'create'
+  dialogTitle.value = '新增项目'
+  dialogVisible.value = true
+  resetForm()
+}
 
 const handleEdit = (row: any) => {
-  dialogMode.value = "edit";
-  dialogTitle.value = "编辑项目";
-  currentProject.value = row;
-  dialogVisible.value = true;
+  dialogMode.value = 'edit'
+  dialogTitle.value = '编辑项目'
+  currentProject.value = row
+  dialogVisible.value = true
   Object.assign(formData, {
     name: row.name,
     description: row.description,
@@ -327,14 +286,14 @@ const handleEdit = (row: any) => {
     priority: row.priority,
     start_date: row.start_date,
     end_date: row.end_date,
-  });
-};
+  })
+}
 
 const handleView = (row: any) => {
-  dialogMode.value = "view";
-  dialogTitle.value = "查看项目";
-  currentProject.value = row;
-  dialogVisible.value = true;
+  dialogMode.value = 'view'
+  dialogTitle.value = '查看项目'
+  currentProject.value = row
+  dialogVisible.value = true
   Object.assign(formData, {
     name: row.name,
     description: row.description,
@@ -342,170 +301,170 @@ const handleView = (row: any) => {
     priority: row.priority,
     start_date: row.start_date,
     end_date: row.end_date,
-  });
-};
+  })
+}
 
 const handleDelete = async (row: any) => {
   try {
-    await ElMessageBox.confirm("确定要删除该项目吗？", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning",
-    });
+    await ElMessageBox.confirm('确定要删除该项目吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
   } catch {
     // 用户取消，不处理
-    return;
+    return
   }
 
   try {
-    await projectApi.delete(row.id);
-    ElMessage.success("删除成功");
-    await loadProjects();
+    await projectApi.delete(row.id)
+    ElMessage.success('删除成功')
+    await loadProjects()
   } catch {
-    ElMessage.error("删除失败");
+    ElMessage.error('删除失败')
   }
-};
+}
 
 const handleSelectionChange = (selection: Project[]) => {
-  selectedProjects.value = selection;
-};
+  selectedProjects.value = selection
+}
 
 const handleSubmit = async () => {
-  if (!formRef.value) return;
-  if (submitting.value) return;
+  if (!formRef.value) return
+  if (submitting.value) return
 
   await formRef.value.validate(async (valid) => {
-    if (!valid) return;
+    if (!valid) return
 
-    submitting.value = true;
+    submitting.value = true
     try {
-      if (dialogMode.value === "create") {
-        await projectApi.create(formData);
-        ElMessage.success("创建成功");
-      } else if (dialogMode.value === "edit" && currentProject.value) {
-        await projectApi.update(currentProject.value.id, formData);
-        ElMessage.success("更新成功");
+      if (dialogMode.value === 'create') {
+        await projectApi.create(formData)
+        ElMessage.success('创建成功')
+      } else if (dialogMode.value === 'edit' && currentProject.value) {
+        await projectApi.update(currentProject.value.id, formData)
+        ElMessage.success('更新成功')
       }
 
-      dialogVisible.value = false;
-      await loadProjects();
+      dialogVisible.value = false
+      await loadProjects()
     } catch (error) {
-      ElMessage.error(dialogMode.value === "create" ? "创建失败" : "更新失败");
+      ElMessage.error(dialogMode.value === 'create' ? '创建失败' : '更新失败')
     } finally {
-      submitting.value = false;
+      submitting.value = false
     }
-  });
-};
+  })
+}
 
 const handleDialogClose = () => {
-  resetForm();
-};
+  resetForm()
+}
 
 const resetForm = () => {
-  formRef.value?.resetFields();
+  formRef.value?.resetFields()
   Object.assign(formData, {
-    name: "",
-    description: "",
-    status: "pending",
-    priority: "medium",
-    start_date: "",
-    end_date: "",
-  });
-};
+    name: '',
+    description: '',
+    status: 'pending',
+    priority: 'medium',
+    start_date: '',
+    end_date: '',
+  })
+}
 
 const handleExport = async () => {
   try {
     const res = await projectApi.exportList({
       keyword: filterForm.search || undefined,
       status: filterForm.status || undefined,
-    });
-    const blob = res.data || res;
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "帮扶项目导出.xlsx";
-    link.click();
-    window.URL.revokeObjectURL(url);
+    })
+    const blob = res.data || res
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '帮扶项目导出.xlsx'
+    link.click()
+    window.URL.revokeObjectURL(url)
     // 导出成功 — 浏览器已确认
   } catch (error) {
-    ElMessage.error("导出失败");
+    ElMessage.error('导出失败')
   }
-};
+}
 
 const handleImport = () => {
-  fileInput.value?.click();
-};
+  fileInput.value?.click()
+}
 
 const handleFileChange = async (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file) return;
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
 
   try {
-    await projectApi.importData(file, "incremental", (progress: number) => {
-      logger.info(`上传进度: ${progress}%`);
-    });
-    ElMessage.success("导入成功");
-    loadProjects();
+    await projectApi.importData(file, 'incremental', (progress: number) => {
+      logger.info(`上传进度: ${progress}%`)
+    })
+    ElMessage.success('导入成功')
+    loadProjects()
   } catch (error) {
-    ElMessage.error("导入失败");
+    ElMessage.error('导入失败')
   } finally {
-    target.value = "";
+    target.value = ''
   }
-};
+}
 
 const handlePageChange = (page: number) => {
-  pagination.page = page;
-  loadProjects();
-};
+  pagination.page = page
+  loadProjects()
+}
 
 const handleSizeChange = (size: number) => {
-  pagination.page_size = size;
-  pagination.page = 1;
-  loadProjects();
-};
+  pagination.page_size = size
+  pagination.page = 1
+  loadProjects()
+}
 
 const getStatusType = (status: string) => {
   const typeMap: Record<string, any> = {
-    pending: "info",
-    in_progress: "warning",
-    completed: "success",
-    cancelled: "danger",
-  };
-  return typeMap[status] || "info";
-};
+    pending: 'info',
+    in_progress: 'warning',
+    completed: 'success',
+    cancelled: 'danger',
+  }
+  return typeMap[status] || 'info'
+}
 
 const getStatusText = (status: string) => {
   const textMap: Record<string, string> = {
-    pending: "待处理",
-    in_progress: "进行中",
-    completed: "已完成",
-    cancelled: "已取消",
-  };
-  return textMap[status] || status;
-};
+    pending: '待处理',
+    in_progress: '进行中',
+    completed: '已完成',
+    cancelled: '已取消',
+  }
+  return textMap[status] || status
+}
 
 const getPriorityType = (priority: string) => {
   const typeMap: Record<string, any> = {
-    low: "info",
-    medium: "warning",
-    high: "danger",
-  };
-  return typeMap[priority] || "info";
-};
+    low: 'info',
+    medium: 'warning',
+    high: 'danger',
+  }
+  return typeMap[priority] || 'info'
+}
 
 const getPriorityText = (priority: string) => {
   const textMap: Record<string, string> = {
-    low: "低",
-    medium: "中",
-    high: "高",
-  };
-  return textMap[priority] || priority;
-};
+    low: '低',
+    medium: '中',
+    high: '高',
+  }
+  return textMap[priority] || priority
+}
 
 onMounted(() => {
-  loadProjects();
-});
+  loadProjects()
+})
 </script>
 
 <style scoped>

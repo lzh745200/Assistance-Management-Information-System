@@ -40,22 +40,14 @@
         <el-table-column prop="province" label="省份" width="100" />
         <el-table-column prop="county" label="县市" width="120" />
         <el-table-column prop="town" label="乡镇" width="120" />
-        <el-table-column
-          prop="is_revitalization_tier"
-          label="振兴梯队"
-          width="100"
-        >
+        <el-table-column prop="is_revitalization_tier" label="振兴梯队" width="100">
           <template #default="{ row }">
             <el-tag v-if="row.is_revitalization_tier" type="success">是</el-tag>
             <el-tag v-else type="info">否</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="population" label="人口" width="80" />
-        <el-table-column
-          prop="annual_income"
-          label="年人均收入(元)"
-          width="130"
-        />
+        <el-table-column prop="annual_income" label="年人均收入(元)" width="130" />
       </el-table>
     </el-card>
   </div>
@@ -63,117 +55,116 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted } from "vue";
-import BaseChart from "@/components/common/BaseChart.vue";
-import { get } from "@/api/request";
+import { ref, computed, onMounted } from 'vue'
+import BaseChart from '@/components/common/BaseChart.vue'
+import { get } from '@/api/request'
 
 interface Village {
-  id: number;
-  village_name: string;
-  province: string;
-  county: string;
-  town: string;
-  is_revitalization_tier: boolean;
-  population: number;
-  annual_income: number;
+  id: number
+  village_name: string
+  province: string
+  county: string
+  town: string
+  is_revitalization_tier: boolean
+  population: number
+  annual_income: number
 }
 
-const loading = ref(false);
-const tableData = ref<Village[]>([]);
+const loading = ref(false)
+const tableData = ref<Village[]>([])
 
 const statCards = computed(() => [
   {
-    key: "total",
-    label: "帮扶村总数",
+    key: 'total',
+    label: '帮扶村总数',
     value: tableData.value.length,
-    suffix: "个",
+    suffix: '个',
   },
   {
-    key: "pop",
-    label: "覆盖人口",
+    key: 'pop',
+    label: '覆盖人口',
     value: tableData.value.reduce((s, v) => s + (v.population || 0), 0),
-    suffix: "人",
+    suffix: '人',
   },
   {
-    key: "income",
-    label: "人均收入均值",
+    key: 'income',
+    label: '人均收入均值',
     value: tableData.value.length
       ? Math.round(
-          tableData.value.reduce((s, v) => s + (v.annual_income || 0), 0) /
-            tableData.value.length,
+          tableData.value.reduce((s, v) => s + (v.annual_income || 0), 0) / tableData.value.length
         )
       : 0,
-    suffix: "元",
+    suffix: '元',
   },
   {
-    key: "provinces",
-    label: "覆盖省份",
+    key: 'provinces',
+    label: '覆盖省份',
     value: new Set(tableData.value.map((v) => v.province).filter(Boolean)).size,
-    suffix: "个",
+    suffix: '个',
   },
-]);
+])
 
 const provinceData = computed(() => {
-  const map: Record<string, number> = {};
+  const map: Record<string, number> = {}
   tableData.value.forEach((v) => {
-    if (v.province) map[v.province] = (map[v.province] || 0) + 1;
-  });
-  return Object.entries(map).map(([k, v]) => ({ name: k, value: v }));
-});
+    if (v.province) map[v.province] = (map[v.province] || 0) + 1
+  })
+  return Object.entries(map).map(([k, v]) => ({ name: k, value: v }))
+})
 
 const tierData = computed(() => {
-  const map: Record<string, number> = {};
+  const map: Record<string, number> = {}
   tableData.value.forEach((v) => {
-    const t = v.is_revitalization_tier ? "振兴梯队" : "非振兴梯队";
-    map[t] = (map[t] || 0) + 1;
-  });
-  return Object.entries(map).map(([k, v]) => ({ name: k, value: v }));
-});
+    const t = v.is_revitalization_tier ? '振兴梯队' : '非振兴梯队'
+    map[t] = (map[t] || 0) + 1
+  })
+  return Object.entries(map).map(([k, v]) => ({ name: k, value: v }))
+})
 
 const barOpt = computed(() => ({
-  tooltip: { trigger: "axis" },
+  tooltip: { trigger: 'axis' },
   xAxis: {
-    type: "category",
+    type: 'category',
     data: provinceData.value.map((d) => d.name),
     axisLabel: { rotate: 45 },
   },
-  yAxis: { type: "value", name: "村庄数" },
+  yAxis: { type: 'value', name: '村庄数' },
   series: [
     {
-      type: "bar",
+      type: 'bar',
       data: provinceData.value.map((d) => d.value),
-      itemStyle: { color: "#4a7c59" },
+      itemStyle: { color: '#4a7c59' },
     },
   ],
   grid: { bottom: 80 },
-}));
+}))
 
 const pieOpt = computed(() => ({
-  tooltip: { trigger: "item" },
+  tooltip: { trigger: 'item' },
   series: [
     {
-      type: "pie",
+      type: 'pie',
       data: tierData.value,
-      radius: ["40%", "70%"],
-      label: { formatter: "{b}: {c}" },
+      radius: ['40%', '70%'],
+      label: { formatter: '{b}: {c}' },
     },
   ],
-}));
+}))
 
 onMounted(async () => {
-  loading.value = true;
+  loading.value = true
   try {
     const res = await get<{ code: number; data: Village[]; total?: number }>(
-      "/supported-villages",
-      { limit: 200 },
-    );
-    if (res.code === 200 && res.data) tableData.value = res.data;
+      '/supported-villages',
+      { limit: 200 }
+    )
+    if (res.code === 200 && res.data) tableData.value = res.data
   } catch {
     /* silent */
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-});
+})
 </script>
 
 <style scoped>

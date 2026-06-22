@@ -14,38 +14,38 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed } from 'vue'
 
 const props = defineProps<{
-  data: Record<string, any>;
-}>();
+  data: Record<string, any>
+}>()
 
 const items = computed(() => [
   {
-    key: "total_amount",
-    label: "经费总额",
+    key: 'total_amount',
+    label: '经费总额',
     value: props.data?.total_amount ?? 0,
-    prefix: "¥",
+    prefix: '¥',
   },
   {
-    key: "approved_amount",
-    label: "已批准",
+    key: 'approved_amount',
+    label: '已批准',
     value: props.data?.approved_amount ?? 0,
-    prefix: "¥",
+    prefix: '¥',
   },
   {
-    key: "pending_amount",
-    label: "待审批",
+    key: 'pending_amount',
+    label: '待审批',
     value: props.data?.pending_amount ?? 0,
-    prefix: "¥",
+    prefix: '¥',
   },
   {
-    key: "total_count",
-    label: "记录总数",
+    key: 'total_count',
+    label: '记录总数',
     value: props.data?.total_count ?? 0,
-    suffix: "条",
+    suffix: '条',
   },
-]);
+])
 </script>
 
 <style scoped>

@@ -3,11 +3,7 @@
     <el-form ref="formRef" :model="formData" label-width="100px">
       <!-- 年份选择 -->
       <el-form-item label="数据年份">
-        <el-select
-          v-model="selectedYear"
-          style="width: 160px"
-          @change="loadYearlyData"
-        >
+        <el-select v-model="selectedYear" style="width: 160px" @change="loadYearlyData">
           <el-option
             v-for="year in availableYears"
             :key="year"
@@ -243,11 +239,7 @@
         </el-col>
         <el-col :span="6">
           <el-form-item label="帮扶车间(个)">
-            <el-input-number
-              v-model="formData.industry.workshop"
-              :min="0"
-              style="width: 160px"
-            />
+            <el-input-number v-model="formData.industry.workshop" :min="0" style="width: 160px" />
           </el-form-item>
         </el-col>
         <el-col :span="6">
@@ -593,9 +585,7 @@
       </el-row>
 
       <el-form-item style="margin-top: 30px">
-        <el-button type="primary" :loading="saving" @click="handleSave"
-          >保存</el-button
-        >
+        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
         <el-button @click="handleClose">取消</el-button>
       </el-form-item>
     </el-form>
@@ -603,11 +593,11 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { QuestionFilled } from "@element-plus/icons-vue";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { QuestionFilled } from '@element-plus/icons-vue'
 import {
   getYearlyData,
   savePopulationData,
@@ -621,29 +611,26 @@ import {
   saveConsumptionData,
   saveEmploymentData,
   copyYearData,
-} from "@/api/supportedVillage";
-import { unwrapData } from "@/utils/unwrapData";
+} from '@/api/supportedVillage'
+import { unwrapData } from '@/utils/unwrapData'
 
 const props = defineProps<{
-  villageId: number;
-  villageName: string;
-}>();
+  villageId: number
+  villageName: string
+}>()
 
 const emit = defineEmits<{
-  close: [];
-}>();
+  close: []
+}>()
 
-const formRef = ref();
-defineExpose({ formRef });
+const formRef = ref()
+defineExpose({ formRef })
 
-const saving = ref(false);
-const copying = ref(false);
-const currentYear = new Date().getFullYear();
-const selectedYear = ref(currentYear);
-const availableYears = Array.from(
-  { length: currentYear - 2000 + 2 },
-  (_, i) => currentYear + 1 - i,
-);
+const saving = ref(false)
+const copying = ref(false)
+const currentYear = new Date().getFullYear()
+const selectedYear = ref(currentYear)
+const availableYears = Array.from({ length: currentYear - 2000 + 2 }, (_, i) => currentYear + 1 - i)
 
 const formData = reactive({
   population: {
@@ -728,124 +715,96 @@ const formData = reactive({
     aidedStudents: 0,
     volunteerCounselors: 0,
   },
-});
+})
 
 const loadYearlyData = async () => {
   try {
-    const resp = await getYearlyData(props.villageId, selectedYear.value);
-    const raw: Record<string, any> = unwrapData(resp);
+    const resp = await getYearlyData(props.villageId, selectedYear.value)
+    const raw: Record<string, any> = unwrapData(resp)
     // 后端 _SECTION_MODEL key → formData 属性名映射
     const sectionMap = {
-      population: "population",
-      income: "income",
-      "force-investment": "forceInvestment",
-      industry: "industry",
-      infrastructure: "infrastructure",
-      "party-building": "partyBuilding",
-      medical: "medical",
-      consumption: "consumption",
-      employment: "employment",
-      education: "education",
-    } as const satisfies Record<string, keyof typeof formData>;
+      population: 'population',
+      income: 'income',
+      'force-investment': 'forceInvestment',
+      industry: 'industry',
+      infrastructure: 'infrastructure',
+      'party-building': 'partyBuilding',
+      medical: 'medical',
+      consumption: 'consumption',
+      employment: 'employment',
+      education: 'education',
+    } as const satisfies Record<string, keyof typeof formData>
     for (const [apiKey, formKey] of Object.entries(sectionMap)) {
       if (raw[apiKey]) {
         Object.assign(formData[formKey], {
           ...raw[apiKey],
           year: selectedYear.value,
-        });
+        })
       }
     }
   } catch (error) {
-    logger.error("加载年度数据失败:", error);
-    ElMessage.warning("加载数据失败，将使用空白表单");
+    logger.error('加载年度数据失败:', error)
+    ElMessage.warning('加载数据失败，将使用空白表单')
   }
-};
+}
 
 const handleCopyFromLastYear = async () => {
-  const fromYear = selectedYear.value - 1;
-  const toYear = selectedYear.value;
+  const fromYear = selectedYear.value - 1
+  const toYear = selectedYear.value
   try {
     await ElMessageBox.confirm(
       `将复制 ${fromYear} 年的数据到 ${toYear} 年，当前 ${toYear} 年已有数据将被覆盖，是否继续？`,
-      "确认复制",
-      { confirmButtonText: "复制", cancelButtonText: "取消", type: "warning" },
-    );
+      '确认复制',
+      { confirmButtonText: '复制', cancelButtonText: '取消', type: 'warning' }
+    )
   } catch {
-    return;
+    return
   }
-  copying.value = true;
+  copying.value = true
   try {
-    await copyYearData(props.villageId, fromYear, toYear);
-    ElMessage.success(`已将 ${fromYear} 年数据复制到 ${toYear} 年`);
-    await loadYearlyData();
+    await copyYearData(props.villageId, fromYear, toYear)
+    ElMessage.success(`已将 ${fromYear} 年数据复制到 ${toYear} 年`)
+    await loadYearlyData()
   } catch (e) {
-    logger.error("复制上年数据失败:", e);
-    ElMessage.error("复制失败，请确认上年度已有数据后重试");
+    logger.error('复制上年数据失败:', e)
+    ElMessage.error('复制失败，请确认上年度已有数据后重试')
   } finally {
-    copying.value = false;
+    copying.value = false
   }
-};
+}
 
 const handleSave = async () => {
-  saving.value = true;
+  saving.value = true
   try {
     await Promise.all([
-      savePopulationData(
-        props.villageId,
-        selectedYear.value,
-        formData.population,
-      ),
+      savePopulationData(props.villageId, selectedYear.value, formData.population),
       saveIncomeData(props.villageId, selectedYear.value, formData.income),
-      saveForceInvestmentData(
-        props.villageId,
-        selectedYear.value,
-        formData.forceInvestment,
-      ),
+      saveForceInvestmentData(props.villageId, selectedYear.value, formData.forceInvestment),
       saveIndustryData(props.villageId, selectedYear.value, formData.industry),
-      saveInfrastructureData(
-        props.villageId,
-        selectedYear.value,
-        formData.infrastructure,
-      ),
-      savePartyBuildingData(
-        props.villageId,
-        selectedYear.value,
-        formData.partyBuilding,
-      ),
+      saveInfrastructureData(props.villageId, selectedYear.value, formData.infrastructure),
+      savePartyBuildingData(props.villageId, selectedYear.value, formData.partyBuilding),
       saveMedicalData(props.villageId, selectedYear.value, formData.medical),
-      saveConsumptionData(
-        props.villageId,
-        selectedYear.value,
-        formData.consumption,
-      ),
-      saveEmploymentData(
-        props.villageId,
-        selectedYear.value,
-        formData.employment,
-      ),
-      saveEducationData(
-        props.villageId,
-        selectedYear.value,
-        formData.education,
-      ),
-    ]);
-    ElMessage.success("保存成功");
-    emit("close");
+      saveConsumptionData(props.villageId, selectedYear.value, formData.consumption),
+      saveEmploymentData(props.villageId, selectedYear.value, formData.employment),
+      saveEducationData(props.villageId, selectedYear.value, formData.education),
+    ])
+    ElMessage.success('保存成功')
+    emit('close')
   } catch (error) {
-    logger.error("保存失败:", error);
-    ElMessage.error("保存失败，请重试");
+    logger.error('保存失败:', error)
+    ElMessage.error('保存失败，请重试')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
-};
+}
 
 const handleClose = () => {
-  emit("close");
-};
+  emit('close')
+}
 
 onMounted(() => {
-  loadYearlyData();
-});
+  loadYearlyData()
+})
 </script>
 
 <style scoped>

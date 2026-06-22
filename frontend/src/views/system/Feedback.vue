@@ -38,20 +38,15 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="content"
-          label="反馈内容"
-          min-width="300"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="content" label="反馈内容" min-width="300" show-overflow-tooltip />
         <el-table-column prop="username" label="提交用户" width="120">
           <template #default="{ row }">
-            {{ row.username || "匿名" }}
+            {{ row.username || '匿名' }}
           </template>
         </el-table-column>
         <el-table-column prop="contact" label="联系方式" width="150">
           <template #default="{ row }">
-            {{ row.contact || "-" }}
+            {{ row.contact || '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="提交时间" width="180" />
@@ -73,76 +68,72 @@
         <el-descriptions-item label="类型">{{
           typeNameMap[currentItem?.type]
         }}</el-descriptions-item>
-        <el-descriptions-item label="内容">{{
-          currentItem?.content
-        }}</el-descriptions-item>
+        <el-descriptions-item label="内容">{{ currentItem?.content }}</el-descriptions-item>
         <el-descriptions-item label="用户">{{
-          currentItem?.username || "匿名"
+          currentItem?.username || '匿名'
         }}</el-descriptions-item>
         <el-descriptions-item label="联系方式">{{
-          currentItem?.contact || "-"
+          currentItem?.contact || '-'
         }}</el-descriptions-item>
-        <el-descriptions-item label="时间">{{
-          currentItem?.created_at
-        }}</el-descriptions-item>
+        <el-descriptions-item label="时间">{{ currentItem?.created_at }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
-const loading = ref(false);
-const tableData = ref<any[]>([]);
-const detailVisible = ref(false);
-const currentItem = ref<any>(null);
+const loading = ref(false)
+const tableData = ref<any[]>([])
+const detailVisible = ref(false)
+const currentItem = ref<any>(null)
 
-const searchForm = reactive({ type: undefined as string | undefined });
-const pagination = reactive({ page: 1, pageSize: 20, total: 0 });
+const searchForm = reactive({ type: undefined as string | undefined })
+const pagination = reactive({ page: 1, pageSize: 20, total: 0 })
 
 const typeNameMap: Record<string, string> = {
-  bug: "Bug反馈",
-  suggestion: "功能建议",
-  other: "其他",
-};
-type TagType = "info" | "primary" | "success" | "warning" | "danger";
+  bug: 'Bug反馈',
+  suggestion: '功能建议',
+  other: '其他',
+}
+type TagType = 'info' | 'primary' | 'success' | 'warning' | 'danger'
 const typeTagMap: Record<string, TagType> = {
-  bug: "danger",
-  suggestion: "warning",
-  other: "info",
-};
+  bug: 'danger',
+  suggestion: 'warning',
+  other: 'info',
+}
 
 async function loadData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const { data } = await request.get("/feedback", {
+    const { data } = await request.get('/feedback', {
       params: {
         page: pagination.page,
         page_size: pagination.pageSize,
         type: searchForm.type,
       },
-    });
+    })
     if (data?.data) {
-      tableData.value = data.data.items || [];
-      pagination.total = data.data.total || 0;
+      tableData.value = data.data.items || []
+      pagination.total = data.data.total || 0
     }
   } catch (e: any) {
-    ElMessage.error("加载反馈列表失败");
+    ElMessage.error('加载反馈列表失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function handleReset() {
-  searchForm.type = undefined;
-  pagination.page = 1;
-  loadData();
+  searchForm.type = undefined
+  pagination.page = 1
+  loadData()
 }
 
-onMounted(() => loadData());
+onMounted(() => loadData())
 </script>
 
 <style scoped>

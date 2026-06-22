@@ -1,18 +1,9 @@
 <template>
   <div class="section-data-form">
     <!-- 年份选择 -->
-    <el-form
-      ref="formRef"
-      :model="formData"
-      label-width="140px"
-      label-position="left"
-    >
+    <el-form ref="formRef" :model="formData" label-width="140px" label-position="left">
       <el-form-item label="数据年份">
-        <el-select
-          v-model="selectedYear"
-          style="width: 200px"
-          @change="handleYearChange"
-        >
+        <el-select v-model="selectedYear" style="width: 200px" @change="handleYearChange">
           <el-option
             v-for="year in availableYears"
             :key="year"
@@ -28,69 +19,41 @@
         <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="总户数">
-              <el-input-number
-                v-model="formData.totalHouseholds"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.totalHouseholds" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="总人数">
-              <el-input-number
-                v-model="formData.totalPopulation"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.totalPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="常住人口数">
-              <el-input-number
-                v-model="formData.residentPopulation"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.residentPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="劳动力(人)">
-              <el-input-number
-                v-model="formData.laborForce"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.laborForce" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="外出务工(人)">
-              <el-input-number
-                v-model="formData.migrantWorkers"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.migrantWorkers" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="脱贫人口(人)">
-              <el-input-number
-                v-model="formData.povertyPopulation"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.povertyPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="脱贫户数(户)">
-              <el-input-number
-                v-model="formData.povertyHouseholds"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.povertyHouseholds" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -221,20 +184,12 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="军以上领导到村(人次)">
-              <el-input-number
-                v-model="formData.seniorLeaderVisits"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.seniorLeaderVisits" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="帮扶单位官兵到村(人次)">
-              <el-input-number
-                v-model="formData.unitSoldierVisits"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.unitSoldierVisits" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -268,40 +223,24 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="种植养殖(个)">
-              <el-input-number
-                v-model="formData.plantingBreeding"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.plantingBreeding" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="帮扶车间(个)">
-              <el-input-number
-                v-model="formData.workshop"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.workshop" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="乡村旅游(个)">
-              <el-input-number
-                v-model="formData.ruralTourism"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.ruralTourism" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="其他(个)">
-              <el-input-number
-                v-model="formData.otherIndustry"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.otherIndustry" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -345,42 +284,26 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="住房改造(户)">
-              <el-input-number
-                v-model="formData.housingRenovation"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.housingRenovation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="水利设施(个)">
-              <el-input-number
-                v-model="formData.waterFacilities"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.waterFacilities" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="文化广场(个)">
-              <el-input-number
-                v-model="formData.culturalPlaza"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.culturalPlaza" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="书屋网吧(个)">
-              <el-input-number
-                v-model="formData.libraryCafe"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.libraryCafe" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -414,31 +337,19 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="结对帮扶党支部(个)">
-              <el-input-number
-                v-model="formData.pairedBranches"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.pairedBranches" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="党建指导员(人)">
-              <el-input-number
-                v-model="formData.partyInstructors"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.partyInstructors" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="联建共促活动(次)">
-              <el-input-number
-                v-model="formData.jointActivities"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.jointActivities" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -481,20 +392,12 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="帮建卫生院室(个)">
-              <el-input-number
-                v-model="formData.clinicsBuilt"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.clinicsBuilt" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="巡诊群众(人次)">
-              <el-input-number
-                v-model="formData.patientsServed"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.patientsServed" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -528,11 +431,7 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="营区销售专柜(个)">
-              <el-input-number
-                v-model="formData.salesCounters"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.salesCounters" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -553,20 +452,12 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="聘用脱贫群众(人)">
-              <el-input-number
-                v-model="formData.hiredPopulation"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.hiredPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="技能培训(人次)">
-              <el-input-number
-                v-model="formData.trainedPopulation"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.trainedPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -601,11 +492,7 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="捐赠帮扶村学校(所)">
-              <el-input-number
-                v-model="formData.donatedSchools"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.donatedSchools" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -630,11 +517,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="资助困难学生(人)">
-              <el-input-number
-                v-model="formData.aidedStudents"
-                :min="0"
-                style="width: 100%"
-              />
+              <el-input-number v-model="formData.aidedStudents" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -673,10 +556,7 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="集体收入描述">
-              <el-input
-                v-model="formData.collectiveIncomeDesc"
-                placeholder="请输入收入情况描述"
-              />
+              <el-input v-model="formData.collectiveIncomeDesc" placeholder="请输入收入情况描述" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -692,16 +572,9 @@
         </el-row>
         <el-divider content-position="left">村委会成员</el-divider>
         <div style="margin-bottom: 12px">
-          <el-button type="primary" size="small" @click="addCommitteeMember"
-            >新增成员</el-button
-          >
+          <el-button type="primary" size="small" @click="addCommitteeMember">新增成员</el-button>
         </div>
-        <el-table
-          :data="committeeMembers"
-          border
-          size="small"
-          style="margin-bottom: 16px"
-        >
+        <el-table :data="committeeMembers" border size="small" style="margin-bottom: 16px">
           <el-table-column label="姓名" min-width="100">
             <template #default="{ row }">
               <el-input v-model="row.name" size="small" placeholder="姓名" />
@@ -709,11 +582,7 @@
           </el-table-column>
           <el-table-column label="职务" min-width="100">
             <template #default="{ row }">
-              <el-input
-                v-model="row.position"
-                size="small"
-                placeholder="职务"
-              />
+              <el-input v-model="row.position" size="small" placeholder="职务" />
             </template>
           </el-table-column>
           <el-table-column label="联系方式" min-width="120">
@@ -733,11 +602,7 @@
           </el-table-column>
           <el-table-column label="操作" width="70" align="center">
             <template #default="{ $index }">
-              <el-button
-                type="danger"
-                text
-                size="small"
-                @click="committeeMembers.splice($index, 1)"
+              <el-button type="danger" text size="small" @click="committeeMembers.splice($index, 1)"
                 >删除</el-button
               >
             </template>
@@ -773,9 +638,7 @@
           <div v-for="att in attachments" :key="att.id" class="attachment-item">
             <div class="attachment-info">
               <el-icon class="file-icon"><Document /></el-icon>
-              <span class="file-name" :title="att.fileName">{{
-                att.fileName
-              }}</span>
+              <span class="file-name" :title="att.fileName">{{ att.fileName }}</span>
               <span class="file-size">{{ formatFileSize(att.fileSize) }}</span>
             </div>
             <div class="attachment-actions">
@@ -788,20 +651,10 @@
               >
                 预览
               </el-button>
-              <el-button
-                text
-                type="primary"
-                size="small"
-                @click="handleDownload(att)"
-              >
+              <el-button text type="primary" size="small" @click="handleDownload(att)">
                 下载
               </el-button>
-              <el-button
-                text
-                type="danger"
-                size="small"
-                @click="handleDeleteAttachment(att)"
-              >
+              <el-button text type="danger" size="small" @click="handleDeleteAttachment(att)">
                 删除
               </el-button>
             </div>
@@ -812,9 +665,7 @@
 
       <!-- 操作按钮 -->
       <el-form-item style="margin-top: 30px">
-        <el-button type="primary" :loading="saving" @click="handleSave"
-          >保存</el-button
-        >
+        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
         <el-button @click="handleClose">取消</el-button>
       </el-form-item>
     </el-form>
@@ -828,17 +679,8 @@
       append-to-body
     >
       <div class="preview-container">
-        <img
-          v-if="previewType === 'image'"
-          :src="previewUrl"
-          alt="预览"
-          class="preview-image"
-        />
-        <iframe
-          v-else-if="previewType === 'pdf'"
-          :src="previewUrl"
-          class="preview-pdf"
-        />
+        <img v-if="previewType === 'image'" :src="previewUrl" alt="预览" class="preview-image" />
+        <iframe v-else-if="previewType === 'pdf'" :src="previewUrl" class="preview-pdf" />
         <div v-else class="preview-unsupported">
           <el-icon :size="48" color="#909399"><Document /></el-icon>
           <p>该文件类型不支持在线预览，请下载后查看</p>
@@ -853,16 +695,12 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Upload, Document } from "@element-plus/icons-vue";
-import type {
-  UploadFile,
-  UploadRequestOptions,
-  UploadRawFile,
-} from "element-plus";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Upload, Document } from '@element-plus/icons-vue'
+import type { UploadFile, UploadRequestOptions, UploadRawFile } from 'element-plus'
 import {
   getYearlyData,
   savePopulationData,
@@ -879,77 +717,77 @@ import {
   uploadSectionAttachment,
   getSectionAttachments,
   deleteSectionAttachment,
-} from "@/api/supportedVillage";
-import type { SectionAttachment } from "@/api/supportedVillage";
+} from '@/api/supportedVillage'
+import type { SectionAttachment } from '@/api/supportedVillage'
 
 const props = defineProps<{
-  villageId: number;
-  villageName: string;
-  sectionKey: string;
-  initialYear?: number;
-}>();
+  villageId: number
+  villageName: string
+  sectionKey: string
+  initialYear?: number
+}>()
 
 const emit = defineEmits<{
-  close: [];
-  saved: [];
-}>();
+  close: []
+  saved: []
+}>()
 
-const formRef = ref();
-defineExpose({ formRef });
-const saving = ref(false);
-const selectedYear = ref(props.initialYear || new Date().getFullYear());
+const formRef = ref()
+defineExpose({ formRef })
+const saving = ref(false)
+const selectedYear = ref(props.initialYear || new Date().getFullYear())
 const availableYears = (() => {
-  const years: number[] = [];
+  const years: number[] = []
   for (let y = 2017; y <= new Date().getFullYear() + 1; y++) {
-    years.push(y);
+    years.push(y)
   }
-  return years.reverse();
-})();
+  return years.reverse()
+})()
 
 // 动态表单数据 — 根据 sectionKey 使用对应字段
-const formData = reactive<Record<string, any>>({});
+const formData = reactive<Record<string, any>>({})
 
 // 附件相关
-const attachments = ref<SectionAttachment[]>([]);
-const uploadFileList = ref<UploadFile[]>([]);
+const attachments = ref<SectionAttachment[]>([])
+const uploadFileList = ref<UploadFile[]>([])
 
 // 预览相关
-const previewVisible = ref(false);
-const previewUrl = ref("");
-const previewTitle = ref("");
-const previewType = ref<"image" | "pdf" | "other">("other");
-const previewAttachment = ref<SectionAttachment | null>(null);
+const previewVisible = ref(false)
+const previewUrl = ref('')
+const previewTitle = ref('')
+const previewType = ref<'image' | 'pdf' | 'other'>('other')
+const previewAttachment = ref<SectionAttachment | null>(null)
 
 // sectionKey 与后端数据字段的映射
 // 村委会成员列表（committee 板块专用）
 const committeeMembers = ref<
   Array<{
-    name: string;
-    position: string;
-    phone: string;
-    isVeteran: boolean;
-    remark: string;
+    name: string
+    position: string
+    phone: string
+    isVeteran: boolean
+    remark: string
   }>
->([]);
+>([])
 
 function addCommitteeMember() {
   committeeMembers.value.push({
-    name: "",
-    position: "",
-    phone: "",
+    name: '',
+    position: '',
+    phone: '',
     isVeteran: false,
-    remark: "",
-  });
+    remark: '',
+  })
 }
 
 // 仅非对称映射：内部 prop key (snake_case) → 后端 API 响应 key (kebab-case)
 // 单单词 key（population、income 等）各约定间不变，无需显式映射
 const _SECTION_KEY_OVERRIDE: Record<string, string> = {
-  force_investment: "force-investment",
-  party_building: "party-building",
-};
+  force_investment: 'force-investment',
+  party_building: 'party-building',
+}
 function resolveApiKey(sectionKey: string): string {
-  return _SECTION_KEY_OVERRIDE[sectionKey] ?? sectionKey;
+  return _SECTION_KEY_OVERRIDE[sectionKey] ?? sectionKey
 }
 
 // 各板块默认数据
@@ -1032,44 +870,44 @@ function getDefaultFormData(key: string): Record<string, any> {
       volunteerCounselors: 0,
     },
     committee: {
-      overview: "",
-      specialIndustry: "",
-      collectiveIncomeDesc: "",
+      overview: '',
+      specialIndustry: '',
+      collectiveIncomeDesc: '',
       collectiveIncomeAmount: 0,
     },
-  };
-  return { ...(defaults[key] || {}) };
+  }
+  return { ...(defaults[key] || {}) }
 }
 
 function resetFormData() {
-  const defaults = getDefaultFormData(props.sectionKey);
-  Object.keys(formData).forEach((k) => delete formData[k]);
-  Object.assign(formData, defaults);
+  const defaults = getDefaultFormData(props.sectionKey)
+  Object.keys(formData).forEach((k) => delete formData[k])
+  Object.assign(formData, defaults)
 }
 
 // 加载年度数据
 async function loadSectionData() {
-  resetFormData();
-  committeeMembers.value = [];
+  resetFormData()
+  committeeMembers.value = []
   try {
-    const data = await getYearlyData(props.villageId, selectedYear.value);
-    const apiKey = resolveApiKey(props.sectionKey);
+    const data = await getYearlyData(props.villageId, selectedYear.value)
+    const apiKey = resolveApiKey(props.sectionKey)
     if (apiKey && (data as any)[apiKey]) {
-      const sectionData = (data as any)[apiKey];
+      const sectionData = (data as any)[apiKey]
       Object.keys(formData).forEach((k) => {
         if (sectionData[k] !== undefined && sectionData[k] !== null) {
-          formData[k] = sectionData[k];
+          formData[k] = sectionData[k]
         }
-      });
+      })
       // 村委会板块加载成员列表
-      if (props.sectionKey === "committee" && sectionData.members) {
+      if (props.sectionKey === 'committee' && sectionData.members) {
         committeeMembers.value = sectionData.members.map((m: any) => ({
-          name: m.name || "",
-          position: m.position || "",
-          phone: m.phone || "",
+          name: m.name || '',
+          position: m.position || '',
+          phone: m.phone || '',
           isVeteran: Boolean(m.isVeteran),
-          remark: m.remark || "",
-        }));
+          remark: m.remark || '',
+        }))
       }
     }
   } catch {
@@ -1083,23 +921,20 @@ async function loadAttachments() {
     attachments.value = await getSectionAttachments(
       props.villageId,
       props.sectionKey,
-      selectedYear.value,
-    );
+      selectedYear.value
+    )
   } catch {
-    attachments.value = [];
+    attachments.value = []
   }
 }
 
 function handleYearChange() {
-  loadSectionData();
-  loadAttachments();
+  loadSectionData()
+  loadAttachments()
 }
 
 // 保存数据 — 只保存当前板块
-const saveFnMap: Record<
-  string,
-  (villageId: number, year: number, data: any) => Promise<any>
-> = {
+const saveFnMap: Record<string, (villageId: number, year: number, data: any) => Promise<any>> = {
   population: savePopulationData,
   income: saveIncomeData,
   force_investment: saveForceInvestmentData,
@@ -1116,58 +951,54 @@ const saveFnMap: Record<
       year,
       members: committeeMembers.value,
     }),
-};
+}
 
 async function handleSave() {
-  const saveFn = saveFnMap[props.sectionKey];
+  const saveFn = saveFnMap[props.sectionKey]
   if (!saveFn) {
-    ElMessage.error("未知板块类型");
-    return;
+    ElMessage.error('未知板块类型')
+    return
   }
-  saving.value = true;
+  saving.value = true
   try {
-    await saveFn(props.villageId, selectedYear.value, { ...formData });
-    ElMessage.success("保存成功");
-    emit("saved");
-    emit("close");
+    await saveFn(props.villageId, selectedYear.value, { ...formData })
+    ElMessage.success('保存成功')
+    emit('saved')
+    emit('close')
   } catch (error: any) {
-    logger.error("保存失败:", error);
-    ElMessage.error(error?.message || "保存失败，请重试");
+    logger.error('保存失败:', error)
+    ElMessage.error(error?.message || '保存失败，请重试')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 
 function handleClose() {
-  emit("close");
+  emit('close')
 }
 
 // ==================== 文件上传相关 ====================
 
 function handleBeforeUpload(file: UploadRawFile) {
-  const maxSize = 20 * 1024 * 1024; // 20MB
+  const maxSize = 20 * 1024 * 1024 // 20MB
   if (file.size > maxSize) {
-    ElMessage.error("文件大小不能超过20MB");
-    return false;
+    ElMessage.error('文件大小不能超过20MB')
+    return false
   }
-  return true;
+  return true
 }
 
 function handleExceed() {
-  ElMessage.warning("最多上传10个文件");
+  ElMessage.warning('最多上传10个文件')
 }
 
 async function handleCustomUpload(options: UploadRequestOptions) {
   try {
-    const att = await uploadSectionAttachment(
-      props.villageId,
-      props.sectionKey,
-      options.file,
-    );
-    attachments.value.push(att);
-    ElMessage.success("上传成功");
+    const att = await uploadSectionAttachment(props.villageId, props.sectionKey, options.file)
+    attachments.value.push(att)
+    ElMessage.success('上传成功')
   } catch (error: any) {
-    ElMessage.error(error?.message || "上传失败");
+    ElMessage.error(error?.message || '上传失败')
   }
 }
 
@@ -1177,78 +1008,72 @@ function handleUploadRemove(_file: UploadFile) {
 
 async function handleDeleteAttachment(att: SectionAttachment) {
   try {
-    await ElMessageBox.confirm(
-      `确定删除文件 "${att.fileName}" 吗？`,
-      "删除确认",
-    );
+    await ElMessageBox.confirm(`确定删除文件 "${att.fileName}" 吗？`, '删除确认')
   } catch {
-    return;
+    return
   }
   try {
-    await deleteSectionAttachment(props.villageId, att.id);
-    attachments.value = attachments.value.filter((a) => a.id !== att.id);
-    ElMessage.success("删除成功");
+    await deleteSectionAttachment(props.villageId, att.id)
+    attachments.value = attachments.value.filter((a) => a.id !== att.id)
+    ElMessage.success('删除成功')
   } catch (error: any) {
-    ElMessage.error(error?.message || "删除失败");
+    ElMessage.error(error?.message || '删除失败')
   }
 }
 
 // ==================== 文件预览相关 ====================
 
 function isPreviewable(fileType: string): boolean {
-  const type = fileType.toLowerCase();
+  const type = fileType.toLowerCase()
   return (
-    type.startsWith("image/") ||
-    type === "application/pdf" ||
+    type.startsWith('image/') ||
+    type === 'application/pdf' ||
     /\.(jpg|jpeg|png|gif|bmp|webp|pdf)$/i.test(type)
-  );
+  )
 }
 
-function getPreviewType(fileType: string): "image" | "pdf" | "other" {
-  const type = fileType.toLowerCase();
-  if (
-    type.startsWith("image/") ||
-    /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(type)
-  ) {
-    return "image";
+function getPreviewType(fileType: string): 'image' | 'pdf' | 'other' {
+  const type = fileType.toLowerCase()
+  if (type.startsWith('image/') || /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(type)) {
+    return 'image'
   }
-  if (type === "application/pdf" || type.endsWith(".pdf")) {
-    return "pdf";
+  if (type === 'application/pdf' || type.endsWith('.pdf')) {
+    return 'pdf'
   }
-  return "other";
+  return 'other'
 }
 
 function handlePreview(att: SectionAttachment) {
-  previewAttachment.value = att;
-  previewTitle.value = att.fileName;
-  previewUrl.value = att.fileUrl;
-  previewType.value = getPreviewType(att.fileType);
-  previewVisible.value = true;
+  previewAttachment.value = att
+  previewTitle.value = att.fileName
+  previewUrl.value = att.fileUrl
+  previewType.value = getPreviewType(att.fileType)
+  previewVisible.value = true
 }
 
 function handleDownload(att: SectionAttachment) {
-  const link = document.createElement("a");
-  link.href = att.fileUrl;
-  link.setAttribute("download", att.fileName);
-  link.target = "_blank";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const link = document.createElement('a')
+  link.href = att.fileUrl
+  link.setAttribute('download', att.fileName)
+  link.target = '_blank'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
 // ==================== 初始化 ====================
 
 onMounted(() => {
-  resetFormData();
-  loadSectionData();
-  loadAttachments();
-});
+  resetFormData()
+  loadSectionData()
+  loadAttachments()
+})
 </script>
 
 <style scoped>

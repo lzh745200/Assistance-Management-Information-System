@@ -7,11 +7,7 @@
         <p class="page-desc">帮扶村综合数据分析与可视化</p>
       </div>
       <div class="header-actions">
-        <el-select
-          v-model="selectedYear"
-          style="width: 120px"
-          @change="loadData"
-        >
+        <el-select v-model="selectedYear" style="width: 120px" @change="loadData">
           <el-option
             v-for="year in availableYears"
             :key="year"
@@ -187,11 +183,7 @@
       <el-col :span="24">
         <div class="chart-card">
           <h3 class="chart-title">年度趋势对比</h3>
-          <div
-            ref="trendChartRef"
-            class="chart-container"
-            style="height: 350px"
-          ></div>
+          <div ref="trendChartRef" class="chart-container" style="height: 350px"></div>
         </div>
       </el-col>
     </el-row>
@@ -207,58 +199,35 @@
       <el-table :data="drillDownData.items" stripe border max-height="300">
         <el-table-column prop="name" label="名称" />
         <el-table-column prop="value" label="数量" width="100" align="right" />
-        <el-table-column
-          prop="totalPopulation"
-          label="人口"
-          width="100"
-          align="right"
-        />
+        <el-table-column prop="totalPopulation" label="人口" width="100" align="right" />
       </el-table>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from "vue";
-import {
-  Download,
-  OfficeBuilding,
-  User,
-  Money,
-  TrendCharts,
-  Close,
-} from "@element-plus/icons-vue";
-import echarts from "@/utils/echarts";
-import { getCurrentTheme } from "@/utils/echarts-theme";
-import SystemStatus from "@/components/business/SystemStatus.vue";
-import {
-  getSummaryStatistics,
-  getFilterOptions,
-  drillDown,
-} from "@/api/analytics";
-import type {
-  SummaryStatistics,
-  FilterOptions,
-  DrillDownResult,
-} from "@/types/analytics";
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { Download, OfficeBuilding, User, Money, TrendCharts, Close } from '@element-plus/icons-vue'
+import echarts from '@/utils/echarts'
+import { getCurrentTheme } from '@/utils/echarts-theme'
+import SystemStatus from '@/components/business/SystemStatus.vue'
+import { getSummaryStatistics, getFilterOptions, drillDown } from '@/api/analytics'
+import type { SummaryStatistics, FilterOptions, DrillDownResult } from '@/types/analytics'
 
 // =========================================================================
 // 年份与筛选
 // =========================================================================
 
-const currentYear = new Date().getFullYear();
-const availableYears = Array.from(
-  { length: currentYear - 2014 },
-  (_, i) => currentYear - i,
-);
-const selectedYear = ref(currentYear);
+const currentYear = new Date().getFullYear()
+const availableYears = Array.from({ length: currentYear - 2014 }, (_, i) => currentYear - i)
+const selectedYear = ref(currentYear)
 
 const filters = reactive({
-  department: "",
-  regionType: "",
-});
+  department: '',
+  regionType: '',
+})
 
 const filterOptions = ref<FilterOptions>({
   departments: [],
@@ -266,7 +235,7 @@ const filterOptions = ref<FilterOptions>({
   regionScopes: [],
   isRevitalizationTier: undefined,
   years: [],
-});
+})
 
 // =========================================================================
 // 统计数据
@@ -290,92 +259,92 @@ const statistics = ref<SummaryStatistics>({
     education: 0,
     educationAidedStudents: 0,
   },
-});
+})
 
-const loading = ref(false);
-const drillDownData = ref<DrillDownResult | null>(null);
-const drillDownTitle = ref("");
+const loading = ref(false)
+const drillDownData = ref<DrillDownResult | null>(null)
+const drillDownTitle = ref('')
 
 const totalInvestment = computed(() => {
-  const inv = statistics.value.investment;
-  return (inv.industry || 0) + (inv.infrastructure || 0) + (inv.education || 0);
-});
+  const inv = statistics.value.investment
+  return (inv.industry || 0) + (inv.infrastructure || 0) + (inv.education || 0)
+})
 
 // =========================================================================
 // KPI 环比趋势（基于可用年份模拟，实际项目中应从 API 获取）
 // =========================================================================
 
 interface KpiTrends {
-  villages: number;
-  population: number;
-  income: number;
-  investment: number;
+  villages: number
+  population: number
+  income: number
+  investment: number
 }
 
 const kpiTrends = computed<KpiTrends>(() => {
   // 生成稳定的伪随机趋势值（基于当前选中年份）
-  const seed = selectedYear.value * 7 + 13;
+  const seed = selectedYear.value * 7 + 13
   const pseudoRandom = (offset: number) =>
-    Math.abs(Math.round(((seed * (offset + 1) * 17) % 180) / 10 + 2));
+    Math.abs(Math.round(((seed * (offset + 1) * 17) % 180) / 10 + 2))
 
   return {
     villages: pseudoRandom(1),
     population: pseudoRandom(2),
     income: pseudoRandom(3),
     investment: pseudoRandom(4),
-  };
-});
+  }
+})
 
 // =========================================================================
 // Sparkline 微型趋势图数据（模拟历史数据）
 // =========================================================================
 
 const generateSparkData = (baseValue: number, points: number): number[] => {
-  const data: number[] = [];
-  if (baseValue <= 0) return Array(points).fill(0);
-  let val = Math.max(baseValue * 0.6, 1);
+  const data: number[] = []
+  if (baseValue <= 0) return Array(points).fill(0)
+  let val = Math.max(baseValue * 0.6, 1)
   for (let i = 0; i < points; i++) {
-    const trend = (baseValue - val) / (points - i);
-    val = Math.max(val * 0.85, val + trend);
-    data.push(Math.round(val * 100) / 100);
+    const trend = (baseValue - val) / (points - i)
+    val = Math.max(val * 0.85, val + trend)
+    data.push(Math.round(val * 100) / 100)
   }
   // 确保最后一个点接近当前值
-  data[data.length - 1] = baseValue;
-  return data;
-};
+  data[data.length - 1] = baseValue
+  return data
+}
 
 // =========================================================================
 // 图表引用
 // =========================================================================
 
-const regionChartRef = ref<HTMLElement>();
-const investmentChartRef = ref<HTMLElement>();
-const trendChartRef = ref<HTMLElement>();
+const regionChartRef = ref<HTMLElement>()
+const investmentChartRef = ref<HTMLElement>()
+const trendChartRef = ref<HTMLElement>()
 
 // Sparkline 容器引用
-const sparkVillagesRef = ref<HTMLElement>();
-const sparkPopulationRef = ref<HTMLElement>();
-const sparkIncomeRef = ref<HTMLElement>();
-const sparkInvestmentRef = ref<HTMLElement>();
+const sparkVillagesRef = ref<HTMLElement>()
+const sparkPopulationRef = ref<HTMLElement>()
+const sparkIncomeRef = ref<HTMLElement>()
+const sparkInvestmentRef = ref<HTMLElement>()
 
-let regionChart: echarts.ECharts | null = null;
-let investmentChart: echarts.ECharts | null = null;
-let trendChart: echarts.ECharts | null = null;
+let regionChart: echarts.ECharts | null = null
+let investmentChart: echarts.ECharts | null = null
+let trendChart: echarts.ECharts | null = null
 
 // Sparkline 实例
-let sparkVillagesChart: echarts.ECharts | null = null;
-let sparkPopulationChart: echarts.ECharts | null = null;
-let sparkIncomeChart: echarts.ECharts | null = null;
-let sparkInvestmentChart: echarts.ECharts | null = null;
+let sparkVillagesChart: echarts.ECharts | null = null
+let sparkPopulationChart: echarts.ECharts | null = null
+let sparkIncomeChart: echarts.ECharts | null = null
+let sparkInvestmentChart: echarts.ECharts | null = null
 
 // =========================================================================
 // 工具函数
 // =========================================================================
 
 const formatNumber = (num: number) => {
-  if (num >= 10000) return (num / 10000).toFixed(1) + "万";
-  return num.toLocaleString();
-};
+  if (num >= 10000) return (num / 10000).toFixed(1) + '万'
+  return num.toLocaleString()
+}
 
 // =========================================================================
 // Sparkline 配置生成
@@ -383,40 +352,37 @@ const formatNumber = (num: number) => {
 
 interface SparkConfig {
   /** 线条/面积渐变顶部颜色（hex 格式） */
-  color: string;
+  color: string
   /** 面积渐变底部颜色（rgba 格式，高透明度） */
-  colorStop: string;
+  colorStop: string
   /** 预计算的 rgba 中间色（用于渐变顶部，约 18% 不透明度） */
-  colorAlpha: string;
+  colorAlpha: string
 }
 
 const SPARK_CONFIGS: Record<string, SparkConfig> = {
   villages: {
-    color: "#1e4d8c",
-    colorAlpha: "rgba(30, 77, 140, 0.18)",
-    colorStop: "rgba(30, 77, 140, 0.02)",
+    color: '#1e4d8c',
+    colorAlpha: 'rgba(30, 77, 140, 0.18)',
+    colorStop: 'rgba(30, 77, 140, 0.02)',
   },
   population: {
-    color: "#2d6a4f",
-    colorAlpha: "rgba(45, 106, 79, 0.18)",
-    colorStop: "rgba(45, 106, 79, 0.02)",
+    color: '#2d6a4f',
+    colorAlpha: 'rgba(45, 106, 79, 0.18)',
+    colorStop: 'rgba(45, 106, 79, 0.02)',
   },
   income: {
-    color: "#f59e0b",
-    colorAlpha: "rgba(245, 158, 11, 0.18)",
-    colorStop: "rgba(245, 158, 11, 0.02)",
+    color: '#f59e0b',
+    colorAlpha: 'rgba(245, 158, 11, 0.18)',
+    colorStop: 'rgba(245, 158, 11, 0.02)',
   },
   investment: {
-    color: "#ef4444",
-    colorAlpha: "rgba(239, 68, 68, 0.18)",
-    colorStop: "rgba(239, 68, 68, 0.02)",
+    color: '#ef4444',
+    colorAlpha: 'rgba(239, 68, 68, 0.18)',
+    colorStop: 'rgba(239, 68, 68, 0.02)',
   },
-};
+}
 
-const createSparkOption = (
-  data: number[],
-  config: SparkConfig,
-): echarts.EChartsCoreOption => ({
+const createSparkOption = (data: number[], config: SparkConfig): echarts.EChartsCoreOption => ({
   grid: {
     left: 0,
     right: 0,
@@ -424,22 +390,22 @@ const createSparkOption = (
     bottom: 0,
   },
   xAxis: {
-    type: "category",
+    type: 'category',
     data: data.map((_, i) => i),
     show: false,
   },
   yAxis: {
-    type: "value",
+    type: 'value',
     show: false,
     min: (val: { min: number; max: number }) => Math.floor(val.min * 0.92),
     max: (val: { min: number; max: number }) => Math.ceil(val.max * 1.06),
   },
   series: [
     {
-      type: "line",
+      type: 'line',
       data,
       smooth: true,
-      symbol: "none",
+      symbol: 'none',
       lineStyle: {
         width: 2,
         color: config.color,
@@ -448,18 +414,18 @@ const createSparkOption = (
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: config.colorAlpha },
           { offset: 0.5, color: config.colorStop },
-          { offset: 1, color: "rgba(255,255,255,0)" },
+          { offset: 1, color: 'rgba(255,255,255,0)' },
         ]),
       },
       animation: true,
       animationDuration: 1200,
-      animationEasing: "cubicOut",
+      animationEasing: 'cubicOut',
     },
   ],
   tooltip: {
     show: false,
   },
-});
+})
 
 // =========================================================================
 // 主图表配置生成（升级版——渐变面积 + 平滑曲线）
@@ -468,43 +434,38 @@ const createSparkOption = (
 const updateCharts = () => {
   // ── 地域分布饼图（升级版） ──
   if (regionChart) {
-    const v = statistics.value.villages;
+    const v = statistics.value.villages
     regionChart.setOption({
-      color: ["#1e4d8c", "#2d6a4f", "#f59e0b", "#ef4444", "#94a3b8"],
+      color: ['#1e4d8c', '#2d6a4f', '#f59e0b', '#ef4444', '#94a3b8'],
       tooltip: {
-        trigger: "item",
-        backgroundColor: "rgba(255,255,255,0.96)",
-        borderColor: "#e2e8f0",
+        trigger: 'item',
+        backgroundColor: 'rgba(255,255,255,0.96)',
+        borderColor: '#e2e8f0',
         borderWidth: 1,
         borderRadius: 8,
         padding: [10, 14],
         textStyle: {
-          color: "#1e293b",
+          color: '#1e293b',
           fontSize: 13,
         },
-        formatter: (params: {
-          marker: string;
-          name: string;
-          value: number;
-          percent: number;
-        }) =>
+        formatter: (params: { marker: string; name: string; value: number; percent: number }) =>
           `${params.marker} ${params.name}<br/>
            <span style="font-family:'DIN Alternate',monospace;font-size:18px;font-weight:700">${params.value}</span>
            <span style="color:#94a3b8"> (${params.percent}%)</span>`,
       },
       legend: {
         bottom: 0,
-        textStyle: { color: "#64748b", fontSize: 12 },
+        textStyle: { color: '#64748b', fontSize: 12 },
       },
       series: [
         {
-          type: "pie",
-          radius: ["48%", "75%"],
-          center: ["50%", "46%"],
+          type: 'pie',
+          radius: ['48%', '75%'],
+          center: ['50%', '46%'],
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 4,
-            borderColor: "#fff",
+            borderColor: '#fff',
             borderWidth: 3,
           },
           label: { show: false },
@@ -512,68 +473,60 @@ const updateCharts = () => {
             label: {
               show: true,
               fontSize: 16,
-              fontWeight: "bold",
+              fontWeight: 'bold',
             },
             itemStyle: {
               shadowBlur: 20,
               shadowOffsetX: 0,
-              shadowColor: "rgba(0, 0, 0, 0.15)",
+              shadowColor: 'rgba(0, 0, 0, 0.15)',
               scaleSize: 8,
             },
           },
           data: [
-            { value: v.threeRegionsCount, name: "三区三州" },
-            { value: v.keyCountyCount, name: "重点帮扶县" },
-            { value: v.provincialDemoCount, name: "省级示范" },
-            { value: v.crossProvinceCount, name: "跨省帮扶" },
+            { value: v.threeRegionsCount, name: '三区三州' },
+            { value: v.keyCountyCount, name: '重点帮扶县' },
+            { value: v.provincialDemoCount, name: '省级示范' },
+            { value: v.crossProvinceCount, name: '跨省帮扶' },
             {
-              value: Math.max(
-                0,
-                v.totalVillages - v.threeRegionsCount - v.keyCountyCount,
-              ),
-              name: "其他",
+              value: Math.max(0, v.totalVillages - v.threeRegionsCount - v.keyCountyCount),
+              name: '其他',
             },
           ],
         },
       ],
-    });
+    })
   }
 
   // ── 投入构成饼图（升级版） ──
   if (investmentChart) {
-    const inv = statistics.value.investment;
+    const inv = statistics.value.investment
     investmentChart.setOption({
-      color: ["#2d6a4f", "#1e4d8c", "#f59e0b"],
+      color: ['#2d6a4f', '#1e4d8c', '#f59e0b'],
       tooltip: {
-        trigger: "item",
-        backgroundColor: "rgba(255,255,255,0.96)",
-        borderColor: "#e2e8f0",
+        trigger: 'item',
+        backgroundColor: 'rgba(255,255,255,0.96)',
+        borderColor: '#e2e8f0',
         borderWidth: 1,
         borderRadius: 8,
         padding: [10, 14],
-        textStyle: { color: "#1e293b", fontSize: 13 },
-        formatter: (params: {
-          marker: string;
-          name: string;
-          value: number;
-          percent: number;
-        }) =>
+        textStyle: { color: '#1e293b', fontSize: 13 },
+        formatter: (params: { marker: string; name: string; value: number; percent: number }) =>
           `${params.marker} ${params.name}<br/>
            <span style="font-family:'DIN Alternate',monospace;font-size:18px;font-weight:700">${params.value}万</span>
            <span style="color:#94a3b8"> (${params.percent}%)</span>`,
       },
       legend: {
         bottom: 0,
-        textStyle: { color: "#64748b", fontSize: 12 },
+        textStyle: { color: '#64748b', fontSize: 12 },
       },
       series: [
         {
-          type: "pie",
-          radius: "62%",
-          center: ["50%", "46%"],
+          type: 'pie',
+          radius: '62%',
+          center: ['50%', '46%'],
           itemStyle: {
             borderRadius: 4,
-            borderColor: "#fff",
+            borderColor: '#fff',
             borderWidth: 3,
           },
           label: { show: false },
@@ -581,59 +534,54 @@ const updateCharts = () => {
             label: {
               show: true,
               fontSize: 16,
-              fontWeight: "bold",
+              fontWeight: 'bold',
             },
             itemStyle: {
               shadowBlur: 20,
               shadowOffsetX: 0,
-              shadowColor: "rgba(0, 0, 0, 0.15)",
+              shadowColor: 'rgba(0, 0, 0, 0.15)',
               scaleSize: 8,
             },
           },
           data: [
-            { value: inv.industry, name: "产业帮扶" },
-            { value: inv.infrastructure, name: "基础设施" },
-            { value: inv.education, name: "教育帮扶" },
+            { value: inv.industry, name: '产业帮扶' },
+            { value: inv.infrastructure, name: '基础设施' },
+            { value: inv.education, name: '教育帮扶' },
           ],
         },
       ],
-    });
+    })
   }
 
   // ── 年度趋势对比（升级为渐变面积图） ──
   if (trendChart) {
-    const years = availableYears.slice().reverse();
-    const baseVillages = statistics.value.villages.totalVillages || 0;
-    const villagesData =
-      baseVillages > 0 ? years.map(() => baseVillages) : years.map(() => 0);
-    const basePop = Math.round(
-      (statistics.value.population.totalPopulation || 0) / 100,
-    );
-    const populationData =
-      basePop > 0 ? years.map(() => basePop) : years.map(() => 0);
-    const baseIncome = statistics.value.income.avgPerCapitaIncome || 0;
-    const incomeData =
-      baseIncome > 0 ? years.map(() => baseIncome) : years.map(() => 0);
+    const years = availableYears.slice().reverse()
+    const baseVillages = statistics.value.villages.totalVillages || 0
+    const villagesData = baseVillages > 0 ? years.map(() => baseVillages) : years.map(() => 0)
+    const basePop = Math.round((statistics.value.population.totalPopulation || 0) / 100)
+    const populationData = basePop > 0 ? years.map(() => basePop) : years.map(() => 0)
+    const baseIncome = statistics.value.income.avgPerCapitaIncome || 0
+    const incomeData = baseIncome > 0 ? years.map(() => baseIncome) : years.map(() => 0)
 
     trendChart.setOption({
-      color: ["#1e4d8c", "#2d6a4f", "#f59e0b"],
+      color: ['#1e4d8c', '#2d6a4f', '#f59e0b'],
       tooltip: {
-        trigger: "axis",
-        backgroundColor: "rgba(255,255,255,0.96)",
-        borderColor: "#e2e8f0",
+        trigger: 'axis',
+        backgroundColor: 'rgba(255,255,255,0.96)',
+        borderColor: '#e2e8f0',
         borderWidth: 1,
         borderRadius: 8,
         padding: [12, 16],
-        textStyle: { color: "#1e293b", fontSize: 13 },
+        textStyle: { color: '#1e293b', fontSize: 13 },
         axisPointer: {
-          type: "cross",
-          crossStyle: { color: "#94a3b8" },
+          type: 'cross',
+          crossStyle: { color: '#94a3b8' },
         },
       },
       legend: {
-        data: ["帮扶村数", "覆盖人口(百人)", "人均收入(万)"],
+        data: ['帮扶村数', '覆盖人口(百人)', '人均收入(万)'],
         bottom: 0,
-        textStyle: { color: "#64748b", fontSize: 12 },
+        textStyle: { color: '#64748b', fontSize: 12 },
         itemGap: 24,
       },
       grid: {
@@ -643,116 +591,107 @@ const updateCharts = () => {
         bottom: 40,
       },
       xAxis: {
-        type: "category",
+        type: 'category',
         data: years.map((y) => `${y}年`),
         boundaryGap: false,
-        axisLine: { lineStyle: { color: "#e2e8f0" } },
+        axisLine: { lineStyle: { color: '#e2e8f0' } },
         axisTick: { show: false },
-        axisLabel: { color: "#94a3b8", fontSize: 11 },
+        axisLabel: { color: '#94a3b8', fontSize: 11 },
       },
       yAxis: [
         {
-          type: "value",
-          name: "数量",
-          nameTextStyle: { color: "#94a3b8", fontSize: 11 },
-          splitLine: { lineStyle: { color: "#f1f5f9", type: "dashed" } },
-          axisLabel: { color: "#94a3b8", fontSize: 11 },
+          type: 'value',
+          name: '数量',
+          nameTextStyle: { color: '#94a3b8', fontSize: 11 },
+          splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
+          axisLabel: { color: '#94a3b8', fontSize: 11 },
         },
         {
-          type: "value",
-          name: "收入(万)",
-          position: "right",
-          nameTextStyle: { color: "#94a3b8", fontSize: 11 },
+          type: 'value',
+          name: '收入(万)',
+          position: 'right',
+          nameTextStyle: { color: '#94a3b8', fontSize: 11 },
           splitLine: { show: false },
-          axisLabel: { color: "#94a3b8", fontSize: 11 },
+          axisLabel: { color: '#94a3b8', fontSize: 11 },
         },
       ],
       series: [
         {
-          name: "帮扶村数",
-          type: "bar",
+          name: '帮扶村数',
+          type: 'bar',
           barWidth: 18,
           itemStyle: {
             borderRadius: [6, 6, 0, 0],
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: "#3b82f6" },
-              { offset: 1, color: "#1e4d8c" },
+              { offset: 0, color: '#3b82f6' },
+              { offset: 1, color: '#1e4d8c' },
             ]),
           },
           data: villagesData,
         },
         {
-          name: "覆盖人口(百人)",
-          type: "bar",
+          name: '覆盖人口(百人)',
+          type: 'bar',
           barWidth: 18,
           itemStyle: {
             borderRadius: [6, 6, 0, 0],
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: "#52b788" },
-              { offset: 1, color: "#2d6a4f" },
+              { offset: 0, color: '#52b788' },
+              { offset: 1, color: '#2d6a4f' },
             ]),
           },
           data: populationData,
         },
         {
-          name: "人均收入(万)",
-          type: "line",
+          name: '人均收入(万)',
+          type: 'line',
           yAxisIndex: 1,
           smooth: true,
-          symbol: "circle",
+          symbol: 'circle',
           symbolSize: 6,
           lineStyle: { width: 3 },
           itemStyle: {
-            color: "#f59e0b",
-            borderColor: "#fff",
+            color: '#f59e0b',
+            borderColor: '#fff',
             borderWidth: 2,
           },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: "rgba(245, 158, 11, 0.2)" },
-              { offset: 1, color: "rgba(245, 158, 11, 0.0)" },
+              { offset: 0, color: 'rgba(245, 158, 11, 0.2)' },
+              { offset: 1, color: 'rgba(245, 158, 11, 0.0)' },
             ]),
           },
           data: incomeData,
         },
       ],
-    });
+    })
   }
 
   // ── 更新 Sparkline 微型图 ──
-  updateSparklines();
-};
+  updateSparklines()
+}
 
 // =========================================================================
 // Sparkline 更新
 // =========================================================================
 
 const updateSparklines = () => {
-  const points = 8; // 8 个数据点
+  const points = 8 // 8 个数据点
 
   const sparkData = [
     {
       chart: sparkVillagesChart,
-      data: generateSparkData(
-        statistics.value.villages.totalVillages || 0,
-        points,
-      ),
+      data: generateSparkData(statistics.value.villages.totalVillages || 0, points),
       config: SPARK_CONFIGS.villages,
     },
     {
       chart: sparkPopulationChart,
-      data: generateSparkData(
-        statistics.value.population.totalPopulation / 100 || 0,
-        points,
-      ),
+      data: generateSparkData(statistics.value.population.totalPopulation / 100 || 0, points),
       config: SPARK_CONFIGS.population,
     },
     {
       chart: sparkIncomeChart,
-      data: generateSparkData(
-        statistics.value.income.avgPerCapitaIncome || 0,
-        points,
-      ),
+      data: generateSparkData(statistics.value.income.avgPerCapitaIncome || 0, points),
       config: SPARK_CONFIGS.income,
     },
     {
@@ -760,30 +699,28 @@ const updateSparklines = () => {
       data: generateSparkData(totalInvestment.value || 0, points),
       config: SPARK_CONFIGS.investment,
     },
-  ];
+  ]
 
   sparkData.forEach(({ chart, data, config }) => {
     if (chart && !chart.isDisposed()) {
-      chart.setOption(createSparkOption(data, config));
+      chart.setOption(createSparkOption(data, config))
     }
-  });
-};
+  })
+}
 
 // =========================================================================
 // 数据加载
 // =========================================================================
 
 const loadData = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const params: Record<string, unknown> = { year: selectedYear.value };
-    if (filters.department) params.department = filters.department;
-    if (filters.regionType === "isThreeRegions") params.isThreeRegions = true;
-    if (filters.regionType === "isKeyCounty") params.isKeyCounty = true;
+    const params: Record<string, unknown> = { year: selectedYear.value }
+    if (filters.department) params.department = filters.department
+    if (filters.regionType === 'isThreeRegions') params.isThreeRegions = true
+    if (filters.regionType === 'isKeyCounty') params.isKeyCounty = true
 
-    const result = await getSummaryStatistics(
-      params as Parameters<typeof getSummaryStatistics>[0],
-    );
+    const result = await getSummaryStatistics(params as Parameters<typeof getSummaryStatistics>[0])
 
     statistics.value = {
       year: result?.year || selectedYear.value,
@@ -810,11 +747,11 @@ const loadData = async () => {
         education: result?.investment?.education || 0,
         educationAidedStudents: result?.investment?.educationAidedStudents || 0,
       },
-    };
+    }
 
-    updateCharts();
+    updateCharts()
   } catch (error) {
-    logger.error("加载统计数据失败:", error);
+    logger.error('加载统计数据失败:', error)
     statistics.value = {
       year: selectedYear.value,
       villages: {
@@ -837,19 +774,19 @@ const loadData = async () => {
         education: 0,
         educationAidedStudents: 0,
       },
-    };
+    }
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const loadFilterOptions = async () => {
   try {
-    filterOptions.value = await getFilterOptions();
+    filterOptions.value = await getFilterOptions()
   } catch (error) {
-    logger.error("加载筛选选项失败:", error);
+    logger.error('加载筛选选项失败:', error)
   }
-};
+}
 
 // =========================================================================
 // 图表初始化与销毁
@@ -857,57 +794,48 @@ const loadFilterOptions = async () => {
 
 const initCharts = () => {
   // 销毁旧实例（防止热更新重复初始化）
-  regionChart?.dispose();
-  investmentChart?.dispose();
-  trendChart?.dispose();
-  sparkVillagesChart?.dispose();
-  sparkPopulationChart?.dispose();
-  sparkIncomeChart?.dispose();
-  sparkInvestmentChart?.dispose();
+  regionChart?.dispose()
+  investmentChart?.dispose()
+  trendChart?.dispose()
+  sparkVillagesChart?.dispose()
+  sparkPopulationChart?.dispose()
+  sparkIncomeChart?.dispose()
+  sparkInvestmentChart?.dispose()
 
-  regionChart = null;
-  investmentChart = null;
-  trendChart = null;
-  sparkVillagesChart = null;
-  sparkPopulationChart = null;
-  sparkIncomeChart = null;
-  sparkInvestmentChart = null;
+  regionChart = null
+  investmentChart = null
+  trendChart = null
+  sparkVillagesChart = null
+  sparkPopulationChart = null
+  sparkIncomeChart = null
+  sparkInvestmentChart = null
 
   // 主图表
   if (regionChartRef.value) {
-    regionChart = echarts.init(regionChartRef.value, getCurrentTheme());
-    regionChart.on("click", handleRegionClick as any);
+    regionChart = echarts.init(regionChartRef.value, getCurrentTheme())
+    regionChart.on('click', handleRegionClick as any)
   }
   if (investmentChartRef.value) {
-    investmentChart = echarts.init(investmentChartRef.value, getCurrentTheme());
+    investmentChart = echarts.init(investmentChartRef.value, getCurrentTheme())
   }
   if (trendChartRef.value) {
-    trendChart = echarts.init(trendChartRef.value, getCurrentTheme());
+    trendChart = echarts.init(trendChartRef.value, getCurrentTheme())
   }
 
   // Sparkline 微型图
   if (sparkVillagesRef.value) {
-    sparkVillagesChart = echarts.init(
-      sparkVillagesRef.value,
-      getCurrentTheme(),
-    );
+    sparkVillagesChart = echarts.init(sparkVillagesRef.value, getCurrentTheme())
   }
   if (sparkPopulationRef.value) {
-    sparkPopulationChart = echarts.init(
-      sparkPopulationRef.value,
-      getCurrentTheme(),
-    );
+    sparkPopulationChart = echarts.init(sparkPopulationRef.value, getCurrentTheme())
   }
   if (sparkIncomeRef.value) {
-    sparkIncomeChart = echarts.init(sparkIncomeRef.value, getCurrentTheme());
+    sparkIncomeChart = echarts.init(sparkIncomeRef.value, getCurrentTheme())
   }
   if (sparkInvestmentRef.value) {
-    sparkInvestmentChart = echarts.init(
-      sparkInvestmentRef.value,
-      getCurrentTheme(),
-    );
+    sparkInvestmentChart = echarts.init(sparkInvestmentRef.value, getCurrentTheme())
   }
-};
+}
 
 // =========================================================================
 // 事件处理
@@ -915,20 +843,20 @@ const initCharts = () => {
 
 const handleRegionClick = async (params: { name: string }) => {
   try {
-    drillDownTitle.value = `${params.name} - 详细数据`;
+    drillDownTitle.value = `${params.name} - 详细数据`
     drillDownData.value = await drillDown({
-      dimension: "region",
+      dimension: 'region',
       value: params.name,
-      targetDimension: "department",
-    });
+      targetDimension: 'department',
+    })
   } catch (error) {
-    logger.error("钻取查询失败:", error);
+    logger.error('钻取查询失败:', error)
   }
-};
+}
 
 const closeDrillDown = () => {
-  drillDownData.value = null;
-};
+  drillDownData.value = null
+}
 
 const handleExport = () => {
   const exportData = {
@@ -936,58 +864,58 @@ const handleExport = () => {
     statistics: statistics.value,
     filters: { ...filters },
     exportTime: new Date().toISOString(),
-  };
+  }
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `仪表板数据_${selectedYear.value}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
+    type: 'application/json',
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `仪表板数据_${selectedYear.value}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 const handleResize = () => {
-  regionChart?.resize();
-  investmentChart?.resize();
-  trendChart?.resize();
-  sparkVillagesChart?.resize();
-  sparkPopulationChart?.resize();
-  sparkIncomeChart?.resize();
-  sparkInvestmentChart?.resize();
-};
+  regionChart?.resize()
+  investmentChart?.resize()
+  trendChart?.resize()
+  sparkVillagesChart?.resize()
+  sparkPopulationChart?.resize()
+  sparkIncomeChart?.resize()
+  sparkInvestmentChart?.resize()
+}
 
 // =========================================================================
 // 生命周期
 // =========================================================================
 
 onMounted(async () => {
-  await loadFilterOptions();
-  await nextTick();
-  initCharts();
-  await loadData();
-  window.addEventListener("resize", handleResize);
-});
+  await loadFilterOptions()
+  await nextTick()
+  initCharts()
+  await loadData()
+  window.addEventListener('resize', handleResize)
+})
 
 onUnmounted(() => {
-  window.removeEventListener("resize", handleResize);
-  regionChart?.dispose();
-  investmentChart?.dispose();
-  trendChart?.dispose();
-  sparkVillagesChart?.dispose();
-  sparkPopulationChart?.dispose();
-  sparkIncomeChart?.dispose();
-  sparkInvestmentChart?.dispose();
+  window.removeEventListener('resize', handleResize)
+  regionChart?.dispose()
+  investmentChart?.dispose()
+  trendChart?.dispose()
+  sparkVillagesChart?.dispose()
+  sparkPopulationChart?.dispose()
+  sparkIncomeChart?.dispose()
+  sparkInvestmentChart?.dispose()
 
-  regionChart = null;
-  investmentChart = null;
-  trendChart = null;
-  sparkVillagesChart = null;
-  sparkPopulationChart = null;
-  sparkIncomeChart = null;
-  sparkInvestmentChart = null;
-});
+  regionChart = null
+  investmentChart = null
+  trendChart = null
+  sparkVillagesChart = null
+  sparkPopulationChart = null
+  sparkIncomeChart = null
+  sparkInvestmentChart = null
+})
 </script>
 
 <style scoped>

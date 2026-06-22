@@ -14,12 +14,7 @@
       </div>
     </div>
 
-    <el-steps
-      :active="step"
-      finish-status="success"
-      align-center
-      class="steps-card"
-    >
+    <el-steps :active="step" finish-status="success" align-center class="steps-card">
       <el-step title="选择模板" description="选择并下载导入模板" />
       <el-step title="上传文件" description="上传填写好的Excel" />
       <el-step title="数据校验" description="校验格式与逻辑" />
@@ -47,9 +42,7 @@
               controls-position="right"
               style="width: 160px"
             />
-            <span style="margin-left: 4px; color: #666; font-size: 13px"
-              >年</span
-            >
+            <span style="margin-left: 4px; color: #666; font-size: 13px">年</span>
           </div>
         </div>
 
@@ -117,16 +110,10 @@
         <div v-if="selectedTemplate" class="template-preview">
           <h3 class="section-title">
             模板字段预览
-            <span class="preview-hint"
-              >（<span class="required-mark">*</span>为必填字段）</span
-            >
+            <span class="preview-hint">（<span class="required-mark">*</span>为必填字段）</span>
           </h3>
           <div class="preview-sections">
-            <div
-              v-for="sec in previewSections"
-              :key="sec.label"
-              class="preview-section"
-            >
+            <div v-for="sec in previewSections" :key="sec.label" class="preview-section">
               <div class="preview-section-title">{{ sec.label }}</div>
               <div class="preview-fields">
                 <span
@@ -135,8 +122,7 @@
                   class="preview-field"
                   :class="{ required: f.required }"
                 >
-                  <span v-if="f.required" class="required-mark">*</span
-                  >{{ f.col }}
+                  <span v-if="f.required" class="required-mark">*</span>{{ f.col }}
                 </span>
               </div>
             </div>
@@ -144,18 +130,10 @@
         </div>
 
         <div class="step-actions">
-          <el-button
-            type="success"
-            :disabled="!selectedTemplate"
-            @click="handleDownloadTemplate"
-          >
+          <el-button type="success" :disabled="!selectedTemplate" @click="handleDownloadTemplate">
             <el-icon><Download /></el-icon>下载模板（{{ selectedYear }}年度）
           </el-button>
-          <el-button
-            type="primary"
-            :disabled="!selectedTemplate"
-            @click="step++"
-          >
+          <el-button type="primary" :disabled="!selectedTemplate" @click="step++">
             下一步：上传文件
           </el-button>
         </div>
@@ -165,15 +143,9 @@
       <div v-if="step === 1" class="step-panel">
         <div class="upload-info-bar">
           <el-descriptions :column="3" border size="small">
-            <el-descriptions-item label="模板类型">{{
-              currentTemplateName
-            }}</el-descriptions-item>
-            <el-descriptions-item label="帮扶年度"
-              >{{ selectedYear }}年</el-descriptions-item
-            >
-            <el-descriptions-item label="填报日期">{{
-              currentDate
-            }}</el-descriptions-item>
+            <el-descriptions-item label="模板类型">{{ currentTemplateName }}</el-descriptions-item>
+            <el-descriptions-item label="帮扶年度">{{ selectedYear }}年</el-descriptions-item>
+            <el-descriptions-item label="填报日期">{{ currentDate }}</el-descriptions-item>
           </el-descriptions>
         </div>
         <el-upload
@@ -189,9 +161,7 @@
           <el-icon class="el-icon--upload" :size="48"><UploadFilled /></el-icon>
           <div class="el-upload__text">将文件拖到此处，或<em>点击选择</em></div>
           <template #tip
-            ><div class="el-upload__tip">
-              仅支持 .xlsx/.xls 格式，最大10MB
-            </div></template
+            ><div class="el-upload__tip">仅支持 .xlsx/.xls 格式，最大10MB</div></template
           >
         </el-upload>
         <el-form label-width="120px" style="margin-top: 24px">
@@ -263,21 +233,13 @@
       <!-- ========== 步骤4: 预览 ========== -->
       <div v-if="step === 3" class="step-panel">
         <el-descriptions title="导入数据预览" :column="3" border>
-          <el-descriptions-item label="模板类型">{{
-            currentTemplateName
-          }}</el-descriptions-item>
-          <el-descriptions-item label="帮扶年度"
-            >{{ selectedYear }}年</el-descriptions-item
-          >
+          <el-descriptions-item label="模板类型">{{ currentTemplateName }}</el-descriptions-item>
+          <el-descriptions-item label="帮扶年度">{{ selectedYear }}年</el-descriptions-item>
           <el-descriptions-item label="导入模式">{{
-            importMode === "incremental" ? "增量导入" : "全量覆盖"
+            importMode === 'incremental' ? '增量导入' : '全量覆盖'
           }}</el-descriptions-item>
-          <el-descriptions-item label="数据总行数"
-            >{{ previewCount }} 条</el-descriptions-item
-          >
-          <el-descriptions-item label="填报日期">{{
-            currentDate
-          }}</el-descriptions-item>
+          <el-descriptions-item label="数据总行数">{{ previewCount }} 条</el-descriptions-item>
+          <el-descriptions-item label="填报日期">{{ currentDate }}</el-descriptions-item>
         </el-descriptions>
         <div class="step-actions" style="margin-top: 24px">
           <el-button @click="step--">上一步</el-button>
@@ -286,18 +248,14 @@
       </div>
 
       <!-- ========== 步骤5: 导入中 ========== -->
-      <div
-        v-if="step === 4"
-        class="step-panel"
-        style="text-align: center; padding: 60px"
-      >
+      <div v-if="step === 4" class="step-panel" style="text-align: center; padding: 60px">
         <el-progress
           type="circle"
           :percentage="importProgress"
           :status="importProgress >= 100 ? 'success' : undefined"
         />
         <p style="margin-top: 16px">
-          {{ importProgress >= 100 ? "导入完成" : "正在导入数据..." }}
+          {{ importProgress >= 100 ? '导入完成' : '正在导入数据...' }}
         </p>
       </div>
 
@@ -313,23 +271,10 @@
             <el-button @click="pushSafe('/projects')">查看项目列表</el-button>
           </template>
         </el-result>
-        <div
-          v-if="importResult.errors && importResult.errors.length > 0"
-          style="margin-top: 20px"
-        >
+        <div v-if="importResult.errors && importResult.errors.length > 0" style="margin-top: 20px">
           <h4 style="margin-bottom: 8px; color: #f56c6c">失败记录</h4>
-          <el-table
-            :data="importResult.errors"
-            border
-            size="small"
-            max-height="200"
-          >
-            <el-table-column
-              prop="row"
-              label="行号"
-              width="80"
-              align="center"
-            />
+          <el-table :data="importResult.errors" border size="small" max-height="200">
+            <el-table-column prop="row" label="行号" width="80" align="center" />
             <el-table-column prop="name" label="项目名称" width="200" />
             <el-table-column prop="error" label="失败原因" />
           </el-table>
@@ -340,32 +285,32 @@
 </template>
 
 <script setup lang="ts">
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ref, computed } from "vue";
-import { UploadFilled, Loading, Download, Back } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
-import { triggerDownload } from "@/api/export";
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ref, computed } from 'vue'
+import { UploadFilled, Loading, Download, Back } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
+import { triggerDownload } from '@/api/export'
 
-const { pushSafe } = useRouterSafe();
+const { pushSafe } = useRouterSafe()
 
-const step = ref(0);
-const selectedTemplate = ref("");
-const selectedFile = ref<File | null>(null);
-const importMode = ref("incremental");
-const validating = ref(false);
-const validationErrors = ref<any[]>([]);
-const previewCount = ref(0);
-const importProgress = ref(0);
+const step = ref(0)
+const selectedTemplate = ref('')
+const selectedFile = ref<File | null>(null)
+const importMode = ref('incremental')
+const validating = ref(false)
+const validationErrors = ref<any[]>([])
+const previewCount = ref(0)
+const importProgress = ref(0)
 const importResult = ref<{ success: number; failed: number; errors?: any[] }>({
   success: 0,
   failed: 0,
-});
+})
 
 // 日期 & 年度
-const now = new Date();
-const currentDate = `${now.getFullYear()}年${String(now.getMonth() + 1).padStart(2, "0")}月${String(now.getDate()).padStart(2, "0")}日`;
-const selectedYear = ref(now.getFullYear());
+const now = new Date()
+const currentDate = `${now.getFullYear()}年${String(now.getMonth() + 1).padStart(2, '0')}月${String(now.getDate()).padStart(2, '0')}日`
+const selectedYear = ref(now.getFullYear())
 
 // 实体类型模板定义
 const entityPreviewFields: Record<
@@ -374,244 +319,239 @@ const entityPreviewFields: Record<
 > = {
   supported_village: [
     {
-      label: "基本信息",
+      label: '基本信息',
       fields: [
-        { col: "各部门各单位", required: true },
-        { col: "具体帮扶单位", required: true },
-        { col: "定点帮扶村", required: true },
-        { col: "地区范围", required: false },
+        { col: '各部门各单位', required: true },
+        { col: '具体帮扶单位', required: true },
+        { col: '定点帮扶村', required: true },
+        { col: '地区范围', required: false },
       ],
     },
     {
-      label: "属性标识",
+      label: '属性标识',
       fields: [
-        { col: "是否属于三区三州", required: false },
-        { col: "是否属于边疆地区", required: false },
-        { col: "是否属于民族地区", required: false },
-        { col: "是否属于160个国家乡村振兴重点帮扶县", required: false },
+        { col: '是否属于三区三州', required: false },
+        { col: '是否属于边疆地区', required: false },
+        { col: '是否属于民族地区', required: false },
+        { col: '是否属于160个国家乡村振兴重点帮扶县', required: false },
       ],
     },
   ],
   project: [
     {
-      label: "基本信息",
+      label: '基本信息',
       fields: [
-        { col: "项目名称", required: true },
-        { col: "项目编号", required: false },
-        { col: "项目类型", required: true },
-        { col: "项目描述", required: false },
+        { col: '项目名称', required: true },
+        { col: '项目编号', required: false },
+        { col: '项目类型', required: true },
+        { col: '项目描述', required: false },
       ],
     },
     {
-      label: "组织与资金",
+      label: '组织与资金',
       fields: [
-        { col: "预算金额", required: false },
-        { col: "项目负责人", required: false },
-        { col: "联系电话", required: false },
-        { col: "负责单位", required: false },
-        { col: "组织编码", required: false },
+        { col: '预算金额', required: false },
+        { col: '项目负责人', required: false },
+        { col: '联系电话', required: false },
+        { col: '负责单位', required: false },
+        { col: '组织编码', required: false },
       ],
     },
   ],
   fund: [
     {
-      label: "基本信息",
+      label: '基本信息',
       fields: [
-        { col: "资金名称", required: true },
-        { col: "编号", required: false },
-        { col: "金额", required: true },
-        { col: "资金类型", required: false },
-        { col: "资金来源", required: false },
+        { col: '资金名称', required: true },
+        { col: '编号', required: false },
+        { col: '金额', required: true },
+        { col: '资金类型', required: false },
+        { col: '资金来源', required: false },
       ],
     },
     {
-      label: "关联信息",
+      label: '关联信息',
       fields: [
-        { col: "用途", required: false },
-        { col: "状态", required: false },
-        { col: "经办人", required: false },
-        { col: "关联项目编号", required: false },
-        { col: "日期", required: false },
+        { col: '用途', required: false },
+        { col: '状态', required: false },
+        { col: '经办人', required: false },
+        { col: '关联项目编号', required: false },
+        { col: '日期', required: false },
       ],
     },
   ],
   school: [
     {
-      label: "基本信息",
+      label: '基本信息',
       fields: [
-        { col: "学校名称", required: true },
-        { col: "学校编码", required: false },
-        { col: "学校类型", required: false },
-        { col: "省份", required: false },
-        { col: "城市", required: false },
-        { col: "区县", required: false },
+        { col: '学校名称', required: true },
+        { col: '学校编码', required: false },
+        { col: '学校类型', required: false },
+        { col: '省份', required: false },
+        { col: '城市', required: false },
+        { col: '区县', required: false },
       ],
     },
     {
-      label: "联系与规模",
+      label: '联系与规模',
       fields: [
-        { col: "校长姓名", required: false },
-        { col: "联系电话", required: false },
-        { col: "学生人数", required: false },
-        { col: "教师人数", required: false },
-        { col: "帮扶单位", required: false },
-        { col: "帮扶状态", required: false },
+        { col: '校长姓名', required: false },
+        { col: '联系电话', required: false },
+        { col: '学生人数', required: false },
+        { col: '教师人数', required: false },
+        { col: '帮扶单位', required: false },
+        { col: '帮扶状态', required: false },
       ],
     },
   ],
-};
+}
 
 const templates = [
   {
-    type: "supported_village",
-    name: "帮扶村数据",
-    icon: "🏘️",
-    description: "导入帮扶村基础信息、属性标识、振兴发展梯队等数据",
-    sections: ["基础信息", "属性标识"],
+    type: 'supported_village',
+    name: '帮扶村数据',
+    icon: '🏘️',
+    description: '导入帮扶村基础信息、属性标识、振兴发展梯队等数据',
+    sections: ['基础信息', '属性标识'],
     fieldCount: 18,
-    scenario: "村庄信息批量建档",
+    scenario: '村庄信息批量建档',
   },
   {
-    type: "project",
-    name: "帮扶项目",
-    icon: "📋",
-    description: "导入项目基础信息、预算金额、负责人、组织编码等",
-    sections: ["基本信息", "组织与资金"],
+    type: 'project',
+    name: '帮扶项目',
+    icon: '📋',
+    description: '导入项目基础信息、预算金额、负责人、组织编码等',
+    sections: ['基本信息', '组织与资金'],
     fieldCount: 13,
-    scenario: "项目批量建档",
+    scenario: '项目批量建档',
   },
   {
-    type: "fund",
-    name: "资金台账",
-    icon: "💰",
-    description: "导入资金名称、金额、类型、来源、关联项目等",
-    sections: ["基本信息", "关联信息"],
+    type: 'fund',
+    name: '资金台账',
+    icon: '💰',
+    description: '导入资金名称、金额、类型、来源、关联项目等',
+    sections: ['基本信息', '关联信息'],
     fieldCount: 12,
-    scenario: "资金台账批量录入",
+    scenario: '资金台账批量录入',
   },
   {
-    type: "school",
-    name: "学校信息",
-    icon: "🏫",
-    description: "导入学校基础信息、地理位置、师生规模、帮扶状态等",
-    sections: ["基本信息", "联系与规模"],
+    type: 'school',
+    name: '学校信息',
+    icon: '🏫',
+    description: '导入学校基础信息、地理位置、师生规模、帮扶状态等',
+    sections: ['基本信息', '联系与规模'],
     fieldCount: 14,
-    scenario: "学校信息批量建档",
+    scenario: '学校信息批量建档',
   },
-];
+]
 
 const currentTemplateName = computed(
-  () => templates.find((t) => t.type === selectedTemplate.value)?.name || "",
-);
+  () => templates.find((t) => t.type === selectedTemplate.value)?.name || ''
+)
 
 const previewSections = computed(() => {
-  if (!selectedTemplate.value) return [];
-  return entityPreviewFields[selectedTemplate.value] || [];
-});
+  if (!selectedTemplate.value) return []
+  return entityPreviewFields[selectedTemplate.value] || []
+})
 
 const handleTemplateSelect = (row: any) => {
-  if (row) selectedTemplate.value = row.type;
-};
+  if (row) selectedTemplate.value = row.type
+}
 
 const handleDownloadTemplate = async () => {
   try {
-    const res = await request.get("/import/template", {
+    const res = await request.get('/import/template', {
       params: {
         entity_type: selectedTemplate.value,
       },
-      responseType: "blob",
-    });
-    const tplName =
-      templates.find((t) => t.type === selectedTemplate.value)?.name || "标准";
-    triggerDownload(res.data, `${tplName}导入模板_${selectedYear.value}.xlsx`);
+      responseType: 'blob',
+    })
+    const tplName = templates.find((t) => t.type === selectedTemplate.value)?.name || '标准'
+    triggerDownload(res.data, `${tplName}导入模板_${selectedYear.value}.xlsx`)
     // 模板下载成功 — 浏览器已确认
   } catch {
-    ElMessage.error("下载模板失败");
+    ElMessage.error('下载模板失败')
   }
-};
+}
 
 const handleFileSelect = (file: any) => {
-  selectedFile.value = file.raw;
-};
+  selectedFile.value = file.raw
+}
 
 const handleValidate = async () => {
-  if (!selectedFile.value) return;
-  validating.value = true;
-  validationErrors.value = [];
+  if (!selectedFile.value) return
+  validating.value = true
+  validationErrors.value = []
   try {
-    const formData = new FormData();
-    formData.append("file", selectedFile.value);
-    const res = await request.post("/import/validate", formData, {
+    const formData = new FormData()
+    formData.append('file', selectedFile.value)
+    const res = await request.post('/import/validate', formData, {
       params: { entity_type: selectedTemplate.value },
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    const data = res.data;
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    const data = res.data
     if (data.error_count > 0 && data.first_errors) {
       validationErrors.value = data.first_errors.map((e: any) => ({
         row: e.row_number || e.row || 0,
-        field: e.field_name || e.field || "",
-        message: e.message || "",
-      }));
+        field: e.field_name || e.field || '',
+        message: e.message || '',
+      }))
     }
-    previewCount.value = data.total_rows || 0;
+    previewCount.value = data.total_rows || 0
   } catch {
-    previewCount.value = 0;
+    previewCount.value = 0
   } finally {
-    validating.value = false;
-    step.value = 2;
+    validating.value = false
+    step.value = 2
   }
-};
+}
 
 const handleImport = async () => {
-  if (!selectedFile.value) return;
-  step.value = 4;
-  importProgress.value = 10;
+  if (!selectedFile.value) return
+  step.value = 4
+  importProgress.value = 10
   try {
-    const formData = new FormData();
-    formData.append("file", selectedFile.value);
+    const formData = new FormData()
+    formData.append('file', selectedFile.value)
     const res = await request.post(
       `/import/entities?mode=${importMode.value}&entity_type=${selectedTemplate.value}`,
       formData,
       {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000,
         onUploadProgress: (e: any) => {
-          if (e.total)
-            importProgress.value = Math.min(
-              Math.round((e.loaded / e.total) * 80),
-              80,
-            );
+          if (e.total) importProgress.value = Math.min(Math.round((e.loaded / e.total) * 80), 80)
         },
-      },
-    );
-    importProgress.value = 100;
-    const data = res.data;
+      }
+    )
+    importProgress.value = 100
+    const data = res.data
     importResult.value = {
       success: data.success_rows || 0,
       failed: data.failed_rows || 0,
       errors: data.errors || [],
-    };
+    }
     setTimeout(() => {
-      step.value = 5;
-    }, 500);
+      step.value = 5
+    }, 500)
   } catch (e: any) {
-    importProgress.value = 100;
-    importResult.value = { success: 0, failed: 1, errors: [] };
-    ElMessage.error(e?.response?.data?.detail || "导入失败");
+    importProgress.value = 100
+    importResult.value = { success: 0, failed: 1, errors: [] }
+    ElMessage.error(e?.response?.data?.detail || '导入失败')
     setTimeout(() => {
-      step.value = 5;
-    }, 500);
+      step.value = 5
+    }, 500)
   }
-};
+}
 
 const handleReset = () => {
-  step.value = 0;
-  selectedFile.value = null;
-  validationErrors.value = [];
-  previewCount.value = 0;
-  importProgress.value = 0;
-  importResult.value = { success: 0, failed: 0 };
-};
+  step.value = 0
+  selectedFile.value = null
+  validationErrors.value = []
+  previewCount.value = 0
+  importProgress.value = 0
+  importResult.value = { success: 0, failed: 0 }
+}
 </script>
 
 <style scoped>

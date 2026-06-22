@@ -3,19 +3,14 @@
     <!-- 页头 -->
     <div class="page-header">
       <h2>数据分级存储管理</h2>
-      <el-button :icon="Refresh" :loading="loading" @click="refreshAll">
-        刷新
-      </el-button>
+      <el-button :icon="Refresh" :loading="loading" @click="refreshAll"> 刷新 </el-button>
     </div>
 
     <!-- 分级摘要卡片 -->
     <el-row :gutter="20" class="stats-row">
       <el-col :span="8">
         <el-card shadow="hover" class="tier-card tier-hot">
-          <el-statistic
-            title="热数据（近 30 天）"
-            :value="stats.hot_count ?? 0"
-          >
+          <el-statistic title="热数据（近 30 天）" :value="stats.hot_count ?? 0">
             <template #suffix>
               <span class="stat-suffix">条</span>
             </template>
@@ -27,10 +22,7 @@
       </el-col>
       <el-col :span="8">
         <el-card shadow="hover" class="tier-card tier-warm">
-          <el-statistic
-            title="温数据（30-365 天）"
-            :value="stats.warm_count ?? 0"
-          >
+          <el-statistic title="温数据（30-365 天）" :value="stats.warm_count ?? 0">
             <template #suffix>
               <span class="stat-suffix">条</span>
             </template>
@@ -42,10 +34,7 @@
       </el-col>
       <el-col :span="8">
         <el-card shadow="hover" class="tier-card tier-cold">
-          <el-statistic
-            title="冷数据（> 365 天）"
-            :value="stats.cold_count ?? 0"
-          >
+          <el-statistic title="冷数据（> 365 天）" :value="stats.cold_count ?? 0">
             <template #suffix>
               <span class="stat-suffix">条</span>
             </template>
@@ -68,30 +57,21 @@
             <div class="bar-item">
               <span class="bar-label">热数据</span>
               <div class="bar-track">
-                <div
-                  class="bar-fill bar-hot"
-                  :style="{ width: countPercent('hot') + '%' }"
-                ></div>
+                <div class="bar-fill bar-hot" :style="{ width: countPercent('hot') + '%' }"></div>
               </div>
               <span class="bar-value">{{ stats.hot_count ?? 0 }}</span>
             </div>
             <div class="bar-item">
               <span class="bar-label">温数据</span>
               <div class="bar-track">
-                <div
-                  class="bar-fill bar-warm"
-                  :style="{ width: countPercent('warm') + '%' }"
-                ></div>
+                <div class="bar-fill bar-warm" :style="{ width: countPercent('warm') + '%' }"></div>
               </div>
               <span class="bar-value">{{ stats.warm_count ?? 0 }}</span>
             </div>
             <div class="bar-item">
               <span class="bar-label">冷数据</span>
               <div class="bar-track">
-                <div
-                  class="bar-fill bar-cold"
-                  :style="{ width: countPercent('cold') + '%' }"
-                ></div>
+                <div class="bar-fill bar-cold" :style="{ width: countPercent('cold') + '%' }"></div>
               </div>
               <span class="bar-value">{{ stats.cold_count ?? 0 }}</span>
             </div>
@@ -107,36 +87,23 @@
             <div class="bar-item">
               <span class="bar-label">热数据</span>
               <div class="bar-track">
-                <div
-                  class="bar-fill bar-hot"
-                  :style="{ width: sizePercent('hot') + '%' }"
-                ></div>
+                <div class="bar-fill bar-hot" :style="{ width: sizePercent('hot') + '%' }"></div>
               </div>
               <span class="bar-value">{{ formatSize(stats.hot_size_mb) }}</span>
             </div>
             <div class="bar-item">
               <span class="bar-label">温数据</span>
               <div class="bar-track">
-                <div
-                  class="bar-fill bar-warm"
-                  :style="{ width: sizePercent('warm') + '%' }"
-                ></div>
+                <div class="bar-fill bar-warm" :style="{ width: sizePercent('warm') + '%' }"></div>
               </div>
-              <span class="bar-value">{{
-                formatSize(stats.warm_size_mb)
-              }}</span>
+              <span class="bar-value">{{ formatSize(stats.warm_size_mb) }}</span>
             </div>
             <div class="bar-item">
               <span class="bar-label">冷数据</span>
               <div class="bar-track">
-                <div
-                  class="bar-fill bar-cold"
-                  :style="{ width: sizePercent('cold') + '%' }"
-                ></div>
+                <div class="bar-fill bar-cold" :style="{ width: sizePercent('cold') + '%' }"></div>
               </div>
-              <span class="bar-value">{{
-                formatSize(stats.cold_size_mb)
-              }}</span>
+              <span class="bar-value">{{ formatSize(stats.cold_size_mb) }}</span>
             </div>
           </div>
         </el-card>
@@ -149,9 +116,7 @@
         <div class="card-header">
           <span class="title">归档控制</span>
           <el-tag v-if="archiveResult" type="success" effect="plain">
-            最近归档：{{ archiveResult.model }}，{{
-              archiveResult.archived_count
-            }}
+            最近归档：{{ archiveResult.model }}，{{ archiveResult.archived_count }}
             条
           </el-tag>
         </div>
@@ -208,11 +173,7 @@
       </template>
       <el-tabs v-model="archiveTab" @tab-change="handleArchiveTabChange">
         <el-tab-pane label="冷归档" name="cold">
-          <el-table
-            :data="coldArchives"
-            style="width: 100%"
-            empty-text="暂无非归档文件"
-          >
+          <el-table :data="coldArchives" style="width: 100%" empty-text="暂无非归档文件">
             <el-table-column prop="name" label="文件名" min-width="200" />
             <el-table-column label="大小" width="120">
               <template #default="{ row }">
@@ -226,12 +187,7 @@
             </el-table-column>
             <el-table-column label="操作" width="120">
               <template #default="{ row }">
-                <el-button
-                  type="primary"
-                  size="small"
-                  link
-                  @click="handleRestore(row)"
-                >
+                <el-button type="primary" size="small" link @click="handleRestore(row)">
                   恢复
                 </el-button>
               </template>
@@ -239,11 +195,7 @@
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="温归档" name="warm">
-          <el-table
-            :data="warmArchives"
-            style="width: 100%"
-            empty-text="暂无温归档文件"
-          >
+          <el-table :data="warmArchives" style="width: 100%" empty-text="暂无温归档文件">
             <el-table-column prop="name" label="文件名" min-width="200" />
             <el-table-column label="大小" width="120">
               <template #default="{ row }">
@@ -257,12 +209,7 @@
             </el-table-column>
             <el-table-column label="操作" width="120">
               <template #default="{ row }">
-                <el-button
-                  type="primary"
-                  size="small"
-                  link
-                  @click="handleRestore(row)"
-                >
+                <el-button type="primary" size="small" link @click="handleRestore(row)">
                   恢复
                 </el-button>
               </template>
@@ -288,12 +235,7 @@
           />
         </el-form-item>
         <el-form-item>
-          <el-button
-            type="primary"
-            :icon="Search"
-            :loading="lookingUp"
-            @click="handleLookup"
-          >
+          <el-button type="primary" :icon="Search" :loading="lookingUp" @click="handleLookup">
             查询分级
           </el-button>
         </el-form-item>
@@ -306,19 +248,13 @@
           <el-descriptions-item label="分级">
             <el-tag
               :type="
-                tierInfo.tier === 'hot'
-                  ? 'danger'
-                  : tierInfo.tier === 'warm'
-                    ? 'warning'
-                    : 'info'
+                tierInfo.tier === 'hot' ? 'danger' : tierInfo.tier === 'warm' ? 'warning' : 'info'
               "
             >
               {{ tierLabel(tierInfo.tier) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="数据年龄">
-            {{ tierInfo.age_days }} 天
-          </el-descriptions-item>
+          <el-descriptions-item label="数据年龄"> {{ tierInfo.age_days }} 天 </el-descriptions-item>
         </el-descriptions>
       </div>
     </el-card>
@@ -352,41 +288,41 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Refresh, FolderOpened, Search } from "@element-plus/icons-vue";
-import { dataTierApi } from "@/api/dataTier";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh, FolderOpened, Search } from '@element-plus/icons-vue'
+import { dataTierApi } from '@/api/dataTier'
 import type {
   StorageStats,
   ArchiveFile,
   ArchiveResult,
   CleanupResult,
   RecordTierInfo,
-} from "@/api/dataTier";
+} from '@/api/dataTier'
 
 // ==================== 响应式状态 ====================
 
-const loading = ref(false);
-const archiving = ref(false);
-const cleaningUp = ref(false);
-const lookingUp = ref(false);
+const loading = ref(false)
+const archiving = ref(false)
+const cleaningUp = ref(false)
+const lookingUp = ref(false)
 
-const stats = ref<StorageStats>({});
-const archiveTab = ref("cold");
-const coldArchives = ref<ArchiveFile[]>([]);
-const warmArchives = ref<ArchiveFile[]>([]);
-const archiveResult = ref<ArchiveResult | null>(null);
-const cleanupResult = ref<CleanupResult | null>(null);
-const tierInfo = ref<RecordTierInfo | null>(null);
+const stats = ref<StorageStats>({})
+const archiveTab = ref('cold')
+const coldArchives = ref<ArchiveFile[]>([])
+const warmArchives = ref<ArchiveFile[]>([])
+const archiveResult = ref<ArchiveResult | null>(null)
+const cleanupResult = ref<CleanupResult | null>(null)
+const tierInfo = ref<RecordTierInfo | null>(null)
 
 const archiveForm = ref({
-  modelName: "",
+  modelName: '',
   beforeDays: 365,
   batchSize: 1000,
-});
+})
 
-const lookupDate = ref<string>("");
-const cleanupMaxAge = ref(365);
+const lookupDate = ref<string>('')
+const cleanupMaxAge = ref(365)
 
 // ==================== 计算属性 ====================
 
@@ -395,81 +331,81 @@ const totalCount = computed(() => {
     (Number(stats.value.hot_count) || 0) +
     (Number(stats.value.warm_count) || 0) +
     (Number(stats.value.cold_count) || 0)
-  );
-});
+  )
+})
 
 const totalSize = computed(() => {
   return (
     (Number(stats.value.hot_size_mb) || 0) +
     (Number(stats.value.warm_size_mb) || 0) +
     (Number(stats.value.cold_size_mb) || 0)
-  );
-});
+  )
+})
 
 function countPercent(tier: string): number {
-  if (totalCount.value === 0) return 0;
-  const val = Number((stats.value as any)[`${tier}_count`]) || 0;
-  return Math.round((val / totalCount.value) * 100);
+  if (totalCount.value === 0) return 0
+  const val = Number((stats.value as any)[`${tier}_count`]) || 0
+  return Math.round((val / totalCount.value) * 100)
 }
 
 function sizePercent(tier: string): number {
-  if (totalSize.value === 0) return 0;
-  const val = Number((stats.value as any)[`${tier}_size_mb`]) || 0;
-  return Math.round((val / totalSize.value) * 100);
+  if (totalSize.value === 0) return 0
+  const val = Number((stats.value as any)[`${tier}_size_mb`]) || 0
+  return Math.round((val / totalSize.value) * 100)
 }
 
 // ==================== 工具函数 ====================
 
 function formatSize(mb: number | undefined): string {
-  if (mb === undefined || mb === null) return "-";
-  const n = Number(mb);
-  if (n >= 1024) return (n / 1024).toFixed(2) + " GB";
-  return n.toFixed(2) + " MB";
+  if (mb === undefined || mb === null) return '-'
+  const n = Number(mb)
+  if (n >= 1024) return (n / 1024).toFixed(2) + ' GB'
+  return n.toFixed(2) + ' MB'
 }
 
 function tierLabel(tier: string): string {
   const map: Record<string, string> = {
-    hot: "热数据",
-    warm: "温数据",
-    cold: "冷数据",
-  };
-  return map[tier] || tier;
+    hot: '热数据',
+    warm: '温数据',
+    cold: '冷数据',
+  }
+  return map[tier] || tier
 }
 
 // ==================== 数据加载 ====================
 
 async function loadStats() {
   try {
-    const data = await dataTierApi.getStats();
-    stats.value = data || {};
+    const data = await dataTierApi.getStats()
+    stats.value = data || {}
   } catch {
-    ElMessage.error("加载存储统计失败");
+    ElMessage.error('加载存储统计失败')
   }
 }
 
 async function loadArchives() {
   try {
-    const data = await dataTierApi.listArchives();
+    const data = await dataTierApi.listArchives()
     // handle both ArchiveList shape and Record<string, any> shape
-    if (data && "cold_archives" in data) {
-      coldArchives.value = (data as any).cold_archives || [];
-      warmArchives.value = (data as any).warm_archives || [];
+    if (data && 'cold_archives' in data) {
+      coldArchives.value = (data as any).cold_archives || []
+      warmArchives.value = (data as any).warm_archives || []
     } else {
-      coldArchives.value = [];
-      warmArchives.value = [];
+      coldArchives.value = []
+      warmArchives.value = []
     }
   } catch {
-    ElMessage.error("加载归档列表失败");
+    ElMessage.error('加载归档列表失败')
   }
 }
 
 async function refreshAll() {
-  loading.value = true;
+  loading.value = true
   try {
-    await Promise.all([loadStats(), loadArchives()]);
-    ElMessage.success("刷新完成");
+    await Promise.all([loadStats(), loadArchives()])
+    ElMessage.success('刷新完成')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -477,24 +413,24 @@ async function refreshAll() {
 
 async function handleArchive() {
   if (!archiveForm.value.modelName.trim()) {
-    ElMessage.warning("请输入数据模型名称");
-    return;
+    ElMessage.warning('请输入数据模型名称')
+    return
   }
 
-  archiving.value = true;
+  archiving.value = true
   try {
     const result = await dataTierApi.archiveModel(
       archiveForm.value.modelName.trim(),
       archiveForm.value.beforeDays,
-      archiveForm.value.batchSize,
-    );
-    archiveResult.value = result;
-    ElMessage.success(result.message || "归档完成");
-    await loadStats();
+      archiveForm.value.batchSize
+    )
+    archiveResult.value = result
+    ElMessage.success(result.message || '归档完成')
+    await loadStats()
   } catch {
-    ElMessage.error("归档失败");
+    ElMessage.error('归档失败')
   } finally {
-    archiving.value = false;
+    archiving.value = false
   }
 }
 
@@ -502,28 +438,24 @@ async function handleArchive() {
 
 async function handleRestore(file: ArchiveFile | Record<string, any>) {
   try {
-    await ElMessageBox.confirm(
-      `确定要恢复归档文件「${file.name}」吗？`,
-      "确认恢复",
-      {
-        type: "warning",
-        confirmButtonText: "恢复",
-        cancelButtonText: "取消",
-      },
-    );
+    await ElMessageBox.confirm(`确定要恢复归档文件「${file.name}」吗？`, '确认恢复', {
+      type: 'warning',
+      confirmButtonText: '恢复',
+      cancelButtonText: '取消',
+    })
   } catch {
-    return; // user cancelled
+    return // user cancelled
   }
 
   // Extract model name from archive file name (convention: model_name_*.json)
-  const modelName = file.name.split("_")[0] || "";
+  const modelName = file.name.split('_')[0] || ''
 
   try {
-    const result = await dataTierApi.restore(file.name, modelName);
-    ElMessage.success(result.message || "恢复完成");
-    await refreshAll();
+    const result = await dataTierApi.restore(file.name, modelName)
+    ElMessage.success(result.message || '恢复完成')
+    await refreshAll()
   } catch {
-    ElMessage.error("恢复失败");
+    ElMessage.error('恢复失败')
   }
 }
 
@@ -535,19 +467,19 @@ function handleArchiveTabChange() {
 
 async function handleLookup() {
   if (!lookupDate.value) {
-    ElMessage.warning("请选择日期");
-    return;
+    ElMessage.warning('请选择日期')
+    return
   }
 
-  lookingUp.value = true;
-  tierInfo.value = null;
+  lookingUp.value = true
+  tierInfo.value = null
   try {
-    const result = await dataTierApi.getTierForRecord(lookupDate.value);
-    tierInfo.value = result;
+    const result = await dataTierApi.getTierForRecord(lookupDate.value)
+    tierInfo.value = result
   } catch {
-    ElMessage.error("分级查询失败");
+    ElMessage.error('分级查询失败')
   } finally {
-    lookingUp.value = false;
+    lookingUp.value = false
   }
 }
 
@@ -557,37 +489,37 @@ async function handleCleanup() {
   try {
     await ElMessageBox.confirm(
       `确定要清理 ${cleanupMaxAge.value} 天前的归档文件吗？此操作不可撤销。`,
-      "确认清理",
+      '确认清理',
       {
-        type: "warning",
-        confirmButtonText: "确认清理",
-        cancelButtonText: "取消",
-      },
-    );
+        type: 'warning',
+        confirmButtonText: '确认清理',
+        cancelButtonText: '取消',
+      }
+    )
   } catch {
-    return; // user cancelled
+    return // user cancelled
   }
 
-  cleaningUp.value = true;
-  cleanupResult.value = null;
+  cleaningUp.value = true
+  cleanupResult.value = null
   try {
-    const result = await dataTierApi.cleanup(cleanupMaxAge.value);
-    cleanupResult.value = result;
-    ElMessage.success(result.message || "清理完成");
-    await loadArchives();
+    const result = await dataTierApi.cleanup(cleanupMaxAge.value)
+    cleanupResult.value = result
+    ElMessage.success(result.message || '清理完成')
+    await loadArchives()
   } catch {
-    ElMessage.error("清理失败");
+    ElMessage.error('清理失败')
   } finally {
-    cleaningUp.value = false;
+    cleaningUp.value = false
   }
 }
 
 // ==================== 生命周期 ====================
 
 onMounted(() => {
-  loadStats();
-  loadArchives();
-});
+  loadStats()
+  loadArchives()
+})
 </script>
 
 <style scoped>

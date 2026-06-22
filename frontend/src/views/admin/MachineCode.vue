@@ -19,15 +19,9 @@
 
       <el-descriptions v-if="machineData" :column="2" border>
         <el-descriptions-item label="机器码">
-          <el-input
-            v-model="machineData.machine_code"
-            readonly
-            style="width: 100%"
-          >
+          <el-input v-model="machineData.machine_code" readonly style="width: 100%">
             <template #append>
-              <el-button @click="copyToClipboard(machineData.machine_code)">
-                复制
-              </el-button>
+              <el-button @click="copyToClipboard(machineData.machine_code)"> 复制 </el-button>
             </template>
           </el-input>
         </el-descriptions-item>
@@ -56,18 +50,12 @@
         </el-descriptions-item>
       </el-descriptions>
 
-      <el-alert
-        v-if="machineData"
-        type="info"
-        :closable="false"
-        style="margin-top: 20px"
-      >
+      <el-alert v-if="machineData" type="info" :closable="false" style="margin-top: 20px">
         <template #title>
           <strong>使用说明：</strong>
         </template>
         <div>
-          1. 将上方的<strong
-            >校验码（{{ machineData.verification_code }}）</strong
+          1. 将上方的<strong>校验码（{{ machineData.verification_code }}）</strong
           >提供给系统管理员<br />
           2. 管理员使用校验码为您生成初始登录密码<br />
           3. 使用初始密码登录后，请立即修改密码
@@ -80,10 +68,7 @@
       <h3>生成用户初始密码</h3>
       <el-form :model="passwordForm" label-width="120px">
         <el-form-item label="用户名">
-          <el-input
-            v-model="passwordForm.username"
-            placeholder="请输入用户名"
-          />
+          <el-input v-model="passwordForm.username" placeholder="请输入用户名" />
         </el-form-item>
 
         <el-form-item label="校验码">
@@ -95,22 +80,13 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="generating"
-            @click="generatePassword"
-          >
+          <el-button type="primary" :loading="generating" @click="generatePassword">
             生成密码
           </el-button>
         </el-form-item>
       </el-form>
 
-      <el-alert
-        v-if="generatedPassword"
-        type="success"
-        :closable="false"
-        style="margin-top: 20px"
-      >
+      <el-alert v-if="generatedPassword" type="success" :closable="false" style="margin-top: 20px">
         <template #title>
           <strong>初始密码已生成：</strong>
         </template>
@@ -120,10 +96,7 @@
           初始密码：<strong style="font-size: 20px; color: #e6a23c">{{
             generatedPassword.initial_password
           }}</strong>
-          <el-button
-            type="text"
-            @click="copyToClipboard(generatedPassword.initial_password)"
-          >
+          <el-button type="text" @click="copyToClipboard(generatedPassword.initial_password)">
             复制密码
           </el-button>
           <br />
@@ -173,12 +146,7 @@
         </el-form-item>
       </el-form>
 
-      <el-alert
-        v-if="resetResult"
-        type="success"
-        :closable="false"
-        style="margin-top: 20px"
-      >
+      <el-alert v-if="resetResult" type="success" :closable="false" style="margin-top: 20px">
         <template #title>
           <strong>密码已重置：</strong>
         </template>
@@ -186,16 +154,11 @@
           新密码：<strong style="font-size: 20px; color: #e6a23c">{{
             resetResult.new_password
           }}</strong>
-          <el-button
-            type="text"
-            @click="copyToClipboard(resetResult.new_password)"
-          >
+          <el-button type="text" @click="copyToClipboard(resetResult.new_password)">
             复制密码
           </el-button>
           <br />
-          <span style="color: #909399; font-size: 14px">
-            请使用新密码登录并及时修改
-          </span>
+          <span style="color: #909399; font-size: 14px"> 请使用新密码登录并及时修改 </span>
         </div>
       </el-alert>
     </el-card>
@@ -204,125 +167,121 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { useUserStore } from "@/stores/user";
-import request from "@/api/request";
-import { copyToClipboard } from "@/utils/clipboard";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/user'
+import request from '@/api/request'
+import { copyToClipboard } from '@/utils/clipboard'
 
-const userStore = useUserStore();
+const userStore = useUserStore()
 
-const loading = ref(false);
-const generating = ref(false);
-const resetting = ref(false);
+const loading = ref(false)
+const generating = ref(false)
+const resetting = ref(false)
 
-const machineData = ref<any>(null);
-const generatedPassword = ref<any>(null);
-const resetResult = ref<any>(null);
+const machineData = ref<any>(null)
+const generatedPassword = ref<any>(null)
+const resetResult = ref<any>(null)
 
 const passwordForm = ref({
-  username: "",
-  verification_code: "",
-});
+  username: '',
+  verification_code: '',
+})
 
 const resetForm = ref({
-  username: "",
-  machine_code: "",
-  verification_code: "",
-});
+  username: '',
+  machine_code: '',
+  verification_code: '',
+})
 
 const isAdmin = computed(() => {
-  const role = userStore.user?.role;
-  return role === "super_admin" || role === "admin";
-});
+  const role = userStore.user?.role
+  return role === 'super_admin' || role === 'admin'
+})
 
 const getMachineCode = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const response = await request.get("/machine-code/get-machine-code");
+    const response = await request.get('/machine-code/get-machine-code')
     if (response.success) {
-      machineData.value = response;
-      ElMessage.success("机器码获取成功");
+      machineData.value = response
+      ElMessage.success('机器码获取成功')
     }
   } catch (error: any) {
-    ElMessage.error(error.message || "获取机器码失败");
+    ElMessage.error(error.message || '获取机器码失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const generatePassword = async () => {
   if (!passwordForm.value.username) {
-    ElMessage.warning("请输入用户名");
-    return;
+    ElMessage.warning('请输入用户名')
+    return
   }
   if (!passwordForm.value.verification_code) {
-    ElMessage.warning("请输入校验码");
-    return;
+    ElMessage.warning('请输入校验码')
+    return
   }
   if (passwordForm.value.verification_code.length !== 4) {
-    ElMessage.warning("校验码必须是4位数字");
-    return;
+    ElMessage.warning('校验码必须是4位数字')
+    return
   }
 
-  generating.value = true;
-  generatedPassword.value = null;
+  generating.value = true
+  generatedPassword.value = null
 
   try {
     const response = await request.post(
-      "/machine-code/generate-initial-password",
-      passwordForm.value,
-    );
+      '/machine-code/generate-initial-password',
+      passwordForm.value
+    )
     if (response.success) {
-      generatedPassword.value = response;
-      ElMessage.success("初始密码已生成");
+      generatedPassword.value = response
+      ElMessage.success('初始密码已生成')
     }
   } catch (error: any) {
-    ElMessage.error(error.message || "生成密码失败");
+    ElMessage.error(error.message || '生成密码失败')
   } finally {
-    generating.value = false;
+    generating.value = false
   }
-};
+}
 
 const resetPassword = async () => {
   if (!resetForm.value.username) {
-    ElMessage.warning("请输入用户名");
-    return;
+    ElMessage.warning('请输入用户名')
+    return
   }
   if (!resetForm.value.machine_code) {
-    ElMessage.warning("请输入机器码");
-    return;
+    ElMessage.warning('请输入机器码')
+    return
   }
   if (!resetForm.value.verification_code) {
-    ElMessage.warning("请输入校验码");
-    return;
+    ElMessage.warning('请输入校验码')
+    return
   }
 
-  resetting.value = true;
-  resetResult.value = null;
+  resetting.value = true
+  resetResult.value = null
 
   try {
-    const response = await request.post(
-      "/machine-code/reset-password-with-machine-code",
-      null,
-      {
-        params: resetForm.value,
-      },
-    );
+    const response = await request.post('/machine-code/reset-password-with-machine-code', null, {
+      params: resetForm.value,
+    })
     if (response.success) {
-      resetResult.value = response;
-      ElMessage.success("密码已重置");
+      resetResult.value = response
+      ElMessage.success('密码已重置')
     }
   } catch (error: any) {
-    ElMessage.error(error.message || "重置密码失败");
+    ElMessage.error(error.message || '重置密码失败')
   } finally {
-    resetting.value = false;
+    resetting.value = false
   }
-};
+}
 
 onMounted(() => {
-  getMachineCode();
-});
+  getMachineCode()
+})
 </script>
 
 <style scoped lang="scss">

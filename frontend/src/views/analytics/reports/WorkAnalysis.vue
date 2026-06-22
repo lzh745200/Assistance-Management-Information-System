@@ -121,52 +121,26 @@
           </el-select>
         </div>
       </div>
-      <el-table
-        v-loading="loading"
-        :data="filteredTableData"
-        border
-        stripe
-        style="width: 100%"
-      >
+      <el-table v-loading="loading" :data="filteredTableData" border stripe style="width: 100%">
         <el-table-column type="index" label="#" width="50" align="center" />
-        <el-table-column
-          prop="name"
-          label="工作名称"
-          min-width="200"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="name" label="工作名称" min-width="200" show-overflow-tooltip />
         <el-table-column prop="typeName" label="工作类型" width="130">
           <template #default="{ row }">
-            <el-tag :type="getTypeTagType(row.type)" size="small">{{
-              row.typeName
-            }}</el-tag>
+            <el-tag :type="getTypeTagType(row.type)" size="small">{{ row.typeName }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="village_name" label="所属村庄" width="120" />
         <el-table-column prop="responsible_person" label="负责人" width="100" />
-        <el-table-column
-          prop="statusName"
-          label="状态"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="statusName" label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="getStatusTagType(row.status)" size="small">{{
-              row.statusName
-            }}</el-tag>
+            <el-tag :type="getStatusTagType(row.status)" size="small">{{ row.statusName }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="progress" label="进度" width="140">
           <template #default="{ row }">
             <el-progress
               :percentage="row.progress"
-              :status="
-                row.progress === 100
-                  ? 'success'
-                  : row.progress > 60
-                    ? ''
-                    : 'warning'
-              "
+              :status="row.progress === 100 ? 'success' : row.progress > 60 ? '' : 'warning'"
               :stroke-width="8"
             />
           </template>
@@ -190,108 +164,99 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import {
-  ref,
-  computed,
-  watch,
-  onMounted,
-  nextTick,
-  onBeforeUnmount,
-} from "vue";
-import { ElMessage } from "element-plus";
-import { Search, Refresh, Download } from "@element-plus/icons-vue";
-import { Chart } from "chart.js/auto";
-import { getRuralWorks } from "@/api/ruralWork";
+import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Search, Refresh, Download } from '@element-plus/icons-vue'
+import { Chart } from 'chart.js/auto'
+import { getRuralWorks } from '@/api/ruralWork'
 
 // 类型映射
 const TYPE_LABELS: Record<string, string> = {
-  infrastructure: "基础设施建设",
-  industry: "产业发展",
-  education: "教育培训",
-  healthcare: "医疗健康",
-  environment: "生态环境保护",
-};
+  infrastructure: '基础设施建设',
+  industry: '产业发展',
+  education: '教育培训',
+  healthcare: '医疗健康',
+  environment: '生态环境保护',
+}
 const STATUS_LABELS: Record<string, string> = {
-  planned: "计划中",
-  in_progress: "进行中",
-  completed: "已完成",
-  delayed: "已延期",
-};
+  planned: '计划中',
+  in_progress: '进行中',
+  completed: '已完成',
+  delayed: '已延期',
+}
 
 // 状态
-const loading = ref(false);
-const dateRange = ref<[string, string] | null>(null);
-const searchText = ref("");
-const filterType = ref("");
-const filterStatus = ref("");
-const currentPage = ref(1);
-const pageSize = ref(10);
-const totalCount = ref(0);
-const allData = ref<any[]>([]);
+const loading = ref(false)
+const dateRange = ref<[string, string] | null>(null)
+const searchText = ref('')
+const filterType = ref('')
+const filterStatus = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalCount = ref(0)
+const allData = ref<any[]>([])
 
 // 图表
-const typeChartRef = ref<HTMLCanvasElement | null>(null);
-const statusChartRef = ref<HTMLCanvasElement | null>(null);
-const trendChartRef = ref<HTMLCanvasElement | null>(null);
-let typeChart: InstanceType<typeof Chart> | null = null;
-let statusChart: InstanceType<typeof Chart> | null = null;
-let trendChart: InstanceType<typeof Chart> | null = null;
+const typeChartRef = ref<HTMLCanvasElement | null>(null)
+const statusChartRef = ref<HTMLCanvasElement | null>(null)
+const trendChartRef = ref<HTMLCanvasElement | null>(null)
+let typeChart: InstanceType<typeof Chart> | null = null
+let statusChart: InstanceType<typeof Chart> | null = null
+let trendChart: InstanceType<typeof Chart> | null = null
 
 // 模拟数据已清除，使用真实API数据
 
 // 统计卡片
 const statsCards = computed(() => {
-  const data = allData.value;
-  const total = data.length;
-  const completed = data.filter((d) => d.status === "completed").length;
-  const inProgress = data.filter((d) => d.status === "in_progress").length;
-  const delayed = data.filter((d) => d.status === "delayed").length;
+  const data = allData.value
+  const total = data.length
+  const completed = data.filter((d) => d.status === 'completed').length
+  const inProgress = data.filter((d) => d.status === 'in_progress').length
+  const delayed = data.filter((d) => d.status === 'delayed').length
   const avgProgress =
-    total > 0
-      ? Math.round(data.reduce((s, d) => s + (d.progress || 0), 0) / total)
-      : 0;
+    total > 0 ? Math.round(data.reduce((s, d) => s + (d.progress || 0), 0) / total) : 0
 
   return [
     {
-      label: "工作总数",
+      label: '工作总数',
       value: total,
-      icon: "📊",
-      color: "#409eff",
-      bgColor: "rgba(64,158,255,0.1)",
-      trend: "较上月 +12%",
-      trendType: "up",
+      icon: '📊',
+      color: '#409eff',
+      bgColor: 'rgba(64,158,255,0.1)',
+      trend: '较上月 +12%',
+      trendType: 'up',
     },
     {
-      label: "进行中",
+      label: '进行中',
       value: inProgress,
-      icon: "🔄",
-      color: "#e6a23c",
-      bgColor: "rgba(230,162,60,0.1)",
+      icon: '🔄',
+      color: '#e6a23c',
+      bgColor: 'rgba(230,162,60,0.1)',
       trend: `占比 ${total > 0 ? Math.round((inProgress / total) * 100) : 0}%`,
-      trendType: "neutral",
+      trendType: 'neutral',
     },
     {
-      label: "已完成",
+      label: '已完成',
       value: completed,
-      icon: "✅",
-      color: "#67c23a",
-      bgColor: "rgba(103,194,58,0.1)",
+      icon: '✅',
+      color: '#67c23a',
+      bgColor: 'rgba(103,194,58,0.1)',
       trend: `完成率 ${total > 0 ? Math.round((completed / total) * 100) : 0}%`,
-      trendType: "up",
+      trendType: 'up',
     },
     {
-      label: "平均进度",
+      label: '平均进度',
       value: `${avgProgress}%`,
-      icon: "📈",
-      color: "#1b4332",
-      bgColor: "rgba(27,67,50,0.1)",
-      trend: delayed > 0 ? `${delayed}项延期` : "无延期",
-      trendType: delayed > 0 ? "down" : "up",
+      icon: '📈',
+      color: '#1b4332',
+      bgColor: 'rgba(27,67,50,0.1)',
+      trend: delayed > 0 ? `${delayed}项延期` : '无延期',
+      trendType: delayed > 0 ? 'down' : 'up',
     },
-  ];
-});
+  ]
+})
 
 // 表格过滤
 const filteredData = computed(() => {
@@ -299,111 +264,104 @@ const filteredData = computed(() => {
     ...item,
     typeName: TYPE_LABELS[item.type] || item.type,
     statusName: STATUS_LABELS[item.status] || item.status,
-  }));
+  }))
 
   if (searchText.value) {
-    const q = searchText.value.toLowerCase();
+    const q = searchText.value.toLowerCase()
     data = data.filter(
       (d) =>
         (d.name && d.name.toLowerCase().includes(q)) ||
-        (d.responsible_person &&
-          d.responsible_person.toLowerCase().includes(q)) ||
-        (d.village_name && d.village_name.toLowerCase().includes(q)),
-    );
+        (d.responsible_person && d.responsible_person.toLowerCase().includes(q)) ||
+        (d.village_name && d.village_name.toLowerCase().includes(q))
+    )
   }
   if (filterType.value) {
-    data = data.filter((d) => d.type === filterType.value);
+    data = data.filter((d) => d.type === filterType.value)
   }
   if (filterStatus.value) {
-    data = data.filter((d) => d.status === filterStatus.value);
+    data = data.filter((d) => d.status === filterStatus.value)
   }
 
-  return data;
-});
+  return data
+})
 
 const filteredTableData = computed(() => {
-  const data = filteredData.value;
-  const start = (currentPage.value - 1) * pageSize.value;
-  return data.slice(start, start + pageSize.value);
-});
+  const data = filteredData.value
+  const start = (currentPage.value - 1) * pageSize.value
+  return data.slice(start, start + pageSize.value)
+})
 
 watch(
   filteredData,
   (data) => {
-    totalCount.value = data.length;
+    totalCount.value = data.length
   },
-  { immediate: true },
-);
+  { immediate: true }
+)
 
 function filterTable() {
-  currentPage.value = 1;
+  currentPage.value = 1
 }
 
 // 数据加载
 async function loadData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await getRuralWorks({ limit: 100 });
-    allData.value = res && (res as any).items ? (res as any).items : [];
+    const res = await getRuralWorks({ limit: 100 })
+    allData.value = res && (res as any).items ? (res as any).items : []
   } catch (e) {
-    logger.error("加载工作数据失败:", e);
-    allData.value = [];
-    ElMessage.error("加载数据失败，请稍后重试");
+    logger.error('加载工作数据失败:', e)
+    allData.value = []
+    ElMessage.error('加载数据失败，请稍后重试')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function refreshData() {
-  await loadData();
-  await nextTick();
-  updateCharts();
-  ElMessage.success("数据已刷新");
+  await loadData()
+  await nextTick()
+  updateCharts()
+  ElMessage.success('数据已刷新')
 }
 
 // 图表
 function destroyCharts() {
   if (typeChart) {
-    typeChart.destroy();
-    typeChart = null;
+    typeChart.destroy()
+    typeChart = null
   }
   if (statusChart) {
-    statusChart.destroy();
-    statusChart = null;
+    statusChart.destroy()
+    statusChart = null
   }
   if (trendChart) {
-    trendChart.destroy();
-    trendChart = null;
+    trendChart.destroy()
+    trendChart = null
   }
 }
 
 function updateCharts() {
-  destroyCharts();
-  const data = allData.value;
+  destroyCharts()
+  const data = allData.value
 
   // 类型分布 - 饼图
   if (typeChartRef.value) {
-    const typeCounts: Record<string, number> = {};
+    const typeCounts: Record<string, number> = {}
     data.forEach((d) => {
-      const label = TYPE_LABELS[d.type] || d.type || "其他";
-      typeCounts[label] = (typeCounts[label] || 0) + 1;
-    });
+      const label = TYPE_LABELS[d.type] || d.type || '其他'
+      typeCounts[label] = (typeCounts[label] || 0) + 1
+    })
     typeChart = new Chart(typeChartRef.value, {
-      type: "doughnut",
+      type: 'doughnut',
       data: {
         labels: Object.keys(typeCounts),
         datasets: [
           {
             data: Object.values(typeCounts),
-            backgroundColor: [
-              "#409EFF",
-              "#67C23A",
-              "#E6A23C",
-              "#F56C6C",
-              "#909399",
-            ],
+            backgroundColor: ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399'],
             borderWidth: 2,
-            borderColor: "#fff",
+            borderColor: '#fff',
           },
         ],
       },
@@ -412,12 +370,12 @@ function updateCharts() {
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: "bottom",
+            position: 'bottom',
             labels: { padding: 16, usePointStyle: true },
           },
         },
       },
-    });
+    })
   }
 
   // 状态分布 - 柱状图
@@ -427,24 +385,24 @@ function updateCharts() {
       in_progress: 0,
       completed: 0,
       delayed: 0,
-    };
+    }
     data.forEach((d) => {
-      if (statusCounts[d.status] !== undefined) statusCounts[d.status]++;
-    });
+      if (statusCounts[d.status] !== undefined) statusCounts[d.status]++
+    })
     statusChart = new Chart(statusChartRef.value, {
-      type: "bar",
+      type: 'bar',
       data: {
-        labels: ["计划中", "进行中", "已完成", "已延期"],
+        labels: ['计划中', '进行中', '已完成', '已延期'],
         datasets: [
           {
-            label: "工作数量",
+            label: '工作数量',
             data: [
               statusCounts.planned,
               statusCounts.in_progress,
               statusCounts.completed,
               statusCounts.delayed,
             ],
-            backgroundColor: ["#909399", "#E6A23C", "#67C23A", "#F56C6C"],
+            backgroundColor: ['#909399', '#E6A23C', '#67C23A', '#F56C6C'],
             borderRadius: 6,
             maxBarThickness: 50,
           },
@@ -458,52 +416,48 @@ function updateCharts() {
           y: { beginAtZero: true, ticks: { stepSize: 1 } },
         },
       },
-    });
+    })
   }
 
   // 月度趋势 - 折线图
   if (trendChartRef.value) {
     // 从真实数据中计算月度统计
-    const now = new Date();
-    const currentMonth = now.getMonth(); // 0-based
-    const monthCount = Math.min(currentMonth + 1, 12);
-    const months: string[] = [];
-    const completedByMonth: number[] = [];
-    const newByMonth: number[] = [];
+    const now = new Date()
+    const currentMonth = now.getMonth() // 0-based
+    const monthCount = Math.min(currentMonth + 1, 12)
+    const months: string[] = []
+    const completedByMonth: number[] = []
+    const newByMonth: number[] = []
     for (let i = 0; i < monthCount; i++) {
-      months.push(`${i + 1}月`);
+      months.push(`${i + 1}月`)
       const monthItems = data.filter((d) => {
-        const created = d.start_date || d.created_at;
-        if (!created) return false;
-        const date = new Date(created);
-        return (
-          date.getMonth() === i && date.getFullYear() === now.getFullYear()
-        );
-      });
-      newByMonth.push(monthItems.length);
-      completedByMonth.push(
-        monthItems.filter((d) => d.status === "completed").length,
-      );
+        const created = d.start_date || d.created_at
+        if (!created) return false
+        const date = new Date(created)
+        return date.getMonth() === i && date.getFullYear() === now.getFullYear()
+      })
+      newByMonth.push(monthItems.length)
+      completedByMonth.push(monthItems.filter((d) => d.status === 'completed').length)
     }
     trendChart = new Chart(trendChartRef.value, {
-      type: "line",
+      type: 'line',
       data: {
         labels: months,
         datasets: [
           {
-            label: "新增工作",
+            label: '新增工作',
             data: newByMonth,
-            borderColor: "#409EFF",
-            backgroundColor: "rgba(64,158,255,0.1)",
+            borderColor: '#409EFF',
+            backgroundColor: 'rgba(64,158,255,0.1)',
             fill: true,
             tension: 0.4,
             pointRadius: 4,
           },
           {
-            label: "完成工作",
+            label: '完成工作',
             data: completedByMonth,
-            borderColor: "#67C23A",
-            backgroundColor: "rgba(103,194,58,0.1)",
+            borderColor: '#67C23A',
+            backgroundColor: 'rgba(103,194,58,0.1)',
             fill: true,
             tension: 0.4,
             pointRadius: 4,
@@ -514,108 +468,96 @@ function updateCharts() {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: "top", labels: { usePointStyle: true } },
+          legend: { position: 'top', labels: { usePointStyle: true } },
         },
         scales: {
           y: { beginAtZero: true, ticks: { stepSize: 1 } },
         },
       },
-    });
+    })
   }
 }
 
 // 导出
 function exportData() {
-  const data = allData.value;
+  const data = allData.value
   if (!data.length) {
-    ElMessage.warning("没有可导出的数据");
-    return;
+    ElMessage.warning('没有可导出的数据')
+    return
   }
 
   const headers = [
-    "序号",
-    "工作名称",
-    "工作类型",
-    "所属村庄",
-    "负责人",
-    "状态",
-    "进度(%)",
-    "开始日期",
-    "结束日期",
-  ];
+    '序号',
+    '工作名称',
+    '工作类型',
+    '所属村庄',
+    '负责人',
+    '状态',
+    '进度(%)',
+    '开始日期',
+    '结束日期',
+  ]
   const rows = data.map((item, i) => [
     i + 1,
-    item.name || "",
-    TYPE_LABELS[item.type] || item.type || "",
-    item.village_name || "",
-    item.responsible_person || "",
-    STATUS_LABELS[item.status] || item.status || "",
+    item.name || '',
+    TYPE_LABELS[item.type] || item.type || '',
+    item.village_name || '',
+    item.responsible_person || '',
+    STATUS_LABELS[item.status] || item.status || '',
     item.progress ?? 0,
-    item.start_date || "",
-    item.end_date || "",
-  ]);
+    item.start_date || '',
+    item.end_date || '',
+  ])
 
-  const BOM = "\uFEFF";
+  const BOM = '\uFEFF'
   const csv =
     BOM +
     [headers, ...rows]
-      .map((r) =>
-        r.map((c: any) => `"${String(c).replace(/"/g, '""')}"`).join(","),
-      )
-      .join("\n");
+      .map((r) => r.map((c: any) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
 
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `工作分析报告_${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `工作分析报告_${new Date().toISOString().slice(0, 10)}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
   // 导出成功 — 浏览器已确认
 }
 
 // 辅助
-function getTypeTagType(
-  type: string,
-): "success" | "info" | "warning" | "danger" | "primary" {
-  const map: Record<
-    string,
-    "success" | "info" | "warning" | "danger" | "primary"
-  > = {
-    infrastructure: "info",
-    industry: "success",
-    education: "warning",
-    healthcare: "danger",
-    environment: "info",
-  };
-  return map[type] || "info";
+function getTypeTagType(type: string): 'success' | 'info' | 'warning' | 'danger' | 'primary' {
+  const map: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'primary'> = {
+    infrastructure: 'info',
+    industry: 'success',
+    education: 'warning',
+    healthcare: 'danger',
+    environment: 'info',
+  }
+  return map[type] || 'info'
 }
-function getStatusTagType(
-  status: string,
-): "success" | "info" | "warning" | "danger" | "primary" {
-  const map: Record<
-    string,
-    "success" | "info" | "warning" | "danger" | "primary"
-  > = {
-    planned: "info",
-    in_progress: "primary",
-    completed: "success",
-    delayed: "danger",
-  };
-  return map[status] || "info";
+function getStatusTagType(status: string): 'success' | 'info' | 'warning' | 'danger' | 'primary' {
+  const map: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'primary'> = {
+    planned: 'info',
+    in_progress: 'primary',
+    completed: 'success',
+    delayed: 'danger',
+  }
+  return map[status] || 'info'
 }
 
 onMounted(async () => {
-  await loadData();
-  await nextTick();
-  updateCharts();
-});
+  await loadData()
+  await nextTick()
+  updateCharts()
+})
 
 onBeforeUnmount(() => {
-  destroyCharts();
-});
+  destroyCharts()
+})
 </script>
 
 <style scoped>

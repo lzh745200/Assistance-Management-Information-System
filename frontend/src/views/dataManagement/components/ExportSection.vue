@@ -78,11 +78,7 @@
             </el-form-item>
 
             <el-form-item>
-              <el-button
-                type="primary"
-                :loading="exporting"
-                @click="handleExport"
-              >
+              <el-button type="primary" :loading="exporting" @click="handleExport">
                 <el-icon><Download /></el-icon>
                 开始导出
               </el-button>
@@ -104,25 +100,18 @@
             </div>
           </template>
 
-          <el-table
-            v-loading="loadingHistory"
-            :data="historyList"
-            max-height="500"
-          >
+          <el-table v-loading="loadingHistory" :data="historyList" max-height="500">
             <el-table-column prop="export_type" label="类型" width="100" />
             <el-table-column label="状态" width="80">
               <template #default="{ row }">
-                <el-tag
-                  :type="formatExportStatus(row.status).type"
-                  size="small"
-                >
+                <el-tag :type="formatExportStatus(row.status).type" size="small">
                   {{ formatExportStatus(row.status).text }}
                 </el-tag>
               </template>
             </el-table-column>
             <el-table-column label="大小" width="80">
               <template #default="{ row }">
-                {{ row.file_size ? formatFileSize(row.file_size) : "-" }}
+                {{ row.file_size ? formatFileSize(row.file_size) : '-' }}
               </template>
             </el-table-column>
             <el-table-column label="时间" width="100">
@@ -152,11 +141,11 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Download, Refresh } from "@element-plus/icons-vue";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Download, Refresh } from '@element-plus/icons-vue'
 import {
   exportVillages,
   getExportTasks,
@@ -166,112 +155,108 @@ import {
   triggerDownload,
   type ExportTask,
   type ExportFilterParams,
-} from "@/api/export";
+} from '@/api/export'
 
 const emit = defineEmits<{
-  (e: "export-complete"): void;
-}>();
+  (e: 'export-complete'): void
+}>()
 
 // 表单数据
 const exportForm = reactive({
-  dataType: "villages",
-  format: "xlsx",
+  dataType: 'villages',
+  format: 'xlsx',
   filters: {
-    department: "",
-    support_unit: "",
-    region_scope: "",
+    department: '',
+    support_unit: '',
+    region_scope: '',
     is_revitalization_tier: false,
   },
-});
+})
 
 // 状态
-const exporting = ref(false);
-const loadingHistory = ref(false);
-const historyList = ref<ExportTask[]>([]);
+const exporting = ref(false)
+const loadingHistory = ref(false)
+const historyList = ref<ExportTask[]>([])
 
 // 加载导出历史
 async function loadHistory() {
-  loadingHistory.value = true;
+  loadingHistory.value = true
   try {
-    const res = await getExportTasks({ page: 1, page_size: 10 });
-    historyList.value = (res as any)?.data?.items || (res as any)?.items;
+    const res = await getExportTasks({ page: 1, page_size: 10 })
+    historyList.value = (res as any)?.data?.items || (res as any)?.items
   } catch (error) {
-    logger.error("加载导出历史失败:", error);
+    logger.error('加载导出历史失败:', error)
   } finally {
-    loadingHistory.value = false;
+    loadingHistory.value = false
   }
 }
 
 // 执行导出
 async function handleExport() {
-  exporting.value = true;
+  exporting.value = true
   try {
     // 构建筛选参数
-    const filters: ExportFilterParams = {};
-    if (exportForm.filters.department)
-      filters.department = exportForm.filters.department;
-    if (exportForm.filters.support_unit)
-      filters.support_unit = exportForm.filters.support_unit;
-    if (exportForm.filters.region_scope)
-      filters.region_scope = exportForm.filters.region_scope;
+    const filters: ExportFilterParams = {}
+    if (exportForm.filters.department) filters.department = exportForm.filters.department
+    if (exportForm.filters.support_unit) filters.support_unit = exportForm.filters.support_unit
+    if (exportForm.filters.region_scope) filters.region_scope = exportForm.filters.region_scope
     if (exportForm.filters.is_revitalization_tier)
-      filters.is_revitalization_tier =
-        exportForm.filters.is_revitalization_tier;
+      filters.is_revitalization_tier = exportForm.filters.is_revitalization_tier
 
-    const result = await exportVillages(filters, false);
+    const result = await exportVillages(filters, false)
 
     if (result instanceof Blob) {
       // 同步导出，直接下载
-      const filename = `帮扶村数据_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      triggerDownload(result, filename);
+      const filename = `帮扶村数据_${new Date().toISOString().slice(0, 10)}.xlsx`
+      triggerDownload(result, filename)
       // 导出成功 — 浏览器已确认
     } else {
       // 异步导出
-      ElMessage.success("导出任务已创建，请在历史记录中查看");
+      ElMessage.success('导出任务已创建，请在历史记录中查看')
     }
 
-    emit("export-complete");
-    loadHistory();
+    emit('export-complete')
+    loadHistory()
   } catch (error) {
-    ElMessage.error("导出失败");
+    ElMessage.error('导出失败')
   } finally {
-    exporting.value = false;
+    exporting.value = false
   }
 }
 
 // 下载文件
 async function handleDownload(task: ExportTask) {
   try {
-    const blob = await downloadExportFile(task.task_id);
-    triggerDownload(blob, task.file_name || `export_${task.task_id}.xlsx`);
-    ElMessage.success("下载成功");
+    const blob = await downloadExportFile(task.task_id)
+    triggerDownload(blob, task.file_name || `export_${task.task_id}.xlsx`)
+    ElMessage.success('下载成功')
   } catch (error) {
-    ElMessage.error("下载失败");
+    ElMessage.error('下载失败')
   }
 }
 
 // 重置表单
 function resetForm() {
-  exportForm.dataType = "villages";
-  exportForm.format = "xlsx";
+  exportForm.dataType = 'villages'
+  exportForm.format = 'xlsx'
   exportForm.filters = {
-    department: "",
-    support_unit: "",
-    region_scope: "",
+    department: '',
+    support_unit: '',
+    region_scope: '',
     is_revitalization_tier: false,
-  };
+  }
 }
 
 // 格式化时间
 function formatTime(dateStr: string): string {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
 onMounted(() => {
-  loadHistory();
-});
+  loadHistory()
+})
 </script>
 
 <style scoped lang="scss">

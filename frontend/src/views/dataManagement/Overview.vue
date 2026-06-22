@@ -92,35 +92,25 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column
-              prop="records"
-              label="记录数"
-              width="100"
-              align="right"
-            >
+            <el-table-column prop="records" label="记录数" width="100" align="right">
               <template #default="{ row }">
                 <span style="font-weight: 600">{{ row.records || 0 }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="lastUpdate" label="最后更新" width="160">
-              <template #default="{ row }">{{
-                formatTime(row.lastUpdate)
-              }}</template>
+              <template #default="{ row }">{{ formatTime(row.lastUpdate) }}</template>
             </el-table-column>
             <el-table-column label="趋势" width="100">
               <template #default="{ row }">
                 <el-tag :type="getTrendType(row.trend)" size="small">
-                  {{ row.trend > 0 ? `+${row.trend}` : row.trend || "0" }}
+                  {{ row.trend > 0 ? `+${row.trend}` : row.trend || '0' }}
                 </el-tag>
               </template>
             </el-table-column>
             <el-table-column label="状态" width="90">
               <template #default="{ row }">
-                <el-tag
-                  :type="row.healthy ? 'success' : 'warning'"
-                  size="small"
-                >
-                  {{ row.healthy ? "正常" : "待检查" }}
+                <el-tag :type="row.healthy ? 'success' : 'warning'" size="small">
+                  {{ row.healthy ? '正常' : '待检查' }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -144,9 +134,7 @@
               >
                 <template #default="{ percentage }">
                   <div class="percentage-content">
-                    <div class="percentage-value">
-                      {{ percentage.toFixed(1) }}%
-                    </div>
+                    <div class="percentage-value">{{ percentage.toFixed(1) }}%</div>
                     <div class="percentage-label">数据完整率</div>
                   </div>
                 </template>
@@ -157,21 +145,11 @@
           <!-- 各模块填报率进度条 -->
           <div class="filing-progress">
             <div class="progress-title">各模块填报进度</div>
-            <div
-              v-for="item in overview.filing_rates"
-              :key="item.module"
-              class="progress-item"
-            >
+            <div v-for="item in overview.filing_rates" :key="item.module" class="progress-item">
               <div class="progress-label">{{ item.module }}</div>
-              <el-progress
-                :percentage="item.rate"
-                :stroke-width="10"
-                :show-text="true"
-              >
+              <el-progress :percentage="item.rate" :stroke-width="10" :show-text="true">
                 <template #default="{ percentage }">
-                  <span style="font-size: 12px; margin-left: 4px"
-                    >{{ percentage }}%</span
-                  >
+                  <span style="font-size: 12px; margin-left: 4px">{{ percentage }}%</span>
                 </template>
               </el-progress>
             </div>
@@ -187,26 +165,16 @@
           <template #header>
             <div class="card-header">
               <span>最近操作日志</span>
-              <el-button
-                link
-                type="primary"
-                @click="navigateTo('/data-management/logs')"
+              <el-button link type="primary" @click="navigateTo('/data-management/logs')"
                 >查看更多</el-button
               >
             </div>
           </template>
-          <div
-            v-if="overview.recent_logs.length === 0"
-            class="empty-placeholder"
-          >
+          <div v-if="overview.recent_logs.length === 0" class="empty-placeholder">
             <el-empty description="暂无操作记录" :image-size="80" />
           </div>
           <div v-else class="logs-list">
-            <div
-              v-for="log in overview.recent_logs"
-              :key="log.id"
-              class="log-item"
-            >
+            <div v-for="log in overview.recent_logs" :key="log.id" class="log-item">
               <div class="log-icon">
                 <el-icon :color="getActionColor(log.action_type)"
                   ><component :is="getActionIcon(log.action_type)"
@@ -224,7 +192,7 @@
                     size="small"
                     style="margin-left: 8px"
                   >
-                    {{ log.status === "success" ? "成功" : "失败" }}
+                    {{ log.status === 'success' ? '成功' : '失败' }}
                   </el-tag>
                 </div>
               </div>
@@ -276,8 +244,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import {
   Location,
   Folder,
@@ -294,12 +262,12 @@ import {
   User,
   DataBoard,
   Check,
-} from "@element-plus/icons-vue";
-import request from "@/api/request";
+} from '@element-plus/icons-vue'
+import request from '@/api/request'
 
-const { pushSafe } = useRouterSafe();
+const { pushSafe } = useRouterSafe()
 
-const loading = ref(false);
+const loading = ref(false)
 
 const overview = reactive({
   villages: 0,
@@ -311,28 +279,28 @@ const overview = reactive({
   modules: [] as any[],
   filing_rates: [] as any[],
   recent_logs: [] as any[],
-});
+})
 
 const fundsLabel = computed(() => {
-  const amount = overview.funds_amount;
-  return amount >= 10000 ? `${(amount / 10000).toFixed(0)}万` : `${amount}`;
-});
+  const amount = overview.funds_amount
+  return amount >= 10000 ? `${(amount / 10000).toFixed(0)}万` : `${amount}`
+})
 
 function formatTime(val: string | null) {
-  if (!val || val === "None") return "-";
+  if (!val || val === 'None') return '-'
   try {
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return val;
-    return d.toLocaleString("zh-CN");
+    const d = new Date(val)
+    if (isNaN(d.getTime())) return val
+    return d.toLocaleString('zh-CN')
   } catch {
-    return val;
+    return val
   }
 }
 
 function getCompletenessColor(percentage: number) {
-  if (percentage >= 90) return "#67c23a";
-  if (percentage >= 70) return "#e6a23c";
-  return "#f56c6c";
+  if (percentage >= 90) return '#67c23a'
+  if (percentage >= 70) return '#e6a23c'
+  return '#f56c6c'
 }
 
 function getModuleIcon(module: string) {
@@ -343,19 +311,19 @@ function getModuleIcon(module: string) {
     经费管理: Money,
     用户管理: User,
     数据分析: DataBoard,
-  };
-  return iconMap[module] || Document;
+  }
+  return iconMap[module] || Document
 }
 
 function getModuleIconColor(row: any) {
-  if (!row.healthy) return "#e6a23c";
-  return "#67c23a";
+  if (!row.healthy) return '#e6a23c'
+  return '#67c23a'
 }
 
 function getTrendType(trend: number) {
-  if (trend > 0) return "success";
-  if (trend < 0) return "danger";
-  return "info";
+  if (trend > 0) return 'success'
+  if (trend < 0) return 'danger'
+  return 'info'
 }
 
 function getActionIcon(actionType: string) {
@@ -366,43 +334,43 @@ function getActionIcon(actionType: string) {
     import: Upload,
     export: FolderAdd,
     backup: FolderAdd,
-  };
-  return iconMap[actionType] || Check;
+  }
+  return iconMap[actionType] || Check
 }
 
 function getActionColor(actionType: string) {
   const colorMap: Record<string, string> = {
-    create: "#67c23a",
-    update: "#409eff",
-    delete: "#f56c6c",
-    import: "#e6a23c",
-    export: "#909399",
-    backup: "#67c23a",
-  };
-  return colorMap[actionType] || "#909399";
+    create: '#67c23a',
+    update: '#409eff',
+    delete: '#f56c6c',
+    import: '#e6a23c',
+    export: '#909399',
+    backup: '#67c23a',
+  }
+  return colorMap[actionType] || '#909399'
 }
 
 function navigateTo(path: string) {
-  pushSafe(path);
+  pushSafe(path)
 }
 
 function handleModuleClick(row: any) {
   const routeMap: Record<string, string> = {
-    帮扶村: "/villages",
-    帮扶项目: "/projects",
-    帮扶学校: "/schools",
-    经费管理: "/funds",
-    用户管理: "/system/users-orgs",
-  };
-  const route = routeMap[row.module];
-  if (route) navigateTo(route);
+    帮扶村: '/villages',
+    帮扶项目: '/projects',
+    帮扶学校: '/schools',
+    经费管理: '/funds',
+    用户管理: '/system/users-orgs',
+  }
+  const route = routeMap[row.module]
+  if (route) navigateTo(route)
 }
 
 async function loadOverview() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await request.get("/statistics/overview");
-    const d = res.data;
+    const res = await request.get('/statistics/overview')
+    const d = res.data
     Object.assign(overview, {
       villages: d.villages ?? 0,
       projects: d.projects ?? 0,
@@ -412,23 +380,23 @@ async function loadOverview() {
       completeness: d.completeness ?? 0,
       modules: d.modules ?? [],
       filing_rates: d.filing_rates ?? [
-        { module: "帮扶村", rate: d.village_filing_rate ?? 0 },
-        { module: "帮扶项目", rate: d.project_filing_rate ?? 0 },
-        { module: "帮扶学校", rate: d.school_filing_rate ?? 0 },
-        { module: "经费管理", rate: d.funds_filing_rate ?? 0 },
+        { module: '帮扶村', rate: d.village_filing_rate ?? 0 },
+        { module: '帮扶项目', rate: d.project_filing_rate ?? 0 },
+        { module: '帮扶学校', rate: d.school_filing_rate ?? 0 },
+        { module: '经费管理', rate: d.funds_filing_rate ?? 0 },
       ],
       recent_logs: d.recent_logs ?? [],
-    });
+    })
   } catch {
     // keep defaults
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 onMounted(() => {
-  loadOverview();
-});
+  loadOverview()
+})
 </script>
 
 <style scoped>

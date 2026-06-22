@@ -85,12 +85,7 @@
             </div>
           </div>
 
-          <el-table
-            v-loading="loading"
-            :data="auditLogs"
-            stripe
-            style="margin-top: 16px"
-          >
+          <el-table v-loading="loading" :data="auditLogs" stripe style="margin-top: 16px">
             <el-table-column type="index" label="#" width="50" />
             <el-table-column prop="timestamp" label="时间" width="170" />
             <el-table-column prop="user" label="用户" width="100" />
@@ -102,19 +97,12 @@
               </template>
             </el-table-column>
             <el-table-column prop="target" label="操作对象" width="150" />
-            <el-table-column
-              prop="detail"
-              label="详情"
-              min-width="200"
-              show-overflow-tooltip
-            />
+            <el-table-column prop="detail" label="详情" min-width="200" show-overflow-tooltip />
             <el-table-column label="结果" width="80">
               <template #default="{ row }">
-                <el-tag
-                  :type="row.success ? 'success' : 'danger'"
-                  size="small"
-                  >{{ row.success ? "成功" : "失败" }}</el-tag
-                >
+                <el-tag :type="row.success ? 'success' : 'danger'" size="small">{{
+                  row.success ? '成功' : '失败'
+                }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="ip" label="IP地址" width="130" />
@@ -131,22 +119,18 @@
             <el-table-column prop="user" label="用户" width="120" />
             <el-table-column label="类型" width="90">
               <template #default="{ row }">
-                <el-tag
-                  :type="row.type === 'login' ? 'success' : 'info'"
-                  size="small"
-                  >{{ row.type === "login" ? "登录" : "登出" }}</el-tag
-                >
+                <el-tag :type="row.type === 'login' ? 'success' : 'info'" size="small">{{
+                  row.type === 'login' ? '登录' : '登出'
+                }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="ip" label="IP地址" width="130" />
             <el-table-column prop="browser" label="浏览器" min-width="150" />
             <el-table-column label="状态" width="80">
               <template #default="{ row }">
-                <el-tag
-                  :type="row.success ? 'success' : 'danger'"
-                  size="small"
-                  >{{ row.success ? "成功" : "失败" }}</el-tag
-                >
+                <el-tag :type="row.success ? 'success' : 'danger'" size="small">{{
+                  row.success ? '成功' : '失败'
+                }}</el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -163,11 +147,7 @@
               <template #default="{ row }">
                 <el-tag
                   :type="
-                    row.level === 'high'
-                      ? 'danger'
-                      : row.level === 'medium'
-                        ? 'warning'
-                        : 'info'
+                    row.level === 'high' ? 'danger' : row.level === 'medium' ? 'warning' : 'info'
                   "
                   size="small"
                 >
@@ -176,19 +156,12 @@
               </template>
             </el-table-column>
             <el-table-column prop="type" label="类型" width="140" />
-            <el-table-column
-              prop="detail"
-              label="详情"
-              min-width="250"
-              show-overflow-tooltip
-            />
+            <el-table-column prop="detail" label="详情" min-width="250" show-overflow-tooltip />
             <el-table-column label="状态" width="100">
               <template #default="{ row }">
-                <el-tag
-                  :type="row.handled ? 'success' : 'warning'"
-                  size="small"
-                  >{{ row.handled ? "已处理" : "待处理" }}</el-tag
-                >
+                <el-tag :type="row.handled ? 'success' : 'warning'" size="small">{{
+                  row.handled ? '已处理' : '待处理'
+                }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="操作" width="80">
@@ -211,97 +184,92 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { auditApi } from "@/api/audit";
+import { ref, reactive, onMounted, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { auditApi } from '@/api/audit'
 
-const activeTab = ref("operations");
-const loading = ref(false);
+const activeTab = ref('operations')
+const loading = ref(false)
 const filters = reactive({
-  action: "",
-  user: "",
+  action: '',
+  user: '',
   dateRange: null as string[] | null,
-});
+})
 
 const stats = reactive({
   todayOps: 0,
   activeUsers: 0,
   warnings: 0,
   failures: 0,
-});
+})
 
-const actionTagType = (
-  a: string,
-): "info" | "primary" | "success" | "warning" | "danger" => {
-  const map: Record<
-    string,
-    "info" | "primary" | "success" | "warning" | "danger"
-  > = {
-    login: "success",
-    data_modify: "primary",
-    data_import: "info",
-    data_export: "success",
-    backup: "warning",
-    permission: "danger",
-    create_project: "primary",
-    update_project: "primary",
-    delete_project: "danger",
-    create_organization: "primary",
-    update_organization: "primary",
-    delete_organization: "danger",
-    create_user: "primary",
-    update_user: "primary",
-    delete_user: "danger",
-    system_config: "warning",
-    file_upload: "info",
-    file_download: "info",
-  };
-  return map[a] || "info";
-};
+const actionTagType = (a: string): 'info' | 'primary' | 'success' | 'warning' | 'danger' => {
+  const map: Record<string, 'info' | 'primary' | 'success' | 'warning' | 'danger'> = {
+    login: 'success',
+    data_modify: 'primary',
+    data_import: 'info',
+    data_export: 'success',
+    backup: 'warning',
+    permission: 'danger',
+    create_project: 'primary',
+    update_project: 'primary',
+    delete_project: 'danger',
+    create_organization: 'primary',
+    update_organization: 'primary',
+    delete_organization: 'danger',
+    create_user: 'primary',
+    update_user: 'primary',
+    delete_user: 'danger',
+    system_config: 'warning',
+    file_upload: 'info',
+    file_download: 'info',
+  }
+  return map[a] || 'info'
+}
 const actionNameMap: Record<string, string> = {
-  login: "登录",
-  data_modify: "数据修改",
-  data_import: "导入",
-  data_export: "导出",
-  backup: "备份",
-  permission: "权限",
-  create_project: "创建项目",
-  update_project: "更新项目",
-  delete_project: "删除项目",
-  create_organization: "创建组织",
-  update_organization: "更新组织",
-  delete_organization: "删除组织",
-  create_user: "创建用户",
-  update_user: "更新用户",
-  delete_user: "删除用户",
-  system_config: "系统配置",
-  file_upload: "文件上传",
-  file_download: "文件下载",
-};
+  login: '登录',
+  data_modify: '数据修改',
+  data_import: '导入',
+  data_export: '导出',
+  backup: '备份',
+  permission: '权限',
+  create_project: '创建项目',
+  update_project: '更新项目',
+  delete_project: '删除项目',
+  create_organization: '创建组织',
+  update_organization: '更新组织',
+  delete_organization: '删除组织',
+  create_user: '创建用户',
+  update_user: '更新用户',
+  delete_user: '删除用户',
+  system_config: '系统配置',
+  file_upload: '文件上传',
+  file_download: '文件下载',
+}
 
 // 级别文本映射
 const getLevelText = (level: string): string => {
   const levelMap: Record<string, string> = {
-    high: "高",
-    medium: "中",
-    low: "低",
-  };
-  return levelMap[level] || level;
-};
-const actionName = (a: string) => actionNameMap[a] || a;
+    high: '高',
+    medium: '中',
+    low: '低',
+  }
+  return levelMap[level] || level
+}
+const actionName = (a: string) => actionNameMap[a] || a
 
-const auditLogs = ref<any[]>([]);
-const loginLogs = ref<any[]>([]);
-const alerts = ref<any[]>([]);
+const auditLogs = ref<any[]>([])
+const loginLogs = ref<any[]>([])
+const alerts = ref<any[]>([])
 
 /** 加载审计统计 */
 async function loadStats() {
   try {
-    const data = await auditApi.getStats();
-    stats.todayOps = data.today_operations ?? data.total_operations ?? 0;
-    stats.activeUsers = data.active_users ?? 0;
-    stats.failures = data.failed_operations ?? 0;
-    stats.warnings = data.warnings ?? 0;
+    const data = await auditApi.getStats()
+    stats.todayOps = data.today_operations ?? data.total_operations ?? 0
+    stats.activeUsers = data.active_users ?? 0
+    stats.failures = data.failed_operations ?? 0
+    stats.warnings = data.warnings ?? 0
   } catch {
     // 统计加载失败不阻断页面
   }
@@ -309,88 +277,86 @@ async function loadStats() {
 
 /** 加载审计日志 */
 async function loadAuditLogs() {
-  loading.value = true;
+  loading.value = true
   try {
-    const params: Record<string, any> = { page: 1, page_size: 50 };
-    if (filters.action) params.action = filters.action;
-    if (filters.user) params.user_id = undefined; // 用户名暂不支持
+    const params: Record<string, any> = { page: 1, page_size: 50 }
+    if (filters.action) params.action = filters.action
+    if (filters.user) params.user_id = undefined // 用户名暂不支持
     if (filters.dateRange?.length === 2) {
-      params.start_date = filters.dateRange[0];
-      params.end_date = filters.dateRange[1];
+      params.start_date = filters.dateRange[0]
+      params.end_date = filters.dateRange[1]
     }
-    const data = await auditApi.getLogs(params);
+    const data = await auditApi.getLogs(params)
     auditLogs.value = (data.items || []).map((item: any) => ({
-      timestamp: item.created_at || "",
-      user: item.username || `用户${item.user_id || ""}`,
-      action: item.action || "",
-      target: item.resource_type
-        ? `${item.resource_type} #${item.resource_id || ""}`
-        : "",
-      detail: item.detail || "",
-      success: item.status !== "failed",
-      ip: item.ip_address || "",
-    }));
+      timestamp: item.created_at || '',
+      user: item.username || `用户${item.user_id || ''}`,
+      action: item.action || '',
+      target: item.resource_type ? `${item.resource_type} #${item.resource_id || ''}` : '',
+      detail: item.detail || '',
+      success: item.status !== 'failed',
+      ip: item.ip_address || '',
+    }))
   } catch {
-    auditLogs.value = [];
+    auditLogs.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 /** 加载登录日志 */
 async function loadLoginLogs() {
   try {
-    const data = await auditApi.getLoginAttempts({ page: 1, page_size: 50 });
+    const data = await auditApi.getLoginAttempts({ page: 1, page_size: 50 })
     loginLogs.value = (data.items || []).map((item: any) => ({
-      timestamp: item.attempt_time || "",
-      user: item.username || "",
-      type: item.success ? "login" : "login",
-      ip: item.ip_address || "",
-      browser: item.user_agent || "",
+      timestamp: item.attempt_time || '',
+      user: item.username || '',
+      type: item.success ? 'login' : 'login',
+      ip: item.ip_address || '',
+      browser: item.user_agent || '',
       success: item.success ?? true,
-    }));
+    }))
   } catch {
-    loginLogs.value = [];
+    loginLogs.value = []
   }
 }
 
 /** 加载安全告警 */
 async function loadAlerts() {
   try {
-    const data = await auditApi.getSecurityEvents({ page: 1, page_size: 50 });
+    const data = await auditApi.getSecurityEvents({ page: 1, page_size: 50 })
     alerts.value = (data.items || []).map((item: any) => ({
       id: item.id,
-      timestamp: item.created_at || "",
-      level: item.severity || "low",
-      type: item.event_type || "",
-      detail: item.description || "",
+      timestamp: item.created_at || '',
+      level: item.severity || 'low',
+      type: item.event_type || '',
+      detail: item.description || '',
       handled: item.resolved ?? false,
-    }));
+    }))
   } catch {
-    alerts.value = [];
+    alerts.value = []
   }
 }
 
 function handleSearch() {
-  loadAuditLogs();
+  loadAuditLogs()
 }
 
 function handleReset() {
-  Object.assign(filters, { action: "", user: "", dateRange: null });
-  loadAuditLogs();
+  Object.assign(filters, { action: '', user: '', dateRange: null })
+  loadAuditLogs()
 }
 
 async function handleAlert(row: any) {
   try {
-    await ElMessageBox.prompt("请输入处理说明", "处理告警", {
-      confirmButtonText: "确认处理",
-      cancelButtonText: "取消",
-      inputPlaceholder: "处理备注",
+    await ElMessageBox.prompt('请输入处理说明', '处理告警', {
+      confirmButtonText: '确认处理',
+      cancelButtonText: '取消',
+      inputPlaceholder: '处理备注',
     }).then(async ({ value }: any) => {
-      await auditApi.resolveSecurityEvent(row.id, value || "已处理");
-      row.handled = true;
-      ElMessage.success("告警已标记为已处理");
-    });
+      await auditApi.resolveSecurityEvent(row.id, value || '已处理')
+      row.handled = true
+      ElMessage.success('告警已标记为已处理')
+    })
   } catch {
     // 用户取消
   }
@@ -398,14 +364,14 @@ async function handleAlert(row: any) {
 
 /** Tab 切换时懒加载数据 */
 watch(activeTab, (tab) => {
-  if (tab === "login" && loginLogs.value.length === 0) loadLoginLogs();
-  if (tab === "alerts" && alerts.value.length === 0) loadAlerts();
-});
+  if (tab === 'login' && loginLogs.value.length === 0) loadLoginLogs()
+  if (tab === 'alerts' && alerts.value.length === 0) loadAlerts()
+})
 
 onMounted(() => {
-  loadStats();
-  loadAuditLogs();
-});
+  loadStats()
+  loadAuditLogs()
+})
 </script>
 
 <style>

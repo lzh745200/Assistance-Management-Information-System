@@ -109,99 +109,47 @@
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="name" label="学校名称" min-width="180">
           <template #default="scope">
-            <el-link type="primary" @click="handleView(scope.row)">{{
-              scope.row.name
-            }}</el-link>
+            <el-link type="primary" @click="handleView(scope.row)">{{ scope.row.name }}</el-link>
           </template>
         </el-table-column>
         <el-table-column prop="type" label="类型" width="100" align="center">
           <template #default="scope">
-            <el-tag size="small">{{
-              typeMap[scope.row.type] || scope.row.type || "-"
-            }}</el-tag>
+            <el-tag size="small">{{ typeMap[scope.row.type] || scope.row.type || '-' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="support_unit"
-          label="帮扶单位"
-          width="140"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="student_count"
-          label="学生数"
-          width="90"
-          align="right"
-        >
+        <el-table-column prop="support_unit" label="帮扶单位" width="140" show-overflow-tooltip />
+        <el-table-column prop="student_count" label="学生数" width="90" align="right">
           <template #default="scope">
             {{ scope.row.student_count || scope.row.students || 0 }}
           </template>
         </el-table-column>
-        <el-table-column
-          prop="teacher_count"
-          label="教师数"
-          width="90"
-          align="right"
-        >
+        <el-table-column prop="teacher_count" label="教师数" width="90" align="right">
           <template #default="scope">
             {{ scope.row.teacher_count || scope.row.teachers || 0 }}
           </template>
         </el-table-column>
-        <el-table-column
-          prop="support_status"
-          label="帮扶状态"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="support_status" label="帮扶状态" width="100" align="center">
           <template #default="scope">
-            <el-tag
-              :type="getStatusTagType(scope.row.support_status)"
-              size="small"
-            >
-              {{ statusMap[scope.row.support_status] || "未帮扶" }}
+            <el-tag :type="getStatusTagType(scope.row.support_status)" size="small">
+              {{ statusMap[scope.row.support_status] || '未帮扶' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="address"
-          label="地址"
-          min-width="160"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="created_at"
-          label="创建时间"
-          width="110"
-          align="center"
-        >
+        <el-table-column prop="address" label="地址" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="created_at" label="创建时间" width="110" align="center">
           <template #default="scope">
-            {{
-              scope.row.created_at
-                ? String(scope.row.created_at).split("T")[0]
-                : "-"
-            }}
+            {{ scope.row.created_at ? String(scope.row.created_at).split('T')[0] : '-' }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
-            <el-button
-              type="primary"
-              link
-              size="small"
-              @click="handleView(scope.row)"
+            <el-button type="primary" link size="small" @click="handleView(scope.row)"
               >查看</el-button
             >
-            <el-button
-              type="primary"
-              link
-              size="small"
-              @click="handleEdit(scope.row)"
+            <el-button type="primary" link size="small" @click="handleEdit(scope.row)"
               >编辑</el-button
             >
-            <el-popconfirm
-              title="确定删除该学校吗？"
-              @confirm="handleDelete(scope.row)"
-            >
+            <el-popconfirm title="确定删除该学校吗？" @confirm="handleDelete(scope.row)">
               <template #reference>
                 <el-button type="danger" link size="small">删除</el-button>
               </template>
@@ -224,12 +172,7 @@
     </div>
 
     <!-- 导入对话框 -->
-    <el-dialog
-      v-model="showImportDialog"
-      title="导入帮扶学校数据"
-      width="520px"
-      destroy-on-close
-    >
+    <el-dialog v-model="showImportDialog" title="导入帮扶学校数据" width="520px" destroy-on-close>
       <div class="import-dialog-body">
         <el-alert
           title="请先下载模板，按模板格式填写学校数据后上传"
@@ -250,9 +193,7 @@
           drag
         >
           <el-icon class="el-icon--upload"><Upload /></el-icon>
-          <div class="el-upload__text">
-            将 Excel 文件拖到此处，或 <em>点击上传</em>
-          </div>
+          <div class="el-upload__text">将 Excel 文件拖到此处，或 <em>点击上传</em></div>
           <template #tip>
             <div class="el-upload__tip">只支持 .xlsx / .xls 格式</div>
           </template>
@@ -260,9 +201,7 @@
       </div>
       <template #footer>
         <el-button @click="showImportDialog = false">关闭</el-button>
-        <el-button type="success" plain @click="handleDownloadTemplate"
-          >下载模板</el-button
-        >
+        <el-button type="success" plain @click="handleDownloadTemplate">下载模板</el-button>
       </template>
     </el-dialog>
   </div>
@@ -270,59 +209,59 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
-import { AuthStorage } from "@/utils/authStorage";
+import { logger } from '@/utils/logger'
+import { AuthStorage } from '@/utils/authStorage'
 
-import { ref, reactive, computed, onMounted, onActivated } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage } from "element-plus";
-import { Plus, Download, Upload, Search } from "@element-plus/icons-vue";
-import request from "@/api/request";
-import { schoolApi } from "@/api/schools";
-import { downloadImportTemplate } from "@/api/import";
+import { ref, reactive, computed, onMounted, onActivated } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage } from 'element-plus'
+import { Plus, Download, Upload, Search } from '@element-plus/icons-vue'
+import request from '@/api/request'
+import { schoolApi } from '@/api/schools'
+import { downloadImportTemplate } from '@/api/import'
 
-const { pushSafe } = useRouterSafe();
-const tableData = ref<any[]>([]);
-const loading = ref(false);
-const total = ref(0);
-const currentPage = ref(1);
-const pageSize = ref(20);
+const { pushSafe } = useRouterSafe()
+const tableData = ref<any[]>([])
+const loading = ref(false)
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(20)
 
-const showImportDialog = ref(false);
-const importUploadRef = ref();
-defineExpose({ importUploadRef });
+const showImportDialog = ref(false)
+const importUploadRef = ref()
+defineExpose({ importUploadRef })
 
 const filterForm = reactive({
-  keyword: "",
-  type: "",
-  status: "",
-});
+  keyword: '',
+  type: '',
+  status: '',
+})
 
 // 上传相关
-const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || "/api/v1";
-const importUrl = `${baseUrl}/schools/import/excel`;
+const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || '/api/v1'
+const importUrl = `${baseUrl}/schools/import/excel`
 const uploadHeaders = computed(() => {
-  const token = AuthStorage.getToken() || "";
-  return { Authorization: token ? `Bearer ${token}` : "" };
-});
+  const token = AuthStorage.getToken() || ''
+  return { Authorization: token ? `Bearer ${token}` : '' }
+})
 
 const typeMap: Record<string, string> = {
-  primary: "小学",
-  middle: "初中",
-  high: "高中",
-  vocational: "职业学校",
-  other: "其他",
-};
+  primary: '小学',
+  middle: '初中',
+  high: '高中',
+  vocational: '职业学校',
+  other: '其他',
+}
 const statusMap: Record<string, string> = {
-  active: "帮扶中",
-  inactive: "未帮扶",
-  completed: "已完成",
-};
+  active: '帮扶中',
+  inactive: '未帮扶',
+  completed: '已完成',
+}
 
 // 统计数据（优先使用服务端全量统计，回退到当前页数据）
-const serverSchoolStats = ref<any>(null);
+const serverSchoolStats = ref<any>(null)
 const stats = computed(() => {
-  const s = serverSchoolStats.value;
+  const s = serverSchoolStats.value
   if (s) {
     return {
       total: s.total_schools ?? (total.value || tableData.value.length),
@@ -331,34 +270,26 @@ const stats = computed(() => {
       totalStudents:
         s.total_students ??
         tableData.value.reduce(
-          (sum: number, sc: any) =>
-            sum + (sc.student_count || sc.students || 0),
-          0,
+          (sum: number, sc: any) => sum + (sc.student_count || sc.students || 0),
+          0
         ),
       totalTeachers:
         s.total_teachers ??
         tableData.value.reduce(
-          (sum: number, sc: any) =>
-            sum + (sc.teacher_count || sc.teachers || 0),
-          0,
+          (sum: number, sc: any) => sum + (sc.teacher_count || sc.teachers || 0),
+          0
         ),
-    };
+    }
   }
-  const list = tableData.value;
+  const list = tableData.value
   return {
     total: total.value || list.length,
-    active: list.filter((s) => s.support_status === "active").length,
-    completed: list.filter((s) => s.support_status === "completed").length,
-    totalStudents: list.reduce(
-      (sum, s) => sum + (s.student_count || s.students || 0),
-      0,
-    ),
-    totalTeachers: list.reduce(
-      (sum, s) => sum + (s.teacher_count || s.teachers || 0),
-      0,
-    ),
-  };
-});
+    active: list.filter((s) => s.support_status === 'active').length,
+    completed: list.filter((s) => s.support_status === 'completed').length,
+    totalStudents: list.reduce((sum, s) => sum + (s.student_count || s.students || 0), 0),
+    totalTeachers: list.reduce((sum, s) => sum + (s.teacher_count || s.teachers || 0), 0),
+  }
+})
 
 // API 统计数据（助学兴教）
 const apiStats = ref({
@@ -366,28 +297,28 @@ const apiStats = ref({
   project_total_budget: 0,
   scholarship_count: 0,
   scholarship_total_amount: 0,
-});
+})
 async function loadApiStats() {
   try {
-    const data = await schoolApi.getStatistics();
-    apiStats.value = data;
+    const data = await schoolApi.getStatistics()
+    apiStats.value = data
     // 服务端返回的 total_schools/active/completed 是全量准确数据
-    if (data) serverSchoolStats.value = data;
+    if (data) serverSchoolStats.value = data
   } catch (error) {
-    logger.error("Failed to load API stats:", error);
+    logger.error('Failed to load API stats:', error)
   }
 }
 
 function getStatusTagType(status: string) {
-  if (status === "active") return "success";
-  if (status === "completed") return "primary";
-  return "info";
+  if (status === 'active') return 'success'
+  if (status === 'completed') return 'primary'
+  return 'info'
 }
 
 async function fetchData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const response = await request.get("/schools", {
+    const response = await request.get('/schools', {
       params: {
         page: currentPage.value,
         page_size: pageSize.value,
@@ -395,142 +326,142 @@ async function fetchData() {
         type: filterForm.type || undefined,
         support_status: filterForm.status || undefined,
       },
-    });
-    const res = response;
-    const inner = res.data || res;
-    tableData.value = inner.items || (Array.isArray(inner) ? inner : []);
-    total.value = inner.total || tableData.value.length;
+    })
+    const res = response
+    const inner = res.data || res
+    tableData.value = inner.items || (Array.isArray(inner) ? inner : [])
+    total.value = inner.total || tableData.value.length
   } catch (e) {
-    logger.error("加载数据失败:", e);
+    logger.error('加载数据失败:', e)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function handleSearch() {
-  currentPage.value = 1;
-  fetchData();
+  currentPage.value = 1
+  fetchData()
 }
 function handleReset() {
-  filterForm.keyword = "";
-  filterForm.type = "";
-  filterForm.status = "";
-  currentPage.value = 1;
-  fetchData();
+  filterForm.keyword = ''
+  filterForm.type = ''
+  filterForm.status = ''
+  currentPage.value = 1
+  fetchData()
 }
 function filterByStatus(status: string) {
-  filterForm.status = status;
-  currentPage.value = 1;
-  fetchData();
+  filterForm.status = status
+  currentPage.value = 1
+  fetchData()
 }
 function handleSizeChange() {
-  currentPage.value = 1;
-  fetchData();
+  currentPage.value = 1
+  fetchData()
 }
 function handlePageChange() {
-  fetchData();
+  fetchData()
 }
 function handleCreate() {
-  pushSafe("/schools/create");
+  pushSafe('/schools/create')
 }
 function handleView(row: any) {
-  if (!row?.id) return;
-  pushSafe(`/schools/${row.id}`);
+  if (!row?.id) return
+  pushSafe(`/schools/${row.id}`)
 }
 function handleEdit(row: any) {
-  if (!row?.id) return;
-  pushSafe(`/schools/${row.id}/edit`);
+  if (!row?.id) return
+  pushSafe(`/schools/${row.id}/edit`)
 }
 async function handleDelete(row: any) {
-  if (!row?.id) return;
+  if (!row?.id) return
   try {
-    await request.delete(`/schools/${row.id}`);
-    ElMessage.success("删除成功");
-    fetchData();
+    await request.delete(`/schools/${row.id}`)
+    ElMessage.success('删除成功')
+    fetchData()
   } catch (error) {
-    logger.error("Failed to delete school:", error);
+    logger.error('Failed to delete school:', error)
   }
 }
 // 下载模板
 async function handleDownloadTemplate() {
   try {
-    const blob = await downloadImportTemplate("school");
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "学校导入模板.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    const blob = await downloadImportTemplate('school')
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '学校导入模板.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
     // 模板下载成功 — 浏览器已确认
   } catch {
-    ElMessage.error("模板下载失败");
+    ElMessage.error('模板下载失败')
   }
 }
 
 // 导入相关
 function beforeImportUpload(file: any) {
-  const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
+  const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
   if (!isExcel) {
-    ElMessage.error("只能上传 Excel 文件");
-    return false;
+    ElMessage.error('只能上传 Excel 文件')
+    return false
   }
   if (file.size > 10 * 1024 * 1024) {
-    ElMessage.error("文件大小不能超过 10MB");
-    return false;
+    ElMessage.error('文件大小不能超过 10MB')
+    return false
   }
-  return true;
+  return true
 }
 
 function onImportSuccess(response: any) {
-  const msg = response?.message || `成功导入 ${response?.imported || 0} 所学校`;
-  ElMessage.success(msg);
+  const msg = response?.message || `成功导入 ${response?.imported || 0} 所学校`
+  ElMessage.success(msg)
   if (response?.errors?.length) {
-    ElMessage.warning(`${response.errors.length} 条数据导入失败`);
+    ElMessage.warning(`${response.errors.length} 条数据导入失败`)
   }
-  showImportDialog.value = false;
-  fetchData();
+  showImportDialog.value = false
+  fetchData()
 }
 
 function onImportError() {
-  ElMessage.error("导入失败，请检查文件格式");
+  ElMessage.error('导入失败，请检查文件格式')
 }
 
 // 导出
 async function handleExport() {
-  ElMessage.success("正在导出学校数据...");
+  ElMessage.success('正在导出学校数据...')
   try {
-    const token = AuthStorage.getToken() || "";
+    const token = AuthStorage.getToken() || ''
     const resp = await fetch(`${baseUrl}/schools/export/excel`, {
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-    });
-    if (!resp.ok) throw new Error("export failed");
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "schools.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      headers: { Authorization: token ? `Bearer ${token}` : '' },
+    })
+    if (!resp.ok) throw new Error('export failed')
+    const blob = await resp.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'schools.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
     // 导出成功 — 浏览器已确认
   } catch {
-    ElMessage.error("导出失败");
+    ElMessage.error('导出失败')
   }
 }
 
 onMounted(() => {
-  fetchData();
-  loadApiStats();
-});
+  fetchData()
+  loadApiStats()
+})
 
 // 页面激活时刷新数据（解决keep-alive缓存问题）
 onActivated(() => {
-  fetchData();
-  loadApiStats();
-});
+  fetchData()
+  loadApiStats()
+})
 </script>
 
 <style scoped>
@@ -593,11 +524,7 @@ onActivated(() => {
 
 .stat-item {
   flex: 1;
-  background: linear-gradient(
-    135deg,
-    rgba(27, 67, 50, 0.08) 0%,
-    rgba(45, 106, 79, 0.05) 100%
-  );
+  background: linear-gradient(135deg, rgba(27, 67, 50, 0.08) 0%, rgba(45, 106, 79, 0.05) 100%);
   border: 1px solid rgba(45, 106, 79, 0.2);
   border-radius: 8px;
   padding: 16px 20px;

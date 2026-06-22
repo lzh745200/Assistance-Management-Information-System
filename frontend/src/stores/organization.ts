@@ -1,80 +1,80 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import { get, post, put, del, apiRequest } from "@/api/request";
-import type { ApiResponse } from "@/types/api";
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { get, post, put, del, apiRequest } from '@/api/request'
+import type { ApiResponse } from '@/types/api'
 
-export const useOrganizationStore = defineStore("organization", () => {
-  const orgs = ref<any[]>([]);
-  const current = ref<any>(null);
-  const tree = ref<any[]>([]);
-  const loading = ref(false);
-  const subordinateOrganizations = ref<any[]>([]);
+export const useOrganizationStore = defineStore('organization', () => {
+  const orgs = ref<any[]>([])
+  const current = ref<any>(null)
+  const tree = ref<any[]>([])
+  const loading = ref(false)
+  const subordinateOrganizations = ref<any[]>([])
 
   async function fetchOrganizations(params?: any) {
-    loading.value = true;
+    loading.value = true
     try {
-      const res = await get<ApiResponse<any[]>>("/organizations", { params });
-      if (res.code === 200 && res.data) orgs.value = res.data;
+      const res = await get<ApiResponse<any[]>>('/organizations', { params })
+      if (res.code === 200 && res.data) orgs.value = res.data
     } catch {
       /* silent */
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
   async function fetchOrganization(id: number) {
-    loading.value = true;
+    loading.value = true
     try {
-      const res = await get<ApiResponse<any>>("/organizations/" + id);
-      if (res.code === 200) current.value = res.data;
+      const res = await get<ApiResponse<any>>('/organizations/' + id)
+      if (res.code === 200) current.value = res.data
     } catch {
       /* silent */
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   }
 
   async function fetchTree() {
     try {
-      const res = await get<ApiResponse<any[]>>("/organizations/tree");
-      if (res.code === 200 && res.data) tree.value = res.data;
+      const res = await get<ApiResponse<any[]>>('/organizations/tree')
+      if (res.code === 200 && res.data) tree.value = res.data
     } catch {
       /* silent */
     }
   }
 
   async function createOrganization(data: any) {
-    const res = await post("/organizations", data);
+    const res = await post('/organizations', data)
     if (res.code === 200 && res.data) {
-      orgs.value.unshift(res.data);
-      tree.value = [];
+      orgs.value.unshift(res.data)
+      tree.value = []
     }
-    return res;
+    return res
   }
 
   async function updateOrganization(id: number, data: any) {
-    const res = await put("/organizations/" + id, data);
+    const res = await put('/organizations/' + id, data)
     if (res.code === 200) {
-      const idx = orgs.value.findIndex((o: any) => o.id === id);
-      if (idx >= 0) orgs.value[idx] = { ...orgs.value[idx], ...data };
-      tree.value = [];
+      const idx = orgs.value.findIndex((o: any) => o.id === id)
+      if (idx >= 0) orgs.value[idx] = { ...orgs.value[idx], ...data }
+      tree.value = []
     }
-    return res;
+    return res
   }
 
   async function deleteOrganization(id: number) {
-    const res = await del("/organizations/" + id);
+    const res = await del('/organizations/' + id)
     if (res.code === 200) {
-      orgs.value = orgs.value.filter((o: any) => o.id !== id);
-      tree.value = [];
+      orgs.value = orgs.value.filter((o: any) => o.id !== id)
+      tree.value = []
     }
-    return res;
+    return res
   }
 
   async function fetchMyOrganization() {
     try {
-      const res = await get<ApiResponse<any>>("/organizations/my");
-      if (res.code === 200 && res.data) current.value = res.data;
+      const res = await get<ApiResponse<any>>('/organizations/my')
+      if (res.code === 200 && res.data) current.value = res.data
     } catch {
       /* silent — my org not configured */
     }
@@ -83,13 +83,13 @@ export const useOrganizationStore = defineStore("organization", () => {
   async function fetchSubordinateOrganizations() {
     try {
       const res = await apiRequest<any>({
-        method: "GET",
-        url: "/organizations/subordinates",
+        method: 'GET',
+        url: '/organizations/subordinates',
         timeout: 10000,
-      });
-      subordinateOrganizations.value = res?.data || res?.items || [];
+      })
+      subordinateOrganizations.value = res?.data || res?.items || []
     } catch {
-      subordinateOrganizations.value = [];
+      subordinateOrganizations.value = []
     }
   }
 
@@ -107,5 +107,5 @@ export const useOrganizationStore = defineStore("organization", () => {
     updateOrganization,
     deleteOrganization,
     fetchSubordinateOrganizations,
-  };
-});
+  }
+})

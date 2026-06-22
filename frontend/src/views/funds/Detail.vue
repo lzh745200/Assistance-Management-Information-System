@@ -4,7 +4,7 @@
       <div class="header-left">
         <el-button :icon="ArrowLeft" @click="goBack">返回列表</el-button>
         <h2 class="page-title">
-          {{ isCreate ? "新增经费记录" : isEdit ? "编辑经费记录" : "经费详情" }}
+          {{ isCreate ? '新增经费记录' : isEdit ? '编辑经费记录' : '经费详情' }}
         </h2>
       </div>
       <div v-if="!isEdit && !isCreate && canEditFund" class="header-actions">
@@ -25,11 +25,9 @@
         <!-- 工作流操作栏 -->
         <div v-if="isManager && fundData.id" class="workflow-bar">
           <div class="workflow-status">
-            当前状态：<el-tag
-              :type="getStatusType(fundData.status)"
-              size="large"
-              >{{ getStatusText(fundData.status) }}</el-tag
-            >
+            当前状态：<el-tag :type="getStatusType(fundData.status)" size="large">{{
+              getStatusText(fundData.status)
+            }}</el-tag>
           </div>
           <div class="workflow-actions">
             <el-button
@@ -80,33 +78,31 @@
               <div class="card-body">
                 <el-descriptions :column="3" border>
                   <el-descriptions-item label="经费编号">{{
-                    fundData.code || "-"
+                    fundData.code || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="名称">{{
-                    fundData.name || "-"
+                    fundData.name || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="经费类型"
-                    ><el-tag>{{
-                      getTypeName(fundData.type)
-                    }}</el-tag></el-descriptions-item
+                    ><el-tag>{{ getTypeName(fundData.type) }}</el-tag></el-descriptions-item
                   >
                   <el-descriptions-item label="经费来源">{{
                     getSourceName(fundData.fund_source || fundData.source)
                   }}</el-descriptions-item>
                   <el-descriptions-item label="关联项目">{{
-                    fundData.project_name || "-"
+                    fundData.project_name || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="日期">{{
-                    fundData.date || "-"
+                    fundData.date || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="申请人">{{
-                    fundData.applicant || "-"
+                    fundData.applicant || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="经办人">{{
-                    fundData.operator || "-"
+                    fundData.operator || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="接收人">{{
-                    fundData.receiver || "-"
+                    fundData.receiver || '-'
                   }}</el-descriptions-item>
                 </el-descriptions>
               </div>
@@ -146,13 +142,13 @@
                     ></el-descriptions-item
                   >
                   <el-descriptions-item label="用途" :span="3">{{
-                    fundData.purpose || "无"
+                    fundData.purpose || '无'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="使用说明" :span="3">{{
-                    fundData.usage_description || "无"
+                    fundData.usage_description || '无'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="备注" :span="3">{{
-                    fundData.remarks || "无"
+                    fundData.remarks || '无'
                   }}</el-descriptions-item>
                 </el-descriptions>
               </div>
@@ -166,7 +162,7 @@
               <div class="card-body">
                 <el-descriptions :column="3" border>
                   <el-descriptions-item label="审批人">{{
-                    fundData.approved_by || "-"
+                    fundData.approved_by || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="审批日期">{{
                     formatDateTime(fundData.approval_date)
@@ -175,7 +171,7 @@
                     formatDateTime(fundData.allocation_date)
                   }}</el-descriptions-item>
                   <el-descriptions-item label="拨付方式">{{
-                    fundData.allocation_method || "-"
+                    fundData.allocation_method || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="开始日期">{{
                     formatDateTime(fundData.start_date)
@@ -187,10 +183,10 @@
                     formatDateTime(fundData.audit_date)
                   }}</el-descriptions-item>
                   <el-descriptions-item label="审计结果">{{
-                    fundData.audit_result || "-"
+                    fundData.audit_result || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="审计意见">{{
-                    fundData.audit_opinion || "-"
+                    fundData.audit_opinion || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="创建时间">{{
                     formatDateTime(fundData.created_at)
@@ -217,22 +213,16 @@
                   >
                     <div class="timeline-content">
                       <div class="timeline-title">
-                        <el-tag
-                          :type="getStatusType(item.from_status)"
-                          size="small"
-                          >{{
-                            getStatusText(item.from_status) || "新建"
-                          }}</el-tag
-                        >
+                        <el-tag :type="getStatusType(item.from_status)" size="small">{{
+                          getStatusText(item.from_status) || '新建'
+                        }}</el-tag>
                         <span style="margin: 0 8px">→</span>
-                        <el-tag
-                          :type="getStatusType(item.to_status)"
-                          size="small"
-                          >{{ getStatusText(item.to_status) }}</el-tag
-                        >
+                        <el-tag :type="getStatusType(item.to_status)" size="small">{{
+                          getStatusText(item.to_status)
+                        }}</el-tag>
                       </div>
                       <div class="timeline-info">
-                        操作人: {{ item.operator_name || "-" }}
+                        操作人: {{ item.operator_name || '-' }}
                         <span v-if="item.remark" style="margin-left: 16px"
                           >备注: {{ item.remark }}</span
                         >
@@ -240,9 +230,7 @@
                     </div>
                   </el-timeline-item>
                 </el-timeline>
-                <div v-else style="font-size: 13px; color: #999">
-                  暂无状态变更记录
-                </div>
+                <div v-else style="font-size: 13px; color: #999">暂无状态变更记录</div>
               </div>
             </div>
           </el-tab-pane>
@@ -252,50 +240,26 @@
             <div class="detail-card" style="margin-bottom: 0">
               <div class="card-header"><h3>字段修改历史</h3></div>
               <div class="card-body">
-                <el-table
-                  v-if="fieldChanges.length"
-                  :data="fieldChanges"
-                  stripe
-                >
+                <el-table v-if="fieldChanges.length" :data="fieldChanges" stripe>
                   <el-table-column prop="field_name" label="字段" width="120" />
-                  <el-table-column
-                    prop="old_value"
-                    label="旧值"
-                    show-overflow-tooltip
-                  >
+                  <el-table-column prop="old_value" label="旧值" show-overflow-tooltip>
                     <template #default="{ row }">
-                      <span class="text-muted">{{ row.old_value || "-" }}</span>
+                      <span class="text-muted">{{ row.old_value || '-' }}</span>
                     </template>
                   </el-table-column>
-                  <el-table-column
-                    prop="new_value"
-                    label="新值"
-                    show-overflow-tooltip
-                  >
+                  <el-table-column prop="new_value" label="新值" show-overflow-tooltip>
                     <template #default="{ row }">
-                      <span class="text-primary">{{
-                        row.new_value || "-"
-                      }}</span>
+                      <span class="text-primary">{{ row.new_value || '-' }}</span>
                     </template>
                   </el-table-column>
-                  <el-table-column
-                    prop="changed_by_name"
-                    label="修改人"
-                    width="120"
-                  />
-                  <el-table-column
-                    prop="changed_at"
-                    label="修改时间"
-                    width="180"
-                  >
+                  <el-table-column prop="changed_by_name" label="修改人" width="120" />
+                  <el-table-column prop="changed_at" label="修改时间" width="180">
                     <template #default="{ row }">
                       {{ formatDateTime(row.changed_at) }}
                     </template>
                   </el-table-column>
                 </el-table>
-                <div v-else style="font-size: 13px; color: #999">
-                  暂无字段修改记录
-                </div>
+                <div v-else style="font-size: 13px; color: #999">暂无字段修改记录</div>
               </div>
             </div>
           </el-tab-pane>
@@ -305,49 +269,25 @@
             <div class="detail-card" style="margin-bottom: 0">
               <div class="card-header"><h3>操作日志</h3></div>
               <div class="card-body">
-                <el-table
-                  v-if="operationLogs.length"
-                  :data="operationLogs"
-                  stripe
-                >
-                  <el-table-column
-                    prop="operation_type"
-                    label="操作类型"
-                    width="150"
-                  >
+                <el-table v-if="operationLogs.length" :data="operationLogs" stripe>
+                  <el-table-column prop="operation_type" label="操作类型" width="150">
                     <template #default="{ row }">
-                      <el-tag size="small">{{
-                        getOperationTypeLabel(row.operation_type)
-                      }}</el-tag>
+                      <el-tag size="small">{{ getOperationTypeLabel(row.operation_type) }}</el-tag>
                     </template>
                   </el-table-column>
-                  <el-table-column
-                    prop="operation_detail"
-                    label="详情"
-                    show-overflow-tooltip
-                  >
+                  <el-table-column prop="operation_detail" label="详情" show-overflow-tooltip>
                     <template #default="{ row }">
                       {{ formatOperationDetail(row.operation_detail) }}
                     </template>
                   </el-table-column>
-                  <el-table-column
-                    prop="operator_name"
-                    label="操作人"
-                    width="120"
-                  />
-                  <el-table-column
-                    prop="created_at"
-                    label="操作时间"
-                    width="180"
-                  >
+                  <el-table-column prop="operator_name" label="操作人" width="120" />
+                  <el-table-column prop="created_at" label="操作时间" width="180">
                     <template #default="{ row }">
                       {{ formatDateTime(row.created_at) }}
                     </template>
                   </el-table-column>
                 </el-table>
-                <div v-else style="font-size: 13px; color: #999">
-                  暂无操作日志
-                </div>
+                <div v-else style="font-size: 13px; color: #999">暂无操作日志</div>
               </div>
             </div>
           </el-tab-pane>
@@ -357,37 +297,24 @@
       <template v-else>
         <div class="detail-card">
           <div class="card-header">
-            <h3>{{ isCreate ? "填写经费信息" : "编辑经费信息" }}</h3>
+            <h3>{{ isCreate ? '填写经费信息' : '编辑经费信息' }}</h3>
           </div>
           <div class="card-body">
-            <el-form
-              ref="formRef"
-              :model="formData"
-              :rules="rules"
-              label-width="120px"
-            >
+            <el-form ref="formRef" :model="formData" :rules="rules" label-width="120px">
               <el-row :gutter="24">
                 <el-col :span="12"
                   ><el-form-item label="经费编号"
-                    ><el-input
-                      v-model="formData.code"
-                      placeholder="选填" /></el-form-item
+                    ><el-input v-model="formData.code" placeholder="选填" /></el-form-item
                 ></el-col>
                 <el-col :span="12"
                   ><el-form-item label="名称" prop="name"
-                    ><el-input
-                      v-model="formData.name"
-                      placeholder="请输入经费名称" /></el-form-item
+                    ><el-input v-model="formData.name" placeholder="请输入经费名称" /></el-form-item
                 ></el-col>
               </el-row>
               <el-row :gutter="24">
                 <el-col :span="12">
                   <el-form-item label="经费类型" prop="type">
-                    <el-select
-                      v-model="formData.type"
-                      placeholder="请选择类型"
-                      style="width: 100%"
-                    >
+                    <el-select v-model="formData.type" placeholder="请选择类型" style="width: 100%">
                       <el-option label="项目经费" value="project" /><el-option
                         label="运营经费"
                         value="operation"
@@ -566,15 +493,10 @@
                   placeholder="请输入备注信息"
               /></el-form-item>
               <el-form-item>
-                <el-button
-                  type="primary"
-                  :loading="submitting"
-                  @click="handleSubmit"
-                  >{{ isCreate ? "创建" : "保存" }}</el-button
-                >
-                <el-button @click="isCreate ? goBack() : cancelEdit()"
-                  >取消</el-button
-                >
+                <el-button type="primary" :loading="submitting" @click="handleSubmit">{{
+                  isCreate ? '创建' : '保存'
+                }}</el-button>
+                <el-button @click="isCreate ? goBack() : cancelEdit()">取消</el-button>
               </el-form-item>
             </el-form>
           </div>
@@ -597,9 +519,7 @@
             style="width: 100%"
         /></el-form-item>
         <el-form-item v-if="wfAction === 'allocate'" label="拨付方式"
-          ><el-input
-            v-model="wfForm.allocation_method"
-            placeholder="如：银行转账"
+          ><el-input v-model="wfForm.allocation_method" placeholder="如：银行转账"
         /></el-form-item>
         <el-form-item v-if="wfAction === 'audit'" label="审计结果">
           <el-select
@@ -624,283 +544,271 @@
       </el-form>
       <template #footer>
         <el-button @click="wfDialogVisible = false">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="wfSubmitting"
-          @click="submitWorkflow"
-          >确认</el-button
-        >
+        <el-button type="primary" :loading="wfSubmitting" @click="submitWorkflow">确认</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
-import { useAuthStore } from "@/stores/auth";
+import { logger } from '@/utils/logger'
+import { useAuthStore } from '@/stores/auth'
 
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { ArrowLeft, Edit, Delete, Loading } from "@element-plus/icons-vue";
-import request from "@/api/request";
-import { fundApi } from "@/api/funds";
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowLeft, Edit, Delete, Loading } from '@element-plus/icons-vue'
+import request from '@/api/request'
+import { fundApi } from '@/api/funds'
 
-const { pushSafe } = useRouterSafe();
-const route = useRoute();
-const authStore = useAuthStore();
-const loading = ref(true);
-const submitting = ref(false);
-const isEdit = ref(false);
-const isCreate = ref(false);
-const formRef = ref();
+const { pushSafe } = useRouterSafe()
+const route = useRoute()
+const authStore = useAuthStore()
+const loading = ref(true)
+const submitting = ref(false)
+const isEdit = ref(false)
+const isCreate = ref(false)
+const formRef = ref()
 
 const isManager = computed(() => {
-  const role = authStore.user?.role || "";
-  return ["admin", "super_admin", "manager"].includes(role);
-});
+  const role = authStore.user?.role || ''
+  return ['admin', 'super_admin', 'manager'].includes(role)
+})
 
 // 判断当前用户是否可以编辑此经费
 const canEditFund = computed(() => {
-  if (isManager.value) return true;
+  if (isManager.value) return true
   // 普通用户：只能编辑自己创建的草稿/驳回状态经费
-  const editableStatuses = ["draft", "rejected"];
-  return (
-    fundData.created_by === authStore.user?.id &&
-    editableStatuses.includes(fundData.status)
-  );
-});
+  const editableStatuses = ['draft', 'rejected']
+  return fundData.created_by === authStore.user?.id && editableStatuses.includes(fundData.status)
+})
 
 // 历史记录数据
-const activeTab = ref("basic");
-const statusHistory = ref<any[]>([]);
-const fieldChanges = ref<any[]>([]);
-const operationLogs = ref<any[]>([]);
+const activeTab = ref('basic')
+const statusHistory = ref<any[]>([])
+const fieldChanges = ref<any[]>([])
+const operationLogs = ref<any[]>([])
 
 // 加载历史记录
 async function loadStatusHistory() {
-  if (!fundData.id) return;
+  if (!fundData.id) return
   try {
-    const res = await request.get(`/funds/${fundData.id}/history/status`);
-    statusHistory.value = res.data?.items || [];
+    const res = await request.get(`/funds/${fundData.id}/history/status`)
+    statusHistory.value = res.data?.items || []
   } catch (error) {
-    console.error("加载状态历史失败:", error);
+    console.error('加载状态历史失败:', error)
   }
 }
 
 async function loadFieldChanges() {
-  if (!fundData.id) return;
+  if (!fundData.id) return
   try {
-    const res = await request.get(`/funds/${fundData.id}/history/fields`);
-    fieldChanges.value = res.data?.items || [];
+    const res = await request.get(`/funds/${fundData.id}/history/fields`)
+    fieldChanges.value = res.data?.items || []
   } catch (error) {
-    console.error("加载字段变更历史失败:", error);
+    console.error('加载字段变更历史失败:', error)
   }
 }
 
 async function loadOperationLogs() {
-  if (!fundData.id) return;
+  if (!fundData.id) return
   try {
-    const res = await request.get(`/funds/${fundData.id}/history/operations`);
-    operationLogs.value = res.data?.items || [];
+    const res = await request.get(`/funds/${fundData.id}/history/operations`)
+    operationLogs.value = res.data?.items || []
   } catch (error) {
-    console.error("加载操作日志失败:", error);
+    console.error('加载操作日志失败:', error)
   }
 }
 
 // 加载所有历史记录（并行执行）
 async function loadAllHistory() {
-  await Promise.all([
-    loadStatusHistory(),
-    loadFieldChanges(),
-    loadOperationLogs(),
-  ]);
+  await Promise.all([loadStatusHistory(), loadFieldChanges(), loadOperationLogs()])
 }
 
 const fundData = reactive<any>({
   id: null,
-  name: "",
+  name: '',
   date: null,
-  type: "",
-  code: "",
-  fund_type: "",
-  fund_source: "",
+  type: '',
+  code: '',
+  fund_type: '',
+  fund_source: '',
   amount: 0,
   planned_amount: 0,
   approved_amount: null,
   allocated_amount: 0,
   used_amount: 0,
   remaining_amount: 0,
-  project_id: "",
-  project_name: "",
+  project_id: '',
+  project_name: '',
   village_id: null,
   school_id: null,
-  purpose: "",
-  source: "",
-  operator: "",
-  applicant: "",
+  purpose: '',
+  source: '',
+  operator: '',
+  applicant: '',
   application_date: null,
-  approved_by: "",
+  approved_by: '',
   approval_date: null,
   allocation_date: null,
-  allocation_method: "",
-  receiver: "",
-  usage_description: "",
+  allocation_method: '',
+  receiver: '',
+  usage_description: '',
   start_date: null,
   end_date: null,
   audit_date: null,
-  audit_result: "",
-  audit_opinion: "",
-  status: "pending",
-  remarks: "",
-  created_at: "",
-  updated_at: "",
-});
+  audit_result: '',
+  audit_opinion: '',
+  status: 'pending',
+  remarks: '',
+  created_at: '',
+  updated_at: '',
+})
 
 const formData = reactive({
-  code: "",
-  name: "",
+  code: '',
+  name: '',
   date: null as string | null,
-  type: "project",
-  fund_source: "",
+  type: 'project',
+  fund_source: '',
   amount: 0,
   planned_amount: 0,
   approved_amount: null as number | null,
   allocated_amount: 0,
   used_amount: 0,
   remaining_amount: 0,
-  project_name: "",
+  project_name: '',
   village_id: null as number | null,
-  purpose: "",
-  source: "",
-  operator: "",
-  receiver: "",
-  usage_description: "",
-  status: "pending",
-  remarks: "",
+  purpose: '',
+  source: '',
+  operator: '',
+  receiver: '',
+  usage_description: '',
+  status: 'pending',
+  remarks: '',
   dateRange: null as string[] | null,
-});
+})
 
 const rules = {
-  name: [{ required: true, message: "请输入经费名称", trigger: "blur" }],
-  amount: [{ required: true, message: "请输入金额", trigger: "blur" }],
-};
+  name: [{ required: true, message: '请输入经费名称', trigger: 'blur' }],
+  amount: [{ required: true, message: '请输入金额', trigger: 'blur' }],
+}
 
 const getTypeName = (t: string) =>
   ({
-    project: "项目经费",
-    operation: "运营经费",
-    education: "教育帮扶",
-    infrastructure: "基础设施",
-    emergency: "应急经费",
-    other: "其他",
+    project: '项目经费',
+    operation: '运营经费',
+    education: '教育帮扶',
+    infrastructure: '基础设施',
+    emergency: '应急经费',
+    other: '其他',
   })[t] ||
   t ||
-  "-";
+  '-'
 const getSourceName = (s: string) =>
   ({
-    military: "军队",
-    government: "政府",
-    donation: "捐赠",
-    enterprise: "企业",
-    other: "其他",
+    military: '军队',
+    government: '政府',
+    donation: '捐赠',
+    enterprise: '企业',
+    other: '其他',
   })[s] ||
   s ||
-  "-";
+  '-'
 const getStatusType = (s: string): any =>
   ({
-    pending: "warning",
-    planned: "info",
-    approved: "primary",
-    allocated: "info",
-    in_use: "primary",
-    completed: "success",
-    audited: "success",
-    rejected: "danger",
-  })[s] || "info";
+    pending: 'warning',
+    planned: 'info',
+    approved: 'primary',
+    allocated: 'info',
+    in_use: 'primary',
+    completed: 'success',
+    audited: 'success',
+    rejected: 'danger',
+  })[s] || 'info'
 const getStatusText = (s: string) =>
   ({
-    pending: "待审批",
-    planned: "已计划",
-    approved: "已批准",
-    allocated: "已拨付",
-    in_use: "使用中",
-    completed: "已完成",
-    audited: "已审计",
-    rejected: "已驳回",
+    pending: '待审批',
+    planned: '已计划',
+    approved: '已批准',
+    allocated: '已拨付',
+    in_use: '使用中',
+    completed: '已完成',
+    audited: '已审计',
+    rejected: '已驳回',
   })[s] ||
   s ||
-  "-";
+  '-'
 const formatMoney = (v: any) =>
   v == null
-    ? "0.00"
-    : Number(v).toLocaleString("zh-CN", {
+    ? '0.00'
+    : Number(v).toLocaleString('zh-CN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
-      });
+      })
 const formatDateTime = (d?: string | null) => {
-  if (!d) return "-";
+  if (!d) return '-'
   try {
-    return String(d).split("T")[0];
+    return String(d).split('T')[0]
   } catch {
-    return String(d);
+    return String(d)
   }
-};
+}
 
 // 操作日志辅助函数
 const getOperationTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
-    attachment_upload: "附件上传",
-    attachment_delete: "附件删除",
-    status_change: "状态变更",
-    field_update: "字段更新",
-    create: "创建",
-    delete: "删除",
-  };
-  return labels[type] || type;
-};
+    attachment_upload: '附件上传',
+    attachment_delete: '附件删除',
+    status_change: '状态变更',
+    field_update: '字段更新',
+    create: '创建',
+    delete: '删除',
+  }
+  return labels[type] || type
+}
 
 const formatOperationDetail = (detail: string | object): string => {
-  if (!detail) return "-";
+  if (!detail) return '-'
   try {
-    const obj = typeof detail === "string" ? JSON.parse(detail) : detail;
-    return typeof obj === "object" ? JSON.stringify(obj) : String(detail);
+    const obj = typeof detail === 'string' ? JSON.parse(detail) : detail
+    return typeof obj === 'object' ? JSON.stringify(obj) : String(detail)
   } catch {
-    return String(detail);
+    return String(detail)
   }
-};
+}
 
 // 工作流
-const wfDialogVisible = ref(false);
-const wfDialogTitle = ref("");
-const wfAction = ref("");
-const wfSubmitting = ref(false);
+const wfDialogVisible = ref(false)
+const wfDialogTitle = ref('')
+const wfAction = ref('')
+const wfSubmitting = ref(false)
 const wfForm = reactive({
-  opinion: "",
+  opinion: '',
   allocated_amount: 0,
-  allocation_method: "",
-  audit_result: "通过",
-});
+  allocation_method: '',
+  audit_result: '通过',
+})
 const wfLabels: Record<string, string> = {
-  approve: "审批通过",
-  reject: "驳回",
-  allocate: "拨付",
-  start_use: "开始使用",
-  complete: "完成使用",
-  audit: "审计",
-};
+  approve: '审批通过',
+  reject: '驳回',
+  allocate: '拨付',
+  start_use: '开始使用',
+  complete: '完成使用',
+  audit: '审计',
+}
 function doWorkflow(action: string) {
-  wfAction.value = action;
-  wfDialogTitle.value = wfLabels[action] || action;
-  wfForm.opinion = "";
-  wfForm.allocated_amount = fundData.approved_amount || fundData.amount || 0;
-  wfForm.allocation_method = "";
-  wfForm.audit_result = "通过";
-  wfDialogVisible.value = true;
+  wfAction.value = action
+  wfDialogTitle.value = wfLabels[action] || action
+  wfForm.opinion = ''
+  wfForm.allocated_amount = fundData.approved_amount || fundData.amount || 0
+  wfForm.allocation_method = ''
+  wfForm.audit_result = '通过'
+  wfDialogVisible.value = true
 }
 async function submitWorkflow() {
-  wfSubmitting.value = true;
+  wfSubmitting.value = true
   try {
     const apiMap: Record<string, Function> = {
       approve: fundApi.approve,
@@ -909,162 +817,159 @@ async function submitWorkflow() {
       start_use: fundApi.startUse,
       complete: fundApi.complete,
       audit: fundApi.audit,
-    };
-    const fn = apiMap[wfAction.value];
-    if (!fn) return;
+    }
+    const fn = apiMap[wfAction.value]
+    if (!fn) return
     await fn(fundData.id, {
       opinion: wfForm.opinion || undefined,
-      allocated_amount:
-        wfAction.value === "allocate" ? wfForm.allocated_amount : undefined,
-      allocation_method:
-        wfAction.value === "allocate" ? wfForm.allocation_method : undefined,
-      audit_result:
-        wfAction.value === "audit" ? wfForm.audit_result : undefined,
-    });
-    ElMessage.success(`${wfDialogTitle.value}操作成功`);
-    wfDialogVisible.value = false;
-    await loadFundDetail();
+      allocated_amount: wfAction.value === 'allocate' ? wfForm.allocated_amount : undefined,
+      allocation_method: wfAction.value === 'allocate' ? wfForm.allocation_method : undefined,
+      audit_result: wfAction.value === 'audit' ? wfForm.audit_result : undefined,
+    })
+    ElMessage.success(`${wfDialogTitle.value}操作成功`)
+    wfDialogVisible.value = false
+    await loadFundDetail()
   } catch (e: any) {
-    const d = e?.response?.data?.detail;
-    ElMessage.error(typeof d === "string" ? d : "操作失败");
+    const d = e?.response?.data?.detail
+    ElMessage.error(typeof d === 'string' ? d : '操作失败')
   } finally {
-    wfSubmitting.value = false;
+    wfSubmitting.value = false
   }
 }
 
 // CRUD
 const loadFundDetail = async () => {
   if (isCreate.value) {
-    loading.value = false;
-    return;
+    loading.value = false
+    return
   }
-  const id = route.params.id as string;
+  const id = route.params.id as string
   if (!id) {
-    loading.value = false;
-    ElMessage.error("无效的经费记录ID");
-    pushSafe("/funds");
-    return;
+    loading.value = false
+    ElMessage.error('无效的经费记录ID')
+    pushSafe('/funds')
+    return
   }
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await request.get(`/funds/${id}`);
-    Object.assign(fundData, res.data);
-    syncFormData(res.data);
+    const res = await request.get(`/funds/${id}`)
+    Object.assign(fundData, res.data)
+    syncFormData(res.data)
   } catch {
-    ElMessage.error("加载经费详情失败");
-    pushSafe("/funds");
+    ElMessage.error('加载经费详情失败')
+    pushSafe('/funds')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 function syncFormData(d: any) {
   Object.assign(formData, {
-    code: d.code || "",
-    name: d.name || "",
+    code: d.code || '',
+    name: d.name || '',
     date: d.date || null,
-    type: d.type || "project",
-    fund_source: d.fund_source || "",
+    type: d.type || 'project',
+    fund_source: d.fund_source || '',
     amount: d.amount || 0,
     planned_amount: d.planned_amount || 0,
     approved_amount: d.approved_amount,
     allocated_amount: d.allocated_amount || 0,
     used_amount: d.used_amount || 0,
     remaining_amount: d.remaining_amount || 0,
-    project_name: d.project_name || "",
+    project_name: d.project_name || '',
     village_id: d.village_id || null,
-    purpose: d.purpose || "",
-    source: d.source || "",
-    operator: d.operator || "",
-    receiver: d.receiver || "",
-    usage_description: d.usage_description || "",
-    status: d.status || "pending",
-    remarks: d.remarks || "",
+    purpose: d.purpose || '',
+    source: d.source || '',
+    operator: d.operator || '',
+    receiver: d.receiver || '',
+    usage_description: d.usage_description || '',
+    status: d.status || 'pending',
+    remarks: d.remarks || '',
     dateRange:
       d.start_date && d.end_date
-        ? [String(d.start_date).split("T")[0], String(d.end_date).split("T")[0]]
+        ? [String(d.start_date).split('T')[0], String(d.end_date).split('T')[0]]
         : null,
-  });
+  })
 }
-const goBack = () => pushSafe("/funds");
+const goBack = () => pushSafe('/funds')
 const handleEdit = () => {
-  isEdit.value = true;
-};
+  isEdit.value = true
+}
 const cancelEdit = () => {
-  isEdit.value = false;
-  syncFormData(fundData);
-};
+  isEdit.value = false
+  syncFormData(fundData)
+}
 const handleSubmit = async () => {
-  if (!formRef.value) return;
+  if (!formRef.value) return
   try {
-    await formRef.value.validate();
-    submitting.value = true;
-    const payload: any = { ...formData };
-    if (!payload.date) delete payload.date;
-    if (!payload.village_id) delete payload.village_id;
+    await formRef.value.validate()
+    submitting.value = true
+    const payload: any = { ...formData }
+    if (!payload.date) delete payload.date
+    if (!payload.village_id) delete payload.village_id
     if (payload.dateRange?.length === 2) {
-      payload.start_date = payload.dateRange[0];
-      payload.end_date = payload.dateRange[1];
+      payload.start_date = payload.dateRange[0]
+      payload.end_date = payload.dateRange[1]
     }
-    delete payload.dateRange;
+    delete payload.dateRange
     Object.keys(payload).forEach((k) => {
-      if (payload[k] === null || payload[k] === "") delete payload[k];
-    });
+      if (payload[k] === null || payload[k] === '') delete payload[k]
+    })
     if (isCreate.value) {
-      await request.post("/funds", payload);
-      ElMessage.success("创建成功");
-      pushSafe("/funds");
+      await request.post('/funds', payload)
+      ElMessage.success('创建成功')
+      pushSafe('/funds')
     } else {
-      await request.put(`/funds/${fundData.id}`, payload);
-      ElMessage.success("保存成功");
-      isEdit.value = false;
-      await loadFundDetail();
+      await request.put(`/funds/${fundData.id}`, payload)
+      ElMessage.success('保存成功')
+      isEdit.value = false
+      await loadFundDetail()
     }
   } catch (error: any) {
-    if (!error?.fields) ElMessage.error("保存失败，请检查输入");
+    if (!error?.fields) ElMessage.error('保存失败，请检查输入')
   } finally {
-    submitting.value = false;
+    submitting.value = false
   }
-};
+}
 const handleDelete = async () => {
   try {
-    await ElMessageBox.confirm("确定要删除这条经费记录吗？", "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning",
-    });
-    await request.delete(`/funds/${fundData.id}`);
-    ElMessage.success("删除成功");
-    pushSafe("/funds");
+    await ElMessageBox.confirm('确定要删除这条经费记录吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await request.delete(`/funds/${fundData.id}`)
+    ElMessage.success('删除成功')
+    pushSafe('/funds')
   } catch (e: any) {
-    if (e !== "cancel") logger.error("删除失败", e);
+    if (e !== 'cancel') logger.error('删除失败', e)
   }
-};
+}
 const checkPageMode = () => {
-  if (route.path.endsWith("/create")) {
-    isCreate.value = true;
-    isEdit.value = true;
-  } else if (route.path.endsWith("/edit")) {
-    isEdit.value = true;
+  if (route.path.endsWith('/create')) {
+    isCreate.value = true
+    isEdit.value = true
+  } else if (route.path.endsWith('/edit')) {
+    isEdit.value = true
   }
-};
+}
 onMounted(async () => {
-  checkPageMode();
+  checkPageMode()
   // 并行加载数据，提高页面加载性能
-  await loadFundDetail();
-  await loadAllHistory();
-});
+  await loadFundDetail()
+  await loadAllHistory()
+})
 // 路由变化时重新检测页面模式（如 /funds/5 → /funds/5/edit）
 // 同一组件实例复用时 onMounted 不会重新触发，需 watch route.path
 watch(
   () => route.path,
   () => {
-    checkPageMode();
-    if (!isCreate.value) loadFundDetail();
-  },
-);
+    checkPageMode()
+    if (!isCreate.value) loadFundDetail()
+  }
+)
 onUnmounted(() => {
   // 清理资源
-});
+})
 </script>
 
 <style scoped>

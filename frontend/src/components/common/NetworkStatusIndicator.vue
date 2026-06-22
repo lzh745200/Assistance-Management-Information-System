@@ -6,7 +6,7 @@
   ></span>
 </template>
 <script setup lang="ts">
-defineProps<{ online?: boolean }>();
+defineProps<{ online?: boolean }>()
 </script>
 <style scoped>
 .net-dot {

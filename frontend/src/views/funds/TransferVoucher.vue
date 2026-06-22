@@ -1,9 +1,7 @@
 <template>
   <div class="voucher-container">
     <el-page-header title="返回" @back="$router.back()">
-      <template #content
-        ><span class="page-title">军地资金划转凭证</span></template
-      >
+      <template #content><span class="page-title">军地资金划转凭证</span></template>
     </el-page-header>
 
     <el-card class="mt-4" shadow="never">
@@ -23,17 +21,10 @@
             <el-option label="已拒绝" value="rejected" />
           </el-select>
         </div>
-        <el-button type="primary" @click="showCreateDialog = true"
-          >新建凭证</el-button
-        >
+        <el-button type="primary" @click="showCreateDialog = true">新建凭证</el-button>
       </div>
 
-      <el-table
-        v-loading="loading"
-        :data="vouchers"
-        size="default"
-        class="mt-3"
-      >
+      <el-table v-loading="loading" :data="vouchers" size="default" class="mt-3">
         <el-table-column prop="voucher_no" label="凭证编号" width="160" />
         <el-table-column prop="direction_label" label="划转方向" width="120" />
         <el-table-column prop="amount" label="金额(万元)" width="120" />
@@ -112,17 +103,10 @@
         <el-form-item label="金额(万元)" required
           ><el-input-number v-model="form.amount" :min="0.01" :precision="2"
         /></el-form-item>
-        <el-form-item label="付款账户"
-          ><el-input v-model="form.payer_account"
-        /></el-form-item>
-        <el-form-item label="收款账户"
-          ><el-input v-model="form.payee_account"
-        /></el-form-item>
+        <el-form-item label="付款账户"><el-input v-model="form.payer_account" /></el-form-item>
+        <el-form-item label="收款账户"><el-input v-model="form.payee_account" /></el-form-item>
         <el-form-item label="划转日期"
-          ><el-date-picker
-            v-model="form.transfer_date"
-            type="date"
-            value-format="YYYY-MM-DD"
+          ><el-date-picker v-model="form.transfer_date" type="date" value-format="YYYY-MM-DD"
         /></el-form-item>
         <el-form-item label="备注"
           ><el-input v-model="form.remarks" type="textarea"
@@ -130,106 +114,100 @@
       </el-form>
       <template #footer>
         <el-button @click="showCreateDialog = false">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="handleCreate"
-          >创建</el-button
-        >
+        <el-button type="primary" :loading="loading" @click="handleCreate">创建</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { fundLifecycleApi } from "@/api/fundLifecycle";
-import { safeRouteParam } from "@/composables/useRouterSafe";
+import { ref, reactive, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { fundLifecycleApi } from '@/api/fundLifecycle'
+import { safeRouteParam } from '@/composables/useRouterSafe'
 
-const route = useRoute();
-const projectId = route.query.project_id
-  ? safeRouteParam(route.query.project_id)
-  : undefined;
+const route = useRoute()
+const projectId = route.query.project_id ? safeRouteParam(route.query.project_id) : undefined
 
-const loading = ref(false);
-const vouchers = ref<any[]>([]);
-const total = ref(0);
-const page = ref(1);
-const pageSize = 20;
-const filters = reactive({ status: "" });
-const showCreateDialog = ref(false);
+const loading = ref(false)
+const vouchers = ref<any[]>([])
+const total = ref(0)
+const page = ref(1)
+const pageSize = 20
+const filters = reactive({ status: '' })
+const showCreateDialog = ref(false)
 const form = reactive({
-  voucher_no: "",
-  direction: "military_to_local",
+  voucher_no: '',
+  direction: 'military_to_local',
   amount: 0,
-  payer_account: "",
-  payee_account: "",
-  transfer_date: "",
-  remarks: "",
+  payer_account: '',
+  payee_account: '',
+  transfer_date: '',
+  remarks: '',
   project_id: projectId,
   fund_id: undefined as number | undefined,
-});
+})
 
 async function loadData() {
-  loading.value = true;
+  loading.value = true
   try {
     const data = await fundLifecycleApi.listTransferVouchers({
       project_id: projectId,
       status: filters.status || undefined,
       page: page.value,
       page_size: pageSize,
-    });
-    vouchers.value = data.items || [];
-    total.value = data.total || 0;
+    })
+    vouchers.value = data.items || []
+    total.value = data.total || 0
   } catch (e: any) {
-    ElMessage.error("加载失败");
+    ElMessage.error('加载失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function handleCreate() {
   if (!form.voucher_no || !form.amount) {
-    ElMessage.warning("请填写凭证编号和金额");
-    return;
+    ElMessage.warning('请填写凭证编号和金额')
+    return
   }
-  loading.value = true;
+  loading.value = true
   try {
-    await fundLifecycleApi.createTransferVoucher(form);
-    ElMessage.success("创建成功");
-    showCreateDialog.value = false;
-    await loadData();
+    await fundLifecycleApi.createTransferVoucher(form)
+    ElMessage.success('创建成功')
+    showCreateDialog.value = false
+    await loadData()
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "创建失败");
+    ElMessage.error(e?.response?.data?.detail || '创建失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function handleConfirm(id: number) {
   try {
-    await ElMessageBox.confirm("确认该凭证？", "确认");
-    await fundLifecycleApi.confirmTransferVoucher(id);
-    ElMessage.success("已确认");
-    await loadData();
+    await ElMessageBox.confirm('确认该凭证？', '确认')
+    await fundLifecycleApi.confirmTransferVoucher(id)
+    ElMessage.success('已确认')
+    await loadData()
   } catch (e: any) {
-    if (e !== "cancel")
-      ElMessage.error(e?.response?.data?.detail || "确认失败");
+    if (e !== 'cancel') ElMessage.error(e?.response?.data?.detail || '确认失败')
   }
 }
 
 async function handleDelete(id: number) {
   try {
-    await ElMessageBox.confirm("确认删除？", "确认");
-    await fundLifecycleApi.deleteTransferVoucher(id);
-    ElMessage.success("已删除");
-    await loadData();
+    await ElMessageBox.confirm('确认删除？', '确认')
+    await fundLifecycleApi.deleteTransferVoucher(id)
+    ElMessage.success('已删除')
+    await loadData()
   } catch (e: any) {
-    if (e !== "cancel")
-      ElMessage.error(e?.response?.data?.detail || "删除失败");
+    if (e !== 'cancel') ElMessage.error(e?.response?.data?.detail || '删除失败')
   }
 }
 
-onMounted(loadData);
+onMounted(loadData)
 </script>
 
 <style scoped>

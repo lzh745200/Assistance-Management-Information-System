@@ -10,11 +10,7 @@
       <template #header>
         <div class="card-header">
           <span>快速备份</span>
-          <el-button
-            type="primary"
-            :loading="creating"
-            @click="handleCreateBackup"
-          >
+          <el-button type="primary" :loading="creating" @click="handleCreateBackup">
             <el-icon><Plus /></el-icon>
             创建备份
           </el-button>
@@ -32,32 +28,18 @@
 
       <!-- 备份列表 -->
       <el-table v-loading="loading" :data="backups" stripe>
-        <el-table-column
-          prop="filename"
-          label="备份文件"
-          min-width="200"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="filename" label="备份文件" min-width="200" show-overflow-tooltip />
         <el-table-column label="大小" width="100">
-          <template #default="{ row }">{{
-            formatSize(row.size_bytes || row.size)
-          }}</template>
+          <template #default="{ row }">{{ formatSize(row.size_bytes || row.size) }}</template>
         </el-table-column>
         <el-table-column label="创建时间" width="180">
-          <template #default="{ row }">{{
-            formatTime(row.created_at)
-          }}</template>
+          <template #default="{ row }">{{ formatTime(row.created_at) }}</template>
         </el-table-column>
-        <el-table-column
-          prop="description"
-          label="描述"
-          min-width="120"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="description" label="描述" min-width="120" show-overflow-tooltip />
         <el-table-column label="压缩" width="70" align="center">
           <template #default="{ row }">
             <el-tag :type="row.compressed ? 'success' : 'info'" size="small">{{
-              row.compressed ? "是" : "否"
+              row.compressed ? '是' : '否'
             }}</el-tag>
           </template>
         </el-table-column>
@@ -68,10 +50,7 @@
     <el-dialog v-model="showCreateDialog" title="创建备份" width="480px">
       <el-form label-width="90px">
         <el-form-item label="备份描述">
-          <el-input
-            v-model="createForm.description"
-            placeholder="例如：日常备份"
-          />
+          <el-input v-model="createForm.description" placeholder="例如：日常备份" />
         </el-form-item>
         <el-form-item label="加密密码">
           <el-input
@@ -87,9 +66,7 @@
       </el-form>
       <template #footer>
         <el-button @click="showCreateDialog = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="confirmCreate"
-          >创建</el-button
-        >
+        <el-button type="primary" :loading="creating" @click="confirmCreate">创建</el-button>
       </template>
     </el-dialog>
   </div>
@@ -97,65 +74,64 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Plus } from "@element-plus/icons-vue";
-import { getBackupList, createBackup } from "@/api/backup";
-import { formatFileSize } from "@/api/export";
-import { format } from "@/utils";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import { getBackupList, createBackup } from '@/api/backup'
+import { formatFileSize } from '@/api/export'
+import { format } from '@/utils'
 
-const loading = ref(false);
-const creating = ref(false);
-const backups = ref<any[]>([]);
-const showCreateDialog = ref(false);
-const createForm = reactive({ description: "", password: "" });
+const loading = ref(false)
+const creating = ref(false)
+const backups = ref<any[]>([])
+const showCreateDialog = ref(false)
+const createForm = reactive({ description: '', password: '' })
 
-const formatSize = (bytes: number) => formatFileSize(bytes || 0);
-const formatTime = (iso: string) => (iso ? format.formatDateTime(iso) : "-");
+const formatSize = (bytes: number) => formatFileSize(bytes || 0)
+const formatTime = (iso: string) => (iso ? format.formatDateTime(iso) : '-')
 
 async function loadBackups() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await getBackupList();
-    backups.value =
-      res.data?.items || (Array.isArray(res.data) ? res.data : []);
+    const res = await getBackupList()
+    backups.value = res.data?.items || (Array.isArray(res.data) ? res.data : [])
   } catch {
-    backups.value = [];
+    backups.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function handleCreateBackup() {
-  Object.assign(createForm, { description: "", password: "" });
-  showCreateDialog.value = true;
+  Object.assign(createForm, { description: '', password: '' })
+  showCreateDialog.value = true
 }
 
 async function confirmCreate() {
-  creating.value = true;
-  showCreateDialog.value = false;
+  creating.value = true
+  showCreateDialog.value = false
   try {
     const res = await createBackup({
-      description: createForm.description || "用户手动备份",
+      description: createForm.description || '用户手动备份',
       compress: true,
       include_uploads: true,
       include_config: false,
       password: createForm.password || undefined,
-    });
+    })
     if (res.data?.success !== false) {
-      ElMessage.success("备份创建成功");
-      loadBackups();
+      ElMessage.success('备份创建成功')
+      loadBackups()
     } else {
-      ElMessage.error(res.data?.message || "备份创建失败");
+      ElMessage.error(res.data?.message || '备份创建失败')
     }
   } catch {
-    ElMessage.error("备份创建失败");
+    ElMessage.error('备份创建失败')
   } finally {
-    creating.value = false;
+    creating.value = false
   }
 }
 
-onMounted(loadBackups);
+onMounted(loadBackups)
 </script>
 
 <style scoped>

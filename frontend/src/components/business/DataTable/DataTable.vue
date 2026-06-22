@@ -17,15 +17,15 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue'
 defineProps<{
-  data: any[];
-  columns: { key: string; label: string; width?: number }[];
-  loading?: boolean;
-  pagination?: boolean;
-  total?: number;
-  pageSize?: number;
-}>();
-defineEmits<{ (e: "page-change", page: number): void }>();
-const page = ref(1);
+  data: any[]
+  columns: { key: string; label: string; width?: number }[]
+  loading?: boolean
+  pagination?: boolean
+  total?: number
+  pageSize?: number
+}>()
+defineEmits<{ (e: 'page-change', page: number): void }>()
+const page = ref(1)
 </script>

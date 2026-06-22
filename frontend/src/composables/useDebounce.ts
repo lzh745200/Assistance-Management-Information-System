@@ -2,52 +2,52 @@
  * 防抖 Composable
  */
 export interface DebouncedFunction<T extends (...args: any[]) => any> {
-  (...args: Parameters<T>): void;
+  (...args: Parameters<T>): void
   /** 取消防抖，清除待执行的定时器 */
-  cancel: () => void;
+  cancel: () => void
   /** 立即执行（跳过防抖延迟） */
-  flush: (...args: Parameters<T>) => void;
+  flush: (...args: Parameters<T>) => void
 }
 
 export function createDebounce<T extends (...args: any[]) => any>(
   fn: T,
-  delay = 300,
+  delay = 300
 ): DebouncedFunction<T> {
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null
 
   const debouncedFn: DebouncedFunction<T> = Object.assign(
     (...args: Parameters<T>) => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => fn(...args), delay);
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => fn(...args), delay)
     },
     {
       cancel: () => {
-        if (timer) clearTimeout(timer);
-        timer = null;
+        if (timer) clearTimeout(timer)
+        timer = null
       },
       flush: (...args: Parameters<T>) => {
-        if (timer) clearTimeout(timer);
-        timer = null;
-        fn(...args);
+        if (timer) clearTimeout(timer)
+        timer = null
+        fn(...args)
       },
-    },
-  );
+    }
+  )
 
-  return debouncedFn;
+  return debouncedFn
 }
 
 export function useDebounce(delayMs = 300) {
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null
 
   function debounce(fn: () => void) {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(fn, delayMs);
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(fn, delayMs)
   }
 
   function cancel() {
-    if (timer) clearTimeout(timer);
-    timer = null;
+    if (timer) clearTimeout(timer)
+    timer = null
   }
 
-  return { debounce, cancel };
+  return { debounce, cancel }
 }

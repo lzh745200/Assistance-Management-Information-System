@@ -13,6 +13,6 @@
   </el-dialog>
 </template>
 <script setup lang="ts">
-defineProps<{ visible: boolean; title?: string; message?: string }>();
-defineEmits<{ (e: "confirm"): void; (e: "cancel"): void }>();
+defineProps<{ visible: boolean; title?: string; message?: string }>()
+defineEmits<{ (e: 'confirm'): void; (e: 'cancel'): void }>()
 </script>

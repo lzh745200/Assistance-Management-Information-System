@@ -10,6 +10,6 @@
   </el-dialog>
 </template>
 <script setup lang="ts">
-defineProps<{ visible: boolean; title?: string }>();
-defineEmits<{ (e: "close"): void }>();
+defineProps<{ visible: boolean; title?: string }>()
+defineEmits<{ (e: 'close'): void }>()
 </script>

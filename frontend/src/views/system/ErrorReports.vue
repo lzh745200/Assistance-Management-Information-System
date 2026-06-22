@@ -60,9 +60,7 @@
             >
               {{ source }}：{{ count }}
             </el-tag>
-            <span
-              v-if="!Object.keys(stats.by_source || {}).length"
-              class="empty-hint"
+            <span v-if="!Object.keys(stats.by_source || {}).length" class="empty-hint"
               >暂无数据</span
             >
           </div>
@@ -82,9 +80,7 @@
             >
               {{ severityLabel(sev) }}：{{ count }}
             </el-tag>
-            <span
-              v-if="!Object.keys(stats.by_severity || {}).length"
-              class="empty-hint"
+            <span v-if="!Object.keys(stats.by_severity || {}).length" class="empty-hint"
               >暂无数据</span
             >
           </div>
@@ -155,30 +151,10 @@
             {{ formatTime(row.reported_at) }}
           </template>
         </el-table-column>
-        <el-table-column
-          prop="source"
-          label="来源"
-          width="140"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="error_type"
-          label="错误类型"
-          width="140"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="message"
-          label="错误信息"
-          min-width="220"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="severity"
-          label="严重程度"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="source" label="来源" width="140" show-overflow-tooltip />
+        <el-table-column prop="error_type" label="错误类型" width="140" show-overflow-tooltip />
+        <el-table-column prop="message" label="错误信息" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="severity" label="严重程度" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="severityTagType(row.severity)" size="small">
               {{ severityLabel(row.severity) }}
@@ -194,12 +170,7 @@
         </el-table-column>
         <el-table-column label="操作" width="100" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button
-              type="primary"
-              link
-              :icon="View"
-              @click="showDetail(row.id)"
-            >
+            <el-button type="primary" link :icon="View" @click="showDetail(row.id)">
               详情
             </el-button>
           </template>
@@ -220,26 +191,15 @@
     </el-card>
 
     <!-- 错误详情弹窗 -->
-    <el-dialog
-      v-model="detailVisible"
-      title="错误详情"
-      width="750px"
-      :close-on-click-modal="false"
-    >
+    <el-dialog v-model="detailVisible" title="错误详情" width="750px" :close-on-click-modal="false">
       <template v-if="detailLoading">
         <el-skeleton :rows="10" animated />
       </template>
       <template v-else-if="detail">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="ID">{{
-            detail.id
-          }}</el-descriptions-item>
-          <el-descriptions-item label="来源">{{
-            detail.source
-          }}</el-descriptions-item>
-          <el-descriptions-item label="错误类型">{{
-            detail.error_type
-          }}</el-descriptions-item>
+          <el-descriptions-item label="ID">{{ detail.id }}</el-descriptions-item>
+          <el-descriptions-item label="来源">{{ detail.source }}</el-descriptions-item>
+          <el-descriptions-item label="错误类型">{{ detail.error_type }}</el-descriptions-item>
           <el-descriptions-item label="严重程度">
             <el-tag :type="severityTagType(detail.severity)" size="small">
               {{ severityLabel(detail.severity) }}
@@ -251,22 +211,18 @@
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="上报人">{{
-            detail.reporter || "系统"
+            detail.reporter || '系统'
           }}</el-descriptions-item>
           <el-descriptions-item label="上报时间">{{
             formatTime(detail.reported_at)
           }}</el-descriptions-item>
           <el-descriptions-item label="解决时间">{{
-            formatTime(detail.resolved_at) || "--"
+            formatTime(detail.resolved_at) || '--'
           }}</el-descriptions-item>
           <el-descriptions-item label="错误信息" :span="2">
             <div class="detail-message">{{ detail.message }}</div>
           </el-descriptions-item>
-          <el-descriptions-item
-            v-if="detail.stack_trace"
-            label="堆栈跟踪"
-            :span="2"
-          >
+          <el-descriptions-item v-if="detail.stack_trace" label="堆栈跟踪" :span="2">
             <el-input
               type="textarea"
               :rows="6"
@@ -275,20 +231,10 @@
               class="stack-trace-input"
             />
           </el-descriptions-item>
-          <el-descriptions-item
-            v-if="detail.context"
-            label="上下文数据"
-            :span="2"
-          >
-            <pre class="context-json">{{
-              JSON.stringify(detail.context, null, 2)
-            }}</pre>
+          <el-descriptions-item v-if="detail.context" label="上下文数据" :span="2">
+            <pre class="context-json">{{ JSON.stringify(detail.context, null, 2) }}</pre>
           </el-descriptions-item>
-          <el-descriptions-item
-            v-if="detail.resolution_note"
-            label="解决备注"
-            :span="2"
-          >
+          <el-descriptions-item v-if="detail.resolution_note" label="解决备注" :span="2">
             {{ detail.resolution_note }}
           </el-descriptions-item>
         </el-descriptions>
@@ -297,11 +243,7 @@
         <el-divider content-position="left">状态更新</el-divider>
         <el-form :model="updateForm" label-width="80px" class="update-form">
           <el-form-item label="状态">
-            <el-select
-              v-model="updateForm.status"
-              placeholder="请选择状态"
-              style="width: 200px"
-            >
+            <el-select v-model="updateForm.status" placeholder="请选择状态" style="width: 200px">
               <el-option label="新建" value="new" />
               <el-option label="调查中" value="investigating" />
               <el-option label="已解决" value="resolved" />
@@ -316,11 +258,7 @@
             />
           </el-form-item>
           <el-form-item>
-            <el-button
-              type="primary"
-              :loading="updateLoading"
-              @click="handleUpdateStatus"
-            >
+            <el-button type="primary" :loading="updateLoading" @click="handleUpdateStatus">
               更新状态
             </el-button>
           </el-form-item>
@@ -331,36 +269,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Refresh, View, Warning } from "@element-plus/icons-vue";
-import {
-  errorReportApi,
-  type ErrorReport,
-  type ErrorStats,
-} from "@/api/errorReport";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Refresh, View, Warning } from '@element-plus/icons-vue'
+import { errorReportApi, type ErrorReport, type ErrorStats } from '@/api/errorReport'
 
 // ==================== 统计数据 ====================
-const statsLoading = ref(false);
+const statsLoading = ref(false)
 const stats = ref<ErrorStats>({
   total: 0,
   open: 0,
   critical: 0,
   by_source: {},
   by_severity: {},
-});
+})
 
 async function loadStats() {
-  statsLoading.value = true;
+  statsLoading.value = true
   try {
-    const res = await errorReportApi.getStats();
+    const res = await errorReportApi.getStats()
     if (res.success && res.data) {
-      stats.value = res.data;
+      stats.value = res.data
     }
   } catch (e: any) {
-    ElMessage.error("加载错误统计失败");
+    ElMessage.error('加载错误统计失败')
   } finally {
-    statsLoading.value = false;
+    statsLoading.value = false
   }
 }
 
@@ -369,179 +303,179 @@ const filters = reactive({
   severity: undefined as string | undefined,
   status: undefined as string | undefined,
   source: undefined as string | undefined,
-});
+})
 
 // ==================== 分页 ====================
 const pagination = reactive({
   page: 1,
   pageSize: 20,
-});
+})
 
 // ==================== 表格 ====================
-const tableLoading = ref(false);
-const tableData = ref<ErrorReport[]>([]);
-const tableTotal = ref(0);
+const tableLoading = ref(false)
+const tableData = ref<ErrorReport[]>([])
+const tableTotal = ref(0)
 
 async function loadTableData() {
-  tableLoading.value = true;
+  tableLoading.value = true
   try {
     const params: Record<string, any> = {
       page: pagination.page,
       page_size: pagination.pageSize,
-    };
-    if (filters.severity) params.severity = filters.severity;
-    if (filters.status) params.status = filters.status;
-    if (filters.source) params.source = filters.source;
+    }
+    if (filters.severity) params.severity = filters.severity
+    if (filters.status) params.status = filters.status
+    if (filters.source) params.source = filters.source
 
-    const res = await errorReportApi.listReports(params);
+    const res = await errorReportApi.listReports(params)
     if (res.success && res.data) {
-      tableData.value = res.data.items || [];
-      tableTotal.value = res.data.total || 0;
+      tableData.value = res.data.items || []
+      tableTotal.value = res.data.total || 0
     }
   } catch (e: any) {
-    ElMessage.error("加载错误报告列表失败");
+    ElMessage.error('加载错误报告列表失败')
   } finally {
-    tableLoading.value = false;
+    tableLoading.value = false
   }
 }
 
 function handleSearch() {
-  pagination.page = 1;
-  loadTableData();
+  pagination.page = 1
+  loadTableData()
 }
 
 function handleReset() {
-  filters.severity = undefined;
-  filters.status = undefined;
-  filters.source = undefined;
-  pagination.page = 1;
-  loadTableData();
+  filters.severity = undefined
+  filters.status = undefined
+  filters.source = undefined
+  pagination.page = 1
+  loadTableData()
 }
 
 function handlePageSizeChange() {
-  pagination.page = 1;
-  loadTableData();
+  pagination.page = 1
+  loadTableData()
 }
 
 // ==================== 详情弹窗 ====================
-const detailVisible = ref(false);
-const detailLoading = ref(false);
-const detail = ref<ErrorReport | null>(null);
+const detailVisible = ref(false)
+const detailLoading = ref(false)
+const detail = ref<ErrorReport | null>(null)
 
 async function showDetail(reportId: number) {
-  detailVisible.value = true;
-  detailLoading.value = true;
-  detail.value = null;
+  detailVisible.value = true
+  detailLoading.value = true
+  detail.value = null
   try {
-    const res = await errorReportApi.getReport(reportId);
+    const res = await errorReportApi.getReport(reportId)
     if (res.success && res.data) {
-      detail.value = res.data;
+      detail.value = res.data
       // 初始化更新表单
-      updateForm.status = res.data.status;
-      updateForm.resolution_note = res.data.resolution_note || "";
+      updateForm.status = res.data.status
+      updateForm.resolution_note = res.data.resolution_note || ''
     }
   } catch (e: any) {
-    ElMessage.error("加载错误详情失败");
-    detailVisible.value = false;
+    ElMessage.error('加载错误详情失败')
+    detailVisible.value = false
   } finally {
-    detailLoading.value = false;
+    detailLoading.value = false
   }
 }
 
 // ==================== 状态更新 ====================
-const updateLoading = ref(false);
+const updateLoading = ref(false)
 const updateForm = reactive({
-  status: "new",
-  resolution_note: "",
-});
+  status: 'new',
+  resolution_note: '',
+})
 
 async function handleUpdateStatus() {
-  if (!detail.value) return;
-  updateLoading.value = true;
+  if (!detail.value) return
+  updateLoading.value = true
   try {
     const res = await errorReportApi.updateReport(detail.value.id, {
       status: updateForm.status,
       resolution_note: updateForm.resolution_note || undefined,
-    });
+    })
     if (res.success) {
-      ElMessage.success(res.message || "状态更新成功");
-      detailVisible.value = false;
-      loadTableData();
-      loadStats();
+      ElMessage.success(res.message || '状态更新成功')
+      detailVisible.value = false
+      loadTableData()
+      loadStats()
     } else {
-      ElMessage.error(res.message || "状态更新失败");
+      ElMessage.error(res.message || '状态更新失败')
     }
   } catch (e: any) {
-    ElMessage.error("状态更新失败");
+    ElMessage.error('状态更新失败')
   } finally {
-    updateLoading.value = false;
+    updateLoading.value = false
   }
 }
 
 // ==================== 全局刷新 ====================
 async function refreshAll() {
-  await Promise.all([loadStats(), loadTableData()]);
+  await Promise.all([loadStats(), loadTableData()])
 }
 
 // ==================== 工具函数 ====================
 function severityLabel(severity: string): string {
   const map: Record<string, string> = {
-    critical: "严重",
-    error: "错误",
-    warning: "警告",
-    info: "信息",
-  };
-  return map[severity] || severity;
+    critical: '严重',
+    error: '错误',
+    warning: '警告',
+    info: '信息',
+  }
+  return map[severity] || severity
 }
 
-type TagType = "primary" | "success" | "warning" | "info" | "danger";
+type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
 
 function severityTagType(severity: string): TagType {
   const map: Record<string, TagType> = {
-    critical: "danger",
-    error: "danger",
-    warning: "warning",
-    info: "info",
-  };
-  return map[severity] || "info";
+    critical: 'danger',
+    error: 'danger',
+    warning: 'warning',
+    info: 'info',
+  }
+  return map[severity] || 'info'
 }
 
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
-    new: "新建",
-    investigating: "调查中",
-    resolved: "已解决",
-    closed: "已关闭",
-  };
-  return map[status] || status;
+    new: '新建',
+    investigating: '调查中',
+    resolved: '已解决',
+    closed: '已关闭',
+  }
+  return map[status] || status
 }
 
 function statusTagType(status: string): TagType {
   const map: Record<string, TagType> = {
-    new: "info",
-    investigating: "warning",
-    resolved: "success",
-    closed: "info",
-  };
-  return map[status] || "info";
+    new: 'info',
+    investigating: 'warning',
+    resolved: 'success',
+    closed: 'info',
+  }
+  return map[status] || 'info'
 }
 
 function formatTime(isoStr?: string): string {
-  if (!isoStr) return "";
+  if (!isoStr) return ''
   try {
-    const d = new Date(isoStr);
-    if (isNaN(d.getTime())) return isoStr;
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    const d = new Date(isoStr)
+    if (isNaN(d.getTime())) return isoStr
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
   } catch {
-    return isoStr;
+    return isoStr
   }
 }
 
 // ==================== 生命周期 ====================
 onMounted(() => {
-  refreshAll();
-});
+  refreshAll()
+})
 </script>
 
 <style scoped>
@@ -680,7 +614,7 @@ onMounted(() => {
 }
 
 .stack-trace-input :deep(.el-textarea__inner) {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
   line-height: 1.5;
   background-color: #f5f7fa;
@@ -692,7 +626,7 @@ onMounted(() => {
   background-color: #f5f7fa;
   border: 1px solid #e4e7ed;
   border-radius: 4px;
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
   line-height: 1.6;
   max-height: 200px;

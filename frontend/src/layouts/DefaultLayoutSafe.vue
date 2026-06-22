@@ -92,19 +92,12 @@
               <span class="menu-title-text">帮扶项目</span>
             </template>
             <el-menu-item index="/projects"><span>项目列表</span></el-menu-item>
-            <el-menu-item index="/projects/management"
-              ><span>项目管控</span></el-menu-item
-            >
-            <el-menu-item index="/projects/import"
-              ><span>项目导入</span></el-menu-item
-            >
+            <el-menu-item index="/projects/management"><span>项目管控</span></el-menu-item>
+            <el-menu-item index="/projects/import"><span>项目导入</span></el-menu-item>
           </el-sub-menu>
 
           <el-sub-menu
-            v-if="
-              menuStore.canAccessMenu('funds-admin') ||
-              menuStore.canAccessMenu('funds-user')
-            "
+            v-if="menuStore.canAccessMenu('funds-admin') || menuStore.canAccessMenu('funds-user')"
             index="fund-group"
             popper-class="aside-popper"
           >
@@ -113,30 +106,14 @@
               <span class="menu-title-text">经费管理</span>
             </template>
             <el-menu-item index="/funds"><span>经费总览</span></el-menu-item>
-            <el-menu-item index="/funds/analysis"
-              ><span>经费分析</span></el-menu-item
-            >
-            <el-menu-item index="/funds/budget"
-              ><span>预算管理</span></el-menu-item
-            >
-            <el-menu-item index="/funds/contract"
-              ><span>合同管理</span></el-menu-item
-            >
-            <el-menu-item index="/funds/anomaly"
-              ><span>异常资金</span></el-menu-item
-            >
-            <el-menu-item index="/funds/lifecycle"
-              ><span>资金周期</span></el-menu-item
-            >
-            <el-menu-item index="/funds/apply"
-              ><span>经费申请</span></el-menu-item
-            >
-            <el-menu-item index="/funds/report"
-              ><span>经费报表</span></el-menu-item
-            >
-            <el-menu-item index="/funds/settlement"
-              ><span>经费结算</span></el-menu-item
-            >
+            <el-menu-item index="/funds/analysis"><span>经费分析</span></el-menu-item>
+            <el-menu-item index="/funds/budget"><span>预算管理</span></el-menu-item>
+            <el-menu-item index="/funds/contract"><span>合同管理</span></el-menu-item>
+            <el-menu-item index="/funds/anomaly"><span>异常资金</span></el-menu-item>
+            <el-menu-item index="/funds/lifecycle"><span>资金周期</span></el-menu-item>
+            <el-menu-item index="/funds/apply"><span>经费申请</span></el-menu-item>
+            <el-menu-item index="/funds/report"><span>经费报表</span></el-menu-item>
+            <el-menu-item index="/funds/settlement"><span>经费结算</span></el-menu-item>
           </el-sub-menu>
 
           <el-sub-menu
@@ -149,15 +126,10 @@
               <span class="menu-title-text">帮扶学校</span>
             </template>
             <el-menu-item index="/schools"><span>学校列表</span></el-menu-item>
-            <el-menu-item index="/schools/analysis"
-              ><span>学校分析</span></el-menu-item
-            >
+            <el-menu-item index="/schools/analysis"><span>学校分析</span></el-menu-item>
           </el-sub-menu>
 
-          <el-menu-item
-            v-if="menuStore.canAccessMenu('policies')"
-            index="/policies"
-          >
+          <el-menu-item v-if="menuStore.canAccessMenu('policies')" index="/policies">
             <el-icon><Document /></el-icon>
             <template #title>
               <span class="menu-title-text">帮扶政策</span>
@@ -182,21 +154,14 @@
               <el-icon><Stamp /></el-icon>
               <span class="menu-title-text">乡村振兴</span>
             </template>
-            <el-menu-item index="/rural-works"
-              ><span>工作首页</span></el-menu-item
-            >
-            <el-menu-item index="/rural-works/list"
-              ><span>工作列表</span></el-menu-item
-            >
+            <el-menu-item index="/rural-works"><span>工作首页</span></el-menu-item>
+            <el-menu-item index="/rural-works/list"><span>工作列表</span></el-menu-item>
           </el-sub-menu>
 
           <!-- ════ 工作流 ════ -->
           <div
             v-show="!isCollapsed"
-            v-if="
-              menuStore.canAccessMenu('approval') ||
-              menuStore.canAccessMenu('work-analysis')
-            "
+            v-if="menuStore.canAccessMenu('approval') || menuStore.canAccessMenu('work-analysis')"
             class="menu-section-label"
           >
             <span>工作流</span>
@@ -212,21 +177,12 @@
               <span class="menu-title-text">审批管理</span>
             </template>
             <el-menu-item index="/approval"><span>审批概览</span></el-menu-item>
-            <el-menu-item index="/approval/pending"
-              ><span>待审批</span></el-menu-item
-            >
-            <el-menu-item index="/approval/my"
-              ><span>我的申请</span></el-menu-item
-            >
-            <el-menu-item index="/approval/history"
-              ><span>审批历史</span></el-menu-item
-            >
+            <el-menu-item index="/approval/pending"><span>待审批</span></el-menu-item>
+            <el-menu-item index="/approval/my"><span>我的申请</span></el-menu-item>
+            <el-menu-item index="/approval/history"><span>审批历史</span></el-menu-item>
           </el-sub-menu>
 
-          <el-menu-item
-            v-if="menuStore.canAccessMenu('work-analysis')"
-            index="/work-calendar"
-          >
+          <el-menu-item v-if="menuStore.canAccessMenu('work-analysis')" index="/work-calendar">
             <el-icon><Calendar /></el-icon>
             <template #title>
               <span class="menu-title-text">工作日历</span>
@@ -258,10 +214,7 @@
           </div>
 
           <el-sub-menu
-            v-if="
-              menuStore.canAccessMenu('data') ||
-              menuStore.canAccessMenu('data-overview')
-            "
+            v-if="menuStore.canAccessMenu('data') || menuStore.canAccessMenu('data-overview')"
             index="data-group"
             popper-class="aside-popper"
           >
@@ -269,27 +222,13 @@
               <el-icon><DataAnalysis /></el-icon>
               <span class="menu-title-text">数据分析</span>
             </template>
-            <el-menu-item index="/data-analysis"
-              ><span>分析首页</span></el-menu-item
-            >
-            <el-menu-item index="/data-analysis/dashboard"
-              ><span>分析仪表板</span></el-menu-item
-            >
-            <el-menu-item index="/data-analysis/map"
-              ><span>地图可视化</span></el-menu-item
-            >
-            <el-menu-item index="/report/templates"
-              ><span>报表模板</span></el-menu-item
-            >
-            <el-menu-item index="/export/report"
-              ><span>报表导出</span></el-menu-item
-            >
-            <el-menu-item index="/data-analysis/assessment"
-              ><span>成效评估</span></el-menu-item
-            >
-            <el-menu-item index="/effectiveness"
-              ><span>帮扶成效</span></el-menu-item
-            >
+            <el-menu-item index="/data-analysis"><span>分析首页</span></el-menu-item>
+            <el-menu-item index="/data-analysis/dashboard"><span>分析仪表板</span></el-menu-item>
+            <el-menu-item index="/data-analysis/map"><span>地图可视化</span></el-menu-item>
+            <el-menu-item index="/report/templates"><span>报表模板</span></el-menu-item>
+            <el-menu-item index="/export/report"><span>报表导出</span></el-menu-item>
+            <el-menu-item index="/data-analysis/assessment"><span>成效评估</span></el-menu-item>
+            <el-menu-item index="/effectiveness"><span>帮扶成效</span></el-menu-item>
           </el-sub-menu>
 
           <!-- ════ 数据管理 ════ -->
@@ -310,10 +249,7 @@
           </div>
 
           <el-sub-menu
-            v-if="
-              menuStore.canAccessMenu('data') ||
-              menuStore.canAccessMenu('data-overview')
-            "
+            v-if="menuStore.canAccessMenu('data') || menuStore.canAccessMenu('data-overview')"
             index="datasync-group"
             popper-class="aside-popper"
           >
@@ -321,32 +257,16 @@
               <el-icon><Connection /></el-icon>
               <span class="menu-title-text">数据管理</span>
             </template>
-            <el-menu-item index="/data-management"
-              ><span>数据概览</span></el-menu-item
-            >
-            <el-menu-item index="/data-management/backup"
-              ><span>数据备份</span></el-menu-item
-            >
-            <el-menu-item index="/data-management/logs"
-              ><span>操作日志</span></el-menu-item
-            >
-            <el-menu-item index="/data-sync/export"
-              ><span>数据导出</span></el-menu-item
-            >
-            <el-menu-item index="/data-sync/import"
-              ><span>数据导入</span></el-menu-item
-            >
-            <el-menu-item index="/data-package"
-              ><span>数据包管理</span></el-menu-item
-            >
-            <el-menu-item
-              v-if="menuStore.canAccessMenu('batch-import')"
-              index="/data-import/batch"
+            <el-menu-item index="/data-management"><span>数据概览</span></el-menu-item>
+            <el-menu-item index="/data-management/backup"><span>数据备份</span></el-menu-item>
+            <el-menu-item index="/data-management/logs"><span>操作日志</span></el-menu-item>
+            <el-menu-item index="/data-sync/export"><span>数据导出</span></el-menu-item>
+            <el-menu-item index="/data-sync/import"><span>数据导入</span></el-menu-item>
+            <el-menu-item index="/data-package"><span>数据包管理</span></el-menu-item>
+            <el-menu-item v-if="menuStore.canAccessMenu('batch-import')" index="/data-import/batch"
               ><span>批量导入</span></el-menu-item
             >
-            <el-menu-item
-              v-if="menuStore.canAccessMenu('data-verify')"
-              index="/data-verify"
+            <el-menu-item v-if="menuStore.canAccessMenu('data-verify')" index="/data-verify"
               ><span>数据校验</span></el-menu-item
             >
           </el-sub-menu>
@@ -360,10 +280,7 @@
             <span>系统管理</span>
           </div>
 
-          <el-menu-item
-            v-if="menuStore.canAccessMenu('users-orgs')"
-            index="/organization"
-          >
+          <el-menu-item v-if="menuStore.canAccessMenu('users-orgs')" index="/organization">
             <el-icon><OfficeBuilding /></el-icon>
             <template #title>
               <span class="menu-title-text">组织机构</span>
@@ -379,29 +296,19 @@
               <el-icon><Setting /></el-icon>
               <span class="menu-title-text">系统管理</span>
             </template>
-            <el-menu-item
-              v-if="menuStore.canAccessMenu('users-orgs')"
-              index="/system/users"
+            <el-menu-item v-if="menuStore.canAccessMenu('users-orgs')" index="/system/users"
               ><span>用户与角色</span></el-menu-item
             >
-            <el-menu-item
-              v-if="menuStore.canAccessMenu('audit')"
-              index="/system/audit"
+            <el-menu-item v-if="menuStore.canAccessMenu('audit')" index="/system/audit"
               ><span>审计管理</span></el-menu-item
             >
-            <el-menu-item
-              v-if="menuStore.canAccessMenu('backup')"
-              index="/system/backup"
+            <el-menu-item v-if="menuStore.canAccessMenu('backup')" index="/system/backup"
               ><span>备份管理</span></el-menu-item
             >
-            <el-menu-item
-              v-if="menuStore.canAccessMenu('system-config')"
-              index="/system/config"
+            <el-menu-item v-if="menuStore.canAccessMenu('system-config')" index="/system/config"
               ><span>系统配置</span></el-menu-item
             >
-            <el-menu-item
-              v-if="menuStore.canAccessMenu('monitor')"
-              index="/system/monitoring"
+            <el-menu-item v-if="menuStore.canAccessMenu('monitor')" index="/system/monitoring"
               ><span>系统监控</span></el-menu-item
             >
             <el-menu-item v-if="menuStore.canAccessMenu('help')" index="/help"
@@ -409,10 +316,7 @@
             >
           </el-sub-menu>
 
-          <el-menu-item
-            v-if="menuStore.canAccessMenu('messages')"
-            index="/message"
-          >
+          <el-menu-item v-if="menuStore.canAccessMenu('messages')" index="/message">
             <el-icon><Message /></el-icon>
             <template #title>
               <span class="menu-title-text">消息中心</span>
@@ -469,12 +373,7 @@
         </div>
       </el-header>
 
-      <el-main
-        id="main-content"
-        class="layout-content"
-        role="main"
-        aria-label="主内容区"
-      >
+      <el-main id="main-content" class="layout-content" role="main" aria-label="主内容区">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
@@ -492,11 +391,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
-import { useMenuStore } from "@/stores/menu";
-import MobileBottomNav from "@/components/layout/MobileBottomNav.vue";
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useMenuStore } from '@/stores/menu'
+import MobileBottomNav from '@/components/layout/MobileBottomNav.vue'
 import {
   HomeFilled,
   Folder,
@@ -519,38 +418,36 @@ import {
   Lock,
   SwitchButton,
   Select,
-} from "@element-plus/icons-vue";
+} from '@element-plus/icons-vue'
 
-const route = useRoute();
-const router = useRouter();
-const authStore = useAuthStore();
-const menuStore = useMenuStore();
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const menuStore = useMenuStore()
 
 // 挂载时加载用户可见菜单（若未加载）
 onMounted(async () => {
   if (!menuStore.loaded) {
-    await menuStore.fetchMenus();
+    await menuStore.fetchMenus()
   }
-});
+})
 
-const isCollapsed = ref(false);
-const username = computed(
-  () => authStore.user?.username || authStore.user?.full_name || "管理员",
-);
-const currentRoute = computed(() => (route.meta?.title as string) || "");
+const isCollapsed = ref(false)
+const username = computed(() => authStore.user?.username || authStore.user?.full_name || '管理员')
+const currentRoute = computed(() => (route.meta?.title as string) || '')
 
 function handleCommand(command: string) {
   switch (command) {
-    case "profile":
-      router.push("/profile");
-      break;
-    case "change-password":
-      router.push("/change-password");
-      break;
-    case "logout":
-      authStore.logout();
-      router.push("/login");
-      break;
+    case 'profile':
+      router.push('/profile')
+      break
+    case 'change-password':
+      router.push('/change-password')
+      break
+    case 'logout':
+      authStore.logout()
+      router.push('/login')
+      break
   }
 }
 </script>

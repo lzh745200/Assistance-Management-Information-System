@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
 /**
  * 缓存管理器
@@ -22,13 +22,13 @@ import { logger } from "@/utils/logger";
  */
 export interface CacheConfig {
   /** 最大缓存条目数 */
-  maxSize: number;
+  maxSize: number
   /** 默认TTL（毫秒） */
-  defaultTTL: number;
+  defaultTTL: number
   /** 需要持久化的键列表 */
-  persistKeys: string[];
+  persistKeys: string[]
   /** localStorage前缀 */
-  storagePrefix: string;
+  storagePrefix: string
 }
 
 /**
@@ -36,15 +36,15 @@ export interface CacheConfig {
  */
 export interface CacheEntry<T = unknown> {
   /** 缓存值 */
-  value: T;
+  value: T
   /** 创建时间戳 */
-  timestamp: number;
+  timestamp: number
   /** TTL（毫秒） */
-  ttl: number;
+  ttl: number
   /** 访问次数 */
-  accessCount: number;
+  accessCount: number
   /** 最后访问时间 */
-  lastAccess: number;
+  lastAccess: number
 }
 
 /**
@@ -52,23 +52,23 @@ export interface CacheEntry<T = unknown> {
  */
 export interface CacheStats {
   /** 当前缓存大小 */
-  size: number;
+  size: number
   /** 命中次数 */
-  hits: number;
+  hits: number
   /** 未命中次数 */
-  misses: number;
+  misses: number
   /** 命中率 */
-  hitRate: number;
+  hitRate: number
   /** 淘汰次数 */
-  evictions: number;
+  evictions: number
 }
 
 /**
  * 序列化后的缓存数据（用于localStorage）
  */
 interface SerializedCache {
-  entries: Array<[string, CacheEntry<unknown>]>;
-  version: number;
+  entries: Array<[string, CacheEntry<unknown>]>
+  version: number
 }
 
 // ============================================================================
@@ -79,10 +79,10 @@ const DEFAULT_CONFIG: CacheConfig = {
   maxSize: 100,
   defaultTTL: 5 * 60 * 1000, // 5分钟
   persistKeys: [],
-  storagePrefix: "cache:",
-};
+  storagePrefix: 'cache:',
+}
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 1
 
 // ============================================================================
 // CacheManager 类
@@ -106,25 +106,25 @@ const CACHE_VERSION = 1;
  * ```
  */
 export class CacheManager {
-  private cache: Map<string, CacheEntry<unknown>>;
-  private config: CacheConfig;
+  private cache: Map<string, CacheEntry<unknown>>
+  private config: CacheConfig
   private stats: {
-    hits: number;
-    misses: number;
-    evictions: number;
-  };
+    hits: number
+    misses: number
+    evictions: number
+  }
 
   constructor(config: Partial<CacheConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.cache = new Map();
+    this.config = { ...DEFAULT_CONFIG, ...config }
+    this.cache = new Map()
     this.stats = {
       hits: 0,
       misses: 0,
       evictions: 0,
-    };
+    }
 
     // 从localStorage恢复持久化数据
-    this.restoreFromStorage();
+    this.restoreFromStorage()
   }
 
   /**
@@ -134,26 +134,26 @@ export class CacheManager {
    * @returns 缓存值，如果不存在或已过期则返回undefined
    */
   get<T>(key: string): T | undefined {
-    const entry = this.cache.get(key);
+    const entry = this.cache.get(key)
 
     if (!entry) {
-      this.stats.misses++;
-      return undefined;
+      this.stats.misses++
+      return undefined
     }
 
     // 检查是否过期
     if (this.isExpired(entry)) {
-      this.delete(key);
-      this.stats.misses++;
-      return undefined;
+      this.delete(key)
+      this.stats.misses++
+      return undefined
     }
 
     // 更新访问信息（LRU）
-    entry.accessCount++;
-    entry.lastAccess = Date.now();
+    entry.accessCount++
+    entry.lastAccess = Date.now()
 
-    this.stats.hits++;
-    return entry.value as T;
+    this.stats.hits++
+    return entry.value as T
   }
 
   /**
@@ -166,23 +166,23 @@ export class CacheManager {
   set<T>(key: string, value: T, ttl?: number): void {
     // 检查是否需要淘汰
     if (this.cache.size >= this.config.maxSize && !this.cache.has(key)) {
-      this.evictLRU();
+      this.evictLRU()
     }
 
-    const now = Date.now();
+    const now = Date.now()
     const entry: CacheEntry<T> = {
       value,
       timestamp: now,
       ttl: ttl ?? this.config.defaultTTL,
       accessCount: 1,
       lastAccess: now,
-    };
+    }
 
-    this.cache.set(key, entry);
+    this.cache.set(key, entry)
 
     // 持久化到localStorage
     if (this.shouldPersist(key)) {
-      this.persistToStorage();
+      this.persistToStorage()
     }
   }
 
@@ -193,13 +193,13 @@ export class CacheManager {
    * @returns 是否存在
    */
   has(key: string): boolean {
-    const entry = this.cache.get(key);
-    if (!entry) return false;
+    const entry = this.cache.get(key)
+    if (!entry) return false
     if (this.isExpired(entry)) {
-      this.delete(key);
-      return false;
+      this.delete(key)
+      return false
     }
-    return true;
+    return true
   }
 
   /**
@@ -209,11 +209,11 @@ export class CacheManager {
    * @returns 是否成功删除
    */
   delete(key: string): boolean {
-    const result = this.cache.delete(key);
+    const result = this.cache.delete(key)
     if (result && this.shouldPersist(key)) {
-      this.persistToStorage();
+      this.persistToStorage()
     }
-    return result;
+    return result
   }
 
   /**
@@ -223,44 +223,42 @@ export class CacheManager {
    * @returns 被删除的条目数量
    */
   invalidate(pattern: string | RegExp): number {
-    let count = 0;
-    const keysToDelete: string[] = [];
+    let count = 0
+    const keysToDelete: string[] = []
 
     for (const key of this.cache.keys()) {
       const matches =
-        typeof pattern === "string"
-          ? key === pattern || key.startsWith(pattern)
-          : pattern.test(key);
+        typeof pattern === 'string' ? key === pattern || key.startsWith(pattern) : pattern.test(key)
 
       if (matches) {
-        keysToDelete.push(key);
+        keysToDelete.push(key)
       }
     }
 
     for (const key of keysToDelete) {
       if (this.cache.delete(key)) {
-        count++;
+        count++
       }
     }
 
     if (count > 0) {
-      this.persistToStorage();
+      this.persistToStorage()
     }
 
-    return count;
+    return count
   }
 
   /**
    * 清空所有缓存
    */
   clear(): void {
-    this.cache.clear();
+    this.cache.clear()
     this.stats = {
       hits: 0,
       misses: 0,
       evictions: 0,
-    };
-    this.clearStorage();
+    }
+    this.clearStorage()
   }
 
   /**
@@ -269,14 +267,14 @@ export class CacheManager {
    * @returns 缓存统计
    */
   getStats(): CacheStats {
-    const total = this.stats.hits + this.stats.misses;
+    const total = this.stats.hits + this.stats.misses
     return {
       size: this.cache.size,
       hits: this.stats.hits,
       misses: this.stats.misses,
       hitRate: total > 0 ? this.stats.hits / total : 0,
       evictions: this.stats.evictions,
-    };
+    }
   }
 
   /**
@@ -285,7 +283,7 @@ export class CacheManager {
    * @returns 缓存键数组
    */
   keys(): string[] {
-    return Array.from(this.cache.keys());
+    return Array.from(this.cache.keys())
   }
 
   /**
@@ -294,7 +292,7 @@ export class CacheManager {
    * @returns 缓存条目数量
    */
   size(): number {
-    return this.cache.size;
+    return this.cache.size
   }
 
   // ============================================================================
@@ -305,27 +303,27 @@ export class CacheManager {
    * 检查缓存条目是否过期
    */
   private isExpired(entry: CacheEntry<unknown>): boolean {
-    if (entry.ttl <= 0) return false; // TTL为0或负数表示永不过期
-    return Date.now() > entry.timestamp + entry.ttl;
+    if (entry.ttl <= 0) return false // TTL为0或负数表示永不过期
+    return Date.now() > entry.timestamp + entry.ttl
   }
 
   /**
    * LRU淘汰策略：淘汰最近最少使用的条目
    */
   private evictLRU(): void {
-    let oldestKey: string | null = null;
-    let oldestAccess = Infinity;
+    let oldestKey: string | null = null
+    let oldestAccess = Infinity
 
     for (const [key, entry] of this.cache.entries()) {
       if (entry.lastAccess < oldestAccess) {
-        oldestAccess = entry.lastAccess;
-        oldestKey = key;
+        oldestAccess = entry.lastAccess
+        oldestKey = key
       }
     }
 
     if (oldestKey) {
-      this.cache.delete(oldestKey);
-      this.stats.evictions++;
+      this.cache.delete(oldestKey)
+      this.stats.evictions++
     }
   }
 
@@ -334,12 +332,12 @@ export class CacheManager {
    */
   private shouldPersist(key: string): boolean {
     return this.config.persistKeys.some((pattern) => {
-      if (pattern.includes("*")) {
-        const regex = new RegExp("^" + pattern.replace(/\*/g, ".*") + "$");
-        return regex.test(key);
+      if (pattern.includes('*')) {
+        const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$')
+        return regex.test(key)
       }
-      return key === pattern || key.startsWith(pattern);
-    });
+      return key === pattern || key.startsWith(pattern)
+    })
   }
 
   /**
@@ -347,25 +345,22 @@ export class CacheManager {
    */
   private persistToStorage(): void {
     try {
-      const entriesToPersist: Array<[string, CacheEntry<unknown>]> = [];
+      const entriesToPersist: Array<[string, CacheEntry<unknown>]> = []
 
       for (const [key, entry] of this.cache.entries()) {
         if (this.shouldPersist(key) && !this.isExpired(entry)) {
-          entriesToPersist.push([key, entry]);
+          entriesToPersist.push([key, entry])
         }
       }
 
       const data: SerializedCache = {
         entries: entriesToPersist,
         version: CACHE_VERSION,
-      };
+      }
 
-      localStorage.setItem(
-        this.config.storagePrefix + "data",
-        JSON.stringify(data),
-      );
+      localStorage.setItem(this.config.storagePrefix + 'data', JSON.stringify(data))
     } catch (error) {
-      logger.warn("Failed to persist cache to localStorage:", error);
+      logger.warn('Failed to persist cache to localStorage:', error)
     }
   }
 
@@ -374,26 +369,26 @@ export class CacheManager {
    */
   private restoreFromStorage(): void {
     try {
-      const stored = localStorage.getItem(this.config.storagePrefix + "data");
-      if (!stored) return;
+      const stored = localStorage.getItem(this.config.storagePrefix + 'data')
+      if (!stored) return
 
-      const data: SerializedCache = JSON.parse(stored);
+      const data: SerializedCache = JSON.parse(stored)
 
       // 版本检查
       if (data.version !== CACHE_VERSION) {
-        this.clearStorage();
-        return;
+        this.clearStorage()
+        return
       }
 
       for (const [key, entry] of data.entries) {
         // 跳过已过期的条目
         if (!this.isExpired(entry)) {
-          this.cache.set(key, entry);
+          this.cache.set(key, entry)
         }
       }
     } catch (error) {
-      logger.warn("Failed to restore cache from localStorage:", error);
-      this.clearStorage();
+      logger.warn('Failed to restore cache from localStorage:', error)
+      this.clearStorage()
     }
   }
 
@@ -402,9 +397,9 @@ export class CacheManager {
    */
   private clearStorage(): void {
     try {
-      localStorage.removeItem(this.config.storagePrefix + "data");
+      localStorage.removeItem(this.config.storagePrefix + 'data')
     } catch (error) {
-      logger.warn("Failed to clear cache from localStorage:", error);
+      logger.warn('Failed to clear cache from localStorage:', error)
     }
   }
 }
@@ -420,7 +415,7 @@ export class CacheManager {
  * @returns JSON字符串
  */
 export function serialize<T>(data: T): string {
-  return JSON.stringify(data);
+  return JSON.stringify(data)
 }
 
 /**
@@ -430,7 +425,7 @@ export function serialize<T>(data: T): string {
  * @returns 反序列化后的数据
  */
 export function deserialize<T>(str: string): T {
-  return JSON.parse(str) as T;
+  return JSON.parse(str) as T
 }
 
 // ============================================================================
@@ -440,6 +435,6 @@ export function deserialize<T>(str: string): T {
 /**
  * 默认缓存管理器实例
  */
-export const cacheManager = new CacheManager();
+export const cacheManager = new CacheManager()
 
-export default CacheManager;
+export default CacheManager

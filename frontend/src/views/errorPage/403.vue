@@ -16,19 +16,19 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 
-const router = useRouter();
-const { pushSafe } = useRouterSafe();
+const router = useRouter()
+const { pushSafe } = useRouterSafe()
 
 const goHome = () => {
-  pushSafe("/");
-};
+  pushSafe('/')
+}
 
 const goBack = () => {
-  router.go(-1);
-};
+  router.go(-1)
+}
 </script>
 
 <style scoped>

@@ -21,18 +21,10 @@
     <div class="help-layout">
       <!-- 左侧目录 -->
       <el-card class="toc-panel">
-        <template #header
-          ><span style="font-weight: 600; color: #1b4332">目录</span></template
-        >
+        <template #header><span style="font-weight: 600; color: #1b4332">目录</span></template>
         <el-menu :default-active="activeSection" @select="scrollToSection">
-          <el-menu-item
-            v-for="section in filteredSections"
-            :key="section.id"
-            :index="section.id"
-          >
-            <el-icon v-if="section.icon"
-              ><component :is="section.icon"
-            /></el-icon>
+          <el-menu-item v-for="section in filteredSections" :key="section.id" :index="section.id">
+            <el-icon v-if="section.icon"><component :is="section.icon" /></el-icon>
             <span>{{ section.title }}</span>
           </el-menu-item>
         </el-menu>
@@ -55,10 +47,7 @@
             </div>
           </template>
           <!-- eslint-disable vue/no-v-html -->
-          <div
-            class="section-content"
-            v-html="safeSectionContent(section.content)"
-          />
+          <div class="section-content" v-html="safeSectionContent(section.content)" />
           <!-- eslint-enable vue/no-v-html -->
         </el-card>
       </div>
@@ -67,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed } from 'vue'
 import {
   Search,
   HomeFilled,
@@ -83,12 +72,12 @@ import {
   Download,
   MapLocation,
   QuestionFilled,
-} from "@element-plus/icons-vue";
-import { sanitizeHtml } from "@/utils/sanitize";
+} from '@element-plus/icons-vue'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 /** XSS 防护：即使当前内容是静态硬编码，也统一过 sanitize 以防止后续改为动态加载时遗漏 */
 function safeSectionContent(html: string): string {
-  return sanitizeHtml(html);
+  return sanitizeHtml(html)
 }
 
 // Ensure dynamic icons are available
@@ -107,23 +96,23 @@ defineExpose({
   Download,
   MapLocation,
   QuestionFilled,
-});
+})
 
-const searchKeyword = ref("");
-const activeSection = ref("overview");
+const searchKeyword = ref('')
+const activeSection = ref('overview')
 
 interface HelpSection {
-  id: string;
-  title: string;
-  icon: string;
-  content: string;
+  id: string
+  title: string
+  icon: string
+  content: string
 }
 
 const sections: HelpSection[] = [
   {
-    id: "overview",
-    title: "系统概述",
-    icon: "HomeFilled",
+    id: 'overview',
+    title: '系统概述',
+    icon: 'HomeFilled',
     content: `
       <p>帮扶管理信息系统是一套面向军队帮扶工作的综合管理平台，支持离线单机运行。</p>
       <p><strong>主要功能模块：</strong></p>
@@ -141,9 +130,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "login",
-    title: "登录与账号",
-    icon: "Setting",
+    id: 'login',
+    title: '登录与账号',
+    icon: 'Setting',
     content: `
       <p><strong>首次登录：</strong>使用管理员分配的账号密码登录系统。</p>
       <p><strong>修改密码：</strong>点击右上角头像 → 修改密码。</p>
@@ -158,9 +147,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "village",
-    title: "帮扶村管理",
-    icon: "Location",
+    id: 'village',
+    title: '帮扶村管理',
+    icon: 'Location',
     content: `
       <p>进入「帮扶村管理」菜单，可查看所有帮扶村列表。</p>
       <p><strong>新增帮扶村：</strong>点击「新增帮扶村」按钮，填写村名、所属县市、帮扶单位等信息。</p>
@@ -169,9 +158,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "school",
-    title: "帮扶学校管理",
-    icon: "School",
+    id: 'school',
+    title: '帮扶学校管理',
+    icon: 'School',
     content: `
       <p>管理援建学校信息，包括基本信息、助学兴教项目和资助学生。</p>
       <p><strong>助学兴教项目：</strong>在学校详情页，点击「助学兴教项目」Tab 管理项目。</p>
@@ -179,9 +168,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "funds",
-    title: "经费管理",
-    icon: "Money",
+    id: 'funds',
+    title: '经费管理',
+    icon: 'Money',
     content: `
       <p>经费管理支持预算编制、经费收支记录和分析报表。</p>
       <p><strong>新增经费记录：</strong>点击「新增经费记录」，填写名称、金额、类型等。</p>
@@ -190,9 +179,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "policy",
-    title: "政策法规",
-    icon: "Document",
+    id: 'policy',
+    title: '政策法规',
+    icon: 'Document',
     content: `
       <p>管理政策法规文件，支持分类浏览、搜索和在线预览。</p>
       <p><strong>上传政策文件：</strong>点击「新增政策」，填写标题、文号、发布日期，并上传附件（支持 PDF/Word/图片）。</p>
@@ -201,9 +190,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "ruralwork",
-    title: "乡村工作",
-    icon: "Sunny",
+    id: 'ruralwork',
+    title: '乡村工作',
+    icon: 'Sunny',
     content: `
       <p>乡村工作模块支持年度任务分配、下级填报、审批和报告生成的完整闭环。</p>
       <p><strong>任务分配（上级）：</strong>创建年度工作任务，选择下级单位进行分配。</p>
@@ -212,9 +201,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "approval",
-    title: "审批管理",
-    icon: "Stamp",
+    id: 'approval',
+    title: '审批管理',
+    icon: 'Stamp',
     content: `
       <p>审批管理分为三个视图：</p>
       <ul>
@@ -226,9 +215,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "analytics",
-    title: "数据分析",
-    icon: "DataAnalysis",
+    id: 'analytics',
+    title: '数据分析',
+    icon: 'DataAnalysis',
     content: `
       <p>数据分析模块提供多维度的数据统计和可视化功能。</p>
       <ul>
@@ -240,9 +229,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "export",
-    title: "报表导出",
-    icon: "Download",
+    id: 'export',
+    title: '报表导出',
+    icon: 'Download',
     content: `
       <p>报表导出中心支持将各类数据导出为 Excel、PDF 或 Word 格式。</p>
       <p><strong>操作步骤：</strong></p>
@@ -256,9 +245,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "backup",
-    title: "备份与恢复",
-    icon: "Setting",
+    id: 'backup',
+    title: '备份与恢复',
+    icon: 'Setting',
     content: `
       <p>系统支持手动备份和定时自动备份。</p>
       <p><strong>手动备份：</strong>进入「备份管理」页面，点击「立即备份」。</p>
@@ -268,9 +257,9 @@ const sections: HelpSection[] = [
     `,
   },
   {
-    id: "faq",
-    title: "常见问题",
-    icon: "QuestionFilled",
+    id: 'faq',
+    title: '常见问题',
+    icon: 'QuestionFilled',
     content: `
       <p><strong>Q: 系统打不开怎么办？</strong></p>
       <p>A: 确保后端服务已启动。查看任务栏托盘区是否有系统图标。如服务未启动，双击桌面快捷方式重新打开。</p>
@@ -282,29 +271,27 @@ const sections: HelpSection[] = [
       <p>A: 系统支持离线地图。如无离线瓦片，会自动使用 ECharts 矢量地图作为回退。</p>
     `,
   },
-];
+]
 
 const filteredSections = computed(() => {
-  if (!searchKeyword.value.trim()) return sections;
-  const keyword = searchKeyword.value.toLowerCase();
+  if (!searchKeyword.value.trim()) return sections
+  const keyword = searchKeyword.value.toLowerCase()
   return sections.filter(
-    (s) =>
-      s.title.toLowerCase().includes(keyword) ||
-      s.content.toLowerCase().includes(keyword),
-  );
-});
+    (s) => s.title.toLowerCase().includes(keyword) || s.content.toLowerCase().includes(keyword)
+  )
+})
 
 function onSearch() {
   // 搜索时自动跳转到第一个匹配的section
   if (filteredSections.value.length > 0) {
-    activeSection.value = filteredSections.value[0].id;
+    activeSection.value = filteredSections.value[0].id
   }
 }
 
 function scrollToSection(id: string) {
-  activeSection.value = id;
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  activeSection.value = id
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 </script>
 

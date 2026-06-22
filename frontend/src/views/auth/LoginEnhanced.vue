@@ -2,10 +2,7 @@
   <div class="login-page">
     <!-- 背景轮播（仅渲染当前图，避免12张同时加载） -->
     <div class="background-carousel">
-      <div
-        class="bg-slide active"
-        :style="{ backgroundImage: `url(${currentBg})` }"
-      ></div>
+      <div class="bg-slide active" :style="{ backgroundImage: `url(${currentBg})` }"></div>
       <div class="bg-overlay"></div>
     </div>
 
@@ -52,11 +49,8 @@
                 class="custom-input"
                 autocomplete="current-password"
               />
-              <span
-                class="toggle-password"
-                @click="showPassword = !showPassword"
-              >
-                {{ showPassword ? "👁️" : "🙈" }}
+              <span class="toggle-password" @click="showPassword = !showPassword">
+                {{ showPassword ? '👁️' : '🙈' }}
               </span>
             </div>
           </div>
@@ -74,9 +68,7 @@
                 maxlength="4"
               />
             </div>
-            <p class="hint-text">
-              首次登录需要验证机器码，请联系管理员获取校验码
-            </p>
+            <p class="hint-text">首次登录需要验证机器码，请联系管理员获取校验码</p>
           </div>
 
           <button type="submit" class="login-btn" :disabled="loading">
@@ -87,17 +79,9 @@
 
         <!-- 忘记密码链接 -->
         <div class="extra-actions">
-          <a href="#" class="forgot-link" @click.prevent="goToForgotPassword">
-            忘记密码？
-          </a>
-          <a href="#" class="register-link" @click.prevent="goToRegister">
-            注册账户
-          </a>
-          <a
-            href="/get-machine-code"
-            class="machine-code-link"
-            @click.prevent="goToMachineCode"
-          >
+          <a href="#" class="forgot-link" @click.prevent="goToForgotPassword"> 忘记密码？ </a>
+          <a href="#" class="register-link" @click.prevent="goToRegister"> 注册账户 </a>
+          <a href="/get-machine-code" class="machine-code-link" @click.prevent="goToMachineCode">
             获取机器码
           </a>
         </div>
@@ -106,9 +90,7 @@
           <div v-if="errorMsg" class="error-banner">
             {{ errorMsg }}
           </div>
-          <p class="copyright">
-            © 2026 V{{ systemVersion }} {{ copyrightOwner }}版权所有
-          </p>
+          <p class="copyright">© 2026 V{{ systemVersion }} {{ copyrightOwner }}版权所有</p>
         </div>
       </div>
     </div>
@@ -116,141 +98,135 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
-import { SYSTEM_VERSION, COPYRIGHT_OWNER } from "@/config/constants";
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { SYSTEM_VERSION, COPYRIGHT_OWNER } from '@/config/constants'
 
-const router = useRouter();
-const authStore = useAuthStore();
+const router = useRouter()
+const authStore = useAuthStore()
 
-const username = ref("");
-const password = ref("");
-const verificationCode = ref("");
-const loading = ref(false);
-const errorMsg = ref("");
-const showPassword = ref(false);
-const showMachineCodeInput = ref(false);
-const systemVersion = SYSTEM_VERSION;
-const copyrightOwner = COPYRIGHT_OWNER;
+const username = ref('')
+const password = ref('')
+const verificationCode = ref('')
+const loading = ref(false)
+const errorMsg = ref('')
+const showPassword = ref(false)
+const showMachineCodeInput = ref(false)
+const systemVersion = SYSTEM_VERSION
+const copyrightOwner = COPYRIGHT_OWNER
 
 // 当前背景图（只加载一张，避免12张同时请求）
-const currentBg = computed(() => backgroundImages[currentBgIndex.value]);
+const currentBg = computed(() => backgroundImages[currentBgIndex.value])
 
 // 背景图片列表
 const backgroundImages = [
-  "/images/login-bg/bg1.jpg",
-  "/images/login-bg/bg2.jpg",
-  "/images/login-bg/bg3.jpg",
-  "/images/login-bg/bg4.jpg",
-  "/images/login-bg/bg5.jpg",
-  "/images/login-bg/bg6.jpg",
-  "/images/login-bg/bg7.jpg",
-  "/images/login-bg/bg8.jpg",
-  "/images/login-bg/bg9.jpg",
-  "/images/login-bg/bg10.jpg",
-  "/images/login-bg/bg11.jpg",
-  "/images/login-bg/bg12.jpg",
-];
+  '/images/login-bg/bg1.jpg',
+  '/images/login-bg/bg2.jpg',
+  '/images/login-bg/bg3.jpg',
+  '/images/login-bg/bg4.jpg',
+  '/images/login-bg/bg5.jpg',
+  '/images/login-bg/bg6.jpg',
+  '/images/login-bg/bg7.jpg',
+  '/images/login-bg/bg8.jpg',
+  '/images/login-bg/bg9.jpg',
+  '/images/login-bg/bg10.jpg',
+  '/images/login-bg/bg11.jpg',
+  '/images/login-bg/bg12.jpg',
+]
 
-const currentBgIndex = ref(0);
-let carouselInterval: number | null = null;
-const imagesPreloaded = ref(false);
+const currentBgIndex = ref(0)
+let carouselInterval: number | null = null
+const imagesPreloaded = ref(false)
 
 // 预加载所有背景图片，确保轮播流畅无黑屏
 const preloadAllImages = async (): Promise<void> => {
   const promises = backgroundImages.map((src) => {
     return new Promise<void>((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve(); // 失败也继续，不阻塞轮播
-      img.src = src;
-    });
-  });
-  await Promise.all(promises);
-  imagesPreloaded.value = true;
-};
+      const img = new Image()
+      img.onload = () => resolve()
+      img.onerror = () => resolve() // 失败也继续，不阻塞轮播
+      img.src = src
+    })
+  })
+  await Promise.all(promises)
+  imagesPreloaded.value = true
+}
 
 const startCarousel = () => {
-  if (carouselInterval) clearInterval(carouselInterval);
+  if (carouselInterval) clearInterval(carouselInterval)
   carouselInterval = window.setInterval(() => {
-    currentBgIndex.value = (currentBgIndex.value + 1) % backgroundImages.length;
-  }, 5000);
-};
+    currentBgIndex.value = (currentBgIndex.value + 1) % backgroundImages.length
+  }, 5000)
+}
 
 onMounted(async () => {
   // 先预加载所有背景图，再启动轮播 — 杜绝黑屏/闪烁
-  await preloadAllImages();
-  startCarousel();
-});
+  await preloadAllImages()
+  startCarousel()
+})
 
 onUnmounted(() => {
   if (carouselInterval) {
-    clearInterval(carouselInterval);
+    clearInterval(carouselInterval)
   }
-});
+})
 
 const handleLogin = async () => {
   if (!username.value || !password.value) {
-    errorMsg.value = "请输入用户名和密码";
-    return;
+    errorMsg.value = '请输入用户名和密码'
+    return
   }
 
-  loading.value = true;
-  errorMsg.value = "";
+  loading.value = true
+  errorMsg.value = ''
 
   try {
-    const success = await authStore.login(username.value, password.value);
+    const success = await authStore.login(username.value, password.value)
     if (success) {
-      const redirect = router.currentRoute.value.query.redirect;
+      const redirect = router.currentRoute.value.query.redirect
 
       // 首次登录 → 跳转修改密码页（保留原始重定向目标）
       if (authStore.mustChangePassword) {
         const target =
-          typeof redirect === "string" &&
-          redirect.startsWith("/") &&
-          !redirect.startsWith("//")
+          typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
             ? `/change-password?redirect=${encodeURIComponent(redirect)}`
-            : "/change-password";
-        router.push(target);
-        return;
+            : '/change-password'
+        router.push(target)
+        return
       }
 
       // 安全校验：仅允许站内相对路径跳转
-      if (
-        typeof redirect === "string" &&
-        redirect.startsWith("/") &&
-        !redirect.startsWith("//")
-      ) {
-        router.push(redirect);
-        return;
+      if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
+        router.push(redirect)
+        return
       }
 
-      router.push("/dashboard");
-      return;
+      router.push('/dashboard')
+      return
     }
 
-    errorMsg.value = authStore.error || "登录失败";
+    errorMsg.value = authStore.error || '登录失败'
   } catch (err: any) {
-    errorMsg.value = "登录系统异常: " + (err.message || "未知错误");
+    errorMsg.value = '登录系统异常: ' + (err.message || '未知错误')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const goToForgotPassword = () => {
-  router.push("/forgot-password");
-};
+  router.push('/forgot-password')
+}
 
 const goToRegister = () => {
-  router.push("/register");
-};
+  router.push('/register')
+}
 
 const goToMachineCode = () => {
-  router.push("/get-machine-code").catch(() => {
-    window.location.href = "/get-machine-code";
-  });
-};
+  router.push('/get-machine-code').catch(() => {
+    window.location.href = '/get-machine-code'
+  })
+}
 </script>
 
 <style scoped>
@@ -273,8 +249,7 @@ const goToMachineCode = () => {
   position: relative;
   overflow-y: auto;
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* 背景轮播 */
@@ -311,11 +286,7 @@ const goToMachineCode = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(8, 28, 21, 0.85) 0%,
-    rgba(27, 67, 50, 0.7) 100%
-  );
+  background: linear-gradient(135deg, rgba(8, 28, 21, 0.85) 0%, rgba(27, 67, 50, 0.7) 100%);
 }
 
 .login-container {
@@ -335,11 +306,7 @@ const goToMachineCode = () => {
 /* 左侧品牌区 */
 .brand-section {
   flex: 1;
-  background: linear-gradient(
-    135deg,
-    rgba(27, 67, 50, 0.95) 0%,
-    rgba(8, 28, 21, 0.98) 100%
-  );
+  background: linear-gradient(135deg, rgba(27, 67, 50, 0.95) 0%, rgba(8, 28, 21, 0.98) 100%);
   display: flex;
   flex-direction: column;
   justify-content: center;

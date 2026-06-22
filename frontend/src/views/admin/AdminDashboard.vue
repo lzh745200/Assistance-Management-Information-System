@@ -7,21 +7,12 @@
         <p class="welcome-subtitle">{{ currentDate }}</p>
       </div>
       <div class="admin-actions">
-        <button class="action-btn gold" @click="pushSafe('/system/users-orgs')">
-          👥 用户管理
-        </button>
-        <button
-          class="action-btn gold"
-          @click="pushSafe('/data-management/backup')"
-        >
+        <button class="action-btn gold" @click="pushSafe('/system/users-orgs')">👥 用户管理</button>
+        <button class="action-btn gold" @click="pushSafe('/data-management/backup')">
           💾 数据备份
         </button>
-        <button class="action-btn gold" @click="pushSafe('/system/audit')">
-          📋 操作审计
-        </button>
-        <button class="action-btn gold" @click="pushSafe('/system/config')">
-          ⚙️ 系统配置
-        </button>
+        <button class="action-btn gold" @click="pushSafe('/system/audit')">📋 操作审计</button>
+        <button class="action-btn gold" @click="pushSafe('/system/config')">⚙️ 系统配置</button>
       </div>
     </div>
 
@@ -49,14 +40,8 @@
             <h3>🖥️ 系统状态</h3>
           </div>
           <div class="system-status">
-            <div v-if="systemStatus.length === 0" class="empty-tip">
-              加载中...
-            </div>
-            <div
-              v-for="status in systemStatus"
-              :key="status.name"
-              class="status-item"
-            >
+            <div v-if="systemStatus.length === 0" class="empty-tip">加载中...</div>
+            <div v-for="status in systemStatus" :key="status.name" class="status-item">
               <span class="status-name">{{ status.name }}</span>
               <span class="status-value" :class="status.status">
                 <span class="status-dot"></span>
@@ -72,16 +57,10 @@
             <h3>🔐 最近登录</h3>
           </div>
           <div class="login-list">
-            <div v-if="recentLogins.length === 0" class="empty-tip">
-              暂无登录记录
-            </div>
-            <div
-              v-for="login in recentLogins"
-              :key="login.id"
-              class="login-item"
-            >
+            <div v-if="recentLogins.length === 0" class="empty-tip">暂无登录记录</div>
+            <div v-for="login in recentLogins" :key="login.id" class="login-item">
               <div class="login-avatar">
-                {{ (login.name || "").charAt(0) || "U" }}
+                {{ (login.name || '').charAt(0) || 'U' }}
               </div>
               <div class="login-info">
                 <span class="login-name">{{ login.name }}</span>
@@ -96,18 +75,12 @@
         <div class="admin-card">
           <div class="card-header">
             <h3>📝 审计日志</h3>
-            <button class="text-btn" @click="pushSafe('/system/audit')">
-              查看全部
-            </button>
+            <button class="text-btn" @click="pushSafe('/system/audit')">查看全部</button>
           </div>
           <div class="audit-list">
-            <div v-if="auditLogs.length === 0" class="empty-tip">
-              暂无审计记录
-            </div>
+            <div v-if="auditLogs.length === 0" class="empty-tip">暂无审计记录</div>
             <div v-for="log in auditLogs" :key="log.id" class="audit-item">
-              <span class="audit-action" :class="log.type">{{
-                log.action
-              }}</span>
+              <span class="audit-action" :class="log.type">{{ log.action }}</span>
               <span class="audit-user">{{ log.user }}</span>
               <span class="audit-target">{{ log.target }}</span>
               <span class="audit-time">{{ log.time }}</span>
@@ -143,9 +116,7 @@
             <span class="pending-count">{{ pendingItems.length }}</span>
           </div>
           <div class="pending-list">
-            <div v-if="pendingItems.length === 0" class="empty-tip">
-              暂无待处理事项
-            </div>
+            <div v-if="pendingItems.length === 0" class="empty-tip">暂无待处理事项</div>
             <div
               v-for="item in pendingItems"
               :key="item.id"
@@ -166,10 +137,7 @@
           </div>
           <div class="storage-info">
             <div class="storage-bar">
-              <div
-                class="storage-used"
-                :style="{ width: storagePercent + '%' }"
-              ></div>
+              <div class="storage-used" :style="{ width: storagePercent + '%' }"></div>
             </div>
             <div class="storage-text">
               已使用 {{ formatSize(storageUsed) }} /
@@ -197,111 +165,108 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, computed, onMounted } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import request from "@/api/request";
+import { ref, computed, onMounted } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import request from '@/api/request'
 
-const { pushSafe } = useRouterSafe();
+const { pushSafe } = useRouterSafe()
 
-const currentDate = new Date().toLocaleDateString("zh-CN", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  weekday: "long",
-});
+const currentDate = new Date().toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long',
+})
 
 const adminStats = ref([
-  { label: "用户总数", value: 0, icon: "👥", trend: "", trendClass: "stable" },
-  { label: "今日活跃", value: 0, icon: "🟢", trend: "", trendClass: "stable" },
-  { label: "数据记录", value: 0, icon: "📊", trend: "", trendClass: "stable" },
+  { label: '用户总数', value: 0, icon: '👥', trend: '', trendClass: 'stable' },
+  { label: '今日活跃', value: 0, icon: '🟢', trend: '', trendClass: 'stable' },
+  { label: '数据记录', value: 0, icon: '📊', trend: '', trendClass: 'stable' },
   {
-    label: "系统运行",
-    value: "--",
-    icon: "⚡",
-    trend: "",
-    trendClass: "stable",
+    label: '系统运行',
+    value: '--',
+    icon: '⚡',
+    trend: '',
+    trendClass: 'stable',
   },
-]);
+])
 
-const systemStatus = ref<any[]>([]);
+const systemStatus = ref<any[]>([])
 
-const recentLogins = ref<any[]>([]);
+const recentLogins = ref<any[]>([])
 
-const auditLogs = ref<any[]>([]);
+const auditLogs = ref<any[]>([])
 
 const quickActions = [
-  { icon: "👥", label: "用户管理", path: "/system/users-orgs" },
-  { icon: "🔑", label: "角色权限", path: "/system/roles" },
-  { icon: "💾", label: "数据备份", path: "/data-management/backup" },
-  { icon: "📋", label: "操作审计", path: "/system/audit" },
-  { icon: "⚙️", label: "系统配置", path: "/system/config" },
-  { icon: "📊", label: "数据总览", path: "/data-management/overview" },
-];
+  { icon: '👥', label: '用户管理', path: '/system/users-orgs' },
+  { icon: '🔑', label: '角色权限', path: '/system/roles' },
+  { icon: '💾', label: '数据备份', path: '/data-management/backup' },
+  { icon: '📋', label: '操作审计', path: '/system/audit' },
+  { icon: '⚙️', label: '系统配置', path: '/system/config' },
+  { icon: '📊', label: '数据总览', path: '/data-management/overview' },
+]
 
-const pendingItems = ref<any[]>([]);
+const pendingItems = ref<any[]>([])
 
-const storageUsed = ref(0);
-const storageTotal = ref(1);
-const dbSize = ref(0);
-const backupSize = ref(0);
-const logSize = ref(0);
+const storageUsed = ref(0)
+const storageTotal = ref(1)
+const dbSize = ref(0)
+const backupSize = ref(0)
+const logSize = ref(0)
 
-const storagePercent = computed(() =>
-  Math.round((storageUsed.value / storageTotal.value) * 100),
-);
+const storagePercent = computed(() => Math.round((storageUsed.value / storageTotal.value) * 100))
 
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`
 }
 
 async function loadAdminData() {
   try {
-    const res = await request.get("/dashboard/stats", {
+    const res = await request.get('/dashboard/stats', {
       params: { admin: true },
       showError: false,
-    } as any);
-    const data = res.data?.data || res.data || {};
+    } as any)
+    const data = res.data?.data || res.data || {}
 
-    adminStats.value[0].value = data.total_users || 0;
-    adminStats.value[1].value = data.active_today || 0;
-    adminStats.value[2].value = data.total_records || 0;
+    adminStats.value[0].value = data.total_users || 0
+    adminStats.value[1].value = data.active_today || 0
+    adminStats.value[2].value = data.total_records || 0
     if (data.uptime) {
-      adminStats.value[3].value = data.uptime;
+      adminStats.value[3].value = data.uptime
     }
 
     if (data.system_status && Array.isArray(data.system_status)) {
-      systemStatus.value = data.system_status;
+      systemStatus.value = data.system_status
     }
     if (data.recent_logins && Array.isArray(data.recent_logins)) {
-      recentLogins.value = data.recent_logins;
+      recentLogins.value = data.recent_logins
     }
     if (data.audit_logs && Array.isArray(data.audit_logs)) {
-      auditLogs.value = data.audit_logs;
+      auditLogs.value = data.audit_logs
     }
     if (data.pending_items && Array.isArray(data.pending_items)) {
-      pendingItems.value = data.pending_items;
+      pendingItems.value = data.pending_items
     }
     if (data.storage) {
-      storageUsed.value = data.storage.used || 0;
-      storageTotal.value = data.storage.total || 1;
-      dbSize.value = data.storage.db || 0;
-      backupSize.value = data.storage.backup || 0;
-      logSize.value = data.storage.log || 0;
+      storageUsed.value = data.storage.used || 0
+      storageTotal.value = data.storage.total || 1
+      dbSize.value = data.storage.db || 0
+      backupSize.value = data.storage.backup || 0
+      logSize.value = data.storage.log || 0
     }
   } catch (e) {
-    logger.error("加载管理数据失败:", e);
+    logger.error('加载管理数据失败:', e)
   }
 }
 
 onMounted(() => {
-  loadAdminData();
-});
+  loadAdminData()
+})
 </script>
 
 <style scoped>

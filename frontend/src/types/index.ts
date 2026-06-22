@@ -6,33 +6,33 @@
  */
 
 // API响应类型
-export * from "./api";
+export * from './api'
 
 // 实体类型
-export * from "./entities";
+export * from './entities'
 
 // 组件Props类型
-export * from "./components";
+export * from './components'
 
 // 数据分析类型
-export * from "./analytics";
+export * from './analytics'
 
 // ============================================================================
 // 兼容性类型别名（保持向后兼容）
 // ============================================================================
 
-import type { User as UserType } from "./entities";
+import type { User as UserType } from './entities'
 
 /**
  * 登录请求参数
  */
 export interface LoginRequest {
   /** 用户名 */
-  username: string;
+  username: string
   /** 密码 */
-  password: string;
+  password: string
   /** 是否记住登录 */
-  remember?: boolean;
+  remember?: boolean
 }
 
 /**
@@ -40,15 +40,15 @@ export interface LoginRequest {
  */
 export interface LoginResponse {
   /** 访问令牌 */
-  accessToken: string;
+  accessToken: string
   /** 刷新令牌 */
-  refreshToken?: string;
+  refreshToken?: string
   /** 令牌类型 */
-  tokenType: string;
+  tokenType: string
   /** 过期时间（秒） */
-  expiresIn: number;
+  expiresIn: number
   /** 用户信息 */
-  user: UserType;
+  user: UserType
 }
 
 /**
@@ -56,9 +56,9 @@ export interface LoginResponse {
  */
 export interface PaginationParams {
   /** 页码 */
-  page: number;
+  page: number
   /** 每页大小 */
-  pageSize: number;
+  pageSize: number
 }
 
 /**
@@ -66,9 +66,9 @@ export interface PaginationParams {
  */
 export interface SortParams {
   /** 排序字段 */
-  sortBy?: string;
+  sortBy?: string
   /** 排序方向 */
-  sortOrder?: "asc" | "desc";
+  sortOrder?: 'asc' | 'desc'
 }
 
 /**
@@ -76,9 +76,9 @@ export interface SortParams {
  */
 export interface ListParams extends PaginationParams, SortParams {
   /** 搜索关键词 */
-  search?: string;
+  search?: string
   /** 过滤条件 */
-  filters?: Record<string, unknown>;
+  filters?: Record<string, unknown>
 }
 
 // ============================================================================
@@ -88,69 +88,66 @@ export interface ListParams extends PaginationParams, SortParams {
 /**
  * 可空类型
  */
-export type Nullable<T> = T | null;
+export type Nullable<T> = T | null
 
 /**
  * 可选类型
  */
-export type Optional<T> = T | undefined;
+export type Optional<T> = T | undefined
 
 /**
  * 深度只读类型
  */
 export type DeepReadonly<T> = {
-  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
-};
+  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P]
+}
 
 /**
  * 深度可选类型
  */
 export type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
+}
 
 /**
  * 提取Promise返回类型
  */
-export type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
+export type UnwrapPromise<T> = T extends Promise<infer U> ? U : T
 
 /**
  * 提取数组元素类型
  */
-export type ArrayElement<T> = T extends (infer U)[] ? U : never;
+export type ArrayElement<T> = T extends (infer U)[] ? U : never
 
 /**
  * 键值对类型
  */
-export type KeyValue<
-  K extends string | number | symbol = string,
-  V = unknown,
-> = Record<K, V>;
+export type KeyValue<K extends string | number | symbol = string, V = unknown> = Record<K, V>
 
 /**
  * 函数类型
  */
-export type AnyFunction = (...args: unknown[]) => unknown;
+export type AnyFunction = (...args: unknown[]) => unknown
 
 /**
  * 异步函数类型
  */
-export type AsyncFunction<T = unknown> = (...args: unknown[]) => Promise<T>;
+export type AsyncFunction<T = unknown> = (...args: unknown[]) => Promise<T>
 
 /**
  * 搜索表单（通用）
  */
 export interface SearchForm {
-  [key: string]: any;
+  [key: string]: any
 }
 
 /**
  * 分页信息
  */
 export interface Pagination {
-  page?: number;
-  page_size?: number;
-  current?: number;
-  size?: number;
-  total: number;
+  page?: number
+  page_size?: number
+  current?: number
+  size?: number
+  total: number
 }

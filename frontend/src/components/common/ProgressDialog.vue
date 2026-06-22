@@ -49,67 +49,65 @@
 
     <template #footer>
       <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="loading" @click="handleSubmit">
-        提交
-      </el-button>
+      <el-button type="primary" :loading="loading" @click="handleSubmit"> 提交 </el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
-import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import { useProjectStore } from "@/stores/project";
+import { ref, reactive, watch } from 'vue'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { useProjectStore } from '@/stores/project'
 
 // 定义项目进度创建接口
 interface ProjectProgressCreate {
-  project_id: number;
-  progress_percentage: number;
-  description: string;
-  challenges?: string;
-  next_steps?: string;
+  project_id: number
+  progress_percentage: number
+  description: string
+  challenges?: string
+  next_steps?: string
 }
 
 interface Props {
-  projectId: number;
-  projectName?: string;
-  visible: boolean;
+  projectId: number
+  projectName?: string
+  visible: boolean
 }
 
-const props = defineProps<Props>();
+const props = defineProps<Props>()
 const emit = defineEmits<{
-  "update:visible": [value: boolean];
-  close: [];
-  success: [];
-}>();
+  'update:visible': [value: boolean]
+  close: []
+  success: []
+}>()
 
-const projectStore = useProjectStore();
-const formRef = ref<FormInstance>();
-const loading = ref(false);
+const projectStore = useProjectStore()
+const formRef = ref<FormInstance>()
+const loading = ref(false)
 
-const form = reactive<Omit<ProjectProgressCreate, "project_id">>({
+const form = reactive<Omit<ProjectProgressCreate, 'project_id'>>({
   progress_percentage: 0,
-  description: "",
-  challenges: "",
-  next_steps: "",
-});
+  description: '',
+  challenges: '',
+  next_steps: '',
+})
 
 const rules: FormRules = {
   progress_percentage: [
-    { required: true, message: "请输入进度百分比", trigger: "blur" },
+    { required: true, message: '请输入进度百分比', trigger: 'blur' },
     {
-      type: "number",
+      type: 'number',
       min: 0,
       max: 100,
-      message: "进度必须在 0-100 之间",
-      trigger: "blur",
+      message: '进度必须在 0-100 之间',
+      trigger: 'blur',
     },
   ],
   description: [
-    { required: true, message: "请输入进度描述", trigger: "blur" },
-    { min: 10, message: "进度描述至少10个字符", trigger: "blur" },
+    { required: true, message: '请输入进度描述', trigger: 'blur' },
+    { min: 10, message: '进度描述至少10个字符', trigger: 'blur' },
   ],
-};
+}
 
 watch(
   () => props.visible,
@@ -118,37 +116,37 @@ watch(
       // 重置表单
       Object.assign(form, {
         progress_percentage: 0,
-        description: "",
-        challenges: "",
-        next_steps: "",
-      });
+        description: '',
+        challenges: '',
+        next_steps: '',
+      })
     }
-  },
-);
+  }
+)
 
 const handleClose = () => {
-  emit("close");
-};
+  emit('close')
+}
 
 const handleSubmit = async () => {
-  if (!formRef.value) return;
+  if (!formRef.value) return
 
-  const valid = await formRef.value.validate();
-  if (!valid) return;
+  const valid = await formRef.value.validate()
+  if (!valid) return
 
-  loading.value = true;
+  loading.value = true
   try {
     await (projectStore as any).addProjectProgress({
       project_id: props.projectId,
       ...form,
-    });
-    ElMessage.success("进度汇报成功");
-    emit("success");
-    handleClose();
+    })
+    ElMessage.success('进度汇报成功')
+    emit('success')
+    handleClose()
   } catch (error) {
     // 错误已在store中处理
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 </script>

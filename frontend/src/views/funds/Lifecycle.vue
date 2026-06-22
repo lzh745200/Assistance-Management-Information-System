@@ -27,11 +27,7 @@
           退回上一阶段
         </el-button>
         <el-button type="primary" size="small" @click="handleAdvance">
-          {{
-            currentPhaseObj?.status === "not_started"
-              ? "开始当前阶段"
-              : "推进到下一阶段"
-          }}
+          {{ currentPhaseObj?.status === 'not_started' ? '开始当前阶段' : '推进到下一阶段' }}
         </el-button>
       </div>
     </el-card>
@@ -61,13 +57,10 @@
               >{{ reportData.project?.budget }} 万元</el-descriptions-item
             >
             <el-descriptions-item label="计划总额"
-              >{{
-                reportData.fund_summary?.total_planned
-              }}
-              万元</el-descriptions-item
+              >{{ reportData.fund_summary?.total_planned }} 万元</el-descriptions-item
             >
             <el-descriptions-item label="项目负责人">{{
-              reportData.project?.leader || "未指定"
+              reportData.project?.leader || '未指定'
             }}</el-descriptions-item>
             <el-descriptions-item label="经费笔数">{{
               reportData.fund_summary?.fund_count
@@ -80,15 +73,10 @@
       <el-tab-pane label="汇总审核" name="phase2">
         <div class="phase-content">
           <div class="action-bar">
-            <el-button
-              type="primary"
-              :loading="loading"
-              @click="handleLockBudget"
+            <el-button type="primary" :loading="loading" @click="handleLockBudget"
               >锁定预算基线</el-button
             >
-            <el-button :loading="loading" @click="handleComplianceCheck"
-              >合规性校验</el-button
-            >
+            <el-button :loading="loading" @click="handleComplianceCheck">合规性校验</el-button>
           </div>
           <div v-if="complianceResult" class="mt-4">
             <el-alert
@@ -122,11 +110,11 @@
                     size="small"
                   >
                     {{
-                      row.severity === "danger"
-                        ? "严重"
-                        : row.severity === "warning"
-                          ? "警告"
-                          : "提示"
+                      row.severity === 'danger'
+                        ? '严重'
+                        : row.severity === 'warning'
+                          ? '警告'
+                          : '提示'
                     }}
                   </el-tag>
                 </template>
@@ -139,43 +127,17 @@
       <!-- 阶段3 - 计划下达与拨付 -->
       <el-tab-pane label="计划下达" name="phase3">
         <div class="phase-content">
-          <el-button :loading="loading" @click="loadAllocationPlan"
-            >加载拨付计划</el-button
-          >
-          <el-table
-            v-if="allocationItems.length"
-            :data="allocationItems"
-            class="mt-3"
-            size="small"
-          >
+          <el-button :loading="loading" @click="loadAllocationPlan">加载拨付计划</el-button>
+          <el-table v-if="allocationItems.length" :data="allocationItems" class="mt-3" size="small">
             <el-table-column prop="fund_name" label="经费名称" width="200" />
-            <el-table-column
-              prop="planned_amount"
-              label="计划金额"
-              width="120"
-            />
-            <el-table-column
-              prop="approved_amount"
-              label="批准金额"
-              width="120"
-            />
-            <el-table-column
-              prop="allocated_amount"
-              label="拨付金额"
-              width="120"
-            />
-            <el-table-column
-              prop="baseline_amount"
-              label="基线金额"
-              width="120"
-            />
+            <el-table-column prop="planned_amount" label="计划金额" width="120" />
+            <el-table-column prop="approved_amount" label="批准金额" width="120" />
+            <el-table-column prop="allocated_amount" label="拨付金额" width="120" />
+            <el-table-column prop="baseline_amount" label="基线金额" width="120" />
             <el-table-column label="预算锁定" width="100">
               <template #default="{ row }">
-                <el-tag
-                  :type="row.budget_locked ? 'success' : 'info'"
-                  size="small"
-                >
-                  {{ row.budget_locked ? "已锁定" : "未锁定" }}
+                <el-tag :type="row.budget_locked ? 'success' : 'info'" size="small">
+                  {{ row.budget_locked ? '已锁定' : '未锁定' }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -200,15 +162,11 @@
         <div class="phase-content">
           <el-button
             type="primary"
-            @click="
-              pushSafe('/funds/transfer-vouchers?project_id=' + projectId)
-            "
+            @click="pushSafe('/funds/transfer-vouchers?project_id=' + projectId)"
           >
             管理划转凭证
           </el-button>
-          <el-button :loading="loading" @click="loadTransferLedger"
-            >查看协调台账</el-button
-          >
+          <el-button :loading="loading" @click="loadTransferLedger">查看协调台账</el-button>
           <div v-if="ledgerData" class="mt-4">
             <el-row :gutter="16">
               <el-col :span="8">
@@ -226,11 +184,7 @@
                 />
               </el-col>
               <el-col :span="8">
-                <el-statistic
-                  title="净划转"
-                  :value="ledgerData.net_transfer"
-                  suffix="万元"
-                />
+                <el-statistic title="净划转" :value="ledgerData.net_transfer" suffix="万元" />
               </el-col>
             </el-row>
           </div>
@@ -241,33 +195,15 @@
       <el-tab-pane label="实施监管" name="phase5">
         <div class="phase-content">
           <div class="action-bar">
-            <el-button
-              type="primary"
-              @click="pushSafe('/funds/contracts?project_id=' + projectId)"
-            >
+            <el-button type="primary" @click="pushSafe('/funds/contracts?project_id=' + projectId)">
               合同管理
             </el-button>
-            <el-button :loading="loading" @click="loadDeviation"
-              >偏差分析</el-button
-            >
+            <el-button :loading="loading" @click="loadDeviation">偏差分析</el-button>
           </div>
-          <el-table
-            v-if="deviations.length"
-            :data="deviations"
-            class="mt-3"
-            size="small"
-          >
+          <el-table v-if="deviations.length" :data="deviations" class="mt-3" size="small">
             <el-table-column prop="fund_name" label="经费名称" width="200" />
-            <el-table-column
-              prop="project_progress"
-              label="项目进度(%)"
-              width="120"
-            />
-            <el-table-column
-              prop="fund_progress"
-              label="资金进度(%)"
-              width="120"
-            />
+            <el-table-column prop="project_progress" label="项目进度(%)" width="120" />
+            <el-table-column prop="fund_progress" label="资金进度(%)" width="120" />
             <el-table-column prop="deviation" label="偏差(%)" width="100" />
             <el-table-column label="状态" width="100">
               <template #default="{ row }">
@@ -282,11 +218,11 @@
                   size="small"
                 >
                   {{
-                    row.status === "danger"
-                      ? "严重偏差"
-                      : row.status === "warning"
-                        ? "偏差"
-                        : "正常"
+                    row.status === 'danger'
+                      ? '严重偏差'
+                      : row.status === 'warning'
+                        ? '偏差'
+                        : '正常'
                   }}
                 </el-tag>
               </template>
@@ -302,18 +238,11 @@
             <el-button type="warning" :loading="loading" @click="handleDetect"
               >触发异常检测</el-button
             >
-            <el-button
-              @click="pushSafe('/funds/anomalies?project_id=' + projectId)"
+            <el-button @click="pushSafe('/funds/anomalies?project_id=' + projectId)"
               >查看异常列表</el-button
             >
           </div>
-          <el-alert
-            v-if="detectResult"
-            :title="detectResult"
-            type="info"
-            show-icon
-            class="mt-3"
-          />
+          <el-alert v-if="detectResult" :title="detectResult" type="info" show-icon class="mt-3" />
         </div>
       </el-tab-pane>
 
@@ -321,39 +250,24 @@
       <el-tab-pane label="决算绩效" name="phase7">
         <div class="phase-content">
           <div class="action-bar">
-            <el-button
-              type="primary"
-              :loading="loading"
-              @click="handleCreateSettlement"
+            <el-button type="primary" :loading="loading" @click="handleCreateSettlement"
               >生成决算报告</el-button
             >
-            <el-button @click="pushSafe('/funds/settlement/' + projectId)"
-              >查看详情</el-button
-            >
+            <el-button @click="pushSafe('/funds/settlement/' + projectId)">查看详情</el-button>
           </div>
           <div v-if="performanceData" class="mt-4">
             <el-descriptions title="绩效概览" :column="2" border>
               <el-descriptions-item label="预算总额"
-                >{{
-                  performanceData.budget_summary?.total_budget
-                }}
-                万元</el-descriptions-item
+                >{{ performanceData.budget_summary?.total_budget }} 万元</el-descriptions-item
               >
               <el-descriptions-item label="已用金额"
-                >{{
-                  performanceData.budget_summary?.total_used
-                }}
-                万元</el-descriptions-item
+                >{{ performanceData.budget_summary?.total_used }} 万元</el-descriptions-item
               >
               <el-descriptions-item label="执行率"
-                >{{
-                  performanceData.budget_summary?.execution_rate
-                }}%</el-descriptions-item
+                >{{ performanceData.budget_summary?.execution_rate }}%</el-descriptions-item
               >
               <el-descriptions-item label="异常解决率"
-                >{{
-                  performanceData.anomaly_summary?.resolution_rate
-                }}%</el-descriptions-item
+                >{{ performanceData.anomaly_summary?.resolution_rate }}%</el-descriptions-item
               >
             </el-descriptions>
           </div>
@@ -378,22 +292,12 @@
           :width="120"
         />
         <div class="health-details">
-          <div
-            v-for="(detail, key) in healthData.details"
-            :key="key"
-            class="detail-item"
-          >
+          <div v-for="(detail, key) in healthData.details" :key="key" class="detail-item">
             <span class="label">{{ detailLabels[key] || key }}</span>
             <el-progress
               :percentage="detail.score"
               :stroke-width="10"
-              :color="
-                detail.score >= 80
-                  ? '#67c23a'
-                  : detail.score >= 60
-                    ? '#e6a23c'
-                    : '#f56c6c'
-              "
+              :color="detail.score >= 80 ? '#67c23a' : detail.score >= 60 ? '#e6a23c' : '#f56c6c'"
             />
           </div>
         </div>
@@ -404,243 +308,231 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { fundLifecycleApi } from "@/api/fundLifecycle";
-import type { PhaseInfo, HealthScore } from "@/api/fundLifecycle";
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { fundLifecycleApi } from '@/api/fundLifecycle'
+import type { PhaseInfo, HealthScore } from '@/api/fundLifecycle'
 
-const route = useRoute();
-const { pushSafe } = useRouterSafe();
-const projectId = computed(() => safeRouteParam(route.params.projectId));
+const route = useRoute()
+const { pushSafe } = useRouterSafe()
+const projectId = computed(() => safeRouteParam(route.params.projectId))
 
-const loading = ref(false);
-const phases = ref<PhaseInfo[]>([]);
-const currentPhase = ref(1);
-const activeTab = ref("phase1");
+const loading = ref(false)
+const phases = ref<PhaseInfo[]>([])
+const currentPhase = ref(1)
+const activeTab = ref('phase1')
 
 // 各阶段数据
-const reportData = ref<any>(null);
-const complianceResult = ref<any>(null);
-const allocationItems = ref<any[]>([]);
-const ledgerData = ref<any>(null);
-const deviations = ref<any[]>([]);
-const detectResult = ref("");
-const performanceData = ref<any>(null);
-const healthData = ref<HealthScore | null>(null);
+const reportData = ref<any>(null)
+const complianceResult = ref<any>(null)
+const allocationItems = ref<any[]>([])
+const ledgerData = ref<any>(null)
+const deviations = ref<any[]>([])
+const detectResult = ref('')
+const performanceData = ref<any>(null)
+const healthData = ref<HealthScore | null>(null)
 
 const detailLabels: Record<string, string> = {
-  budget_execution: "预算执行率",
-  payment_timeliness: "支付及时率",
-  voucher_completeness: "凭证完整率",
-  anomaly_count: "异常指标",
-  contract_fulfillment: "合同履约率",
-  settlement_completion: "决算完成度",
-};
+  budget_execution: '预算执行率',
+  payment_timeliness: '支付及时率',
+  voucher_completeness: '凭证完整率',
+  anomaly_count: '异常指标',
+  contract_fulfillment: '合同履约率',
+  settlement_completion: '决算完成度',
+}
 
-const currentPhaseObj = computed(() =>
-  phases.value.find((p) => p.phase === currentPhase.value),
-);
+const currentPhaseObj = computed(() => phases.value.find((p) => p.phase === currentPhase.value))
 
 function getStepStatus(phase: PhaseInfo) {
-  if (phase.status === "completed") return "success";
-  if (phase.status === "in_progress") return "process";
-  if (phase.status === "skipped") return "error";
-  return "wait";
+  if (phase.status === 'completed') return 'success'
+  if (phase.status === 'in_progress') return 'process'
+  if (phase.status === 'skipped') return 'error'
+  return 'wait'
 }
 
 function getStepDesc(phase: PhaseInfo) {
-  if (phase.status === "completed")
-    return phase.completed_at ? phase.completed_at.slice(0, 10) : "已完成";
-  if (phase.status === "in_progress") return "进行中";
-  return "";
+  if (phase.status === 'completed')
+    return phase.completed_at ? phase.completed_at.slice(0, 10) : '已完成'
+  if (phase.status === 'in_progress') return '进行中'
+  return ''
 }
 
 async function loadPhases() {
   try {
-    const data = await fundLifecycleApi.getPhases(projectId.value);
-    phases.value = data.phases || [];
-    currentPhase.value = data.current_phase || 1;
-    activeTab.value = `phase${currentPhase.value}`;
+    const data = await fundLifecycleApi.getPhases(projectId.value)
+    phases.value = data.phases || []
+    currentPhase.value = data.current_phase || 1
+    activeTab.value = `phase${currentPhase.value}`
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "加载阶段数据失败");
+    ElMessage.error(e?.response?.data?.detail || '加载阶段数据失败')
   }
 }
 
 async function handleAdvance() {
   try {
-    await ElMessageBox.confirm("确认推进到下一阶段？", "确认");
-    loading.value = true;
-    const res = await fundLifecycleApi.advancePhase(projectId.value);
-    ElMessage.success(res.message || "操作成功");
-    await loadPhases();
+    await ElMessageBox.confirm('确认推进到下一阶段？', '确认')
+    loading.value = true
+    const res = await fundLifecycleApi.advancePhase(projectId.value)
+    ElMessage.success(res.message || '操作成功')
+    await loadPhases()
   } catch (e: any) {
-    if (e !== "cancel")
-      ElMessage.error(e?.response?.data?.detail || "推进失败");
+    if (e !== 'cancel') ElMessage.error(e?.response?.data?.detail || '推进失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function handleRollback() {
   try {
-    await ElMessageBox.confirm("确认退回上一阶段？", "确认");
-    loading.value = true;
-    const res = await fundLifecycleApi.rollbackPhase(projectId.value);
-    ElMessage.success(res.message || "操作成功");
-    await loadPhases();
+    await ElMessageBox.confirm('确认退回上一阶段？', '确认')
+    loading.value = true
+    const res = await fundLifecycleApi.rollbackPhase(projectId.value)
+    ElMessage.success(res.message || '操作成功')
+    await loadPhases()
   } catch (e: any) {
-    if (e !== "cancel")
-      ElMessage.error(e?.response?.data?.detail || "退回失败");
+    if (e !== 'cancel') ElMessage.error(e?.response?.data?.detail || '退回失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // 阶段1
 async function handleInitiate() {
-  loading.value = true;
+  loading.value = true
   try {
-    await fundLifecycleApi.initiate(projectId.value);
-    reportData.value = await fundLifecycleApi.getReportTemplate(
-      projectId.value,
-    );
-    ElMessage.success("论证立项已启动");
-    await loadPhases();
+    await fundLifecycleApi.initiate(projectId.value)
+    reportData.value = await fundLifecycleApi.getReportTemplate(projectId.value)
+    ElMessage.success('论证立项已启动')
+    await loadPhases()
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "操作失败");
+    ElMessage.error(e?.response?.data?.detail || '操作失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // 阶段2
 async function handleLockBudget() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await fundLifecycleApi.lockBudget(projectId.value);
-    ElMessage.success(res.message || "预算基线已锁定");
+    const res = await fundLifecycleApi.lockBudget(projectId.value)
+    ElMessage.success(res.message || '预算基线已锁定')
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "锁定失败");
+    ElMessage.error(e?.response?.data?.detail || '锁定失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function handleComplianceCheck() {
-  loading.value = true;
+  loading.value = true
   try {
-    complianceResult.value = await fundLifecycleApi.complianceCheck(
-      projectId.value,
-    );
+    complianceResult.value = await fundLifecycleApi.complianceCheck(projectId.value)
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "校验失败");
+    ElMessage.error(e?.response?.data?.detail || '校验失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // 阶段3
 async function loadAllocationPlan() {
-  loading.value = true;
+  loading.value = true
   try {
-    const data = await fundLifecycleApi.allocationPlan(projectId.value);
-    allocationItems.value = data.items || [];
+    const data = await fundLifecycleApi.allocationPlan(projectId.value)
+    allocationItems.value = data.items || []
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "加载失败");
+    ElMessage.error(e?.response?.data?.detail || '加载失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function handleQuotaLock(fundId: number) {
   try {
-    const res = await fundLifecycleApi.quotaLock(fundId);
-    ElMessage.success(res.message || "额度已锁定");
-    await loadAllocationPlan();
+    const res = await fundLifecycleApi.quotaLock(fundId)
+    ElMessage.success(res.message || '额度已锁定')
+    await loadAllocationPlan()
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "锁定失败");
+    ElMessage.error(e?.response?.data?.detail || '锁定失败')
   }
 }
 
 // 阶段4
 async function loadTransferLedger() {
-  loading.value = true;
+  loading.value = true
   try {
-    ledgerData.value = await fundLifecycleApi.transferLedger(projectId.value);
+    ledgerData.value = await fundLifecycleApi.transferLedger(projectId.value)
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "加载失败");
+    ElMessage.error(e?.response?.data?.detail || '加载失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // 阶段5
 async function loadDeviation() {
-  loading.value = true;
+  loading.value = true
   try {
-    const data = await fundLifecycleApi.monitoringDeviation(projectId.value);
-    deviations.value = data.deviations || [];
+    const data = await fundLifecycleApi.monitoringDeviation(projectId.value)
+    deviations.value = data.deviations || []
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "加载失败");
+    ElMessage.error(e?.response?.data?.detail || '加载失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // 阶段6
 async function handleDetect() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await fundLifecycleApi.detectAnomalies(projectId.value);
-    detectResult.value = res.message || "检测完成";
-    ElMessage.success(res.message);
+    const res = await fundLifecycleApi.detectAnomalies(projectId.value)
+    detectResult.value = res.message || '检测完成'
+    ElMessage.success(res.message)
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "检测失败");
+    ElMessage.error(e?.response?.data?.detail || '检测失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // 阶段7
 async function handleCreateSettlement() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await fundLifecycleApi.createSettlement(projectId.value);
-    ElMessage.success(res.message || "决算报告已生成");
-    performanceData.value = await fundLifecycleApi.getPerformance(
-      projectId.value,
-    );
+    const res = await fundLifecycleApi.createSettlement(projectId.value)
+    ElMessage.success(res.message || '决算报告已生成')
+    performanceData.value = await fundLifecycleApi.getPerformance(projectId.value)
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "生成失败");
+    ElMessage.error(e?.response?.data?.detail || '生成失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // 健康度
 async function loadHealth() {
-  if (!projectId.value) return;
+  if (!projectId.value) return
   try {
-    healthData.value = await fundLifecycleApi.getHealth(projectId.value);
+    healthData.value = await fundLifecycleApi.getHealth(projectId.value)
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "加载失败");
+    ElMessage.error(e?.response?.data?.detail || '加载失败')
   }
 }
 
 onMounted(async () => {
-  if (!projectId.value) return;
-  await loadPhases();
+  if (!projectId.value) return
+  await loadPhases()
   try {
-    reportData.value = await fundLifecycleApi.getReportTemplate(
-      projectId.value,
-    );
+    reportData.value = await fundLifecycleApi.getReportTemplate(projectId.value)
   } catch {
     /* ignore */
   }
-  loadHealth();
-});
+  loadHealth()
+})
 </script>
 
 <style scoped>

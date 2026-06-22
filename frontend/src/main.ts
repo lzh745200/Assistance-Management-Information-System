@@ -14,44 +14,44 @@
 //    多个同时出现的通知/消息会重叠在视口同一位置。
 //    当前系统 ElNotification 仅有 2 个调用点（errorHandler + BackupManagement），
 //    同时触发的概率极低，此限制可接受。
-const _style = document.createElement("style");
+const _style = document.createElement('style')
 _style.textContent = `
   .el-message,.el-message--success,.el-message--error,.el-message--warning,.el-message--info{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;position:fixed!important}
   .el-notification{top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;position:fixed!important;margin:0!important}
   .el-notification__group{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}
   .el-message-box{top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;position:fixed!important;margin:0!important}
-`;
-document.head.appendChild(_style);
+`
+document.head.appendChild(_style)
 
-import { createApp } from "vue";
-import { createPinia } from "pinia";
-import App from "./App.vue";
-import router from "./router";
-import "./router/guards";
-import { AuthStorage } from "@/utils/authStorage";
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import router from './router'
+import './router/guards'
+import { AuthStorage } from '@/utils/authStorage'
 
 // 全局样式（Element Plus 覆盖 + 通知居中 + 组件美化）
-import "@/styles/index.scss";
+import '@/styles/index.scss'
 // Dashboard 深度视觉主题（注：tokens.scss 通过 vite additionalData 自动注入组件 SCSS 块）
-import "@/styles/dashboard-theme.scss";
+import '@/styles/dashboard-theme.scss'
 // 列表页统一规范化 (Phase 2)
-import "@/styles/components/list-page.scss";
+import '@/styles/components/list-page.scss'
 // 表单/详情页统一升级 (Phase 3)
-import "@/styles/components/form-page.scss";
+import '@/styles/components/form-page.scss'
 
 // 一次性将旧版 localStorage token 迁移到 sessionStorage
-AuthStorage.migrateFromLocalStorage();
+AuthStorage.migrateFromLocalStorage()
 
-const app = createApp(App);
+const app = createApp(App)
 
-app.use(createPinia());
-app.use(router);
+app.use(createPinia())
+app.use(router)
 
 // ── 全局：ElMessage 默认显示关闭按钮 + 5s 持续时间 ──
 //    Element Plus 2.x 通过 messageDefaults 对象配置全局默认值（非 ElMessage.defaults）。
-import { messageDefaults } from "element-plus";
-Object.assign(messageDefaults, { showClose: true, duration: 5000 });
+import { messageDefaults } from 'element-plus'
+Object.assign(messageDefaults, { showClose: true, duration: 5000 })
 
-app.mount("#app");
+app.mount('#app')
 
-export default app;
+export default app

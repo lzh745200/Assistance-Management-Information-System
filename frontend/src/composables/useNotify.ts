@@ -14,11 +14,11 @@
  *   notify.system('备份已完成')
  */
 
-import { ElMessage, ElNotification } from "element-plus";
+import { ElMessage, ElNotification } from 'element-plus'
 
 /** 从 Axios 错误提取后端返回的 detail 消息 */
-function extractError(e: any, fallback = "操作失败，请重试"): string {
-  return e?.response?.data?.detail || e?.message || fallback;
+function extractError(e: any, fallback = '操作失败，请重试'): string {
+  return e?.response?.data?.detail || e?.message || fallback
 }
 
 export const notify = {
@@ -27,34 +27,31 @@ export const notify = {
 
   /** Tier 1: 操作成功 — 2s 自动消失 */
   success(msg: string) {
-    ElMessage({ type: "success", message: msg, duration: 2000 });
+    ElMessage({ type: 'success', message: msg, duration: 2000 })
   },
 
   /** Tier 1: 操作失败 — 5s */
   error(msgOrErr: any, fallback?: string) {
-    const msg =
-      typeof msgOrErr === "string"
-        ? msgOrErr
-        : extractError(msgOrErr, fallback);
-    ElMessage({ type: "error", message: msg, duration: 5000 });
+    const msg = typeof msgOrErr === 'string' ? msgOrErr : extractError(msgOrErr, fallback)
+    ElMessage({ type: 'error', message: msg, duration: 5000 })
   },
 
   /** Tier 1: 警告 */
   warn(msg: string) {
-    ElMessage({ type: "warning", message: msg, duration: 3000 });
+    ElMessage({ type: 'warning', message: msg, duration: 3000 })
   },
 
   /** Tier 2: 含统计结果提示 — 5s */
   done(msg: string) {
-    ElMessage({ type: "success", message: msg, duration: 5000 });
+    ElMessage({ type: 'success', message: msg, duration: 5000 })
   },
 
   /** Tier 3: 系统级角标通知 */
   system(
     title: string,
     message: string,
-    type: "success" | "error" | "warning" | "info" = "success",
+    type: 'success' | 'error' | 'warning' | 'info' = 'success'
   ) {
-    ElNotification({ title, message, type, duration: 5000, showClose: true });
+    ElNotification({ title, message, type, duration: 5000, showClose: true })
   },
-};
+}

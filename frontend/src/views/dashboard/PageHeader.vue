@@ -29,7 +29,7 @@
         :loading="backingUp"
         @click="handleBackup"
       >
-        {{ backingUp ? "备份中..." : "一键备份" }}
+        {{ backingUp ? '备份中...' : '一键备份' }}
       </el-button>
       <!-- 更多菜单 -->
       <el-dropdown trigger="click" @command="handleMoreCommand">
@@ -47,61 +47,53 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
-import {
-  Plus,
-  TrendCharts,
-  Upload,
-  MoreFilled,
-  Grid,
-} from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { Plus, TrendCharts, Upload, MoreFilled, Grid } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 const emit = defineEmits<{
-  (e: "toggle-layout"): void;
-  (e: "backup-complete"): void;
-}>();
+  (e: 'toggle-layout'): void
+  (e: 'backup-complete'): void
+}>()
 
-const router = useRouter();
-const authStore = useAuthStore();
-const backingUp = ref(false);
+const router = useRouter()
+const authStore = useAuthStore()
+const backingUp = ref(false)
 
 const displayName = computed(
-  () => authStore.user?.full_name || authStore.user?.username || "管理员",
-);
+  () => authStore.user?.full_name || authStore.user?.username || '管理员'
+)
 
-const isAdmin = computed(
-  () => authStore.user?.role === "admin" || authStore.user?.is_superuser,
-);
+const isAdmin = computed(() => authStore.user?.role === 'admin' || authStore.user?.is_superuser)
 
 const formattedDate = computed(() => {
-  const now = new Date();
-  const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
-  return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 周${weekDays[now.getDay()]}`;
-});
+  const now = new Date()
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六']
+  return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 周${weekDays[now.getDay()]}`
+})
 
 async function handleBackup() {
-  backingUp.value = true;
+  backingUp.value = true
   try {
-    await request.post("/system/backup", {
-      description: "主页手动备份",
+    await request.post('/system/backup', {
+      description: '主页手动备份',
       include_uploads: true,
-    });
-    ElMessage.success("备份创建成功");
-    emit("backup-complete");
+    })
+    ElMessage.success('备份创建成功')
+    emit('backup-complete')
   } catch {
-    ElMessage.error("备份失败");
+    ElMessage.error('备份失败')
   } finally {
-    backingUp.value = false;
+    backingUp.value = false
   }
 }
 
 function handleMoreCommand(cmd: string) {
-  if (cmd === "layout") {
-    emit("toggle-layout");
+  if (cmd === 'layout') {
+    emit('toggle-layout')
   }
 }
 </script>

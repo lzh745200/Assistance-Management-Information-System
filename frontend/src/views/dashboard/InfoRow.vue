@@ -5,43 +5,19 @@
       <h3 class="section-title">近期动态</h3>
       <div class="timeline-list">
         <div v-for="item in activities" :key="item.id" class="timeline-item">
-          <span class="tl-time">{{
-            formatTime(item.time || item.created_at)
-          }}</span>
+          <span class="tl-time">{{ formatTime(item.time || item.created_at) }}</span>
           <span class="tl-dot" />
           <template v-if="editingId === item.id">
-            <input
-              v-model="editForm.action"
-              class="tl-edit-input"
-              placeholder="操作"
-            />
-            <input
-              v-model="editForm.target"
-              class="tl-edit-input"
-              placeholder="目标"
-            />
+            <input v-model="editForm.action" class="tl-edit-input" placeholder="操作" />
+            <input v-model="editForm.target" class="tl-edit-input" placeholder="目标" />
             <button class="tl-save-btn" @click="saveEdit(item.id)">保存</button>
-            <button class="tl-cancel-btn" @click="editingId = null">
-              取消
-            </button>
+            <button class="tl-cancel-btn" @click="editingId = null">取消</button>
           </template>
           <template v-else>
-            <span class="tl-text">{{
-              item.action || item.description || "--"
-            }}</span>
-            <span v-if="item.target" class="tl-target"
-              >— {{ item.target }}</span
-            >
-            <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">
-              ✎
-            </button>
-            <button
-              class="tl-delete-btn"
-              title="删除"
-              @click="deleteActivity(item.id)"
-            >
-              ✕
-            </button>
+            <span class="tl-text">{{ item.action || item.description || '--' }}</span>
+            <span v-if="item.target" class="tl-target">— {{ item.target }}</span>
+            <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">✎</button>
+            <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">✕</button>
           </template>
         </div>
         <div v-if="activities.length === 0" class="tl-empty">暂无动态</div>
@@ -53,64 +29,64 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
-const activities = ref<any[]>([]);
-const editingId = ref<string | null>(null);
-const editForm = ref({ action: "", target: "" });
+const activities = ref<any[]>([])
+const editingId = ref<string | null>(null)
+const editForm = ref({ action: '', target: '' })
 
 function startEdit(item: any) {
-  editingId.value = item.id;
-  editForm.value = { action: item.action || "", target: item.target || "" };
+  editingId.value = item.id
+  editForm.value = { action: item.action || '', target: item.target || '' }
 }
 
 async function saveEdit(id: string) {
   try {
-    await request.put(`/dashboard/recent-activities/${id}`, editForm.value);
-    const idx = activities.value.findIndex((a) => a.id === id);
+    await request.put(`/dashboard/recent-activities/${id}`, editForm.value)
+    const idx = activities.value.findIndex((a) => a.id === id)
     if (idx >= 0) {
-      activities.value[idx].action = editForm.value.action;
-      activities.value[idx].target = editForm.value.target;
+      activities.value[idx].action = editForm.value.action
+      activities.value[idx].target = editForm.value.target
     }
-    editingId.value = null;
+    editingId.value = null
   } catch {
-    ElMessage.error("保存失败，请重试");
+    ElMessage.error('保存失败，请重试')
   }
 }
 
 async function deleteActivity(id: string) {
   try {
-    await request.delete(`/dashboard/recent-activities/${id}`);
-    activities.value = activities.value.filter((a) => a.id !== id);
+    await request.delete(`/dashboard/recent-activities/${id}`)
+    activities.value = activities.value.filter((a) => a.id !== id)
   } catch {
-    ElMessage.error("删除失败，请重试");
+    ElMessage.error('删除失败，请重试')
   }
 }
 
 function formatTime(t: string): string {
-  if (!t) return "";
-  const d = new Date(t);
-  if (isNaN(d.getTime())) return t.slice(0, 10);
-  return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  if (!t) return ''
+  const d = new Date(t)
+  if (isNaN(d.getTime())) return t.slice(0, 10)
+  return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
 async function loadActivities() {
   try {
-    const res = await request.get("/dashboard/recent-activities", {
+    const res = await request.get('/dashboard/recent-activities', {
       params: { limit: 10 },
-    } as any);
-    const data = (res as any)?.data?.items || (res as any)?.items || [];
-    activities.value = (Array.isArray(data) ? data : []).slice(0, 10);
+    } as any)
+    const data = (res as any)?.data?.items || (res as any)?.items || []
+    activities.value = (Array.isArray(data) ? data : []).slice(0, 10)
   } catch {
-    activities.value = [];
+    activities.value = []
   }
 }
 
 onMounted(() => {
-  loadActivities();
-});
+  loadActivities()
+})
 </script>
 
 <style scoped lang="scss">
@@ -139,7 +115,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   &::before {
-    content: "";
+    content: '';
     display: inline-block;
     width: 4px;
     height: 16px;
@@ -166,7 +142,7 @@ onMounted(() => {
 .tl-time {
   font-size: 11px;
   color: #94a3b8;
-  font-family: "DIN Alternate", monospace;
+  font-family: 'DIN Alternate', monospace;
   white-space: nowrap;
   min-width: 50px;
 }

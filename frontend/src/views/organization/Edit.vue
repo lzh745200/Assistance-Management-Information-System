@@ -3,17 +3,12 @@
     <el-card v-loading="loading" class="edit-card">
       <template #header>
         <div class="card-header">
-          <span class="title">{{ isEdit ? "编辑组织" : "新增组织" }}</span>
+          <span class="title">{{ isEdit ? '编辑组织' : '新增组织' }}</span>
           <el-button @click="handleBack">返回</el-button>
         </div>
       </template>
 
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="rules"
-        label-width="120px"
-      >
+      <el-form ref="formRef" :model="formData" :rules="rules" label-width="120px">
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="组织名称" prop="name">
@@ -22,11 +17,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="组织编码" prop="code">
-              <el-input
-                v-model="formData.code"
-                placeholder="留空自动生成"
-                :disabled="isEdit"
-              />
+              <el-input v-model="formData.code" placeholder="留空自动生成" :disabled="isEdit" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -51,11 +42,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="状态">
-              <el-switch
-                v-model="formData.is_active"
-                active-text="正常"
-                inactive-text="停用"
-              />
+              <el-switch v-model="formData.is_active" active-text="正常" inactive-text="停用" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -63,18 +50,12 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="联系人">
-              <el-input
-                v-model="formData.contact_person"
-                placeholder="请输入联系人"
-              />
+              <el-input v-model="formData.contact_person" placeholder="请输入联系人" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="联系电话">
-              <el-input
-                v-model="formData.contact_phone"
-                placeholder="请输入联系电话"
-              />
+              <el-input v-model="formData.contact_phone" placeholder="请输入联系电话" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -93,12 +74,7 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="submitLoading"
-            @click="handleSubmit"
-            >保存</el-button
-          >
+          <el-button type="primary" :loading="submitLoading" @click="handleSubmit">保存</el-button>
           <el-button @click="handleBack">取消</el-button>
         </el-form-item>
       </el-form>
@@ -108,103 +84,103 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
-import { ElMessage, type FormInstance, type FormRules } from "element-plus";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import {
   getOrganization,
   getOrganizations,
   createOrganization,
   updateOrganization,
-} from "@/api/organization";
-import type { Organization } from "@/types/organization";
+} from '@/api/organization'
+import type { Organization } from '@/types/organization'
 
-const route = useRoute();
-const { pushSafe } = useRouterSafe();
+const route = useRoute()
+const { pushSafe } = useRouterSafe()
 
-const loading = ref(false);
-const submitLoading = ref(false);
-const formRef = ref<FormInstance>();
-const parentOptions = ref<Organization[]>([]);
+const loading = ref(false)
+const submitLoading = ref(false)
+const formRef = ref<FormInstance>()
+const parentOptions = ref<Organization[]>([])
 
-const isEdit = computed(() => !!route.params.id);
+const isEdit = computed(() => !!route.params.id)
 
 const formData = reactive({
-  name: "",
-  code: "",
+  name: '',
+  code: '',
   parent_id: null as number | null,
   is_active: true,
-  contact_person: "",
-  contact_phone: "",
-  address: "",
-  description: "",
-});
+  contact_person: '',
+  contact_phone: '',
+  address: '',
+  description: '',
+})
 
 const rules: FormRules = {
-  name: [{ required: true, message: "请输入组织名称", trigger: "blur" }],
+  name: [{ required: true, message: '请输入组织名称', trigger: 'blur' }],
   contact_phone: [
     {
       pattern: /^1[3-9]\d{9}$/,
-      message: "请输入正确的手机号",
-      trigger: "blur",
+      message: '请输入正确的手机号',
+      trigger: 'blur',
     },
   ],
-};
+}
 
 const loadParentOptions = async () => {
   try {
-    const res = await getOrganizations({ page_size: 1000, is_active: true });
-    const currentId = safeRouteParam(route.params.id);
+    const res = await getOrganizations({ page_size: 1000, is_active: true })
+    const currentId = safeRouteParam(route.params.id)
     // 编辑时排除自身，避免将自己设为上级
     parentOptions.value = ((res as any).items || []).filter(
-      (item: Organization) => item.id !== currentId,
-    );
+      (item: Organization) => item.id !== currentId
+    )
   } catch (error) {
-    logger.error("加载上级组织失败:", error);
-    ElMessage.error("加载上级组织失败，请稍后重试");
+    logger.error('加载上级组织失败:', error)
+    ElMessage.error('加载上级组织失败，请稍后重试')
   }
-};
+}
 
 const loadData = async () => {
-  const id = safeRouteParam(route.params.id);
-  if (!id) return;
+  const id = safeRouteParam(route.params.id)
+  if (!id) return
 
-  loading.value = true;
+  loading.value = true
   try {
-    const data = await getOrganization(id);
+    const data = await getOrganization(id)
     Object.assign(formData, {
-      name: data.name || "",
-      code: data.code || "",
+      name: data.name || '',
+      code: data.code || '',
       parent_id: data.parent_id ?? null,
       is_active: data.is_active !== false,
-      contact_person: data.contact_person || "",
-      contact_phone: data.contact_phone || "",
-      address: data.address || "",
-      description: data.description || "",
-    });
+      contact_person: data.contact_person || '',
+      contact_phone: data.contact_phone || '',
+      address: data.address || '',
+      description: data.description || '',
+    })
   } catch (error) {
-    logger.error("加载组织信息失败:", error);
-    ElMessage.error("加载组织信息失败");
-    pushSafe("/organizations");
+    logger.error('加载组织信息失败:', error)
+    ElMessage.error('加载组织信息失败')
+    pushSafe('/organizations')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const handleBack = () => {
-  pushSafe("/organizations");
-};
+  pushSafe('/organizations')
+}
 
 const handleSubmit = async () => {
-  if (!formRef.value) return;
+  if (!formRef.value) return
 
   await formRef.value.validate(async (valid) => {
-    if (!valid) return;
+    if (!valid) return
 
-    submitLoading.value = true;
+    submitLoading.value = true
     try {
       if (isEdit.value) {
         await updateOrganization(safeRouteParam(route.params.id), {
@@ -214,8 +190,8 @@ const handleSubmit = async () => {
           contact_phone: formData.contact_phone || undefined,
           address: formData.address || undefined,
           is_active: formData.is_active,
-        });
-        ElMessage.success("更新成功");
+        })
+        ElMessage.success('更新成功')
       } else {
         await createOrganization({
           name: formData.name,
@@ -225,25 +201,25 @@ const handleSubmit = async () => {
           contact_person: formData.contact_person || undefined,
           contact_phone: formData.contact_phone || undefined,
           address: formData.address || undefined,
-        });
-        ElMessage.success("创建成功");
+        })
+        ElMessage.success('创建成功')
       }
-      pushSafe("/organizations");
+      pushSafe('/organizations')
     } catch (error) {
-      logger.error("保存失败:", error);
-      ElMessage.error("保存失败");
+      logger.error('保存失败:', error)
+      ElMessage.error('保存失败')
     } finally {
-      submitLoading.value = false;
+      submitLoading.value = false
     }
-  });
-};
+  })
+}
 
 onMounted(() => {
-  loadParentOptions();
+  loadParentOptions()
   if (isEdit.value) {
-    loadData();
+    loadData()
   }
-});
+})
 </script>
 
 <style scoped>

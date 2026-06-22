@@ -2,9 +2,7 @@
   <div class="scholarship-page">
     <div class="page-header">
       <div class="header-left">
-        <el-button :icon="ArrowLeft" @click="pushSafe(`/schools/${schoolId}`)"
-          >返回详情</el-button
-        >
+        <el-button :icon="ArrowLeft" @click="pushSafe(`/schools/${schoolId}`)">返回详情</el-button>
         <h2 class="page-title">资助学生管理</h2>
       </div>
       <div class="header-actions">
@@ -26,12 +24,7 @@
         style="width: 130px"
         @change="loadData"
       >
-        <el-option
-          v-for="y in yearOptions"
-          :key="y"
-          :label="String(y)"
-          :value="y"
-        />
+        <el-option v-for="y in yearOptions" :key="y" :label="String(y)" :value="y" />
       </el-select>
     </div>
 
@@ -40,18 +33,8 @@
       <el-table-column prop="student_name" label="学生姓名" width="100" />
       <el-table-column prop="grade" label="年级" width="80" />
       <el-table-column prop="year" label="年度" width="80" />
-      <el-table-column
-        prop="amount"
-        label="资助金额(元)"
-        width="120"
-        align="right"
-      />
-      <el-table-column
-        prop="reason"
-        label="资助原因"
-        min-width="160"
-        show-overflow-tooltip
-      />
+      <el-table-column prop="amount" label="资助金额(元)" width="120" align="right" />
+      <el-table-column prop="reason" label="资助原因" min-width="160" show-overflow-tooltip />
       <el-table-column prop="status" label="状态" width="90">
         <template #default="{ row }">
           <el-tag size="small" :type="statusTagType(row.status)">{{
@@ -59,17 +42,10 @@
           }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column
-        prop="contact_info"
-        label="联系方式"
-        width="120"
-        show-overflow-tooltip
-      />
+      <el-table-column prop="contact_info" label="联系方式" width="120" show-overflow-tooltip />
       <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
-          <el-button type="primary" link size="small" @click="openDialog(row)"
-            >编辑</el-button
-          >
+          <el-button type="primary" link size="small" @click="openDialog(row)">编辑</el-button>
           <el-popconfirm title="确定删除？" @confirm="handleDelete(row)">
             <template #reference>
               <el-button type="danger" link size="small">删除</el-button>
@@ -98,24 +74,14 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="资助年度">
-              <el-input-number
-                v-model="form.year"
-                :min="2020"
-                :max="2030"
-                style="width: 100%"
-              />
+              <el-input-number v-model="form.year" :min="2020" :max="2030" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="资助金额">
-              <el-input-number
-                v-model="form.amount"
-                :min="0"
-                :precision="2"
-                style="width: 100%"
-              />
+              <el-input-number v-model="form.amount" :min="0" :precision="2" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -143,19 +109,12 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave"
-          >保存</el-button
-        >
+        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
 
     <!-- 导入对话框 -->
-    <el-dialog
-      v-model="showImportDialog"
-      title="导入资助学生"
-      width="500px"
-      destroy-on-close
-    >
+    <el-dialog v-model="showImportDialog" title="导入资助学生" width="500px" destroy-on-close>
       <el-alert
         title="Excel格式：学生姓名、年级、年度、金额、原因、状态"
         type="info"
@@ -184,135 +143,128 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
-import { AuthStorage } from "@/utils/authStorage";
+import { logger } from '@/utils/logger'
+import { AuthStorage } from '@/utils/authStorage'
 
-import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
-import { ElMessage } from "element-plus";
-import { ArrowLeft, Plus, Upload } from "@element-plus/icons-vue";
-import { schoolApi } from "@/api/schools";
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { ElMessage } from 'element-plus'
+import { ArrowLeft, Plus, Upload } from '@element-plus/icons-vue'
+import { schoolApi } from '@/api/schools'
 
-const { pushSafe } = useRouterSafe();
-const route = useRoute();
-const schoolId = safeRouteParam(route.params.id);
+const { pushSafe } = useRouterSafe()
+const route = useRoute()
+const schoolId = safeRouteParam(route.params.id)
 
-const loading = ref(false);
-const saving = ref(false);
-const students = ref<any[]>([]);
-const dialogVisible = ref(false);
-const editingItem = ref<any>(null);
-const filterYear = ref<number | undefined>(undefined);
-const showImportDialog = ref(false);
+const loading = ref(false)
+const saving = ref(false)
+const students = ref<any[]>([])
+const dialogVisible = ref(false)
+const editingItem = ref<any>(null)
+const filterYear = ref<number | undefined>(undefined)
+const showImportDialog = ref(false)
 
-const yearOptions = Array.from({ length: 11 }, (_, i) => 2020 + i);
+const yearOptions = Array.from({ length: 11 }, (_, i) => 2020 + i)
 const statusMap: Record<string, string> = {
-  pending: "待审批",
-  approved: "已批准",
-  disbursed: "已发放",
-  completed: "已完成",
-};
+  pending: '待审批',
+  approved: '已批准',
+  disbursed: '已发放',
+  completed: '已完成',
+}
 function statusTagType(s: string) {
-  if (s === "disbursed" || s === "completed") return "success";
-  if (s === "approved") return "primary";
-  return "info";
+  if (s === 'disbursed' || s === 'completed') return 'success'
+  if (s === 'approved') return 'primary'
+  return 'info'
 }
 
-const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || "/api/v1";
-const importUrl = `${baseUrl}/schools/${schoolId}/scholarship-students/import`;
+const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || '/api/v1'
+const importUrl = `${baseUrl}/schools/${schoolId}/scholarship-students/import`
 const uploadHeaders = computed(() => {
-  const token = AuthStorage.getToken() || "";
-  return { Authorization: token ? `Bearer ${token}` : "" };
-});
+  const token = AuthStorage.getToken() || ''
+  return { Authorization: token ? `Bearer ${token}` : '' }
+})
 
 const form = ref({
-  student_name: "",
-  grade: "",
+  student_name: '',
+  grade: '',
   year: new Date().getFullYear(),
   amount: 0,
-  reason: "",
-  status: "pending",
-  contact_info: "",
-});
+  reason: '',
+  status: 'pending',
+  contact_info: '',
+})
 
 async function loadData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await schoolApi.listScholarshipStudents(
-      schoolId,
-      filterYear.value,
-    );
-    students.value = res.items || [];
+    const res = await schoolApi.listScholarshipStudents(schoolId, filterYear.value)
+    students.value = res.items || []
   } catch (error) {
-    logger.error("Failed to load scholarship students:", error);
+    logger.error('Failed to load scholarship students:', error)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function openDialog(row?: any) {
-  editingItem.value = row || null;
+  editingItem.value = row || null
   if (row) {
-    form.value = { ...row };
+    form.value = { ...row }
   } else {
     form.value = {
-      student_name: "",
-      grade: "",
+      student_name: '',
+      grade: '',
       year: new Date().getFullYear(),
       amount: 0,
-      reason: "",
-      status: "pending",
-      contact_info: "",
-    };
+      reason: '',
+      status: 'pending',
+      contact_info: '',
+    }
   }
-  dialogVisible.value = true;
+  dialogVisible.value = true
 }
 
 async function handleSave() {
   if (!form.value.student_name) {
-    ElMessage.warning("请输入学生姓名");
-    return;
+    ElMessage.warning('请输入学生姓名')
+    return
   }
-  saving.value = true;
+  saving.value = true
   try {
     if (editingItem.value) {
-      await schoolApi.updateScholarshipStudent(
-        schoolId,
-        editingItem.value.id,
-        form.value,
-      );
-      ElMessage.success("更新成功");
+      await schoolApi.updateScholarshipStudent(schoolId, editingItem.value.id, form.value)
+      ElMessage.success('更新成功')
     } else {
-      await schoolApi.createScholarshipStudent(schoolId, form.value);
-      ElMessage.success("创建成功");
+      await schoolApi.createScholarshipStudent(schoolId, form.value)
+      ElMessage.success('创建成功')
     }
-    dialogVisible.value = false;
-    loadData();
+    dialogVisible.value = false
+    loadData()
   } catch {
-    ElMessage.error("保存失败");
+    ElMessage.error('保存失败')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 
 async function handleDelete(row: any) {
   try {
-    await schoolApi.deleteScholarshipStudent(schoolId, row.id);
-    ElMessage.success("删除成功");
-    loadData();
+    await schoolApi.deleteScholarshipStudent(schoolId, row.id)
+    ElMessage.success('删除成功')
+    loadData()
   } catch (error) {
-    logger.error("Failed to delete scholarship student:", error);
+    logger.error('Failed to delete scholarship student:', error)
   }
 }
 
 function onImportSuccess(response: any) {
-  ElMessage.success(response?.message || "导入成功");
-  showImportDialog.value = false;
-  loadData();
+  ElMessage.success(response?.message || '导入成功')
+  showImportDialog.value = false
+  loadData()
 }
 
-onMounted(() => loadData());
+onMounted(() => loadData())
 </script>
 
 <style scoped>

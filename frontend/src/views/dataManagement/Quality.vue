@@ -2,9 +2,7 @@
   <div class="quality-page">
     <div class="page-header">
       <h2 class="page-title">数据质量监控</h2>
-      <p class="page-desc">
-        实时监控系统数据质量，检查完整性、一致性和准确性，给出修改建议
-      </p>
+      <p class="page-desc">实时监控系统数据质量，检查完整性、一致性和准确性，给出修改建议</p>
     </div>
 
     <!-- 质量评分仪表盘 -->
@@ -14,14 +12,7 @@
           <div class="quality-gauge" :class="scoreClass">
             <div class="gauge-ring">
               <svg viewBox="0 0 120 120" class="gauge-svg">
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="50"
-                  stroke="#e0e0e0"
-                  stroke-width="8"
-                  fill="none"
-                />
+                <circle cx="60" cy="60" r="50" stroke="#e0e0e0" stroke-width="8" fill="none" />
                 <circle
                   cx="60"
                   cy="60"
@@ -52,19 +43,13 @@
       </el-col>
       <el-col :span="6">
         <el-card class="stat-card success"
-          ><div class="stat-num">
-            {{ (stats.popFillRate * 100).toFixed(1) }}%
-          </div>
+          ><div class="stat-num">{{ (stats.popFillRate * 100).toFixed(1) }}%</div>
           <div class="stat-lbl">人口数据填报率</div></el-card
         >
       </el-col>
       <el-col :span="6">
-        <el-card
-          class="stat-card"
-          :class="stats.incomeFillRate < 0.6 ? 'warning' : 'success'"
-          ><div class="stat-num">
-            {{ (stats.incomeFillRate * 100).toFixed(1) }}%
-          </div>
+        <el-card class="stat-card" :class="stats.incomeFillRate < 0.6 ? 'warning' : 'success'"
+          ><div class="stat-num">{{ (stats.incomeFillRate * 100).toFixed(1) }}%</div>
           <div class="stat-lbl">收入数据填报率</div></el-card
         >
       </el-col>
@@ -76,26 +61,14 @@
         <div class="card-header">
           <span>数据质量操作</span>
           <div>
-            <el-button type="warning" :loading="cleaning" @click="runClean">
-              清洗数据
-            </el-button>
-            <el-button
-              type="info"
-              :loading="deduplicating"
-              @click="runDeduplicate"
-            >
+            <el-button type="warning" :loading="cleaning" @click="runClean"> 清洗数据 </el-button>
+            <el-button type="info" :loading="deduplicating" @click="runDeduplicate">
               去重检查
             </el-button>
-            <el-button
-              type="danger"
-              :loading="fullChecking"
-              @click="runFullCheck"
-            >
+            <el-button type="danger" :loading="fullChecking" @click="runFullCheck">
               全面检查
             </el-button>
-            <el-button type="primary" :loading="loading" @click="loadReport">
-              刷新报告
-            </el-button>
+            <el-button type="primary" :loading="loading" @click="loadReport"> 刷新报告 </el-button>
           </div>
         </div>
       </template>
@@ -117,16 +90,9 @@
             <span class="metric-label">准确性</span>
             <el-progress
               :percentage="
-                Math.round(
-                  (1 - stats.anomalyCount / Math.max(stats.totalVillages, 1)) *
-                    100,
-                )
+                Math.round((1 - stats.anomalyCount / Math.max(stats.totalVillages, 1)) * 100)
               "
-              :color="
-                progressColor(
-                  1 - stats.anomalyCount / Math.max(stats.totalVillages, 1),
-                )
-              "
+              :color="progressColor(1 - stats.anomalyCount / Math.max(stats.totalVillages, 1))"
               :stroke-width="16"
             />
           </div>
@@ -134,10 +100,7 @@
         <el-col :span="8">
           <div class="metric-item">
             <span class="metric-label">时效性</span>
-            <el-progress
-              :percentage="stats.generatedAt ? 100 : 0"
-              :stroke-width="16"
-            />
+            <el-progress :percentage="stats.generatedAt ? 100 : 0" :stroke-width="16" />
           </div>
         </el-col>
       </el-row>
@@ -145,26 +108,13 @@
       <el-tabs v-model="activeTab">
         <!-- 填报缺失概览 -->
         <el-tab-pane label="填报缺失" name="missing">
-          <el-table
-            v-loading="loading"
-            :data="missingVillages"
-            stripe
-            max-height="500"
-          >
-            <el-table-column
-              prop="village_name"
-              label="帮扶村"
-              min-width="120"
-            />
+          <el-table v-loading="loading" :data="missingVillages" stripe max-height="500">
+            <el-table-column prop="village_name" label="帮扶村" min-width="120" />
             <el-table-column prop="county" label="县/市" width="100" />
             <el-table-column label="人口数据填报" width="120" align="center">
               <template #default="{ row }">
                 <el-tag
-                  :type="
-                    row.population_missing_years.length === 0
-                      ? 'success'
-                      : 'danger'
-                  "
+                  :type="row.population_missing_years.length === 0 ? 'success' : 'danger'"
                   size="small"
                 >
                   {{ row.population_filled }}/{{ stats.expectedYears.length }}
@@ -173,22 +123,18 @@
             </el-table-column>
             <el-table-column label="缺失年份(人口)" min-width="180">
               <template #default="{ row }">
-                <span
-                  v-if="row.population_missing_years.length === 0"
-                  style="color: #67c23a"
+                <span v-if="row.population_missing_years.length === 0" style="color: #67c23a"
                   >已完成</span
                 >
                 <span v-else style="color: #f56c6c">{{
-                  row.population_missing_years.join(", ")
+                  row.population_missing_years.join(', ')
                 }}</span>
               </template>
             </el-table-column>
             <el-table-column label="收入数据填报" width="120" align="center">
               <template #default="{ row }">
                 <el-tag
-                  :type="
-                    row.income_missing_years.length === 0 ? 'success' : 'danger'
-                  "
+                  :type="row.income_missing_years.length === 0 ? 'success' : 'danger'"
                   size="small"
                 >
                   {{ row.income_filled }}/{{ stats.expectedYears.length }}
@@ -197,31 +143,21 @@
             </el-table-column>
             <el-table-column label="缺失年份(收入)" min-width="180">
               <template #default="{ row }">
-                <span
-                  v-if="row.income_missing_years.length === 0"
-                  style="color: #67c23a"
+                <span v-if="row.income_missing_years.length === 0" style="color: #67c23a"
                   >已完成</span
                 >
-                <span v-else style="color: #f56c6c">{{
-                  row.income_missing_years.join(", ")
-                }}</span>
+                <span v-else style="color: #f56c6c">{{ row.income_missing_years.join(', ') }}</span>
               </template>
             </el-table-column>
             <el-table-column label="建议" width="180">
               <template #default="{ row }">
                 <span
-                  v-if="
-                    row.population_missing_years.length +
-                      row.income_missing_years.length >
-                    0
-                  "
+                  v-if="row.population_missing_years.length + row.income_missing_years.length > 0"
                   style="color: #e6a23c; font-size: 12px"
                 >
                   请补充缺失年份数据
                 </span>
-                <span v-else style="color: #67c23a; font-size: 12px"
-                  >数据完整</span
-                >
+                <span v-else style="color: #67c23a; font-size: 12px">数据完整</span>
               </template>
             </el-table-column>
           </el-table>
@@ -240,33 +176,20 @@
           <el-table v-else :data="anomalies" stripe max-height="500">
             <el-table-column prop="village_name" label="帮扶村" width="120" />
             <el-table-column prop="year" label="年份" width="80" />
-            <el-table-column
-              prop="previous_value"
-              label="上年人均收入"
-              width="120"
-            />
-            <el-table-column
-              prop="current_value"
-              label="当年人均收入"
-              width="120"
-            />
+            <el-table-column prop="previous_value" label="上年人均收入" width="120" />
+            <el-table-column prop="current_value" label="当年人均收入" width="120" />
             <el-table-column label="变动率" width="100">
               <template #default="{ row }">
-                <el-tag
-                  :type="row.severity === 'high' ? 'danger' : 'warning'"
-                  size="small"
-                >
+                <el-tag :type="row.severity === 'high' ? 'danger' : 'warning'" size="small">
                   {{ (row.change_rate * 100).toFixed(1) }}%
                 </el-tag>
               </template>
             </el-table-column>
             <el-table-column label="严重程度" width="90">
               <template #default="{ row }">
-                <el-tag
-                  :type="row.severity === 'high' ? 'danger' : 'warning'"
-                  size="small"
-                  >{{ row.severity === "high" ? "高" : "中" }}</el-tag
-                >
+                <el-tag :type="row.severity === 'high' ? 'danger' : 'warning'" size="small">{{
+                  row.severity === 'high' ? '高' : '中'
+                }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="建议" min-width="200">
@@ -284,12 +207,7 @@
         <el-tab-pane label="填报进度" name="progress">
           <el-table v-loading="loading" :data="progressMatrix" stripe>
             <el-table-column prop="county" label="县/市" width="120" fixed />
-            <el-table-column
-              prop="total_villages"
-              label="村庄数"
-              width="80"
-              align="center"
-            />
+            <el-table-column prop="total_villages" label="村庄数" width="80" align="center" />
             <el-table-column
               v-for="yr in stats.expectedYears"
               :key="yr"
@@ -332,19 +250,13 @@
                 {{ fullCheckResults.summary?.total_checks ?? 0 }}
               </el-descriptions-item>
               <el-descriptions-item label="通过">
-                <el-tag type="success">{{
-                  fullCheckResults.summary?.passed ?? 0
-                }}</el-tag>
+                <el-tag type="success">{{ fullCheckResults.summary?.passed ?? 0 }}</el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="警告">
-                <el-tag type="warning">{{
-                  fullCheckResults.summary?.warnings ?? 0
-                }}</el-tag>
+                <el-tag type="warning">{{ fullCheckResults.summary?.warnings ?? 0 }}</el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="错误">
-                <el-tag type="danger">{{
-                  fullCheckResults.summary?.errors ?? 0
-                }}</el-tag>
+                <el-tag type="danger">{{ fullCheckResults.summary?.errors ?? 0 }}</el-tag>
               </el-descriptions-item>
             </el-descriptions>
 
@@ -390,29 +302,12 @@
                   </div>
                 </template>
                 <div v-if="check.issues && check.issues.length > 0">
-                  <el-table
-                    :data="check.issues"
-                    stripe
-                    size="small"
-                    max-height="300"
-                  >
+                  <el-table :data="check.issues" stripe size="small" max-height="300">
                     <el-table-column prop="module" label="模块" width="120" />
-                    <el-table-column
-                      prop="record_id"
-                      label="记录ID"
-                      width="100"
-                    />
+                    <el-table-column prop="record_id" label="记录ID" width="100" />
                     <el-table-column prop="field" label="字段" width="120" />
-                    <el-table-column
-                      prop="issue"
-                      label="问题描述"
-                      min-width="200"
-                    />
-                    <el-table-column
-                      prop="suggestion"
-                      label="修改建议"
-                      min-width="200"
-                    />
+                    <el-table-column prop="issue" label="问题描述" min-width="200" />
+                    <el-table-column prop="suggestion" label="修改建议" min-width="200" />
                   </el-table>
                 </div>
                 <el-empty v-else description="未发现问题" :image-size="60" />
@@ -426,22 +321,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import {
-  SuccessFilled,
-  WarningFilled,
-  CircleCloseFilled,
-} from "@element-plus/icons-vue";
-import { runFullCheck as apiRunFullCheck } from "@/api/dataQuality";
-import request from "@/api/request";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { SuccessFilled, WarningFilled, CircleCloseFilled } from '@element-plus/icons-vue'
+import { runFullCheck as apiRunFullCheck } from '@/api/dataQuality'
+import request from '@/api/request'
 
-const loading = ref(false);
-const fullChecking = ref(false);
-const cleaning = ref(false);
-const deduplicating = ref(false);
-const activeTab = ref("missing");
-const activeCheckItems = ref<number[]>([]);
+const loading = ref(false)
+const fullChecking = ref(false)
+const cleaning = ref(false)
+const deduplicating = ref(false)
+const activeTab = ref('missing')
+const activeCheckItems = ref<number[]>([])
 
 const stats = reactive({
   totalVillages: 0,
@@ -449,159 +340,145 @@ const stats = reactive({
   incomeFillRate: 0,
   anomalyCount: 0,
   expectedYears: [] as number[],
-  generatedAt: "",
-});
+  generatedAt: '',
+})
 
-const missingVillages = ref<any[]>([]);
-const anomalies = ref<any[]>([]);
-const progressMatrix = ref<any[]>([]);
-const fullCheckResults = ref<any>(null);
+const missingVillages = ref<any[]>([])
+const anomalies = ref<any[]>([])
+const progressMatrix = ref<any[]>([])
+const fullCheckResults = ref<any>(null)
 
 // 综合质量评分
 const qualityScore = computed(() => {
-  const popScore = stats.popFillRate * 40;
-  const incomeScore = stats.incomeFillRate * 30;
-  const anomalyScore = Math.max(
-    0,
-    (1 - stats.anomalyCount / Math.max(stats.totalVillages, 1)) * 30,
-  );
-  return Math.round(popScore + incomeScore + anomalyScore);
-});
+  const popScore = stats.popFillRate * 40
+  const incomeScore = stats.incomeFillRate * 30
+  const anomalyScore = Math.max(0, (1 - stats.anomalyCount / Math.max(stats.totalVillages, 1)) * 30)
+  return Math.round(popScore + incomeScore + anomalyScore)
+})
 
 const scoreClass = computed(() => {
-  if (qualityScore.value >= 80) return "score-good";
-  if (qualityScore.value >= 60) return "score-warn";
-  return "score-bad";
-});
+  if (qualityScore.value >= 80) return 'score-good'
+  if (qualityScore.value >= 60) return 'score-warn'
+  return 'score-bad'
+})
 
 const dashArray = computed(() => {
-  const circumference = 2 * Math.PI * 50;
-  const filled = (qualityScore.value / 100) * circumference;
-  return `${filled} ${circumference}`;
-});
+  const circumference = 2 * Math.PI * 50
+  const filled = (qualityScore.value / 100) * circumference
+  return `${filled} ${circumference}`
+})
 
 function progressColor(rate: number): string {
-  if (rate >= 0.9) return "#67c23a";
-  if (rate >= 0.6) return "#e6a23c";
-  return "#f56c6c";
+  if (rate >= 0.9) return '#67c23a'
+  if (rate >= 0.6) return '#e6a23c'
+  return '#f56c6c'
 }
 
 async function loadReport() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await request.get("/data-quality/report");
-    const d = res.data;
+    const res = await request.get('/data-quality/report')
+    const d = res.data
 
-    stats.generatedAt = d.generated_at || "";
+    stats.generatedAt = d.generated_at || ''
 
-    const nr = d.null_rate_report || {};
-    stats.totalVillages = nr.total_villages ?? 0;
-    stats.popFillRate = nr.population_fill_rate ?? 0;
-    stats.incomeFillRate = nr.income_fill_rate ?? 0;
-    stats.expectedYears = nr.expected_years ?? [];
+    const nr = d.null_rate_report || {}
+    stats.totalVillages = nr.total_villages ?? 0
+    stats.popFillRate = nr.population_fill_rate ?? 0
+    stats.incomeFillRate = nr.income_fill_rate ?? 0
+    stats.expectedYears = nr.expected_years ?? []
     missingVillages.value = (nr.villages ?? []).filter(
-      (v: any) =>
-        v.population_missing_years?.length > 0 ||
-        v.income_missing_years?.length > 0,
-    );
+      (v: any) => v.population_missing_years?.length > 0 || v.income_missing_years?.length > 0
+    )
 
-    anomalies.value = d.income_anomalies ?? [];
-    stats.anomalyCount = anomalies.value.length;
+    anomalies.value = d.income_anomalies ?? []
+    stats.anomalyCount = anomalies.value.length
 
-    const fp = d.filing_progress || {};
+    const fp = d.filing_progress || {}
     progressMatrix.value = (fp.matrix ?? []).map((item: any) => ({
       ...item,
       years: Object.fromEntries(
-        Object.entries(item.years || {}).map(([k, v]: [string, any]) => [
-          Number(k),
-          v,
-        ]),
+        Object.entries(item.years || {}).map(([k, v]: [string, any]) => [Number(k), v])
       ),
-    }));
+    }))
   } catch (err: any) {
-    ElMessage.error(
-      err?.response?.data?.error || err?.message || "加载数据质量报告失败",
-    );
+    ElMessage.error(err?.response?.data?.error || err?.message || '加载数据质量报告失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function runFullCheck() {
-  fullChecking.value = true;
+  fullChecking.value = true
   try {
     // 尝试使用 dataQuality API
-    const res = await apiRunFullCheck();
-    fullCheckResults.value = (res as any)?.data || res;
-    activeTab.value = "full";
+    const res = await apiRunFullCheck()
+    fullCheckResults.value = (res as any)?.data || res
+    activeTab.value = 'full'
 
     activeCheckItems.value = (fullCheckResults.value.checks || [])
       .map((check: any, index: number) => (check.issues_count > 0 ? index : -1))
-      .filter((i: number) => i >= 0);
+      .filter((i: number) => i >= 0)
 
-    const summary = fullCheckResults.value.summary || {};
+    const summary = fullCheckResults.value.summary || {}
     if (summary.errors > 0) {
-      ElMessage.warning(
-        `检查完成，发现 ${summary.errors} 个错误和 ${summary.warnings} 个警告`,
-      );
+      ElMessage.warning(`检查完成，发现 ${summary.errors} 个错误和 ${summary.warnings} 个警告`)
     } else if (summary.warnings > 0) {
-      ElMessage.warning(`检查完成，发现 ${summary.warnings} 个警告`);
+      ElMessage.warning(`检查完成，发现 ${summary.warnings} 个警告`)
     } else {
-      ElMessage.success("检查完成，数据质量良好！");
+      ElMessage.success('检查完成，数据质量良好！')
     }
   } catch (err: any) {
     // 回退到原有 API
     try {
-      const res = await request.post("/data-quality/full-check");
-      fullCheckResults.value = res.data;
-      activeTab.value = "full";
+      const res = await request.post('/data-quality/full-check')
+      fullCheckResults.value = res.data
+      activeTab.value = 'full'
       activeCheckItems.value = (fullCheckResults.value.checks || [])
-        .map((check: any, index: number) =>
-          check.issues_count > 0 ? index : -1,
-        )
-        .filter((i: number) => i >= 0);
+        .map((check: any, index: number) => (check.issues_count > 0 ? index : -1))
+        .filter((i: number) => i >= 0)
     } catch (fallbackErr: any) {
-      ElMessage.error(err?.message || "全面检查失败");
+      ElMessage.error(err?.message || '全面检查失败')
     }
   } finally {
-    fullChecking.value = false;
+    fullChecking.value = false
   }
 }
 
 async function runClean() {
-  cleaning.value = true;
+  cleaning.value = true
   try {
-    ElMessage.info("数据清洗功能已触发，请查看报告了解清洗结果");
+    ElMessage.info('数据清洗功能已触发，请查看报告了解清洗结果')
     // 调用 dataQuality API 的 clean 方法
-    const { clean } = await import("@/api/dataQuality");
-    await clean({ records: [], cleaning_rules: {} });
-    ElMessage.success("数据清洗完成");
-    await loadReport();
+    const { clean } = await import('@/api/dataQuality')
+    await clean({ records: [], cleaning_rules: {} })
+    ElMessage.success('数据清洗完成')
+    await loadReport()
   } catch (err: any) {
-    ElMessage.error(err?.message || "数据清洗失败");
+    ElMessage.error(err?.message || '数据清洗失败')
   } finally {
-    cleaning.value = false;
+    cleaning.value = false
   }
 }
 
 async function runDeduplicate() {
-  deduplicating.value = true;
+  deduplicating.value = true
   try {
-    ElMessage.info("数据去重检查已触发");
-    const { deduplicate } = await import("@/api/dataQuality");
-    await deduplicate([], ["village_name", "county"]);
-    ElMessage.success("去重检查完成");
-    await loadReport();
+    ElMessage.info('数据去重检查已触发')
+    const { deduplicate } = await import('@/api/dataQuality')
+    await deduplicate([], ['village_name', 'county'])
+    ElMessage.success('去重检查完成')
+    await loadReport()
   } catch (err: any) {
-    ElMessage.error(err?.message || "去重检查失败");
+    ElMessage.error(err?.message || '去重检查失败')
   } finally {
-    deduplicating.value = false;
+    deduplicating.value = false
   }
 }
 
 onMounted(() => {
-  loadReport();
-});
+  loadReport()
+})
 </script>
 
 <style scoped>

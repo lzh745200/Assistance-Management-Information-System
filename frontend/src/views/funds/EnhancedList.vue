@@ -16,11 +16,7 @@
         <el-button @click="handleDownloadTemplate">
           <el-icon><Download /></el-icon>下载模板
         </el-button>
-        <el-button
-          :loading="exporting"
-          :disabled="exporting"
-          @click="handleExport"
-        >
+        <el-button :loading="exporting" :disabled="exporting" @click="handleExport">
           <el-icon><Download /></el-icon>导出
         </el-button>
       </div>
@@ -124,9 +120,7 @@
         >
           导出选中
         </el-button>
-        <el-button size="small" text @click="clearSelection"
-          >取消选择</el-button
-        >
+        <el-button size="small" text @click="clearSelection">取消选择</el-button>
       </div>
       <el-table
         ref="tableRef"
@@ -139,9 +133,7 @@
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="name" label="经费名称" min-width="180">
           <template #default="scope">
-            <el-link type="primary" @click="handleView(scope.row)">{{
-              scope.row.name
-            }}</el-link>
+            <el-link type="primary" @click="handleView(scope.row)">{{ scope.row.name }}</el-link>
           </template>
         </el-table-column>
         <el-table-column prop="type" label="类型" width="110" align="center">
@@ -149,26 +141,14 @@
             <el-tag size="small">{{ getTypeName(scope.row.type) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="amount"
-          label="金额(万元)"
-          width="120"
-          align="right"
-        >
+        <el-table-column prop="amount" label="金额(万元)" width="120" align="right">
           <template #default="scope">
-            <span class="amount-text">{{
-              formatAmount(scope.row.amount)
-            }}</span>
+            <span class="amount-text">{{ formatAmount(scope.row.amount) }}</span>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="project_name"
-          label="关联项目"
-          width="160"
-          show-overflow-tooltip
-        >
+        <el-table-column prop="project_name" label="关联项目" width="160" show-overflow-tooltip>
           <template #default="scope">
-            {{ scope.row.project_name || scope.row.project || "-" }}
+            {{ scope.row.project_name || scope.row.project || '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
@@ -178,12 +158,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="source"
-          label="经费来源"
-          width="120"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="source" label="经费来源" width="120" show-overflow-tooltip />
         <el-table-column label="健康度" width="100" align="center">
           <template #default="scope">
             <el-progress
@@ -205,15 +180,8 @@
         </el-table-column>
         <el-table-column label="阶段" width="110" align="center">
           <template #default="scope">
-            <el-tag
-              v-if="scope.row.lifecycle_phase"
-              size="small"
-              effect="plain"
-            >
-              {{
-                phaseLabels[scope.row.lifecycle_phase] ||
-                `阶段${scope.row.lifecycle_phase}`
-              }}
+            <el-tag v-if="scope.row.lifecycle_phase" size="small" effect="plain">
+              {{ phaseLabels[scope.row.lifecycle_phase] || `阶段${scope.row.lifecycle_phase}` }}
             </el-tag>
             <span v-else class="text-muted">--</span>
           </template>
@@ -221,18 +189,13 @@
         <el-table-column prop="date" label="日期" width="110" align="center">
           <template #default="scope">
             {{
-              scope.row.date ||
-              (scope.row.created_at ? scope.row.created_at.split("T")[0] : "-")
+              scope.row.date || (scope.row.created_at ? scope.row.created_at.split('T')[0] : '-')
             }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="scope">
-            <el-button
-              type="primary"
-              link
-              size="small"
-              @click="handleView(scope.row)"
+            <el-button type="primary" link size="small" @click="handleView(scope.row)"
               >查看</el-button
             >
             <el-button
@@ -243,11 +206,7 @@
               @click="pushSafe('/funds/lifecycle/' + scope.row.project_id)"
               >生命周期</el-button
             >
-            <el-button
-              type="primary"
-              link
-              size="small"
-              @click="handleEdit(scope.row)"
+            <el-button type="primary" link size="small" @click="handleEdit(scope.row)"
               >编辑</el-button
             >
             <el-button
@@ -270,10 +229,7 @@
               @click="quickAllocate(scope.row)"
               >拨付</el-button
             >
-            <el-popconfirm
-              title="确定删除该经费记录吗？"
-              @confirm="handleDelete(scope.row)"
-            >
+            <el-popconfirm title="确定删除该经费记录吗？" @confirm="handleDelete(scope.row)">
               <template #reference>
                 <el-button
                   type="danger"
@@ -305,105 +261,100 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, computed, onMounted } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Plus, Download, Search, Tickets } from "@element-plus/icons-vue";
-import request from "@/api/request";
-import { fundApi } from "@/api/funds";
-import { downloadImportTemplate } from "@/api/import";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Download, Search, Tickets } from '@element-plus/icons-vue'
+import request from '@/api/request'
+import { fundApi } from '@/api/funds'
+import { downloadImportTemplate } from '@/api/import'
 
 const phaseLabels: Record<number, string> = {
-  1: "论证立项",
-  2: "汇总审核",
-  3: "计划拨付",
-  4: "军地对接",
-  5: "实施监管",
-  6: "核查督查",
-  7: "决算绩效",
-};
+  1: '论证立项',
+  2: '汇总审核',
+  3: '计划拨付',
+  4: '军地对接',
+  5: '实施监管',
+  6: '核查督查',
+  7: '决算绩效',
+}
 
-const { pushSafe } = useRouterSafe();
-const tableData = ref<any[]>([]);
-const loading = ref(false);
-const exporting = ref(false);
-const approving = ref<Record<number, boolean>>({});
-const allocating = ref<Record<number, boolean>>({});
-const deleting = ref<Record<number, boolean>>({});
-const batchDeleting = ref(false);
-const total = ref(0);
-const currentPage = ref(1);
-const pageSize = ref(20);
-const selectedRows = ref<any[]>([]);
-const tableRef = ref<any>(null);
+const { pushSafe } = useRouterSafe()
+const tableData = ref<any[]>([])
+const loading = ref(false)
+const exporting = ref(false)
+const approving = ref<Record<number, boolean>>({})
+const allocating = ref<Record<number, boolean>>({})
+const deleting = ref<Record<number, boolean>>({})
+const batchDeleting = ref(false)
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(20)
+const selectedRows = ref<any[]>([])
+const tableRef = ref<any>(null)
 
 const filterForm = reactive({
-  keyword: "",
-  type: "",
-  status: "",
-});
+  keyword: '',
+  type: '',
+  status: '',
+})
 
 // 服务端统计数据（全量准确）
-const serverStats = ref<any>(null);
+const serverStats = ref<any>(null)
 const stats = computed(() => {
-  const s = serverStats.value;
+  const s = serverStats.value
   if (s) {
-    const byStatus = s.by_status || {};
+    const byStatus = s.by_status || {}
     return {
       totalAmount: formatAmount(s.total_amount || 0),
       allocatedAmount: formatAmount(s.total_allocated || 0),
       pendingCount: byStatus.pending?.count || 0,
       plannedCount: byStatus.planned?.count || 0,
       totalCount: s.total_count || total.value,
-    };
+    }
   }
   // 回退：服务端统计不可用时使用当前页数据
-  const list = tableData.value;
-  const totalAmount = list.reduce((sum, f) => sum + (Number(f.amount) || 0), 0);
+  const list = tableData.value
+  const totalAmount = list.reduce((sum, f) => sum + (Number(f.amount) || 0), 0)
   const allocatedAmount = list
-    .filter(
-      (f) =>
-        f.status === "allocated" ||
-        f.status === "completed" ||
-        f.status === "audited",
-    )
-    .reduce((sum, f) => sum + (Number(f.amount) || 0), 0);
+    .filter((f) => f.status === 'allocated' || f.status === 'completed' || f.status === 'audited')
+    .reduce((sum, f) => sum + (Number(f.amount) || 0), 0)
   return {
     totalAmount: formatAmount(totalAmount),
     allocatedAmount: formatAmount(allocatedAmount),
-    pendingCount: list.filter((f) => f.status === "pending").length,
-    plannedCount: list.filter((f) => f.status === "planned").length,
+    pendingCount: list.filter((f) => f.status === 'pending').length,
+    plannedCount: list.filter((f) => f.status === 'planned').length,
     totalCount: total.value || list.length,
-  };
-});
+  }
+})
 
 async function loadStats() {
   try {
-    const res = await request.get("/funds/statistics/overview", {
+    const res = await request.get('/funds/statistics/overview', {
       showError: false,
-    } as any);
-    const d = res.data?.data || res.data;
-    if (d) serverStats.value = d;
+    } as any)
+    const d = res.data?.data || res.data
+    if (d) serverStats.value = d
   } catch {
     /* 统计加载失败不阻塞主流程 */
   }
 }
 
 function formatAmount(val: any) {
-  const num = Number(val);
-  if (isNaN(num)) return "0.00";
-  return num.toLocaleString("zh-CN", {
+  const num = Number(val)
+  if (isNaN(num)) return '0.00'
+  return num.toLocaleString('zh-CN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  })
 }
 
 async function fetchData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const response = await request.get("/funds", {
+    const response = await request.get('/funds', {
       params: {
         page: currentPage.value,
         page_size: pageSize.value,
@@ -411,238 +362,226 @@ async function fetchData() {
         fund_type: filterForm.type || undefined,
         status: filterForm.status || undefined,
       },
-    });
-    const resData = response.data;
+    })
+    const resData = response.data
     tableData.value =
-      resData?.items ||
-      resData?.data?.items ||
-      (Array.isArray(resData) ? resData : []);
-    total.value =
-      resData?.total || resData?.data?.total || tableData.value.length;
+      resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : [])
+    total.value = resData?.total || resData?.data?.total || tableData.value.length
   } catch (e) {
-    logger.error("加载数据失败:", e);
+    logger.error('加载数据失败:', e)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function handleSearch() {
-  currentPage.value = 1;
-  fetchData();
+  currentPage.value = 1
+  fetchData()
 }
 function handleReset() {
-  filterForm.keyword = "";
-  filterForm.type = "";
-  filterForm.status = "";
-  currentPage.value = 1;
-  fetchData();
+  filterForm.keyword = ''
+  filterForm.type = ''
+  filterForm.status = ''
+  currentPage.value = 1
+  fetchData()
 }
 function filterByStatus(status: string) {
-  filterForm.status = status;
-  currentPage.value = 1;
-  fetchData();
+  filterForm.status = status
+  currentPage.value = 1
+  fetchData()
 }
 function handleSizeChange() {
-  currentPage.value = 1;
-  fetchData();
+  currentPage.value = 1
+  fetchData()
 }
 function handlePageChange() {
-  fetchData();
+  fetchData()
 }
 function handleCreate() {
-  pushSafe("/funds/create");
+  pushSafe('/funds/create')
 }
 function handleView(row: any) {
-  pushSafe(`/funds/${row.id}`);
+  pushSafe(`/funds/${row.id}`)
 }
 function handleEdit(row: any) {
-  pushSafe(`/funds/${row.id}/edit`);
+  pushSafe(`/funds/${row.id}/edit`)
 }
 async function handleDelete(row: any) {
-  if (deleting.value[row.id]) return;
-  deleting.value[row.id] = true;
+  if (deleting.value[row.id]) return
+  deleting.value[row.id] = true
   try {
-    await request.delete(`/funds/${row.id}`);
-    ElMessage.success("删除成功");
+    await request.delete(`/funds/${row.id}`)
+    ElMessage.success('删除成功')
     // 立即从前端列表中移除，确保界面及时更新
-    tableData.value = tableData.value.filter((item: any) => item.id !== row.id);
-    total.value = Math.max(0, total.value - 1);
-    fetchData();
-    loadStats();
+    tableData.value = tableData.value.filter((item: any) => item.id !== row.id)
+    total.value = Math.max(0, total.value - 1)
+    fetchData()
+    loadStats()
   } catch (e: any) {
-    const detail = e?.response?.data?.detail || e?.message || "删除失败";
-    ElMessage.error(`删除失败: ${detail}`);
+    const detail = e?.response?.data?.detail || e?.message || '删除失败'
+    ElMessage.error(`删除失败: ${detail}`)
   } finally {
-    delete deleting.value[row.id];
+    delete deleting.value[row.id]
   }
 }
 async function handleDownloadTemplate() {
   try {
-    const blob = await downloadImportTemplate("fund");
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "经费导入模板.xlsx";
-    link.click();
-    window.URL.revokeObjectURL(url);
+    const blob = await downloadImportTemplate('fund')
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '经费导入模板.xlsx'
+    link.click()
+    window.URL.revokeObjectURL(url)
     // 模板下载成功 — 浏览器已确认
   } catch {
-    ElMessage.error("模板下载失败");
+    ElMessage.error('模板下载失败')
   }
 }
 
 async function handleExport() {
-  if (exporting.value) return;
-  exporting.value = true;
+  if (exporting.value) return
+  exporting.value = true
   try {
     await fundApi.exportList({
       search: filterForm.keyword || undefined,
       type: filterForm.type || undefined,
       status: filterForm.status || undefined,
-    });
+    })
     // 导出成功 — 浏览器已确认
   } catch {
-    ElMessage.error("导出失败");
+    ElMessage.error('导出失败')
   } finally {
-    exporting.value = false;
+    exporting.value = false
   }
 }
 
 async function quickApprove(row: any) {
-  if (approving.value[row.id]) return;
-  approving.value[row.id] = true;
+  if (approving.value[row.id]) return
+  approving.value[row.id] = true
   try {
-    await fundApi.approve(row.id, {});
-    ElMessage.success("审批成功");
-    fetchData();
-    loadStats();
+    await fundApi.approve(row.id, {})
+    ElMessage.success('审批成功')
+    fetchData()
+    loadStats()
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "审批失败");
+    ElMessage.error(e?.response?.data?.detail || '审批失败')
   } finally {
-    delete approving.value[row.id];
+    delete approving.value[row.id]
   }
 }
 async function quickAllocate(row: any) {
-  if (allocating.value[row.id]) return;
-  allocating.value[row.id] = true;
+  if (allocating.value[row.id]) return
+  allocating.value[row.id] = true
   try {
-    await fundApi.allocate(row.id, {});
-    ElMessage.success("拨付成功");
-    fetchData();
-    loadStats();
+    await fundApi.allocate(row.id, {})
+    ElMessage.success('拨付成功')
+    fetchData()
+    loadStats()
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "拨付失败");
+    ElMessage.error(e?.response?.data?.detail || '拨付失败')
   } finally {
-    delete allocating.value[row.id];
+    delete allocating.value[row.id]
   }
 }
 
 function getTypeName(type: string) {
   const m: Record<string, string> = {
-    project: "项目经费",
-    operation: "运营经费",
-    education: "教育帮扶",
-    infrastructure: "基础设施",
-    emergency: "应急经费",
-    other: "其他",
-  };
-  return m[type] || type || "-";
+    project: '项目经费',
+    operation: '运营经费',
+    education: '教育帮扶',
+    infrastructure: '基础设施',
+    emergency: '应急经费',
+    other: '其他',
+  }
+  return m[type] || type || '-'
 }
-function getStatusType(
-  status: string,
-): "success" | "info" | "warning" | "danger" | "primary" {
-  const m: Record<
-    string,
-    "success" | "info" | "warning" | "danger" | "primary"
-  > = {
-    pending: "warning",
-    planned: "info",
-    approved: "primary",
-    allocated: "info",
-    in_use: "primary",
-    completed: "success",
-    audited: "success",
-  };
-  return m[status] || "info";
+function getStatusType(status: string): 'success' | 'info' | 'warning' | 'danger' | 'primary' {
+  const m: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'primary'> = {
+    pending: 'warning',
+    planned: 'info',
+    approved: 'primary',
+    allocated: 'info',
+    in_use: 'primary',
+    completed: 'success',
+    audited: 'success',
+  }
+  return m[status] || 'info'
 }
 function getStatusText(status: string) {
   const m: Record<string, string> = {
-    pending: "待审批",
-    planned: "已计划",
-    approved: "已批准",
-    allocated: "已拨付",
-    in_use: "使用中",
-    completed: "已完成",
-    audited: "已审计",
-  };
-  return m[status] || status || "-";
+    pending: '待审批',
+    planned: '已计划',
+    approved: '已批准',
+    allocated: '已拨付',
+    in_use: '使用中',
+    completed: '已完成',
+    audited: '已审计',
+  }
+  return m[status] || status || '-'
 }
 
 // 批量操作
 function handleSelectionChange(rows: any[]) {
-  selectedRows.value = rows;
+  selectedRows.value = rows
 }
 function clearSelection() {
-  tableRef.value?.clearSelection();
-  selectedRows.value = [];
+  tableRef.value?.clearSelection()
+  selectedRows.value = []
 }
 async function handleBatchDelete() {
-  if (!selectedRows.value.length || batchDeleting.value) return;
-  const count = selectedRows.value.length;
+  if (!selectedRows.value.length || batchDeleting.value) return
+  const count = selectedRows.value.length
   try {
-    await ElMessageBox.confirm(
-      `确定删除选中的 ${count} 条经费记录吗？`,
-      "批量删除确认",
-      { type: "warning" },
-    );
+    await ElMessageBox.confirm(`确定删除选中的 ${count} 条经费记录吗？`, '批量删除确认', {
+      type: 'warning',
+    })
   } catch {
-    return;
+    return
   }
-  batchDeleting.value = true;
+  batchDeleting.value = true
   try {
-    let deleted = 0;
-    let failed = 0;
-    const deletedIds: any[] = [];
+    let deleted = 0
+    let failed = 0
+    const deletedIds: any[] = []
     for (const row of selectedRows.value) {
       try {
-        await request.delete(`/funds/${row.id}`);
-        deleted++;
-        deletedIds.push(row.id);
+        await request.delete(`/funds/${row.id}`)
+        deleted++
+        deletedIds.push(row.id)
       } catch {
-        failed++;
+        failed++
       }
     }
     // 立即从前端列表中移除已删除的记录
-    tableData.value = tableData.value.filter(
-      (item: any) => !deletedIds.includes(item.id),
-    );
-    total.value = Math.max(0, total.value - deleted);
-    if (deleted > 0) ElMessage.success(`成功删除 ${deleted} 条记录`);
-    if (failed > 0) ElMessage.warning(`${failed} 条记录删除失败`);
-    clearSelection();
-    fetchData();
-    loadStats();
+    tableData.value = tableData.value.filter((item: any) => !deletedIds.includes(item.id))
+    total.value = Math.max(0, total.value - deleted)
+    if (deleted > 0) ElMessage.success(`成功删除 ${deleted} 条记录`)
+    if (failed > 0) ElMessage.warning(`${failed} 条记录删除失败`)
+    clearSelection()
+    fetchData()
+    loadStats()
   } finally {
-    batchDeleting.value = false;
+    batchDeleting.value = false
   }
 }
 async function handleBatchExport() {
-  if (exporting.value) return;
-  exporting.value = true;
+  if (exporting.value) return
+  exporting.value = true
   try {
-    await fundApi.exportList({});
+    await fundApi.exportList({})
     // 导出成功 — 浏览器已确认
   } catch {
-    ElMessage.error("导出失败");
+    ElMessage.error('导出失败')
   } finally {
-    exporting.value = false;
+    exporting.value = false
   }
 }
 
 onMounted(() => {
-  fetchData();
-  loadStats();
-});
+  fetchData()
+  loadStats()
+})
 </script>
 
 <style scoped>
@@ -684,11 +623,7 @@ onMounted(() => {
 
 .stat-item {
   flex: 1;
-  background: linear-gradient(
-    135deg,
-    rgba(27, 67, 50, 0.08) 0%,
-    rgba(45, 106, 79, 0.05) 100%
-  );
+  background: linear-gradient(135deg, rgba(27, 67, 50, 0.08) 0%, rgba(45, 106, 79, 0.05) 100%);
   border: 1px solid rgba(45, 106, 79, 0.2);
   border-radius: 8px;
   padding: 16px 20px;

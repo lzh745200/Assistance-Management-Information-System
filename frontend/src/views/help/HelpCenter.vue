@@ -14,19 +14,14 @@
           @keyup.enter="doSearch"
         >
           <template #append>
-            <el-button :icon="Search" :loading="searching" @click="doSearch">
-              搜索
-            </el-button>
+            <el-button :icon="Search" :loading="searching" @click="doSearch"> 搜索 </el-button>
           </template>
         </el-input>
       </div>
     </div>
 
     <!-- 搜索结果 -->
-    <div
-      v-if="searchResults.length > 0 && searchQuery"
-      class="search-results-section"
-    >
+    <div v-if="searchResults.length > 0 && searchQuery" class="search-results-section">
       <el-card>
         <template #header>
           <div class="section-header">
@@ -41,13 +36,8 @@
           @click="viewArticle(item)"
         >
           <h4>{{ item.title }}</h4>
-          <el-tag size="small" type="info" style="margin-right: 8px">{{
-            item.category
-          }}</el-tag>
-          <span
-            class="search-snippet"
-            v-html="highlightKeyword(item.snippet)"
-          />
+          <el-tag size="small" type="info" style="margin-right: 8px">{{ item.category }}</el-tag>
+          <span class="search-snippet" v-html="highlightKeyword(item.snippet)" />
         </div>
         <el-empty v-if="searchTotal === 0" description="未找到相关文档" />
       </el-card>
@@ -87,7 +77,7 @@
         <el-card v-if="viewMode === 'list'" class="content-card">
           <template #header>
             <div class="section-header">
-              <span>{{ activeCategoryName || "全部文档" }}</span>
+              <span>{{ activeCategoryName || '全部文档' }}</span>
               <span class="article-count">共 {{ articlesTotal }} 篇</span>
             </div>
           </template>
@@ -101,9 +91,7 @@
           >
             <el-table-column prop="title" label="标题" min-width="250">
               <template #default="{ row }">
-                <el-link type="primary" :underline="false">{{
-                  row.title
-                }}</el-link>
+                <el-link type="primary" :underline="false">{{ row.title }}</el-link>
               </template>
             </el-table-column>
             <el-table-column prop="category" label="分类" width="120">
@@ -124,12 +112,7 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column
-              prop="summary"
-              label="摘要"
-              min-width="200"
-              show-overflow-tooltip
-            />
+            <el-table-column prop="summary" label="摘要" min-width="200" show-overflow-tooltip />
           </el-table>
 
           <el-pagination
@@ -142,27 +125,17 @@
             @current-change="loadArticles"
           />
 
-          <el-empty
-            v-if="!loadingArticles && articles.length === 0"
-            description="暂无文档"
-          />
+          <el-empty v-if="!loadingArticles && articles.length === 0" description="暂无文档" />
         </el-card>
 
         <!-- 文章详情 -->
         <el-card v-if="viewMode === 'detail'" class="content-card">
           <template #header>
             <div class="section-header">
-              <el-button
-                type="primary"
-                link
-                :icon="ArrowLeft"
-                @click="backToList"
-              >
+              <el-button type="primary" link :icon="ArrowLeft" @click="backToList">
                 返回列表
               </el-button>
-              <span style="flex: 1; text-align: center">{{
-                articleDetail?.title
-              }}</span>
+              <span style="flex: 1; text-align: center">{{ articleDetail?.title }}</span>
               <el-tag size="small">{{ articleDetail?.category }}</el-tag>
             </div>
           </template>
@@ -179,35 +152,21 @@
                 {{ tag }}
               </el-tag>
             </div>
-            <div
-              class="article-content"
-              v-html="articleDetail.content || '(无内容)'"
-            />
+            <div class="article-content" v-html="articleDetail.content || '(无内容)'" />
           </div>
           <el-empty v-else description="文档加载失败" />
         </el-card>
 
         <!-- 系统信息 -->
-        <el-card
-          v-if="systemInfo && viewMode === 'list'"
-          class="system-info-card"
-        >
+        <el-card v-if="systemInfo && viewMode === 'list'" class="system-info-card">
           <template #header>
             <span>系统信息</span>
           </template>
           <el-descriptions :column="2" border size="small">
-            <el-descriptions-item label="系统名称">{{
-              systemInfo.name
-            }}</el-descriptions-item>
-            <el-descriptions-item label="简称">{{
-              systemInfo.short_name
-            }}</el-descriptions-item>
-            <el-descriptions-item label="版本">{{
-              systemInfo.version
-            }}</el-descriptions-item>
-            <el-descriptions-item label="说明">{{
-              systemInfo.description
-            }}</el-descriptions-item>
+            <el-descriptions-item label="系统名称">{{ systemInfo.name }}</el-descriptions-item>
+            <el-descriptions-item label="简称">{{ systemInfo.short_name }}</el-descriptions-item>
+            <el-descriptions-item label="版本">{{ systemInfo.version }}</el-descriptions-item>
+            <el-descriptions-item label="说明">{{ systemInfo.description }}</el-descriptions-item>
             <el-descriptions-item label="技术支持">{{
               systemInfo.contact?.technical_support
             }}</el-descriptions-item>
@@ -233,147 +192,147 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Search, ArrowLeft } from "@element-plus/icons-vue";
-import { helpApi } from "@/api/help";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Search, ArrowLeft } from '@element-plus/icons-vue'
+import { helpApi } from '@/api/help'
 import type {
   HelpCategory,
   HelpArticleSummary,
   HelpArticle,
   HelpSearchResult,
   SystemInfo,
-} from "@/api/help";
+} from '@/api/help'
 
-type ViewMode = "list" | "detail";
+type ViewMode = 'list' | 'detail'
 
-const viewMode = ref<ViewMode>("list");
-const activeCategory = ref("");
-const searchQuery = ref("");
-const searching = ref(false);
-const loadingCategories = ref(false);
-const loadingArticles = ref(false);
+const viewMode = ref<ViewMode>('list')
+const activeCategory = ref('')
+const searchQuery = ref('')
+const searching = ref(false)
+const loadingCategories = ref(false)
+const loadingArticles = ref(false)
 
-const categories = ref<HelpCategory[]>([]);
-const articles = ref<HelpArticleSummary[]>([]);
-const articlesTotal = ref(0);
-const currentPage = ref(1);
-const pageSize = ref(20);
+const categories = ref<HelpCategory[]>([])
+const articles = ref<HelpArticleSummary[]>([])
+const articlesTotal = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(20)
 
-const articleDetail = ref<HelpArticle | null>(null);
+const articleDetail = ref<HelpArticle | null>(null)
 
-const searchResults = ref<HelpSearchResult[]>([]);
-const searchTotal = ref(0);
+const searchResults = ref<HelpSearchResult[]>([])
+const searchTotal = ref(0)
 
-const systemInfo = ref<SystemInfo | null>(null);
+const systemInfo = ref<SystemInfo | null>(null)
 
 const activeCategoryName = computed(() => {
-  const cat = categories.value.find((c) => c.key === activeCategory.value);
-  return cat?.name || "";
-});
+  const cat = categories.value.find((c) => c.key === activeCategory.value)
+  return cat?.name || ''
+})
 
 async function loadCategories() {
-  loadingCategories.value = true;
+  loadingCategories.value = true
   try {
-    const res = await helpApi.getCategories();
-    categories.value = res.data?.categories || [];
+    const res = await helpApi.getCategories()
+    categories.value = res.data?.categories || []
   } catch {
-    ElMessage.error("加载分类列表失败");
+    ElMessage.error('加载分类列表失败')
   } finally {
-    loadingCategories.value = false;
+    loadingCategories.value = false
   }
 }
 
 async function loadArticles() {
-  loadingArticles.value = true;
+  loadingArticles.value = true
   try {
     const params: any = {
       page: currentPage.value,
       page_size: pageSize.value,
-    };
-    if (activeCategory.value) params.category = activeCategory.value;
-    const res = await helpApi.getArticles(params);
-    articles.value = res.data?.items || [];
-    articlesTotal.value = res.data?.total || 0;
+    }
+    if (activeCategory.value) params.category = activeCategory.value
+    const res = await helpApi.getArticles(params)
+    articles.value = res.data?.items || []
+    articlesTotal.value = res.data?.total || 0
   } catch {
-    ElMessage.error("加载文档列表失败");
+    ElMessage.error('加载文档列表失败')
   } finally {
-    loadingArticles.value = false;
+    loadingArticles.value = false
   }
 }
 
 async function viewArticle(row: { id: number }) {
-  if (!row.id) return;
+  if (!row.id) return
   try {
-    const res = await helpApi.getArticle(row.id);
-    articleDetail.value = res.data || null;
-    viewMode.value = "detail";
+    const res = await helpApi.getArticle(row.id)
+    articleDetail.value = res.data || null
+    viewMode.value = 'detail'
   } catch {
-    ElMessage.error("加载文档详情失败");
+    ElMessage.error('加载文档详情失败')
   }
 }
 
 function selectCategory(key: string) {
-  activeCategory.value = key;
-  currentPage.value = 1;
-  viewMode.value = "list";
-  articleDetail.value = null;
-  loadArticles();
+  activeCategory.value = key
+  currentPage.value = 1
+  viewMode.value = 'list'
+  articleDetail.value = null
+  loadArticles()
 }
 
 function backToList() {
-  viewMode.value = "list";
-  articleDetail.value = null;
+  viewMode.value = 'list'
+  articleDetail.value = null
 }
 
 async function doSearch() {
-  const q = searchQuery.value.trim();
+  const q = searchQuery.value.trim()
   if (!q) {
-    searchResults.value = [];
-    searchTotal.value = 0;
-    return;
+    searchResults.value = []
+    searchTotal.value = 0
+    return
   }
-  searching.value = true;
+  searching.value = true
   try {
-    const res = await helpApi.search(q, 20);
-    searchResults.value = res.data?.items || [];
-    searchTotal.value = res.data?.total || 0;
+    const res = await helpApi.search(q, 20)
+    searchResults.value = res.data?.items || []
+    searchTotal.value = res.data?.total || 0
   } catch {
-    ElMessage.error("搜索失败");
+    ElMessage.error('搜索失败')
   } finally {
-    searching.value = false;
+    searching.value = false
   }
 }
 
 function clearSearch() {
-  searchQuery.value = "";
-  searchResults.value = [];
-  searchTotal.value = 0;
+  searchQuery.value = ''
+  searchResults.value = []
+  searchTotal.value = 0
 }
 
 function highlightKeyword(snippet: string): string {
-  if (!searchQuery.value) return snippet;
-  const escaped = searchQuery.value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (!searchQuery.value) return snippet
+  const escaped = searchQuery.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   return snippet.replace(
-    new RegExp(`(${escaped})`, "gi"),
-    '<span style="background:#fff3cd;padding:0 2px;border-radius:2px">$1</span>',
-  );
+    new RegExp(`(${escaped})`, 'gi'),
+    '<span style="background:#fff3cd;padding:0 2px;border-radius:2px">$1</span>'
+  )
 }
 
 async function loadSystemInfo() {
   try {
-    const res = await helpApi.getSystemInfo();
-    systemInfo.value = res.data || null;
+    const res = await helpApi.getSystemInfo()
+    systemInfo.value = res.data || null
   } catch {
     // 系统信息非必须，静默失败
   }
 }
 
 onMounted(() => {
-  loadCategories();
-  loadArticles();
-  loadSystemInfo();
-});
+  loadCategories()
+  loadArticles()
+  loadSystemInfo()
+})
 </script>
 
 <style scoped lang="scss">

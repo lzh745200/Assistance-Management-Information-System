@@ -20,27 +20,17 @@
     <div class="step-content">
       <!-- 步骤1: 基础信息 -->
       <div v-show="currentStep === 0" class="step-panel">
-        <el-form
-          :model="formData.basicInfo"
-          label-width="140px"
-          class="entry-form"
-        >
+        <el-form :model="formData.basicInfo" label-width="140px" class="entry-form">
           <h3 class="form-section-title">部门与单位信息</h3>
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="部门单位" required>
-                <el-input
-                  v-model="formData.basicInfo.department"
-                  placeholder="请输入部门单位"
-                />
+                <el-input v-model="formData.basicInfo.department" placeholder="请输入部门单位" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="具体帮扶单位" required>
-                <el-input
-                  v-model="formData.basicInfo.supportUnit"
-                  placeholder="请输入帮扶单位"
-                />
+                <el-input v-model="formData.basicInfo.supportUnit" placeholder="请输入帮扶单位" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -49,10 +39,7 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="帮扶村名称" required>
-                <el-input
-                  v-model="formData.basicInfo.villageName"
-                  placeholder="请输入帮扶村名称"
-                />
+                <el-input v-model="formData.basicInfo.villageName" placeholder="请输入帮扶村名称" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -81,12 +68,7 @@
                   style="width: 100%"
                   @change="onRegionChange"
                 >
-                  <el-option
-                    v-for="p in provinces"
-                    :key="p"
-                    :label="p"
-                    :value="p"
-                  />
+                  <el-option v-for="p in provinces" :key="p" :label="p" :value="p" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -112,10 +94,7 @@
           <el-row :gutter="20">
             <el-col :span="8">
               <el-form-item label="乡镇">
-                <el-input
-                  v-model="formData.basicInfo.township"
-                  placeholder="请输入乡镇"
-                />
+                <el-input v-model="formData.basicInfo.township" placeholder="请输入乡镇" />
               </el-form-item>
             </el-col>
             <el-col :span="8">
@@ -134,34 +113,25 @@
           <el-row :gutter="20">
             <el-col :span="6"
               ><el-form-item label="三区三州"
-                ><el-switch
-                  v-model="
-                    formData.basicInfo.isThreeRegionsThreeStates
-                  " /></el-form-item
+                ><el-switch v-model="formData.basicInfo.isThreeRegionsThreeStates" /></el-form-item
             ></el-col>
             <el-col :span="6"
               ><el-form-item label="边疆地区"
-                ><el-switch
-                  v-model="formData.basicInfo.isBorderArea" /></el-form-item
+                ><el-switch v-model="formData.basicInfo.isBorderArea" /></el-form-item
             ></el-col>
             <el-col :span="6"
               ><el-form-item label="民族地区"
-                ><el-switch
-                  v-model="formData.basicInfo.isEthnicArea" /></el-form-item
+                ><el-switch v-model="formData.basicInfo.isEthnicArea" /></el-form-item
             ></el-col>
             <el-col :span="6"
               ><el-form-item label="革命地区"
-                ><el-switch
-                  v-model="
-                    formData.basicInfo.isRevolutionaryArea
-                  " /></el-form-item
+                ><el-switch v-model="formData.basicInfo.isRevolutionaryArea" /></el-form-item
             ></el-col>
           </el-row>
           <el-row :gutter="20">
             <el-col :span="6"
               ><el-form-item label="重点帮扶县"
-                ><el-switch
-                  v-model="formData.basicInfo.isKeyCounty" /></el-form-item
+                ><el-switch v-model="formData.basicInfo.isKeyCounty" /></el-form-item
             ></el-col>
           </el-row>
 
@@ -181,9 +151,7 @@
             </el-col>
           </el-row>
 
-          <h4 style="font-size: 14px; color: #1b4332; margin: 16px 0 8px">
-            村委会人员信息
-          </h4>
+          <h4 style="font-size: 14px; color: #1b4332; margin: 16px 0 8px">村委会人员信息</h4>
           <div
             v-for="(member, idx) in formData.committeeInfo.members"
             :key="'member' + idx"
@@ -192,11 +160,7 @@
             <el-row :gutter="12">
               <el-col :span="4">
                 <el-form-item label="姓名">
-                  <el-input
-                    v-model="member.name"
-                    placeholder="姓名"
-                    maxlength="20"
-                  />
+                  <el-input v-model="member.name" placeholder="姓名" maxlength="20" />
                 </el-form-item>
               </el-col>
               <el-col :span="4">
@@ -220,11 +184,7 @@
               </el-col>
               <el-col :span="5">
                 <el-form-item label="联系方式">
-                  <el-input
-                    v-model="member.phone"
-                    placeholder="手机号"
-                    maxlength="20"
-                  />
+                  <el-input v-model="member.phone" placeholder="手机号" maxlength="20" />
                 </el-form-item>
               </el-col>
               <el-col :span="3">
@@ -234,11 +194,7 @@
               </el-col>
               <el-col :span="6">
                 <el-form-item label="备注">
-                  <el-input
-                    v-model="member.remark"
-                    placeholder="备注"
-                    maxlength="50"
-                  />
+                  <el-input v-model="member.remark" placeholder="备注" maxlength="50" />
                 </el-form-item>
               </el-col>
               <el-col :span="2">
@@ -252,9 +208,7 @@
               </el-col>
             </el-row>
           </div>
-          <el-button type="primary" plain @click="addCommitteeMember"
-            >+ 添加村委会成员</el-button
-          >
+          <el-button type="primary" plain @click="addCommitteeMember">+ 添加村委会成员</el-button>
 
           <el-row :gutter="20" style="margin-top: 16px">
             <el-col :span="24">
@@ -391,11 +345,7 @@
                   style="width: 100%" /></el-form-item
             ></el-col>
           </el-row>
-          <div
-            v-for="yr in investYearRange"
-            :key="'inv' + yr"
-            class="year-data-row"
-          >
+          <div v-for="yr in investYearRange" :key="'inv' + yr" class="year-data-row">
             <el-divider content-position="left">{{ yr }}年</el-divider>
             <el-row :gutter="20">
               <el-col :span="6"
@@ -443,13 +393,9 @@
                 >{{ totalLocalInvest.toFixed(2) }}万</el-descriptions-item
               >
               <el-descriptions-item label="总投入"
-                >{{
-                  (totalMilitaryInvest + totalLocalInvest).toFixed(2)
-                }}万</el-descriptions-item
+                >{{ (totalMilitaryInvest + totalLocalInvest).toFixed(2) }}万</el-descriptions-item
               >
-              <el-descriptions-item label="到村总人次">{{
-                totalVisits
-              }}</el-descriptions-item>
+              <el-descriptions-item label="到村总人次">{{ totalVisits }}</el-descriptions-item>
             </el-descriptions>
           </div>
         </el-form>
@@ -746,28 +692,20 @@
       <div v-show="currentStep === 3" class="step-panel">
         <el-form label-width="140px" class="entry-form">
           <h3 class="form-section-title">表彰情况</h3>
-          <div
-            v-for="(honor, idx) in formData.honors"
-            :key="idx"
-            class="dynamic-row"
-          >
+          <div v-for="(honor, idx) in formData.honors" :key="idx" class="dynamic-row">
             <el-row :gutter="16">
               <el-col :span="4"
                 ><el-form-item label="级别"
                   ><el-select v-model="honor.level" style="width: 100%"
                     ><el-option label="国家级" value="国家级" /><el-option
                       label="省级"
-                      value="省级" /><el-option
-                      label="市级"
-                      value="市级" /><el-option
+                      value="省级" /><el-option label="市级" value="市级" /><el-option
                       label="其他"
                       value="其他" /></el-select></el-form-item
               ></el-col>
               <el-col :span="10"
                 ><el-form-item label="表彰名称"
-                  ><el-input
-                    v-model="honor.honorName"
-                    placeholder="请输入表彰名称" /></el-form-item
+                  ><el-input v-model="honor.honorName" placeholder="请输入表彰名称" /></el-form-item
               ></el-col>
               <el-col :span="4"
                 ><el-form-item label="年份"
@@ -795,28 +733,21 @@
               >
             </el-row>
           </div>
-          <el-button type="primary" plain @click="addHonor"
-            >+ 添加表彰记录</el-button
-          >
+          <el-button type="primary" plain @click="addHonor">+ 添加表彰记录</el-button>
 
           <h3 class="form-section-title">跨单位协作</h3>
           <el-row :gutter="20">
             <el-col :span="8"
               ><el-form-item label="跨大单位"
-                ><el-switch
-                  v-model="formData.collaboration.isCrossUnit" /></el-form-item
+                ><el-switch v-model="formData.collaboration.isCrossUnit" /></el-form-item
             ></el-col>
             <el-col :span="8"
               ><el-form-item label="跨省"
-                ><el-switch
-                  v-model="
-                    formData.collaboration.isCrossProvince
-                  " /></el-form-item
+                ><el-switch v-model="formData.collaboration.isCrossProvince" /></el-form-item
             ></el-col>
             <el-col :span="8"
               ><el-form-item label="跨市"
-                ><el-switch
-                  v-model="formData.collaboration.isCrossCity" /></el-form-item
+                ><el-switch v-model="formData.collaboration.isCrossCity" /></el-form-item
             ></el-col>
           </el-row>
           <el-form-item label="协作内容描述">
@@ -867,13 +798,9 @@
             @change="handleFileChange"
           >
             <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-            <div class="el-upload__text">
-              将文件拖到此处，或<em>点击上传</em>
-            </div>
+            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
             <template #tip>
-              <div class="el-upload__tip">
-                支持图片和文档格式，单个文件不超过20MB
-              </div>
+              <div class="el-upload__tip">支持图片和文档格式，单个文件不超过20MB</div>
             </template>
           </el-upload>
         </el-form>
@@ -883,26 +810,20 @@
     <!-- 底部操作栏 -->
     <div class="action-bar">
       <el-button v-if="currentStep > 0" @click="goPrevStep">上一步</el-button>
-      <el-button v-if="currentStep < 4" type="primary" @click="goNextStep"
-        >下一步</el-button
-      >
+      <el-button v-if="currentStep < 4" type="primary" @click="goNextStep">下一步</el-button>
       <el-button type="primary" @click="handleSaveDraft">保存草稿</el-button>
-      <el-button v-if="currentStep === 4" type="success" @click="handleSubmit"
-        >提交审核</el-button
-      >
-      <span v-if="lastSavedAt" class="auto-save-hint"
-        >自动保存于 {{ lastSavedAt }}</span
-      >
+      <el-button v-if="currentStep === 4" type="success" @click="handleSubmit">提交审核</el-button>
+      <span v-if="lastSavedAt" class="auto-save-hint">自动保存于 {{ lastSavedAt }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from "vue";
-import { UploadFilled } from "@element-plus/icons-vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import request from "@/api/request";
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { UploadFilled } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import request from '@/api/request'
 import {
   PROVINCES,
   HELP_TYPES,
@@ -912,58 +833,57 @@ import {
   MEDICAL_ACTIVITY_TYPES,
   EDUCATION_ACTIVITY_TYPES,
   detectRegionAttributes,
-} from "@/config/regionDictionary";
+} from '@/config/regionDictionary'
 import type {
   PopulationEconomicData,
   InvestmentData,
   HonorRecord,
   VillageCommitteeMember,
-} from "@/types/helpProject";
+} from '@/types/helpProject'
 
-const DRAFT_STORAGE_KEY = "comprehensive_entry_draft";
-const AUTO_SAVE_INTERVAL = 30_000; // 30秒自动保存
-let autoSaveTimer: ReturnType<typeof setInterval> | null = null;
-const lastSavedAt = ref("");
+const DRAFT_STORAGE_KEY = 'comprehensive_entry_draft'
+const AUTO_SAVE_INTERVAL = 30_000 // 30秒自动保存
+let autoSaveTimer: ReturnType<typeof setInterval> | null = null
+const lastSavedAt = ref('')
 
-const currentStep = ref(0);
-const helpTab = ref("industry");
+const currentStep = ref(0)
+const helpTab = ref('industry')
 
-const provinces = PROVINCES;
-const helpTypes = HELP_TYPES;
-const industryTypes = INDUSTRY_PROJECT_TYPES;
-const infraTypes = INFRASTRUCTURE_PROJECT_TYPES;
-const partyTypes = PARTY_BUILDING_ACTIVITY_TYPES;
-const medicalTypes = MEDICAL_ACTIVITY_TYPES;
-const educationTypes = EDUCATION_ACTIVITY_TYPES;
+const provinces = PROVINCES
+const helpTypes = HELP_TYPES
+const industryTypes = INDUSTRY_PROJECT_TYPES
+const infraTypes = INFRASTRUCTURE_PROJECT_TYPES
+const partyTypes = PARTY_BUILDING_ACTIVITY_TYPES
+const medicalTypes = MEDICAL_ACTIVITY_TYPES
+const educationTypes = EDUCATION_ACTIVITY_TYPES
 
-const currentYear = new Date().getFullYear();
+const currentYear = new Date().getFullYear()
 
-const popYearStart = ref(currentYear - 5);
-const popYearEnd = ref(currentYear);
+const popYearStart = ref(currentYear - 5)
+const popYearEnd = ref(currentYear)
 const yearRange = computed(() => {
-  const arr: number[] = [];
-  for (let y = popYearStart.value; y <= popYearEnd.value; y++) arr.push(y);
-  return arr;
-});
+  const arr: number[] = []
+  for (let y = popYearStart.value; y <= popYearEnd.value; y++) arr.push(y)
+  return arr
+})
 
-const investYearStart = ref(currentYear - 4);
-const investYearEnd = ref(currentYear);
+const investYearStart = ref(currentYear - 4)
+const investYearEnd = ref(currentYear)
 const investYearRange = computed(() => {
-  const arr: number[] = [];
-  for (let y = investYearStart.value; y <= investYearEnd.value; y++)
-    arr.push(y);
-  return arr;
-});
+  const arr: number[] = []
+  for (let y = investYearStart.value; y <= investYearEnd.value; y++) arr.push(y)
+  return arr
+})
 
 const formData = reactive({
   basicInfo: {
-    department: "",
-    supportUnit: "",
-    villageName: "",
-    province: "",
-    city: "",
-    county: "",
-    township: "",
+    department: '',
+    supportUnit: '',
+    villageName: '',
+    province: '',
+    city: '',
+    county: '',
+    township: '',
     isThreeRegionsThreeStates: false,
     isBorderArea: false,
     isEthnicArea: false,
@@ -971,7 +891,7 @@ const formData = reactive({
     isKeyCounty: false,
     isRevitalizationTier: false,
     helpStartYear: currentYear,
-    helpType: "",
+    helpType: '',
     includedInOverallPlan: false,
   },
   populationData: yearRange.value.map((y) => ({
@@ -991,34 +911,34 @@ const formData = reactive({
   })) as InvestmentData[],
   industryHelp: {
     investment: 0,
-    projectType: "",
+    projectType: '',
     projectCount: 0,
     employmentDriven: 0,
     year: currentYear,
   },
   infrastructureHelp: {
     investment: 0,
-    projectType: "",
+    projectType: '',
     projectCount: 0,
     beneficiaries: 0,
     year: currentYear,
   },
   partyBuildingHelp: {
     investment: 0,
-    activityType: "",
+    activityType: '',
     activityCount: 0,
     year: currentYear,
   },
   medicalHelp: {
     investment: 0,
-    activityType: "",
+    activityType: '',
     activityCount: 0,
     beneficiaries: 0,
     year: currentYear,
   },
   consumptionHelp: {
     purchaseAmount: 0,
-    productType: "",
+    productType: '',
     salesAmount: 0,
     year: currentYear,
   },
@@ -1030,7 +950,7 @@ const formData = reactive({
   },
   educationHelp: {
     investment: 0,
-    activityType: "",
+    activityType: '',
     activityCount: 0,
     aidedStudents: 0,
     year: currentYear,
@@ -1041,79 +961,69 @@ const formData = reactive({
     isCrossProvince: false,
     isCrossCity: false,
     collaboratingUnits: [] as string[],
-    description: "",
+    description: '',
   },
   committeeInfo: {
-    overview: "",
+    overview: '',
     members: [] as VillageCommitteeMember[],
-    specialIndustry: "",
-    collectiveIncomeDesc: "",
+    specialIndustry: '',
+    collectiveIncomeDesc: '',
     collectiveIncomeAmount: 0,
   },
-});
+})
 
-const relatedSchoolText = ref("");
-const relatedFundText = ref("");
-const fileList = ref<any[]>([]);
+const relatedSchoolText = ref('')
+const relatedFundText = ref('')
+const fileList = ref<any[]>([])
 
 const getPopData = (year: number) => {
-  return (
-    formData.populationData.find((d) => d.year === year) ||
-    formData.populationData[0]
-  );
-};
+  return formData.populationData.find((d) => d.year === year) || formData.populationData[0]
+}
 
 const getInvestData = (year: number) => {
-  return (
-    formData.investmentData.find((d) => d.year === year) ||
-    formData.investmentData[0]
-  );
-};
+  return formData.investmentData.find((d) => d.year === year) || formData.investmentData[0]
+}
 
 const totalMilitaryInvest = computed(() =>
-  formData.investmentData.reduce((s, d) => s + d.militaryInvestment, 0),
-);
+  formData.investmentData.reduce((s, d) => s + d.militaryInvestment, 0)
+)
 const totalLocalInvest = computed(() =>
-  formData.investmentData.reduce((s, d) => s + d.localInvestment, 0),
-);
+  formData.investmentData.reduce((s, d) => s + d.localInvestment, 0)
+)
 const totalVisits = computed(() =>
-  formData.investmentData.reduce(
-    (s, d) => s + d.leaderVisits + d.soldierVisits,
-    0,
-  ),
-);
+  formData.investmentData.reduce((s, d) => s + d.leaderVisits + d.soldierVisits, 0)
+)
 
 const onRegionChange = () => {
-  const { province, city, county } = formData.basicInfo;
+  const { province, city, county } = formData.basicInfo
   if (province && city && county) {
-    const attrs = detectRegionAttributes(province, city, county);
-    formData.basicInfo.isThreeRegionsThreeStates =
-      attrs.isThreeRegionsThreeStates;
-    formData.basicInfo.isBorderArea = attrs.isBorderArea;
-    formData.basicInfo.isEthnicArea = attrs.isEthnicArea;
-    formData.basicInfo.isRevolutionaryArea = attrs.isRevolutionaryArea;
-    formData.basicInfo.isKeyCounty = attrs.isKeyCounty;
+    const attrs = detectRegionAttributes(province, city, county)
+    formData.basicInfo.isThreeRegionsThreeStates = attrs.isThreeRegionsThreeStates
+    formData.basicInfo.isBorderArea = attrs.isBorderArea
+    formData.basicInfo.isEthnicArea = attrs.isEthnicArea
+    formData.basicInfo.isRevolutionaryArea = attrs.isRevolutionaryArea
+    formData.basicInfo.isKeyCounty = attrs.isKeyCounty
   }
-};
+}
 
 const addHonor = () => {
   formData.honors.push({
-    level: "省级",
-    honorName: "",
+    level: '省级',
+    honorName: '',
     year: currentYear,
-    recipient: "",
-  });
-};
+    recipient: '',
+  })
+}
 
 const addCommitteeMember = () => {
   formData.committeeInfo.members.push({
-    name: "",
-    position: "",
-    phone: "",
+    name: '',
+    position: '',
+    phone: '',
     isVeteran: false,
-    remark: "",
-  });
-};
+    remark: '',
+  })
+}
 
 watch(yearRange, (newRange) => {
   for (const y of newRange) {
@@ -1125,14 +1035,12 @@ watch(yearRange, (newRange) => {
         povertyAlleviatedPopulation: 0,
         perCapitaIncome: 0,
         collectiveEconomyIncome: 0,
-      });
+      })
     }
   }
-  formData.populationData = formData.populationData.filter((d) =>
-    newRange.includes(d.year),
-  );
-  formData.populationData.sort((a, b) => a.year - b.year);
-});
+  formData.populationData = formData.populationData.filter((d) => newRange.includes(d.year))
+  formData.populationData.sort((a, b) => a.year - b.year)
+})
 
 watch(investYearRange, (newRange) => {
   for (const y of newRange) {
@@ -1143,18 +1051,16 @@ watch(investYearRange, (newRange) => {
         localInvestment: 0,
         leaderVisits: 0,
         soldierVisits: 0,
-      });
+      })
     }
   }
-  formData.investmentData = formData.investmentData.filter((d) =>
-    newRange.includes(d.year),
-  );
-  formData.investmentData.sort((a, b) => a.year - b.year);
-});
+  formData.investmentData = formData.investmentData.filter((d) => newRange.includes(d.year))
+  formData.investmentData.sort((a, b) => a.year - b.year)
+})
 
 const handleFileChange = (_file: any) => {
   // 文件处理逻辑
-};
+}
 
 // ==================== 自动保存草稿 ====================
 function saveDraftToLocal() {
@@ -1169,9 +1075,9 @@ function saveDraftToLocal() {
       relatedSchoolText: relatedSchoolText.value,
       relatedFundText: relatedFundText.value,
       savedAt: new Date().toISOString(),
-    };
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
-    lastSavedAt.value = new Date().toLocaleTimeString();
+    }
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
+    lastSavedAt.value = new Date().toLocaleTimeString()
   } catch {
     // localStorage 写满或不可用，静默忽略
   }
@@ -1179,159 +1085,145 @@ function saveDraftToLocal() {
 
 function loadDraftFromLocal() {
   try {
-    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
-    if (!raw) return;
-    const draft = JSON.parse(raw);
-    if (!draft?.formData?.basicInfo) return;
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY)
+    if (!raw) return
+    const draft = JSON.parse(raw)
+    if (!draft?.formData?.basicInfo) return
 
     // 检查草稿是否超过7天
     if (draft.savedAt) {
-      const savedDate = new Date(draft.savedAt);
-      const diffDays =
-        (Date.now() - savedDate.getTime()) / (1000 * 60 * 60 * 24);
+      const savedDate = new Date(draft.savedAt)
+      const diffDays = (Date.now() - savedDate.getTime()) / (1000 * 60 * 60 * 24)
       if (diffDays > 7) {
-        localStorage.removeItem(DRAFT_STORAGE_KEY);
-        return;
+        localStorage.removeItem(DRAFT_STORAGE_KEY)
+        return
       }
     }
 
-    Object.assign(formData.basicInfo, draft.formData.basicInfo);
-    Object.assign(formData.committeeInfo, draft.formData.committeeInfo);
-    Object.assign(formData.industryHelp, draft.formData.industryHelp);
-    Object.assign(
-      formData.infrastructureHelp,
-      draft.formData.infrastructureHelp,
-    );
-    Object.assign(formData.partyBuildingHelp, draft.formData.partyBuildingHelp);
-    Object.assign(formData.medicalHelp, draft.formData.medicalHelp);
-    Object.assign(formData.consumptionHelp, draft.formData.consumptionHelp);
-    Object.assign(formData.employmentHelp, draft.formData.employmentHelp);
-    Object.assign(formData.educationHelp, draft.formData.educationHelp);
-    Object.assign(formData.collaboration, draft.formData.collaboration);
-    if (draft.formData.honors) formData.honors = draft.formData.honors;
-    if (draft.formData.populationData)
-      formData.populationData = draft.formData.populationData;
-    if (draft.formData.investmentData)
-      formData.investmentData = draft.formData.investmentData;
+    Object.assign(formData.basicInfo, draft.formData.basicInfo)
+    Object.assign(formData.committeeInfo, draft.formData.committeeInfo)
+    Object.assign(formData.industryHelp, draft.formData.industryHelp)
+    Object.assign(formData.infrastructureHelp, draft.formData.infrastructureHelp)
+    Object.assign(formData.partyBuildingHelp, draft.formData.partyBuildingHelp)
+    Object.assign(formData.medicalHelp, draft.formData.medicalHelp)
+    Object.assign(formData.consumptionHelp, draft.formData.consumptionHelp)
+    Object.assign(formData.employmentHelp, draft.formData.employmentHelp)
+    Object.assign(formData.educationHelp, draft.formData.educationHelp)
+    Object.assign(formData.collaboration, draft.formData.collaboration)
+    if (draft.formData.honors) formData.honors = draft.formData.honors
+    if (draft.formData.populationData) formData.populationData = draft.formData.populationData
+    if (draft.formData.investmentData) formData.investmentData = draft.formData.investmentData
 
-    if (draft.currentStep != null) currentStep.value = draft.currentStep;
-    if (draft.popYearStart) popYearStart.value = draft.popYearStart;
-    if (draft.popYearEnd) popYearEnd.value = draft.popYearEnd;
-    if (draft.investYearStart) investYearStart.value = draft.investYearStart;
-    if (draft.investYearEnd) investYearEnd.value = draft.investYearEnd;
-    if (draft.relatedSchoolText)
-      relatedSchoolText.value = draft.relatedSchoolText;
-    if (draft.relatedFundText) relatedFundText.value = draft.relatedFundText;
+    if (draft.currentStep != null) currentStep.value = draft.currentStep
+    if (draft.popYearStart) popYearStart.value = draft.popYearStart
+    if (draft.popYearEnd) popYearEnd.value = draft.popYearEnd
+    if (draft.investYearStart) investYearStart.value = draft.investYearStart
+    if (draft.investYearEnd) investYearEnd.value = draft.investYearEnd
+    if (draft.relatedSchoolText) relatedSchoolText.value = draft.relatedSchoolText
+    if (draft.relatedFundText) relatedFundText.value = draft.relatedFundText
 
-    ElMessage.info(
-      `已恢复上次草稿（保存于 ${new Date(draft.savedAt).toLocaleString()}）`,
-    );
+    ElMessage.info(`已恢复上次草稿（保存于 ${new Date(draft.savedAt).toLocaleString()}）`)
   } catch {
     // 解析失败则忽略
   }
 }
 
 function clearDraft() {
-  localStorage.removeItem(DRAFT_STORAGE_KEY);
-  lastSavedAt.value = "";
+  localStorage.removeItem(DRAFT_STORAGE_KEY)
+  lastSavedAt.value = ''
 }
 
 // ==================== 步骤校验 ====================
 function validateCurrentStep(): boolean {
   if (currentStep.value === 0) {
-    const b = formData.basicInfo;
+    const b = formData.basicInfo
     if (!b.department?.trim()) {
-      ElMessage.warning("请填写部门单位");
-      return false;
+      ElMessage.warning('请填写部门单位')
+      return false
     }
     if (!b.supportUnit?.trim()) {
-      ElMessage.warning("请填写帮扶单位");
-      return false;
+      ElMessage.warning('请填写帮扶单位')
+      return false
     }
     if (!b.villageName?.trim()) {
-      ElMessage.warning("请填写帮扶村名称");
-      return false;
+      ElMessage.warning('请填写帮扶村名称')
+      return false
     }
     if (!b.helpType) {
-      ElMessage.warning("请选择帮扶类型");
-      return false;
+      ElMessage.warning('请选择帮扶类型')
+      return false
     }
     if (!b.province) {
-      ElMessage.warning("请选择省份");
-      return false;
+      ElMessage.warning('请选择省份')
+      return false
     }
   }
-  return true;
+  return true
 }
 
 function goNextStep() {
-  if (!validateCurrentStep()) return;
+  if (!validateCurrentStep()) return
   if (currentStep.value < 4) {
-    currentStep.value++;
-    saveDraftToLocal();
+    currentStep.value++
+    saveDraftToLocal()
   }
 }
 
 function goPrevStep() {
   if (currentStep.value > 0) {
-    currentStep.value--;
-    saveDraftToLocal();
+    currentStep.value--
+    saveDraftToLocal()
   }
 }
 
 const handleSaveDraft = async () => {
-  saveDraftToLocal();
+  saveDraftToLocal()
   try {
-    await submitVillageData();
-    ElMessage.success("草稿已保存到服务器");
+    await submitVillageData()
+    ElMessage.success('草稿已保存到服务器')
   } catch (e: any) {
-    ElMessage.success("草稿已保存到本地");
+    ElMessage.success('草稿已保存到本地')
   }
-};
+}
 
 const handleSubmit = async () => {
   // 提交前校验基础信息
-  if (
-    !formData.basicInfo.department?.trim() ||
-    !formData.basicInfo.villageName?.trim()
-  ) {
-    ElMessage.warning("请先完善基础信息（部门和帮扶村名称为必填项）");
-    currentStep.value = 0;
-    return;
+  if (!formData.basicInfo.department?.trim() || !formData.basicInfo.villageName?.trim()) {
+    ElMessage.warning('请先完善基础信息（部门和帮扶村名称为必填项）')
+    currentStep.value = 0
+    return
   }
   try {
-    await ElMessageBox.confirm(
-      "确认提交数据进行审核？提交后将清除本地草稿。",
-      "提交确认",
-      { type: "info" },
-    );
-    await submitVillageData();
-    clearDraft();
-    ElMessage.success("数据已提交审核");
-    currentStep.value = 0;
+    await ElMessageBox.confirm('确认提交数据进行审核？提交后将清除本地草稿。', '提交确认', {
+      type: 'info',
+    })
+    await submitVillageData()
+    clearDraft()
+    ElMessage.success('数据已提交审核')
+    currentStep.value = 0
   } catch (e: any) {
-    if (e !== "cancel") {
-      ElMessage.error(e?.response?.data?.detail || "提交失败");
+    if (e !== 'cancel') {
+      ElMessage.error(e?.response?.data?.detail || '提交失败')
     }
   }
-};
+}
 
 onMounted(() => {
-  loadDraftFromLocal();
-  autoSaveTimer = setInterval(saveDraftToLocal, AUTO_SAVE_INTERVAL);
-});
+  loadDraftFromLocal()
+  autoSaveTimer = setInterval(saveDraftToLocal, AUTO_SAVE_INTERVAL)
+})
 
 onUnmounted(() => {
-  if (autoSaveTimer) clearInterval(autoSaveTimer);
-});
+  if (autoSaveTimer) clearInterval(autoSaveTimer)
+})
 
 async function submitVillageData() {
-  const b = formData.basicInfo;
+  const b = formData.basicInfo
   const payload = {
     department: b.department,
     support_unit: b.supportUnit,
     village_name: b.villageName,
-    province: "贵州省",
+    province: '贵州省',
     city: b.city || undefined,
     county: b.county || undefined,
     township: b.township || undefined,
@@ -1342,12 +1234,12 @@ async function submitVillageData() {
     is_key_county: b.isKeyCounty,
     is_revitalization_tier: b.isRevitalizationTier || undefined,
     is_in_overall_plan: b.includedInOverallPlan,
-  };
-  const res = await request.post("/supported-villages", payload);
-  const village = res.data;
-  const villageId = village?.id || village?.data?.id;
+  }
+  const res = await request.post('/supported-villages', payload)
+  const village = res.data
+  const villageId = village?.id || village?.data?.id
 
-  if (!villageId) return village;
+  if (!villageId) return village
 
   // 提交每年的人口数据和收入数据
   for (const pop of formData.populationData) {
@@ -1356,14 +1248,14 @@ async function submitVillageData() {
         year: pop.year,
         total_population: pop.totalPopulation,
         total_households: pop.households,
-      });
+      })
     }
     if (pop.perCapitaIncome > 0 || pop.collectiveEconomyIncome > 0) {
       await request.post(`/supported-villages/${villageId}/income`, {
         year: pop.year,
         per_capita_income: pop.perCapitaIncome,
         collective_income: pop.collectiveEconomyIncome,
-      });
+      })
     }
   }
 
@@ -1374,11 +1266,11 @@ async function submitVillageData() {
         year: inv.year,
         senior_leader_visits: inv.leaderVisits,
         unit_soldier_visits: inv.soldierVisits,
-      });
+      })
     }
   }
 
-  return village;
+  return village
 }
 </script>
 

@@ -7,5 +7,5 @@
   ></el-card>
 </template>
 <script setup lang="ts">
-defineProps<{ title?: string; height?: number }>();
+defineProps<{ title?: string; height?: number }>()
 </script>

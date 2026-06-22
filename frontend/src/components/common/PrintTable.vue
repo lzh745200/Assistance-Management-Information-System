@@ -40,51 +40,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { escapeHtml, sanitizeHtml } from "@/utils/sanitize";
+import { ref, computed } from 'vue'
+import { escapeHtml, sanitizeHtml } from '@/utils/sanitize'
 
 interface Column {
-  key: string;
-  label: string;
+  key: string
+  label: string
 }
 
 interface Props {
-  data: any[];
-  columns: Column[];
-  title: string;
-  visible: boolean;
+  data: any[]
+  columns: Column[]
+  title: string
+  visible: boolean
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits(["close"]);
+const props = defineProps<Props>()
+const emit = defineEmits(['close'])
 
-const printContent = ref<HTMLElement>();
+const printContent = ref<HTMLElement>()
 
 const printTime = computed(() => {
-  return new Date().toLocaleString("zh-CN");
-});
+  return new Date().toLocaleString('zh-CN')
+})
 
 const getCellValue = (item: any, key: string) => {
-  const keys = key.split(".");
-  let value = item;
+  const keys = key.split('.')
+  let value = item
   for (const k of keys) {
-    if (value && typeof value === "object") {
-      value = value[k];
+    if (value && typeof value === 'object') {
+      value = value[k]
     } else {
-      return "";
+      return ''
     }
   }
-  return value || "";
-};
+  return value || ''
+}
 
 const handlePrint = () => {
-  if (!printContent.value) return;
+  if (!printContent.value) return
 
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
 
   // Escape title to prevent XSS
-  const safeTitle = escapeHtml(props.title);
+  const safeTitle = escapeHtml(props.title)
 
   const styles = `
     <style>
@@ -130,14 +130,14 @@ const handlePrint = () => {
         .print-actions { display: none; }
       }
     </style>
-  `;
+  `
 
   const content = `
     <div class="print-header">
       <h2>${safeTitle}</h2>
     </div>
     ${sanitizeHtml(printContent.value.innerHTML)}
-  `;
+  `
 
   printWindow.document.write(`
     <html>
@@ -154,16 +154,16 @@ const handlePrint = () => {
               window.close();
             };
           };
-        ${"<"}/script>
+        ${'<'}/script>
       </body>
     </html>
-  `);
-  printWindow.document.close();
-};
+  `)
+  printWindow.document.close()
+}
 
 const handleClose = () => {
-  emit("close");
-};
+  emit('close')
+}
 </script>
 
 <style scoped>

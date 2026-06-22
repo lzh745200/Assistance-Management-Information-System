@@ -47,17 +47,8 @@
         </div>
       </div>
 
-      <el-table
-        v-loading="loading"
-        :data="anomalies"
-        size="default"
-        class="mt-3"
-      >
-        <el-table-column
-          prop="anomaly_type_label"
-          label="异常类型"
-          width="120"
-        />
+      <el-table v-loading="loading" :data="anomalies" size="default" class="mt-3">
+        <el-table-column prop="anomaly_type_label" label="异常类型" width="120" />
         <el-table-column label="严重程度" width="100">
           <template #default="{ row }">
             <el-tag
@@ -82,30 +73,21 @@
         />
         <el-table-column prop="detected_at" label="检测时间" width="160">
           <template #default="{ row }">{{
-            row.detected_at?.slice(0, 19).replace("T", " ")
+            row.detected_at?.slice(0, 19).replace('T', ' ')
           }}</template>
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.resolved ? 'success' : 'danger'" size="small">
-              {{ row.resolved ? "已处理" : "未处理" }}
+              {{ row.resolved ? '已处理' : '未处理' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="resolved_by" label="处理人" width="100" />
-        <el-table-column
-          prop="resolution"
-          label="处理说明"
-          width="200"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="resolution" label="处理说明" width="200" show-overflow-tooltip />
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
-            <el-button
-              v-if="!row.resolved"
-              size="small"
-              type="primary"
-              @click="openResolve(row)"
+            <el-button v-if="!row.resolved" size="small" type="primary" @click="openResolve(row)"
               >处理</el-button
             >
           </template>
@@ -126,98 +108,85 @@
     <!-- 处理对话框 -->
     <el-dialog v-model="resolveDialogVisible" title="处理异常" width="500px">
       <p class="anomaly-desc">{{ currentAnomaly?.description }}</p>
-      <el-input
-        v-model="resolution"
-        type="textarea"
-        :rows="3"
-        placeholder="请输入处理说明"
-      />
+      <el-input v-model="resolution" type="textarea" :rows="3" placeholder="请输入处理说明" />
       <template #footer>
         <el-button @click="resolveDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="handleResolve"
-          >确认处理</el-button
-        >
+        <el-button type="primary" :loading="loading" @click="handleResolve">确认处理</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { ElMessage } from "element-plus";
-import { fundLifecycleApi } from "@/api/fundLifecycle";
-import { safeRouteParam } from "@/composables/useRouterSafe";
+import { ref, reactive, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { fundLifecycleApi } from '@/api/fundLifecycle'
+import { safeRouteParam } from '@/composables/useRouterSafe'
 
-const route = useRoute();
-const projectId = route.query.project_id
-  ? safeRouteParam(route.query.project_id)
-  : undefined;
+const route = useRoute()
+const projectId = route.query.project_id ? safeRouteParam(route.query.project_id) : undefined
 
-const loading = ref(false);
-const anomalies = ref<any[]>([]);
-const total = ref(0);
-const page = ref(1);
-const pageSize = 20;
+const loading = ref(false)
+const anomalies = ref<any[]>([])
+const total = ref(0)
+const page = ref(1)
+const pageSize = 20
 const filters = reactive({
-  severity: "",
-  anomaly_type: "",
+  severity: '',
+  anomaly_type: '',
   resolved: undefined as number | undefined,
-});
-const resolveDialogVisible = ref(false);
-const currentAnomaly = ref<any>(null);
-const resolution = ref("");
+})
+const resolveDialogVisible = ref(false)
+const currentAnomaly = ref<any>(null)
+const resolution = ref('')
 
 async function loadData() {
-  loading.value = true;
+  loading.value = true
   try {
     const params: Record<string, any> = {
       page: page.value,
       page_size: pageSize,
-    };
-    if (projectId) params.project_id = projectId;
-    if (filters.severity) params.severity = filters.severity;
-    if (filters.anomaly_type) params.anomaly_type = filters.anomaly_type;
-    if (filters.resolved !== undefined)
-      params.resolved = filters.resolved === 1;
-    const data = await fundLifecycleApi.listAnomalies(params);
-    anomalies.value = data.items || [];
-    total.value = data.total || 0;
+    }
+    if (projectId) params.project_id = projectId
+    if (filters.severity) params.severity = filters.severity
+    if (filters.anomaly_type) params.anomaly_type = filters.anomaly_type
+    if (filters.resolved !== undefined) params.resolved = filters.resolved === 1
+    const data = await fundLifecycleApi.listAnomalies(params)
+    anomalies.value = data.items || []
+    total.value = data.total || 0
   } catch {
-    ElMessage.error("加载失败");
+    ElMessage.error('加载失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function openResolve(row: any) {
-  currentAnomaly.value = row;
-  resolution.value = "";
-  resolveDialogVisible.value = true;
+  currentAnomaly.value = row
+  resolution.value = ''
+  resolveDialogVisible.value = true
 }
 
 async function handleResolve() {
   if (!resolution.value.trim()) {
-    ElMessage.warning("请输入处理说明");
-    return;
+    ElMessage.warning('请输入处理说明')
+    return
   }
-  loading.value = true;
+  loading.value = true
   try {
-    await fundLifecycleApi.resolveAnomaly(
-      currentAnomaly.value.id,
-      resolution.value,
-    );
-    ElMessage.success("已标记为已处理");
-    resolveDialogVisible.value = false;
-    await loadData();
+    await fundLifecycleApi.resolveAnomaly(currentAnomaly.value.id, resolution.value)
+    ElMessage.success('已标记为已处理')
+    resolveDialogVisible.value = false
+    await loadData()
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || "处理失败");
+    ElMessage.error(e?.response?.data?.detail || '处理失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-onMounted(loadData);
+onMounted(loadData)
 </script>
 
 <style scoped>

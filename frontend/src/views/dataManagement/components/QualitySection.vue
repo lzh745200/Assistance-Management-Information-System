@@ -62,11 +62,7 @@
           <template #default="{ row }">
             <el-tag
               :type="
-                row.status === 'pass'
-                  ? 'success'
-                  : row.status === 'warning'
-                    ? 'warning'
-                    : 'danger'
+                row.status === 'pass' ? 'success' : row.status === 'warning' ? 'warning' : 'danger'
               "
               size="small"
             >
@@ -76,9 +72,7 @@
         </el-table-column>
         <el-table-column label="问题数" width="100">
           <template #default="{ row }">
-            <span :class="{ 'text-danger': row.issues > 0 }">{{
-              row.issues
-            }}</span>
+            <span :class="{ 'text-danger': row.issues > 0 }">{{ row.issues }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="100">
@@ -111,12 +105,7 @@
       </el-table>
       <template #footer>
         <el-button @click="showIssuesDialog = false">关闭</el-button>
-        <el-button
-          type="primary"
-          :loading="fixing"
-          :disabled="!canAutoFix"
-          @click="handleAutoFix"
-        >
+        <el-button type="primary" :loading="fixing" :disabled="!canAutoFix" @click="handleAutoFix">
           自动修复
         </el-button>
       </template>
@@ -126,174 +115,163 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed } from "vue";
-import { ElMessage } from "element-plus";
-import { Search } from "@element-plus/icons-vue";
+import { ref, computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
 
 interface QualityStats {
-  totalRecords: number;
-  validRecords: number;
-  invalidRecords: number;
-  completenessRate: number;
-  lastCheckTime: string;
+  totalRecords: number
+  validRecords: number
+  invalidRecords: number
+  completenessRate: number
+  lastCheckTime: string
 }
 
 interface CheckItem {
-  id: string;
-  name: string;
-  description: string;
-  status: "pass" | "warning" | "fail" | "pending";
-  issues: number;
+  id: string
+  name: string
+  description: string
+  status: 'pass' | 'warning' | 'fail' | 'pending'
+  issues: number
 }
 
 interface IssueDetail {
-  record_id: number;
-  field: string;
-  issue: string;
-  suggestion: string;
+  record_id: number
+  field: string
+  issue: string
+  suggestion: string
 }
 
 const props = defineProps<{
-  stats: QualityStats;
-}>();
+  stats: QualityStats
+}>()
 
 // 状态
-const checking = ref(false);
-const fixing = ref(false);
-const showIssuesDialog = ref(false);
-const selectedCheck = ref<CheckItem | null>(null);
-const issueDetails = ref<IssueDetail[]>([]);
-const canAutoFix = ref(false);
+const checking = ref(false)
+const fixing = ref(false)
+const showIssuesDialog = ref(false)
+const selectedCheck = ref<CheckItem | null>(null)
+const issueDetails = ref<IssueDetail[]>([])
+const canAutoFix = ref(false)
 
 // 检查项列表
 const checkItems = ref<CheckItem[]>([
   {
-    id: "required_fields",
-    name: "必填字段检查",
-    description: "检查帮扶村名称、部门、帮扶单位等必填字段是否完整",
-    status: "pass",
+    id: 'required_fields',
+    name: '必填字段检查',
+    description: '检查帮扶村名称、部门、帮扶单位等必填字段是否完整',
+    status: 'pass',
     issues: 0,
   },
   {
-    id: "data_format",
-    name: "数据格式检查",
-    description: "检查日期、数值、枚举等字段的格式是否正确",
-    status: "pass",
+    id: 'data_format',
+    name: '数据格式检查',
+    description: '检查日期、数值、枚举等字段的格式是否正确',
+    status: 'pass',
     issues: 0,
   },
   {
-    id: "region_validity",
-    name: "地区有效性检查",
-    description: "检查县/市是否在黔南州12个县市范围内",
-    status: "pass",
+    id: 'region_validity',
+    name: '地区有效性检查',
+    description: '检查县/市是否在黔南州12个县市范围内',
+    status: 'pass',
     issues: 0,
   },
   {
-    id: "data_consistency",
-    name: "数据一致性检查",
-    description: "检查关联数据的一致性，如年度数据与主记录的关联",
-    status: "pass",
+    id: 'data_consistency',
+    name: '数据一致性检查',
+    description: '检查关联数据的一致性，如年度数据与主记录的关联',
+    status: 'pass',
     issues: 0,
   },
   {
-    id: "duplicate_check",
-    name: "重复数据检查",
-    description: "检查是否存在重复的帮扶村记录",
-    status: "pass",
+    id: 'duplicate_check',
+    name: '重复数据检查',
+    description: '检查是否存在重复的帮扶村记录',
+    status: 'pass',
     issues: 0,
   },
   {
-    id: "calculation_check",
-    name: "计算正确性检查",
-    description: "检查合计、汇总等计算字段是否正确",
-    status: "pass",
+    id: 'calculation_check',
+    name: '计算正确性检查',
+    description: '检查合计、汇总等计算字段是否正确',
+    status: 'pass',
     issues: 0,
   },
-]);
+])
 
 // 计算属性
 const validRate = computed(() => {
-  if (props.stats.totalRecords === 0) return 0;
-  return ((props.stats.validRecords / props.stats.totalRecords) * 100).toFixed(
-    1,
-  );
-});
+  if (props.stats.totalRecords === 0) return 0
+  return ((props.stats.validRecords / props.stats.totalRecords) * 100).toFixed(1)
+})
 
 const invalidRate = computed(() => {
-  if (props.stats.totalRecords === 0) return 0;
-  return (
-    (props.stats.invalidRecords / props.stats.totalRecords) *
-    100
-  ).toFixed(1);
-});
+  if (props.stats.totalRecords === 0) return 0
+  return ((props.stats.invalidRecords / props.stats.totalRecords) * 100).toFixed(1)
+})
 
 // 获取状态文本
 function getStatusText(status: string): string {
   const statusMap: Record<string, string> = {
-    pass: "通过",
-    warning: "警告",
-    fail: "失败",
-    pending: "待检查",
-  };
-  return statusMap[status] || status;
+    pass: '通过',
+    warning: '警告',
+    fail: '失败',
+    pending: '待检查',
+  }
+  return statusMap[status] || status
 }
 
 // 执行检查
 async function handleCheck() {
-  checking.value = true;
+  checking.value = true
   try {
     // 模拟检查过程
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
     // 模拟检查结果
     checkItems.value = checkItems.value.map((item) => ({
       ...item,
-      status:
-        Math.random() > 0.3 ? "pass" : Math.random() > 0.5 ? "warning" : "fail",
+      status: Math.random() > 0.3 ? 'pass' : Math.random() > 0.5 ? 'warning' : 'fail',
       issues: Math.random() > 0.3 ? 0 : Math.floor(Math.random() * 10),
-    }));
+    }))
 
-    ElMessage.success("数据质量检查完成");
+    ElMessage.success('数据质量检查完成')
   } catch (error) {
-    ElMessage.error("检查失败");
+    ElMessage.error('检查失败')
   } finally {
-    checking.value = false;
+    checking.value = false
   }
 }
 
 // 查看问题详情
 function handleViewIssues(check: CheckItem) {
-  selectedCheck.value = check;
+  selectedCheck.value = check
 
   // 模拟问题详情
   issueDetails.value = Array.from({ length: check.issues }, (_, i) => ({
     record_id: 1000 + i,
-    field: ["village_name", "department", "county", "support_unit"][
-      Math.floor(Math.random() * 4)
-    ],
-    issue: ["字段为空", "格式不正确", "值超出范围", "数据不一致"][
-      Math.floor(Math.random() * 4)
-    ],
-    suggestion: "请检查并修正该字段的值",
-  }));
+    field: ['village_name', 'department', 'county', 'support_unit'][Math.floor(Math.random() * 4)],
+    issue: ['字段为空', '格式不正确', '值超出范围', '数据不一致'][Math.floor(Math.random() * 4)],
+    suggestion: '请检查并修正该字段的值',
+  }))
 
-  canAutoFix.value =
-    check.id === "data_format" || check.id === "calculation_check";
-  showIssuesDialog.value = true;
+  canAutoFix.value = check.id === 'data_format' || check.id === 'calculation_check'
+  showIssuesDialog.value = true
 }
 
 // 自动修复
 async function handleAutoFix() {
-  fixing.value = true;
+  fixing.value = true
   try {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    ElMessage.success("自动修复完成");
-    showIssuesDialog.value = false;
-    handleCheck();
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    ElMessage.success('自动修复完成')
+    showIssuesDialog.value = false
+    handleCheck()
   } catch (error) {
-    ElMessage.error("修复失败");
+    ElMessage.error('修复失败')
   } finally {
-    fixing.value = false;
+    fixing.value = false
   }
 }
 </script>

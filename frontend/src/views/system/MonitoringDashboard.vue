@@ -4,9 +4,7 @@
     <div class="page-header">
       <h2 class="page-title">系统监控面板</h2>
       <div class="header-right">
-        <span v-if="lastUpdated" class="last-updated"
-          >🕐 更新于 {{ lastUpdated }}</span
-        >
+        <span v-if="lastUpdated" class="last-updated">🕐 更新于 {{ lastUpdated }}</span>
         <div class="health-badge" :class="scoreBadgeClass">
           <span class="health-score-num">{{ healthScore }}</span>
           <span class="health-score-label">分</span>
@@ -20,9 +18,7 @@
         >
           刷新
         </el-button>
-        <el-button :icon="Download" size="small" @click="exportData">
-          导出
-        </el-button>
+        <el-button :icon="Download" size="small" @click="exportData"> 导出 </el-button>
       </div>
     </div>
 
@@ -99,9 +95,7 @@
       <div class="chart-panel">
         <div class="panel-header">
           <span>📊 API 请求统计（近24小时）</span>
-          <el-tag v-if="apiStats.length === 0" type="warning" size="small"
-            >无数据</el-tag
-          >
+          <el-tag v-if="apiStats.length === 0" type="warning" size="small">无数据</el-tag>
         </div>
         <div ref="chartRef" class="chart-container" />
         <el-empty
@@ -133,11 +127,7 @@
             <span class="log-level">{{ log.level.toUpperCase() }}</span>
             <span class="log-message">{{ log.message }}</span>
           </div>
-          <el-empty
-            v-if="filteredLogs.length === 0"
-            description="暂无匹配日志"
-            :image-size="32"
-          />
+          <el-empty v-if="filteredLogs.length === 0" description="暂无匹配日志" :image-size="32" />
         </div>
       </div>
     </div>
@@ -145,32 +135,26 @@
     <!-- ── Bottom: Collapsible Health Checks ── -->
     <div class="health-section">
       <div class="health-header" @click="healthExpanded = !healthExpanded">
-        <span class="toggle-icon">{{ healthExpanded ? "▼" : "▶" }}</span>
+        <span class="toggle-icon">{{ healthExpanded ? '▼' : '▶' }}</span>
         <span>🩺 系统健康检查</span>
         <el-tag
-          :type="
-            healthScore >= 80
-              ? 'success'
-              : healthScore >= 60
-                ? 'warning'
-                : 'danger'
-          "
+          :type="healthScore >= 80 ? 'success' : healthScore >= 60 ? 'warning' : 'danger'"
           size="small"
           effect="dark"
           style="margin-left: 12px"
         >
           {{
             healthScore >= 90
-              ? "极佳"
+              ? '极佳'
               : healthScore >= 80
-                ? "良好"
+                ? '良好'
                 : healthScore >= 60
-                  ? "需关注"
-                  : "异常"
+                  ? '需关注'
+                  : '异常'
           }}
         </el-tag>
         <span class="health-toggle-hint">
-          {{ healthExpanded ? "点击收起" : "点击展开" }}
+          {{ healthExpanded ? '点击收起' : '点击展开' }}
         </span>
       </div>
       <div v-show="healthExpanded" class="health-body">
@@ -178,9 +162,7 @@
           <h4>基础检查</h4>
           <div v-for="item in basicChecks" :key="item.name" class="check-item">
             <el-icon :size="16">
-              <component
-                :is="item.passed ? CircleCheckFilled : CircleCloseFilled"
-              />
+              <component :is="item.passed ? CircleCheckFilled : CircleCloseFilled" />
             </el-icon>
             <span class="check-name">{{ item.name }}</span>
             <span class="check-detail">{{ item.detail }}</span>
@@ -188,15 +170,9 @@
         </div>
         <div class="check-group">
           <h4>性能检查</h4>
-          <div
-            v-for="item in performanceChecks"
-            :key="item.name"
-            class="check-item"
-          >
+          <div v-for="item in performanceChecks" :key="item.name" class="check-item">
             <el-icon :size="16">
-              <component
-                :is="item.passed ? CircleCheckFilled : CircleCloseFilled"
-              />
+              <component :is="item.passed ? CircleCheckFilled : CircleCloseFilled" />
             </el-icon>
             <span class="check-name">{{ item.name }}</span>
             <span class="check-detail">{{ item.detail }}</span>
@@ -218,11 +194,8 @@
           </div>
           <div class="check-item">
             <span class="check-name">完整性检查</span>
-            <el-tag
-              :type="dbInfo.integrityOk ? 'success' : 'danger'"
-              size="small"
-            >
-              {{ dbInfo.integrityOk ? "通过" : "失败" }}
+            <el-tag :type="dbInfo.integrityOk ? 'success' : 'danger'" size="small">
+              {{ dbInfo.integrityOk ? '通过' : '失败' }}
             </el-tag>
           </div>
           <div class="check-item">
@@ -236,207 +209,193 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
-import { ElMessage } from "element-plus";
-import {
-  Refresh,
-  Download,
-  CircleCheckFilled,
-  CircleCloseFilled,
-} from "@element-plus/icons-vue";
-import * as echarts from "echarts";
-import request from "@/api/request";
-import { useConfigStore } from "@/stores/config";
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Refresh, Download, CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
+import request from '@/api/request'
+import { useConfigStore } from '@/stores/config'
 
 // ── Types ──
 interface SnapshotData {
-  cpu_usage: number;
-  memory_usage: number;
-  disk_usage: number;
-  network_recv_mb: number;
-  network_sent_mb: number;
-  process_threads: number;
-  cpu_count: number;
-  memory_used_mb: number;
-  memory_total_mb: number;
-  disk_used_gb: number;
-  disk_total_gb: number;
+  cpu_usage: number
+  memory_usage: number
+  disk_usage: number
+  network_recv_mb: number
+  network_sent_mb: number
+  process_threads: number
+  cpu_count: number
+  memory_used_mb: number
+  memory_total_mb: number
+  disk_used_gb: number
+  disk_total_gb: number
 }
 
 interface ApiStat {
-  endpoint: string;
-  method: string;
-  count: number;
-  avg_time_ms: number;
-  error_rate: number;
+  endpoint: string
+  method: string
+  count: number
+  avg_time_ms: number
+  error_rate: number
 }
 
 interface HealthData {
-  db_size_mb: number;
-  table_count: number;
-  db_integrity_ok: boolean;
-  wal_size_kb: number;
-  uptime_seconds: number;
+  db_size_mb: number
+  table_count: number
+  db_integrity_ok: boolean
+  wal_size_kb: number
+  uptime_seconds: number
 }
 
 interface HistoryPoint {
-  cpu: number;
-  mem: number;
-  disk: number;
-  time: string;
+  cpu: number
+  mem: number
+  disk: number
+  time: string
 }
 
 interface CheckItem {
-  name: string;
-  passed: boolean;
-  detail: string;
+  name: string
+  passed: boolean
+  detail: string
 }
 
 // ── State ──
-const loading = ref(false);
-const lastUpdated = ref("");
-const healthScore = ref(0);
-const healthExpanded = ref(
-  sessionStorage.getItem("monitor-health-expanded") !== "false",
-);
-const activePopover = ref<string | null>(null);
-const logLevelFilter = ref<"all" | "warn" | "error">("all");
+const loading = ref(false)
+const lastUpdated = ref('')
+const healthScore = ref(0)
+const healthExpanded = ref(sessionStorage.getItem('monitor-health-expanded') !== 'false')
+const activePopover = ref<string | null>(null)
+const logLevelFilter = ref<'all' | 'warn' | 'error'>('all')
 
-const snapshot = ref<SnapshotData | null>(null);
-const apiStats = ref<ApiStat[]>([]);
-const healthData = ref<HealthData | null>(null);
-const history = ref<HistoryPoint[]>([]);
-const maxHistory = 10;
+const snapshot = ref<SnapshotData | null>(null)
+const apiStats = ref<ApiStat[]>([])
+const healthData = ref<HealthData | null>(null)
+const history = ref<HistoryPoint[]>([])
+const maxHistory = 10
 
-const recentLogs = ref<
-  { id: number; time: string; level: string; message: string }[]
->([]);
-const chartRef = ref<HTMLDivElement | null>(null);
-let chartInstance: echarts.ECharts | null = null;
+const recentLogs = ref<{ id: number; time: string; level: string; message: string }[]>([])
+const chartRef = ref<HTMLDivElement | null>(null)
+let chartInstance: echarts.ECharts | null = null
 
-const configStore = useConfigStore();
+const configStore = useConfigStore()
 
 // ── Computed: log filtering ──
 const filteredLogs = computed(() => {
-  if (logLevelFilter.value === "all") return recentLogs.value;
-  return recentLogs.value.filter((l) => l.level === logLevelFilter.value);
-});
+  if (logLevelFilter.value === 'all') return recentLogs.value
+  return recentLogs.value.filter((l) => l.level === logLevelFilter.value)
+})
 
 // ── Computed: dbInfo ──
 const dbInfo = computed(() => {
-  const h = healthData.value;
+  const h = healthData.value
   return {
-    size: h ? `${h.db_size_mb.toFixed(1)} MB` : "--",
-    tableCount: h ? String(h.table_count) : "--",
-    walSize: h ? `${h.wal_size_kb.toFixed(1)} KB` : "--",
+    size: h ? `${h.db_size_mb.toFixed(1)} MB` : '--',
+    tableCount: h ? String(h.table_count) : '--',
+    walSize: h ? `${h.wal_size_kb.toFixed(1)} KB` : '--',
     integrityOk: h?.db_integrity_ok ?? false,
     uptime: h?.uptime_seconds
       ? `${Math.floor(h.uptime_seconds / 3600)}h ${Math.floor((h.uptime_seconds % 3600) / 60)}m`
-      : "--",
-  };
-});
+      : '--',
+  }
+})
 
 // ── Computed: health checks ──
 const basicChecks = computed<CheckItem[]>(() => {
-  const h = healthData.value;
+  const h = healthData.value
   return [
     {
-      name: "数据库连接",
+      name: '数据库连接',
       passed: h?.db_integrity_ok ?? false,
-      detail: h?.db_integrity_ok ? "正常" : "异常",
+      detail: h?.db_integrity_ok ? '正常' : '异常',
     },
     {
-      name: "API 服务",
+      name: 'API 服务',
       passed: apiStats.value.length > 0,
-      detail: apiStats.value.length > 0 ? "正常响应" : "无数据",
+      detail: apiStats.value.length > 0 ? '正常响应' : '无数据',
     },
-    { name: "认证服务", passed: true, detail: "运行中" },
-    { name: "缓存服务", passed: true, detail: "运行中" },
-    { name: "日志系统", passed: true, detail: "运行中" },
-  ];
-});
+    { name: '认证服务', passed: true, detail: '运行中' },
+    { name: '缓存服务', passed: true, detail: '运行中' },
+    { name: '日志系统', passed: true, detail: '运行中' },
+  ]
+})
 
 const performanceChecks = computed<CheckItem[]>(() => {
-  const s = snapshot.value;
+  const s = snapshot.value
   return [
     {
-      name: "CPU 使用率",
+      name: 'CPU 使用率',
       passed: (s?.cpu_usage ?? 100) < 90,
-      detail: s ? `${s.cpu_usage.toFixed(1)}%` : "--",
+      detail: s ? `${s.cpu_usage.toFixed(1)}%` : '--',
     },
     {
-      name: "内存使用率",
+      name: '内存使用率',
       passed: (s?.memory_usage ?? 100) < 90,
-      detail: s ? `${s.memory_usage.toFixed(1)}%` : "--",
+      detail: s ? `${s.memory_usage.toFixed(1)}%` : '--',
     },
     {
-      name: "磁盘使用率",
+      name: '磁盘使用率',
       passed: (s?.disk_usage ?? 100) < 90,
-      detail: s ? `${s.disk_usage.toFixed(1)}%` : "--",
+      detail: s ? `${s.disk_usage.toFixed(1)}%` : '--',
     },
-    { name: "响应时间", passed: true, detail: "< 100ms" },
+    { name: '响应时间', passed: true, detail: '< 100ms' },
     {
-      name: "数据库大小",
+      name: '数据库大小',
       passed: (healthData.value?.db_size_mb ?? 9999) < 500,
       detail: dbInfo.value.size,
     },
-  ];
-});
+  ]
+})
 
 // ── Score computation ──
-function computeScore(
-  snap: SnapshotData | null,
-  health: HealthData | null,
-): number {
-  let score = 20;
+function computeScore(snap: SnapshotData | null, health: HealthData | null): number {
+  let score = 20
   if (snap) {
-    if (snap.cpu_usage < 70) score += 20;
-    else if (snap.cpu_usage < 90) score += 10;
-    if (snap.memory_usage < 75) score += 20;
-    else if (snap.memory_usage < 90) score += 10;
-    if (snap.disk_usage < 75) score += 20;
-    else if (snap.disk_usage < 90) score += 10;
+    if (snap.cpu_usage < 70) score += 20
+    else if (snap.cpu_usage < 90) score += 10
+    if (snap.memory_usage < 75) score += 20
+    else if (snap.memory_usage < 90) score += 10
+    if (snap.disk_usage < 75) score += 20
+    else if (snap.disk_usage < 90) score += 10
   }
-  if (health?.db_integrity_ok) score += 20;
-  return Math.min(100, score);
+  if (health?.db_integrity_ok) score += 20
+  return Math.min(100, score)
 }
 
 const scoreBadgeClass = computed(() => {
-  if (healthScore.value >= 80) return "score-good";
-  if (healthScore.value >= 60) return "score-warning";
-  return "score-danger";
-});
+  if (healthScore.value >= 80) return 'score-good'
+  if (healthScore.value >= 60) return 'score-warning'
+  return 'score-danger'
+})
 
 // ── Metric card helpers ──
 interface MetricCard {
-  key: string;
-  icon: string;
-  value: string;
-  unit: string;
-  status: string;
-  statusText: string;
-  tagType: "success" | "warning" | "danger" | "info";
-  label: string;
-  detail: string;
-  percent: number;
-  history: number[];
-  error: boolean;
+  key: string
+  icon: string
+  value: string
+  unit: string
+  status: string
+  statusText: string
+  tagType: 'success' | 'warning' | 'danger' | 'info'
+  label: string
+  detail: string
+  percent: number
+  history: number[]
+  error: boolean
 }
 
 function statusInfo(
   val: number,
-  invert = false,
+  invert = false
 ): {
-  status: string;
-  tagType: "success" | "warning" | "danger";
-  statusText: string;
+  status: string
+  tagType: 'success' | 'warning' | 'danger'
+  statusText: string
 } {
-  const v = invert ? 100 - val : val;
-  if (v >= 90)
-    return { status: "danger", tagType: "danger", statusText: "严重" };
-  if (v >= 70)
-    return { status: "warning", tagType: "warning", statusText: "警告" };
-  return { status: "normal", tagType: "success", statusText: "正常" };
+  const v = invert ? 100 - val : val
+  if (v >= 90) return { status: 'danger', tagType: 'danger', statusText: '严重' }
+  if (v >= 70) return { status: 'warning', tagType: 'warning', statusText: '警告' }
+  return { status: 'normal', tagType: 'success', statusText: '正常' }
 }
 
 function makePrimaryCard(
@@ -449,7 +408,7 @@ function makePrimaryCard(
   percent: number,
   history_: number[],
   si: ReturnType<typeof statusInfo>,
-  hasData: boolean,
+  hasData: boolean
 ): MetricCard {
   return {
     key,
@@ -462,287 +421,271 @@ function makePrimaryCard(
     ...si,
     history: history_,
     error: !hasData,
-  };
+  }
 }
 
 // ── Primary cards (CPU / Memory / Disk) ──
 const primaryCards = computed<MetricCard[]>(() => {
-  const s = snapshot.value;
-  const hist = history.value;
-  const hasData = s !== null;
+  const s = snapshot.value
+  const hist = history.value
+  const hasData = s !== null
 
   return [
     makePrimaryCard(
-      "cpu",
-      "🖥️",
-      hasData ? s!.cpu_usage.toFixed(1) : "--",
-      "%",
-      "CPU 使用率",
-      hasData ? `${s!.cpu_count} 核 · ${s!.process_threads} 线程` : "",
+      'cpu',
+      '🖥️',
+      hasData ? s!.cpu_usage.toFixed(1) : '--',
+      '%',
+      'CPU 使用率',
+      hasData ? `${s!.cpu_count} 核 · ${s!.process_threads} 线程` : '',
       hasData ? s!.cpu_usage : 0,
       hist.map((h) => h.cpu / 100),
       statusInfo(s?.cpu_usage ?? 0),
-      hasData,
+      hasData
     ),
     makePrimaryCard(
-      "memory",
-      "💾",
-      hasData ? s!.memory_usage.toFixed(1) : "--",
-      "%",
-      "内存使用率",
-      hasData
-        ? `${s!.memory_used_mb.toFixed(0)} / ${s!.memory_total_mb.toFixed(0)} MB`
-        : "",
+      'memory',
+      '💾',
+      hasData ? s!.memory_usage.toFixed(1) : '--',
+      '%',
+      '内存使用率',
+      hasData ? `${s!.memory_used_mb.toFixed(0)} / ${s!.memory_total_mb.toFixed(0)} MB` : '',
       hasData ? s!.memory_usage : 0,
       hist.map((h) => h.mem / 100),
       statusInfo(s?.memory_usage ?? 0),
-      hasData,
+      hasData
     ),
     makePrimaryCard(
-      "disk",
-      "📀",
-      hasData ? s!.disk_usage.toFixed(1) : "--",
-      "%",
-      "磁盘使用率",
-      hasData
-        ? `${s!.disk_used_gb.toFixed(1)} / ${s!.disk_total_gb.toFixed(1)} GB`
-        : "",
+      'disk',
+      '📀',
+      hasData ? s!.disk_usage.toFixed(1) : '--',
+      '%',
+      '磁盘使用率',
+      hasData ? `${s!.disk_used_gb.toFixed(1)} / ${s!.disk_total_gb.toFixed(1)} GB` : '',
       hasData ? s!.disk_usage : 0,
       hist.map((h) => h.disk / 100),
       statusInfo(s?.disk_usage ?? 0),
-      hasData,
+      hasData
     ),
-  ];
-});
+  ]
+})
 
 // ── Secondary cards (Network / Threads) ──
 const secondaryCards = computed<MetricCard[]>(() => {
-  const s = snapshot.value;
-  const hasData = s !== null;
+  const s = snapshot.value
+  const hasData = s !== null
 
-  const netRecvSi = statusInfo(
-    s ? Math.min(100, (s.network_recv_mb / 100) * 100) : 0,
-  );
-  const netSentSi = statusInfo(
-    s ? Math.min(100, (s.network_sent_mb / 100) * 100) : 0,
-  );
+  const netRecvSi = statusInfo(s ? Math.min(100, (s.network_recv_mb / 100) * 100) : 0)
+  const netSentSi = statusInfo(s ? Math.min(100, (s.network_sent_mb / 100) * 100) : 0)
   const thrSi =
     s?.process_threads != null && s.process_threads > 500
-      ? { status: "warning", tagType: "warning" as const, statusText: "偏高" }
-      : { status: "normal", tagType: "success" as const, statusText: "正常" };
+      ? { status: 'warning', tagType: 'warning' as const, statusText: '偏高' }
+      : { status: 'normal', tagType: 'success' as const, statusText: '正常' }
 
   return [
     {
-      key: "net_recv",
-      icon: "📥",
-      value: hasData ? s!.network_recv_mb.toFixed(1) : "--",
-      unit: "MB",
+      key: 'net_recv',
+      icon: '📥',
+      value: hasData ? s!.network_recv_mb.toFixed(1) : '--',
+      unit: 'MB',
       ...netRecvSi,
-      label: "网络接收",
-      detail: "累计接收",
+      label: '网络接收',
+      detail: '累计接收',
       percent: 0,
       history: [],
       error: !hasData,
     },
     {
-      key: "net_sent",
-      icon: "📤",
-      value: hasData ? s!.network_sent_mb.toFixed(1) : "--",
-      unit: "MB",
+      key: 'net_sent',
+      icon: '📤',
+      value: hasData ? s!.network_sent_mb.toFixed(1) : '--',
+      unit: 'MB',
       ...netSentSi,
-      label: "网络发送",
-      detail: "累计发送",
+      label: '网络发送',
+      detail: '累计发送',
       percent: 0,
       history: [],
       error: !hasData,
     },
     {
-      key: "threads",
-      icon: "⚙️",
-      value: hasData ? String(s!.process_threads) : "--",
-      unit: "",
+      key: 'threads',
+      icon: '⚙️',
+      value: hasData ? String(s!.process_threads) : '--',
+      unit: '',
       ...thrSi,
-      label: "进程线程",
-      detail: hasData ? `${s!.cpu_count} 核 CPU` : "",
+      label: '进程线程',
+      detail: hasData ? `${s!.cpu_count} 核 CPU` : '',
       percent: 0,
       history: [],
       error: !hasData,
     },
-  ];
-});
+  ]
+})
 
 // ── History ring buffer ──
 function pushHistory(cpu: number, mem: number, disk: number) {
-  const now = new Date();
-  const time = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`;
-  history.value.push({ cpu, mem, disk, time });
-  if (history.value.length > maxHistory) history.value.shift();
+  const now = new Date()
+  const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
+  history.value.push({ cpu, mem, disk, time })
+  if (history.value.length > maxHistory) history.value.shift()
 }
 
 // ── Data fetching ──
 async function fetchSnapshot() {
   try {
-    const res = await request.get("/system/monitor/snapshot");
-    const data = (res as any)?.data?.data ?? (res as any)?.data ?? {};
-    snapshot.value = data;
-    return data as SnapshotData | null;
+    const res = await request.get('/system/monitor/snapshot')
+    const data = (res as any)?.data?.data ?? (res as any)?.data ?? {}
+    snapshot.value = data
+    return data as SnapshotData | null
   } catch {
-    snapshot.value = null;
-    return null;
+    snapshot.value = null
+    return null
   }
 }
 
 async function fetchApiStats() {
   try {
-    const res = await request.get("/system/monitor/api-stats", {
+    const res = await request.get('/system/monitor/api-stats', {
       params: { hours: 24 },
-    });
-    const data = (res as any)?.data?.data ?? (res as any)?.data ?? {};
-    apiStats.value = data?.top_endpoints ?? [];
-    return apiStats.value;
+    })
+    const data = (res as any)?.data?.data ?? (res as any)?.data ?? {}
+    apiStats.value = data?.top_endpoints ?? []
+    return apiStats.value
   } catch {
-    apiStats.value = [];
-    return [];
+    apiStats.value = []
+    return []
   }
 }
 
 async function fetchHealth() {
   try {
-    const res = await request.get("/health/full");
-    const data = (res as any)?.data ?? {};
-    healthData.value = data;
-    return data as HealthData | null;
+    const res = await request.get('/health/full')
+    const data = (res as any)?.data ?? {}
+    healthData.value = data
+    return data as HealthData | null
   } catch {
-    healthData.value = null;
-    return null;
+    healthData.value = null
+    return null
   }
 }
 
 async function refreshAll() {
-  loading.value = true;
+  loading.value = true
   try {
     const [snap, stats, health] = await Promise.allSettled([
       fetchSnapshot(),
       fetchApiStats(),
       fetchHealth(),
-    ]);
-    const snapData = snap.status === "fulfilled" ? snap.value : null;
-    const healthVal = health.status === "fulfilled" ? health.value : null;
+    ])
+    const snapData = snap.status === 'fulfilled' ? snap.value : null
+    const healthVal = health.status === 'fulfilled' ? health.value : null
 
-    if (snap.status === "rejected")
-      console.error("Snapshot fetch failed:", snap.reason);
-    if (stats.status === "rejected")
-      console.error("API stats fetch failed:", stats.reason);
-    if (health.status === "rejected")
-      console.error("Health fetch failed:", health.reason);
+    if (snap.status === 'rejected') console.error('Snapshot fetch failed:', snap.reason)
+    if (stats.status === 'rejected') console.error('API stats fetch failed:', stats.reason)
+    if (health.status === 'rejected') console.error('Health fetch failed:', health.reason)
 
     if (snapData) {
-      pushHistory(
-        snapData.cpu_usage,
-        snapData.memory_usage,
-        snapData.disk_usage,
-      );
-      const sid = Date.now();
-      const logs: typeof recentLogs.value = [];
+      pushHistory(snapData.cpu_usage, snapData.memory_usage, snapData.disk_usage)
+      const sid = Date.now()
+      const logs: typeof recentLogs.value = []
       if (snapData.cpu_usage > 80)
         logs.push({
           id: sid,
           time: new Date().toLocaleTimeString(),
-          level: "warn",
+          level: 'warn',
           message: `CPU 使用率偏高: ${snapData.cpu_usage.toFixed(1)}%`,
-        });
+        })
       if (snapData.memory_usage > 80)
         logs.push({
           id: sid + 1,
           time: new Date().toLocaleTimeString(),
-          level: "warn",
+          level: 'warn',
           message: `内存使用率偏高: ${snapData.memory_usage.toFixed(1)}%`,
-        });
+        })
       if (snapData.disk_usage > 85)
         logs.push({
           id: sid + 2,
           time: new Date().toLocaleTimeString(),
-          level: "error",
+          level: 'error',
           message: `磁盘使用率过高: ${snapData.disk_usage.toFixed(1)}%`,
-        });
+        })
       if (logs.length === 0)
         logs.push({
           id: sid,
           time: new Date().toLocaleTimeString(),
-          level: "info",
-          message: "系统资源使用正常",
-        });
-      recentLogs.value = logs;
+          level: 'info',
+          message: '系统资源使用正常',
+        })
+      recentLogs.value = logs
     }
 
-    healthScore.value = computeScore(snapData, healthVal);
-    nextTick(() => buildChart());
+    healthScore.value = computeScore(snapData, healthVal)
+    nextTick(() => buildChart())
   } finally {
-    loading.value = false;
-    lastUpdated.value = new Date().toLocaleTimeString();
+    loading.value = false
+    lastUpdated.value = new Date().toLocaleTimeString()
   }
 }
 
 // ── ECharts ──
 function buildChart() {
-  if (!chartRef.value) return;
-  if (chartInstance) chartInstance.dispose();
+  if (!chartRef.value) return
+  if (chartInstance) chartInstance.dispose()
 
-  const isDark =
-    configStore.theme === "dark" || configStore.theme === "military";
-  chartInstance = echarts.init(chartRef.value, isDark ? "dark" : undefined);
+  const isDark = configStore.theme === 'dark' || configStore.theme === 'military'
+  chartInstance = echarts.init(chartRef.value, isDark ? 'dark' : undefined)
 
-  const endpoints = apiStats.value.slice(0, 10);
-  const names = endpoints.map((e) => `${e.method} ${e.endpoint}`);
-  const counts = endpoints.map((e) => e.count);
-  const avgTimes = endpoints.map((e) => (e.avg_time_ms ?? 0).toFixed(1));
-  const errorRates = endpoints.map((e) => (e.error_rate ?? 0).toFixed(1));
+  const endpoints = apiStats.value.slice(0, 10)
+  const names = endpoints.map((e) => `${e.method} ${e.endpoint}`)
+  const counts = endpoints.map((e) => e.count)
+  const avgTimes = endpoints.map((e) => (e.avg_time_ms ?? 0).toFixed(1))
+  const errorRates = endpoints.map((e) => (e.error_rate ?? 0).toFixed(1))
 
   chartInstance.setOption({
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    legend: { data: ["请求数", "平均耗时(ms)", "错误率(%)"], top: 0 },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: ['请求数', '平均耗时(ms)', '错误率(%)'], top: 0 },
     grid: { left: 10, right: 10, top: 32, bottom: 0, containLabel: true },
     xAxis: {
-      type: "category",
+      type: 'category',
       data: names,
       axisLabel: { rotate: 30, fontSize: 10, interval: 0 },
     },
     yAxis: [
       {
-        type: "value",
-        name: "请求数/耗时",
-        splitLine: { lineStyle: { type: "dashed" } },
+        type: 'value',
+        name: '请求数/耗时',
+        splitLine: { lineStyle: { type: 'dashed' } },
       },
-      { type: "value", name: "错误率(%)", splitLine: { show: false } },
+      { type: 'value', name: '错误率(%)', splitLine: { show: false } },
     ],
     series: [
       {
-        name: "请求数",
-        type: "bar",
+        name: '请求数',
+        type: 'bar',
         data: counts,
-        itemStyle: { color: "#409eff" },
+        itemStyle: { color: '#409eff' },
         barMaxWidth: 28,
       },
       {
-        name: "平均耗时(ms)",
-        type: "line",
+        name: '平均耗时(ms)',
+        type: 'line',
         yAxisIndex: 0,
         data: avgTimes,
-        lineStyle: { color: "#67c23a" },
-        symbol: "circle",
+        lineStyle: { color: '#67c23a' },
+        symbol: 'circle',
         symbolSize: 4,
       },
       {
-        name: "错误率(%)",
-        type: "line",
+        name: '错误率(%)',
+        type: 'line',
         yAxisIndex: 1,
         data: errorRates,
-        lineStyle: { color: "#f56c6c" },
-        symbol: "diamond",
+        lineStyle: { color: '#f56c6c' },
+        symbol: 'diamond',
         symbolSize: 4,
       },
     ],
-  });
+  })
 }
 
 // ── Export ──
@@ -754,44 +697,44 @@ function exportData() {
     apiStats: apiStats.value,
     health: healthData.value,
     history: history.value,
-  };
+  }
   const blob = new Blob([JSON.stringify(report, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `monitoring-export-${Date.now()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  ElMessage.success("监控数据已导出");
+    type: 'application/json',
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `monitoring-export-${Date.now()}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+  ElMessage.success('监控数据已导出')
 }
 
 // ── Theme watch ──
 watch(
   () => configStore.theme,
   () => {
-    nextTick(() => buildChart());
-  },
-);
+    nextTick(() => buildChart())
+  }
+)
 
 // ── Lifecycle ──
-let pollTimer: ReturnType<typeof setInterval> | null = null;
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(async () => {
-  await refreshAll();
-  nextTick(() => buildChart());
-  pollTimer = setInterval(refreshAll, 30000);
-});
+  await refreshAll()
+  nextTick(() => buildChart())
+  pollTimer = setInterval(refreshAll, 30000)
+})
 
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer);
-  if (chartInstance) chartInstance.dispose();
-});
+  if (pollTimer) clearInterval(pollTimer)
+  if (chartInstance) chartInstance.dispose()
+})
 
 watch(healthExpanded, (val) => {
-  sessionStorage.setItem("monitor-health-expanded", String(val));
-});
+  sessionStorage.setItem('monitor-health-expanded', String(val))
+})
 </script>
 
 <style scoped>

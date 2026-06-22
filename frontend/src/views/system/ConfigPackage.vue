@@ -51,9 +51,7 @@
         <el-table-column prop="description" label="说明" width="200" />
         <el-table-column label="操作" width="120">
           <template #default="{ row }">
-            <el-button size="small" text type="primary" @click="editConfig(row)"
-              >编辑</el-button
-            >
+            <el-button size="small" text type="primary" @click="editConfig(row)">编辑</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -76,21 +74,12 @@
       @update:model-value="dialogVisible = false"
     >
       <el-form v-if="editRow" :model="editRow" label-width="100px">
-        <el-form-item label="配置项"
-          ><el-input :model-value="editRow.key" disabled
-        /></el-form-item>
+        <el-form-item label="配置项"><el-input :model-value="editRow.key" disabled /></el-form-item>
         <el-form-item label="配置值">
           <el-input v-if="!editRow.sensitive" v-model="editRow.value" />
-          <el-input
-            v-else
-            v-model="editRow.value"
-            type="password"
-            show-password
-          />
+          <el-input v-else v-model="editRow.value" type="password" show-password />
         </el-form-item>
-        <el-form-item label="说明"
-          ><el-input v-model="editRow.description"
-        /></el-form-item>
+        <el-form-item label="说明"><el-input v-model="editRow.description" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -102,74 +91,62 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  Download,
-  Upload,
-  RefreshRight,
-  Refresh,
-} from "@element-plus/icons-vue";
-import { get, post } from "@/api/request";
+import { ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Download, Upload, RefreshRight, Refresh } from '@element-plus/icons-vue'
+import { get, post } from '@/api/request'
 
 interface ConfigItem {
-  key: string;
-  value: string;
-  description: string;
-  sensitive?: boolean;
+  key: string
+  value: string
+  description: string
+  sensitive?: boolean
 }
 
-const loading = ref(false);
-const configList = ref<ConfigItem[]>([]);
-const dialogVisible = ref(false);
-const editRow = ref<ConfigItem | null>(null);
-const fileInput = ref<HTMLInputElement>();
+const loading = ref(false)
+const configList = ref<ConfigItem[]>([])
+const dialogVisible = ref(false)
+const editRow = ref<ConfigItem | null>(null)
+const fileInput = ref<HTMLInputElement>()
 
-const SENSITIVE_KEYS = [
-  "SECRET_KEY",
-  "CSRF_SECRET_KEY",
-  "SMTP_PASSWORD",
-  "ENCRYPTION_KEY",
-];
+const SENSITIVE_KEYS = ['SECRET_KEY', 'CSRF_SECRET_KEY', 'SMTP_PASSWORD', 'ENCRYPTION_KEY']
 
 async function loadConfig() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await get<{ code: number; data: Record<string, string> }>(
-      "/system/config",
-    );
+    const res = await get<{ code: number; data: Record<string, string> }>('/system/config')
     if (res.code === 200 && res.data) {
       configList.value = Object.entries(res.data).map(([k, v]) => ({
         key: k,
-        value: typeof v === "string" ? v : JSON.stringify(v),
-        description: "",
+        value: typeof v === 'string' ? v : JSON.stringify(v),
+        description: '',
         sensitive: SENSITIVE_KEYS.includes(k),
-      }));
+      }))
     }
   } catch {
-    configList.value = [];
+    configList.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function editConfig(row: ConfigItem) {
-  editRow.value = { ...row };
-  dialogVisible.value = true;
+  editRow.value = { ...row }
+  dialogVisible.value = true
 }
 
 async function saveConfig() {
   if (editRow.value) {
     try {
-      await post("/system/config", {
+      await post('/system/config', {
         key: editRow.value.key,
         value: editRow.value.value,
-      });
-      ElMessage.success("已保存");
-      dialogVisible.value = false;
-      loadConfig();
+      })
+      ElMessage.success('已保存')
+      dialogVisible.value = false
+      loadConfig()
     } catch {
-      ElMessage.error("保存失败");
+      ElMessage.error('保存失败')
     }
   }
 }
@@ -178,50 +155,50 @@ function exportConfig() {
   const data = JSON.stringify(
     Object.fromEntries(configList.value.map((c) => [c.key, c.value])),
     null,
-    2,
-  );
-  const blob = new Blob([data], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `system-config-${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  ElMessage.success("配置已导出");
+    2
+  )
+  const blob = new Blob([data], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `system-config-${new Date().toISOString().slice(0, 10)}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+  ElMessage.success('配置已导出')
 }
 
 function triggerImport() {
-  fileInput.value?.click();
+  fileInput.value?.click()
 }
 
 async function handleFileImport(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
   try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-    await post("/system/config/import", data);
-    ElMessage.success("配置已导入");
-    loadConfig();
+    const text = await file.text()
+    const data = JSON.parse(text)
+    await post('/system/config/import', data)
+    ElMessage.success('配置已导入')
+    loadConfig()
   } catch {
-    ElMessage.error("导入失败，请检查文件格式");
+    ElMessage.error('导入失败，请检查文件格式')
   }
 }
 
 async function resetConfig() {
   try {
-    await ElMessageBox.confirm("确认恢复为默认配置？此操作不可撤销。", "警告", {
-      type: "warning",
-    });
-    await post("/system/config/reset");
-    ElMessage.success("已恢复默认配置");
-    loadConfig();
+    await ElMessageBox.confirm('确认恢复为默认配置？此操作不可撤销。', '警告', {
+      type: 'warning',
+    })
+    await post('/system/config/reset')
+    ElMessage.success('已恢复默认配置')
+    loadConfig()
   } catch {
     /* cancelled */
   }
 }
 
-loadConfig();
+loadConfig()
 </script>
 
 <style scoped>

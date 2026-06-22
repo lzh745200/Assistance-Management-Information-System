@@ -7,11 +7,7 @@
   >
     <el-form :model="exportForm" label-width="100px">
       <el-form-item label="导出年份" required>
-        <el-select
-          v-model="exportForm.year"
-          placeholder="请选择年份"
-          style="width: 100%"
-        >
+        <el-select v-model="exportForm.year" placeholder="请选择年份" style="width: 100%">
           <el-option
             v-for="year in availableYears"
             :key="year"
@@ -45,78 +41,76 @@
 
     <template #footer>
       <el-button @click="$emit('update:modelValue', false)">取消</el-button>
-      <el-button type="primary" :loading="exporting" @click="handleExport">
-        导出
-      </el-button>
+      <el-button type="primary" :loading="exporting" @click="handleExport"> 导出 </el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive } from "vue";
-import { ElMessage } from "element-plus";
-import { exportAndDownloadExcel, exportAndDownloadPdf } from "@/api/report";
-import type { ExportFormat, DataSection } from "@/types/analytics";
+import { ref, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
+import { exportAndDownloadExcel, exportAndDownloadPdf } from '@/api/report'
+import type { ExportFormat, DataSection } from '@/types/analytics'
 
 defineProps<{
-  modelValue: boolean;
-}>();
+  modelValue: boolean
+}>()
 
 const emit = defineEmits<{
-  "update:modelValue": [value: boolean];
-  export: [];
-}>();
+  'update:modelValue': [value: boolean]
+  export: []
+}>()
 
-const currentYear = new Date().getFullYear();
-const availableYears = Array.from({ length: 6 }, (_, i) => currentYear - i + 1);
+const currentYear = new Date().getFullYear()
+const availableYears = Array.from({ length: 6 }, (_, i) => currentYear - i + 1)
 
-const exporting = ref(false);
+const exporting = ref(false)
 
 const exportForm = reactive({
   year: currentYear,
-  format: "excel" as ExportFormat,
+  format: 'excel' as ExportFormat,
   includeSections: [
-    "population",
-    "income",
-    "industry",
-    "infrastructure",
-    "education",
+    'population',
+    'income',
+    'industry',
+    'infrastructure',
+    'education',
   ] as DataSection[],
-});
+})
 
 const handleExport = async () => {
   if (!exportForm.year) {
-    ElMessage.warning("请选择导出年份");
-    return;
+    ElMessage.warning('请选择导出年份')
+    return
   }
 
-  exporting.value = true;
+  exporting.value = true
   try {
     const query = {
       year: exportForm.year,
       format: exportForm.format,
       includeSections: exportForm.includeSections,
-    };
+    }
 
-    if (exportForm.format === "excel") {
-      await exportAndDownloadExcel(query);
+    if (exportForm.format === 'excel') {
+      await exportAndDownloadExcel(query)
     } else {
-      await exportAndDownloadPdf(query);
+      await exportAndDownloadPdf(query)
     }
 
     // 导出成功 — 浏览器已确认
-    emit("export");
-    emit("update:modelValue", false);
+    emit('export')
+    emit('update:modelValue', false)
   } catch (error) {
-    logger.error("导出失败:", error);
-    ElMessage.error("导出失败，请稍后重试");
+    logger.error('导出失败:', error)
+    ElMessage.error('导出失败，请稍后重试')
   } finally {
-    exporting.value = false;
+    exporting.value = false
   }
-};
+}
 </script>
 
 <style scoped>

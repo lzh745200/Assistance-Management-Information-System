@@ -39,11 +39,7 @@
       </el-select>
     </div>
 
-    <el-tabs
-      v-model="activeTab"
-      type="border-card"
-      @tab-change="onFilterChange"
-    >
+    <el-tabs v-model="activeTab" type="border-card" @tab-change="onFilterChange">
       <el-tab-pane label="导入模板" name="import">
         <div v-loading="loading" class="template-grid">
           <el-empty
@@ -55,36 +51,21 @@
             <div class="t-info">
               <div class="t-name-row">
                 <h4>{{ t.name }}</h4>
-                <el-tag
-                  v-if="t.is_active"
-                  type="success"
-                  size="small"
-                  effect="plain"
-                  >启用</el-tag
-                >
-                <el-tag v-else type="info" size="small" effect="plain"
-                  >停用</el-tag
-                >
+                <el-tag v-if="t.is_active" type="success" size="small" effect="plain">启用</el-tag>
+                <el-tag v-else type="info" size="small" effect="plain">停用</el-tag>
               </div>
               <p>{{ t.description || moduleLabel(t.module) }}</p>
               <span class="t-meta"
-                >{{ moduleLabel(t.module) }} · 创建:
-                {{ formatDate(t.created_at) }} · 更新:
+                >{{ moduleLabel(t.module) }} · 创建: {{ formatDate(t.created_at) }} · 更新:
                 {{ formatDate(t.updated_at) }}</span
               >
             </div>
             <div class="t-actions">
-              <el-button type="primary" link @click="handlePreview(t)"
-                >预览</el-button
-              >
-              <el-button type="primary" link @click="handleDownload(t)"
-                >下载</el-button
-              >
+              <el-button type="primary" link @click="handlePreview(t)">预览</el-button>
+              <el-button type="primary" link @click="handleDownload(t)">下载</el-button>
               <el-button link @click="openUploadDialog(t)">上传填报</el-button>
               <el-button link @click="handleEdit(t)">编辑</el-button>
-              <el-button link type="danger" @click="handleDelete(t)"
-                >删除</el-button
-              >
+              <el-button link type="danger" @click="handleDelete(t)">删除</el-button>
             </div>
           </div>
         </div>
@@ -100,35 +81,20 @@
             <div class="t-info">
               <div class="t-name-row">
                 <h4>{{ t.name }}</h4>
-                <el-tag
-                  v-if="t.is_active"
-                  type="success"
-                  size="small"
-                  effect="plain"
-                  >启用</el-tag
-                >
-                <el-tag v-else type="info" size="small" effect="plain"
-                  >停用</el-tag
-                >
+                <el-tag v-if="t.is_active" type="success" size="small" effect="plain">启用</el-tag>
+                <el-tag v-else type="info" size="small" effect="plain">停用</el-tag>
               </div>
               <p>{{ t.description || moduleLabel(t.module) }}</p>
               <span class="t-meta"
-                >{{ moduleLabel(t.module) }} · 创建:
-                {{ formatDate(t.created_at) }} · 更新:
+                >{{ moduleLabel(t.module) }} · 创建: {{ formatDate(t.created_at) }} · 更新:
                 {{ formatDate(t.updated_at) }}</span
               >
             </div>
             <div class="t-actions">
-              <el-button type="primary" link @click="handlePreview(t)"
-                >预览</el-button
-              >
-              <el-button type="primary" link @click="handleDownload(t)"
-                >下载</el-button
-              >
+              <el-button type="primary" link @click="handlePreview(t)">预览</el-button>
+              <el-button type="primary" link @click="handleDownload(t)">下载</el-button>
               <el-button link @click="handleEdit(t)">编辑</el-button>
-              <el-button link type="danger" @click="handleDelete(t)"
-                >删除</el-button
-              >
+              <el-button link type="danger" @click="handleDelete(t)">删除</el-button>
             </div>
           </div>
         </div>
@@ -136,18 +102,8 @@
     </el-tabs>
 
     <!-- 新建模板对话框 -->
-    <el-dialog
-      v-model="showCreateDialog"
-      title="新建模板"
-      width="520px"
-      @closed="resetCreateForm"
-    >
-      <el-form
-        ref="createFormRef"
-        :model="newTemplate"
-        :rules="createRules"
-        label-width="100px"
-      >
+    <el-dialog v-model="showCreateDialog" title="新建模板" width="520px" @closed="resetCreateForm">
+      <el-form ref="createFormRef" :model="newTemplate" :rules="createRules" label-width="100px">
         <el-form-item label="模板名称" prop="name">
           <el-input
             v-model="newTemplate.name"
@@ -195,9 +151,7 @@
       </el-form>
       <template #footer>
         <el-button @click="showCreateDialog = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="handleCreate"
-          >创建</el-button
-        >
+        <el-button type="primary" :loading="creating" @click="handleCreate">创建</el-button>
       </template>
     </el-dialog>
 
@@ -211,11 +165,7 @@
         label-width="100px"
       >
         <el-form-item label="模板名称" prop="name">
-          <el-input
-            v-model="editTemplate.name"
-            maxlength="50"
-            show-word-limit
-          />
+          <el-input v-model="editTemplate.name" maxlength="50" show-word-limit />
         </el-form-item>
         <el-form-item label="描述">
           <el-input
@@ -232,9 +182,7 @@
       </el-form>
       <template #footer>
         <el-button @click="showEditDialog = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="handleSaveEdit"
-          >保存</el-button
-        >
+        <el-button type="primary" :loading="creating" @click="handleSaveEdit">保存</el-button>
       </template>
     </el-dialog>
 
@@ -242,11 +190,9 @@
     <el-dialog v-model="showPreviewDialog" title="模板预览" width="600px">
       <div v-if="previewTemplate" class="preview-content">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="模板名称">{{
-            previewTemplate.name
-          }}</el-descriptions-item>
+          <el-descriptions-item label="模板名称">{{ previewTemplate.name }}</el-descriptions-item>
           <el-descriptions-item label="模板类型">{{
-            previewTemplate.type === "import" ? "导入模板" : "导出模板"
+            previewTemplate.type === 'import' ? '导入模板' : '导出模板'
           }}</el-descriptions-item>
           <el-descriptions-item label="关联模块">
             <span
@@ -255,14 +201,12 @@
             >
           </el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag
-              :type="previewTemplate.is_active ? 'success' : 'info'"
-              size="small"
-              >{{ previewTemplate.is_active ? "启用" : "停用" }}</el-tag
-            >
+            <el-tag :type="previewTemplate.is_active ? 'success' : 'info'" size="small">{{
+              previewTemplate.is_active ? '启用' : '停用'
+            }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="描述" :span="2">{{
-            previewTemplate.description || "暂无描述"
+            previewTemplate.description || '暂无描述'
           }}</el-descriptions-item>
           <el-descriptions-item label="创建时间">{{
             formatDate(previewTemplate.created_at)
@@ -283,9 +227,7 @@
       </div>
       <template #footer>
         <el-button @click="showPreviewDialog = false">关闭</el-button>
-        <el-button type="primary" @click="handleDownload(previewTemplate!)"
-          >下载模板</el-button
-        >
+        <el-button type="primary" @click="handleDownload(previewTemplate!)">下载模板</el-button>
       </template>
     </el-dialog>
 
@@ -305,8 +247,7 @@
           show-icon
           style="margin-bottom: 16px"
         >
-          请先选择填写好的 Excel
-          文件，点击"预览数据"查看解析结果，确认无误后再点击"确认导入"。
+          请先选择填写好的 Excel 文件，点击"预览数据"查看解析结果，确认无误后再点击"确认导入"。
         </el-alert>
 
         <el-upload
@@ -332,12 +273,8 @@
         <el-form label-width="100px">
           <el-form-item label="导入模式">
             <el-radio-group v-model="importMode">
-              <el-radio value="incremental">
-                增量导入（跳过已有重复数据）
-              </el-radio>
-              <el-radio value="overwrite">
-                全量覆盖（清空后重新导入）
-              </el-radio>
+              <el-radio value="incremental"> 增量导入（跳过已有重复数据） </el-radio>
+              <el-radio value="overwrite"> 全量覆盖（清空后重新导入） </el-radio>
             </el-radio-group>
           </el-form-item>
         </el-form>
@@ -353,7 +290,7 @@
             {{ previewResult.total_rows }}
           </el-descriptions-item>
           <el-descriptions-item label="导入模式">
-            {{ importMode === "incremental" ? "增量导入" : "全量覆盖" }}
+            {{ importMode === 'incremental' ? '增量导入' : '全量覆盖' }}
           </el-descriptions-item>
           <el-descriptions-item label="有效数据">
             <el-tag type="success">{{ previewResult.success_count }}</el-tag>
@@ -364,27 +301,16 @@
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="预览条数">
-            <el-tag type="info">{{
-              previewResult.parsed_data?.length || 0
-            }}</el-tag>
+            <el-tag type="info">{{ previewResult.parsed_data?.length || 0 }}</el-tag>
           </el-descriptions-item>
         </el-descriptions>
 
         <!-- 预览数据表格 -->
-        <div
-          v-if="previewResult.parsed_data?.length"
-          style="margin-bottom: 16px"
-        >
+        <div v-if="previewResult.parsed_data?.length" style="margin-bottom: 16px">
           <h4 style="margin: 0 0 8px; font-size: 14px; color: #409eff">
             数据预览（前 {{ previewResult.parsed_data.length }} 条）
           </h4>
-          <el-table
-            :data="previewResult.parsed_data"
-            border
-            size="small"
-            max-height="220"
-            stripe
-          >
+          <el-table :data="previewResult.parsed_data" border size="small" max-height="220" stripe>
             <el-table-column
               v-for="col in previewColumns"
               :key="col"
@@ -401,12 +327,7 @@
           <h4 style="margin: 0 0 8px; font-size: 14px; color: #e63946">
             错误详情（共 {{ previewResult.errors.length }} 条）
           </h4>
-          <el-table
-            :data="previewResult.errors"
-            border
-            size="small"
-            max-height="160"
-          >
+          <el-table :data="previewResult.errors" border size="small" max-height="160">
             <el-table-column prop="row" label="位置" width="70" />
             <el-table-column prop="message" label="错误信息" />
           </el-table>
@@ -426,9 +347,7 @@
           预览数据
         </el-button>
         <!-- 返回预览 -->
-        <el-button v-else @click="previewResult = null">
-          重新选择文件
-        </el-button>
+        <el-button v-else @click="previewResult = null"> 重新选择文件 </el-button>
         <!-- 确认导入 -->
         <el-button
           v-if="previewResult"
@@ -444,26 +363,16 @@
     <!-- 导入结果对话框 -->
     <el-dialog v-model="showImportResult" title="导入结果" width="600px">
       <div v-if="importResult">
-        <el-result
-          v-if="importResult.success"
-          icon="success"
-          :title="importResult.message"
-        >
+        <el-result v-if="importResult.success" icon="success" :title="importResult.message">
           <template #sub-title>
             <el-descriptions :column="2" border style="margin-top: 16px">
               <el-descriptions-item label="导入成功">
                 <el-tag type="success">{{ importResult.imported }}</el-tag> 条
               </el-descriptions-item>
-              <el-descriptions-item
-                v-if="importResult.skipped"
-                label="跳过重复"
-              >
+              <el-descriptions-item v-if="importResult.skipped" label="跳过重复">
                 <el-tag type="info">{{ importResult.skipped }}</el-tag> 条
               </el-descriptions-item>
-              <el-descriptions-item
-                v-if="importResult.deleted"
-                label="删除旧记录"
-              >
+              <el-descriptions-item v-if="importResult.deleted" label="删除旧记录">
                 <el-tag type="warning">{{ importResult.deleted }}</el-tag> 条
               </el-descriptions-item>
               <el-descriptions-item label="导入失败">
@@ -485,12 +394,7 @@
         <!-- 错误详情 -->
         <div v-if="importResult.errors?.length" style="margin-top: 12px">
           <h4 style="color: #e63946">失败详情</h4>
-          <el-table
-            :data="importResult.errors"
-            border
-            size="small"
-            max-height="180"
-          >
+          <el-table :data="importResult.errors" border size="small" max-height="180">
             <el-table-column prop="row" label="行号" width="70" />
             <el-table-column prop="message" label="错误信息" />
           </el-table>
@@ -501,130 +405,130 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Search, Upload } from "@element-plus/icons-vue";
-import type { FormInstance, FormRules } from "element-plus";
-import request from "@/api/request";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Upload } from '@element-plus/icons-vue'
+import type { FormInstance, FormRules } from 'element-plus'
+import request from '@/api/request'
 
 interface Template {
-  id: number;
-  name: string;
-  type: string;
-  module: string;
-  fields?: string;
-  description?: string;
-  is_active: boolean;
-  created_at?: string;
-  updated_at?: string;
+  id: number
+  name: string
+  type: string
+  module: string
+  fields?: string
+  description?: string
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
 }
 
 // 状态
-const activeTab = ref("import");
-const loading = ref(false);
-const creating = ref(false);
-const templates = ref<Template[]>([]);
-const showCreateDialog = ref(false);
-const showEditDialog = ref(false);
-const showPreviewDialog = ref(false);
-const showUploadDialog = ref(false);
-const showImportResult = ref(false);
-const editTemplate = ref<Template | null>(null);
-const previewTemplate = ref<Template | null>(null);
-const searchText = ref("");
-const filterModule = ref("");
+const activeTab = ref('import')
+const loading = ref(false)
+const creating = ref(false)
+const templates = ref<Template[]>([])
+const showCreateDialog = ref(false)
+const showEditDialog = ref(false)
+const showPreviewDialog = ref(false)
+const showUploadDialog = ref(false)
+const showImportResult = ref(false)
+const editTemplate = ref<Template | null>(null)
+const previewTemplate = ref<Template | null>(null)
+const searchText = ref('')
+const filterModule = ref('')
 
 // 上传相关
-const uploadRef = ref();
-const selectedFile = ref<File | null>(null);
-const previewResult = ref<any>(null);
-const previewColumns = ref<string[]>([]);
-const importing = ref(false);
-const previewing = ref(false);
-const importMode = ref("incremental");
-const currentUploadTemplate = ref<Template | null>(null);
-const importResult = ref<any>(null);
+const uploadRef = ref()
+const selectedFile = ref<File | null>(null)
+const previewResult = ref<any>(null)
+const previewColumns = ref<string[]>([])
+const importing = ref(false)
+const previewing = ref(false)
+const importMode = ref('incremental')
+const currentUploadTemplate = ref<Template | null>(null)
+const importResult = ref<any>(null)
 
 // 表单
-const createFormRef = ref<FormInstance>();
-const editFormRef = ref<FormInstance>();
+const createFormRef = ref<FormInstance>()
+const editFormRef = ref<FormInstance>()
 const newTemplate = reactive({
-  name: "",
-  type: "import",
-  module: "village",
-  description: "",
-});
+  name: '',
+  type: 'import',
+  module: 'village',
+  description: '',
+})
 
 const createRules: FormRules = {
-  name: [{ required: true, message: "请输入模板名称", trigger: "blur" }],
-  type: [{ required: true, message: "请选择模板类型", trigger: "change" }],
-  module: [{ required: true, message: "请选择关联模块", trigger: "change" }],
-};
+  name: [{ required: true, message: '请输入模板名称', trigger: 'blur' }],
+  type: [{ required: true, message: '请选择模板类型', trigger: 'change' }],
+  module: [{ required: true, message: '请选择关联模块', trigger: 'change' }],
+}
 const editRules: FormRules = {
-  name: [{ required: true, message: "请输入模板名称", trigger: "blur" }],
-};
+  name: [{ required: true, message: '请输入模板名称', trigger: 'blur' }],
+}
 
 const moduleIcon = (m: string) =>
   ({
-    village: "🈁️",
-    school: "🏣",
-    fund: "💰",
-    project: "📁",
-    rural_work: "🌾",
-    comprehensive: "📊",
-  })[m] || "📄";
+    village: '🈁️',
+    school: '🏣',
+    fund: '💰',
+    project: '📁',
+    rural_work: '🌾',
+    comprehensive: '📊',
+  })[m] || '📄'
 const moduleLabel = (m: string) =>
   ({
-    village: "帮扶村",
-    school: "帮扶学校",
-    fund: "经费管理",
-    project: "帮扶项目",
-    rural_work: "乡村工作",
-    comprehensive: "综合报表",
-  })[m] || m;
+    village: '帮扶村',
+    school: '帮扶学校',
+    fund: '经费管理',
+    project: '帮扶项目',
+    rural_work: '乡村工作',
+    comprehensive: '综合报表',
+  })[m] || m
 
 const formatDate = (dateStr?: string) => {
-  if (!dateStr) return "-";
-  return dateStr.slice(0, 10);
-};
+  if (!dateStr) return '-'
+  return dateStr.slice(0, 10)
+}
 
 const parseFields = (fields?: string): string[] => {
-  if (!fields) return [];
+  if (!fields) return []
   try {
-    const parsed = JSON.parse(fields);
-    if (!Array.isArray(parsed)) return [];
+    const parsed = JSON.parse(fields)
+    if (!Array.isArray(parsed)) return []
     // 字段可能是对象（含 excel_header）或纯字符串
     return parsed
       .map((f: any) =>
-        typeof f === "object" && f !== null
+        typeof f === 'object' && f !== null
           ? f.excel_header || f.db_field || JSON.stringify(f)
-          : String(f),
+          : String(f)
       )
-      .filter(Boolean);
+      .filter(Boolean)
   } catch {
     return fields
-      .split(",")
+      .split(',')
       .map((f) => f.trim())
-      .filter(Boolean);
+      .filter(Boolean)
   }
-};
+}
 
 // 过滤逻辑：类型 + 搜索 + 模块
 const displayTemplates = computed(() => {
-  let data = templates.value.filter((t) => t.type === activeTab.value);
+  let data = templates.value.filter((t) => t.type === activeTab.value)
   if (searchText.value) {
-    const q = searchText.value.toLowerCase();
+    const q = searchText.value.toLowerCase()
     data = data.filter(
       (t) =>
         (t.name && t.name.toLowerCase().includes(q)) ||
-        (t.description && t.description.toLowerCase().includes(q)),
-    );
+        (t.description && t.description.toLowerCase().includes(q))
+    )
   }
   if (filterModule.value) {
-    data = data.filter((t) => t.module === filterModule.value);
+    data = data.filter((t) => t.module === filterModule.value)
   }
-  return data;
-});
+  return data
+})
 
 function onFilterChange() {
   // displayTemplates 是 computed，自动响应
@@ -632,122 +536,120 @@ function onFilterChange() {
 
 // API
 async function loadTemplates() {
-  loading.value = true;
+  loading.value = true
   try {
-    const { data } = await request.get("/report-templates");
+    const { data } = await request.get('/report-templates')
     // 兼容多种后端响应格式: 直接数组 / { data: [...] } / { items: [...] }
     const list = Array.isArray(data)
       ? data
       : Array.isArray((data as any)?.data)
         ? (data as any).data
-        : (data as any)?.items || [];
-    templates.value = list as Template[];
+        : (data as any)?.items || []
+    templates.value = list as Template[]
   } catch {
-    templates.value = [];
+    templates.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function openCreateDialog() {
-  showCreateDialog.value = true;
+  showCreateDialog.value = true
 }
 
 function resetCreateForm() {
-  newTemplate.name = "";
-  newTemplate.description = "";
-  newTemplate.type = "import";
-  newTemplate.module = "village";
-  createFormRef.value?.resetFields();
+  newTemplate.name = ''
+  newTemplate.description = ''
+  newTemplate.type = 'import'
+  newTemplate.module = 'village'
+  createFormRef.value?.resetFields()
 }
 
 async function handleCreate() {
-  if (!createFormRef.value) return;
+  if (!createFormRef.value) return
   try {
-    await createFormRef.value.validate();
+    await createFormRef.value.validate()
   } catch {
-    return;
+    return
   }
-  creating.value = true;
+  creating.value = true
   try {
-    await request.post("/report-templates", newTemplate);
-    ElMessage.success("模板创建成功");
-    showCreateDialog.value = false;
-    activeTab.value = newTemplate.type;
-    loadTemplates();
+    await request.post('/report-templates', newTemplate)
+    ElMessage.success('模板创建成功')
+    showCreateDialog.value = false
+    activeTab.value = newTemplate.type
+    loadTemplates()
   } catch {
-    ElMessage.error("创建失败");
+    ElMessage.error('创建失败')
   } finally {
-    creating.value = false;
+    creating.value = false
   }
 }
 
 async function handleDownload(t: Template) {
   try {
     const res = await request.get(`/report-templates/${t.id}/download`, {
-      responseType: "blob",
-    });
-    const url = window.URL.createObjectURL(res.data);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${t.name}.xlsx`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-    ElMessage.success(`下载模板: ${t.name}`);
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(res.data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${t.name}.xlsx`
+    link.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success(`下载模板: ${t.name}`)
   } catch {
-    ElMessage.error("下载失败");
+    ElMessage.error('下载失败')
   }
 }
 
 function handleEdit(t: Template) {
-  editTemplate.value = { ...t };
-  showEditDialog.value = true;
+  editTemplate.value = { ...t }
+  showEditDialog.value = true
 }
 
 async function handleSaveEdit() {
-  if (!editTemplate.value) return;
+  if (!editTemplate.value) return
   if (editFormRef.value) {
     try {
-      await editFormRef.value.validate();
+      await editFormRef.value.validate()
     } catch {
-      return;
+      return
     }
   } else if (!editTemplate.value.name?.trim()) {
-    ElMessage.warning("请输入模板名称");
-    return;
+    ElMessage.warning('请输入模板名称')
+    return
   }
-  creating.value = true;
+  creating.value = true
   try {
     await request.put(`/report-templates/${editTemplate.value.id}`, {
       name: editTemplate.value.name,
       description: editTemplate.value.description,
       is_active: editTemplate.value.is_active,
-    });
-    ElMessage.success("保存成功");
-    showEditDialog.value = false;
-    loadTemplates();
+    })
+    ElMessage.success('保存成功')
+    showEditDialog.value = false
+    loadTemplates()
   } catch {
-    ElMessage.error("保存失败");
+    ElMessage.error('保存失败')
   } finally {
-    creating.value = false;
+    creating.value = false
   }
 }
 
 function handlePreview(t: Template) {
-  previewTemplate.value = { ...t };
-  showPreviewDialog.value = true;
+  previewTemplate.value = { ...t }
+  showPreviewDialog.value = true
 }
 
 async function handleDelete(t: Template) {
   try {
-    await ElMessageBox.confirm(
-      `确定删除模板“${t.name}”？此操作不可恢复。`,
-      "提示",
-      { type: "warning" },
-    );
-    await request.delete(`/report-templates/${t.id}`);
-    ElMessage.success("删除成功");
-    loadTemplates();
+    await ElMessageBox.confirm(`确定删除模板“${t.name}”？此操作不可恢复。`, '提示', {
+      type: 'warning',
+    })
+    await request.delete(`/report-templates/${t.id}`)
+    ElMessage.success('删除成功')
+    loadTemplates()
   } catch {
     // cancelled
   }
@@ -755,98 +657,98 @@ async function handleDelete(t: Template) {
 
 // 上传填报相关方法
 function openUploadDialog(t: Template) {
-  selectedFile.value = null;
-  previewResult.value = null;
-  previewColumns.value = [];
-  importMode.value = "incremental";
-  currentUploadTemplate.value = t;
+  selectedFile.value = null
+  previewResult.value = null
+  previewColumns.value = []
+  importMode.value = 'incremental'
+  currentUploadTemplate.value = t
   if (uploadRef.value) {
-    uploadRef.value.clearFiles();
+    uploadRef.value.clearFiles()
   }
-  showUploadDialog.value = true;
+  showUploadDialog.value = true
 }
 
 function onUploadDialogClosed() {
-  selectedFile.value = null;
-  previewResult.value = null;
-  previewColumns.value = [];
+  selectedFile.value = null
+  previewResult.value = null
+  previewColumns.value = []
   if (uploadRef.value) {
-    uploadRef.value.clearFiles();
+    uploadRef.value.clearFiles()
   }
 }
 
 function onFileChange(file: any) {
-  selectedFile.value = file.raw || file;
+  selectedFile.value = file.raw || file
 }
 
 function onFileRemove() {
-  selectedFile.value = null;
-  previewResult.value = null;
+  selectedFile.value = null
+  previewResult.value = null
 }
 
 async function handleFilePreview() {
-  if (!selectedFile.value || !currentUploadTemplate.value) return;
-  previewing.value = true;
+  if (!selectedFile.value || !currentUploadTemplate.value) return
+  previewing.value = true
   try {
-    const formData = new FormData();
-    formData.append("file", selectedFile.value);
+    const formData = new FormData()
+    formData.append('file', selectedFile.value)
     const res = await request.post(
       `/report-templates/${currentUploadTemplate.value!.id}/upload?mode=preview`,
       formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
-    previewResult.value = res.data;
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    previewResult.value = res.data
     // 提取预览列名
     if (res.data.parsed_data?.length) {
-      previewColumns.value = Object.keys(res.data.parsed_data[0] || {});
+      previewColumns.value = Object.keys(res.data.parsed_data[0] || {})
     }
   } catch (err: any) {
-    const msg = err?.response?.data?.detail || err?.message || "预览失败";
-    ElMessage.error(msg);
-    previewResult.value = null;
+    const msg = err?.response?.data?.detail || err?.message || '预览失败'
+    ElMessage.error(msg)
+    previewResult.value = null
   } finally {
-    previewing.value = false;
+    previewing.value = false
   }
 }
 
 async function handleConfirmImport() {
-  if (!selectedFile.value || !currentUploadTemplate.value) return;
+  if (!selectedFile.value || !currentUploadTemplate.value) return
 
   // 增量覆盖模式需要二次确认
-  if (importMode.value === "overwrite") {
+  if (importMode.value === 'overwrite') {
     try {
       await ElMessageBox.confirm(
-        "全量覆盖将删除现有所有记录后重新导入，确定继续？",
-        "危险操作确认",
-        { type: "warning", confirmButtonText: "确定全量覆盖" },
-      );
+        '全量覆盖将删除现有所有记录后重新导入，确定继续？',
+        '危险操作确认',
+        { type: 'warning', confirmButtonText: '确定全量覆盖' }
+      )
     } catch {
-      return;
+      return
     }
   }
 
-  importing.value = true;
+  importing.value = true
   try {
-    const formData = new FormData();
-    formData.append("file", selectedFile.value);
+    const formData = new FormData()
+    formData.append('file', selectedFile.value)
     const res = await request.post(
       `/report-templates/${currentUploadTemplate.value!.id}/upload?mode=confirm&import_mode=${importMode.value}`,
       formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
-    importResult.value = res.data;
-    showUploadDialog.value = false;
-    showImportResult.value = true;
-    loadTemplates();
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    importResult.value = res.data
+    showUploadDialog.value = false
+    showImportResult.value = true
+    loadTemplates()
   } catch (err: any) {
-    const msg = err?.response?.data?.detail || err?.message || "导入失败";
-    ElMessage.error(msg);
+    const msg = err?.response?.data?.detail || err?.message || '导入失败'
+    ElMessage.error(msg)
   } finally {
-    importing.value = false;
+    importing.value = false
   }
 }
 
-onMounted(loadTemplates);
+onMounted(loadTemplates)
 </script>
 
 <style scoped>

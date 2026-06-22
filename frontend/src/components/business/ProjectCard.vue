@@ -8,10 +8,10 @@
 </template>
 <script setup lang="ts">
 defineProps<{
-  title?: string;
-  name?: string;
-  description?: string;
-  progress?: number;
-  status?: string;
-}>();
+  title?: string
+  name?: string
+  description?: string
+  progress?: number
+  status?: string
+}>()
 </script>

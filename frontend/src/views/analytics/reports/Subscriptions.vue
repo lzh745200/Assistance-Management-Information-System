@@ -37,9 +37,7 @@
         </el-table-column>
         <el-table-column prop="frequency" label="生成周期" width="120">
           <template #default="{ row }">
-            <el-tag size="small">{{
-              frequencyMap[row.frequency] || row.frequency
-            }}</el-tag>
+            <el-tag size="small">{{ frequencyMap[row.frequency] || row.frequency }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="nextRun" label="下次生成" width="160" />
@@ -56,15 +54,9 @@
         <el-table-column prop="lastRun" label="上次生成" width="160" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="handleRunNow(row)"
-              >立即生成</el-button
-            >
-            <el-button link type="primary" @click="handleEdit(row)"
-              >编辑</el-button
-            >
-            <el-button link type="danger" @click="handleDelete(row)"
-              >删除</el-button
-            >
+            <el-button link type="primary" @click="handleRunNow(row)">立即生成</el-button>
+            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -83,11 +75,8 @@
           >
             <div class="history-item">
               <span class="history-name">{{ record.name }}</span>
-              <el-tag
-                size="small"
-                :type="record.status === 'success' ? 'success' : 'danger'"
-              >
-                {{ record.status === "success" ? "成功" : "失败" }}
+              <el-tag size="small" :type="record.status === 'success' ? 'success' : 'danger'">
+                {{ record.status === 'success' ? '成功' : '失败' }}
               </el-tag>
               <span class="history-detail">{{ record.detail }}</span>
             </div>
@@ -97,21 +86,13 @@
     </el-card>
 
     <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="showAddDialog"
-      :title="editingId ? '编辑订阅' : '新增订阅'"
-      width="600px"
-    >
+    <el-dialog v-model="showAddDialog" :title="editingId ? '编辑订阅' : '新增订阅'" width="600px">
       <el-form ref="formRef" :model="form" label-width="100px" :rules="rules">
         <el-form-item label="订阅名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入订阅名称" />
         </el-form-item>
         <el-form-item label="报表类型" prop="reportType">
-          <el-select
-            v-model="form.reportType"
-            placeholder="选择报表类型"
-            style="width: 100%"
-          >
+          <el-select v-model="form.reportType" placeholder="选择报表类型" style="width: 100%">
             <el-option label="帮扶村统计报表" value="village_stats" />
             <el-option label="学校帮扶报表" value="school_stats" />
             <el-option label="项目进度报表" value="project_progress" />
@@ -120,11 +101,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="生成周期" prop="frequency">
-          <el-select
-            v-model="form.frequency"
-            placeholder="选择周期"
-            style="width: 100%"
-          >
+          <el-select v-model="form.frequency" placeholder="选择周期" style="width: 100%">
             <el-option label="每日" value="daily" />
             <el-option label="每周" value="weekly" />
             <el-option label="每月" value="monthly" />
@@ -139,12 +116,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="备注">
-          <el-input
-            v-model="form.remark"
-            type="textarea"
-            :rows="3"
-            placeholder="可选"
-          />
+          <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="可选" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -156,156 +128,145 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Plus, Document } from "@element-plus/icons-vue";
+import { ref, reactive } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Document } from '@element-plus/icons-vue'
 
-const loading = ref(false);
-const showAddDialog = ref(false);
-const editingId = ref<string | null>(null);
-const formRef = ref();
+const loading = ref(false)
+const showAddDialog = ref(false)
+const editingId = ref<string | null>(null)
+const formRef = ref()
 
 const frequencyMap: Record<string, string> = {
-  daily: "每日",
-  weekly: "每周",
-  monthly: "每月",
-  quarterly: "每季度",
-};
+  daily: '每日',
+  weekly: '每周',
+  monthly: '每月',
+  quarterly: '每季度',
+}
 
 const subscriptions = ref([
   {
-    id: "1",
-    name: "月度帮扶村统计",
-    reportType: "village_stats",
-    frequency: "monthly",
-    nextRun: "2026-05-01 08:00",
-    status: "active",
-    lastRun: "2026-04-01 08:00",
+    id: '1',
+    name: '月度帮扶村统计',
+    reportType: 'village_stats',
+    frequency: 'monthly',
+    nextRun: '2026-05-01 08:00',
+    status: 'active',
+    lastRun: '2026-04-01 08:00',
   },
   {
-    id: "2",
-    name: "周度项目进度报告",
-    reportType: "project_progress",
-    frequency: "weekly",
-    nextRun: "2026-04-27 08:00",
-    status: "active",
-    lastRun: "2026-04-20 08:00",
+    id: '2',
+    name: '周度项目进度报告',
+    reportType: 'project_progress',
+    frequency: 'weekly',
+    nextRun: '2026-04-27 08:00',
+    status: 'active',
+    lastRun: '2026-04-20 08:00',
   },
   {
-    id: "3",
-    name: "季度经费汇总",
-    reportType: "fund_usage",
-    frequency: "quarterly",
-    nextRun: "2026-07-01 08:00",
-    status: "paused",
-    lastRun: "2026-01-01 08:00",
+    id: '3',
+    name: '季度经费汇总',
+    reportType: 'fund_usage',
+    frequency: 'quarterly',
+    nextRun: '2026-07-01 08:00',
+    status: 'paused',
+    lastRun: '2026-01-01 08:00',
   },
-]);
+])
 
 const historyRecords = ref([
   {
-    id: "1",
-    name: "月度帮扶村统计",
-    status: "success",
-    time: "2026-04-01 08:00",
-    detail: "生成 24 条记录，导出 Excel",
+    id: '1',
+    name: '月度帮扶村统计',
+    status: 'success',
+    time: '2026-04-01 08:00',
+    detail: '生成 24 条记录，导出 Excel',
   },
   {
-    id: "2",
-    name: "周度项目进度报告",
-    status: "success",
-    time: "2026-04-20 08:00",
-    detail: "生成 56 个项目进度记录",
+    id: '2',
+    name: '周度项目进度报告',
+    status: 'success',
+    time: '2026-04-20 08:00',
+    detail: '生成 56 个项目进度记录',
   },
   {
-    id: "3",
-    name: "季度经费汇总",
-    status: "error",
-    time: "2026-01-01 08:00",
-    detail: "数据库连接超时，已重试",
+    id: '3',
+    name: '季度经费汇总',
+    status: 'error',
+    time: '2026-01-01 08:00',
+    detail: '数据库连接超时，已重试',
   },
-]);
+])
 
 const form = reactive({
-  name: "",
-  reportType: "",
-  frequency: "monthly",
-  scope: "all",
-  remark: "",
-});
+  name: '',
+  reportType: '',
+  frequency: 'monthly',
+  scope: 'all',
+  remark: '',
+})
 
 const rules = {
-  name: [{ required: true, message: "请输入订阅名称", trigger: "blur" }],
-  reportType: [
-    { required: true, message: "请选择报表类型", trigger: "change" },
-  ],
-  frequency: [{ required: true, message: "请选择生成周期", trigger: "change" }],
-};
+  name: [{ required: true, message: '请输入订阅名称', trigger: 'blur' }],
+  reportType: [{ required: true, message: '请选择报表类型', trigger: 'change' }],
+  frequency: [{ required: true, message: '请选择生成周期', trigger: 'change' }],
+}
 
 function getReportTypeLabel(type: string): string {
   const map: Record<string, string> = {
-    village_stats: "帮扶村统计",
-    school_stats: "学校帮扶",
-    project_progress: "项目进度",
-    fund_usage: "经费使用",
-    comprehensive: "综合汇总",
-  };
-  return map[type] || type;
+    village_stats: '帮扶村统计',
+    school_stats: '学校帮扶',
+    project_progress: '项目进度',
+    fund_usage: '经费使用',
+    comprehensive: '综合汇总',
+  }
+  return map[type] || type
 }
 
-function getReportTypeTag(
-  type: string,
-): "success" | "warning" | "primary" | "danger" | "info" {
-  const map: Record<
-    string,
-    "success" | "warning" | "primary" | "danger" | "info"
-  > = {
-    village_stats: "success",
-    school_stats: "warning",
-    project_progress: "primary",
-    fund_usage: "danger",
-    comprehensive: "info",
-  };
-  return map[type] || "info";
+function getReportTypeTag(type: string): 'success' | 'warning' | 'primary' | 'danger' | 'info' {
+  const map: Record<string, 'success' | 'warning' | 'primary' | 'danger' | 'info'> = {
+    village_stats: 'success',
+    school_stats: 'warning',
+    project_progress: 'primary',
+    fund_usage: 'danger',
+    comprehensive: 'info',
+  }
+  return map[type] || 'info'
 }
 
 function handleStatusChange(row: any) {
-  const statusText = row.status === "active" ? "启用" : "暂停";
-  ElMessage.success(`已${statusText}订阅：${row.name}`);
+  const statusText = row.status === 'active' ? '启用' : '暂停'
+  ElMessage.success(`已${statusText}订阅：${row.name}`)
 }
 
 function handleRunNow(row: any) {
-  ElMessage.info(`正在生成报表：${row.name}...`);
+  ElMessage.info(`正在生成报表：${row.name}...`)
   setTimeout(() => {
-    ElMessage.success(`报表生成成功：${row.name}`);
-    row.lastRun = new Date().toLocaleString("zh-CN");
+    ElMessage.success(`报表生成成功：${row.name}`)
+    row.lastRun = new Date().toLocaleString('zh-CN')
     historyRecords.value.unshift({
       id: Date.now().toString(),
       name: row.name,
-      status: "success",
+      status: 'success',
       time: row.lastRun,
-      detail: "手动触发生成",
-    });
-  }, 1500);
+      detail: '手动触发生成',
+    })
+  }, 1500)
 }
 
 function handleEdit(row: any) {
-  editingId.value = row.id;
-  form.name = row.name;
-  form.reportType = row.reportType;
-  form.frequency = row.frequency;
-  showAddDialog.value = true;
+  editingId.value = row.id
+  form.name = row.name
+  form.reportType = row.reportType
+  form.frequency = row.frequency
+  showAddDialog.value = true
 }
 
 async function handleDelete(row: any) {
   try {
-    await ElMessageBox.confirm(
-      `确定要删除订阅「${row.name}」吗？`,
-      "确认删除",
-      { type: "warning" },
-    );
-    subscriptions.value = subscriptions.value.filter((s) => s.id !== row.id);
-    ElMessage.success("删除成功");
+    await ElMessageBox.confirm(`确定要删除订阅「${row.name}」吗？`, '确认删除', { type: 'warning' })
+    subscriptions.value = subscriptions.value.filter((s) => s.id !== row.id)
+    ElMessage.success('删除成功')
   } catch {
     // 取消删除
   }
@@ -313,29 +274,27 @@ async function handleDelete(row: any) {
 
 function handleSave() {
   formRef.value?.validate((valid: boolean) => {
-    if (!valid) return;
+    if (!valid) return
     if (editingId.value) {
-      const idx = subscriptions.value.findIndex(
-        (s) => s.id === editingId.value,
-      );
+      const idx = subscriptions.value.findIndex((s) => s.id === editingId.value)
       if (idx >= 0) {
-        subscriptions.value[idx] = { ...subscriptions.value[idx], ...form };
+        subscriptions.value[idx] = { ...subscriptions.value[idx], ...form }
       }
-      ElMessage.success("更新成功");
+      ElMessage.success('更新成功')
     } else {
       subscriptions.value.push({
         id: Date.now().toString(),
         ...form,
-        nextRun: "待定",
-        status: "active",
-        lastRun: "-",
-      });
-      ElMessage.success("创建成功");
+        nextRun: '待定',
+        status: 'active',
+        lastRun: '-',
+      })
+      ElMessage.success('创建成功')
     }
-    showAddDialog.value = false;
-    editingId.value = null;
-    formRef.value?.resetFields();
-  });
+    showAddDialog.value = false
+    editingId.value = null
+    formRef.value?.resetFields()
+  })
 }
 </script>
 

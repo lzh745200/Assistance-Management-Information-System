@@ -6,9 +6,9 @@
   >
 </template>
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute } from "vue-router";
-const route = useRoute();
-const active = computed(() => route.path);
-defineProps<{ menuItems: { path: string; title: string }[] }>();
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+const route = useRoute()
+const active = computed(() => route.path)
+defineProps<{ menuItems: { path: string; title: string }[] }>()
 </script>

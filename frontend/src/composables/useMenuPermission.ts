@@ -1,4 +1,4 @@
 export function useMenuPermission() {
-  const hasPermission = (_menuKey: string) => true;
-  return { hasPermission };
+  const hasPermission = (_menuKey: string) => true
+  return { hasPermission }
 }

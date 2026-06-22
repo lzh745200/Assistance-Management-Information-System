@@ -12,33 +12,33 @@
  * // In template: <el-button @click="execute(project.id)" :loading="isPending">删除</el-button>
  */
 
-import { ref, type Ref } from "vue";
-import { ElMessage } from "element-plus";
+import { ref, type Ref } from 'vue'
+import { ElMessage } from 'element-plus'
 
 export interface OptimisticUpdateOptions<T = any> {
   /** 失败时是否回滚到之前的状态 (默认 true) */
-  rollbackOnError?: boolean;
+  rollbackOnError?: boolean
   /** 成功提示消息 */
-  successMessage?: string;
+  successMessage?: string
   /** 失败提示消息 */
-  errorMessage?: string;
+  errorMessage?: string
   /** 操作前的确认回调，返回 false 则取消 */
-  beforeExecute?: (data: T) => boolean | Promise<boolean>;
+  beforeExecute?: (data: T) => boolean | Promise<boolean>
   /** 操作成功后的回调 */
-  onSuccess?: (data: T) => void;
+  onSuccess?: (data: T) => void
   /** 操作失败后的回调 */
-  onError?: (error: Error, data: T) => void;
+  onError?: (error: Error, data: T) => void
 }
 
 export interface OptimisticUpdateReturn<T = any> {
   /** 是否正在执行 */
-  isPending: Ref<boolean>;
+  isPending: Ref<boolean>
   /** 最近一次错误 */
-  error: Ref<Error | null>;
+  error: Ref<Error | null>
   /** 执行乐观更新 */
-  execute: (data: T) => Promise<boolean>;
+  execute: (data: T) => Promise<boolean>
   /** 重置错误状态 */
-  reset: () => void;
+  reset: () => void
 }
 
 /**
@@ -48,56 +48,56 @@ export interface OptimisticUpdateReturn<T = any> {
  */
 export function useOptimisticUpdate<T = any>(
   mutationFn: (data: T) => Promise<any>,
-  options: OptimisticUpdateOptions<T> = {},
+  options: OptimisticUpdateOptions<T> = {}
 ): OptimisticUpdateReturn<T> {
   const {
     successMessage,
-    errorMessage = "操作失败，请重试",
+    errorMessage = '操作失败，请重试',
     beforeExecute,
     onSuccess,
     onError,
-  } = options;
+  } = options
 
-  const isPending = ref(false);
-  const error = ref<Error | null>(null);
+  const isPending = ref(false)
+  const error = ref<Error | null>(null)
 
   async function execute(data: T): Promise<boolean> {
-    if (isPending.value) return false;
+    if (isPending.value) return false
 
     // 前置检查
     if (beforeExecute) {
       try {
-        const shouldProceed = await beforeExecute(data);
-        if (!shouldProceed) return false;
+        const shouldProceed = await beforeExecute(data)
+        if (!shouldProceed) return false
       } catch {
-        return false;
+        return false
       }
     }
 
-    isPending.value = true;
-    error.value = null;
+    isPending.value = true
+    error.value = null
 
     try {
-      await mutationFn(data);
-      if (successMessage) ElMessage.success(successMessage);
-      onSuccess?.(data);
-      return true;
+      await mutationFn(data)
+      if (successMessage) ElMessage.success(successMessage)
+      onSuccess?.(data)
+      return true
     } catch (e) {
-      const err = e instanceof Error ? e : new Error(String(e));
-      error.value = err;
-      ElMessage.error(errorMessage);
-      onError?.(err, data);
-      return false;
+      const err = e instanceof Error ? e : new Error(String(e))
+      error.value = err
+      ElMessage.error(errorMessage)
+      onError?.(err, data)
+      return false
     } finally {
-      isPending.value = false;
+      isPending.value = false
     }
   }
 
   function reset() {
-    error.value = null;
+    error.value = null
   }
 
-  return { isPending, error, execute, reset };
+  return { isPending, error, execute, reset }
 }
 
 /**
@@ -110,37 +110,33 @@ export function useOptimisticUpdate<T = any>(
 export function useOptimisticRemove<T extends { id: number | string }>(
   list: Ref<T[]>,
   deleteFn: (id: number | string) => Promise<any>,
-  options: OptimisticUpdateOptions = {},
+  options: OptimisticUpdateOptions = {}
 ) {
-  const shouldRollback = options.rollbackOnError !== false;
-  const {
-    execute: doDelete,
-    isPending,
-    error,
-  } = useOptimisticUpdate(deleteFn, options);
-  const removingIds = ref<Set<number | string>>(new Set());
+  const shouldRollback = options.rollbackOnError !== false
+  const { execute: doDelete, isPending, error } = useOptimisticUpdate(deleteFn, options)
+  const removingIds = ref<Set<number | string>>(new Set())
 
   async function remove(id: number | string): Promise<boolean> {
     // 乐观移除：立即从列表中移除
-    const originalList = [...list.value];
-    const removedItem = list.value.find((item) => item.id === id);
-    list.value = list.value.filter((item) => item.id !== id);
-    removingIds.value.add(id);
+    const originalList = [...list.value]
+    const removedItem = list.value.find((item) => item.id === id)
+    list.value = list.value.filter((item) => item.id !== id)
+    removingIds.value.add(id)
 
-    const success = await doDelete(id as any);
+    const success = await doDelete(id as any)
 
     if (!success && shouldRollback) {
       // 回滚：恢复删除的项到原位置
       if (removedItem) {
-        const idx = originalList.findIndex((item) => item.id === id);
-        const restored = [...list.value];
-        restored.splice(idx, 0, removedItem);
-        list.value = restored;
+        const idx = originalList.findIndex((item) => item.id === id)
+        const restored = [...list.value]
+        restored.splice(idx, 0, removedItem)
+        list.value = restored
       }
     }
-    removingIds.value.delete(id);
-    return success;
+    removingIds.value.delete(id)
+    return success
   }
 
-  return { remove, isPending, error, removingIds };
+  return { remove, isPending, error, removingIds }
 }

@@ -13,8 +13,8 @@
 
 <script setup lang="ts">
 defineProps<{
-  items: { label: string; value: string | number }[];
-}>();
+  items: { label: string; value: string | number }[]
+}>()
 </script>
 
 <style scoped>

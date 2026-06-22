@@ -7,47 +7,47 @@
  * - 查询导入历史
  */
 
-import request from "@/api/request";
+import request from '@/api/request'
 
 // ==================== 类型定义 ====================
 
 /** 导入模式 */
-export type ImportMode = "incremental" | "overwrite";
+export type ImportMode = 'incremental' | 'overwrite'
 
 /** 导入结果 */
 export interface ImportResult {
-  success: boolean;
-  total_rows: number;
-  success_rows: number;
-  failed_rows: number;
-  skipped_rows: number;
-  errors?: ImportError[];
+  success: boolean
+  total_rows: number
+  success_rows: number
+  failed_rows: number
+  skipped_rows: number
+  errors?: ImportError[]
 }
 
 /** 导入错误 */
 export interface ImportError {
-  row_number: number;
-  field_name: string;
-  message: string;
+  row_number: number
+  field_name: string
+  message: string
 }
 
 /** 导入历史记录 */
 export interface ImportHistory {
-  id: number;
-  file_name: string;
-  status: string;
-  total_rows: number;
-  success_rows: number;
-  failed_rows: number;
-  skipped_rows: number;
-  created_at: string;
-  updated_at: string;
+  id: number
+  file_name: string
+  status: string
+  total_rows: number
+  success_rows: number
+  failed_rows: number
+  skipped_rows: number
+  created_at: string
+  updated_at: string
 }
 
 /** 导入历史列表响应 */
 interface ImportHistoryResponse {
-  items: ImportHistory[];
-  total: number;
+  items: ImportHistory[]
+  total: number
 }
 
 // ==================== API函数 ====================
@@ -60,9 +60,9 @@ interface ImportHistoryResponse {
 export async function downloadImportTemplate(type: string): Promise<Blob> {
   const response = await request.get(`/import/template`, {
     params: { entity_type: type },
-    responseType: "blob",
-  });
-  return response.data;
+    responseType: 'blob',
+  })
+  return response.data
 }
 
 /**
@@ -74,39 +74,39 @@ export async function downloadImportTemplate(type: string): Promise<Blob> {
  */
 export async function importEntities(
   file: File,
-  entityType: string = "supported_village",
-  mode: ImportMode = "incremental",
+  entityType: string = 'supported_village',
+  mode: ImportMode = 'incremental'
 ): Promise<ImportResult> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("entity_type", entityType);
-  formData.append("mode", mode);
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('entity_type', entityType)
+  formData.append('mode', mode)
 
-  const response = await request.post("/import/entities", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  const response = await request.post('/import/entities', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 120000,
-  });
-  return response.data;
+  })
+  return response.data
 }
 
 /** @deprecated 使用 importEntities 替代 */
 export const importVillages = (file: File, mode?: ImportMode) =>
-  importEntities(file, "supported_village", mode);
+  importEntities(file, 'supported_village', mode)
 
 /** 预览导入数据 */
 export async function previewImportData(
   file: File,
-  entityType: string,
+  entityType: string
 ): Promise<{ rows: any[]; total: number; columns: string[] }> {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("entity_type", entityType);
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('entity_type', entityType)
 
-  const response = await request.post("/import/preview", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  const response = await request.post('/import/preview', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 60000,
-  });
-  return response.data;
+  })
+  return response.data
 }
 
 /**
@@ -117,12 +117,12 @@ export async function previewImportData(
  */
 export async function getImportHistory(
   page: number = 1,
-  pageSize: number = 10,
+  pageSize: number = 10
 ): Promise<ImportHistoryResponse> {
-  const response = await request.get("/import/history", {
+  const response = await request.get('/import/history', {
     params: { page, page_size: pageSize },
-  });
-  return response.data;
+  })
+  return response.data
 }
 
 /**
@@ -130,28 +130,25 @@ export async function getImportHistory(
  * @param data 验证参数
  * @returns 验证结果
  */
-export async function validateImport(data: {
-  file?: File;
-  entity_type?: string;
-}): Promise<{
-  valid: boolean;
-  errors?: Array<{ row: number; field: string; message: string }>;
-  total_rows?: number;
+export async function validateImport(data: { file?: File; entity_type?: string }): Promise<{
+  valid: boolean
+  errors?: Array<{ row: number; field: string; message: string }>
+  total_rows?: number
 }> {
   if (data.file) {
-    const formData = new FormData();
-    formData.append("file", data.file);
+    const formData = new FormData()
+    formData.append('file', data.file)
     if (data.entity_type) {
-      formData.append("entity_type", data.entity_type);
+      formData.append('entity_type', data.entity_type)
     }
-    const response = await request.post("/import/validate", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    const response = await request.post('/import/validate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000,
-    });
-    return response.data;
+    })
+    return response.data
   }
-  const response = await request.post("/import/validate", data);
-  return response.data;
+  const response = await request.post('/import/validate', data)
+  return response.data
 }
 
 /**
@@ -160,14 +157,14 @@ export async function validateImport(data: {
  * @returns 格式化后的状态信息
  */
 export function formatImportStatus(status: string): {
-  text: string;
-  type: string;
+  text: string
+  type: string
 } {
   const statusMap: Record<string, { text: string; type: string }> = {
-    pending: { text: "等待中", type: "info" },
-    processing: { text: "处理中", type: "warning" },
-    completed: { text: "已完成", type: "success" },
-    failed: { text: "失败", type: "danger" },
-  };
-  return statusMap[status] || { text: status, type: "info" };
+    pending: { text: '等待中', type: 'info' },
+    processing: { text: '处理中', type: 'warning' },
+    completed: { text: '已完成', type: 'success' },
+    failed: { text: '失败', type: 'danger' },
+  }
+  return statusMap[status] || { text: status, type: 'info' }
 }

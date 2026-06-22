@@ -16,7 +16,7 @@
 
 /** 等待指定毫秒 */
 function _wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
@@ -30,27 +30,27 @@ function _wait(ms: number): Promise<void> {
 export async function retryImport<T = any>(
   importFn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 1000,
+  baseDelay: number = 1000
 ): Promise<T> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await importFn();
+      return await importFn()
     } catch (error) {
       // 最后一次尝试失败 → 不再重试，向上抛出
       if (attempt >= maxRetries) {
-        throw error;
+        throw error
       }
       // 指数退避: attempt=0 → delay=baseDelay*1, attempt=1 → delay=baseDelay*2
-      const delay = baseDelay * (attempt + 1);
+      const delay = baseDelay * (attempt + 1)
       console.warn(
         `[ChunkLoader] 模块加载失败，${delay}ms 后重试 (${attempt + 1}/${maxRetries})`,
-        error instanceof Error ? error.message : error,
-      );
-      await _wait(delay);
+        error instanceof Error ? error.message : error
+      )
+      await _wait(delay)
     }
   }
   // TypeScript 需要显式 throw（实际不会到达这里）
-  throw new Error("[ChunkLoader] unreachable");
+  throw new Error('[ChunkLoader] unreachable')
 }
 
-export default retryImport;
+export default retryImport

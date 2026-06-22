@@ -9,11 +9,7 @@
         <el-empty description="暂无项目数据" :image-size="60" />
       </div>
       <div v-else class="progress-list">
-        <div
-          v-for="project in displayProjects"
-          :key="project.id"
-          class="progress-item"
-        >
+        <div v-for="project in displayProjects" :key="project.id" class="progress-item">
           <div class="progress-info">
             <span class="project-name">{{ project.name }}</span>
             <span class="project-status" :class="project.statusClass">
@@ -36,37 +32,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed } from 'vue'
 
 interface ProjectItem {
-  id: number | string;
-  name: string;
-  progress: number;
-  statusClass: string;
-  statusText: string;
-  startDate: string;
+  id: number | string
+  name: string
+  progress: number
+  statusClass: string
+  statusText: string
+  startDate: string
 }
 
 const props = withDefaults(
   defineProps<{
-    visible?: boolean;
-    projects?: ProjectItem[];
-    maxDisplay?: number;
+    visible?: boolean
+    projects?: ProjectItem[]
+    maxDisplay?: number
   }>(),
   {
     visible: true,
     projects: () => [],
     maxDisplay: 5,
-  },
-);
+  }
+)
 
 defineEmits<{
-  (e: "viewAll"): void;
-}>();
+  (e: 'viewAll'): void
+}>()
 
-const displayProjects = computed(() =>
-  props.projects.slice(0, props.maxDisplay),
-);
+const displayProjects = computed(() => props.projects.slice(0, props.maxDisplay))
 </script>
 
 <style scoped>

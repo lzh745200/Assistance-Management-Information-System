@@ -7,12 +7,7 @@
         clearable
         @update:model-value="onCityChange"
       >
-        <el-option
-          v-for="city in GUIZHOU_ALL_CITIES"
-          :key="city"
-          :label="city"
-          :value="city"
-        />
+        <el-option v-for="city in GUIZHOU_ALL_CITIES" :key="city" :label="city" :value="city" />
       </el-select>
     </el-form-item>
     <el-form-item label="所在县市">
@@ -23,12 +18,7 @@
         :disabled="!availableCounties.length"
         @update:model-value="onCountyChange"
       >
-        <el-option
-          v-for="c in availableCounties"
-          :key="c"
-          :label="c"
-          :value="c"
-        />
+        <el-option v-for="c in availableCounties" :key="c" :label="c" :value="c" />
       </el-select>
     </el-form-item>
     <el-form-item v-if="showTownship" label="乡镇">
@@ -42,52 +32,52 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { GUIZHOU_ALL_CITIES, getCountiesByCity } from "@/data/guizhouRegion";
+import { computed } from 'vue'
+import { GUIZHOU_ALL_CITIES, getCountiesByCity } from '@/data/guizhouRegion'
 
 export interface RegionValue {
-  city?: string;
-  county?: string;
-  township?: string;
+  city?: string
+  county?: string
+  township?: string
 }
 
 const props = withDefaults(
   defineProps<{
-    modelValue?: RegionValue;
-    showTownship?: boolean;
+    modelValue?: RegionValue
+    showTownship?: boolean
   }>(),
-  { showTownship: true },
-);
+  { showTownship: true }
+)
 
 const emit = defineEmits<{
-  "update:modelValue": [value: RegionValue];
-}>();
+  'update:modelValue': [value: RegionValue]
+}>()
 
 const availableCounties = computed(() => {
-  if (!props.modelValue?.city) return [];
-  return getCountiesByCity(props.modelValue.city);
-});
+  if (!props.modelValue?.city) return []
+  return getCountiesByCity(props.modelValue.city)
+})
 
 function onCityChange(city: string) {
-  emit("update:modelValue", {
+  emit('update:modelValue', {
     ...props.modelValue,
     city: city || undefined,
     county: undefined, // 切换市州时清除县选择
     township: props.modelValue?.township,
-  });
+  })
 }
 
 function onCountyChange(county: string) {
-  emit("update:modelValue", {
+  emit('update:modelValue', {
     ...props.modelValue,
     county: county || undefined,
-  });
+  })
 }
 
 function onTownshipChange(township: string) {
-  emit("update:modelValue", {
+  emit('update:modelValue', {
     ...props.modelValue,
     township: township || undefined,
-  });
+  })
 }
 </script>

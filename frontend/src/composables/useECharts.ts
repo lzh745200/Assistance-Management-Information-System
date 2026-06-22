@@ -10,85 +10,82 @@
  *   setOption({ ... }); // 自动初始化 + 自动销毁
  */
 
-import { ref, onMounted, onUnmounted, type Ref } from "vue";
-import type { EChartsOption, ECharts } from "echarts";
+import { ref, onMounted, onUnmounted, type Ref } from 'vue'
+import type { EChartsOption, ECharts } from 'echarts'
 
 interface UseEChartsOptions {
   /** 是否自动监听 window resize（默认 true） */
-  autoResize?: boolean;
+  autoResize?: boolean
   /** resize 防抖延迟 (ms)，默认 100 */
-  resizeDebounce?: number;
+  resizeDebounce?: number
 }
 
 interface UseEChartsReturn {
   /** 模板 ref 绑定的 DOM 元素 */
-  chartRef: Ref<HTMLElement | null>;
+  chartRef: Ref<HTMLElement | null>
   /** 当前 ECharts 实例（只读） */
-  instance: Ref<ECharts | null>;
+  instance: Ref<ECharts | null>
   /** 设置/更新图表配置 */
-  setOption: (
-    option: EChartsOption,
-    opts?: { notMerge?: boolean; lazyUpdate?: boolean },
-  ) => void;
+  setOption: (option: EChartsOption, opts?: { notMerge?: boolean; lazyUpdate?: boolean }) => void
   /** 手动调整图表大小 */
-  resize: () => void;
+  resize: () => void
   /** 获取图表 Base64 截图 */
-  getDataURL: () => string;
+  getDataURL: () => string
 }
 
 export function useECharts(opts: UseEChartsOptions = {}): UseEChartsReturn {
-  const { autoResize = true, resizeDebounce = 100 } = opts;
+  const { autoResize = true, resizeDebounce = 100 } = opts
 
-  const chartRef = ref<HTMLElement | null>(null);
-  const instance = ref<ECharts | null>(null) as Ref<ECharts | null>;
+  const chartRef = ref<HTMLElement | null>(null)
+  const instance = ref<ECharts | null>(null) as Ref<ECharts | null>
 
-  let _resizeTimer: ReturnType<typeof setTimeout> | null = null;
+  let _resizeTimer: ReturnType<typeof setTimeout> | null = null
 
   function _onResize() {
-    if (_resizeTimer) clearTimeout(_resizeTimer);
+    if (_resizeTimer) clearTimeout(_resizeTimer)
     _resizeTimer = setTimeout(() => {
-      instance.value?.resize();
-    }, resizeDebounce);
+      instance.value?.resize()
+    }, resizeDebounce)
   }
 
   async function _init() {
-    if (!chartRef.value) return;
+    if (!chartRef.value) return
     // 动态导入 echarts（支持 code-splitting）
-    const echarts = await import("echarts");
-    instance.value = echarts.init(chartRef.value);
+    const echarts = await import('echarts')
+    instance.value = echarts.init(chartRef.value)
     if (autoResize) {
-      window.addEventListener("resize", _onResize);
+      window.addEventListener('resize', _onResize)
     }
   }
 
   function setOption(
     option: EChartsOption,
-    setOpts?: { notMerge?: boolean; lazyUpdate?: boolean },
+    setOpts?: { notMerge?: boolean; lazyUpdate?: boolean }
   ) {
-    if (!instance.value) return;
-    instance.value.setOption(option, setOpts);
+    if (!instance.value) return
+    instance.value.setOption(option, setOpts)
   }
 
   function resize() {
-    instance.value?.resize();
+    instance.value?.resize()
   }
 
   function getDataURL(): string {
-    return instance.value?.getDataURL() ?? "";
+    return instance.value?.getDataURL() ?? ''
   }
 
   onMounted(async () => {
-    await _init();
-  });
+    await _init()
+  })
 
   onUnmounted(() => {
-    if (_resizeTimer) clearTimeout(_resizeTimer);
+    if (_resizeTimer) clearTimeout(_resizeTimer)
     if (autoResize) {
-      window.removeEventListener("resize", _onResize);
+      window.removeEventListener('resize', _onResize)
     }
-    instance.value?.dispose();
-    instance.value = null;
-  });
+    instance.value?.dispose()
+    instance.value = null
+  })
 
-  return { chartRef, instance, setOption, resize, getDataURL };
+  return { chartRef, instance, setOption, resize, getDataURL }
 }

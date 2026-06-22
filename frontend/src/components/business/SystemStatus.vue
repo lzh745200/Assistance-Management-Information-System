@@ -28,9 +28,7 @@
     <div class="status-item" title="本地数据库文件大小">
       <el-icon class="status-icon-db"><Coin /></el-icon>
       <span class="status-label">数据库</span>
-      <span class="status-value data-number data-number--sm">{{
-        dbSizeText
-      }}</span>
+      <span class="status-value data-number data-number--sm">{{ dbSizeText }}</span>
     </div>
 
     <div class="status-divider"></div>
@@ -39,9 +37,7 @@
     <div class="status-item" title="CPU 使用率">
       <el-icon class="status-icon-cpu"><Monitor /></el-icon>
       <span class="status-label">CPU</span>
-      <span class="status-value data-number data-number--sm"
-        >{{ cpuPercent }}%</span
-      >
+      <span class="status-value data-number data-number--sm">{{ cpuPercent }}%</span>
       <div class="status-bar">
         <div
           class="status-bar__fill status-bar__fill--cpu"
@@ -60,9 +56,7 @@
     <div class="status-item" title="内存使用率">
       <el-icon class="status-icon-mem"><Files /></el-icon>
       <span class="status-label">内存</span>
-      <span class="status-value data-number data-number--sm"
-        >{{ memPercent }}%</span
-      >
+      <span class="status-value data-number data-number--sm">{{ memPercent }}%</span>
       <div class="status-bar">
         <div
           class="status-bar__fill status-bar__fill--mem"
@@ -101,18 +95,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import {
-  Timer,
-  Coin,
-  Monitor,
-  Files,
-  Cpu,
-  Refresh,
-} from "@element-plus/icons-vue";
-import { getMonitorSnapshot } from "@/api/systemMonitor";
-import type { MonitorSnapshot } from "@/api/systemMonitor";
-import { logger } from "@/utils/logger";
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { Timer, Coin, Monitor, Files, Cpu, Refresh } from '@element-plus/icons-vue'
+import { getMonitorSnapshot } from '@/api/systemMonitor'
+import type { MonitorSnapshot } from '@/api/systemMonitor'
+import { logger } from '@/utils/logger'
 
 // =========================================================================
 // Props
@@ -120,68 +107,68 @@ import { logger } from "@/utils/logger";
 
 interface Props {
   /** 轮询间隔（毫秒），默认 30 秒，设为 0 禁用轮询 */
-  pollInterval?: number;
+  pollInterval?: number
   /** 是否显示刷新按钮 */
-  showRefresh?: boolean;
+  showRefresh?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pollInterval: 30000,
   showRefresh: true,
-});
+})
 
 // =========================================================================
 // 状态
 // =========================================================================
 
-const isOnline = ref(true);
-const isSyncing = ref(false);
-const isRefreshing = ref(false);
-const lastSyncTime = ref<Date | null>(null);
-const dbSizeBytes = ref<number>(0);
-const cpuPercent = ref<number>(0);
-const memPercent = ref<number>(0);
-const processMemoryMB = ref<number>(0);
-const processThreads = ref<number>(0);
+const isOnline = ref(true)
+const isSyncing = ref(false)
+const isRefreshing = ref(false)
+const lastSyncTime = ref<Date | null>(null)
+const dbSizeBytes = ref<number>(0)
+const cpuPercent = ref<number>(0)
+const memPercent = ref<number>(0)
+const processMemoryMB = ref<number>(0)
+const processThreads = ref<number>(0)
 
-let pollTimer: ReturnType<typeof setInterval> | null = null;
+let pollTimer: ReturnType<typeof setInterval> | null = null
 
 // =========================================================================
 // 计算属性
 // =========================================================================
 
 const onlineStatusText = computed(() => {
-  if (isSyncing.value) return "同步中";
-  return isOnline.value ? "在线" : "离线";
-});
+  if (isSyncing.value) return '同步中'
+  return isOnline.value ? '在线' : '离线'
+})
 
 const formattedSyncTime = computed(() => {
-  if (!lastSyncTime.value) return "--:--";
-  const now = new Date();
-  const diff = now.getTime() - lastSyncTime.value.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
+  if (!lastSyncTime.value) return '--:--'
+  const now = new Date()
+  const diff = now.getTime() - lastSyncTime.value.getTime()
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
 
-  if (minutes < 1) return "刚刚";
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (hours < 24) return `${hours}小时前`;
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  if (hours < 24) return `${hours}小时前`
 
-  return lastSyncTime.value.toLocaleDateString("zh-CN", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-});
+  return lastSyncTime.value.toLocaleDateString('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+})
 
 /** 人性化数据库文件大小显示 */
 const dbSizeText = computed(() => {
-  const bytes = dbSizeBytes.value;
-  if (bytes === 0) return "-- MB";
-  const mb = bytes / (1024 * 1024);
-  if (mb >= 1024) return (mb / 1024).toFixed(2) + " GB";
-  return mb.toFixed(1) + " MB";
-});
+  const bytes = dbSizeBytes.value
+  if (bytes === 0) return '-- MB'
+  const mb = bytes / (1024 * 1024)
+  if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GB'
+  return mb.toFixed(1) + ' MB'
+})
 
 // =========================================================================
 // 方法
@@ -190,69 +177,69 @@ const dbSizeText = computed(() => {
 const estimateDbSize = async () => {
   try {
     // 尝试从后端获取数据库文件大小
-    const { getDatabaseFileSize } = await import("@/api/systemMonitor");
-    const res = await getDatabaseFileSize();
+    const { getDatabaseFileSize } = await import('@/api/systemMonitor')
+    const res = await getDatabaseFileSize()
     if (res?.data?.size_bytes) {
-      dbSizeBytes.value = res.data.size_bytes;
+      dbSizeBytes.value = res.data.size_bytes
     }
   } catch {
     // 降级：使用 fetch 探测或设为 0
-    dbSizeBytes.value = 0;
+    dbSizeBytes.value = 0
   }
-};
+}
 
 const fetchSnapshot = async () => {
   try {
-    const res = await getMonitorSnapshot();
+    const res = await getMonitorSnapshot()
     if (res?.success && res?.data) {
-      const d: MonitorSnapshot = res.data;
-      isOnline.value = true;
-      cpuPercent.value = Math.round(d.cpu_usage || 0);
-      memPercent.value = Math.round(d.memory_usage || 0);
-      processMemoryMB.value = Math.round(d.process_memory_mb || 0);
-      processThreads.value = d.process_threads || 0;
-      lastSyncTime.value = new Date();
+      const d: MonitorSnapshot = res.data
+      isOnline.value = true
+      cpuPercent.value = Math.round(d.cpu_usage || 0)
+      memPercent.value = Math.round(d.memory_usage || 0)
+      processMemoryMB.value = Math.round(d.process_memory_mb || 0)
+      processThreads.value = d.process_threads || 0
+      lastSyncTime.value = new Date()
     }
   } catch {
-    isOnline.value = false;
+    isOnline.value = false
     // 保持上次数据不变，仅标记离线
   }
-};
+}
 
 const refresh = async () => {
-  isRefreshing.value = true;
-  isSyncing.value = true;
+  isRefreshing.value = true
+  isSyncing.value = true
   try {
-    await Promise.all([fetchSnapshot(), estimateDbSize()]);
-    lastSyncTime.value = new Date();
+    await Promise.all([fetchSnapshot(), estimateDbSize()])
+    lastSyncTime.value = new Date()
   } catch (error) {
-    logger.error("[SystemStatus] 刷新失败:", error);
+    logger.error('[SystemStatus] 刷新失败:', error)
   } finally {
-    isRefreshing.value = false;
-    isSyncing.value = false;
+    isRefreshing.value = false
+    isSyncing.value = false
   }
-};
+}
 
 // =========================================================================
 // 生命周期
 // =========================================================================
 
 onMounted(async () => {
-  await refresh();
+  await refresh()
 
   if (props.pollInterval > 0) {
     pollTimer = setInterval(() => {
-      fetchSnapshot();
-    }, props.pollInterval);
+      fetchSnapshot()
+    }, props.pollInterval)
   }
-});
+})
 
 onUnmounted(() => {
   if (pollTimer !== null) {
-    clearInterval(pollTimer);
-    pollTimer = null;
+    clearInterval(pollTimer)
+    pollTimer = null
   }
-});
+})
 </script>
 
 <style scoped lang="scss">

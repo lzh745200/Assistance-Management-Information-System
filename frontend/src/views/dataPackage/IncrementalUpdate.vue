@@ -53,14 +53,8 @@
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" @click="handleDetectChanges">
-                检测变更
-              </el-button>
-              <el-button
-                type="success"
-                :disabled="!changesSummary"
-                @click="handleExport"
-              >
+              <el-button type="primary" @click="handleDetectChanges"> 检测变更 </el-button>
+              <el-button type="success" :disabled="!changesSummary" @click="handleExport">
                 导出增量包
               </el-button>
             </el-form-item>
@@ -77,14 +71,10 @@
                 <el-tag type="success">{{ changesSummary.total_added }}</el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="修改记录">
-                <el-tag type="warning">{{
-                  changesSummary.total_modified
-                }}</el-tag>
+                <el-tag type="warning">{{ changesSummary.total_modified }}</el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="删除记录">
-                <el-tag type="danger">{{
-                  changesSummary.total_deleted
-                }}</el-tag>
+                <el-tag type="danger">{{ changesSummary.total_deleted }}</el-tag>
               </el-descriptions-item>
             </el-descriptions>
 
@@ -121,18 +111,12 @@
 
             <el-form-item label="应用变更">
               <el-switch v-model="importForm.apply_changes" />
-              <span style="margin-left: 10px; color: #999">
-                关闭时仅预览，不实际导入
-              </span>
+              <span style="margin-left: 10px; color: #999"> 关闭时仅预览，不实际导入 </span>
             </el-form-item>
 
             <el-form-item>
-              <el-button
-                type="primary"
-                :disabled="!importForm.package_id"
-                @click="handleImport"
-              >
-                {{ importForm.apply_changes ? "导入增量包" : "预览变更" }}
+              <el-button type="primary" :disabled="!importForm.package_id" @click="handleImport">
+                {{ importForm.apply_changes ? '导入增量包' : '预览变更' }}
               </el-button>
             </el-form-item>
           </el-form>
@@ -140,9 +124,7 @@
           <!-- 导入结果 -->
           <el-card v-if="importResult" style="margin-top: 20px">
             <template #header>
-              <span>{{
-                importResult.preview_only ? "预览结果" : "导入结果"
-              }}</span>
+              <span>{{ importResult.preview_only ? '预览结果' : '导入结果' }}</span>
             </template>
 
             <el-alert
@@ -184,166 +166,150 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
-import { DATA_TYPES, DATA_TYPE_LABELS } from "@/constants/dataTypes";
-import { handleApiError } from "@/utils/errorHandler";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
+import { DATA_TYPES, DATA_TYPE_LABELS } from '@/constants/dataTypes'
+import { handleApiError } from '@/utils/errorHandler'
 
 interface PackageItem {
-  id: number | string;
-  package_code: string;
-  description: string;
-  type: string;
+  id: number | string
+  package_code: string
+  description: string
+  type: string
 }
 
 interface ChangesSummary {
-  total_added: number;
-  total_modified: number;
-  total_deleted: number;
-  by_type: Record<
-    string,
-    { added: number; modified: number; deleted: number; total: number }
-  >;
+  total_added: number
+  total_modified: number
+  total_deleted: number
+  by_type: Record<string, { added: number; modified: number; deleted: number; total: number }>
 }
 
 interface ImportResult {
-  preview_only: boolean;
-  stats?: { added: number; modified: number; deleted: number };
+  preview_only: boolean
+  stats?: { added: number; modified: number; deleted: number }
   summary?: {
-    total_added: number;
-    total_modified: number;
-    total_deleted: number;
-  };
+    total_added: number
+    total_modified: number
+    total_deleted: number
+  }
 }
 
-const activeTab = ref("export");
-const packageList = ref<PackageItem[]>([]);
-const incrementalPackages = ref<PackageItem[]>([]);
-const changesSummary = ref<ChangesSummary | null>(null);
-const importResult = ref<ImportResult | null>(null);
+const activeTab = ref('export')
+const packageList = ref<PackageItem[]>([])
+const incrementalPackages = ref<PackageItem[]>([])
+const changesSummary = ref<ChangesSummary | null>(null)
+const importResult = ref<ImportResult | null>(null)
 
 const exportForm = ref({
   base_package_id: null,
-  data_types: [
-    DATA_TYPES.VILLAGES,
-    DATA_TYPES.PROJECTS,
-    DATA_TYPES.FUNDS,
-    DATA_TYPES.SCHOOLS,
-  ],
-  description: "",
-});
+  data_types: [DATA_TYPES.VILLAGES, DATA_TYPES.PROJECTS, DATA_TYPES.FUNDS, DATA_TYPES.SCHOOLS],
+  description: '',
+})
 
 const importForm = ref({
   package_id: null,
   apply_changes: false,
-});
+})
 
 // 获取数据包列表
 const fetchPackageList = async () => {
   try {
-    const response = await request.get("/data-packages");
+    const response = await request.get('/data-packages')
     if (response.data.items) {
-      packageList.value = response.data.items.filter(
-        (p: PackageItem) => p.type !== "update",
-      );
+      packageList.value = response.data.items.filter((p: PackageItem) => p.type !== 'update')
       incrementalPackages.value = response.data.items.filter(
-        (p: PackageItem) => p.type === "update",
-      );
+        (p: PackageItem) => p.type === 'update'
+      )
     }
   } catch {
-    ElMessage.error("获取数据包列表失败");
+    ElMessage.error('获取数据包列表失败')
   }
-};
+}
 
 // 检测变更
 const handleDetectChanges = async () => {
   if (!exportForm.value.base_package_id) {
-    ElMessage.warning("请选择基础数据包");
-    return;
+    ElMessage.warning('请选择基础数据包')
+    return
   }
 
   if (exportForm.value.data_types.length === 0) {
-    ElMessage.warning("请选择数据类型");
-    return;
+    ElMessage.warning('请选择数据类型')
+    return
   }
 
   try {
-    const response = await request.post(
-      "/data-packages/incremental/detect-changes",
-      null,
-      {
-        params: {
-          org_id: null, // 使用当前用户组织
-          data_types: exportForm.value.data_types,
-          base_package_id: exportForm.value.base_package_id,
-        },
+    const response = await request.post('/data-packages/incremental/detect-changes', null, {
+      params: {
+        org_id: null, // 使用当前用户组织
+        data_types: exportForm.value.data_types,
+        base_package_id: exportForm.value.base_package_id,
       },
-    );
+    })
 
     if (response.data.success) {
-      changesSummary.value = response.data.summary;
-      ElMessage.success("变更检测完成");
+      changesSummary.value = response.data.summary
+      ElMessage.success('变更检测完成')
     }
   } catch (error: unknown) {
-    handleApiError(error, "检测变更失败");
+    handleApiError(error, '检测变更失败')
   }
-};
+}
 
 // 导出增量包
 const handleExport = async () => {
   try {
-    const response = await request.post("/data-packages/incremental/export", {
+    const response = await request.post('/data-packages/incremental/export', {
       org_id: null,
       data_types: exportForm.value.data_types,
       base_package_id: exportForm.value.base_package_id,
-      description: exportForm.value.description || "增量更新包",
-    });
+      description: exportForm.value.description || '增量更新包',
+    })
 
     if (response.data.success) {
-      ElMessage.success("增量包导出成功");
+      ElMessage.success('增量包导出成功')
 
       // 下载文件
       if (response.data.download_url) {
-        window.open(response.data.download_url, "_blank");
+        window.open(response.data.download_url, '_blank')
       }
 
       // 刷新列表
-      fetchPackageList();
-      changesSummary.value = null;
+      fetchPackageList()
+      changesSummary.value = null
     }
   } catch (error: unknown) {
-    handleApiError(error, "导出失败");
+    handleApiError(error, '导出失败')
   }
-};
+}
 
 // 导入增量包
 const handleImport = async () => {
   try {
-    const response = await request.post("/data-packages/incremental/import", {
+    const response = await request.post('/data-packages/incremental/import', {
       package_id: importForm.value.package_id,
       apply_changes: importForm.value.apply_changes,
-    });
+    })
 
     if (response.data.success) {
-      importResult.value = response.data;
-      ElMessage.success(
-        importForm.value.apply_changes ? "导入成功" : "预览完成",
-      );
+      importResult.value = response.data
+      ElMessage.success(importForm.value.apply_changes ? '导入成功' : '预览完成')
     }
   } catch (error: unknown) {
-    handleApiError(error, "操作失败");
+    handleApiError(error, '操作失败')
   }
-};
+}
 
 // 数据包变更
 const handlePackageChange = () => {
-  importResult.value = null;
-};
+  importResult.value = null
+}
 
 // 获取按类型统计的变更
 const changesByType = computed(() => {
-  if (!changesSummary.value?.by_type) return [];
+  if (!changesSummary.value?.by_type) return []
 
   return Object.entries(changesSummary.value.by_type).map(([type, stats]) => ({
     type,
@@ -351,12 +317,12 @@ const changesByType = computed(() => {
     modified: stats.modified,
     deleted: stats.deleted,
     total: stats.total,
-  }));
-});
+  }))
+})
 
 onMounted(() => {
-  fetchPackageList();
-});
+  fetchPackageList()
+})
 </script>
 
 <style scoped>

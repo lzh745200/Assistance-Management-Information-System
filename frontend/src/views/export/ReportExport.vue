@@ -137,11 +137,7 @@
       </el-form>
 
       <div class="official-report-list">
-        <div
-          v-for="report in officialReportTypes"
-          :key="report.type"
-          class="official-report-item"
-        >
+        <div v-for="report in officialReportTypes" :key="report.type" class="official-report-item">
           <div class="report-info">
             <el-icon :size="24" :color="report.color">
               <component :is="report.icon" />
@@ -220,13 +216,7 @@
             >
               下载
             </el-button>
-            <el-button
-              v-if="row.status === 'processing'"
-              link
-              type="info"
-              size="small"
-              disabled
-            >
+            <el-button v-if="row.status === 'processing'" link type="info" size="small" disabled>
               处理中...
             </el-button>
           </template>
@@ -238,17 +228,12 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
-import request from "@/api/request";
+import { logger } from '@/utils/logger'
+import request from '@/api/request'
 
-import { ref, reactive, onMounted } from "vue";
-import {
-  Download,
-  Refresh,
-  Document,
-  DocumentChecked,
-} from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
+import { ref, reactive, onMounted } from 'vue'
+import { Download, Refresh, Document, DocumentChecked } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import {
   getExportHistory,
   downloadExportFile,
@@ -256,85 +241,85 @@ import {
   formatFileSize,
   exportReportWord,
   exportReportPdf,
-} from "@/api/export";
+} from '@/api/export'
 
 // 报表类型定义
 // _exportReport 函数在模板中通过动态组件方式使用
 
 const officialReportTypes = [
   {
-    type: "summary",
-    name: "年度帮扶工作总结",
-    description: "汇总年度帮扶村庄、学校、项目及资金情况",
-    icon: "DataAnalysis",
-    color: "#40916c",
+    type: 'summary',
+    name: '年度帮扶工作总结',
+    description: '汇总年度帮扶村庄、学校、项目及资金情况',
+    icon: 'DataAnalysis',
+    color: '#40916c',
   },
   {
-    type: "fund_detail",
-    name: "帮扶资金拨付明细表",
-    description: "按年度列示资金拨付明细及状态",
-    icon: "Money",
-    color: "#e91e63",
+    type: 'fund_detail',
+    name: '帮扶资金拨付明细表',
+    description: '按年度列示资金拨付明细及状态',
+    icon: 'Money',
+    color: '#e91e63',
   },
   {
-    type: "project_progress",
-    name: "帮扶项目进度统计表",
-    description: "按年度统计项目预算、进度及健康标识",
-    icon: "Folder",
-    color: "#ff9800",
+    type: 'project_progress',
+    name: '帮扶项目进度统计表',
+    description: '按年度统计项目预算、进度及健康标识',
+    icon: 'Folder',
+    color: '#ff9800',
   },
-];
+]
 
 const reportTypes = [
   {
-    type: "village_summary",
-    name: "帮扶村汇总报表",
-    description: "帮扶村基本情况统计汇总",
-    icon: "Location",
-    color: "#40916c",
+    type: 'village_summary',
+    name: '帮扶村汇总报表',
+    description: '帮扶村基本情况统计汇总',
+    icon: 'Location',
+    color: '#40916c',
   },
   {
-    type: "fund_analysis",
-    name: "资金使用分析报表",
-    description: "资金预算、支出、结余分析",
-    icon: "Money",
-    color: "#e91e63",
+    type: 'fund_analysis',
+    name: '资金使用分析报表',
+    description: '资金预算、支出、结余分析',
+    icon: 'Money',
+    color: '#e91e63',
   },
   {
-    type: "project_progress",
-    name: "项目进度报表",
-    description: "项目实施进度跟踪统计",
-    icon: "Folder",
-    color: "#ff9800",
+    type: 'project_progress',
+    name: '项目进度报表',
+    description: '项目实施进度跟踪统计',
+    icon: 'Folder',
+    color: '#ff9800',
   },
   {
-    type: "school_statistics",
-    name: "学校援建统计报表",
-    description: "援建学校情况统计",
-    icon: "School",
-    color: "#2196f3",
+    type: 'school_statistics',
+    name: '学校援建统计报表',
+    description: '援建学校情况统计',
+    icon: 'School',
+    color: '#2196f3',
   },
   {
-    type: "annual_summary",
-    name: "年度工作总结报表",
-    description: "年度工作成效汇总",
-    icon: "DataAnalysis",
-    color: "#9c27b0",
+    type: 'annual_summary',
+    name: '年度工作总结报表',
+    description: '年度工作成效汇总',
+    icon: 'DataAnalysis',
+    color: '#9c27b0',
   },
   {
-    type: "comprehensive",
-    name: "综合数据报表",
-    description: "全面数据导出",
-    icon: "Document",
-    color: "#607d8b",
+    type: 'comprehensive',
+    name: '综合数据报表',
+    description: '全面数据导出',
+    icon: 'Document',
+    color: '#607d8b',
   },
-];
+]
 
 // 状态
-const selectedType = ref("");
-const exporting = ref(false);
-const loadingHistory = ref(false);
-const exportHistory = ref<any[]>([]);
+const selectedType = ref('')
+const exporting = ref(false)
+const loadingHistory = ref(false)
+const exportHistory = ref<any[]>([])
 
 const officialLoading = reactive<Record<string, boolean>>({
   summary_word: false,
@@ -343,115 +328,105 @@ const officialLoading = reactive<Record<string, boolean>>({
   fund_detail_pdf: false,
   project_progress_word: false,
   project_progress_pdf: false,
-});
+})
 
 const officialForm = reactive({
   year: new Date().getFullYear().toString(),
-});
+})
 
 const exportForm = reactive({
   dateRange: null as [Date, Date] | null,
-  scope: "self",
-  format: "xlsx",
+  scope: 'self',
+  format: 'xlsx',
   includeCharts: true,
-  dimensions: ["region", "status"],
-  fundTypes: ["budget", "actual"],
-  projectStatus: ["planning", "in_progress", "completed"],
-});
+  dimensions: ['region', 'status'],
+  fundTypes: ['budget', 'actual'],
+  projectStatus: ['planning', 'in_progress', 'completed'],
+})
 
 // 标签映射
 const exportStatusLabels: Record<string, string> = {
-  pending: "等待中",
-  processing: "处理中",
-  completed: "已完成",
-  failed: "失败",
-};
+  pending: '等待中',
+  processing: '处理中',
+  completed: '已完成',
+  failed: '失败',
+}
 
-const exportStatusTypes: Record<
-  string,
-  "info" | "primary" | "success" | "warning" | "danger"
-> = {
-  pending: "info",
-  processing: "warning",
-  completed: "success",
-  failed: "danger",
-};
+const exportStatusTypes: Record<string, 'info' | 'primary' | 'success' | 'warning' | 'danger'> = {
+  pending: 'info',
+  processing: 'warning',
+  completed: 'success',
+  failed: 'danger',
+}
 
 // 方法
 function selectReportType(type: string) {
-  selectedType.value = type;
+  selectedType.value = type
 }
 
 function getReportTypeName(type: string): string {
-  const report = reportTypes.find((r) => r.type === type);
-  return report?.name || type;
+  const report = reportTypes.find((r) => r.type === type)
+  return report?.name || type
 }
 
 function getExportStatusLabel(status: string): string {
-  return exportStatusLabels[status] || status;
+  return exportStatusLabels[status] || status
 }
 
 function getExportStatusType(
-  status: string,
-): "success" | "info" | "warning" | "danger" | "primary" {
-  return exportStatusTypes[status] || "info";
+  status: string
+): 'success' | 'info' | 'warning' | 'danger' | 'primary' {
+  return exportStatusTypes[status] || 'info'
 }
 
 function formatDate(dateStr?: string): string {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleString("zh-CN");
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 function resetForm() {
-  exportForm.dateRange = null;
-  exportForm.scope = "self";
-  exportForm.format = "xlsx";
-  exportForm.includeCharts = true;
+  exportForm.dateRange = null
+  exportForm.scope = 'self'
+  exportForm.format = 'xlsx'
+  exportForm.includeCharts = true
 }
 
 function handlePrintPreview() {
   if (!selectedType.value) {
-    ElMessage.warning("请先选择报表类型");
-    return;
+    ElMessage.warning('请先选择报表类型')
+    return
   }
-  window.print();
+  window.print()
 }
 
-async function handleExportOfficial(
-  reportType: string,
-  format: "word" | "pdf",
-) {
-  const loadingKey = `${reportType}_${format}`;
-  officialLoading[loadingKey] = true;
+async function handleExportOfficial(reportType: string, format: 'word' | 'pdf') {
+  const loadingKey = `${reportType}_${format}`
+  officialLoading[loadingKey] = true
   try {
-    const yearNum = officialForm.year ? Number(officialForm.year) : undefined;
+    const yearNum = officialForm.year ? Number(officialForm.year) : undefined
     const blob =
-      format === "word"
+      format === 'word'
         ? await exportReportWord(reportType, yearNum)
-        : await exportReportPdf(reportType, yearNum);
+        : await exportReportPdf(reportType, yearNum)
 
-    const reportName =
-      officialReportTypes.find((r) => r.type === reportType)?.name ||
-      reportType;
-    const filename = `${reportName}_${yearNum || new Date().getFullYear()}.${format === "word" ? "docx" : "pdf"}`;
-    triggerDownload(blob, filename);
-    ElMessage.success(`${reportName} 导出成功`);
+    const reportName = officialReportTypes.find((r) => r.type === reportType)?.name || reportType
+    const filename = `${reportName}_${yearNum || new Date().getFullYear()}.${format === 'word' ? 'docx' : 'pdf'}`
+    triggerDownload(blob, filename)
+    ElMessage.success(`${reportName} 导出成功`)
   } catch (error: any) {
-    ElMessage.error(
-      error.response?.data?.detail || `${format.toUpperCase()} 导出失败`,
-    );
+    ElMessage.error(error.response?.data?.detail || `${format.toUpperCase()} 导出失败`)
   } finally {
-    officialLoading[loadingKey] = false;
+    officialLoading[loadingKey] = false
   }
 }
 
 async function handleExport() {
   if (!selectedType.value) {
-    ElMessage.warning("请选择报表类型");
-    return;
+    ElMessage.warning('请选择报表类型')
+    return
   }
 
-  exporting.value = true;
+  exporting.value = true
   try {
     const params = {
       report_type: selectedType.value,
@@ -465,69 +440,69 @@ async function handleExport() {
         fund_types: exportForm.fundTypes,
         project_status: exportForm.projectStatus,
       },
-    };
+    }
 
     // 同步导出报表，直接下载文件
-    const response = await request.post("/async-export/reports", params, {
-      responseType: "blob",
-    });
+    const response = await request.post('/async-export/reports', params, {
+      responseType: 'blob',
+    })
 
     if (response instanceof Blob) {
-      const blob = response;
-      const filename = getReportFileName(selectedType.value, exportForm.format);
-      triggerDownload(blob, filename);
-      ElMessage.success("报表导出成功");
+      const blob = response
+      const filename = getReportFileName(selectedType.value, exportForm.format)
+      triggerDownload(blob, filename)
+      ElMessage.success('报表导出成功')
     } else {
-      ElMessage.warning("报表导出中，请稍后在导出历史查看进度");
-      loadHistory();
+      ElMessage.warning('报表导出中，请稍后在导出历史查看进度')
+      loadHistory()
     }
   } catch (error) {
-    ElMessage.error((error as Error).message || "导出失败");
+    ElMessage.error((error as Error).message || '导出失败')
   } finally {
-    exporting.value = false;
+    exporting.value = false
   }
 }
 
 function getReportFileName(reportType: string, format: string): string {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
   const reportNames: Record<string, string> = {
-    village_summary: "帮扶村汇总报表",
-    fund_analysis: "资金使用分析报表",
-    project_progress: "项目进度报表",
-    school_statistics: "学校援建统计报表",
-    annual_summary: "年度工作总结报表",
-    comprehensive: "综合数据报表",
-  };
-  const name = reportNames[reportType] || "报表导出";
-  return `${name}_${timestamp}.${format}`;
+    village_summary: '帮扶村汇总报表',
+    fund_analysis: '资金使用分析报表',
+    project_progress: '项目进度报表',
+    school_statistics: '学校援建统计报表',
+    annual_summary: '年度工作总结报表',
+    comprehensive: '综合数据报表',
+  }
+  const name = reportNames[reportType] || '报表导出'
+  return `${name}_${timestamp}.${format}`
 }
 
 async function loadHistory() {
-  loadingHistory.value = true;
+  loadingHistory.value = true
   try {
-    const response = await getExportHistory({ page: 1, page_size: 10 });
-    exportHistory.value = response.items || [];
+    const response = await getExportHistory({ page: 1, page_size: 10 })
+    exportHistory.value = response.items || []
   } catch (error) {
-    logger.error("加载导出历史失败:", error);
+    logger.error('加载导出历史失败:', error)
   } finally {
-    loadingHistory.value = false;
+    loadingHistory.value = false
   }
 }
 
 async function downloadExport(record: any) {
   try {
-    const blob = await downloadExportFile(record.task_id);
-    const filename = record.file_name || "导出文件.xlsx";
-    triggerDownload(blob, filename);
+    const blob = await downloadExportFile(record.task_id)
+    const filename = record.file_name || '导出文件.xlsx'
+    triggerDownload(blob, filename)
   } catch (error) {
-    ElMessage.error("下载失败");
+    ElMessage.error('下载失败')
   }
 }
 
 // 生命周期
 onMounted(() => {
-  loadHistory();
-});
+  loadHistory()
+})
 </script>
 
 <style scoped lang="scss">

@@ -8,9 +8,9 @@
 </template>
 <script setup lang="ts">
 defineProps<{
-  title?: string;
-  name?: string;
-  description?: string;
-  industry?: string;
-}>();
+  title?: string
+  name?: string
+  description?: string
+  industry?: string
+}>()
 </script>

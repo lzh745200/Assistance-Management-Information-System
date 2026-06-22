@@ -29,79 +29,79 @@
 
 <script lang="ts" setup>
 // @ts-nocheck
-import { ref, onMounted, onUnmounted } from "vue";
-import { ElMessageBox } from "element-plus";
-import { SecurityLevel } from "@/utils/security";
+import { ref, onMounted, onUnmounted } from 'vue'
+import { ElMessageBox } from 'element-plus'
+import { SecurityLevel } from '@/utils/security'
 
-type TagType = "success" | "info" | "warning" | "danger" | "primary";
+type TagType = 'success' | 'info' | 'warning' | 'danger' | 'primary'
 
 interface SecurityEvent {
-  time: string;
-  type: string;
-  level: SecurityLevel;
-  message: string;
-  details?: string;
+  time: string
+  type: string
+  level: SecurityLevel
+  message: string
+  details?: string
 }
 
-const securityEvents = ref<SecurityEvent[]>([]);
+const securityEvents = ref<SecurityEvent[]>([])
 const securityStatus = ref<{ type: TagType; text: string }>({
-  type: "success",
-  text: "安全状态正常",
-});
+  type: 'success',
+  text: '安全状态正常',
+})
 
 const getLevelType = (level: SecurityLevel) => {
   switch (level) {
     case SecurityLevel.TOP_SECRET:
-      return "danger";
+      return 'danger'
     case SecurityLevel.SECRET:
-      return "warning";
+      return 'warning'
     case SecurityLevel.CONFIDENTIAL:
-      return "primary";
+      return 'primary'
     default:
-      return "info";
+      return 'info'
   }
-};
+}
 
 const fetchSecurityEvents = async () => {
   // 模拟获取安全事件数据
   securityEvents.value = [
     {
       time: new Date().toLocaleString(),
-      type: "登录成功",
+      type: '登录成功',
       level: SecurityLevel.INTERNAL,
-      message: "管理员从IP 192.168.1.100登录系统",
+      message: '管理员从IP 192.168.1.100登录系统',
     },
     {
       time: new Date(Date.now() - 1000 * 60 * 5).toLocaleString(),
-      type: "数据访问",
+      type: '数据访问',
       level: SecurityLevel.CONFIDENTIAL,
-      message: "访问了机密级数据: 作战计划",
+      message: '访问了机密级数据: 作战计划',
     },
     {
       time: new Date(Date.now() - 1000 * 60 * 30).toLocaleString(),
-      type: "权限变更",
+      type: '权限变更',
       level: SecurityLevel.SECRET,
-      message: "用户权限提升为机密级",
+      message: '用户权限提升为机密级',
     },
-  ];
-};
+  ]
+}
 
 const handleDetail = (event: SecurityEvent) => {
-  ElMessageBox.alert(event.details || event.message, "安全事件详情");
-};
+  ElMessageBox.alert(event.details || event.message, '安全事件详情')
+}
 
 onMounted(() => {
-  fetchSecurityEvents();
+  fetchSecurityEvents()
   // 模拟实时监控
   const _monitorTimer = setInterval(() => {
     // 实际项目中调用API获取最新安全事件（Demo模式不生成假数据）
     // Demo mode: no fake data generation
-  }, 5000);
+  }, 5000)
 
   onUnmounted(() => {
-    clearInterval(_monitorTimer);
-  });
-});
+    clearInterval(_monitorTimer)
+  })
+})
 </script>
 
 <style scoped>

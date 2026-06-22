@@ -5,9 +5,7 @@
     <div class="content-container">
       <!-- 返回登录按钮 -->
       <div class="back-button">
-        <el-button icon="ArrowLeft" @click="pushSafe('/login')">
-          返回登录
-        </el-button>
+        <el-button icon="ArrowLeft" @click="pushSafe('/login')"> 返回登录 </el-button>
       </div>
 
       <!-- 主卡片 -->
@@ -35,11 +33,7 @@
 
           <!-- 机器码信息 -->
           <div v-if="machineData" class="machine-info">
-            <el-alert
-              type="success"
-              :closable="false"
-              style="margin-bottom: 20px"
-            >
+            <el-alert type="success" :closable="false" style="margin-bottom: 20px">
               <template #title>
                 <strong>机器码获取成功</strong>
               </template>
@@ -50,15 +44,11 @@
             <div class="verification-code-section">
               <h3>校验码</h3>
               <div class="verification-code-display">
-                <span class="code-text">{{
-                  machineData.verification_code
-                }}</span>
+                <span class="code-text">{{ machineData.verification_code }}</span>
                 <el-button
                   type="primary"
                   style="margin-left: 15px"
-                  @click="
-                    copyToClipboard(machineData.verification_code, '校验码')
-                  "
+                  @click="copyToClipboard(machineData.verification_code, '校验码')"
                 >
                   复制
                 </el-button>
@@ -84,18 +74,11 @@
 
             <!-- 一键复制全部信息 -->
             <div class="copy-all-section">
-              <el-button
-                type="success"
-                size="large"
-                style="width: 100%"
-                @click="copyAllInfo"
-              >
+              <el-button type="success" size="large" style="width: 100%" @click="copyAllInfo">
                 <el-icon><CopyDocument /></el-icon>
                 一键复制全部信息（机器码+校验码）
               </el-button>
-              <p class="hint">
-                点击后将机器码和校验码一起复制，方便发送给管理员
-              </p>
+              <p class="hint">点击后将机器码和校验码一起复制，方便发送给管理员</p>
             </div>
 
             <!-- 机器信息 -->
@@ -167,63 +150,63 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage } from "element-plus";
-import { CopyDocument } from "@element-plus/icons-vue";
-import request from "@/api/request";
-import { copyToClipboard } from "@/utils/clipboard";
+import { ref } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage } from 'element-plus'
+import { CopyDocument } from '@element-plus/icons-vue'
+import request from '@/api/request'
+import { copyToClipboard } from '@/utils/clipboard'
 
-const { pushSafe } = useRouterSafe();
+const { pushSafe } = useRouterSafe()
 
 interface MachineInfo {
-  system: string;
-  release: string;
-  node: string;
-  processor: string;
-  machine: string;
+  system: string
+  release: string
+  node: string
+  processor: string
+  machine: string
 }
 
 interface MachineData {
-  machine_code: string;
-  verification_code: string;
-  machine_info: MachineInfo;
+  machine_code: string
+  verification_code: string
+  machine_info: MachineInfo
 }
 
-const loading = ref(false);
-const machineData = ref<MachineData | null>(null);
+const loading = ref(false)
+const machineData = ref<MachineData | null>(null)
 
 const getMachineCode = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const response = await request.get("/machine-code/get-machine-code");
+    const response = await request.get('/machine-code/get-machine-code')
     // 后端返回 {code:200, data:{machine_code, verification_code, machine_info}}
-    const resData = response?.data ?? response;
-    const payload = resData?.data ?? resData;
+    const resData = response?.data ?? response
+    const payload = resData?.data ?? resData
     if (payload?.machine_code) {
-      machineData.value = payload as MachineData;
-      ElMessage.success("机器码获取成功");
+      machineData.value = payload as MachineData
+      ElMessage.success('机器码获取成功')
     } else {
-      ElMessage.error(resData?.message || "获取机器码失败，请重试");
+      ElMessage.error(resData?.message || '获取机器码失败，请重试')
     }
   } catch (error: any) {
-    console.error("[GetMachineCode] 获取机器码失败:", error);
+    console.error('[GetMachineCode] 获取机器码失败:', error)
     ElMessage.error(
       error?.response?.data?.detail ||
         error?.response?.data?.message ||
         error?.message ||
-        "获取机器码失败，请检查系统服务是否正常",
-    );
+        '获取机器码失败，请检查系统服务是否正常'
+    )
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const copyAllInfo = () => {
-  if (!machineData.value) return;
-  const info = `机器码：${machineData.value.machine_code}\n校验码：${machineData.value.verification_code}`;
-  copyToClipboard(info, "全部信息");
-};
+  if (!machineData.value) return
+  const info = `机器码：${machineData.value.machine_code}\n校验码：${machineData.value.verification_code}`
+  copyToClipboard(info, '全部信息')
+}
 </script>
 
 <style scoped lang="scss">
@@ -246,7 +229,7 @@ const copyAllInfo = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("/images/login-bg/bg1.jpg");
+  background-image: url('/images/login-bg/bg1.jpg');
   background-size: cover;
   background-position: center;
   opacity: 0.15;
@@ -354,7 +337,7 @@ const copyAllInfo = () => {
   font-weight: bold;
   color: #1b4332;
   letter-spacing: 8px;
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -384,14 +367,14 @@ const copyAllInfo = () => {
 .machine-code-display .code-text {
   font-size: 16px;
   color: #1b4332;
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
   letter-spacing: 1px;
   flex: 1;
   text-align: center;
 }
 
 .machine-code-input {
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
   font-size: 13px;
 }
 

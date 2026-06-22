@@ -39,12 +39,8 @@
         <el-descriptions-item label="会话ID" :span="2">
           <code>{{ sessionInfo.session_id }}</code>
         </el-descriptions-item>
-        <el-descriptions-item label="总块数">{{
-          sessionInfo.total_chunks
-        }}</el-descriptions-item>
-        <el-descriptions-item label="文件名">{{
-          sessionInfo.file_name
-        }}</el-descriptions-item>
+        <el-descriptions-item label="总块数">{{ sessionInfo.total_chunks }}</el-descriptions-item>
+        <el-descriptions-item label="文件名">{{ sessionInfo.file_name }}</el-descriptions-item>
         <el-descriptions-item label="文件大小">{{
           formatSize(sessionInfo.file_size)
         }}</el-descriptions-item>
@@ -60,8 +56,7 @@
         <div class="card-header">
           <span>上传进度</span>
           <span class="progress-text">
-            {{ progressInfo?.uploaded_chunks || 0 }} /
-            {{ progressInfo?.total_chunks || 0 }} 块 ({{
+            {{ progressInfo?.uploaded_chunks || 0 }} / {{ progressInfo?.total_chunks || 0 }} 块 ({{
               (progressInfo?.progress || 0).toFixed(1)
             }}%)
           </span>
@@ -96,11 +91,7 @@
       <el-progress
         :percentage="Math.round(progressInfo?.progress || 0)"
         :status="
-          uploadState === 'done'
-            ? 'success'
-            : uploadState === 'error'
-              ? 'exception'
-              : undefined
+          uploadState === 'done' ? 'success' : uploadState === 'error' ? 'exception' : undefined
         "
         :stroke-width="20"
         style="margin-top: 20px"
@@ -112,11 +103,7 @@
       <template #header>
         <span>上传完成</span>
       </template>
-      <el-result
-        icon="success"
-        title="文件上传成功"
-        :sub-title="mergeResult.file_name"
-      >
+      <el-result icon="success" title="文件上传成功" :sub-title="mergeResult.file_name">
         <template #extra>
           <el-descriptions :column="2" border size="small">
             <el-descriptions-item label="文件路径">{{
@@ -149,10 +136,7 @@
         >
           取消上传
         </el-button>
-        <el-button
-          v-if="uploadState === 'done' || uploadState === 'error'"
-          @click="resetAll"
-        >
+        <el-button v-if="uploadState === 'done' || uploadState === 'error'" @click="resetAll">
           重新上传
         </el-button>
       </div>
@@ -161,268 +145,251 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { UploadFilled } from "@element-plus/icons-vue";
-import { chunkedUploadApi } from "@/api/chunkedUpload";
-import type {
-  InitUploadResult,
-  UploadProgress,
-  MergeResult,
-} from "@/api/chunkedUpload";
+import { ref, onUnmounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { UploadFilled } from '@element-plus/icons-vue'
+import { chunkedUploadApi } from '@/api/chunkedUpload'
+import type { InitUploadResult, UploadProgress, MergeResult } from '@/api/chunkedUpload'
 
-type UploadState =
-  | "idle"
-  | "initializing"
-  | "uploading"
-  | "merging"
-  | "done"
-  | "error";
+type UploadState = 'idle' | 'initializing' | 'uploading' | 'merging' | 'done' | 'error'
 
-const uploadState = ref<UploadState>("idle");
-const initializing = ref(false);
-const cancelling = ref(false);
+const uploadState = ref<UploadState>('idle')
+const initializing = ref(false)
+const cancelling = ref(false)
 
-const selectedFile = ref<File | null>(null);
-const sessionInfo = ref<InitUploadResult | null>(null);
-const progressInfo = ref<UploadProgress | null>(null);
-const mergeResult = ref<MergeResult | null>(null);
-const uploadRef = ref<any>(null);
+const selectedFile = ref<File | null>(null)
+const sessionInfo = ref<InitUploadResult | null>(null)
+const progressInfo = ref<UploadProgress | null>(null)
+const mergeResult = ref<MergeResult | null>(null)
+const uploadRef = ref<any>(null)
 
-const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB
 
-let pollingTimer: ReturnType<typeof setInterval> | null = null;
+let pollingTimer: ReturnType<typeof setInterval> | null = null
 
 const chunkStatuses = ref<
   Array<{ index: number; done: boolean; current: boolean; pending: boolean }>
->([]);
+>([])
 
-const currentStep = ref(0);
+const currentStep = ref(0)
 
 const sessionStatusType = computed(() => {
-  if (!sessionInfo.value) return "info";
-  if (uploadState.value === "done") return "success";
-  if (uploadState.value === "error") return "danger";
-  if (uploadState.value === "uploading") return "warning";
-  return "info";
-});
+  if (!sessionInfo.value) return 'info'
+  if (uploadState.value === 'done') return 'success'
+  if (uploadState.value === 'error') return 'danger'
+  if (uploadState.value === 'uploading') return 'warning'
+  return 'info'
+})
 
 const sessionStatusText = computed(() => {
-  if (uploadState.value === "done") return "已完成";
-  if (uploadState.value === "error") return "失败";
-  if (uploadState.value === "uploading") return "上传中";
-  if (uploadState.value === "merging") return "合并中";
-  return "就绪";
-});
+  if (uploadState.value === 'done') return '已完成'
+  if (uploadState.value === 'error') return '失败'
+  if (uploadState.value === 'uploading') return '上传中'
+  if (uploadState.value === 'merging') return '合并中'
+  return '就绪'
+})
 
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
 
 function onFileChange(file: any) {
-  selectedFile.value = file.raw || file;
-  resetSession();
+  selectedFile.value = file.raw || file
+  resetSession()
 }
 
 function onFileRemove() {
-  selectedFile.value = null;
-  resetSession();
+  selectedFile.value = null
+  resetSession()
 }
 
 function resetSession() {
-  stopPolling();
-  sessionInfo.value = null;
-  progressInfo.value = null;
-  mergeResult.value = null;
-  uploadState.value = "idle";
-  currentStep.value = 0;
-  chunkStatuses.value = [];
+  stopPolling()
+  sessionInfo.value = null
+  progressInfo.value = null
+  mergeResult.value = null
+  uploadState.value = 'idle'
+  currentStep.value = 0
+  chunkStatuses.value = []
 }
 
 function resetAll() {
-  selectedFile.value = null;
-  uploadRef.value?.clearFiles();
-  resetSession();
+  selectedFile.value = null
+  uploadRef.value?.clearFiles()
+  resetSession()
 }
 
 function startPolling() {
-  stopPolling();
+  stopPolling()
   pollingTimer = setInterval(async () => {
-    if (!sessionInfo.value) return;
+    if (!sessionInfo.value) return
     try {
-      const progress = await chunkedUploadApi.getProgress(
-        sessionInfo.value.session_id,
-      );
-      progressInfo.value = progress;
-      updateChunkStatuses(progress);
-      if (progress.status === "completed" || progress.status === "merged") {
+      const progress = await chunkedUploadApi.getProgress(sessionInfo.value.session_id)
+      progressInfo.value = progress
+      updateChunkStatuses(progress)
+      if (progress.status === 'completed' || progress.status === 'merged') {
         // all chunks uploaded, trigger merge
-        uploadState.value = "merging";
-        currentStep.value = 2;
-        stopPolling();
-        await doMerge();
-      } else if (progress.status === "error") {
-        uploadState.value = "error";
-        stopPolling();
-        ElMessage.error("上传过程中出现错误");
+        uploadState.value = 'merging'
+        currentStep.value = 2
+        stopPolling()
+        await doMerge()
+      } else if (progress.status === 'error') {
+        uploadState.value = 'error'
+        stopPolling()
+        ElMessage.error('上传过程中出现错误')
       }
     } catch {
       // polling error, continue
     }
-  }, 500);
+  }, 500)
 }
 
 function stopPolling() {
   if (pollingTimer) {
-    clearInterval(pollingTimer);
-    pollingTimer = null;
+    clearInterval(pollingTimer)
+    pollingTimer = null
   }
 }
 
 function updateChunkStatuses(progress: UploadProgress) {
-  const total = progress.total_chunks;
-  const uploaded = progress.uploaded_chunks;
+  const total = progress.total_chunks
+  const uploaded = progress.uploaded_chunks
   chunkStatuses.value = Array.from({ length: total }, (_, i) => ({
     index: i,
     done: i < uploaded,
     current: i === uploaded,
     pending: i > uploaded,
-  }));
+  }))
 }
 
 async function startUpload() {
   if (!selectedFile.value) {
-    ElMessage.warning("请先选择文件");
-    return;
+    ElMessage.warning('请先选择文件')
+    return
   }
 
-  initializing.value = true;
+  initializing.value = true
   try {
     // Step 1: Init
-    uploadState.value = "initializing";
-    currentStep.value = 0;
-    const file = selectedFile.value;
+    uploadState.value = 'initializing'
+    currentStep.value = 0
+    const file = selectedFile.value
     const initResult = await chunkedUploadApi.initUpload({
       file_name: file.name,
       file_size: file.size,
       chunk_size: CHUNK_SIZE,
-    });
-    sessionInfo.value = initResult;
-    currentStep.value = 1;
+    })
+    sessionInfo.value = initResult
+    currentStep.value = 1
 
     // Step 2: Upload chunks
-    uploadState.value = "uploading";
-    const chunks = splitFile(file, initResult.chunk_size);
+    uploadState.value = 'uploading'
+    const chunks = splitFile(file, initResult.chunk_size)
     chunkStatuses.value = Array.from({ length: chunks.length }, (_, i) => ({
       index: i,
       done: false,
       current: false,
       pending: true,
-    }));
-    startPolling();
+    }))
+    startPolling()
 
     for (let i = 0; i < chunks.length; i++) {
-      if (uploadState.value !== "uploading") break;
+      if (uploadState.value !== 'uploading') break
       try {
         chunkStatuses.value[i] = {
           index: i,
           done: false,
           current: true,
           pending: false,
-        };
-        await chunkedUploadApi.uploadChunk(initResult.session_id, i, chunks[i]);
+        }
+        await chunkedUploadApi.uploadChunk(initResult.session_id, i, chunks[i])
         chunkStatuses.value[i] = {
           index: i,
           done: true,
           current: false,
           pending: false,
-        };
+        }
       } catch {
-        ElMessage.error(`块 ${i + 1} 上传失败`);
-        uploadState.value = "error";
-        stopPolling();
-        return;
+        ElMessage.error(`块 ${i + 1} 上传失败`)
+        uploadState.value = 'error'
+        stopPolling()
+        return
       }
     }
 
-    if (uploadState.value === "uploading") {
+    if (uploadState.value === 'uploading') {
       // All chunks uploaded, wait for polling to detect completion and trigger merge
-      stopPolling();
+      stopPolling()
       // Check progress one more time
-      const progress = await chunkedUploadApi.getProgress(
-        initResult.session_id,
-      );
-      progressInfo.value = progress;
-      if (progress.status === "completed") {
-        uploadState.value = "merging";
-        currentStep.value = 2;
-        await doMerge();
+      const progress = await chunkedUploadApi.getProgress(initResult.session_id)
+      progressInfo.value = progress
+      if (progress.status === 'completed') {
+        uploadState.value = 'merging'
+        currentStep.value = 2
+        await doMerge()
       }
     }
   } catch (err: any) {
-    ElMessage.error(err?.message || "初始化上传失败");
-    uploadState.value = "error";
+    ElMessage.error(err?.message || '初始化上传失败')
+    uploadState.value = 'error'
   } finally {
-    initializing.value = false;
+    initializing.value = false
   }
 }
 
 async function doMerge() {
-  if (!sessionInfo.value) return;
+  if (!sessionInfo.value) return
   try {
-    uploadState.value = "merging";
-    const result = await chunkedUploadApi.mergeChunks(
-      sessionInfo.value.session_id,
-    );
-    mergeResult.value = result;
-    uploadState.value = "done";
-    currentStep.value = 3;
-    ElMessage.success("文件上传并合并成功！");
+    uploadState.value = 'merging'
+    const result = await chunkedUploadApi.mergeChunks(sessionInfo.value.session_id)
+    mergeResult.value = result
+    uploadState.value = 'done'
+    currentStep.value = 3
+    ElMessage.success('文件上传并合并成功！')
   } catch (err: any) {
-    ElMessage.error(err?.message || "合并失败");
-    uploadState.value = "error";
+    ElMessage.error(err?.message || '合并失败')
+    uploadState.value = 'error'
   }
 }
 
 async function cancelUpload() {
-  if (!sessionInfo.value) return;
+  if (!sessionInfo.value) return
   try {
-    await ElMessageBox.confirm("确定要取消上传吗？", "确认", {
-      type: "warning",
-    });
+    await ElMessageBox.confirm('确定要取消上传吗？', '确认', {
+      type: 'warning',
+    })
   } catch {
-    return;
+    return
   }
-  cancelling.value = true;
-  stopPolling();
+  cancelling.value = true
+  stopPolling()
   try {
-    await chunkedUploadApi.cancelUpload(sessionInfo.value.session_id);
-    ElMessage.success("上传已取消");
+    await chunkedUploadApi.cancelUpload(sessionInfo.value.session_id)
+    ElMessage.success('上传已取消')
   } catch {
-    ElMessage.error("取消失败");
+    ElMessage.error('取消失败')
   } finally {
-    cancelling.value = false;
-    resetSession();
+    cancelling.value = false
+    resetSession()
   }
 }
 
 function splitFile(file: File, chunkSize: number): Blob[] {
-  const chunks: Blob[] = [];
-  let offset = 0;
+  const chunks: Blob[] = []
+  let offset = 0
   while (offset < file.size) {
-    chunks.push(file.slice(offset, offset + chunkSize));
-    offset += chunkSize;
+    chunks.push(file.slice(offset, offset + chunkSize))
+    offset += chunkSize
   }
-  return chunks;
+  return chunks
 }
 
 onUnmounted(() => {
-  stopPolling();
-});
+  stopPolling()
+})
 </script>
 
 <style scoped>

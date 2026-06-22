@@ -1,11 +1,7 @@
 <template>
   <div
     class="skeleton"
-    :class="[
-      `skeleton--${variant}`,
-      `skeleton--${animation}`,
-      { 'skeleton--loading': loading },
-    ]"
+    :class="[`skeleton--${variant}`, `skeleton--${animation}`, { 'skeleton--loading': loading }]"
     :style="skeletonStyle"
     role="status"
     :aria-busy="loading"
@@ -49,11 +45,7 @@
           <div v-for="i in columns" :key="i" class="skeleton__table-cell"></div>
         </div>
         <div v-for="row in rows" :key="row" class="skeleton__table-row">
-          <div
-            v-for="col in columns"
-            :key="col"
-            class="skeleton__table-cell"
-          ></div>
+          <div v-for="col in columns" :key="col" class="skeleton__table-cell"></div>
         </div>
       </div>
     </template>
@@ -84,93 +76,79 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type CSSProperties } from "vue";
+import { computed, type CSSProperties } from 'vue'
 
 // Props 定义
 export interface SkeletonProps {
   /** 是否加载中 */
-  loading?: boolean;
+  loading?: boolean
   /** 变体类型 */
-  variant?: "rect" | "circle" | "text" | "list" | "card" | "form" | "table";
+  variant?: 'rect' | 'circle' | 'text' | 'list' | 'card' | 'form' | 'table'
   /** 动画类型 */
-  animation?: "pulse" | "wave" | "none";
+  animation?: 'pulse' | 'wave' | 'none'
   /** 宽度 */
-  width?: string | number;
+  width?: string | number
   /** 高度 */
-  height?: string | number;
+  height?: string | number
   /** 行数（用于列表、表单、文本） */
-  rows?: number;
+  rows?: number
   /** 列数（用于表格） */
-  columns?: number;
+  columns?: number
   /** 是否显示头像（用于列表） */
-  avatar?: boolean;
+  avatar?: boolean
   /** 头像大小 */
-  avatarSize?: string | number;
+  avatarSize?: string | number
   /** 是否显示图片（用于卡片） */
-  image?: boolean;
+  image?: boolean
   /** 圆角 */
-  borderRadius?: string | number;
+  borderRadius?: string | number
 }
 
 const props = withDefaults(defineProps<SkeletonProps>(), {
   loading: true,
-  variant: "rect",
-  animation: "pulse",
+  variant: 'rect',
+  animation: 'pulse',
   rows: 3,
   columns: 4,
   avatar: false,
   avatarSize: 40,
   image: true,
   borderRadius: 4,
-});
+})
 
 // 计算样式
 const skeletonStyle = computed<CSSProperties>(() => ({
-  "--skeleton-border-radius":
-    typeof props.borderRadius === "number"
-      ? `${props.borderRadius}px`
-      : props.borderRadius,
-}));
+  '--skeleton-border-radius':
+    typeof props.borderRadius === 'number' ? `${props.borderRadius}px` : props.borderRadius,
+}))
 
 const rectStyle = computed<CSSProperties>(() => ({
-  width:
-    typeof props.width === "number"
-      ? `${props.width}px`
-      : props.width || "100%",
-  height:
-    typeof props.height === "number"
-      ? `${props.height}px`
-      : props.height || "20px",
-}));
+  width: typeof props.width === 'number' ? `${props.width}px` : props.width || '100%',
+  height: typeof props.height === 'number' ? `${props.height}px` : props.height || '20px',
+}))
 
 const circleStyle = computed<CSSProperties>(() => {
-  const size =
-    typeof props.width === "number"
-      ? `${props.width}px`
-      : props.width || "40px";
+  const size = typeof props.width === 'number' ? `${props.width}px` : props.width || '40px'
   return {
     width: size,
     height: size,
-  };
-});
+  }
+})
 
 const avatarStyle = computed<CSSProperties>(() => {
-  const size =
-    typeof props.avatarSize === "number"
-      ? `${props.avatarSize}px`
-      : props.avatarSize;
+  const size = typeof props.avatarSize === 'number' ? `${props.avatarSize}px` : props.avatarSize
   return {
     width: size,
     height: size,
-  };
-});
+  }
+})
 
 // 获取文本行宽度（最后一行较短）
 function getLineWidth(index: number): string {
   if (index === props.rows) {
-    return "60%";
+    return '60%'
   }
-  return "100%";
+  return '100%'
 }
 </script>
 

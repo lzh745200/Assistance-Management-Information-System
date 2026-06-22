@@ -10,31 +10,17 @@
         当前用户：<strong>{{ username }}</strong>
       </span>
       <el-space>
-        <el-button
-          size="small"
-          :disabled="!isCustomized"
-          @click="resetToDefault"
-        >
+        <el-button size="small" :disabled="!isCustomized" @click="resetToDefault">
           恢复角色默认
         </el-button>
-        <el-button
-          type="primary"
-          size="small"
-          :loading="saving"
-          @click="saveConfig"
-        >
+        <el-button type="primary" size="small" :loading="saving" @click="saveConfig">
           保存配置
         </el-button>
       </el-space>
     </div>
 
     <!-- 角色默认菜单提示 -->
-    <el-alert
-      v-if="isCustomized"
-      type="info"
-      :closable="false"
-      style="margin: 12px 0"
-    >
+    <el-alert v-if="isCustomized" type="info" :closable="false" style="margin: 12px 0">
       当前为自定义配置。角色默认包含
       {{ roleDefaultKeys?.length || 0 }} 个菜单。
     </el-alert>
@@ -42,12 +28,7 @@
     <!-- 角色默认菜单标签 -->
     <div class="role-default-info">
       <span class="label">角色默认菜单：</span>
-      <el-tag
-        v-for="key in roleDefaultKeys"
-        :key="key"
-        size="small"
-        style="margin: 2px"
-      >
+      <el-tag v-for="key in roleDefaultKeys" :key="key" size="small" style="margin: 2px">
         {{ getMenuLabel(key) }}
       </el-tag>
     </div>
@@ -69,122 +50,122 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
+import { ref, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 interface MenuTreeNode {
-  key: string;
-  label: string;
-  children?: MenuTreeNode[];
+  key: string
+  label: string
+  children?: MenuTreeNode[]
 }
 
 const props = defineProps<{
-  userId: number;
-  username: string;
-  role?: string;
-  roleDefaultKeys?: string[];
-  isCustomized?: boolean;
-  currentMenuKeys?: string[];
-}>();
+  userId: number
+  username: string
+  role?: string
+  roleDefaultKeys?: string[]
+  isCustomized?: boolean
+  currentMenuKeys?: string[]
+}>()
 
 const emit = defineEmits<{
-  saved: [];
-}>();
+  saved: []
+}>()
 
-const menuTreeRef = ref();
-const saving = ref(false);
-const selectedMenuKeys = ref<string[] | null>([]);
-const menuTreeData = ref<MenuTreeNode[]>([]);
+const menuTreeRef = ref()
+const saving = ref(false)
+const selectedMenuKeys = ref<string[] | null>([])
+const menuTreeData = ref<MenuTreeNode[]>([])
 
 // 菜单 key → label 映射
-const menuLabelMap = ref<Record<string, string>>({});
+const menuLabelMap = ref<Record<string, string>>({})
 
 function buildLabelMap(nodes: MenuTreeNode[]) {
   for (const node of nodes) {
-    menuLabelMap.value[node.key] = node.label;
+    menuLabelMap.value[node.key] = node.label
     if (node.children) {
-      buildLabelMap(node.children);
+      buildLabelMap(node.children)
     }
   }
 }
 
 function getMenuLabel(key: string): string {
-  return menuLabelMap.value[key] || key;
+  return menuLabelMap.value[key] || key
 }
 
 async function loadMenuTree() {
   try {
-    const res = await request.get("/menus/all");
-    menuTreeData.value = (res.data?.data || res.data || []) as MenuTreeNode[];
-    buildLabelMap(menuTreeData.value);
+    const res = await request.get('/menus/all')
+    menuTreeData.value = (res.data?.data || res.data || []) as MenuTreeNode[]
+    buildLabelMap(menuTreeData.value)
   } catch {
     // 使用前端静态配置作为回退
     try {
-      const { MENU_CONFIG } = await import("@/config/menu-config");
-      menuTreeData.value = MENU_CONFIG as unknown as MenuTreeNode[];
-      buildLabelMap(menuTreeData.value);
+      const { MENU_CONFIG } = await import('@/config/menu-config')
+      menuTreeData.value = MENU_CONFIG as unknown as MenuTreeNode[]
+      buildLabelMap(menuTreeData.value)
     } catch {
-      menuTreeData.value = [];
+      menuTreeData.value = []
     }
   }
 }
 
 async function loadUserMenuConfig() {
-  if (!props.userId) return;
+  if (!props.userId) return
   try {
-    const res = await request.get(`/menus/user-menus/${props.userId}`);
-    const data = res.data?.data || res.data;
+    const res = await request.get(`/menus/user-menus/${props.userId}`)
+    const data = res.data?.data || res.data
     if (data && data.menu_keys !== null && data.menu_keys !== undefined) {
       // 用户有自定义配置 → 显示当前配置
-      selectedMenuKeys.value = data.menu_keys;
+      selectedMenuKeys.value = data.menu_keys
     } else {
       // 无自定义配置 → 显示角色默认菜单（空数组 = 未自定义）
-      selectedMenuKeys.value = props.roleDefaultKeys || [];
+      selectedMenuKeys.value = props.roleDefaultKeys || []
     }
   } catch {
-    selectedMenuKeys.value = props.currentMenuKeys || [];
+    selectedMenuKeys.value = props.currentMenuKeys || []
   }
 }
 
 function onMenuCheck(_node: any, checked: any) {
-  selectedMenuKeys.value = (checked?.checkedKeys || checked) as string[];
+  selectedMenuKeys.value = (checked?.checkedKeys || checked) as string[]
 }
 
 function resetToDefault() {
   // 设为 null 表示"恢复角色默认菜单"——后端 len==0 会清空所有菜单
-  selectedMenuKeys.value = null as any;
+  selectedMenuKeys.value = null as any
 }
 
 async function saveConfig() {
-  saving.value = true;
+  saving.value = true
   try {
     // null → 恢复角色默认；[] → 清空所有菜单；[...] → 自定义
     await request.put(`/menus/user-menus/${props.userId}`, {
       menu_keys: selectedMenuKeys.value,
-    });
-    emit("saved");
-    ElMessage.success("菜单配置保存成功");
+    })
+    emit('saved')
+    ElMessage.success('菜单配置保存成功')
   } catch (err: any) {
-    ElMessage.error(err?.response?.data?.detail || "保存失败");
+    ElMessage.error(err?.response?.data?.detail || '保存失败')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 
 watch(
   () => props.currentMenuKeys,
   (keys) => {
-    if (keys) selectedMenuKeys.value = keys;
-  },
-);
+    if (keys) selectedMenuKeys.value = keys
+  }
+)
 
 onMounted(async () => {
-  await loadMenuTree();
-  await loadUserMenuConfig();
-});
+  await loadMenuTree()
+  await loadUserMenuConfig()
+})
 
-defineExpose({ loadUserMenuConfig });
+defineExpose({ loadUserMenuConfig })
 </script>
 
 <style scoped lang="scss">

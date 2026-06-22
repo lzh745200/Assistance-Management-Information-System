@@ -10,13 +10,13 @@
 </template>
 
 <script setup lang="ts">
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { useRouterSafe } from '@/composables/useRouterSafe'
 
-const { pushSafe } = useRouterSafe();
+const { pushSafe } = useRouterSafe()
 
 const goHome = () => {
-  pushSafe("/");
-};
+  pushSafe('/')
+}
 </script>
 
 <style scoped>

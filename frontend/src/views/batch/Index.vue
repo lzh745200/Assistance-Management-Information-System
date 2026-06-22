@@ -67,17 +67,10 @@
       <div class="id-summary">
         <span v-if="parsedIds.length > 0" class="id-count">
           已识别 <strong>{{ parsedIds.length }}</strong> 个ID：
-          <el-tag
-            v-for="id in parsedIds.slice(0, 10)"
-            :key="id"
-            size="small"
-            style="margin: 2px"
-          >
+          <el-tag v-for="id in parsedIds.slice(0, 10)" :key="id" size="small" style="margin: 2px">
             {{ id }}
           </el-tag>
-          <span v-if="parsedIds.length > 10"
-            >... 等{{ parsedIds.length }}项</span
-          >
+          <span v-if="parsedIds.length > 10">... 等{{ parsedIds.length }}项</span>
         </span>
         <span v-else class="id-empty">尚未输入有效ID</span>
       </div>
@@ -136,11 +129,7 @@
 
     <!-- 进度条 -->
     <div v-if="inProgress" class="progress-card">
-      <el-progress
-        :percentage="progressPercent"
-        :status="progressStatus"
-        :stroke-width="16"
-      />
+      <el-progress :percentage="progressPercent" :status="progressStatus" :stroke-width="16" />
       <p class="progress-text">{{ progressText }}</p>
     </div>
 
@@ -149,7 +138,7 @@
       <div class="card-header">
         <h3>操作结果</h3>
         <el-tag :type="resultSummary.success ? 'success' : 'danger'">
-          {{ resultSummary.success ? "成功" : "失败" }}
+          {{ resultSummary.success ? '成功' : '失败' }}
         </el-tag>
       </div>
       <div class="card-body">
@@ -161,28 +150,16 @@
             {{ entityLabel(batchForm.entity) }}
           </el-descriptions-item>
           <el-descriptions-item label="处理数量">
-            {{ resultSummary.processed ?? resultSummary.total ?? "-" }}
+            {{ resultSummary.processed ?? resultSummary.total ?? '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="成功数量">
-            {{ resultSummary.success_count ?? resultSummary.success ?? "-" }}
+            {{ resultSummary.success_count ?? resultSummary.success ?? '-' }}
           </el-descriptions-item>
-          <el-descriptions-item
-            v-if="resultSummary.message"
-            label="消息"
-            :span="2"
-          >
+          <el-descriptions-item v-if="resultSummary.message" label="消息" :span="2">
             {{ resultSummary.message }}
           </el-descriptions-item>
-          <el-descriptions-item
-            v-if="resultSummary.errors?.length"
-            label="错误详情"
-            :span="2"
-          >
-            <div
-              v-for="(err, i) in resultSummary.errors"
-              :key="i"
-              class="error-item"
-            >
+          <el-descriptions-item v-if="resultSummary.errors?.length" label="错误详情" :span="2">
+            <div v-for="(err, i) in resultSummary.errors" :key="i" class="error-item">
               {{ err }}
             </div>
           </el-descriptions-item>
@@ -193,249 +170,242 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Check, Edit, Delete, Download } from "@element-plus/icons-vue";
-import {
-  batchUpdate,
-  batchDelete,
-  batchExport,
-  validateBatch,
-} from "@/api/batchOperations";
+import { ref, reactive, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Check, Edit, Delete, Download } from '@element-plus/icons-vue'
+import { batchUpdate, batchDelete, batchExport, validateBatch } from '@/api/batchOperations'
 
 const batchForm = reactive({
-  operation: "update" as string,
-  entity: "supported_villages" as string,
-  format: "xlsx" as string,
+  operation: 'update' as string,
+  entity: 'supported_villages' as string,
+  format: 'xlsx' as string,
   softDelete: true,
-});
+})
 
-const idInput = ref("");
-const updatesInput = ref('{"status": "active"}');
-const inProgress = ref(false);
-const progressPercent = ref(0);
-const progressStatus = ref<"" | "success" | "exception">("");
-const progressText = ref("");
-const resultSummary = ref<any>(null);
+const idInput = ref('')
+const updatesInput = ref('{"status": "active"}')
+const inProgress = ref(false)
+const progressPercent = ref(0)
+const progressStatus = ref<'' | 'success' | 'exception'>('')
+const progressText = ref('')
+const resultSummary = ref<any>(null)
 
 const parsedIds = computed(() => {
-  const text = idInput.value.trim();
-  if (!text) return [];
-  const ids: number[] = [];
+  const text = idInput.value.trim()
+  if (!text) return []
+  const ids: number[] = []
   // 支持逗号、换行、空格分隔
-  const parts = text.split(/[,\n\s]+/);
+  const parts = text.split(/[,\n\s]+/)
   for (const part of parts) {
-    const num = Number(part.trim());
+    const num = Number(part.trim())
     if (!isNaN(num) && num > 0) {
-      ids.push(num);
+      ids.push(num)
     }
   }
-  return [...new Set(ids)]; // 去重
-});
+  return [...new Set(ids)] // 去重
+})
 
 function operationLabel(op: string) {
   const map: Record<string, string> = {
-    update: "批量更新",
-    delete: "批量删除",
-    export: "批量导出",
-    validate: "批量验证",
-  };
-  return map[op] || op;
+    update: '批量更新',
+    delete: '批量删除',
+    export: '批量导出',
+    validate: '批量验证',
+  }
+  return map[op] || op
 }
 
 function entityLabel(entity: string) {
   const map: Record<string, string> = {
-    supported_villages: "帮扶村庄",
-    schools: "帮扶学校",
-    projects: "帮扶项目",
-    funds: "帮扶经费",
-  };
-  return map[entity] || entity;
+    supported_villages: '帮扶村庄',
+    schools: '帮扶学校',
+    projects: '帮扶项目',
+    funds: '帮扶经费',
+  }
+  return map[entity] || entity
 }
 
 function parseUpdates(): Record<string, any> {
   try {
-    return JSON.parse(updatesInput.value);
+    return JSON.parse(updatesInput.value)
   } catch {
-    ElMessage.error("更新字段JSON格式不正确");
-    return {};
+    ElMessage.error('更新字段JSON格式不正确')
+    return {}
   }
 }
 
 async function handleValidate() {
   if (parsedIds.value.length === 0) {
-    ElMessage.warning("请输入至少一个有效ID");
-    return;
+    ElMessage.warning('请输入至少一个有效ID')
+    return
   }
-  inProgress.value = true;
-  progressPercent.value = 30;
-  progressText.value = "正在验证...";
+  inProgress.value = true
+  progressPercent.value = 30
+  progressText.value = '正在验证...'
   try {
-    const response = await validateBatch(batchForm.entity, parsedIds.value);
-    const data = response?.data ?? response;
+    const response = await validateBatch(batchForm.entity, parsedIds.value)
+    const data = response?.data ?? response
     resultSummary.value = {
       success: true,
       processed: parsedIds.value.length,
-      message: data?.message ?? "验证完成",
+      message: data?.message ?? '验证完成',
       errors: data?.errors ?? [],
-    };
-    progressPercent.value = 100;
-    progressStatus.value = "success";
-    progressText.value = "验证完成";
-    ElMessage.success("验证完成");
+    }
+    progressPercent.value = 100
+    progressStatus.value = 'success'
+    progressText.value = '验证完成'
+    ElMessage.success('验证完成')
   } catch {
-    progressStatus.value = "exception";
-    progressText.value = "验证失败";
+    progressStatus.value = 'exception'
+    progressText.value = '验证失败'
     resultSummary.value = {
       success: false,
-      message: "验证失败",
-    };
-    ElMessage.error("验证失败");
+      message: '验证失败',
+    }
+    ElMessage.error('验证失败')
   } finally {
-    inProgress.value = false;
+    inProgress.value = false
   }
 }
 
 async function handleBatchUpdate() {
   if (parsedIds.value.length === 0) {
-    ElMessage.warning("请输入至少一个有效ID");
-    return;
+    ElMessage.warning('请输入至少一个有效ID')
+    return
   }
-  const updates = parseUpdates();
-  if (!updates || Object.keys(updates).length === 0) return;
+  const updates = parseUpdates()
+  if (!updates || Object.keys(updates).length === 0) return
 
   try {
     await ElMessageBox.confirm(
       `确定要对${parsedIds.value.length}条${entityLabel(batchForm.entity)}执行批量更新吗？`,
-      "确认操作",
-      { type: "warning" },
-    );
+      '确认操作',
+      { type: 'warning' }
+    )
   } catch {
-    return;
+    return
   }
 
-  inProgress.value = true;
-  progressPercent.value = 20;
-  progressText.value = "正在批量更新...";
+  inProgress.value = true
+  progressPercent.value = 20
+  progressText.value = '正在批量更新...'
   try {
     const response = await batchUpdate({
       table_name: batchForm.entity,
       ids: parsedIds.value,
       updates,
-    });
-    const data = response?.data ?? response;
+    })
+    const data = response?.data ?? response
     resultSummary.value = {
       success: true,
       processed: parsedIds.value.length,
-      success_count:
-        data?.success_count ?? data?.affected ?? parsedIds.value.length,
-      message: data?.message ?? "批量更新完成",
+      success_count: data?.success_count ?? data?.affected ?? parsedIds.value.length,
+      message: data?.message ?? '批量更新完成',
       errors: data?.errors ?? [],
-    };
-    progressPercent.value = 100;
-    progressStatus.value = "success";
-    progressText.value = "批量更新完成";
-    ElMessage.success("批量更新完成");
+    }
+    progressPercent.value = 100
+    progressStatus.value = 'success'
+    progressText.value = '批量更新完成'
+    ElMessage.success('批量更新完成')
   } catch {
-    progressStatus.value = "exception";
-    progressText.value = "批量更新失败";
-    resultSummary.value = { success: false, message: "批量更新失败" };
-    ElMessage.error("批量更新失败");
+    progressStatus.value = 'exception'
+    progressText.value = '批量更新失败'
+    resultSummary.value = { success: false, message: '批量更新失败' }
+    ElMessage.error('批量更新失败')
   } finally {
-    inProgress.value = false;
+    inProgress.value = false
   }
 }
 
 async function handleBatchDelete() {
   if (parsedIds.value.length === 0) {
-    ElMessage.warning("请输入至少一个有效ID");
-    return;
+    ElMessage.warning('请输入至少一个有效ID')
+    return
   }
 
   try {
     await ElMessageBox.confirm(
       `确定要删除${parsedIds.value.length}条${entityLabel(batchForm.entity)}吗？此操作可能不可恢复！`,
-      "危险操作",
-      { type: "error", confirmButtonText: "确认删除" },
-    );
+      '危险操作',
+      { type: 'error', confirmButtonText: '确认删除' }
+    )
   } catch {
-    return;
+    return
   }
 
-  inProgress.value = true;
-  progressPercent.value = 20;
-  progressText.value = "正在批量删除...";
+  inProgress.value = true
+  progressPercent.value = 20
+  progressText.value = '正在批量删除...'
   try {
     const response = await batchDelete({
       table_name: batchForm.entity,
       ids: parsedIds.value,
       soft_delete: batchForm.softDelete,
-    });
-    const data = response?.data ?? response;
+    })
+    const data = response?.data ?? response
     resultSummary.value = {
       success: true,
       processed: parsedIds.value.length,
-      success_count:
-        data?.success_count ?? data?.deleted ?? parsedIds.value.length,
-      message: data?.message ?? "批量删除完成",
+      success_count: data?.success_count ?? data?.deleted ?? parsedIds.value.length,
+      message: data?.message ?? '批量删除完成',
       errors: data?.errors ?? [],
-    };
-    progressPercent.value = 100;
-    progressStatus.value = "success";
-    progressText.value = "批量删除完成";
-    ElMessage.success("批量删除完成");
+    }
+    progressPercent.value = 100
+    progressStatus.value = 'success'
+    progressText.value = '批量删除完成'
+    ElMessage.success('批量删除完成')
   } catch {
-    progressStatus.value = "exception";
-    progressText.value = "批量删除失败";
-    resultSummary.value = { success: false, message: "批量删除失败" };
-    ElMessage.error("批量删除失败");
+    progressStatus.value = 'exception'
+    progressText.value = '批量删除失败'
+    resultSummary.value = { success: false, message: '批量删除失败' }
+    ElMessage.error('批量删除失败')
   } finally {
-    inProgress.value = false;
+    inProgress.value = false
   }
 }
 
 async function handleBatchExport() {
   if (parsedIds.value.length === 0) {
-    ElMessage.warning("请输入至少一个有效ID");
-    return;
+    ElMessage.warning('请输入至少一个有效ID')
+    return
   }
 
-  inProgress.value = true;
-  progressPercent.value = 30;
-  progressText.value = "正在导出...";
+  inProgress.value = true
+  progressPercent.value = 30
+  progressText.value = '正在导出...'
   try {
     const response = await batchExport({
       table_name: batchForm.entity,
       ids: parsedIds.value,
       format: batchForm.format,
-    });
-    const data = response?.data ?? response;
+    })
+    const data = response?.data ?? response
     resultSummary.value = {
       success: true,
       processed: parsedIds.value.length,
-      message: data?.message ?? "导出完成",
-    };
-    progressPercent.value = 100;
-    progressStatus.value = "success";
-    progressText.value = "导出完成";
-    ElMessage.success("导出任务已提交，请留意下载通知");
+      message: data?.message ?? '导出完成',
+    }
+    progressPercent.value = 100
+    progressStatus.value = 'success'
+    progressText.value = '导出完成'
+    ElMessage.success('导出任务已提交，请留意下载通知')
   } catch {
-    progressStatus.value = "exception";
-    progressText.value = "导出失败";
-    resultSummary.value = { success: false, message: "导出失败" };
-    ElMessage.error("导出失败");
+    progressStatus.value = 'exception'
+    progressText.value = '导出失败'
+    resultSummary.value = { success: false, message: '导出失败' }
+    ElMessage.error('导出失败')
   } finally {
-    inProgress.value = false;
+    inProgress.value = false
   }
 }
 
 function handleReset() {
-  idInput.value = "";
-  updatesInput.value = '{"status": "active"}';
-  resultSummary.value = null;
-  progressPercent.value = 0;
-  progressStatus.value = "";
-  progressText.value = "";
+  idInput.value = ''
+  updatesInput.value = '{"status": "active"}'
+  resultSummary.value = null
+  progressPercent.value = 0
+  progressStatus.value = ''
+  progressText.value = ''
 }
 </script>
 

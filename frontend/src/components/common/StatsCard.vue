@@ -8,51 +8,47 @@
     </div>
     <div class="stats-card__value">{{ formattedValue }}</div>
     <div v-if="subtitle" class="stats-card__subtitle">{{ subtitle }}</div>
-    <div
-      v-if="trend !== undefined"
-      class="stats-card__trend"
-      :class="trendClass"
-    >
+    <div v-if="trend !== undefined" class="stats-card__trend" :class="trendClass">
       <span>{{ trendText }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, type Component } from "vue";
+import { computed, type Component } from 'vue'
 
 interface Props {
-  title: string;
-  value: number | string;
-  subtitle?: string;
-  icon?: Component;
-  type?: "primary" | "success" | "warning" | "danger" | "info";
-  trend?: number;
-  prefix?: string;
-  suffix?: string;
+  title: string
+  value: number | string
+  subtitle?: string
+  icon?: Component
+  type?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
+  trend?: number
+  prefix?: string
+  suffix?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  type: "primary",
-  prefix: "",
-  suffix: "",
-});
+  type: 'primary',
+  prefix: '',
+  suffix: '',
+})
 
 const formattedValue = computed(() => {
-  if (typeof props.value === "string") return props.value;
-  return `${props.prefix}${props.value.toLocaleString()}${props.suffix}`;
-});
+  if (typeof props.value === 'string') return props.value
+  return `${props.prefix}${props.value.toLocaleString()}${props.suffix}`
+})
 
 const trendClass = computed(() => {
-  if (props.trend === undefined) return "";
-  return props.trend >= 0 ? "stats-card__trend--up" : "stats-card__trend--down";
-});
+  if (props.trend === undefined) return ''
+  return props.trend >= 0 ? 'stats-card__trend--up' : 'stats-card__trend--down'
+})
 
 const trendText = computed(() => {
-  if (props.trend === undefined) return "";
-  const sign = props.trend >= 0 ? "+" : "";
-  return `${sign}${props.trend}%`;
-});
+  if (props.trend === undefined) return ''
+  const sign = props.trend >= 0 ? '+' : ''
+  return `${sign}${props.trend}%`
+})
 </script>
 
 <style scoped>

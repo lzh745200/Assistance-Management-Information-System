@@ -9,15 +9,11 @@
           :value="runningCount.running"
           class="running-badge"
         >
-          <el-tag type="warning" size="small" class="pulse-tag">
-            运行中
-          </el-tag>
+          <el-tag type="warning" size="small" class="pulse-tag"> 运行中 </el-tag>
         </el-badge>
       </div>
       <div class="header-right">
-        <span v-if="lastUpdated" class="last-updated">
-          更新于 {{ lastUpdated }}
-        </span>
+        <span v-if="lastUpdated" class="last-updated"> 更新于 {{ lastUpdated }} </span>
         <el-switch
           v-model="autoRefresh"
           active-text="自动刷新"
@@ -33,12 +29,7 @@
         >
           刷新
         </el-button>
-        <el-button
-          :icon="Plus"
-          size="small"
-          type="success"
-          @click="showCreateDialog = true"
-        >
+        <el-button :icon="Plus" size="small" type="success" @click="showCreateDialog = true">
           创建任务
         </el-button>
       </div>
@@ -97,11 +88,7 @@
             >
               {{ type }}: {{ count }}
             </el-tag>
-            <span
-              v-if="!Object.keys(stats.by_type || {}).length"
-              class="stat-empty"
-              >--</span
-            >
+            <span v-if="!Object.keys(stats.by_type || {}).length" class="stat-empty">--</span>
           </div>
         </el-card>
       </el-col>
@@ -137,9 +124,7 @@
               @clear="handleSearch"
               @keyup.enter="handleSearch"
             />
-            <el-button size="small" :icon="Search" @click="handleSearch"
-              >查询</el-button
-            >
+            <el-button size="small" :icon="Search" @click="handleSearch">查询</el-button>
             <el-button size="small" @click="resetFilters">重置</el-button>
           </div>
         </div>
@@ -149,9 +134,7 @@
         <el-table-column prop="task_id" label="任务ID" width="140">
           <template #default="{ row }">
             <el-tooltip :content="row.task_id" placement="top">
-              <span class="text-truncate"
-                >{{ row.task_id?.substring(0, 14) }}...</span
-              >
+              <span class="text-truncate">{{ row.task_id?.substring(0, 14) }}...</span>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -162,9 +145,7 @@
         </el-table-column>
         <el-table-column prop="task_type" label="类型" width="120">
           <template #default="{ row }">
-            <el-tag size="small" type="info">{{
-              row.task_type || "--"
-            }}</el-tag>
+            <el-tag size="small" type="info">{{ row.task_type || '--' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -199,14 +180,10 @@
         </el-table-column>
         <el-table-column prop="message" label="消息" min-width="160">
           <template #default="{ row }">
-            <el-tooltip
-              v-if="row.message"
-              :content="row.message"
-              placement="top"
-            >
+            <el-tooltip v-if="row.message" :content="row.message" placement="top">
               <span class="text-truncate"
                 >{{ row.message?.substring(0, 30)
-                }}{{ row.message?.length > 30 ? "..." : "" }}</span
+                }}{{ row.message?.length > 30 ? '...' : '' }}</span
               >
             </el-tooltip>
             <span v-else class="text-muted">--</span>
@@ -219,7 +196,7 @@
         </el-table-column>
         <el-table-column prop="created_by" label="创建人" width="100">
           <template #default="{ row }">
-            {{ row.created_by || "--" }}
+            {{ row.created_by || '--' }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="140" fixed="right">
@@ -236,9 +213,7 @@
             </el-button>
             <el-button
               v-if="
-                row.status === 'completed' ||
-                row.status === 'failed' ||
-                row.status === 'cancelled'
+                row.status === 'completed' || row.status === 'failed' || row.status === 'cancelled'
               "
               type="danger"
               size="small"
@@ -273,12 +248,7 @@
       :close-on-click-modal="false"
       @closed="resetCreateForm"
     >
-      <el-form
-        ref="createFormRef"
-        :model="createForm"
-        :rules="createFormRules"
-        label-width="100px"
-      >
+      <el-form ref="createFormRef" :model="createForm" :rules="createFormRules" label-width="100px">
         <el-form-item label="任务名称" prop="task_name">
           <el-input
             v-model="createForm.task_name"
@@ -305,11 +275,7 @@
       </el-form>
       <template #footer>
         <el-button @click="showCreateDialog = false">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="createLoading"
-          @click="handleCreateTask"
-        >
+        <el-button type="primary" :loading="createLoading" @click="handleCreateTask">
           创建
         </el-button>
       </template>
@@ -318,94 +284,83 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  Refresh,
-  VideoPause,
-  Delete,
-  Plus,
-  Search,
-} from "@element-plus/icons-vue";
-import {
-  tasksApi,
-  type TaskInfo,
-  type TaskStats,
-  type RunningTaskCount,
-} from "@/api/tasks";
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh, VideoPause, Delete, Plus, Search } from '@element-plus/icons-vue'
+import { tasksApi, type TaskInfo, type TaskStats, type RunningTaskCount } from '@/api/tasks'
 
 // ==================== 响应式状态 ====================
 
-const loading = ref(false);
-const taskList = ref<TaskInfo[]>([]);
-const page = ref(1);
-const pageSize = ref(20);
-const total = ref(0);
+const loading = ref(false)
+const taskList = ref<TaskInfo[]>([])
+const page = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
 
-const filterStatus = ref("");
-const filterType = ref("");
+const filterStatus = ref('')
+const filterType = ref('')
 
-const autoRefresh = ref(false);
-const showCreateDialog = ref(false);
-const createLoading = ref(false);
-const lastUpdated = ref("");
+const autoRefresh = ref(false)
+const showCreateDialog = ref(false)
+const createLoading = ref(false)
+const lastUpdated = ref('')
 
 const stats = ref<TaskStats>({
   total: 0,
   by_status: {},
   by_type: {},
   active_count: 0,
-});
+})
 
 const runningCount = ref<RunningTaskCount>({
   running: 0,
   pending: 0,
   total_active: 0,
-});
+})
 
 const createForm = reactive({
-  task_name: "",
-  task_type: "",
-  params: "",
-});
+  task_name: '',
+  task_type: '',
+  params: '',
+})
 
-const createFormRef = ref();
+const createFormRef = ref()
 
 const createFormRules = {
-  task_name: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
-};
+  task_name: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
+}
 
 // ==================== 自动刷新 ====================
 
-let refreshInterval: ReturnType<typeof setInterval> | null = null;
+let refreshInterval: ReturnType<typeof setInterval> | null = null
 
 function toggleAutoRefresh(value: string | number | boolean) {
   if (value) {
-    startAutoRefresh();
+    startAutoRefresh()
   } else {
-    stopAutoRefresh();
+    stopAutoRefresh()
   }
 }
 
 function startAutoRefresh() {
-  stopAutoRefresh();
+  stopAutoRefresh()
   refreshInterval = setInterval(async () => {
     try {
-      const countRes = await tasksApi.getRunningCount();
+      const countRes = await tasksApi.getRunningCount()
       if (countRes.success && countRes.data.total_active > 0) {
-        await fetchTaskList(false);
-        updateLastUpdated();
+        await fetchTaskList(false)
+        updateLastUpdated()
       }
     } catch {
       // auto-refresh silently fails
     }
-  }, 5000);
+  }, 5000)
 }
 
 function stopAutoRefresh() {
   if (refreshInterval !== null) {
-    clearInterval(refreshInterval);
-    refreshInterval = null;
+    clearInterval(refreshInterval)
+    refreshInterval = null
   }
 }
 
@@ -413,9 +368,9 @@ function stopAutoRefresh() {
 
 async function fetchStats() {
   try {
-    const res = await tasksApi.getStats();
+    const res = await tasksApi.getStats()
     if (res.success) {
-      stats.value = res.data;
+      stats.value = res.data
     }
   } catch {
     // stats failure is non-blocking
@@ -424,9 +379,9 @@ async function fetchStats() {
 
 async function fetchRunningCount() {
   try {
-    const res = await tasksApi.getRunningCount();
+    const res = await tasksApi.getRunningCount()
     if (res.success) {
-      runningCount.value = res.data;
+      runningCount.value = res.data
     }
   } catch {
     // non-blocking
@@ -434,92 +389,84 @@ async function fetchRunningCount() {
 }
 
 async function fetchTaskList(showLoading = true) {
-  if (showLoading) loading.value = true;
+  if (showLoading) loading.value = true
   try {
     const params: Record<string, any> = {
       page: page.value,
       page_size: pageSize.value,
-    };
+    }
     if (filterStatus.value) {
-      params.status = filterStatus.value;
+      params.status = filterStatus.value
     }
     if (filterType.value) {
-      params.task_type = filterType.value;
+      params.task_type = filterType.value
     }
-    const res = await tasksApi.listTasks(params);
+    const res = await tasksApi.listTasks(params)
     if (res.success) {
-      taskList.value = res.data.items;
-      total.value = res.data.total;
+      taskList.value = res.data.items
+      total.value = res.data.total
     }
   } catch {
-    ElMessage.error("获取任务列表失败");
+    ElMessage.error('获取任务列表失败')
   } finally {
-    if (showLoading) loading.value = false;
+    if (showLoading) loading.value = false
   }
 }
 
 async function refreshAll() {
-  loading.value = true;
+  loading.value = true
   try {
-    await Promise.all([
-      fetchStats(),
-      fetchRunningCount(),
-      fetchTaskList(false),
-    ]);
-    updateLastUpdated();
+    await Promise.all([fetchStats(), fetchRunningCount(), fetchTaskList(false)])
+    updateLastUpdated()
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function updateLastUpdated() {
-  const now = new Date();
-  lastUpdated.value = now.toLocaleTimeString("zh-CN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  const now = new Date()
+  lastUpdated.value = now.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
 }
 
 // ==================== 事件处理 ====================
 
 function handleSearch() {
-  page.value = 1;
-  fetchTaskList();
+  page.value = 1
+  fetchTaskList()
 }
 
 function resetFilters() {
-  filterStatus.value = "";
-  filterType.value = "";
-  page.value = 1;
-  fetchTaskList();
+  filterStatus.value = ''
+  filterType.value = ''
+  page.value = 1
+  fetchTaskList()
 }
 
 function handlePageChange() {
-  fetchTaskList();
+  fetchTaskList()
 }
 
 async function handleCancel(row: TaskInfo) {
   try {
-    await ElMessageBox.confirm(
-      `确定要取消任务「${row.task_name}」吗？`,
-      "确认取消",
-      {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      },
-    );
-    const res = await tasksApi.cancelTask(row.task_id);
+    await ElMessageBox.confirm(`确定要取消任务「${row.task_name}」吗？`, '确认取消', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    const res = await tasksApi.cancelTask(row.task_id)
     if (res.success) {
-      ElMessage.success("已取消");
-      await refreshAll();
+      ElMessage.success('已取消')
+      await refreshAll()
     } else {
-      ElMessage.error(res.message || "取消失败");
+      ElMessage.error(res.message || '取消失败')
     }
   } catch (err: any) {
-    if (err !== "cancel" && err?.message !== "cancel") {
-      ElMessage.error(err?.message || "取消操作失败");
+    if (err !== 'cancel' && err?.message !== 'cancel') {
+      ElMessage.error(err?.message || '取消操作失败')
     }
   }
 }
@@ -528,125 +475,122 @@ async function handleDelete(row: TaskInfo) {
   try {
     await ElMessageBox.confirm(
       `确定要删除任务「${row.task_name}」吗？此操作不可恢复。`,
-      "确认删除",
+      '确认删除',
       {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      },
-    );
-    const res = await tasksApi.deleteTask(row.task_id);
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    const res = await tasksApi.deleteTask(row.task_id)
     if (res.success) {
-      ElMessage.success("已删除");
-      await refreshAll();
+      ElMessage.success('已删除')
+      await refreshAll()
     } else {
-      ElMessage.error(res.message || "删除失败");
+      ElMessage.error(res.message || '删除失败')
     }
   } catch (err: any) {
-    if (err !== "cancel" && err?.message !== "cancel") {
-      ElMessage.error(err?.message || "删除操作失败");
+    if (err !== 'cancel' && err?.message !== 'cancel') {
+      ElMessage.error(err?.message || '删除操作失败')
     }
   }
 }
 
 async function handleCreateTask() {
-  const valid = await createFormRef.value?.validate().catch(() => false);
-  if (!valid) return;
+  const valid = await createFormRef.value?.validate().catch(() => false)
+  if (!valid) return
 
-  createLoading.value = true;
+  createLoading.value = true
   try {
-    let params: Record<string, any> | undefined;
+    let params: Record<string, any> | undefined
     if (createForm.params.trim()) {
       try {
-        params = JSON.parse(createForm.params);
+        params = JSON.parse(createForm.params)
       } catch {
-        ElMessage.error("参数格式错误，请输入有效的JSON");
-        createLoading.value = false;
-        return;
+        ElMessage.error('参数格式错误，请输入有效的JSON')
+        createLoading.value = false
+        return
       }
     }
     const res = await tasksApi.createTask({
       task_name: createForm.task_name,
       task_type: createForm.task_type || undefined,
       params,
-    });
+    })
     if (res.success) {
-      ElMessage.success(res.message || "任务创建成功");
-      showCreateDialog.value = false;
-      await refreshAll();
+      ElMessage.success(res.message || '任务创建成功')
+      showCreateDialog.value = false
+      await refreshAll()
     } else {
-      ElMessage.error(res.message || "创建失败");
+      ElMessage.error(res.message || '创建失败')
     }
   } catch {
-    ElMessage.error("创建任务失败");
+    ElMessage.error('创建任务失败')
   } finally {
-    createLoading.value = false;
+    createLoading.value = false
   }
 }
 
 function resetCreateForm() {
-  createForm.task_name = "";
-  createForm.task_type = "";
-  createForm.params = "";
-  createFormRef.value?.resetFields();
+  createForm.task_name = ''
+  createForm.task_type = ''
+  createForm.params = ''
+  createFormRef.value?.resetFields()
 }
 
 // ==================== 工具函数 ====================
 
 function statusTagType(
-  status: string,
-): "primary" | "success" | "warning" | "info" | "danger" | undefined {
-  const map: Record<
-    string,
-    "primary" | "success" | "warning" | "info" | "danger" | undefined
-  > = {
-    pending: "info",
+  status: string
+): 'primary' | 'success' | 'warning' | 'info' | 'danger' | undefined {
+  const map: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger' | undefined> = {
+    pending: 'info',
     running: undefined,
-    completed: "success",
-    failed: "danger",
-    cancelled: "warning",
-  };
-  return map[status] || "info";
+    completed: 'success',
+    failed: 'danger',
+    cancelled: 'warning',
+  }
+  return map[status] || 'info'
 }
 
 function statusLabel(status: string) {
   const map: Record<string, string> = {
-    pending: "等待中",
-    running: "运行中",
-    completed: "已完成",
-    failed: "失败",
-    cancelled: "已取消",
-  };
-  return map[status] || status;
+    pending: '等待中',
+    running: '运行中',
+    completed: '已完成',
+    failed: '失败',
+    cancelled: '已取消',
+  }
+  return map[status] || status
 }
 
 function formatDateTime(dateStr: string) {
-  if (!dateStr) return "--";
+  if (!dateStr) return '--'
   try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return dateStr;
-    return date.toLocaleString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return dateStr
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
   } catch {
-    return dateStr;
+    return dateStr
   }
 }
 
 // ==================== 生命周期 ====================
 
 onMounted(() => {
-  refreshAll();
-});
+  refreshAll()
+})
 
 onUnmounted(() => {
-  stopAutoRefresh();
-});
+  stopAutoRefresh()
+})
 </script>
 
 <style scoped>

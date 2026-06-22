@@ -3,9 +3,7 @@
     <div class="page-header">
       <div class="header-info">
         <h2 class="page-title">舆情监测</h2>
-        <p class="page-desc">
-          监控帮扶相关舆情动态，分析情感倾向，预警风险信息
-        </p>
+        <p class="page-desc">监控帮扶相关舆情动态，分析情感倾向，预警风险信息</p>
       </div>
       <div class="header-actions">
         <el-button type="primary" :loading="collecting" @click="handleCollect">
@@ -21,42 +19,37 @@
     <div v-if="!statsError" class="stats-row">
       <div class="stat-item" :class="statLoading ? 'stat-loading' : ''">
         <div class="stat-value" style="color: #67c23a">
-          {{ statLoading ? "-" : stats.positive }}
+          {{ statLoading ? '-' : stats.positive }}
         </div>
         <div class="stat-label">正面舆情</div>
       </div>
       <div class="stat-item">
         <div class="stat-value" style="color: #909399">
-          {{ statLoading ? "-" : stats.neutral }}
+          {{ statLoading ? '-' : stats.neutral }}
         </div>
         <div class="stat-label">中性舆情</div>
       </div>
       <div class="stat-item">
         <div class="stat-value" style="color: #f56c6c">
-          {{ statLoading ? "-" : stats.negative }}
+          {{ statLoading ? '-' : stats.negative }}
         </div>
         <div class="stat-label">负面舆情</div>
       </div>
       <div class="stat-item">
         <div class="stat-value" style="color: #e6a23c">
-          {{ statLoading ? "-" : stats.alerts }}
+          {{ statLoading ? '-' : stats.alerts }}
         </div>
         <div class="stat-label">预警信息</div>
       </div>
       <div class="stat-item">
-        <div class="stat-value">{{ statLoading ? "-" : stats.total }}</div>
+        <div class="stat-value">{{ statLoading ? '-' : stats.total }}</div>
         <div class="stat-label">总条数</div>
       </div>
     </div>
 
     <!-- 加载错误提示 -->
     <div v-if="statsError" class="error-hint" style="margin-bottom: 20px">
-      <el-alert
-        title="统计数据加载失败"
-        type="warning"
-        show-icon
-        :closable="false"
-      />
+      <el-alert title="统计数据加载失败" type="warning" show-icon :closable="false" />
     </div>
 
     <el-row :gutter="20">
@@ -65,11 +58,7 @@
         <div class="section-card">
           <div class="section-header">
             <h3>热门关键词</h3>
-            <el-select
-              v-model="keywordDays"
-              style="width: 100px"
-              @change="loadKeywords"
-            >
+            <el-select v-model="keywordDays" style="width: 100px" @change="loadKeywords">
               <el-option label="近7天" :value="7" />
               <el-option label="近30天" :value="30" />
             </el-select>
@@ -116,16 +105,12 @@
             <div v-for="alert in alerts" :key="alert.id" class="alert-item">
               <div class="alert-header">
                 <el-tag
-                  :type="
-                    alert.sentiment_label === 'negative' ? 'danger' : 'warning'
-                  "
+                  :type="alert.sentiment_label === 'negative' ? 'danger' : 'warning'"
                   size="small"
                 >
-                  {{ alert.sentiment_label || "预警" }}
+                  {{ alert.sentiment_label || '预警' }}
                 </el-tag>
-                <span class="alert-source">{{
-                  alert.source || "未知来源"
-                }}</span>
+                <span class="alert-source">{{ alert.source || '未知来源' }}</span>
                 <span class="alert-time">{{
                   formatDate(alert.published_at || alert.created_at)
                 }}</span>
@@ -157,28 +142,15 @@
         <el-empty description="暂无新闻数据" :image-size="60" />
       </div>
       <el-table v-else :data="newsList" stripe size="small">
-        <el-table-column
-          prop="title"
-          label="标题"
-          min-width="280"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="title" label="标题" min-width="280" show-overflow-tooltip />
         <el-table-column label="情感" width="100" align="center">
           <template #default="scope">
-            <el-tag
-              :type="sentimentTagType(scope.row.sentiment_label)"
-              size="small"
-            >
+            <el-tag :type="sentimentTagType(scope.row.sentiment_label)" size="small">
               {{ sentimentLabel(scope.row.sentiment_label) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="source"
-          label="来源"
-          width="120"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="source" label="来源" width="120" show-overflow-tooltip />
         <el-table-column label="发布时间" width="110" align="center">
           <template #default="scope">
             {{ formatDate(scope.row.published_at || scope.row.created_at) }}
@@ -186,9 +158,7 @@
         </el-table-column>
         <el-table-column label="预警" width="70" align="center">
           <template #default="scope">
-            <el-tag v-if="scope.row.is_alert" type="danger" size="small"
-              >预警</el-tag
-            >
+            <el-tag v-if="scope.row.is_alert" type="danger" size="small">预警</el-tag>
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -198,9 +168,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Loading, Refresh, DataAnalysis } from "@element-plus/icons-vue";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Loading, Refresh, DataAnalysis } from '@element-plus/icons-vue'
 import {
   collectNews,
   analyzeNews,
@@ -208,7 +178,7 @@ import {
   getStatistics,
   getHotKeywords,
   getAlerts,
-} from "@/api/sentiment";
+} from '@/api/sentiment'
 
 const stats = reactive({
   positive: 0,
@@ -216,162 +186,161 @@ const stats = reactive({
   neutral: 0,
   alerts: 0,
   total: 0,
-});
-const statLoading = ref(false);
-const statsError = ref(false);
+})
+const statLoading = ref(false)
+const statsError = ref(false)
 
-const keywords = ref<any[]>([]);
-const keywordsLoading = ref(false);
-const keywordDays = ref(7);
+const keywords = ref<any[]>([])
+const keywordsLoading = ref(false)
+const keywordDays = ref(7)
 
-const alerts = ref<any[]>([]);
-const alertsLoading = ref(false);
+const alerts = ref<any[]>([])
+const alertsLoading = ref(false)
 
-const newsList = ref<any[]>([]);
-const newsLoading = ref(false);
-const newsFilter = ref("");
+const newsList = ref<any[]>([])
+const newsLoading = ref(false)
+const newsFilter = ref('')
 
-const collecting = ref(false);
-const analyzing = ref(false);
+const collecting = ref(false)
+const analyzing = ref(false)
 
 function formatDate(d: string) {
-  if (!d) return "-";
-  return d.split("T")[0];
+  if (!d) return '-'
+  return d.split('T')[0]
 }
 
 function sentimentLabel(label: string) {
   const map: Record<string, string> = {
-    positive: "正面",
-    negative: "负面",
-    neutral: "中性",
-  };
-  return map[label] || label || "-";
+    positive: '正面',
+    negative: '负面',
+    neutral: '中性',
+  }
+  return map[label] || label || '-'
 }
 
 function sentimentTagType(label: string) {
-  if (label === "positive") return "success";
-  if (label === "negative") return "danger";
-  return "info";
+  if (label === 'positive') return 'success'
+  if (label === 'negative') return 'danger'
+  return 'info'
 }
 
 function tagFontSize(count: number) {
-  const base = Math.min(Math.max(count, 1), 50);
-  return 12 + (base / 50) * 8;
+  const base = Math.min(Math.max(count, 1), 50)
+  return 12 + (base / 50) * 8
 }
 
-function tagType(sentiment: string): "success" | "danger" | "info" {
-  if (sentiment === "positive") return "success";
-  if (sentiment === "negative") return "danger";
-  return "info";
+function tagType(sentiment: string): 'success' | 'danger' | 'info' {
+  if (sentiment === 'positive') return 'success'
+  if (sentiment === 'negative') return 'danger'
+  return 'info'
 }
 
 async function loadStats() {
-  statLoading.value = true;
-  statsError.value = false;
+  statLoading.value = true
+  statsError.value = false
   try {
-    const response = await getStatistics(7);
-    const data = response?.data ?? response;
+    const response = await getStatistics(7)
+    const data = response?.data ?? response
     if (data) {
-      stats.positive = data.positive_count ?? data.positive ?? 0;
-      stats.negative = data.negative_count ?? data.negative ?? 0;
-      stats.neutral = data.neutral_count ?? data.neutral ?? 0;
-      stats.alerts = data.alert_count ?? data.alerts ?? 0;
-      stats.total = data.total_count ?? data.total ?? 0;
+      stats.positive = data.positive_count ?? data.positive ?? 0
+      stats.negative = data.negative_count ?? data.negative ?? 0
+      stats.neutral = data.neutral_count ?? data.neutral ?? 0
+      stats.alerts = data.alert_count ?? data.alerts ?? 0
+      stats.total = data.total_count ?? data.total ?? 0
     }
   } catch {
-    statsError.value = true;
+    statsError.value = true
   } finally {
-    statLoading.value = false;
+    statLoading.value = false
   }
 }
 
 async function loadKeywords() {
-  keywordsLoading.value = true;
+  keywordsLoading.value = true
   try {
-    const response = await getHotKeywords(keywordDays.value, 30);
-    const data = response?.data ?? response;
-    keywords.value =
-      data?.items ?? data?.keywords ?? (Array.isArray(data) ? data : []);
+    const response = await getHotKeywords(keywordDays.value, 30)
+    const data = response?.data ?? response
+    keywords.value = data?.items ?? data?.keywords ?? (Array.isArray(data) ? data : [])
   } catch {
     // 静默
   } finally {
-    keywordsLoading.value = false;
+    keywordsLoading.value = false
   }
 }
 
 async function loadAlerts() {
-  alertsLoading.value = true;
+  alertsLoading.value = true
   try {
-    const response = await getAlerts(7, 20);
-    const data = response?.data ?? response;
-    alerts.value = data?.items ?? (Array.isArray(data) ? data : []);
+    const response = await getAlerts(7, 20)
+    const data = response?.data ?? response
+    alerts.value = data?.items ?? (Array.isArray(data) ? data : [])
   } catch {
     // 静默
   } finally {
-    alertsLoading.value = false;
+    alertsLoading.value = false
   }
 }
 
 async function loadNews() {
-  newsLoading.value = true;
+  newsLoading.value = true
   try {
-    const params: Record<string, any> = { limit: 20 };
-    if (newsFilter.value === "alert") {
-      params.is_alert = true;
+    const params: Record<string, any> = { limit: 20 }
+    if (newsFilter.value === 'alert') {
+      params.is_alert = true
     } else if (newsFilter.value) {
-      params.sentiment_label = newsFilter.value;
+      params.sentiment_label = newsFilter.value
     }
-    const response = await getNews(params);
-    const data = response?.data ?? response;
-    newsList.value = data?.items ?? (Array.isArray(data) ? data : []);
+    const response = await getNews(params)
+    const data = response?.data ?? response
+    newsList.value = data?.items ?? (Array.isArray(data) ? data : [])
   } catch {
     // 静默
   } finally {
-    newsLoading.value = false;
+    newsLoading.value = false
   }
 }
 
 async function handleCollect() {
-  collecting.value = true;
+  collecting.value = true
   try {
     await collectNews({
-      keywords: ["乡村振兴", "帮扶", "军队扶贫", "助学兴教"],
-    });
-    ElMessage.success("新闻采集已触发");
+      keywords: ['乡村振兴', '帮扶', '军队扶贫', '助学兴教'],
+    })
+    ElMessage.success('新闻采集已触发')
     setTimeout(() => {
-      loadStats();
-      loadNews();
-    }, 2000);
+      loadStats()
+      loadNews()
+    }, 2000)
   } catch {
-    ElMessage.error("采集失败");
+    ElMessage.error('采集失败')
   } finally {
-    collecting.value = false;
+    collecting.value = false
   }
 }
 
 async function handleAnalyze() {
-  analyzing.value = true;
+  analyzing.value = true
   try {
-    const response = await analyzeNews(100);
-    const data = response?.data ?? response;
-    ElMessage.success(`分析完成：处理 ${data?.processed ?? "N/A"} 条`);
-    loadStats();
-    loadKeywords();
-    loadAlerts();
-    loadNews();
+    const response = await analyzeNews(100)
+    const data = response?.data ?? response
+    ElMessage.success(`分析完成：处理 ${data?.processed ?? 'N/A'} 条`)
+    loadStats()
+    loadKeywords()
+    loadAlerts()
+    loadNews()
   } catch {
-    ElMessage.error("分析失败");
+    ElMessage.error('分析失败')
   } finally {
-    analyzing.value = false;
+    analyzing.value = false
   }
 }
 
 onMounted(() => {
-  loadStats();
-  loadKeywords();
-  loadAlerts();
-  loadNews();
-});
+  loadStats()
+  loadKeywords()
+  loadAlerts()
+  loadNews()
+})
 </script>
 
 <style scoped>

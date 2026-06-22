@@ -43,11 +43,7 @@
             :disabled="loading"
             @input="validatePassword"
           />
-          <div
-            v-if="showPasswordHint"
-            class="password-hint"
-            :class="{ active: showPasswordHint }"
-          >
+          <div v-if="showPasswordHint" class="password-hint" :class="{ active: showPasswordHint }">
             <!-- 密码规则提示 -->
             <ul class="hint-list">
               <li :class="{ valid: passwordStrengthData.length >= 8 }">
@@ -83,11 +79,9 @@
                   ]"
                 ></div>
               </div>
-              <span
-                class="strength-text"
-                :class="['text-' + passwordStrengthData.level]"
-                >{{ passwordStrengthData.text }}</span
-              >
+              <span class="strength-text" :class="['text-' + passwordStrengthData.level]">{{
+                passwordStrengthData.text
+              }}</span>
             </div>
           </div>
         </el-form-item>
@@ -155,36 +149,36 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, reactive, watch, computed } from "vue";
-import { ElMessage, ElMessageBox, ElForm } from "element-plus";
-import { useRouter } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { WarningFilled } from "@element-plus/icons-vue";
-import { useUserStore } from "@/stores/user";
-import { useAuthStore } from "@/stores/auth";
+import { ref, reactive, watch, computed } from 'vue'
+import { ElMessage, ElMessageBox, ElForm } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { WarningFilled } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/auth'
 
-const router = useRouter();
-const { pushSafe } = useRouterSafe();
-const userStore = useUserStore();
-const authStore = useAuthStore();
+const router = useRouter()
+const { pushSafe } = useRouterSafe()
+const userStore = useUserStore()
+const authStore = useAuthStore()
 
 // 是否为强制改密模式
-const isForceChange = computed(() => authStore.mustChangePassword === true);
+const isForceChange = computed(() => authStore.mustChangePassword === true)
 
 // 表单引用
-const passwordFormRef = ref<InstanceType<typeof ElForm> | null>(null);
+const passwordFormRef = ref<InstanceType<typeof ElForm> | null>(null)
 
 // 表单数据
 const passwordForm = reactive({
-  oldPassword: "",
-  newPassword: "",
-  confirmPassword: "",
-});
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
 
 // 状态变量
-const loading = ref(false);
-const newPasswordError = ref("");
-const showPasswordHint = ref(false);
+const loading = ref(false)
+const newPasswordError = ref('')
+const showPasswordHint = ref(false)
 
 // 密码强度检查结果
 const passwordStrengthData = reactive({
@@ -195,78 +189,70 @@ const passwordStrengthData = reactive({
   hasSpecial: false,
   validCount: 0,
   level: 0 as 0 | 1 | 2 | 3,
-  text: "未设置",
-});
+  text: '未设置',
+})
 
 // 表单验证规则
 const passwordRules: Record<string, any[]> = reactive({
   oldPassword: [
-    { required: true, message: "请输入当前密码", trigger: "blur" },
-    { min: 6, max: 20, message: "密码长度应在6-20个字符之间", trigger: "blur" },
+    { required: true, message: '请输入当前密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度应在6-20个字符之间', trigger: 'blur' },
   ],
   newPassword: [
-    { required: true, message: "请输入新密码", trigger: "blur" },
+    { required: true, message: '请输入新密码', trigger: 'blur' },
     {
-      message: "密码验证失败",
-      validator: (
-        _rule: any,
-        value: string,
-        callback: (error?: Error) => void,
-      ) => {
+      message: '密码验证失败',
+      validator: (_rule: any, value: string, callback: (error?: Error) => void) => {
         if (!value) {
-          callback(new Error("请输入新密码"));
+          callback(new Error('请输入新密码'))
         } else if (value === passwordForm.oldPassword) {
-          callback(new Error("新密码不能与当前密码相同"));
+          callback(new Error('新密码不能与当前密码相同'))
         } else if (passwordStrengthData.validCount < 3) {
-          callback(new Error("密码强度不足，请满足至少3项密码规则"));
+          callback(new Error('密码强度不足，请满足至少3项密码规则'))
         } else {
-          callback();
+          callback()
         }
       },
-      trigger: "blur",
+      trigger: 'blur',
     },
   ],
   confirmPassword: [
-    { required: true, message: "请再次输入新密码", trigger: "blur" },
+    { required: true, message: '请再次输入新密码', trigger: 'blur' },
     {
-      message: "密码确认失败",
-      validator: (
-        _rule: any,
-        value: string,
-        callback: (error?: Error) => void,
-      ) => {
+      message: '密码确认失败',
+      validator: (_rule: any, value: string, callback: (error?: Error) => void) => {
         if (!value) {
-          callback(new Error("请再次输入新密码"));
+          callback(new Error('请再次输入新密码'))
         } else if (value !== passwordForm.newPassword) {
-          callback(new Error("两次输入的密码不一致"));
+          callback(new Error('两次输入的密码不一致'))
         } else {
-          callback();
+          callback()
         }
       },
-      trigger: "blur",
+      trigger: 'blur',
     },
   ],
-});
+})
 
 // 计算密码是否有效
 const isPasswordValid = computed((): boolean => {
   return (
     passwordStrengthData.validCount >= 3 &&
-    passwordForm.newPassword !== "" &&
+    passwordForm.newPassword !== '' &&
     passwordForm.newPassword === passwordForm.confirmPassword
-  );
-});
+  )
+})
 
 // 验证密码强度
 const validatePassword = (value: string) => {
-  showPasswordHint.value = !!value;
+  showPasswordHint.value = !!value
 
   // 重置验证结果
-  passwordStrengthData.length = value.length;
-  passwordStrengthData.hasUppercase = /[A-Z]/.test(value);
-  passwordStrengthData.hasLowercase = /[a-z]/.test(value);
-  passwordStrengthData.hasNumber = /\d/.test(value);
-  passwordStrengthData.hasSpecial = /[!@#$%^&*]/.test(value);
+  passwordStrengthData.length = value.length
+  passwordStrengthData.hasUppercase = /[A-Z]/.test(value)
+  passwordStrengthData.hasLowercase = /[a-z]/.test(value)
+  passwordStrengthData.hasNumber = /\d/.test(value)
+  passwordStrengthData.hasSpecial = /[!@#$%^&*]/.test(value)
 
   // 计算符合规则的数量
   const validCount = [
@@ -275,130 +261,112 @@ const validatePassword = (value: string) => {
     passwordStrengthData.hasLowercase,
     passwordStrengthData.hasNumber,
     passwordStrengthData.hasSpecial,
-  ].filter(Boolean).length;
+  ].filter(Boolean).length
 
-  passwordStrengthData.validCount = validCount;
+  passwordStrengthData.validCount = validCount
 
   // 设置强度等级
   if (validCount === 0) {
-    passwordStrengthData.level = 0;
-    passwordStrengthData.text = "未设置";
+    passwordStrengthData.level = 0
+    passwordStrengthData.text = '未设置'
   } else if (validCount <= 2) {
-    passwordStrengthData.level = 1;
-    passwordStrengthData.text = "弱";
+    passwordStrengthData.level = 1
+    passwordStrengthData.text = '弱'
   } else if (validCount <= 4) {
-    passwordStrengthData.level = 2;
-    passwordStrengthData.text = "中";
+    passwordStrengthData.level = 2
+    passwordStrengthData.text = '中'
   } else {
-    passwordStrengthData.level = 3;
-    passwordStrengthData.text = "强";
+    passwordStrengthData.level = 3
+    passwordStrengthData.text = '强'
   }
 
   // 清除错误提示
   if (validCount >= 3) {
-    newPasswordError.value = "";
+    newPasswordError.value = ''
   }
-};
+}
 
 // 处理密码修改
 const handleChangePassword = async () => {
-  if (!passwordFormRef.value) return;
+  if (!passwordFormRef.value) return
 
   try {
     const valid = await new Promise<boolean>((resolve) => {
       passwordFormRef.value!.validate((valid: boolean) => {
-        resolve(valid);
-      });
-    });
+        resolve(valid)
+      })
+    })
 
     if (!valid) {
-      ElMessage.warning("请检查输入信息");
-      return;
+      ElMessage.warning('请检查输入信息')
+      return
     }
 
     // 二次确认
-    await ElMessageBox.confirm(
-      "确定要修改密码吗？修改成功后需要重新登录。",
-      "确认修改",
-      {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      },
-    );
+    await ElMessageBox.confirm('确定要修改密码吗？修改成功后需要重新登录。', '确认修改', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
 
-    loading.value = true;
-    await userStore.changePassword(
-      passwordForm.oldPassword,
-      passwordForm.newPassword,
-    );
+    loading.value = true
+    await userStore.changePassword(passwordForm.oldPassword, passwordForm.newPassword)
 
-    ElMessage.success("密码修改成功，即将跳转到登录页");
+    ElMessage.success('密码修改成功，即将跳转到登录页')
 
     // 密码修改成功后，立即退出登录并跳转到登录页，确保新密码立即生效
     setTimeout(async () => {
       try {
         // 优先使用 authStore 退出（清除 token）
-        if (authStore && typeof authStore.logout === "function") {
-          await authStore.logout();
+        if (authStore && typeof authStore.logout === 'function') {
+          await authStore.logout()
         } else {
-          await userStore.logout();
+          await userStore.logout()
         }
       } catch (_) {
         // 即使退出失败也要跳转登录页
       }
-      await pushSafe({ path: "/login" });
-    }, 1000);
+      await pushSafe({ path: '/login' })
+    }, 1000)
   } catch (error) {
-    if (error instanceof Error && error.name !== "Cancel") {
-      const errorMessage = error.message || "密码修改失败，请重试";
-      ElMessage.error(errorMessage);
+    if (error instanceof Error && error.name !== 'Cancel') {
+      const errorMessage = error.message || '密码修改失败，请重试'
+      ElMessage.error(errorMessage)
     }
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // 处理取消
 const handleCancel = async () => {
-  if (
-    passwordForm.oldPassword ||
-    passwordForm.newPassword ||
-    passwordForm.confirmPassword
-  ) {
+  if (passwordForm.oldPassword || passwordForm.newPassword || passwordForm.confirmPassword) {
     try {
-      await ElMessageBox.confirm(
-        "确定要取消修改吗？当前输入将不会保存。",
-        "确认取消",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "info",
-        },
-      );
-      router.back();
+      await ElMessageBox.confirm('确定要取消修改吗？当前输入将不会保存。', '确认取消', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info',
+      })
+      router.back()
     } catch {
       // 继续留在当前页面
     }
   } else {
-    router.back();
+    router.back()
   }
-};
+}
 
 // 监听新密码变化，自动验证确认密码
 watch(
   () => passwordForm.newPassword,
   () => {
-    if (
-      passwordForm.confirmPassword &&
-      passwordForm.confirmPassword !== passwordForm.newPassword
-    ) {
+    if (passwordForm.confirmPassword && passwordForm.confirmPassword !== passwordForm.newPassword) {
       if (passwordFormRef.value) {
-        passwordFormRef.value.validateField("confirmPassword");
+        passwordFormRef.value.validateField('confirmPassword')
       }
     }
-  },
-);
+  }
+)
 </script>
 
 <style scoped>
@@ -628,7 +596,7 @@ watch(
 }
 
 .security-tips li::before {
-  content: "•";
+  content: '•';
   position: absolute;
   left: 0;
   color: #f56c6c;

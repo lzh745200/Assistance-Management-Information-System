@@ -2,9 +2,7 @@
   <div class="data-import-page">
     <div class="page-header">
       <h2>数据导入</h2>
-      <p class="page-desc">
-        下载模板填写数据后上传，支持帮扶村、项目、资金、学校四种类型
-      </p>
+      <p class="page-desc">下载模板填写数据后上传，支持帮扶村、项目、资金、学校四种类型</p>
     </div>
 
     <!-- 模板下载区 -->
@@ -75,9 +73,7 @@
             <el-icon :size="48"><Upload /></el-icon>
             <div class="upload-text">
               <p>拖拽文件到此处或<em>点击上传</em></p>
-              <p class="upload-hint">
-                仅支持 .xlsx / .xls 格式，单次最多 1000 条
-              </p>
+              <p class="upload-hint">仅支持 .xlsx / .xls 格式，单次最多 1000 条</p>
             </div>
           </el-upload>
         </el-form-item>
@@ -107,13 +103,7 @@
         <el-alert type="info" :closable="false" style="margin-bottom: 12px">
           共 {{ previewData.total }} 条数据，请确认无误后点击"确认导入"
         </el-alert>
-        <el-table
-          :data="previewData.rows.slice(0, 10)"
-          border
-          stripe
-          max-height="300"
-          size="small"
-        >
+        <el-table :data="previewData.rows.slice(0, 10)" border stripe max-height="300" size="small">
           <el-table-column
             v-for="col in previewData.columns"
             :key="col"
@@ -141,14 +131,9 @@
         style="margin-top: 16px"
       >
         <template v-if="importResult.success">
-          总 {{ importResult.total_rows }} 条，成功
-          {{ importResult.success_rows }} 条
-          <span v-if="importResult.skipped_rows"
-            >，跳过 {{ importResult.skipped_rows }} 条</span
-          >
-          <span v-if="importResult.failed_rows"
-            >，失败 {{ importResult.failed_rows }} 条</span
-          >
+          总 {{ importResult.total_rows }} 条，成功 {{ importResult.success_rows }} 条
+          <span v-if="importResult.skipped_rows">，跳过 {{ importResult.skipped_rows }} 条</span>
+          <span v-if="importResult.failed_rows">，失败 {{ importResult.failed_rows }} 条</span>
         </template>
         <div v-if="importResult.errors?.length" style="margin-top: 8px">
           <p
@@ -174,9 +159,7 @@
         <el-table-column prop="file_name" label="文件名" min-width="180" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)">{{
-              statusLabel(row.status)
-            }}</el-tag>
+            <el-tag :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="total_rows" label="总行数" width="80" />
@@ -184,7 +167,7 @@
         <el-table-column prop="failed_rows" label="失败" width="70" />
         <el-table-column prop="created_at" label="导入时间" width="170">
           <template #default="{ row }">
-            {{ row.created_at?.slice(0, 19) || "-" }}
+            {{ row.created_at?.slice(0, 19) || '-' }}
           </template>
         </el-table-column>
       </el-table>
@@ -203,15 +186,9 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import {
-  Download,
-  Upload,
-  Document,
-  Clock,
-  View,
-} from "@element-plus/icons-vue";
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Download, Upload, Document, Clock, View } from '@element-plus/icons-vue'
 import {
   downloadImportTemplate,
   importEntities,
@@ -221,153 +198,148 @@ import {
   type ImportResult,
   type ImportHistory,
   type ImportMode,
-} from "@/api/import";
+} from '@/api/import'
 
 const templates = [
   {
-    type: "supported_village",
-    label: "帮扶村",
-    desc: "村名、县市、帮扶单位等字段",
+    type: 'supported_village',
+    label: '帮扶村',
+    desc: '村名、县市、帮扶单位等字段',
   },
-  { type: "project", label: "项目", desc: "项目名称、类型、预算、日期等" },
-  { type: "fund", label: "资金", desc: "经费名称、金额、来源、用途等" },
-  { type: "school", label: "学校", desc: "学校名称、类型、学生数等" },
-];
+  { type: 'project', label: '项目', desc: '项目名称、类型、预算、日期等' },
+  { type: 'fund', label: '资金', desc: '经费名称、金额、来源、用途等' },
+  { type: 'school', label: '学校', desc: '学校名称、类型、学生数等' },
+]
 
 // ── Template download ──
-const downloadingType = ref("");
+const downloadingType = ref('')
 
 async function handleDownloadTemplate(type: string) {
-  downloadingType.value = type;
+  downloadingType.value = type
   try {
-    const blob = await downloadImportTemplate(type);
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    const tpl = templates.find((t) => t.type === type);
-    link.download = `${tpl?.label || type}导入模板.xlsx`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    const blob = await downloadImportTemplate(type)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    const tpl = templates.find((t) => t.type === type)
+    link.download = `${tpl?.label || type}导入模板.xlsx`
+    link.click()
+    window.URL.revokeObjectURL(url)
     // 模板下载成功 — 浏览器已确认
   } catch (e: any) {
-    ElMessage.error(e?.message || "模板下载失败");
+    ElMessage.error(e?.message || '模板下载失败')
   } finally {
-    downloadingType.value = "";
+    downloadingType.value = ''
   }
 }
 
 // ── File upload ──
-const uploadRef = ref();
-const selectedFile = ref<File | null>(null);
+const uploadRef = ref()
+const selectedFile = ref<File | null>(null)
 const importForm = ref({
-  entityType: "supported_village",
-  mode: "incremental" as ImportMode,
-});
-const importing = ref(false);
-const importResult = ref<ImportResult | null>(null);
+  entityType: 'supported_village',
+  mode: 'incremental' as ImportMode,
+})
+const importing = ref(false)
+const importResult = ref<ImportResult | null>(null)
 
 function handleFileChange(file: any) {
-  selectedFile.value = file.raw;
+  selectedFile.value = file.raw
 }
 
 function handleFileRemove() {
-  selectedFile.value = null;
+  selectedFile.value = null
 }
 
 function handleReset() {
-  uploadRef.value?.clearFiles();
-  selectedFile.value = null;
-  previewData.value = null;
-  importResult.value = null;
+  uploadRef.value?.clearFiles()
+  selectedFile.value = null
+  previewData.value = null
+  importResult.value = null
 }
 
 // ── Preview ──
-const previewing = ref(false);
+const previewing = ref(false)
 const previewData = ref<{
-  rows: any[];
-  total: number;
-  columns: string[];
-} | null>(null);
+  rows: any[]
+  total: number
+  columns: string[]
+} | null>(null)
 
 async function handlePreview() {
-  if (!selectedFile.value) return;
-  previewing.value = true;
-  previewData.value = null;
+  if (!selectedFile.value) return
+  previewing.value = true
+  previewData.value = null
   try {
-    const result = await previewImportData(
-      selectedFile.value,
-      importForm.value.entityType,
-    );
-    previewData.value = result;
+    const result = await previewImportData(selectedFile.value, importForm.value.entityType)
+    previewData.value = result
   } catch (e: any) {
-    ElMessage.error(
-      e?.response?.data?.detail || e?.message || "数据预览失败，请检查文件格式",
-    );
+    ElMessage.error(e?.response?.data?.detail || e?.message || '数据预览失败，请检查文件格式')
   } finally {
-    previewing.value = false;
+    previewing.value = false
   }
 }
 
 async function handleImport() {
   if (!selectedFile.value) {
-    ElMessage.warning("请先选择文件");
-    return;
+    ElMessage.warning('请先选择文件')
+    return
   }
   if (!previewData.value) {
-    ElMessage.warning("请先预览数据确认无误后再导入");
-    return;
+    ElMessage.warning('请先预览数据确认无误后再导入')
+    return
   }
-  importing.value = true;
-  importResult.value = null;
+  importing.value = true
+  importResult.value = null
   try {
     const result = await importEntities(
       selectedFile.value,
       importForm.value.entityType,
-      importForm.value.mode,
-    );
-    importResult.value = result;
+      importForm.value.mode
+    )
+    importResult.value = result
     if (result.success) {
-      ElMessage.success(`导入完成：${result.success_rows} 条成功`);
+      ElMessage.success(`导入完成：${result.success_rows} 条成功`)
     } else {
-      ElMessage.error(`导入失败：${result.errors?.length || 0} 个错误`);
+      ElMessage.error(`导入失败：${result.errors?.length || 0} 个错误`)
     }
-    handleReset();
-    loadHistory();
+    handleReset()
+    loadHistory()
   } catch (e: any) {
-    ElMessage.error(e?.response?.data?.detail || e?.message || "导入失败");
+    ElMessage.error(e?.response?.data?.detail || e?.message || '导入失败')
   } finally {
-    importing.value = false;
+    importing.value = false
   }
 }
 
 // ── History ──
-const history = ref<ImportHistory[]>([]);
-const historyTotal = ref(0);
-const historyPage = ref(1);
-const historyLoading = ref(false);
+const history = ref<ImportHistory[]>([])
+const historyTotal = ref(0)
+const historyPage = ref(1)
+const historyLoading = ref(false)
 
 async function loadHistory() {
-  historyLoading.value = true;
+  historyLoading.value = true
   try {
-    const res = await getImportHistory(historyPage.value, 10);
-    history.value = res.items || [];
-    historyTotal.value = res.total || 0;
+    const res = await getImportHistory(historyPage.value, 10)
+    history.value = res.items || []
+    historyTotal.value = res.total || 0
   } catch {
-    history.value = [];
+    history.value = []
   } finally {
-    historyLoading.value = false;
+    historyLoading.value = false
   }
 }
 
 function statusTagType(status: string): string {
-  return formatImportStatus(status).type;
+  return formatImportStatus(status).type
 }
 
 function statusLabel(status: string): string {
-  return formatImportStatus(status).text;
+  return formatImportStatus(status).text
 }
 
-onMounted(loadHistory);
+onMounted(loadHistory)
 </script>
 
 <style scoped>

@@ -17,36 +17,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-const route = useRoute();
-const router = useRouter();
+const route = useRoute()
+const router = useRouter()
 
-const windowWidth = ref(window.innerWidth);
-const isMobile = computed(() => windowWidth.value < 768);
+const windowWidth = ref(window.innerWidth)
+const isMobile = computed(() => windowWidth.value < 768)
 
 const navItems = [
-  { path: "/dashboard", label: "首页", icon: "HomeFilled" },
-  { path: "/supported-villages", label: "帮扶村", icon: "Grid" },
-  { path: "/funds", label: "经费", icon: "Money" },
-  { path: "/message", label: "消息", icon: "Message", badge: "" },
-  { path: "/profile", label: "我的", icon: "User" },
-];
+  { path: '/dashboard', label: '首页', icon: 'HomeFilled' },
+  { path: '/supported-villages', label: '帮扶村', icon: 'Grid' },
+  { path: '/funds', label: '经费', icon: 'Money' },
+  { path: '/message', label: '消息', icon: 'Message', badge: '' },
+  { path: '/profile', label: '我的', icon: 'User' },
+]
 
 function isActive(path: string) {
-  return route.path === path || route.path.startsWith(path + "/");
+  return route.path === path || route.path.startsWith(path + '/')
 }
 
 function navigate(path: string) {
-  router.push(path);
+  router.push(path)
 }
 
 function onResize() {
-  windowWidth.value = window.innerWidth;
+  windowWidth.value = window.innerWidth
 }
-onMounted(() => window.addEventListener("resize", onResize));
-onUnmounted(() => window.removeEventListener("resize", onResize));
+onMounted(() => window.addEventListener('resize', onResize))
+onUnmounted(() => window.removeEventListener('resize', onResize))
 </script>
 
 <style scoped>

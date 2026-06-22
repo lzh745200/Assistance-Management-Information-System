@@ -4,5 +4,5 @@
   </div>
 </template>
 <script setup lang="ts">
-defineProps<{ selectedCount?: number }>();
+defineProps<{ selectedCount?: number }>()
 </script>

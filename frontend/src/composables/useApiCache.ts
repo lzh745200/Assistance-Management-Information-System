@@ -4,37 +4,37 @@
  * 使用 shallowRef 避免 Vue 深度响应式包裹泛型 Map，
  * 防止 UnwrapRef<T> 类型推断问题。
  */
-import { shallowRef } from "vue";
+import { shallowRef } from 'vue'
 
 interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
+  data: T
+  timestamp: number
 }
 
 export function useApiCache<T = any>(ttlMs = 60000) {
-  const cache = shallowRef<Map<string, CacheEntry<T>>>(new Map());
+  const cache = shallowRef<Map<string, CacheEntry<T>>>(new Map())
 
   function get(key: string): T | null {
-    const entry = cache.value.get(key);
-    if (!entry) return null;
+    const entry = cache.value.get(key)
+    if (!entry) return null
     if (Date.now() - entry.timestamp > ttlMs) {
-      cache.value.delete(key);
-      return null;
+      cache.value.delete(key)
+      return null
     }
-    return entry.data;
+    return entry.data
   }
 
   function set(key: string, data: T) {
-    cache.value.set(key, { data, timestamp: Date.now() });
+    cache.value.set(key, { data, timestamp: Date.now() })
   }
 
   function invalidate(key?: string) {
     if (key) {
-      cache.value.delete(key);
+      cache.value.delete(key)
     } else {
-      cache.value.clear();
+      cache.value.clear()
     }
   }
 
-  return { get, set, invalidate };
+  return { get, set, invalidate }
 }

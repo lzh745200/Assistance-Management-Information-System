@@ -12,31 +12,23 @@
       </template>
 
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="组织名称">{{
-          org.name
-        }}</el-descriptions-item>
-        <el-descriptions-item label="组织编码">{{
-          org.code
-        }}</el-descriptions-item>
-        <el-descriptions-item label="层级">{{
-          org.level
-        }}</el-descriptions-item>
+        <el-descriptions-item label="组织名称">{{ org.name }}</el-descriptions-item>
+        <el-descriptions-item label="组织编码">{{ org.code }}</el-descriptions-item>
+        <el-descriptions-item label="层级">{{ org.level }}</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag :type="org.is_active ? 'success' : 'info'">
-            {{ org.is_active ? "正常" : "停用" }}
+            {{ org.is_active ? '正常' : '停用' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="联系人">{{
-          org.contact_person || "无"
-        }}</el-descriptions-item>
+        <el-descriptions-item label="联系人">{{ org.contact_person || '无' }}</el-descriptions-item>
         <el-descriptions-item label="联系电话">{{
-          org.contact_phone || "无"
+          org.contact_phone || '无'
         }}</el-descriptions-item>
         <el-descriptions-item label="地址" :span="2">{{
-          org.address || "无"
+          org.address || '无'
         }}</el-descriptions-item>
         <el-descriptions-item label="描述" :span="2">{{
-          org.description || "无"
+          org.description || '无'
         }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{
           formatDate(org.created_at)
@@ -51,76 +43,76 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
-import { ElMessage } from "element-plus";
-import { getOrganization } from "@/api/organization";
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { ElMessage } from 'element-plus'
+import { getOrganization } from '@/api/organization'
 
-const { pushSafe } = useRouterSafe();
-const route = useRoute();
-const loading = ref(false);
+const { pushSafe } = useRouterSafe()
+const route = useRoute()
+const loading = ref(false)
 
 const org = ref({
   id: 0,
-  name: "",
-  code: "",
+  name: '',
+  code: '',
   level: 0,
   is_active: true,
-  contact_person: "",
-  contact_phone: "",
-  address: "",
-  description: "",
-  created_at: "",
-  updated_at: "",
-});
+  contact_person: '',
+  contact_phone: '',
+  address: '',
+  description: '',
+  created_at: '',
+  updated_at: '',
+})
 
 const formatDate = (dateStr?: string) => {
-  if (!dateStr) return "无";
-  return dateStr.split("T")[0];
-};
+  if (!dateStr) return '无'
+  return dateStr.split('T')[0]
+}
 
 const loadData = async () => {
-  const id = safeRouteParam(route.params.id);
-  if (!id) return;
+  const id = safeRouteParam(route.params.id)
+  if (!id) return
 
-  loading.value = true;
+  loading.value = true
   try {
-    const data = await getOrganization(id);
+    const data = await getOrganization(id)
     org.value = {
       id: data.id,
-      name: data.name || "",
-      code: data.code || "",
+      name: data.name || '',
+      code: data.code || '',
       level: data.level || 0,
       is_active: data.is_active !== false,
-      contact_person: data.contact_person || "",
-      contact_phone: data.contact_phone || "",
-      address: data.address || "",
-      description: data.description || "",
-      created_at: data.created_at || "",
-      updated_at: data.updated_at || "",
-    };
+      contact_person: data.contact_person || '',
+      contact_phone: data.contact_phone || '',
+      address: data.address || '',
+      description: data.description || '',
+      created_at: data.created_at || '',
+      updated_at: data.updated_at || '',
+    }
   } catch (error) {
-    logger.error("加载组织信息失败:", error);
-    ElMessage.error("加载组织信息失败");
+    logger.error('加载组织信息失败:', error)
+    ElMessage.error('加载组织信息失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const handleEdit = () => {
-  pushSafe(`/organizations/${org.value.id}/edit`);
-};
+  pushSafe(`/organizations/${org.value.id}/edit`)
+}
 
 const handleBack = () => {
-  pushSafe("/organizations");
-};
+  pushSafe('/organizations')
+}
 
 onMounted(() => {
-  loadData();
-});
+  loadData()
+})
 </script>
 
 <style scoped>

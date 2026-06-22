@@ -19,10 +19,7 @@
       >
         <el-table-column prop="title" label="菜单名称" min-width="200">
           <template #default="{ row }">
-            <el-icon
-              v-if="row.icon"
-              style="margin-right: 6px; vertical-align: middle"
-            >
+            <el-icon v-if="row.icon" style="margin-right: 6px; vertical-align: middle">
               <component :is="row.icon" />
             </el-icon>
             <span>{{ row.title }}</span>
@@ -38,9 +35,7 @@
         </el-table-column>
         <el-table-column label="权限" width="120" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.requiresAdmin" type="warning" size="small"
-              >管理员</el-tag
-            >
+            <el-tag v-if="row.requiresAdmin" type="warning" size="small">管理员</el-tag>
             <el-tag v-else size="small">所有人</el-tag>
           </template>
         </el-table-column>
@@ -50,42 +45,42 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRouter } from "vue-router";
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
-const router = useRouter();
+const router = useRouter()
 
 interface MenuItem {
-  path: string;
-  name: string;
-  title: string;
-  icon?: string;
-  hidden: boolean;
-  requiresAdmin: boolean;
-  children?: MenuItem[];
-  hasChildren?: boolean;
+  path: string
+  name: string
+  title: string
+  icon?: string
+  hidden: boolean
+  requiresAdmin: boolean
+  children?: MenuItem[]
+  hasChildren?: boolean
 }
 
 const menuTree = computed<MenuItem[]>(() => {
-  const mainRoute = router.options.routes.find((r) => r.path === "/");
-  if (!mainRoute?.children) return [];
+  const mainRoute = router.options.routes.find((r) => r.path === '/')
+  if (!mainRoute?.children) return []
   return mainRoute.children
     .filter((child) => child.meta?.title)
     .map(
       (child): MenuItem => ({
         path: `/${child.path}`,
-        name: String(child.name || ""),
-        title: String(child.meta?.title || ""),
-        icon: String(child.meta?.icon || ""),
+        name: String(child.name || ''),
+        title: String(child.meta?.title || ''),
+        icon: String(child.meta?.icon || ''),
         hidden: !!child.meta?.hidden,
         requiresAdmin: !!child.meta?.requiresAdmin,
         children: undefined,
         hasChildren: false,
-      }),
-    );
-});
+      })
+    )
+})
 
-const menuCount = computed(() => menuTree.value.length);
+const menuCount = computed(() => menuTree.value.length)
 </script>
 
 <style scoped>

@@ -1,114 +1,107 @@
 // 大文件分片上传工具
 
 export interface ChunkUploadOptions {
-  file: File;
-  chunkSize?: number;
-  onProgress?: (progress: number) => void;
-  onChunkComplete?: (chunkIndex: number, totalChunks: number) => void;
-  onError?: (error: Error) => void;
-  onComplete?: (result: any) => void;
+  file: File
+  chunkSize?: number
+  onProgress?: (progress: number) => void
+  onChunkComplete?: (chunkIndex: number, totalChunks: number) => void
+  onError?: (error: Error) => void
+  onComplete?: (result: any) => void
 }
 
 export interface ChunkInfo {
-  chunkIndex: number;
-  chunk: Blob;
-  totalChunks: number;
-  fileId: string;
-  fileName: string;
-  fileSize: number;
-  fileHash?: string;
+  chunkIndex: number
+  chunk: Blob
+  totalChunks: number
+  fileId: string
+  fileName: string
+  fileSize: number
+  fileHash?: string
 }
 
 export class ChunkUploader {
-  private file: File;
-  private chunkSize: number;
-  private fileId: string;
-  private totalChunks: number;
-  private uploadedChunks: Set<number>;
-  private options: ChunkUploadOptions;
+  private file: File
+  private chunkSize: number
+  private fileId: string
+  private totalChunks: number
+  private uploadedChunks: Set<number>
+  private options: ChunkUploadOptions
 
   constructor(options: ChunkUploadOptions) {
-    this.file = options.file;
-    this.chunkSize = options.chunkSize || 5 * 1024 * 1024; // 默认5MB
-    this.fileId = this.generateFileId();
-    this.totalChunks = Math.ceil(this.file.size / this.chunkSize);
-    this.uploadedChunks = new Set();
-    this.options = options;
+    this.file = options.file
+    this.chunkSize = options.chunkSize || 5 * 1024 * 1024 // 默认5MB
+    this.fileId = this.generateFileId()
+    this.totalChunks = Math.ceil(this.file.size / this.chunkSize)
+    this.uploadedChunks = new Set()
+    this.options = options
   }
 
   private generateFileId(): string {
-    return `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    return `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
   }
 
   private async calculateFileHash(): Promise<string> {
     return new Promise((resolve) => {
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = async (e) => {
-        const buffer = e.target?.result as ArrayBuffer;
-        const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-        resolve(hashHex);
-      };
-      reader.readAsArrayBuffer(this.file);
-    });
+        const buffer = e.target?.result as ArrayBuffer
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+        resolve(hashHex)
+      }
+      reader.readAsArrayBuffer(this.file)
+    })
   }
 
   private createChunk(chunkIndex: number): Blob {
-    const start = chunkIndex * this.chunkSize;
-    const end = Math.min(start + this.chunkSize, this.file.size);
-    return this.file.slice(start, end);
+    const start = chunkIndex * this.chunkSize
+    const end = Math.min(start + this.chunkSize, this.file.size)
+    return this.file.slice(start, end)
   }
 
-  private async uploadChunk(
-    chunkInfo: ChunkInfo,
-    uploadUrl: string,
-  ): Promise<void> {
-    const formData = new FormData();
-    formData.append("chunk", chunkInfo.chunk);
-    formData.append("chunkIndex", chunkInfo.chunkIndex.toString());
-    formData.append("totalChunks", chunkInfo.totalChunks.toString());
-    formData.append("fileId", chunkInfo.fileId);
-    formData.append("fileName", chunkInfo.fileName);
-    formData.append("fileSize", chunkInfo.fileSize.toString());
+  private async uploadChunk(chunkInfo: ChunkInfo, uploadUrl: string): Promise<void> {
+    const formData = new FormData()
+    formData.append('chunk', chunkInfo.chunk)
+    formData.append('chunkIndex', chunkInfo.chunkIndex.toString())
+    formData.append('totalChunks', chunkInfo.totalChunks.toString())
+    formData.append('fileId', chunkInfo.fileId)
+    formData.append('fileName', chunkInfo.fileName)
+    formData.append('fileSize', chunkInfo.fileSize.toString())
 
     if (chunkInfo.fileHash) {
-      formData.append("fileHash", chunkInfo.fileHash);
+      formData.append('fileHash', chunkInfo.fileHash)
     }
 
     const response = await fetch(uploadUrl, {
-      method: "POST",
+      method: 'POST',
       body: formData,
-    });
+    })
 
     if (!response.ok) {
-      throw new Error(`分片上传失败: ${response.statusText}`);
+      throw new Error(`分片上传失败: ${response.statusText}`)
     }
 
-    return response.json();
+    return response.json()
   }
 
   private updateProgress(): void {
     if (this.options.onProgress) {
-      const progress = Math.round(
-        (this.uploadedChunks.size / this.totalChunks) * 100,
-      );
-      this.options.onProgress(progress);
+      const progress = Math.round((this.uploadedChunks.size / this.totalChunks) * 100)
+      this.options.onProgress(progress)
     }
   }
 
   async upload(uploadUrl: string): Promise<any> {
     try {
-      const fileHash = await this.calculateFileHash();
+      const fileHash = await this.calculateFileHash()
 
       for (let i = 0; i < this.totalChunks; i++) {
         if (this.uploadedChunks.has(i)) {
-          continue;
+          continue
         }
 
-        const chunk = this.createChunk(i);
+        const chunk = this.createChunk(i)
         const chunkInfo: ChunkInfo = {
           chunkIndex: i,
           chunk,
@@ -117,16 +110,16 @@ export class ChunkUploader {
           fileName: this.file.name,
           fileSize: this.file.size,
           fileHash,
-        };
-
-        await this.uploadChunk(chunkInfo, uploadUrl);
-        this.uploadedChunks.add(i);
-
-        if (this.options.onChunkComplete) {
-          this.options.onChunkComplete(i, this.totalChunks);
         }
 
-        this.updateProgress();
+        await this.uploadChunk(chunkInfo, uploadUrl)
+        this.uploadedChunks.add(i)
+
+        if (this.options.onChunkComplete) {
+          this.options.onChunkComplete(i, this.totalChunks)
+        }
+
+        this.updateProgress()
       }
 
       if (this.options.onComplete) {
@@ -135,8 +128,8 @@ export class ChunkUploader {
           fileName: this.file.name,
           fileSize: this.file.size,
           fileHash,
-        };
-        this.options.onComplete(result);
+        }
+        this.options.onComplete(result)
       }
 
       return {
@@ -144,25 +137,25 @@ export class ChunkUploader {
         fileName: this.file.name,
         fileSize: this.file.size,
         fileHash,
-      };
+      }
     } catch (error) {
       if (this.options.onError) {
-        this.options.onError(error as Error);
+        this.options.onError(error as Error)
       }
-      throw error;
+      throw error
     }
   }
 
   async resumeUpload(uploadUrl: string): Promise<any> {
     try {
-      const fileHash = await this.calculateFileHash();
+      const fileHash = await this.calculateFileHash()
 
       for (let i = 0; i < this.totalChunks; i++) {
         if (this.uploadedChunks.has(i)) {
-          continue;
+          continue
         }
 
-        const chunk = this.createChunk(i);
+        const chunk = this.createChunk(i)
         const chunkInfo: ChunkInfo = {
           chunkIndex: i,
           chunk,
@@ -171,16 +164,16 @@ export class ChunkUploader {
           fileName: this.file.name,
           fileSize: this.file.size,
           fileHash,
-        };
-
-        await this.uploadChunk(chunkInfo, uploadUrl);
-        this.uploadedChunks.add(i);
-
-        if (this.options.onChunkComplete) {
-          this.options.onChunkComplete(i, this.totalChunks);
         }
 
-        this.updateProgress();
+        await this.uploadChunk(chunkInfo, uploadUrl)
+        this.uploadedChunks.add(i)
+
+        if (this.options.onChunkComplete) {
+          this.options.onChunkComplete(i, this.totalChunks)
+        }
+
+        this.updateProgress()
       }
 
       if (this.options.onComplete) {
@@ -189,8 +182,8 @@ export class ChunkUploader {
           fileName: this.file.name,
           fileSize: this.file.size,
           fileHash,
-        };
-        this.options.onComplete(result);
+        }
+        this.options.onComplete(result)
       }
 
       return {
@@ -198,12 +191,12 @@ export class ChunkUploader {
         fileName: this.file.name,
         fileSize: this.file.size,
         fileHash,
-      };
+      }
     } catch (error) {
       if (this.options.onError) {
-        this.options.onError(error as Error);
+        this.options.onError(error as Error)
       }
-      throw error;
+      throw error
     }
   }
 
@@ -212,29 +205,29 @@ export class ChunkUploader {
   }
 
   cancel(): void {
-    this.uploadedChunks.clear();
+    this.uploadedChunks.clear()
   }
 
   getProgress(): number {
-    return Math.round((this.uploadedChunks.size / this.totalChunks) * 100);
+    return Math.round((this.uploadedChunks.size / this.totalChunks) * 100)
   }
 
   getUploadedChunks(): number[] {
-    return Array.from(this.uploadedChunks);
+    return Array.from(this.uploadedChunks)
   }
 }
 
 export async function uploadFileWithChunks(
   file: File,
   uploadUrl: string,
-  options?: Partial<ChunkUploadOptions>,
+  options?: Partial<ChunkUploadOptions>
 ): Promise<any> {
   const uploader = new ChunkUploader({
     file,
     ...options,
-  });
+  })
 
-  return uploader.upload(uploadUrl);
+  return uploader.upload(uploadUrl)
 }
 
 export async function resumeFileUpload(
@@ -242,15 +235,15 @@ export async function resumeFileUpload(
   uploadedChunks: number[],
   file: File,
   uploadUrl: string,
-  options?: Partial<ChunkUploadOptions>,
+  options?: Partial<ChunkUploadOptions>
 ): Promise<any> {
   const uploader = new ChunkUploader({
     file,
     ...options,
-  });
+  })
 
-  uploader["fileId"] = fileId;
-  uploader["uploadedChunks"] = new Set(uploadedChunks);
+  uploader['fileId'] = fileId
+  uploader['uploadedChunks'] = new Set(uploadedChunks)
 
-  return uploader.resumeUpload(uploadUrl);
+  return uploader.resumeUpload(uploadUrl)
 }

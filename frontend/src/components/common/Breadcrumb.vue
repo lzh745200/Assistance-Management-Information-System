@@ -6,5 +6,5 @@
   >
 </template>
 <script setup lang="ts">
-defineProps<{ items: { title: string; to?: string }[] }>();
+defineProps<{ items: { title: string; to?: string }[] }>()
 </script>

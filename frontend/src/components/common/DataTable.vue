@@ -12,8 +12,8 @@
 </template>
 <script setup lang="ts">
 defineProps<{
-  data: any[];
-  columns: { key: string; label: string; width?: number }[];
-  loading?: boolean;
-}>();
+  data: any[]
+  columns: { key: string; label: string; width?: number }[]
+  loading?: boolean
+}>()
 </script>

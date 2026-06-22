@@ -9,11 +9,11 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from "element-plus";
-import BackupSection from "./components/BackupSection.vue";
+import { ElMessage } from 'element-plus'
+import BackupSection from './components/BackupSection.vue'
 
 function handleBackupComplete() {
-  ElMessage.success("备份操作完成");
+  ElMessage.success('备份操作完成')
 }
 </script>
 

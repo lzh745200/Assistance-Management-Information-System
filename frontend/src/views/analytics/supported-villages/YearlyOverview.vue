@@ -9,11 +9,7 @@
         <h2 class="page-title">{{ villageName }} — 年度数据管理</h2>
       </div>
       <div class="header-actions">
-        <el-select
-          v-model="selectedYear"
-          style="width: 120px"
-          @change="loadAllData"
-        >
+        <el-select v-model="selectedYear" style="width: 120px" @change="loadAllData">
           <el-option
             v-for="year in availableYears"
             :key="year"
@@ -21,11 +17,7 @@
             :value="year"
           />
         </el-select>
-        <el-button
-          type="primary"
-          :loading="downloadingAll"
-          @click="handleDownloadAllTemplates"
-        >
+        <el-button type="primary" :loading="downloadingAll" @click="handleDownloadAllTemplates">
           <el-icon><Download /></el-icon>全部模板下载
         </el-button>
         <el-upload
@@ -50,22 +42,14 @@
           <h3>{{ section.title }}</h3>
         </div>
         <div class="section-summary">
-          <div
-            v-for="stat in section.stats"
-            :key="stat.label"
-            class="summary-item"
-          >
+          <div v-for="stat in section.stats" :key="stat.label" class="summary-item">
             <span class="summary-value">{{ stat.value }}</span>
             <span class="summary-label">{{ stat.label }}</span>
           </div>
           <div v-if="!section.stats.length" class="no-data-hint">暂无数据</div>
         </div>
         <div class="section-card-actions">
-          <el-button
-            size="small"
-            type="primary"
-            @click="openEditDialog(section.key)"
-          >
+          <el-button size="small" type="primary" @click="openEditDialog(section.key)">
             <el-icon><Edit /></el-icon>填写
           </el-button>
           <el-button size="small" @click="handleDownloadTemplate(section.key)">
@@ -108,11 +92,11 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
-import { ArrowLeft, Edit, Download, Upload } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { ArrowLeft, Edit, Download, Upload } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import {
   getSupportedVillage,
   getYearlyData,
@@ -120,302 +104,293 @@ import {
   importSectionData,
   downloadAllTemplates,
   importAllSectionsData,
-} from "@/api/supportedVillage";
-import type { YearlyDataSummary } from "@/types/analytics";
-import SectionDataForm from "./components/SectionDataForm.vue";
-import { unwrapData } from "@/utils/unwrapData";
+} from '@/api/supportedVillage'
+import type { YearlyDataSummary } from '@/types/analytics'
+import SectionDataForm from './components/SectionDataForm.vue'
+import { unwrapData } from '@/utils/unwrapData'
 
-const route = useRoute();
-const { pushSafe } = useRouterSafe();
+const route = useRoute()
+const { pushSafe } = useRouterSafe()
 
-const villageId = computed(() => safeRouteParam(route.params.id));
-const villageName = ref("");
-const loading = ref(false);
-const downloadingAll = ref(false);
-const importingAll = ref(false);
-const selectedYear = ref(new Date().getFullYear());
-const yearlyData = ref<YearlyDataSummary | null>(null);
+const villageId = computed(() => safeRouteParam(route.params.id))
+const villageName = ref('')
+const loading = ref(false)
+const downloadingAll = ref(false)
+const importingAll = ref(false)
+const selectedYear = ref(new Date().getFullYear())
+const yearlyData = ref<YearlyDataSummary | null>(null)
 
 const availableYears = computed(() => {
-  const years: number[] = [];
+  const years: number[] = []
   for (let y = 2017; y <= new Date().getFullYear() + 1; y++) {
-    years.push(y);
+    years.push(y)
   }
-  return years.reverse();
-});
+  return years.reverse()
+})
 
 // 弹窗
-const editDialogVisible = ref(false);
-const editSectionKey = ref("");
-const editSectionTitle = ref("");
+const editDialogVisible = ref(false)
+const editSectionKey = ref('')
+const editSectionTitle = ref('')
 
 // 板块定义
 const sections = computed(() => {
-  const d = yearlyData.value;
+  const d = yearlyData.value
   return [
     {
-      key: "population",
-      title: "人口数据",
-      icon: "👥",
+      key: 'population',
+      title: '人口数据',
+      icon: '👥',
       stats: d?.population
         ? [
-            { label: "总人口", value: d.population.totalPopulation ?? 0 },
-            { label: "总户数", value: d.population.totalHouseholds ?? 0 },
-            { label: "常住人口", value: d.population.residentPopulation ?? 0 },
+            { label: '总人口', value: d.population.totalPopulation ?? 0 },
+            { label: '总户数', value: d.population.totalHouseholds ?? 0 },
+            { label: '常住人口', value: d.population.residentPopulation ?? 0 },
           ]
         : [],
     },
     {
-      key: "income",
-      title: "收入数据",
-      icon: "💰",
+      key: 'income',
+      title: '收入数据',
+      icon: '💰',
       stats: d?.income
         ? [
             {
-              label: "人均收入(万)",
+              label: '人均收入(万)',
               value: (d.income.perCapitaIncome ?? 0).toFixed(2),
             },
             {
-              label: "集体收入(万)",
+              label: '集体收入(万)',
               value: (d.income.collectiveIncome ?? 0).toFixed(2),
             },
           ]
         : [],
     },
     {
-      key: "force_investment",
-      title: "力量投入",
-      icon: "🎖️",
-      stats: d?.["force-investment"]
+      key: 'force_investment',
+      title: '力量投入',
+      icon: '🎖️',
+      stats: d?.['force-investment']
         ? [
             {
-              label: "领导到村(人次)",
-              value: d["force-investment"].seniorLeaderVisits ?? 0,
+              label: '领导到村(人次)',
+              value: d['force-investment'].seniorLeaderVisits ?? 0,
             },
             {
-              label: "官兵到村(人次)",
-              value: d["force-investment"].unitSoldierVisits ?? 0,
+              label: '官兵到村(人次)',
+              value: d['force-investment'].unitSoldierVisits ?? 0,
             },
           ]
         : [],
     },
     {
-      key: "industry",
-      title: "产业帮扶",
-      icon: "🏭",
+      key: 'industry',
+      title: '产业帮扶',
+      icon: '🏭',
       stats: d?.industry
         ? [
             {
-              label: "当年投入(万)",
+              label: '当年投入(万)',
               value: (d.industry.investment ?? 0).toFixed(2),
             },
           ]
         : [],
     },
     {
-      key: "infrastructure",
-      title: "基础设施",
-      icon: "🏗️",
+      key: 'infrastructure',
+      title: '基础设施',
+      icon: '🏗️',
       stats: d?.infrastructure
         ? [
             {
-              label: "当年投入(万)",
+              label: '当年投入(万)',
               value: (d.infrastructure.investment ?? 0).toFixed(2),
             },
           ]
         : [],
     },
     {
-      key: "party_building",
-      title: "党建帮扶",
-      icon: "🏛️",
-      stats: d?.["party-building"]
+      key: 'party_building',
+      title: '党建帮扶',
+      icon: '🏛️',
+      stats: d?.['party-building']
         ? [
             {
-              label: "投入(万)",
-              value: (d["party-building"].investment ?? 0).toFixed(2),
+              label: '投入(万)',
+              value: (d['party-building'].investment ?? 0).toFixed(2),
             },
             {
-              label: "联建活动(次)",
-              value: d["party-building"].jointActivities ?? 0,
+              label: '联建活动(次)',
+              value: d['party-building'].jointActivities ?? 0,
             },
           ]
         : [],
     },
     {
-      key: "medical",
-      title: "医疗帮扶",
-      icon: "🏥",
+      key: 'medical',
+      title: '医疗帮扶',
+      icon: '🏥',
       stats: d?.medical
         ? [
             {
-              label: "投入(万)",
+              label: '投入(万)',
               value: (d.medical.investment ?? 0).toFixed(2),
             },
             {
-              label: "巡诊(人次)",
+              label: '巡诊(人次)',
               value: d.medical.patientsServed ?? 0,
             },
           ]
         : [],
     },
     {
-      key: "consumption",
-      title: "消费帮扶",
-      icon: "🛒",
+      key: 'consumption',
+      title: '消费帮扶',
+      icon: '🛒',
       stats: d?.consumption
         ? [
             {
-              label: "采购产品(万)",
+              label: '采购产品(万)',
               value: (d.consumption.villageProductsPurchase ?? 0).toFixed(2),
             },
           ]
         : [],
     },
     {
-      key: "employment",
-      title: "就业帮扶",
-      icon: "💼",
+      key: 'employment',
+      title: '就业帮扶',
+      icon: '💼',
       stats: d?.employment
         ? [
             {
-              label: "聘用(人)",
+              label: '聘用(人)',
               value: d.employment.hiredPopulation ?? 0,
             },
             {
-              label: "培训(人次)",
+              label: '培训(人次)',
               value: d.employment.trainedPopulation ?? 0,
             },
           ]
         : [],
     },
     {
-      key: "education",
-      title: "教育帮扶",
-      icon: "📚",
+      key: 'education',
+      title: '教育帮扶',
+      icon: '📚',
       stats: d?.education
         ? [
             {
-              label: "投入(万)",
+              label: '投入(万)',
               value: (d.education.investment ?? 0).toFixed(2),
             },
             {
-              label: "资助学生(人)",
+              label: '资助学生(人)',
               value: d.education.aidedStudents ?? 0,
             },
           ]
         : [],
     },
     {
-      key: "committee",
-      title: "村委会情况",
-      icon: "🏢",
+      key: 'committee',
+      title: '村委会情况',
+      icon: '🏢',
       stats: (d as any)?.committee
         ? [
             {
-              label: "成员数",
+              label: '成员数',
               value: (d as any).committee.members?.length ?? 0,
             },
             {
-              label: "集体收入(万)",
-              value: ((d as any).committee.collectiveIncomeAmount ?? 0).toFixed(
-                2,
-              ),
+              label: '集体收入(万)',
+              value: ((d as any).committee.collectiveIncomeAmount ?? 0).toFixed(2),
             },
           ]
         : [],
     },
-  ];
-});
+  ]
+})
 
 async function loadAllData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const _v = await getSupportedVillage(villageId.value);
-    const village = unwrapData(_v);
-    villageName.value = village.villageName;
-    const _raw = await getYearlyData(villageId.value, selectedYear.value);
-    yearlyData.value = unwrapData(_raw);
+    const _v = await getSupportedVillage(villageId.value)
+    const village = unwrapData(_v)
+    villageName.value = village.villageName
+    const _raw = await getYearlyData(villageId.value, selectedYear.value)
+    yearlyData.value = unwrapData(_raw)
   } catch (e: any) {
-    ElMessage.error(e?.message || "加载数据失败");
+    ElMessage.error(e?.message || '加载数据失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function openEditDialog(key: string) {
-  editSectionKey.value = key;
-  editSectionTitle.value =
-    sections.value.find((s) => s.key === key)?.title || "";
-  editDialogVisible.value = true;
+  editSectionKey.value = key
+  editSectionTitle.value = sections.value.find((s) => s.key === key)?.title || ''
+  editDialogVisible.value = true
 }
 
 async function handleDownloadTemplate(sectionKey: string) {
   try {
-    await downloadTemplate(sectionKey, selectedYear.value);
+    await downloadTemplate(sectionKey, selectedYear.value)
     // 模板下载成功 — 浏览器已确认
   } catch {
-    ElMessage.error("模板下载失败");
+    ElMessage.error('模板下载失败')
   }
 }
 
 async function handleImportSection(sectionKey: string, file: any) {
-  const rawFile = file.raw || file;
+  const rawFile = file.raw || file
   try {
-    const result = await importSectionData(
-      sectionKey,
-      selectedYear.value,
-      rawFile,
-    );
-    ElMessage.success(`导入成功 ${result.imported} 条`);
+    const result = await importSectionData(sectionKey, selectedYear.value, rawFile)
+    ElMessage.success(`导入成功 ${result.imported} 条`)
     if (result.failed > 0) {
-      ElMessage.warning(`${result.failed} 条导入失败`);
+      ElMessage.warning(`${result.failed} 条导入失败`)
     }
-    loadAllData();
+    loadAllData()
   } catch (e: any) {
-    ElMessage.error(e?.message || "导入失败");
+    ElMessage.error(e?.message || '导入失败')
   }
 }
 
 async function handleDownloadAllTemplates() {
-  downloadingAll.value = true;
+  downloadingAll.value = true
   try {
-    await downloadAllTemplates(selectedYear.value);
-    ElMessage.success("全部板块模板下载成功");
+    await downloadAllTemplates(selectedYear.value)
+    ElMessage.success('全部板块模板下载成功')
   } catch (e: any) {
-    ElMessage.error(e?.message || "模板下载失败");
+    ElMessage.error(e?.message || '模板下载失败')
   } finally {
-    downloadingAll.value = false;
+    downloadingAll.value = false
   }
 }
 
 async function handleImportAll(file: any) {
-  const rawFile = file.raw || file;
-  importingAll.value = true;
+  const rawFile = file.raw || file
+  importingAll.value = true
   try {
-    const result = await importAllSectionsData(selectedYear.value, rawFile);
-    const secCount = result.sections?.length || 0;
-    ElMessage.success(
-      `全部导入完成：成功 ${result.imported} 条（${secCount} 个板块）`,
-    );
+    const result = await importAllSectionsData(selectedYear.value, rawFile)
+    const secCount = result.sections?.length || 0
+    ElMessage.success(`全部导入完成：成功 ${result.imported} 条（${secCount} 个板块）`)
     if (result.failed > 0) {
-      ElMessage.warning(`${result.failed} 条数据导入失败`);
+      ElMessage.warning(`${result.failed} 条数据导入失败`)
     }
-    loadAllData();
+    loadAllData()
   } catch (e: any) {
-    ElMessage.error(e?.message || "全部导入失败");
+    ElMessage.error(e?.message || '全部导入失败')
   } finally {
-    importingAll.value = false;
+    importingAll.value = false
   }
 }
 
 function handleBack() {
-  pushSafe(`/supported-villages/${villageId.value}`);
+  pushSafe(`/supported-villages/${villageId.value}`)
 }
 
 onMounted(() => {
-  loadAllData();
-});
+  loadAllData()
+})
 </script>
 
 <style scoped>

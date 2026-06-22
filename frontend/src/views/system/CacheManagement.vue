@@ -38,17 +38,15 @@
 
       <el-descriptions :column="2" border>
         <el-descriptions-item label="缓存后端">
-          {{ stats.backend_type || "memory" }}
+          {{ stats.backend_type || 'memory' }}
         </el-descriptions-item>
         <el-descriptions-item label="最大容量">
-          {{ stats.max_size ?? "-" }} 项
+          {{ stats.max_size ?? '-' }} 项
         </el-descriptions-item>
         <el-descriptions-item label="当前键数">
           {{ stats.item_count ?? 0 }}
         </el-descriptions-item>
-        <el-descriptions-item label="命中率">
-          {{ hitRateNum }}%
-        </el-descriptions-item>
+        <el-descriptions-item label="命中率"> {{ hitRateNum }}% </el-descriptions-item>
         <el-descriptions-item label="总请求数">
           {{ stats.total_requests ?? 0 }}
         </el-descriptions-item>
@@ -61,73 +59,73 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import request from "@/api/request";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import request from '@/api/request'
 
-const loading = ref(false);
-const clearing = ref(false);
+const loading = ref(false)
+const clearing = ref(false)
 const stats = ref<Record<string, any>>({
   item_count: 0,
   hits: 0,
   misses: 0,
   total_requests: 0,
   max_size: 0,
-  backend_type: "memory",
+  backend_type: 'memory',
   estimated_size_bytes: 0,
-});
+})
 
 const hitRate = computed(() => {
-  const total = (stats.value.hits || 0) + (stats.value.misses || 0);
-  if (total === 0) return 0;
-  return (stats.value.hits / total) * 100;
-});
+  const total = (stats.value.hits || 0) + (stats.value.misses || 0)
+  if (total === 0) return 0
+  return (stats.value.hits / total) * 100
+})
 
 const hitRateNum = computed(() => {
-  return parseFloat(hitRate.value.toFixed(1));
-});
+  return parseFloat(hitRate.value.toFixed(1))
+})
 
 function formatSize(bytes: number) {
-  if (!bytes || bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  if (!bytes || bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
 }
 
 async function refreshData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await request.get("/system/cache/stats");
+    const res = await request.get('/system/cache/stats')
     if (res.data?.success !== false && res.data?.data) {
-      stats.value = res.data.data;
+      stats.value = res.data.data
     }
   } catch {
-    ElMessage.error("加载缓存信息失败");
+    ElMessage.error('加载缓存信息失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function clearAllCache() {
   try {
-    await ElMessageBox.confirm("确定清除全部缓存吗？", "警告", {
-      type: "warning",
-    });
-    clearing.value = true;
-    const res = await request.post("/system/cache/clear");
+    await ElMessageBox.confirm('确定清除全部缓存吗？', '警告', {
+      type: 'warning',
+    })
+    clearing.value = true
+    const res = await request.post('/system/cache/clear')
     if (res.data?.success !== false) {
-      ElMessage.success(res.data?.message || "缓存已清除");
+      ElMessage.success(res.data?.message || '缓存已清除')
     }
-    await refreshData();
+    await refreshData()
   } catch (e: any) {
-    if (e !== "cancel") ElMessage.error("清除失败");
+    if (e !== 'cancel') ElMessage.error('清除失败')
   } finally {
-    clearing.value = false;
+    clearing.value = false
   }
 }
 
-onMounted(() => refreshData());
+onMounted(() => refreshData())
 </script>
 
 <style scoped>

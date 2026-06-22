@@ -10,23 +10,13 @@
             <el-icon><Setting /></el-icon> 自定义布局
           </span>
           <span v-if="layoutSaved" class="layout-saved">✅ 已保存</span>
-          <el-select
-            v-model="layoutPreset"
-            size="small"
-            style="width: 110px"
-            @change="applyPreset"
-          >
+          <el-select v-model="layoutPreset" size="small" style="width: 110px" @change="applyPreset">
             <el-option label="默认布局" value="default" />
             <el-option label="紧凑模式" value="compact" />
             <el-option label="展开全部" value="expand" />
           </el-select>
           <el-button size="small" text @click="resetLayout">恢复默认</el-button>
-          <el-button
-            size="small"
-            type="primary"
-            @click="showLayoutEditor = false"
-            >完成</el-button
-          >
+          <el-button size="small" type="primary" @click="showLayoutEditor = false">完成</el-button>
         </div>
         <p class="layout-hint">拖拽排序 · 开关控制可见性</p>
         <div class="layout-sections">
@@ -44,11 +34,7 @@
           >
             <el-icon class="drag-handle"><Rank /></el-icon>
             <span>{{ section.label }}</span>
-            <el-switch
-              v-model="section.visible"
-              size="small"
-              @change="onToggle"
-            />
+            <el-switch v-model="section.visible" size="small" @change="onToggle" />
           </div>
         </div>
       </div>
@@ -72,11 +58,7 @@
         <div class="panel-header">
           <el-icon><Grid /></el-icon>
           <span>快捷入口</span>
-          <el-button
-            size="small"
-            text
-            @click="showLayoutEditor = !showLayoutEditor"
-          >
+          <el-button size="small" text @click="showLayoutEditor = !showLayoutEditor">
             <el-icon><Setting /></el-icon>
           </el-button>
         </div>
@@ -102,150 +84,130 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import {
-  Setting,
-  Rank,
-  TrendCharts,
-  Grid,
-  Clock,
-} from "@element-plus/icons-vue";
-import PageHeader from "./PageHeader.vue";
-import KpiCards from "./KpiCards.vue";
-import QuickActions from "./components/QuickActions.vue";
-import ChartRow from "./ChartRow.vue";
-import InfoRow from "./InfoRow.vue";
-import { useUserStore } from "@/stores/user";
+import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Setting, Rank, TrendCharts, Grid, Clock } from '@element-plus/icons-vue'
+import PageHeader from './PageHeader.vue'
+import KpiCards from './KpiCards.vue'
+import QuickActions from './components/QuickActions.vue'
+import ChartRow from './ChartRow.vue'
+import InfoRow from './InfoRow.vue'
+import { useUserStore } from '@/stores/user'
 
-const showLayoutEditor = ref(false);
-const userStore = useUserStore();
+const showLayoutEditor = ref(false)
+const userStore = useUserStore()
 const isAdmin = computed(
-  () =>
-    userStore.currentUser?.role === "admin" ||
-    userStore.currentUser?.is_superuser,
-);
-const isManager = computed(
-  () => isAdmin.value || userStore.currentUser?.role === "manager",
-);
+  () => userStore.currentUser?.role === 'admin' || userStore.currentUser?.is_superuser
+)
+const isManager = computed(() => isAdmin.value || userStore.currentUser?.role === 'manager')
 
 // 布局持久化
-const STORAGE_KEY = "dashboard_layout_v2";
+const STORAGE_KEY = 'dashboard_layout_v2'
 const defaults = [
-  { key: "kpi", label: "数据概览", visible: true },
-  { key: "charts", label: "数据趋势", visible: true },
-  { key: "quickActions", label: "快捷入口", visible: true },
-  { key: "info", label: "最新动态", visible: true },
-];
-const layoutSections = reactive<
-  { key: string; label: string; visible: boolean }[]
->([]);
+  { key: 'kpi', label: '数据概览', visible: true },
+  { key: 'charts', label: '数据趋势', visible: true },
+  { key: 'quickActions', label: '快捷入口', visible: true },
+  { key: 'info', label: '最新动态', visible: true },
+]
+const layoutSections = reactive<{ key: string; label: string; visible: boolean }[]>([])
 
 function loadLayout() {
-  const VALID_KEYS = new Set(["kpi", "charts", "quickActions", "info"]);
+  const VALID_KEYS = new Set(['kpi', 'charts', 'quickActions', 'info'])
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw)
       if (
         Array.isArray(parsed) &&
-        parsed.every(
-          (s: any) =>
-            s?.key && VALID_KEYS.has(s.key) && typeof s.visible === "boolean",
-        )
+        parsed.every((s: any) => s?.key && VALID_KEYS.has(s.key) && typeof s.visible === 'boolean')
       ) {
-        layoutSections.splice(0, 99, ...parsed);
-        return;
+        layoutSections.splice(0, 99, ...parsed)
+        return
       }
     }
   } catch {
     /* ignore */
   }
-  layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s })));
+  layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s })))
 }
 function saveLayout() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...layoutSections]));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...layoutSections]))
 }
 function resetLayout() {
-  layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s })));
-  saveLayout();
-  ElMessage.success("已恢复默认布局");
+  layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s })))
+  saveLayout()
+  ElMessage.success('已恢复默认布局')
 }
 const visible = computed(() => {
-  const m: Record<string, boolean> = {};
-  layoutSections.forEach((s) => (m[s.key] = s.visible));
-  return m;
-});
-watch(layoutSections, saveLayout, { deep: true });
-onMounted(loadLayout);
+  const m: Record<string, boolean> = {}
+  layoutSections.forEach((s) => (m[s.key] = s.visible))
+  return m
+})
+watch(layoutSections, saveLayout, { deep: true })
+onMounted(loadLayout)
 
 // 拖拽排序
-let dragKey = "";
+let dragKey = ''
 function onDragStart(_e: DragEvent, key: string) {
-  dragKey = key;
+  dragKey = key
 }
 function onDrop(_e: DragEvent, targetKey: string) {
-  if (!dragKey || dragKey === targetKey) return;
-  const from = layoutSections.findIndex((s) => s.key === dragKey);
-  const to = layoutSections.findIndex((s) => s.key === targetKey);
+  if (!dragKey || dragKey === targetKey) return
+  const from = layoutSections.findIndex((s) => s.key === dragKey)
+  const to = layoutSections.findIndex((s) => s.key === targetKey)
   if (from >= 0 && to >= 0) {
-    const [item] = layoutSections.splice(from, 1);
-    layoutSections.splice(to, 0, item);
-    saveLayout();
+    const [item] = layoutSections.splice(from, 1)
+    layoutSections.splice(to, 0, item)
+    saveLayout()
   }
 }
 
-const layoutSaved = ref(false);
-const layoutPreset = ref("default");
-const dragOverKey = ref("");
+const layoutSaved = ref(false)
+const layoutPreset = ref('default')
+const dragOverKey = ref('')
 
 function onDragOver(key: string) {
-  dragOverKey.value = key;
+  dragOverKey.value = key
 }
 function onDragLeave() {
-  dragOverKey.value = "";
+  dragOverKey.value = ''
 }
 function onDragEnd() {
-  dragOverKey.value = "";
-  layoutSaved.value = false;
-  saveLayout();
-  layoutSaved.value = true;
+  dragOverKey.value = ''
+  layoutSaved.value = false
+  saveLayout()
+  layoutSaved.value = true
 }
 function onToggle() {
-  layoutSaved.value = false;
-  saveLayout();
-  layoutSaved.value = true;
+  layoutSaved.value = false
+  saveLayout()
+  layoutSaved.value = true
 }
 
 function applyPreset(val: string) {
-  if (val === "default")
-    layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s })));
-  else if (val === "compact") {
+  if (val === 'default') layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s })))
+  else if (val === 'compact') {
     layoutSections.splice(
       0,
       99,
       ...defaults.map((s) => ({
         ...s,
-        visible: s.key === "kpi" || s.key === "quickActions",
-      })),
-    );
-  } else if (val === "expand") {
-    layoutSections.splice(
-      0,
-      99,
-      ...defaults.map((s) => ({ ...s, visible: true })),
-    );
+        visible: s.key === 'kpi' || s.key === 'quickActions',
+      }))
+    )
+  } else if (val === 'expand') {
+    layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s, visible: true })))
   }
-  saveLayout();
-  layoutSaved.value = true;
-  setTimeout(() => (layoutSaved.value = false), 2000);
+  saveLayout()
+  layoutSaved.value = true
+  setTimeout(() => (layoutSaved.value = false), 2000)
 }
 
 function handleBackup() {
-  ElMessage.info("请前往 系统管理 → 备份管理 手动创建备份");
+  ElMessage.info('请前往 系统管理 → 备份管理 手动创建备份')
 }
 function handleRestore() {
-  ElMessage.info("请前往 系统管理 → 备份管理 执行恢复");
+  ElMessage.info('请前往 系统管理 → 备份管理 执行恢复')
 }
 </script>
 

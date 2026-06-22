@@ -15,71 +15,65 @@
  * )
  */
 
-import { ref, onUnmounted, type Ref } from "vue";
+import { ref, onUnmounted, type Ref } from 'vue'
 
 export interface AutoSaveOptions {
   /** 防抖延迟 (ms)，默认 3000 */
-  delayMs?: number;
+  delayMs?: number
   /** 草稿 localStorage 键名，为空则不持久化 */
-  storageKey?: string;
+  storageKey?: string
   /** 是否持久化草稿 (默认 true) */
-  persistDraft?: boolean;
+  persistDraft?: boolean
   /** 是否启用 (默认 true) */
-  enabled?: boolean;
+  enabled?: boolean
   /** 草稿数据（用于持久化） */
-  draftData?: Ref<Record<string, any>> | (() => Record<string, any>);
+  draftData?: Ref<Record<string, any>> | (() => Record<string, any>)
 }
 
 export interface AutoSaveReturn {
-  isDirty: Ref<boolean>;
-  isSaving: Ref<boolean>;
-  lastSaved: Ref<Date | null>;
-  hasDraft: Ref<boolean>;
+  isDirty: Ref<boolean>
+  isSaving: Ref<boolean>
+  lastSaved: Ref<Date | null>
+  hasDraft: Ref<boolean>
   /** 标记数据已变更（触发防抖自动保存） */
-  markDirty: () => void;
+  markDirty: () => void
   /** 立即保存（跳过防抖） */
-  triggerSave: () => Promise<void>;
+  triggerSave: () => Promise<void>
   /** 恢复上次草稿 */
-  restoreDraft: () => Record<string, any> | null;
+  restoreDraft: () => Record<string, any> | null
   /** 清除草稿 */
-  clearDraft: () => void;
+  clearDraft: () => void
   /** 暂停自动保存 */
-  pause: () => void;
+  pause: () => void
   /** 恢复自动保存 */
-  resume: () => void;
+  resume: () => void
 }
 
 export function useAutoSave(
   saveFn: () => Promise<void>,
-  options: AutoSaveOptions = {},
+  options: AutoSaveOptions = {}
 ): AutoSaveReturn {
-  const {
-    delayMs = 3000,
-    storageKey,
-    persistDraft = true,
-    enabled = true,
-    draftData,
-  } = options;
+  const { delayMs = 3000, storageKey, persistDraft = true, enabled = true, draftData } = options
 
-  const isDirty = ref(false);
-  const isSaving = ref(false);
-  const lastSaved = ref<Date | null>(null);
-  const isPaused = ref(false);
+  const isDirty = ref(false)
+  const isSaving = ref(false)
+  const lastSaved = ref<Date | null>(null)
+  const isPaused = ref(false)
 
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null
 
   // 检查是否有草稿
-  const hasDraft = ref(!!(storageKey && localStorage.getItem(storageKey)));
+  const hasDraft = ref(!!(storageKey && localStorage.getItem(storageKey)))
 
   // 持久化草稿到 localStorage
   function persistDraftData() {
-    if (!storageKey || !persistDraft) return;
+    if (!storageKey || !persistDraft) return
     try {
-      let data: Record<string, any> = {};
-      if (typeof draftData === "function") {
-        data = draftData();
+      let data: Record<string, any> = {}
+      if (typeof draftData === 'function') {
+        data = draftData()
       } else if (draftData?.value) {
-        data = draftData.value;
+        data = draftData.value
       }
       if (data && Object.keys(data).length > 0) {
         localStorage.setItem(
@@ -87,96 +81,96 @@ export function useAutoSave(
           JSON.stringify({
             data,
             timestamp: new Date().toISOString(),
-          }),
-        );
-        hasDraft.value = true;
+          })
+        )
+        hasDraft.value = true
       }
     } catch (e) {
-      console.error(`[auto-save] 保存草稿 "${storageKey}" 失败:`, e);
+      console.error(`[auto-save] 保存草稿 "${storageKey}" 失败:`, e)
     }
   }
 
   // 恢复草稿
   function restoreDraft(): Record<string, any> | null {
-    if (!storageKey) return null;
+    if (!storageKey) return null
     try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) return null;
-      return JSON.parse(raw).data;
+      const raw = localStorage.getItem(storageKey)
+      if (!raw) return null
+      return JSON.parse(raw).data
     } catch {
-      return null;
+      return null
     }
   }
 
   // 清除草稿
   function clearDraft() {
     if (storageKey) {
-      localStorage.removeItem(storageKey);
-      hasDraft.value = false;
+      localStorage.removeItem(storageKey)
+      hasDraft.value = false
     }
   }
 
   function markDirty() {
-    isDirty.value = true;
-    if (timer) clearTimeout(timer);
+    isDirty.value = true
+    if (timer) clearTimeout(timer)
 
     // 先持久化草稿
-    persistDraftData();
+    persistDraftData()
 
     timer = setTimeout(() => {
-      triggerSave();
-    }, delayMs);
+      triggerSave()
+    }, delayMs)
   }
 
   async function triggerSave() {
-    if (!isDirty.value || isSaving.value) return;
-    if (isPaused.value) return;
-    if (enabled === false) return;
+    if (!isDirty.value || isSaving.value) return
+    if (isPaused.value) return
+    if (enabled === false) return
 
-    isSaving.value = true;
+    isSaving.value = true
     try {
-      await saveFn();
-      isDirty.value = false;
-      lastSaved.value = new Date();
-      clearDraft();
+      await saveFn()
+      isDirty.value = false
+      lastSaved.value = new Date()
+      clearDraft()
     } catch (e) {
-      console.error("[auto-save] 保存失败:", e);
+      console.error('[auto-save] 保存失败:', e)
     } finally {
-      isSaving.value = false;
+      isSaving.value = false
     }
   }
 
   function pause() {
-    isPaused.value = true;
+    isPaused.value = true
   }
 
   function resume() {
-    isPaused.value = false;
+    isPaused.value = false
   }
 
   // 页面关闭前保存草稿（仅在启用持久化时注册监听器）
   function onBeforeUnload(e: BeforeUnloadEvent) {
     if (isDirty.value) {
-      persistDraftData();
-      e.preventDefault();
-      e.returnValue = "您有未保存的更改，确定要离开吗？";
+      persistDraftData()
+      e.preventDefault()
+      e.returnValue = '您有未保存的更改，确定要离开吗？'
     }
   }
 
-  if (typeof window !== "undefined" && storageKey && persistDraft) {
-    window.addEventListener("beforeunload", onBeforeUnload);
+  if (typeof window !== 'undefined' && storageKey && persistDraft) {
+    window.addEventListener('beforeunload', onBeforeUnload)
   }
 
   onUnmounted(() => {
-    if (timer) clearTimeout(timer);
-    if (typeof window !== "undefined") {
-      window.removeEventListener("beforeunload", onBeforeUnload);
+    if (timer) clearTimeout(timer)
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('beforeunload', onBeforeUnload)
     }
     // 组件卸载时触发保存
     if (isDirty.value) {
-      triggerSave();
+      triggerSave()
     }
-  });
+  })
 
   return {
     isDirty,
@@ -189,5 +183,5 @@ export function useAutoSave(
     clearDraft,
     pause,
     resume,
-  };
+  }
 }

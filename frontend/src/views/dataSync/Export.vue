@@ -19,10 +19,7 @@
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item
-          v-if="exportForm.exportType === 'incremental'"
-          label="起始时间"
-        >
+        <el-form-item v-if="exportForm.exportType === 'incremental'" label="起始时间">
           <el-date-picker
             v-model="exportForm.since"
             type="datetime"
@@ -42,9 +39,7 @@
             <el-checkbox value="policies">政策</el-checkbox>
             <el-checkbox value="force_investments">部队投入</el-checkbox>
             <el-checkbox value="industry_supports">产业帮扶</el-checkbox>
-            <el-checkbox value="infrastructure_improvements"
-              >基础设施</el-checkbox
-            >
+            <el-checkbox value="infrastructure_improvements">基础设施</el-checkbox>
             <el-checkbox value="party_building_supports">党建帮扶</el-checkbox>
             <el-checkbox value="medical_supports">医疗帮扶</el-checkbox>
             <el-checkbox value="consumption_supports">消费帮扶</el-checkbox>
@@ -52,30 +47,19 @@
             <el-checkbox value="education_supports">教育帮扶</el-checkbox>
           </el-checkbox-group>
           <div class="form-tip">
-            <el-button type="text" size="small" @click="selectAllModules"
-              >全选</el-button
-            >
-            <el-button type="text" size="small" @click="clearModules"
-              >清空</el-button
-            >
+            <el-button type="text" size="small" @click="selectAllModules">全选</el-button>
+            <el-button type="text" size="small" @click="clearModules">清空</el-button>
           </div>
         </el-form-item>
 
-        <el-form-item
-          v-if="exportForm.exportType === 'incremental'"
-          label="包含上传文件"
-        >
+        <el-form-item v-if="exportForm.exportType === 'incremental'" label="包含上传文件">
           <el-switch v-model="exportForm.includeFiles" />
-          <div class="form-tip">
-            包含上传的图片、文档等文件(会增加数据包大小)
-          </div>
+          <div class="form-tip">包含上传的图片、文档等文件(会增加数据包大小)</div>
         </el-form-item>
 
         <el-form-item label="加密保护">
           <el-switch v-model="exportForm.encrypted" />
-          <div class="form-tip">
-            启用加密后，导出的数据包将使用密码保护（推荐）
-          </div>
+          <div class="form-tip">启用加密后，导出的数据包将使用密码保护（推荐）</div>
         </el-form-item>
 
         <el-form-item v-if="exportForm.encrypted" label="加密密码" required>
@@ -123,9 +107,7 @@
         <el-table-column prop="user_name" label="操作人" width="120" />
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleDownload(row)">
-              下载
-            </el-button>
+            <el-button type="primary" size="small" @click="handleDownload(row)"> 下载 </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -135,171 +117,165 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, onMounted } from "vue";
-import { ElMessage } from "element-plus";
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import {
   exportData,
   exportEncryptedData,
   downloadExportPackage,
   getSyncLogs,
   type ExportEncryptedParams,
-} from "@/api/dataSync";
-import type { SyncLog } from "@/api/dataSync";
+} from '@/api/dataSync'
+import type { SyncLog } from '@/api/dataSync'
 
 const exportForm = ref({
-  exportType: "full" as "full" | "selective" | "incremental",
+  exportType: 'full' as 'full' | 'selective' | 'incremental',
   since: null as Date | null,
   modules: [] as string[],
   includeFiles: false,
   encrypted: true,
-  password: "",
-  confirmPassword: "",
-});
+  password: '',
+  confirmPassword: '',
+})
 
-const exporting = ref(false);
-const exportHistory = ref<SyncLog[]>([]);
+const exporting = ref(false)
+const exportHistory = ref<SyncLog[]>([])
 
 const allModules = [
-  "supported_villages",
-  "village_populations",
-  "village_incomes",
-  "organizations",
-  "policies",
-  "force_investments",
-  "industry_supports",
-  "infrastructure_improvements",
-  "party_building_supports",
-  "medical_supports",
-  "consumption_supports",
-  "employment_supports",
-  "education_supports",
-];
+  'supported_villages',
+  'village_populations',
+  'village_incomes',
+  'organizations',
+  'policies',
+  'force_investments',
+  'industry_supports',
+  'infrastructure_improvements',
+  'party_building_supports',
+  'medical_supports',
+  'consumption_supports',
+  'employment_supports',
+  'education_supports',
+]
 
 const selectAllModules = () => {
-  exportForm.value.modules = [...allModules];
-};
+  exportForm.value.modules = [...allModules]
+}
 
 const clearModules = () => {
-  exportForm.value.modules = [];
-};
+  exportForm.value.modules = []
+}
 
 const handleExport = async () => {
   // 验证
-  if (
-    exportForm.value.exportType !== "full" &&
-    exportForm.value.modules.length === 0
-  ) {
-    ElMessage.warning("请至少选择一个导出模块");
-    return;
+  if (exportForm.value.exportType !== 'full' && exportForm.value.modules.length === 0) {
+    ElMessage.warning('请至少选择一个导出模块')
+    return
   }
 
   if (exportForm.value.encrypted) {
     if (!exportForm.value.password) {
-      ElMessage.warning("请输入加密密码");
-      return;
+      ElMessage.warning('请输入加密密码')
+      return
     }
     if (exportForm.value.password.length < 8) {
-      ElMessage.warning("密码长度至少为 8 位");
-      return;
+      ElMessage.warning('密码长度至少为 8 位')
+      return
     }
     if (exportForm.value.password !== exportForm.value.confirmPassword) {
-      ElMessage.warning("两次输入的密码不一致");
-      return;
+      ElMessage.warning('两次输入的密码不一致')
+      return
     }
   }
 
-  exporting.value = true;
+  exporting.value = true
   try {
-    let response;
+    let response
 
     if (exportForm.value.encrypted) {
       // 加密导出
       const params: ExportEncryptedParams = {
-        export_type: (exportForm.value.exportType === "full"
-          ? "full"
-          : "selective") as "full" | "selective",
-        modules:
-          exportForm.value.exportType === "full"
-            ? undefined
-            : exportForm.value.modules,
+        export_type: (exportForm.value.exportType === 'full' ? 'full' : 'selective') as
+          | 'full'
+          | 'selective',
+        modules: exportForm.value.exportType === 'full' ? undefined : exportForm.value.modules,
         password: exportForm.value.password,
         since: exportForm.value.since?.toISOString() ?? undefined,
-      };
-      response = await exportEncryptedData(params);
+      }
+      response = await exportEncryptedData(params)
     } else {
       // 旧版增量导出（无加密）
       const params = {
         since: exportForm.value.since?.toISOString(),
         modules: exportForm.value.modules,
         include_files: exportForm.value.includeFiles,
-      };
-      response = await exportData(params);
+      }
+      response = await exportData(params)
     }
 
     if (response.success) {
-      ElMessage.success(`导出成功! 共 ${response.total_records} 条记录`);
+      ElMessage.success(`导出成功! 共 ${response.total_records} 条记录`)
       // 自动下载
-      await handleDownloadByName(response.package_name);
+      await handleDownloadByName(response.package_name)
       // 刷新历史
-      await loadExportHistory();
+      await loadExportHistory()
       // 清空密码
-      exportForm.value.password = "";
-      exportForm.value.confirmPassword = "";
+      exportForm.value.password = ''
+      exportForm.value.confirmPassword = ''
     }
   } catch (error: any) {
-    ElMessage.error(error.message || "导出失败");
+    ElMessage.error(error.message || '导出失败')
   } finally {
-    exporting.value = false;
+    exporting.value = false
   }
-};
+}
 
 const handleDownload = async (row: SyncLog) => {
-  await handleDownloadByName(row.package_name);
-};
+  await handleDownloadByName(row.package_name)
+}
 
 const handleDownloadByName = async (packageName: string) => {
   try {
-    const response = await downloadExportPackage(packageName);
-    const blob = response.data || new Blob([response as any]);
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
+    const response = await downloadExportPackage(packageName)
+    const blob = response.data || new Blob([response as any])
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
     // 根据文件名判断扩展名
-    const extension = packageName.includes(".") ? "" : ".rrs";
-    link.download = `${packageName}${extension}`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    const extension = packageName.includes('.') ? '' : '.rrs'
+    link.download = `${packageName}${extension}`
+    link.click()
+    window.URL.revokeObjectURL(url)
   } catch (error: any) {
-    ElMessage.error(error.message || "下载失败");
+    ElMessage.error(error.message || '下载失败')
   }
-};
+}
 
 const loadExportHistory = async () => {
   try {
-    const response = await getSyncLogs("export", 20);
+    const response = await getSyncLogs('export', 20)
     if (response.success) {
-      exportHistory.value = response;
+      exportHistory.value = response
     }
   } catch (error) {
-    console.error("加载导出历史失败:", error);
+    console.error('加载导出历史失败:', error)
   }
-};
+}
 
 const formatSize = (bytes: number) => {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-};
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
+}
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString("zh-CN");
-};
+  return new Date(dateStr).toLocaleString('zh-CN')
+}
 
 onMounted(() => {
-  loadExportHistory();
+  loadExportHistory()
   // 默认选择所有模块
-  selectAllModules();
-});
+  selectAllModules()
+})
 </script>
 
 <style scoped lang="scss">

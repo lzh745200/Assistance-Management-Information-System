@@ -25,7 +25,7 @@
         <p class="latest-desc">{{ latestLog.description }}</p>
         <div class="latest-meta">
           <span>发布时间：{{ formatDate(latestLog.created_at) }}</span>
-          <span>操作人：{{ latestLog.updated_by || "系统" }}</span>
+          <span>操作人：{{ latestLog.updated_by || '系统' }}</span>
         </div>
       </div>
     </el-card>
@@ -51,14 +51,12 @@
             <el-card shadow="hover" class="timeline-item-card">
               <div class="log-header">
                 <el-tag
-                  :type="
-                    log.version === latestLog?.version ? 'primary' : 'info'
-                  "
+                  :type="log.version === latestLog?.version ? 'primary' : 'info'"
                   size="small"
                 >
                   {{ log.version }}
                 </el-tag>
-                <span class="log-author">{{ log.updated_by || "系统" }}</span>
+                <span class="log-author">{{ log.updated_by || '系统' }}</span>
                 <el-button
                   v-if="isAdmin"
                   type="danger"
@@ -106,57 +104,55 @@
       </el-form>
       <template #footer>
         <el-button @click="showAddDialog = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitLog">
-          确定
-        </el-button>
+        <el-button type="primary" :loading="saving" @click="submitLog"> 确定 </el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { updateLogsApi, type UpdateLog } from "@/api/updateLogs";
-import { useAuthStore } from "@/stores/auth";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { updateLogsApi, type UpdateLog } from '@/api/updateLogs'
+import { useAuthStore } from '@/stores/auth'
 
-const authStore = useAuthStore();
-const isAdmin = computed(() => authStore.isAdmin);
+const authStore = useAuthStore()
+const isAdmin = computed(() => authStore.isAdmin)
 
-const loading = ref(false);
-const saving = ref(false);
-const logs = ref<UpdateLog[]>([]);
-const total = ref(0);
-const currentPage = ref(1);
-const pageSize = 20;
-const latestLog = ref<UpdateLog | null>(null);
+const loading = ref(false)
+const saving = ref(false)
+const logs = ref<UpdateLog[]>([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = 20
+const latestLog = ref<UpdateLog | null>(null)
 
-const showAddDialog = ref(false);
-const newLog = ref({ version: "", description: "" });
+const showAddDialog = ref(false)
+const newLog = ref({ version: '', description: '' })
 
 async function loadLogs() {
-  loading.value = true;
+  loading.value = true
   try {
     const result = await updateLogsApi.listLogs({
       page: currentPage.value,
       page_size: pageSize,
-    });
+    })
     if (result.success && result.data) {
-      logs.value = result.data.items || [];
-      total.value = result.data.total || 0;
+      logs.value = result.data.items || []
+      total.value = result.data.total || 0
     }
   } catch {
-    ElMessage.error("加载更新日志失败");
+    ElMessage.error('加载更新日志失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function loadLatest() {
   try {
-    const result = await updateLogsApi.getLatest();
+    const result = await updateLogsApi.getLatest()
     if (result.success && result.data) {
-      latestLog.value = result.data as UpdateLog;
+      latestLog.value = result.data as UpdateLog
     }
   } catch {
     // 可能没有记录，忽略
@@ -164,65 +160,63 @@ async function loadLatest() {
 }
 
 async function refreshData() {
-  await Promise.all([loadLogs(), loadLatest()]);
+  await Promise.all([loadLogs(), loadLatest()])
 }
 
 async function submitLog() {
   if (!newLog.value.version || !newLog.value.description) {
-    ElMessage.warning("请填写版本号和更新内容");
-    return;
+    ElMessage.warning('请填写版本号和更新内容')
+    return
   }
-  saving.value = true;
+  saving.value = true
   try {
     await updateLogsApi.createLog({
       version: newLog.value.version,
       description: newLog.value.description,
-    });
-    ElMessage.success("更新日志已添加");
-    showAddDialog.value = false;
-    newLog.value = { version: "", description: "" };
-    await refreshData();
+    })
+    ElMessage.success('更新日志已添加')
+    showAddDialog.value = false
+    newLog.value = { version: '', description: '' }
+    await refreshData()
   } catch (e: any) {
-    ElMessage.error(e?.message || "添加失败");
+    ElMessage.error(e?.message || '添加失败')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 
 async function handleDelete(log: UpdateLog) {
   try {
-    await ElMessageBox.confirm(
-      `确定要删除版本 ${log.version} 的更新记录吗？`,
-      "确认删除",
-      { type: "warning" },
-    );
-    await updateLogsApi.deleteLog(log.id);
-    ElMessage.success("已删除");
-    await refreshData();
+    await ElMessageBox.confirm(`确定要删除版本 ${log.version} 的更新记录吗？`, '确认删除', {
+      type: 'warning',
+    })
+    await updateLogsApi.deleteLog(log.id)
+    ElMessage.success('已删除')
+    await refreshData()
   } catch (e: any) {
-    if (e !== "cancel") {
-      ElMessage.error(e?.message || "删除失败");
+    if (e !== 'cancel') {
+      ElMessage.error(e?.message || '删除失败')
     }
   }
 }
 
 function formatDate(dateStr: string) {
-  if (!dateStr) return "-";
+  if (!dateStr) return '-'
   try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
   } catch {
-    return dateStr.slice(0, 10);
+    return dateStr.slice(0, 10)
   }
 }
 
 onMounted(() => {
-  refreshData();
-});
+  refreshData()
+})
 </script>
 
 <style scoped lang="scss">

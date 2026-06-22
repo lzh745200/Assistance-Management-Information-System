@@ -3,25 +3,13 @@
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="角色名称">
-          <el-input
-            v-model="searchForm.name"
-            placeholder="请输入角色名称"
-            clearable
-          />
+          <el-input v-model="searchForm.name" placeholder="请输入角色名称" clearable />
         </el-form-item>
         <el-form-item label="角色编码">
-          <el-input
-            v-model="searchForm.code"
-            placeholder="请输入角色编码"
-            clearable
-          />
+          <el-input v-model="searchForm.code" placeholder="请输入角色编码" clearable />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select
-            v-model="searchForm.status"
-            placeholder="请选择状态"
-            clearable
-          >
+          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
             <el-option label="启用" value="active" />
             <el-option label="禁用" value="inactive" />
           </el-select>
@@ -60,24 +48,15 @@
         <el-table-column prop="status" label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 'active' ? 'success' : 'info'">
-              {{ row.status === "active" ? "启用" : "禁用" }}
+              {{ row.status === 'active' ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="250" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)"
-              >编辑</el-button
-            >
-            <el-button
-              type="success"
-              size="small"
-              @click="handlePermission(row)"
-              >权限</el-button
-            >
-            <el-button type="danger" size="small" @click="handleDelete(row)"
-              >删除</el-button
-            >
+            <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button type="success" size="small" @click="handlePermission(row)">权限</el-button>
+            <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -93,12 +72,7 @@
 
     <!-- 角色编辑对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="rules"
-        label-width="100px"
-      >
+      <el-form ref="formRef" :model="formData" :rules="rules" label-width="100px">
         <el-form-item label="角色名称" prop="name">
           <el-input v-model="formData.name" placeholder="请输入角色名称" />
         </el-form-item>
@@ -125,9 +99,7 @@
       </el-form>
       <template #footer>
         <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSubmit"
-          >确定</el-button
-        >
+        <el-button type="primary" :loading="saving" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
 
@@ -145,15 +117,12 @@
         <el-table-column prop="is_active" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.is_active ? 'success' : 'info'" size="small">
-              {{ row.is_active ? "正常" : "禁用" }}
+              {{ row.is_active ? '正常' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
       </el-table>
-      <div
-        v-if="roleUsers.length === 0"
-        style="text-align: center; padding: 40px; color: #999"
-      >
+      <div v-if="roleUsers.length === 0" style="text-align: center; padding: 40px; color: #999">
         暂无关联用户
       </div>
       <template #footer>
@@ -184,9 +153,7 @@
       />
       <template #footer>
         <el-button @click="permissionDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="savePermissions"
-          >保存</el-button
-        >
+        <el-button type="primary" :loading="saving" @click="savePermissions">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -199,395 +166,388 @@
 // 本文件保留以供参考，不再独立路由访问（/system/roles → redirect /system/users）
 // ================================================================
 // @ts-nocheck
-import { ref, reactive, onMounted } from "vue";
-import {
-  ElMessage,
-  ElMessageBox,
-  type FormInstance,
-  type FormRules,
-  ElTree,
-} from "element-plus";
-import { Plus } from "@element-plus/icons-vue";
-import request from "@/api/request";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules, ElTree } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import request from '@/api/request'
 
 interface RoleItem {
-  id: string;
-  name: string;
-  code: string;
-  description: string;
-  userCount: number;
-  createTime: string;
-  status: string;
+  id: string
+  name: string
+  code: string
+  description: string
+  userCount: number
+  createTime: string
+  status: string
 }
 
 interface RoleUser {
-  username: string;
-  real_name?: string;
-  email?: string;
-  is_active?: boolean;
+  username: string
+  real_name?: string
+  email?: string
+  is_active?: boolean
 }
 
 interface PermissionItem {
-  code: string;
-  name: string;
-  description?: string;
+  code: string
+  name: string
+  description?: string
 }
 
 interface TreeNode {
-  id: string;
-  label: string;
-  children?: TreeNode[];
+  id: string
+  label: string
+  children?: TreeNode[]
 }
 
 const searchForm = reactive({
-  name: "",
-  code: "",
-  status: "",
-});
+  name: '',
+  code: '',
+  status: '',
+})
 
-const tableData = ref<RoleItem[]>([]);
+const tableData = ref<RoleItem[]>([])
 
 const pagination = reactive({
   page: 1,
   size: 10,
   total: 0,
-});
+})
 
-const dialogVisible = ref(false);
-const permissionDialogVisible = ref(false);
-const usersDialogVisible = ref(false);
-const dialogTitle = ref("新增角色");
-const isEdit = ref(false);
-const formRef = ref<FormInstance>();
-const treeRef = ref<InstanceType<typeof ElTree> | null>(null);
-const saving = ref(false);
-const loadingUsers = ref(false);
-const roleUsers = ref<RoleUser[]>([]);
+const dialogVisible = ref(false)
+const permissionDialogVisible = ref(false)
+const usersDialogVisible = ref(false)
+const dialogTitle = ref('新增角色')
+const isEdit = ref(false)
+const formRef = ref<FormInstance>()
+const treeRef = ref<InstanceType<typeof ElTree> | null>(null)
+const saving = ref(false)
+const loadingUsers = ref(false)
+const roleUsers = ref<RoleUser[]>([])
 
 const formData = reactive({
-  id: "",
-  name: "",
-  code: "",
-  description: "",
-  status: "active",
-});
+  id: '',
+  name: '',
+  code: '',
+  description: '',
+  status: 'active',
+})
 
 const rules: FormRules = {
   name: [
-    { required: true, message: "请输入角色名称", trigger: "blur" },
-    { min: 2, max: 20, message: "长度在 2 到 20 个字符", trigger: "blur" },
+    { required: true, message: '请输入角色名称', trigger: 'blur' },
+    { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' },
   ],
   code: [
-    { required: true, message: "请输入角色编码", trigger: "blur" },
+    { required: true, message: '请输入角色编码', trigger: 'blur' },
     {
       pattern: /^[A-Z_]+$/,
-      message: "角色编码只能包含大写字母和下划线",
-      trigger: "blur",
+      message: '角色编码只能包含大写字母和下划线',
+      trigger: 'blur',
     },
   ],
-};
+}
 
 // 权限树数据 - 从后端动态加载
-const menuTreeData = ref<TreeNode[]>([]);
+const menuTreeData = ref<TreeNode[]>([])
 
 const treeProps = {
-  children: "children",
-  label: "label",
-};
+  children: 'children',
+  label: 'label',
+}
 
-const defaultCheckedKeys = ref<string[]>([]);
-const currentRole = ref<RoleItem | null>(null);
+const defaultCheckedKeys = ref<string[]>([])
+const currentRole = ref<RoleItem | null>(null)
 
 // 获取所有叶子节点ID
 const getAllLeafKeys = (nodes: TreeNode[]): string[] => {
-  let keys: string[] = [];
+  let keys: string[] = []
   nodes.forEach((node) => {
     if (node.children && node.children.length > 0) {
-      keys = keys.concat(getAllLeafKeys(node.children));
+      keys = keys.concat(getAllLeafKeys(node.children))
     } else {
-      keys.push(node.id);
+      keys.push(node.id)
     }
-  });
-  return keys;
-};
+  })
+  return keys
+}
 
 const checkAll = () => {
-  const allKeys = getAllLeafKeys(menuTreeData.value);
-  treeRef.value?.setCheckedKeys(allKeys);
-};
+  const allKeys = getAllLeafKeys(menuTreeData.value)
+  treeRef.value?.setCheckedKeys(allKeys)
+}
 
 const uncheckAll = () => {
-  treeRef.value?.setCheckedKeys([]);
-};
+  treeRef.value?.setCheckedKeys([])
+}
 
 const handleSearch = () => {
-  loadRoles();
-};
+  loadRoles()
+}
 
 const handleReset = () => {
-  Object.assign(searchForm, { name: "", code: "", status: "" });
-  loadRoles();
-};
+  Object.assign(searchForm, { name: '', code: '', status: '' })
+  loadRoles()
+}
 
 const handleAdd = () => {
-  isEdit.value = false;
-  dialogTitle.value = "新增角色";
+  isEdit.value = false
+  dialogTitle.value = '新增角色'
   Object.assign(formData, {
-    id: "",
-    name: "",
-    code: "",
-    description: "",
-    status: "active",
-  });
-  dialogVisible.value = true;
-};
+    id: '',
+    name: '',
+    code: '',
+    description: '',
+    status: 'active',
+  })
+  dialogVisible.value = true
+}
 
 const handleEdit = (row: RoleItem) => {
-  isEdit.value = true;
-  dialogTitle.value = "编辑角色";
-  Object.assign(formData, row);
-  dialogVisible.value = true;
-};
+  isEdit.value = true
+  dialogTitle.value = '编辑角色'
+  Object.assign(formData, row)
+  dialogVisible.value = true
+}
 
 const handlePermission = async (row: RoleItem) => {
-  currentRole.value = row;
+  currentRole.value = row
   // 从后端加载角色已有权限
   try {
-    const res = await request.get(`/rbac/roles/${row.id}`);
-    const perms: string[] = res.data?.data?.permissions || [];
-    defaultCheckedKeys.value = perms;
+    const res = await request.get(`/rbac/roles/${row.id}`)
+    const perms: string[] = res.data?.data?.permissions || []
+    defaultCheckedKeys.value = perms
   } catch {
-    defaultCheckedKeys.value = [];
+    defaultCheckedKeys.value = []
   }
-  permissionDialogVisible.value = true;
-};
+  permissionDialogVisible.value = true
+}
 
 const handleViewUsers = async (row: RoleItem) => {
-  currentRole.value = row;
-  usersDialogVisible.value = true;
-  loadingUsers.value = true;
+  currentRole.value = row
+  usersDialogVisible.value = true
+  loadingUsers.value = true
   try {
     // 从后端加载该角色关联的用户
-    const res = await request.get(`/rbac/roles/${row.id}/users`);
-    roleUsers.value = (res.data?.data || res.data?.users || []) as RoleUser[];
+    const res = await request.get(`/rbac/roles/${row.id}/users`)
+    roleUsers.value = (res.data?.data || res.data?.users || []) as RoleUser[]
   } catch {
-    roleUsers.value = [];
+    roleUsers.value = []
   } finally {
-    loadingUsers.value = false;
+    loadingUsers.value = false
   }
-};
+}
 
 const handleDelete = async (row: RoleItem) => {
   try {
     // 检查是否有关联用户
-    const res = await request.get(`/rbac/roles/${row.id}/users`);
-    const users = res.data?.data || res.data?.users || [];
+    const res = await request.get(`/rbac/roles/${row.id}/users`)
+    const users = res.data?.data || res.data?.users || []
     if (users.length > 0) {
       await ElMessageBox.confirm(
         `该角色下还有 ${users.length} 个用户，删除后这些用户将失去此角色权限。确定继续删除？`,
-        "警告",
+        '警告',
         {
-          type: "warning",
-          confirmButtonText: "确认删除",
-          cancelButtonText: "取消",
-        },
-      );
+          type: 'warning',
+          confirmButtonText: '确认删除',
+          cancelButtonText: '取消',
+        }
+      )
     } else {
-      await ElMessageBox.confirm(`确定删除角色 "${row.name}" 吗？`, "提示", {
-        type: "warning",
-      });
+      await ElMessageBox.confirm(`确定删除角色 "${row.name}" 吗？`, '提示', {
+        type: 'warning',
+      })
     }
 
-    await request.delete(`/rbac/roles/${row.id}`);
-    ElMessage.success("删除成功");
-    loadRoles();
+    await request.delete(`/rbac/roles/${row.id}`)
+    ElMessage.success('删除成功')
+    loadRoles()
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("删除失败");
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
     }
   }
-};
+}
 
 const handleCancel = () => {
-  dialogVisible.value = false;
-};
+  dialogVisible.value = false
+}
 
 const handleSubmit = async () => {
-  if (!formRef.value) return;
+  if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
-    if (!valid) return;
-    saving.value = true;
+    if (!valid) return
+    saving.value = true
     try {
       if (isEdit.value) {
         await request.put(`/rbac/roles/${formData.id}`, {
           name: formData.name,
           description: formData.description,
-          is_active: formData.status === "active",
-        });
-        ElMessage.success("已保存");
+          is_active: formData.status === 'active',
+        })
+        ElMessage.success('已保存')
       } else {
-        await request.post("/rbac/roles", {
+        await request.post('/rbac/roles', {
           name: formData.name,
           description: formData.description,
           permissions: [],
           is_system: false,
-        });
-        ElMessage.success("已创建");
+        })
+        ElMessage.success('已创建')
       }
-      dialogVisible.value = false;
-      loadRoles();
+      dialogVisible.value = false
+      loadRoles()
     } catch {
-      ElMessage.error("保存失败");
+      ElMessage.error('保存失败')
     } finally {
-      saving.value = false;
+      saving.value = false
     }
-  });
-};
+  })
+}
 
 const savePermissions = async () => {
-  if (!currentRole.value) return;
-  const checkedKeys = treeRef.value?.getCheckedKeys() || [];
-  saving.value = true;
+  if (!currentRole.value) return
+  const checkedKeys = treeRef.value?.getCheckedKeys() || []
+  saving.value = true
   try {
     // 保存角色权限到后端
     await request.put(`/rbac/roles/${currentRole.value.id}`, {
       permissions: checkedKeys,
-    });
-    ElMessage.success("已保存");
-    permissionDialogVisible.value = false;
+    })
+    ElMessage.success('已保存')
+    permissionDialogVisible.value = false
   } catch {
-    ElMessage.error("权限保存失败");
+    ElMessage.error('权限保存失败')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
-};
+}
 
 /** 从后端加载权限列表并构建树形结构 */
 async function loadPermissions() {
   try {
-    const res = await request.get("/rbac/permissions");
-    const categories: Record<string, PermissionItem[]> =
-      res.data?.categories || {};
+    const res = await request.get('/rbac/permissions')
+    const categories: Record<string, PermissionItem[]> = res.data?.categories || {}
 
     // 扩展权限类别中文映射，覆盖所有系统模块
     const categoryNames: Record<string, string> = {
-      user: "用户管理",
-      org: "组织管理",
-      village: "帮扶村管理",
-      project: "帮扶项目管理",
-      school: "帮扶学校管理",
-      funds: "经费管理",
-      policy: "政策法规",
-      rural_works: "乡村工作",
-      approval: "审批管理",
-      data_entry: "数据录入",
-      data_import: "数据导入",
-      data_verify: "数据校验审核",
-      data_analysis: "数据统计分析",
-      report: "报表管理",
-      analytics: "数据分析",
-      data_management: "数据管理",
-      backup: "备份管理",
-      quality: "数据质量监控",
-      logs: "操作日志",
-      system: "系统管理",
-      role: "角色权限管理",
-      audit: "安全审计",
-      config: "系统配置",
-      admin: "管理员",
-    };
+      user: '用户管理',
+      org: '组织管理',
+      village: '帮扶村管理',
+      project: '帮扶项目管理',
+      school: '帮扶学校管理',
+      funds: '经费管理',
+      policy: '政策法规',
+      rural_works: '乡村工作',
+      approval: '审批管理',
+      data_entry: '数据录入',
+      data_import: '数据导入',
+      data_verify: '数据校验审核',
+      data_analysis: '数据统计分析',
+      report: '报表管理',
+      analytics: '数据分析',
+      data_management: '数据管理',
+      backup: '备份管理',
+      quality: '数据质量监控',
+      logs: '操作日志',
+      system: '系统管理',
+      role: '角色权限管理',
+      audit: '安全审计',
+      config: '系统配置',
+      admin: '管理员',
+    }
 
     const actionNames: Record<string, string> = {
-      read: "查看",
-      write: "编辑",
-      create: "创建",
-      update: "修改",
-      delete: "删除",
-      import: "导入",
-      export: "导出",
-      download: "下载",
-      upload: "上传",
-      publish: "发布",
-      approve: "审批",
-      reject: "驳回",
-      backup: "备份",
-      restore: "恢复",
-      verify: "校验",
-      monitor: "监控",
-      manage_roles: "角色管理",
-      manage_users: "用户管理",
-      config: "配置",
-      all: "全部权限",
-    };
+      read: '查看',
+      write: '编辑',
+      create: '创建',
+      update: '修改',
+      delete: '删除',
+      import: '导入',
+      export: '导出',
+      download: '下载',
+      upload: '上传',
+      publish: '发布',
+      approve: '审批',
+      reject: '驳回',
+      backup: '备份',
+      restore: '恢复',
+      verify: '校验',
+      monitor: '监控',
+      manage_roles: '角色管理',
+      manage_users: '用户管理',
+      config: '配置',
+      all: '全部权限',
+    }
 
-    const tree: TreeNode[] = [];
+    const tree: TreeNode[] = []
     for (const [cat, perms] of Object.entries(categories)) {
-      if (!perms || perms.length === 0) continue;
+      if (!perms || perms.length === 0) continue
       tree.push({
         id: cat,
         label: categoryNames[cat] || cat,
         children: perms.map((p: PermissionItem) => {
-          const action = p.code?.split(":")[1] || p.name;
+          const action = p.code?.split(':')[1] || p.name
           return {
             id: p.code,
             label: actionNames[action] || p.description || action,
-          };
+          }
         }),
-      });
+      })
     }
-    menuTreeData.value = tree;
+    menuTreeData.value = tree
   } catch {
     // 加载失败使用空树
-    menuTreeData.value = [];
-    ElMessage.error("加载权限菜单失败，请稍后重试");
+    menuTreeData.value = []
+    ElMessage.error('加载权限菜单失败，请稍后重试')
   }
 }
 
 /** 加载角色列表 */
 async function loadRoles() {
   try {
-    const res = await request.get("/rbac/roles");
-    const roles = res.data?.data || [];
+    const res = await request.get('/rbac/roles')
+    const roles = res.data?.data || []
 
     // 并行加载每个角色的用户数
     const rolesWithUserCount = await Promise.all(
       roles.map(async (r: unknown) => {
-        const roleItem = r as Record<string, unknown>;
-        const rid = String(roleItem.id);
-        let userCount = 0;
+        const roleItem = r as Record<string, unknown>
+        const rid = String(roleItem.id)
+        let userCount = 0
         try {
-          const userRes = await request.get(`/rbac/roles/${rid}/users`);
-          const users = userRes.data?.data || userRes.data?.users || [];
-          userCount = users.length;
+          const userRes = await request.get(`/rbac/roles/${rid}/users`)
+          const users = userRes.data?.data || userRes.data?.users || []
+          userCount = users.length
         } catch {
           // 如果接口不存在或失败，用户数为0
         }
         return {
           id: rid,
-          name: String(roleItem.name || ""),
-          code: String(roleItem.name || "")
+          name: String(roleItem.name || ''),
+          code: String(roleItem.name || '')
             .toUpperCase()
-            .replace(/\s+/g, "_"),
-          description: String(roleItem.description || ""),
+            .replace(/\s+/g, '_'),
+          description: String(roleItem.description || ''),
           userCount,
-          createTime: String(roleItem.created_at || ""),
-          status: roleItem.is_active !== false ? "active" : "inactive",
-        };
-      }),
-    );
+          createTime: String(roleItem.created_at || ''),
+          status: roleItem.is_active !== false ? 'active' : 'inactive',
+        }
+      })
+    )
 
-    tableData.value = rolesWithUserCount;
-    pagination.total = tableData.value.length;
+    tableData.value = rolesWithUserCount
+    pagination.total = tableData.value.length
   } catch {
-    tableData.value = [];
-    ElMessage.error("加载角色列表失败，请稍后重试");
+    tableData.value = []
+    ElMessage.error('加载角色列表失败，请稍后重试')
   }
 }
 
 onMounted(() => {
-  loadRoles();
-  loadPermissions();
-});
+  loadRoles()
+  loadPermissions()
+})
 </script>
 
 <style scoped>

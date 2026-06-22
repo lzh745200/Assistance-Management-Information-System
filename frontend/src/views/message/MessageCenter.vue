@@ -6,11 +6,7 @@
         <div class="card-header">
           <span class="title">
             消息中心
-            <el-badge
-              v-if="unreadCount > 0"
-              :value="unreadCount"
-              class="unread-badge"
-            />
+            <el-badge v-if="unreadCount > 0" :value="unreadCount" class="unread-badge" />
           </span>
           <div class="actions">
             <el-button :disabled="unreadCount === 0" @click="handleMarkAllRead">
@@ -75,10 +71,7 @@
         <el-table-column type="selection" width="55" />
         <el-table-column label="类型" width="120">
           <template #default="{ row }">
-            <el-tag
-              :type="formatMessageType(row.message_type).type as any"
-              size="small"
-            >
+            <el-tag :type="formatMessageType(row.message_type).type as any" size="small">
               {{ formatMessageType(row.message_type).text }}
             </el-tag>
           </template>
@@ -91,12 +84,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="content"
-          label="内容"
-          min-width="300"
-          show-overflow-tooltip
-        >
+        <el-table-column prop="content" label="内容" min-width="300" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="message-content">{{ row.content }}</span>
           </template>
@@ -109,18 +97,10 @@
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button-group>
-              <el-button
-                size="small"
-                :disabled="row.is_read"
-                @click.stop="handleMarkRead(row)"
-              >
+              <el-button size="small" :disabled="row.is_read" @click.stop="handleMarkRead(row)">
                 <el-icon><Check /></el-icon>
               </el-button>
-              <el-button
-                size="small"
-                type="danger"
-                @click.stop="handleDelete(row)"
-              >
+              <el-button size="small" type="danger" @click.stop="handleDelete(row)">
                 <el-icon><Delete /></el-icon>
               </el-button>
               <el-button
@@ -151,18 +131,11 @@
     </el-card>
 
     <!-- 消息详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      :title="currentMessage?.title"
-      width="600px"
-    >
+    <el-dialog v-model="detailDialogVisible" :title="currentMessage?.title" width="600px">
       <div v-if="currentMessage" class="message-detail">
         <el-descriptions :column="1" border>
           <el-descriptions-item label="类型">
-            <el-tag
-              :type="formatMessageType(currentMessage.message_type).type as any"
-              size="small"
-            >
+            <el-tag :type="formatMessageType(currentMessage.message_type).type as any" size="small">
               {{ formatMessageType(currentMessage.message_type).text }}
             </el-tag>
           </el-descriptions-item>
@@ -187,10 +160,10 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, onMounted, onUnmounted } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Refresh, Check, Delete, Link } from "@element-plus/icons-vue";
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh, Check, Delete, Link } from '@element-plus/icons-vue'
 import {
   getMessages,
   markAsRead,
@@ -200,28 +173,28 @@ import {
   formatRelativeTime,
   type Message,
   type MessageType,
-} from "@/api/message";
+} from '@/api/message'
 
-const { pushSafe } = useRouterSafe();
+const { pushSafe } = useRouterSafe()
 
 // ==================== 状态 ====================
 
-const loading = ref(false);
-const messages = ref<Message[]>([]);
-const selectedMessages = ref<Message[]>([]);
-const total = ref(0);
-const page = ref(1);
-const pageSize = ref(20);
-const unreadCount = ref(0);
+const loading = ref(false)
+const messages = ref<Message[]>([])
+const selectedMessages = ref<Message[]>([])
+const total = ref(0)
+const page = ref(1)
+const pageSize = ref(20)
+const unreadCount = ref(0)
 
 const filterForm = ref({
   message_type: undefined as MessageType | undefined,
   is_read: undefined as number | undefined,
-});
+})
 
 // 详情对话框
-const detailDialogVisible = ref(false);
-const currentMessage = ref<Message | null>(null);
+const detailDialogVisible = ref(false)
+const currentMessage = ref<Message | null>(null)
 
 // WebSocket（单机版禁用，消息通过 HTTP 轮询）
 // ==================== 方法 ====================
@@ -230,26 +203,22 @@ const currentMessage = ref<Message | null>(null);
  * 加载消息列表
  */
 async function loadMessages() {
-  loading.value = true;
+  loading.value = true
   try {
     const response = await getMessages({
       page: page.value,
       page_size: pageSize.value,
       message_type: filterForm.value.message_type,
       is_read:
-        filterForm.value.is_read === 1
-          ? true
-          : filterForm.value.is_read === 0
-            ? false
-            : undefined,
-    });
-    messages.value = response.items;
-    total.value = response.total;
-    unreadCount.value = response.unread_count;
+        filterForm.value.is_read === 1 ? true : filterForm.value.is_read === 0 ? false : undefined,
+    })
+    messages.value = response.items
+    total.value = response.total
+    unreadCount.value = response.unread_count
   } catch (error) {
-    ElMessage.error("加载消息列表失败");
+    ElMessage.error('加载消息列表失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -257,27 +226,27 @@ async function loadMessages() {
  * 搜索
  */
 function handleSearch() {
-  page.value = 1;
-  loadMessages();
+  page.value = 1
+  loadMessages()
 }
 
 /**
  * 选择变化
  */
 function handleSelectionChange(selection: Message[]) {
-  selectedMessages.value = selection;
+  selectedMessages.value = selection
 }
 
 /**
  * 行点击
  */
 function handleRowClick(row: Message) {
-  currentMessage.value = row;
-  detailDialogVisible.value = true;
+  currentMessage.value = row
+  detailDialogVisible.value = true
 
   // 标记为已读
   if (!row.is_read) {
-    handleMarkRead(row);
+    handleMarkRead(row)
   }
 }
 
@@ -285,7 +254,7 @@ function handleRowClick(row: Message) {
  * 获取行样式
  */
 function getRowClassName({ row }: { row: Message }) {
-  return row.is_read ? "" : "unread-row";
+  return row.is_read ? '' : 'unread-row'
 }
 
 /**
@@ -293,9 +262,9 @@ function getRowClassName({ row }: { row: Message }) {
  */
 async function handleMarkRead(message: Message) {
   try {
-    await markAsRead([message.id]);
-    message.is_read = true;
-    unreadCount.value = Math.max(0, unreadCount.value - 1);
+    await markAsRead([message.id])
+    message.is_read = true
+    unreadCount.value = Math.max(0, unreadCount.value - 1)
   } catch {
     // 静默失败
   }
@@ -306,12 +275,12 @@ async function handleMarkRead(message: Message) {
  */
 async function handleMarkAllRead() {
   try {
-    await markAllAsRead();
-    messages.value.forEach((m) => (m.is_read = true));
-    unreadCount.value = 0;
-    ElMessage.success("已标记");
+    await markAllAsRead()
+    messages.value.forEach((m) => (m.is_read = true))
+    unreadCount.value = 0
+    ElMessage.success('已标记')
   } catch (error) {
-    ElMessage.error("操作失败");
+    ElMessage.error('操作失败')
   }
 }
 
@@ -320,12 +289,12 @@ async function handleMarkAllRead() {
  */
 async function handleDelete(message: Message) {
   try {
-    await ElMessageBox.confirm("确定要删除这条消息吗？", "删除确认", {
-      type: "warning",
-    });
-    await deleteMessages([message.id]);
-    ElMessage.success("删除成功");
-    loadMessages();
+    await ElMessageBox.confirm('确定要删除这条消息吗？', '删除确认', {
+      type: 'warning',
+    })
+    await deleteMessages([message.id])
+    ElMessage.success('删除成功')
+    loadMessages()
   } catch {
     // 用户取消
   }
@@ -335,19 +304,19 @@ async function handleDelete(message: Message) {
  * 批量删除
  */
 async function handleBatchDelete() {
-  if (selectedMessages.value.length === 0) return;
+  if (selectedMessages.value.length === 0) return
 
   try {
     await ElMessageBox.confirm(
       `确定要删除选中的 ${selectedMessages.value.length} 条消息吗？`,
-      "批量删除确认",
-      { type: "warning" },
-    );
+      '批量删除确认',
+      { type: 'warning' }
+    )
 
-    const ids = selectedMessages.value.map((m) => m.id);
-    await deleteMessages(ids);
-    ElMessage.success("删除成功");
-    loadMessages();
+    const ids = selectedMessages.value.map((m) => m.id)
+    await deleteMessages(ids)
+    ElMessage.success('删除成功')
+    loadMessages()
   } catch {
     // 用户取消
   }
@@ -358,10 +327,10 @@ async function handleBatchDelete() {
  */
 function handleGoToLink(message: Message) {
   if (message.link) {
-    if (message.link.startsWith("http")) {
-      window.open(message.link, "_blank");
+    if (message.link.startsWith('http')) {
+      window.open(message.link, '_blank')
     } else {
-      pushSafe(message.link);
+      pushSafe(message.link)
     }
   }
 }
@@ -370,8 +339,8 @@ function handleGoToLink(message: Message) {
  * 格式化日期时间
  */
 function formatDateTime(dateStr: string): string {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleString("zh-CN");
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 /**
@@ -391,13 +360,13 @@ function closeWebSocket() {
 // ==================== 生命周期 ====================
 
 onMounted(() => {
-  loadMessages();
-  initWebSocket();
-});
+  loadMessages()
+  initWebSocket()
+})
 
 onUnmounted(() => {
-  closeWebSocket();
-});
+  closeWebSocket()
+})
 </script>
 
 <style scoped lang="scss">

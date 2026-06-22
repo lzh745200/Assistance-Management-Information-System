@@ -29,10 +29,7 @@
         >
           权限数据加载失败，请关闭面板后重试。保存操作已被禁用。
         </el-alert>
-        <PermissionTreePanel
-          :permissions="currentPermissions"
-          @change="onPermissionsChange"
-        />
+        <PermissionTreePanel :permissions="currentPermissions" @change="onPermissionsChange" />
         <div style="margin-top: 16px; text-align: right">
           <el-button
             type="primary"
@@ -62,21 +59,13 @@
       <!-- Tab 4: 遗留角色 -->
       <el-tab-pane label="系统角色" name="legacy">
         <div class="legacy-section">
-          <el-alert
-            type="warning"
-            :closable="false"
-            style="margin-bottom: 16px"
-          >
+          <el-alert type="warning" :closable="false" style="margin-bottom: 16px">
             系统角色为向后兼容保留。新权限配置请使用"角色分配"和"权限配置"。
           </el-alert>
 
           <el-form label-width="100px" :model="legacyForm">
             <el-form-item label="系统角色">
-              <el-select
-                v-model="legacyForm.role"
-                placeholder="选择系统角色"
-                style="width: 240px"
-              >
+              <el-select v-model="legacyForm.role" placeholder="选择系统角色" style="width: 240px">
                 <el-option label="超级管理员" value="super_admin" />
                 <el-option label="管理员" value="admin" />
                 <el-option label="审批领导" value="approval_leader" />
@@ -94,11 +83,7 @@
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button
-                type="primary"
-                :loading="savingLegacy"
-                @click="saveLegacyRole"
-              >
+              <el-button type="primary" :loading="savingLegacy" @click="saveLegacyRole">
                 保存
               </el-button>
             </el-form-item>
@@ -110,179 +95,178 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
-import PermissionTreePanel from "./PermissionTreePanel.vue";
-import RoleTagsPanel from "./RoleTagsPanel.vue";
-import MenuVisibilityPanel from "./MenuVisibilityPanel.vue";
+import { ref, watch, computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
+import PermissionTreePanel from './PermissionTreePanel.vue'
+import RoleTagsPanel from './RoleTagsPanel.vue'
+import MenuVisibilityPanel from './MenuVisibilityPanel.vue'
 
 interface UserInfo {
-  id: number;
-  username: string;
-  full_name?: string;
-  role?: string;
-  data_scope?: string;
-  permissions?: string;
-  allowed_menus?: string | null;
+  id: number
+  username: string
+  full_name?: string
+  role?: string
+  data_scope?: string
+  permissions?: string
+  allowed_menus?: string | null
 }
 
 interface RbacRole {
-  id: string;
-  name: string;
-  description?: string;
-  is_system?: boolean;
-  is_active?: boolean;
-  priority?: number;
-  permissions?: string[];
+  id: string
+  name: string
+  description?: string
+  is_system?: boolean
+  is_active?: boolean
+  priority?: number
+  permissions?: string[]
 }
 
 const props = defineProps<{
-  modelValue: boolean;
-  user: UserInfo | null;
-}>();
+  modelValue: boolean
+  user: UserInfo | null
+}>()
 
 const emit = defineEmits<{
-  "update:modelValue": [value: boolean];
-  saved: [];
-}>();
+  'update:modelValue': [value: boolean]
+  saved: []
+}>()
 
 const visible = computed({
   get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
+  set: (val) => emit('update:modelValue', val),
+})
 
-const activeTab = ref("roles");
-const savingPermissions = ref(false);
-const savingLegacy = ref(false);
+const activeTab = ref('roles')
+const savingPermissions = ref(false)
+const savingLegacy = ref(false)
 
-const rolePanelRef = ref();
-const permissionsLoadFailed = ref(false);
-const currentPermissions = ref<string[]>([]);
-const allRoles = ref<RbacRole[]>([]);
-const roleDefaultKeys = ref<string[]>([]);
-const currentMenuKeys = ref<string[]>([]);
-const isMenuCustomized = ref(false);
+const rolePanelRef = ref()
+const permissionsLoadFailed = ref(false)
+const currentPermissions = ref<string[]>([])
+const allRoles = ref<RbacRole[]>([])
+const roleDefaultKeys = ref<string[]>([])
+const currentMenuKeys = ref<string[]>([])
+const isMenuCustomized = ref(false)
 
 const legacyForm = ref({
-  role: "",
-  data_scope: "",
-});
+  role: '',
+  data_scope: '',
+})
 
 // ── 加载数据 ──
 
 async function loadAllRoles() {
   try {
-    const res = await request.get("/rbac/roles");
-    allRoles.value = (res.data?.data || res.data || []) as RbacRole[];
+    const res = await request.get('/rbac/roles')
+    allRoles.value = (res.data?.data || res.data || []) as RbacRole[]
   } catch {
-    allRoles.value = [];
+    allRoles.value = []
   }
 }
 
 async function loadCurrentPermissions() {
-  if (!props.user?.id) return;
+  if (!props.user?.id) return
   try {
-    const res = await request.get(`/rbac/user/${props.user.id}/permissions`);
-    const payload = res.data?.data || res.data;
-    const perms = payload?.permissions || payload || [];
-    currentPermissions.value = Array.isArray(perms) ? perms : [];
-    permissionsLoadFailed.value = false;
+    const res = await request.get(`/rbac/user/${props.user.id}/permissions`)
+    const payload = res.data?.data || res.data
+    const perms = payload?.permissions || payload || []
+    currentPermissions.value = Array.isArray(perms) ? perms : []
+    permissionsLoadFailed.value = false
   } catch {
-    permissionsLoadFailed.value = true;
-    currentPermissions.value = []; // 清空过期数据，防止前一个用户权限残留
+    permissionsLoadFailed.value = true
+    currentPermissions.value = [] // 清空过期数据，防止前一个用户权限残留
   }
 }
 
 async function loadMenuConfig() {
-  if (!props.user?.id) return;
+  if (!props.user?.id) return
   try {
-    const res = await request.get(`/menus/user-menus/${props.user.id}`);
-    const data = res.data?.data || res.data;
+    const res = await request.get(`/menus/user-menus/${props.user.id}`)
+    const data = res.data?.data || res.data
     if (data) {
-      currentMenuKeys.value = data.menu_keys || [];
-      isMenuCustomized.value = data.is_customized || false;
-      roleDefaultKeys.value = data.role_default_keys || [];
+      currentMenuKeys.value = data.menu_keys || []
+      isMenuCustomized.value = data.is_customized || false
+      roleDefaultKeys.value = data.role_default_keys || []
     }
   } catch {
-    currentMenuKeys.value = [];
+    currentMenuKeys.value = []
   }
 }
 
 function refreshPermissions() {
-  loadCurrentPermissions();
+  loadCurrentPermissions()
 }
 
 function refreshMenuConfig() {
-  loadMenuConfig();
+  loadMenuConfig()
 }
 
 function onPermissionsChange(perms: string[]) {
-  currentPermissions.value = perms;
+  currentPermissions.value = perms
 }
 
 // ── 保存操作 ──
 
 async function savePermissions() {
-  if (!props.user?.id || permissionsLoadFailed.value) return;
-  savingPermissions.value = true;
+  if (!props.user?.id || permissionsLoadFailed.value) return
+  savingPermissions.value = true
   try {
     // 原子性保存：后端在单个事务内完成撤销+授予
-    const res = await request.post("/rbac/save-permissions", {
+    const res = await request.post('/rbac/save-permissions', {
       user_id: props.user.id,
       permissions: currentPermissions.value,
-    });
-    if (!visible.value) return; // 抽屉已关闭，中止后续操作
+    })
+    if (!visible.value) return // 抽屉已关闭，中止后续操作
 
-    const data = res.data || {};
+    const data = res.data || {}
     if (!data.success) {
-      const detail = data.message || data.detail || "权限保存失败";
-      ElMessage.error(String(detail));
-      return;
+      const detail = data.message || data.detail || '权限保存失败'
+      ElMessage.error(String(detail))
+      return
     }
 
-    const granted = (data.granted as string[]) || [];
-    const revoked = (data.revoked as string[]) || [];
-    const skipped = (data.skipped as string[]) || [];
-    const failed = (data.failed as string[]) || [];
+    const granted = (data.granted as string[]) || []
+    const revoked = (data.revoked as string[]) || []
+    const skipped = (data.skipped as string[]) || []
+    const failed = (data.failed as string[]) || []
 
     if (failed.length === 0) {
-      const parts: string[] = ["权限保存成功"];
-      if (granted.length > 0) parts.push(`(授予 ${granted.length} 项)`);
-      if (revoked.length > 0) parts.push(`(撤销 ${revoked.length} 项)`);
-      if (skipped.length > 0)
-        parts.push(`(${skipped.length} 项已存在，已跳过)`);
-      ElMessage.success(parts.join(" "));
+      const parts: string[] = ['权限保存成功']
+      if (granted.length > 0) parts.push(`(授予 ${granted.length} 项)`)
+      if (revoked.length > 0) parts.push(`(撤销 ${revoked.length} 项)`)
+      if (skipped.length > 0) parts.push(`(${skipped.length} 项已存在，已跳过)`)
+      ElMessage.success(parts.join(' '))
     } else {
-      ElMessage.warning(`权限保存部分失败: ${failed.join(", ")}`);
+      ElMessage.warning(`权限保存部分失败: ${failed.join(', ')}`)
     }
-    emit("saved");
+    emit('saved')
   } catch (err: any) {
-    ElMessage.error(err?.response?.data?.detail || "权限保存失败");
+    ElMessage.error(err?.response?.data?.detail || '权限保存失败')
   } finally {
-    savingPermissions.value = false;
+    savingPermissions.value = false
   }
 }
 
 async function saveLegacyRole() {
-  if (!props.user?.id) return;
-  savingLegacy.value = true;
+  if (!props.user?.id) return
+  savingLegacy.value = true
   try {
     await request.put(`/users/${props.user.id}/permissions`, {
       role: legacyForm.value.role,
       data_scope: legacyForm.value.data_scope,
-    });
-    ElMessage.success("系统角色保存成功");
-    emit("saved");
+    })
+    ElMessage.success('系统角色保存成功')
+    emit('saved')
   } catch (err: any) {
-    ElMessage.error(err?.response?.data?.detail || "保存失败");
+    ElMessage.error(err?.response?.data?.detail || '保存失败')
   } finally {
-    savingLegacy.value = false;
+    savingLegacy.value = false
   }
 }
 
 function handleClose() {
-  visible.value = false;
+  visible.value = false
 }
 
 // ── 监听用户变化 ──
@@ -292,28 +276,24 @@ watch(
   async (user) => {
     if (user) {
       legacyForm.value = {
-        role: user.role || "operator",
-        data_scope: user.data_scope || "org",
-      };
-      await Promise.all([
-        loadAllRoles(),
-        loadCurrentPermissions(),
-        loadMenuConfig(),
-      ]);
+        role: user.role || 'operator',
+        data_scope: user.data_scope || 'org',
+      }
+      await Promise.all([loadAllRoles(), loadCurrentPermissions(), loadMenuConfig()])
       // 加载已分配角色
-      setTimeout(() => rolePanelRef.value?.loadAssignedRoles?.(), 200);
+      setTimeout(() => rolePanelRef.value?.loadAssignedRoles?.(), 200)
     }
   },
-  { immediate: true },
-);
+  { immediate: true }
+)
 
 // 暴露给父组件
 defineExpose({
   refreshAll: () => {
-    loadCurrentPermissions();
-    loadMenuConfig();
+    loadCurrentPermissions()
+    loadMenuConfig()
   },
-});
+})
 </script>
 
 <style scoped lang="scss">

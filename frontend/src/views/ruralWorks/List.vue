@@ -61,12 +61,7 @@
             @change="handleSearch"
           >
             <el-option label="全部年份" value="" />
-            <el-option
-              v-for="y in yearOptions"
-              :key="y"
-              :label="y + '年'"
-              :value="y"
-            />
+            <el-option v-for="y in yearOptions" :key="y" :label="y + '年'" :value="y" />
           </el-select>
           <el-button @click="resetFilters">重置</el-button>
         </div>
@@ -83,20 +78,9 @@
 
     <!-- 数据表格 -->
     <el-card class="table-card">
-      <el-table
-        v-loading="loading"
-        :data="filteredData"
-        border
-        stripe
-        style="width: 100%"
-      >
+      <el-table v-loading="loading" :data="filteredData" border stripe style="width: 100%">
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column
-          prop="name"
-          label="工作名称"
-          min-width="180"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="name" label="工作名称" min-width="180" show-overflow-tooltip />
         <el-table-column prop="type" label="工作类型" width="130">
           <template #default="{ row }">
             <el-tag :type="getTypeTagColor(row.type)" size="small">{{
@@ -117,13 +101,7 @@
           <template #default="{ row }">
             <el-progress
               :percentage="row.progress"
-              :status="
-                row.progress === 100
-                  ? 'success'
-                  : row.progress > 60
-                    ? ''
-                    : 'warning'
-              "
+              :status="row.progress === 100 ? 'success' : row.progress > 60 ? '' : 'warning'"
               :stroke-width="8"
             />
           </template>
@@ -133,12 +111,8 @@
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button size="small" @click="handleView(row)">查看</el-button>
-            <el-button size="small" type="primary" @click="handleEdit(row)"
-              >编辑</el-button
-            >
-            <el-button size="small" type="danger" @click="handleDelete(row)"
-              >删除</el-button
-            >
+            <el-button size="small" type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -157,12 +131,7 @@
     </el-card>
 
     <!-- 查看/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="700px"
-      destroy-on-close
-    >
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="700px" destroy-on-close>
       <el-form
         ref="formRef"
         :model="formData"
@@ -183,11 +152,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="工作类型" prop="type">
-              <el-select
-                v-model="formData.type"
-                placeholder="请选择类型"
-                style="width: 100%"
-              >
+              <el-select v-model="formData.type" placeholder="请选择类型" style="width: 100%">
                 <el-option label="基础设施建设" value="infrastructure" />
                 <el-option label="产业发展" value="industry" />
                 <el-option label="教育培训" value="education" />
@@ -198,11 +163,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="状态" prop="status">
-              <el-select
-                v-model="formData.status"
-                placeholder="请选择状态"
-                style="width: 100%"
-              >
+              <el-select v-model="formData.status" placeholder="请选择状态" style="width: 100%">
                 <el-option label="计划中" value="planned" />
                 <el-option label="进行中" value="in_progress" />
                 <el-option label="已完成" value="completed" />
@@ -230,10 +191,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="负责人">
-              <el-input
-                v-model="formData.responsible_person"
-                placeholder="请输入负责人"
-              />
+              <el-input v-model="formData.responsible_person" placeholder="请输入负责人" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -260,13 +218,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="进度">
-              <el-slider
-                v-model="formData.progress"
-                :min="0"
-                :max="100"
-                :step="5"
-                show-input
-              />
+              <el-slider v-model="formData.progress" :min="0" :max="100" :step="5" show-input />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -285,9 +237,7 @@
       </el-form>
       <template v-if="dialogMode !== 'view'" #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave"
-          >保存</el-button
-        >
+        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -295,121 +245,118 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted, reactive } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Search, Plus, Download } from "@element-plus/icons-vue";
-import type { FormInstance, FormRules } from "element-plus";
-import type { WorkStatus, WorkType } from "@/api/ruralWork";
+import { ref, computed, onMounted, reactive } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, Download } from '@element-plus/icons-vue'
+import type { FormInstance, FormRules } from 'element-plus'
+import type { WorkStatus, WorkType } from '@/api/ruralWork'
 
 // 类型映射
 const typeLabels: Record<string, string> = {
-  infrastructure: "基础设施建设",
-  industry: "产业发展",
-  education: "教育培训",
-  healthcare: "医疗健康",
-  environment: "生态环境保护",
-};
+  infrastructure: '基础设施建设',
+  industry: '产业发展',
+  education: '教育培训',
+  healthcare: '医疗健康',
+  environment: '生态环境保护',
+}
 
 const statusLabels: Record<string, string> = {
-  planned: "计划中",
-  in_progress: "进行中",
-  completed: "已完成",
-  delayed: "已延期",
-};
+  planned: '计划中',
+  in_progress: '进行中',
+  completed: '已完成',
+  delayed: '已延期',
+}
 
-const statusColors: Record<
-  string,
-  "info" | "primary" | "success" | "warning" | "danger"
-> = {
-  planned: "info",
-  in_progress: "primary",
-  completed: "success",
-  delayed: "danger",
-};
+const statusColors: Record<string, 'info' | 'primary' | 'success' | 'warning' | 'danger'> = {
+  planned: 'info',
+  in_progress: 'primary',
+  completed: 'success',
+  delayed: 'danger',
+}
 
 // 状态
-const loading = ref(false);
-const searchText = ref("");
-const filterStatus = ref("");
-const filterType = ref("");
-const filterYear = ref<number | string>(""); // 默认不筛选年份，显示所有数据
-const yearOptions = ref<number[]>([]);
-const currentPage = ref(1);
-const pageSize = ref(10);
-const total = ref(0);
-const tableData = ref<any[]>([]);
-const saving = ref(false);
-const villageOptions = ref<any[]>([]);
+const loading = ref(false)
+const searchText = ref('')
+const filterStatus = ref('')
+const filterType = ref('')
+const filterYear = ref<number | string>('') // 默认不筛选年份，显示所有数据
+const yearOptions = ref<number[]>([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const tableData = ref<any[]>([])
+const saving = ref(false)
+const villageOptions = ref<any[]>([])
 
 // 对话框
-const dialogVisible = ref(false);
-const dialogMode = ref<"create" | "edit" | "view">("create");
+const dialogVisible = ref(false)
+const dialogMode = ref<'create' | 'edit' | 'view'>('create')
 const dialogTitle = computed(() => {
-  if (dialogMode.value === "create") return "新增乡村工作";
-  if (dialogMode.value === "edit") return "编辑乡村工作";
-  return "查看乡村工作";
-});
-const formRef = ref<FormInstance>();
+  if (dialogMode.value === 'create') return '新增乡村工作'
+  if (dialogMode.value === 'edit') return '编辑乡村工作'
+  return '查看乡村工作'
+})
+const formRef = ref<FormInstance>()
 const formData = reactive({
   id: 0,
-  name: "",
-  type: "" as string,
-  status: "planned" as string,
+  name: '',
+  type: '' as string,
+  status: 'planned' as string,
   village_id: undefined as number | undefined,
-  responsible_person: "",
+  responsible_person: '',
   progress: 0,
-  start_date: "",
-  end_date: "",
-  description: "",
-});
+  start_date: '',
+  end_date: '',
+  description: '',
+})
 const formRules: FormRules = {
-  name: [{ required: true, message: "请输入工作名称", trigger: "blur" }],
-  type: [{ required: true, message: "请选择工作类型", trigger: "change" }],
-};
+  name: [{ required: true, message: '请输入工作名称', trigger: 'blur' }],
+  type: [{ required: true, message: '请选择工作类型', trigger: 'change' }],
+}
 
 // 数据源：直接使用 tableData
 const dataSource = computed(() => {
-  return tableData.value;
-});
+  return tableData.value
+})
 
 // 服务端统计（优先），回退到当前页数据
-const serverStats = ref<any>(null);
+const serverStats = ref<any>(null)
 const statsCards = computed(() => {
-  const s = serverStats.value;
+  const s = serverStats.value
   if (s) {
     return [
-      { label: "工作总数", value: s.total ?? 0, color: "#409eff" },
-      { label: "进行中", value: s.in_progress ?? 0, color: "#e6a23c" },
-      { label: "已完成", value: s.completed ?? 0, color: "#67c23a" },
-      { label: "已延期", value: s.delayed ?? 0, color: "#f56c6c" },
-    ];
+      { label: '工作总数', value: s.total ?? 0, color: '#409eff' },
+      { label: '进行中', value: s.in_progress ?? 0, color: '#e6a23c' },
+      { label: '已完成', value: s.completed ?? 0, color: '#67c23a' },
+      { label: '已延期', value: s.delayed ?? 0, color: '#f56c6c' },
+    ]
   }
-  const data = dataSource.value;
+  const data = dataSource.value
   return [
-    { label: "工作总数", value: total.value || data.length, color: "#409eff" },
+    { label: '工作总数', value: total.value || data.length, color: '#409eff' },
     {
-      label: "进行中",
-      value: data.filter((d: any) => d.status === "in_progress").length,
-      color: "#e6a23c",
+      label: '进行中',
+      value: data.filter((d: any) => d.status === 'in_progress').length,
+      color: '#e6a23c',
     },
     {
-      label: "已完成",
-      value: data.filter((d: any) => d.status === "completed").length,
-      color: "#67c23a",
+      label: '已完成',
+      value: data.filter((d: any) => d.status === 'completed').length,
+      color: '#67c23a',
     },
     {
-      label: "已延期",
-      value: data.filter((d: any) => d.status === "delayed").length,
-      color: "#f56c6c",
+      label: '已延期',
+      value: data.filter((d: any) => d.status === 'delayed').length,
+      color: '#f56c6c',
     },
-  ];
-});
+  ]
+})
 
 async function loadServerStats() {
   try {
-    const { getRuralWorkStatistics } = await import("@/api/ruralWork");
-    const stats = await getRuralWorkStatistics();
-    if (stats) serverStats.value = stats;
+    const { getRuralWorkStatistics } = await import('@/api/ruralWork')
+    const stats = await getRuralWorkStatistics()
+    if (stats) serverStats.value = stats
   } catch {
     /* 统计加载失败不阻塞主流程 */
   }
@@ -417,105 +364,100 @@ async function loadServerStats() {
 
 // 显示的数据：直接使用 tableData，不再进行客户端过滤
 const filteredData = computed(() => {
-  return tableData.value;
-});
+  return tableData.value
+})
 
-function getTypeTagColor(
-  type: string,
-): "info" | "primary" | "success" | "warning" | "danger" {
-  const map: Record<
-    string,
-    "info" | "primary" | "success" | "warning" | "danger"
-  > = {
-    infrastructure: "primary",
-    industry: "success",
-    education: "warning",
-    healthcare: "danger",
-    environment: "info",
-  };
-  return map[type] || "info";
+function getTypeTagColor(type: string): 'info' | 'primary' | 'success' | 'warning' | 'danger' {
+  const map: Record<string, 'info' | 'primary' | 'success' | 'warning' | 'danger'> = {
+    infrastructure: 'primary',
+    industry: 'success',
+    education: 'warning',
+    healthcare: 'danger',
+    environment: 'info',
+  }
+  return map[type] || 'info'
 }
 
 async function fetchData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const { getRuralWorks } = await import("@/api/ruralWork");
+    const { getRuralWorks } = await import('@/api/ruralWork')
     const result = await getRuralWorks({
       skip: (currentPage.value - 1) * pageSize.value,
       limit: pageSize.value,
       search: searchText.value || undefined,
       status: (filterStatus.value as WorkStatus) || undefined,
       type: (filterType.value as WorkType) || undefined,
-      year: typeof filterYear.value === "number" ? filterYear.value : undefined,
-    });
-    tableData.value = result.items || [];
-    total.value = result.total || 0;
+      year: typeof filterYear.value === 'number' ? filterYear.value : undefined,
+    })
+    tableData.value = result.items || []
+    total.value = result.total || 0
   } catch (error) {
-    console.error("加载数据失败:", error);
-    ElMessage.error("加载数据失败");
-    tableData.value = [];
-    total.value = 0;
+    console.error('加载数据失败:', error)
+    ElMessage.error('加载数据失败')
+    tableData.value = []
+    total.value = 0
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function handleSearch() {
-  currentPage.value = 1;
-  fetchData();
+  currentPage.value = 1
+  fetchData()
 }
 
 function resetFilters() {
-  searchText.value = "";
-  filterStatus.value = "";
-  filterType.value = "";
-  filterYear.value = "";
-  currentPage.value = 1;
-  fetchData();
+  searchText.value = ''
+  filterStatus.value = ''
+  filterType.value = ''
+  filterYear.value = ''
+  currentPage.value = 1
+  fetchData()
 }
 
 function resetForm() {
   Object.assign(formData, {
     id: 0,
-    name: "",
-    type: "",
-    status: "planned",
+    name: '',
+    type: '',
+    status: 'planned',
     village_id: undefined,
-    responsible_person: "",
+    responsible_person: '',
     progress: 0,
-    start_date: "",
-    end_date: "",
-    description: "",
-  });
+    start_date: '',
+    end_date: '',
+    description: '',
+  })
 }
 
 function handleCreate() {
-  dialogMode.value = "create";
-  resetForm();
-  dialogVisible.value = true;
+  dialogMode.value = 'create'
+  resetForm()
+  dialogVisible.value = true
 }
 
 function handleView(row: any) {
-  dialogMode.value = "view";
-  Object.assign(formData, row);
-  dialogVisible.value = true;
+  dialogMode.value = 'view'
+  Object.assign(formData, row)
+  dialogVisible.value = true
 }
 
 function handleEdit(row: any) {
-  dialogMode.value = "edit";
-  Object.assign(formData, row);
-  dialogVisible.value = true;
+  dialogMode.value = 'edit'
+  Object.assign(formData, row)
+  dialogVisible.value = true
 }
 
 async function handleSave() {
-  if (!formRef.value) return;
+  if (!formRef.value) return
   try {
-    await formRef.value.validate();
+    await formRef.value.validate()
   } catch {
-    return;
+    return
   }
 
-  saving.value = true;
+  saving.value = true
   try {
     const payload = {
       name: formData.name,
@@ -527,148 +469,147 @@ async function handleSave() {
       start_date: formData.start_date,
       end_date: formData.end_date,
       description: formData.description,
-    };
-
-    if (dialogMode.value === "create") {
-      const { createRuralWork } = await import("@/api/ruralWork");
-      await createRuralWork(payload as any);
-      ElMessage.success("新增成功");
-    } else {
-      const { updateRuralWork } = await import("@/api/ruralWork");
-      await updateRuralWork(formData.id, payload as any);
-      ElMessage.success("保存成功");
     }
-    dialogVisible.value = false;
-    await fetchData();
+
+    if (dialogMode.value === 'create') {
+      const { createRuralWork } = await import('@/api/ruralWork')
+      await createRuralWork(payload as any)
+      ElMessage.success('新增成功')
+    } else {
+      const { updateRuralWork } = await import('@/api/ruralWork')
+      await updateRuralWork(formData.id, payload as any)
+      ElMessage.success('保存成功')
+    }
+    dialogVisible.value = false
+    await fetchData()
   } catch (error: any) {
-    console.error("保存失败:", error);
+    console.error('保存失败:', error)
     const msg =
       error?.response?.data?.detail ||
       error?.response?.data?.message ||
       error?.message ||
-      "保存失败，请稍后重试";
-    ElMessage.error(msg);
+      '保存失败，请稍后重试'
+    ElMessage.error(msg)
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 
 async function handleDelete(row: any) {
   try {
-    await ElMessageBox.confirm("确认删除该工作项？此操作不可恢复。", "警告", {
-      type: "warning",
-    });
-    const { deleteRuralWork } = await import("@/api/ruralWork");
-    await deleteRuralWork(row.id);
-    ElMessage.success("删除成功");
-    fetchData();
+    await ElMessageBox.confirm('确认删除该工作项？此操作不可恢复。', '警告', {
+      type: 'warning',
+    })
+    const { deleteRuralWork } = await import('@/api/ruralWork')
+    await deleteRuralWork(row.id)
+    ElMessage.success('删除成功')
+    fetchData()
   } catch (error: any) {
     // 用户取消删除
-    if (error === "cancel") {
-      return;
+    if (error === 'cancel') {
+      return
     }
     // API 调用失败
-    console.error("删除失败:", error);
-    const errorMsg =
-      error?.response?.data?.detail || error?.message || "删除失败";
-    ElMessage.error(errorMsg);
+    console.error('删除失败:', error)
+    const errorMsg = error?.response?.data?.detail || error?.message || '删除失败'
+    ElMessage.error(errorMsg)
   }
 }
 
 function handleExport() {
-  const data = dataSource.value;
+  const data = dataSource.value
   if (!data || data.length === 0) {
-    ElMessage.warning("没有可导出的数据");
-    return;
+    ElMessage.warning('没有可导出的数据')
+    return
   }
 
   const headers = [
-    "序号",
-    "工作名称",
-    "工作类型",
-    "所属村庄",
-    "负责人",
-    "状态",
-    "进度(%)",
-    "开始日期",
-    "结束日期",
-    "工作描述",
-  ];
+    '序号',
+    '工作名称',
+    '工作类型',
+    '所属村庄',
+    '负责人',
+    '状态',
+    '进度(%)',
+    '开始日期',
+    '结束日期',
+    '工作描述',
+  ]
   const rows = data.map((item: any, index: number) => [
     index + 1,
-    item.name || "",
-    typeLabels[item.type] || item.type || "",
-    item.village_name || "",
-    item.responsible_person || "",
-    statusLabels[item.status] || item.status || "",
+    item.name || '',
+    typeLabels[item.type] || item.type || '',
+    item.village_name || '',
+    item.responsible_person || '',
+    statusLabels[item.status] || item.status || '',
     item.progress ?? 0,
-    item.start_date || "",
-    item.end_date || "",
-    item.description || "",
-  ]);
+    item.start_date || '',
+    item.end_date || '',
+    item.description || '',
+  ])
 
-  const BOM = "\uFEFF";
+  const BOM = '\uFEFF'
   const csvContent =
     BOM +
     [headers, ...rows]
       .map((row) =>
         row
           .map((cell: any) => {
-            const str = String(cell).replace(/"/g, '""');
-            return `"${str}"`;
+            const str = String(cell).replace(/"/g, '""')
+            return `"${str}"`
           })
-          .join(","),
+          .join(',')
       )
-      .join("\n");
+      .join('\n')
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `乡村工作列表_${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `乡村工作列表_${new Date().toISOString().slice(0, 10)}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
   // 导出成功 — 浏览器已确认
 }
 
 async function loadYears() {
   try {
-    const { getAvailableYears } = await import("@/api/ruralWork");
-    const years = await getAvailableYears();
-    yearOptions.value = years.length > 0 ? years : generateDefaultYears();
+    const { getAvailableYears } = await import('@/api/ruralWork')
+    const years = await getAvailableYears()
+    yearOptions.value = years.length > 0 ? years : generateDefaultYears()
     // 确保当前年度在选项中
-    const curYear = new Date().getFullYear();
+    const curYear = new Date().getFullYear()
     if (!yearOptions.value.includes(curYear)) {
-      yearOptions.value.unshift(curYear);
+      yearOptions.value.unshift(curYear)
     }
   } catch {
-    yearOptions.value = generateDefaultYears();
+    yearOptions.value = generateDefaultYears()
   }
 }
 
 function generateDefaultYears(): number[] {
-  const current = new Date().getFullYear();
-  return Array.from({ length: 6 }, (_, i) => current - i);
+  const current = new Date().getFullYear()
+  return Array.from({ length: 6 }, (_, i) => current - i)
 }
 
 async function loadVillages() {
   try {
-    const { getVillagesForSelect } = await import("@/api/ruralWork");
-    villageOptions.value = await getVillagesForSelect();
+    const { getVillagesForSelect } = await import('@/api/ruralWork')
+    villageOptions.value = await getVillagesForSelect()
   } catch (error) {
-    console.error("加载村庄列表失败:", error);
-    villageOptions.value = [];
+    console.error('加载村庄列表失败:', error)
+    villageOptions.value = []
   }
 }
 
 onMounted(() => {
-  loadYears();
-  loadVillages();
-  fetchData();
-  loadServerStats();
-});
+  loadYears()
+  loadVillages()
+  fetchData()
+  loadServerStats()
+})
 </script>
 
 <style scoped>

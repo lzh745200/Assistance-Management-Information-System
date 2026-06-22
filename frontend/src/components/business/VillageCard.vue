@@ -9,10 +9,10 @@
 </template>
 <script setup lang="ts">
 defineProps<{
-  name?: string;
-  province?: string;
-  county?: string;
-  tier?: string;
-  isRevitalizationTier?: boolean;
-}>();
+  name?: string
+  province?: string
+  county?: string
+  tier?: string
+  isRevitalizationTier?: boolean
+}>()
 </script>

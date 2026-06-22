@@ -21,20 +21,14 @@
       >
         <div class="card-header">
           <span class="card-title">{{ getCardTitle(row) }}</span>
-          <span
-            v-if="getCardBadge(row)"
-            class="card-badge"
-            :class="getCardBadgeClass(row)"
-          >
+          <span v-if="getCardBadge(row)" class="card-badge" :class="getCardBadgeClass(row)">
             {{ getCardBadge(row) }}
           </span>
         </div>
         <div class="card-body">
           <div v-for="field in cardFields" :key="field.key" class="card-field">
             <span class="field-label">{{ field.label }}</span>
-            <span class="field-value">{{
-              formatField(row[field.key], field)
-            }}</span>
+            <span class="field-value">{{ formatField(row[field.key], field) }}</span>
           </div>
         </div>
         <div v-if="$slots['card-actions']" class="card-actions">
@@ -44,7 +38,7 @@
       <!-- 空状态 -->
       <div v-if="!data || data.length === 0" class="empty-state">
         <span class="empty-icon">📋</span>
-        <span>{{ emptyText || "暂无数据" }}</span>
+        <span>{{ emptyText || '暂无数据' }}</span>
       </div>
     </div>
 
@@ -65,86 +59,86 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 interface CardField {
-  key: string;
-  label: string;
-  format?: string; // 'currency' | 'percent' | 'date'
+  key: string
+  label: string
+  format?: string // 'currency' | 'percent' | 'date'
 }
 
 const props = withDefaults(
   defineProps<{
-    data: any[];
-    cardFields?: CardField[];
-    cardTitleKey?: string;
-    cardBadgeKey?: string;
-    total?: number;
-    showPagination?: boolean;
-    emptyText?: string;
+    data: any[]
+    cardFields?: CardField[]
+    cardTitleKey?: string
+    cardBadgeKey?: string
+    total?: number
+    showPagination?: boolean
+    emptyText?: string
   }>(),
   {
     cardFields: () => [],
     showPagination: false,
     total: 0,
-    emptyText: "暂无数据",
-  },
-);
+    emptyText: '暂无数据',
+  }
+)
 
 const emit = defineEmits<{
-  "row-click": [row: any];
-  "page-change": [page: number];
-  "size-change": [size: number];
-}>();
+  'row-click': [row: any]
+  'page-change': [page: number]
+  'size-change': [size: number]
+}>()
 
-const windowWidth = ref(window.innerWidth);
-const isMobile = computed(() => windowWidth.value < 768);
-const currentPage = ref(1);
-const pageSize = ref(10);
+const windowWidth = ref(window.innerWidth)
+const isMobile = computed(() => windowWidth.value < 768)
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 const tableEvents = computed(() => {
-  const events: Record<string, any> = {};
+  const events: Record<string, any> = {}
   for (const key in emit) {
-    events[key] = (...args: any[]) => (emit as any)[key](...args);
+    events[key] = (...args: any[]) => (emit as any)[key](...args)
   }
-  return events;
-});
+  return events
+})
 
 function getCardTitle(row: any): string {
   if (props.cardTitleKey && row[props.cardTitleKey]) {
-    return String(row[props.cardTitleKey]);
+    return String(row[props.cardTitleKey])
   }
-  return row.name || row.title || row.label || `#${row.id || ""}`;
+  return row.name || row.title || row.label || `#${row.id || ''}`
 }
 
 function getCardBadge(row: any): string {
   if (props.cardBadgeKey && row[props.cardBadgeKey]) {
-    return String(row[props.cardBadgeKey]);
+    return String(row[props.cardBadgeKey])
   }
-  return row.status || row.badge || "";
+  return row.status || row.badge || ''
 }
 
 function getCardBadgeClass(row: any): string {
-  const val = getCardBadge(row);
-  if (val.includes("完成") || val.includes("active")) return "badge-success";
-  if (val.includes("超") || val.includes("danger")) return "badge-danger";
-  if (val.includes("待") || val.includes("pending")) return "badge-warning";
-  return "badge-info";
+  const val = getCardBadge(row)
+  if (val.includes('完成') || val.includes('active')) return 'badge-success'
+  if (val.includes('超') || val.includes('danger')) return 'badge-danger'
+  if (val.includes('待') || val.includes('pending')) return 'badge-warning'
+  return 'badge-info'
 }
 
 function formatField(value: any, field: CardField): string {
-  if (value === null || value === undefined) return "-";
-  if (field.format === "currency") return `¥${Number(value).toLocaleString()}`;
-  if (field.format === "percent") return `${Number(value).toFixed(1)}%`;
-  if (field.format === "date") return String(value).slice(0, 10);
-  return String(value);
+  if (value === null || value === undefined) return '-'
+  if (field.format === 'currency') return `¥${Number(value).toLocaleString()}`
+  if (field.format === 'percent') return `${Number(value).toFixed(1)}%`
+  if (field.format === 'date') return String(value).slice(0, 10)
+  return String(value)
 }
 
 function onResize() {
-  windowWidth.value = window.innerWidth;
+  windowWidth.value = window.innerWidth
 }
-onMounted(() => window.addEventListener("resize", onResize));
-onUnmounted(() => window.removeEventListener("resize", onResize));
+onMounted(() => window.addEventListener('resize', onResize))
+onUnmounted(() => window.removeEventListener('resize', onResize))
 </script>
 
 <style scoped>

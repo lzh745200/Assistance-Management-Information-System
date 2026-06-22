@@ -37,11 +37,7 @@
           <el-statistic title="待审批" :value="tasks.length" />
         </el-col>
         <el-col :span="6">
-          <el-statistic
-            title="高优先级"
-            :value="highPriorityCount"
-            value-style="color: #f56c6c"
-          />
+          <el-statistic title="高优先级" :value="highPriorityCount" value-style="color: #f56c6c" />
         </el-col>
         <el-col :span="6">
           <el-statistic title="今日新增" :value="todayCount" />
@@ -65,22 +61,15 @@
         <el-table-column type="selection" width="55" />
         <el-table-column label="优先级" width="80" align="center">
           <template #default="{ row }">
-            <el-tag
-              :type="row.priority > 0 ? 'danger' : 'info'"
-              size="small"
-              effect="dark"
-            >
-              {{ row.priority > 0 ? "高" : "普通" }}
+            <el-tag :type="row.priority > 0 ? 'danger' : 'info'" size="small" effect="dark">
+              {{ row.priority > 0 ? '高' : '普通' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="title" label="审批标题" min-width="200">
           <template #default="{ row }">
             <el-link type="primary" @click="handleViewDetail(row)">
-              {{
-                row.title ||
-                `${formatEntityType(row.entity_type)} #${row.entity_id}`
-              }}
+              {{ row.title || `${formatEntityType(row.entity_type)} #${row.entity_id}` }}
             </el-link>
           </template>
         </el-table-column>
@@ -123,11 +112,7 @@
                 <el-icon><Edit /></el-icon>
                 编辑
               </el-button>
-              <el-button
-                size="small"
-                type="success"
-                @click="handleQuickApprove(row)"
-              >
+              <el-button size="small" type="success" @click="handleQuickApprove(row)">
                 <el-icon><Check /></el-icon>
                 快速通过
               </el-button>
@@ -175,9 +160,7 @@
       </el-form>
       <template #footer>
         <el-button @click="rejectDialogVisible = false">取消</el-button>
-        <el-button type="danger" :loading="submitting" @click="confirmReject">
-          确认拒绝
-        </el-button>
+        <el-button type="danger" :loading="submitting" @click="confirmReject"> 确认拒绝 </el-button>
       </template>
     </el-dialog>
 
@@ -188,9 +171,7 @@
           <el-table-column prop="field" label="字段" width="150" />
           <el-table-column prop="original" label="原值">
             <template #default="{ row }">
-              <span :class="{ 'diff-changed': row.changed }">{{
-                row.original ?? "-"
-              }}</span>
+              <span :class="{ 'diff-changed': row.changed }">{{ row.original ?? '-' }}</span>
             </template>
           </el-table-column>
           <el-table-column prop="changed" label="新值">
@@ -201,7 +182,7 @@
                   'diff-new': row.changed,
                 }"
               >
-                {{ row.new ?? "-" }}
+                {{ row.new ?? '-' }}
               </span>
             </template>
           </el-table-column>
@@ -213,9 +194,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { Refresh, Check, Close, View, Edit } from "@element-plus/icons-vue";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh, Check, Close, View, Edit } from '@element-plus/icons-vue'
 import {
   getPendingTasks,
   approveTask,
@@ -227,67 +208,63 @@ import {
   autoApproveAll,
   type ApprovalTask,
   type TaskDiff,
-} from "@/api/approval";
+} from '@/api/approval'
 
 // ==================== 状态 ====================
 
-const loading = ref(false);
-const submitting = ref(false);
-const autoApproving = ref(false);
-const tasks = ref<ApprovalTask[]>([]);
-const selectedTasks = ref<ApprovalTask[]>([]);
-const currentTask = ref<ApprovalTask | null>(null);
+const loading = ref(false)
+const submitting = ref(false)
+const autoApproving = ref(false)
+const tasks = ref<ApprovalTask[]>([])
+const selectedTasks = ref<ApprovalTask[]>([])
+const currentTask = ref<ApprovalTask | null>(null)
 
 // 对话框
-const approveDialogVisible = ref(false);
-const rejectDialogVisible = ref(false);
-const diffDialogVisible = ref(false);
+const approveDialogVisible = ref(false)
+const rejectDialogVisible = ref(false)
+const diffDialogVisible = ref(false)
 
 // 表单
-const approveForm = ref({ opinion: "" });
-const rejectForm = ref({ opinion: "" });
+const approveForm = ref({ opinion: '' })
+const rejectForm = ref({ opinion: '' })
 
 // 变更对比
-const taskDiff = ref<TaskDiff | null>(null);
+const taskDiff = ref<TaskDiff | null>(null)
 
 // ==================== 计算属性 ====================
 
-const highPriorityCount = computed(
-  () => tasks.value.filter((t) => t.priority > 0).length,
-);
+const highPriorityCount = computed(() => tasks.value.filter((t) => t.priority > 0).length)
 
 const todayCount = computed(() => {
-  const today = new Date().toDateString();
-  return tasks.value.filter(
-    (t) => new Date(t.created_at).toDateString() === today,
-  ).length;
-});
+  const today = new Date().toDateString()
+  return tasks.value.filter((t) => new Date(t.created_at).toDateString() === today).length
+})
 
 // 超时判断：超过24小时未审批
-const OVERDUE_HOURS = 24;
+const OVERDUE_HOURS = 24
 function isOverdue(task: any): boolean {
-  if (!task.created_at) return false;
-  const created = new Date(task.created_at).getTime();
-  const now = Date.now();
-  return (now - created) / (1000 * 60 * 60) > OVERDUE_HOURS;
+  if (!task.created_at) return false
+  const created = new Date(task.created_at).getTime()
+  const now = Date.now()
+  return (now - created) / (1000 * 60 * 60) > OVERDUE_HOURS
 }
 
 const diffTableData = computed(() => {
-  if (!taskDiff.value) return [];
+  if (!taskDiff.value) return []
 
-  const { original_data, change_data, diff_fields } = taskDiff.value;
+  const { original_data, change_data, diff_fields } = taskDiff.value
   const allFields = new Set([
     ...Object.keys(original_data || {}),
     ...Object.keys(change_data || {}),
-  ]);
+  ])
 
   return Array.from(allFields).map((field) => ({
     field,
     original: original_data?.[field],
     new: change_data?.[field],
     changed: diff_fields?.includes(field),
-  }));
-});
+  }))
+})
 
 // ==================== 方法 ====================
 
@@ -295,13 +272,13 @@ const diffTableData = computed(() => {
  * 加载待审批任务
  */
 async function loadTasks() {
-  loading.value = true;
+  loading.value = true
   try {
-    tasks.value = await getPendingTasks({ limit: 100 });
+    tasks.value = await getPendingTasks({ limit: 100 })
   } catch (error) {
-    ElMessage.error("加载任务列表失败");
+    ElMessage.error('加载任务列表失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -309,11 +286,11 @@ async function loadTasks() {
  * 选择变化
  */
 function handleSelectionChange(selection: any[]) {
-  selectedTasks.value = selection;
+  selectedTasks.value = selection
 }
 
-import { useRouterSafe } from "@/composables/useRouterSafe";
-const { pushSafe } = useRouterSafe();
+import { useRouterSafe } from '@/composables/useRouterSafe'
+const { pushSafe } = useRouterSafe()
 
 // ... existing code ...
 
@@ -321,24 +298,24 @@ const { pushSafe } = useRouterSafe();
  * 查看详情
  */
 function handleViewDetail(task: any) {
-  if (task.entity_type === "rural_work") {
+  if (task.entity_type === 'rural_work') {
     pushSafe({
-      path: "/rural-works",
-      query: { id: task.entity_id, action: "view" },
-    });
+      path: '/rural-works',
+      query: { id: task.entity_id, action: 'view' },
+    })
   } else {
-    handleViewDiff(task);
+    handleViewDiff(task)
   }
 }
 
 function handleEditWork(task: any) {
-  if (task.entity_type === "rural_work") {
+  if (task.entity_type === 'rural_work') {
     pushSafe({
-      path: "/rural-works",
-      query: { id: task.entity_id, action: "edit" },
-    });
+      path: '/rural-works',
+      query: { id: task.entity_id, action: 'edit' },
+    })
   } else {
-    ElMessage.info("请在对应管理页面进行编辑");
+    ElMessage.info('请在对应管理页面进行编辑')
   }
 }
 
@@ -346,14 +323,14 @@ function handleEditWork(task: any) {
  * 查看变更对比
  */
 async function handleViewDiff(task: any) {
-  currentTask.value = task;
-  diffDialogVisible.value = true;
-  taskDiff.value = null;
+  currentTask.value = task
+  diffDialogVisible.value = true
+  taskDiff.value = null
 
   try {
-    taskDiff.value = await getTaskDiff(task.id);
+    taskDiff.value = await getTaskDiff(task.id)
   } catch (error) {
-    ElMessage.error("加载变更对比失败");
+    ElMessage.error('加载变更对比失败')
   }
 }
 
@@ -370,18 +347,18 @@ async function handleViewDiff(task: any) {
  * 确认通过
  */
 async function confirmApprove() {
-  if (!currentTask.value) return;
+  if (!currentTask.value) return
 
-  submitting.value = true;
+  submitting.value = true
   try {
-    await approveTask(currentTask.value.id, approveForm.value.opinion);
-    ElMessage.success("审批通过");
-    approveDialogVisible.value = false;
-    loadTasks();
+    await approveTask(currentTask.value.id, approveForm.value.opinion)
+    ElMessage.success('审批通过')
+    approveDialogVisible.value = false
+    loadTasks()
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.detail || "操作失败");
+    ElMessage.error(error.response?.data?.detail || '操作失败')
   } finally {
-    submitting.value = false;
+    submitting.value = false
   }
 }
 
@@ -389,32 +366,32 @@ async function confirmApprove() {
  * 审批拒绝
  */
 function handleReject(task: any) {
-  currentTask.value = task;
-  rejectForm.value = { opinion: "" };
-  rejectDialogVisible.value = true;
+  currentTask.value = task
+  rejectForm.value = { opinion: '' }
+  rejectDialogVisible.value = true
 }
 
 /**
  * 确认拒绝
  */
 async function confirmReject() {
-  if (!currentTask.value) return;
+  if (!currentTask.value) return
 
   if (!rejectForm.value.opinion) {
-    ElMessage.warning("请输入拒绝原因");
-    return;
+    ElMessage.warning('请输入拒绝原因')
+    return
   }
 
-  submitting.value = true;
+  submitting.value = true
   try {
-    await rejectTask(currentTask.value.id, rejectForm.value.opinion);
-    ElMessage.success("已拒绝");
-    rejectDialogVisible.value = false;
-    loadTasks();
+    await rejectTask(currentTask.value.id, rejectForm.value.opinion)
+    ElMessage.success('已拒绝')
+    rejectDialogVisible.value = false
+    loadTasks()
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.detail || "操作失败");
+    ElMessage.error(error.response?.data?.detail || '操作失败')
   } finally {
-    submitting.value = false;
+    submitting.value = false
   }
 }
 
@@ -425,12 +402,12 @@ async function handleQuickApprove(task: any) {
   try {
     await ElMessageBox.confirm(
       `确定要快速通过「${task.title || `${formatEntityType(task.entity_type)} #${task.entity_id}`}」吗？`,
-      "快速审批",
-      { type: "info", confirmButtonText: "确认通过", cancelButtonText: "取消" },
-    );
-    await autoApproveSingleTask(task.id, "单机版快速审批通过");
-    ElMessage.success("审批通过");
-    loadTasks();
+      '快速审批',
+      { type: 'info', confirmButtonText: '确认通过', cancelButtonText: '取消' }
+    )
+    await autoApproveSingleTask(task.id, '单机版快速审批通过')
+    ElMessage.success('审批通过')
+    loadTasks()
   } catch {
     // 用户取消
   }
@@ -440,29 +417,27 @@ async function handleQuickApprove(task: any) {
  * 单机版一键审批所有待处理任务
  */
 async function handleAutoApproveAll() {
-  if (tasks.value.length === 0) return;
+  if (tasks.value.length === 0) return
 
   try {
     await ElMessageBox.confirm(
       `确定要一键通过所有 ${tasks.value.length} 个待审批任务吗？`,
-      "一键全部通过",
+      '一键全部通过',
       {
-        type: "warning",
-        confirmButtonText: "全部通过",
-        cancelButtonText: "取消",
-      },
-    );
+        type: 'warning',
+        confirmButtonText: '全部通过',
+        cancelButtonText: '取消',
+      }
+    )
 
-    autoApproving.value = true;
-    const result = await autoApproveAll("单机版一键批量审批通过");
-    ElMessage.success(
-      `批量审批完成：成功 ${result.success.length}，失败 ${result.failed.length}`,
-    );
-    loadTasks();
+    autoApproving.value = true
+    const result = await autoApproveAll('单机版一键批量审批通过')
+    ElMessage.success(`批量审批完成：成功 ${result.success.length}，失败 ${result.failed.length}`)
+    loadTasks()
   } catch {
     // 用户取消
   } finally {
-    autoApproving.value = false;
+    autoApproving.value = false
   }
 }
 
@@ -470,33 +445,29 @@ async function handleAutoApproveAll() {
  * 批量通过
  */
 async function handleBatchApprove() {
-  if (selectedTasks.value.length === 0) return;
+  if (selectedTasks.value.length === 0) return
 
   try {
     await ElMessageBox.confirm(
       `确定要批量通过选中的 ${selectedTasks.value.length} 个任务吗？`,
-      "批量审批确认",
-      { type: "warning" },
-    );
+      '批量审批确认',
+      { type: 'warning' }
+    )
 
-    const { value: opinion } = (await ElMessageBox.prompt(
-      "请输入审批意见（可选）",
-      "批量审批",
-      { inputPlaceholder: "审批意见" },
-    ).catch(() => ({ value: "" }))) as { value: string };
+    const { value: opinion } = (await ElMessageBox.prompt('请输入审批意见（可选）', '批量审批', {
+      inputPlaceholder: '审批意见',
+    }).catch(() => ({ value: '' }))) as { value: string }
 
-    loading.value = true;
-    const taskIds = selectedTasks.value.map((t) => t.id);
-    const result = await batchApprove(taskIds, opinion);
+    loading.value = true
+    const taskIds = selectedTasks.value.map((t) => t.id)
+    const result = await batchApprove(taskIds, opinion)
 
-    ElMessage.success(
-      `批量审批完成：成功 ${result.success.length}，失败 ${result.failed.length}`,
-    );
-    loadTasks();
+    ElMessage.success(`批量审批完成：成功 ${result.success.length}，失败 ${result.failed.length}`)
+    loadTasks()
   } catch {
     // 用户取消
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -504,15 +475,15 @@ async function handleBatchApprove() {
  * 格式化日期时间
  */
 function formatDateTime(dateStr: string): string {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleString("zh-CN");
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 // ==================== 生命周期 ====================
 
 onMounted(() => {
-  loadTasks();
-});
+  loadTasks()
+})
 </script>
 
 <style scoped lang="scss">

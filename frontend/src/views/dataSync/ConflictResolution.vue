@@ -18,11 +18,7 @@
 
       <div v-else class="conflicts-list">
         <el-collapse v-model="activeNames">
-          <el-collapse-item
-            v-for="(conflict, index) in conflicts"
-            :key="conflict.id"
-            :name="index"
-          >
+          <el-collapse-item v-for="(conflict, index) in conflicts" :key="conflict.id" :name="index">
             <template #title>
               <div class="conflict-title">
                 <el-tag :type="getConflictTypeTag(conflict.conflict_type)">
@@ -57,11 +53,7 @@
                   <el-radio value="use_import">使用导入数据</el-radio>
                   <el-radio value="merge">合并数据</el-radio>
                 </el-radio-group>
-                <el-button
-                  type="primary"
-                  size="small"
-                  @click="resolveConflict(conflict)"
-                >
+                <el-button type="primary" size="small" @click="resolveConflict(conflict)">
                   解决此冲突
                 </el-button>
               </div>
@@ -75,128 +67,124 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getConflicts,
   resolveConflict as resolveConflictApi,
   type ConflictDetail,
-} from "@/api/dataSync";
+} from '@/api/dataSync'
 
 interface Conflict extends ConflictDetail {
-  remote_data: Record<string, any>;
-  resolution?: "keep_local" | "use_import" | "merge";
+  remote_data: Record<string, any>
+  resolution?: 'keep_local' | 'use_import' | 'merge'
 }
 
-const route = useRoute();
-const router = useRouter();
-const conflicts = ref<Conflict[]>([]);
-const activeNames = ref<number[]>([]);
-const loading = ref(false);
+const route = useRoute()
+const router = useRouter()
+const conflicts = ref<Conflict[]>([])
+const activeNames = ref<number[]>([])
+const loading = ref(false)
 
-const getConflictTypeTag = (type: string): "info" | "warning" | "danger" => {
-  const tags: Record<string, "info" | "warning" | "danger"> = {
-    update: "warning",
-    delete: "danger",
-    insert: "info",
-  };
-  return tags[type] || "info";
-};
+const getConflictTypeTag = (type: string): 'info' | 'warning' | 'danger' => {
+  const tags: Record<string, 'info' | 'warning' | 'danger'> = {
+    update: 'warning',
+    delete: 'danger',
+    insert: 'info',
+  }
+  return tags[type] || 'info'
+}
 
 const getConflictTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    update: "更新冲突",
-    delete: "删除冲突",
-    insert: "插入冲突",
-  };
-  return labels[type] || type;
-};
+    update: '更新冲突',
+    delete: '删除冲突',
+    insert: '插入冲突',
+  }
+  return labels[type] || type
+}
 
 const loadConflicts = async () => {
   try {
-    loading.value = true;
-    const syncLogId = route.query.syncLogId as string;
+    loading.value = true
+    const syncLogId = route.query.syncLogId as string
     if (!syncLogId) {
-      ElMessage.warning("缺少同步日志ID");
-      return;
+      ElMessage.warning('缺少同步日志ID')
+      return
     }
 
-    const response = await getConflicts(parseInt(syncLogId));
+    const response = await getConflicts(parseInt(syncLogId))
     if (response.success) {
       conflicts.value = response.map((c: ConflictDetail) => ({
         ...c,
         remote_data: c.import_data,
-        resolution: "keep_local" as const,
-      }));
+        resolution: 'keep_local' as const,
+      }))
       // 默认展开第一个冲突
       if (conflicts.value.length > 0) {
-        activeNames.value = [0];
+        activeNames.value = [0]
       }
     }
   } catch (error: any) {
-    ElMessage.error(error.message || "加载冲突数据失败");
+    ElMessage.error(error.message || '加载冲突数据失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const resolveConflict = async (conflict: Conflict) => {
   if (!conflict.resolution) {
-    ElMessage.warning("请选择解决方案");
-    return;
+    ElMessage.warning('请选择解决方案')
+    return
   }
 
   try {
     await resolveConflictApi({
       conflict_id: conflict.id,
       resolution: conflict.resolution,
-    });
-    ElMessage.success("冲突已解决");
+    })
+    ElMessage.success('冲突已解决')
     // 从列表中移除已解决的冲突
-    conflicts.value = conflicts.value.filter((c) => c.id !== conflict.id);
+    conflicts.value = conflicts.value.filter((c) => c.id !== conflict.id)
   } catch (error: any) {
-    ElMessage.error(error.message || "解决冲突失败");
+    ElMessage.error(error.message || '解决冲突失败')
   }
-};
+}
 
 const resolveAll = async () => {
   if (conflicts.value.length === 0) {
-    ElMessage.info("没有需要解决的冲突");
-    return;
+    ElMessage.info('没有需要解决的冲突')
+    return
   }
 
   try {
-    await ElMessageBox.confirm(
-      `确定要批量解决 ${conflicts.value.length} 个冲突吗？`,
-      "批量解决",
-      {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      },
-    );
+    await ElMessageBox.confirm(`确定要批量解决 ${conflicts.value.length} 个冲突吗？`, '批量解决', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
 
     for (const conflict of conflicts.value) {
       await resolveConflictApi({
         conflict_id: conflict.id,
-        resolution: conflict.resolution || "keep_local",
-      });
+        resolution: conflict.resolution || 'keep_local',
+      })
     }
 
-    ElMessage.success("所有冲突已解决");
-    conflicts.value = [];
-    router.push({ name: "DataSyncImport" });
+    ElMessage.success('所有冲突已解决')
+    conflicts.value = []
+    router.push({ name: 'DataSyncImport' })
   } catch (error: any) {
-    if (error !== "cancel") {
-      ElMessage.error(error.message || "批量解决失败");
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '批量解决失败')
     }
   }
-};
+}
 
 onMounted(() => {
-  loadConflicts();
-});
+  loadConflicts()
+})
 </script>
 
 <style scoped lang="scss">

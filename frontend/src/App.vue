@@ -23,37 +23,37 @@
  * 1. 提供 Element Plus 全局配置
  * 2. 路由容器 + 错误边界（组件级，切换路由自动恢复）
  */
-import zhCn from "element-plus/es/locale/lang/zh-cn";
-import { onErrorCaptured, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import { checkVersion } from "@/composables/useVersionCheck";
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import { onErrorCaptured, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { checkVersion } from '@/composables/useVersionCheck'
 
-document.title = "帮扶管理信息系统";
+document.title = '帮扶管理信息系统'
 
 // 启动时检查版本更新
 onMounted(() => {
-  checkVersion();
-});
+  checkVersion()
+})
 
-const router = useRouter();
-const appError = ref(false);
-const errorMessage = ref("请重试或返回首页");
+const router = useRouter()
+const appError = ref(false)
+const errorMessage = ref('请重试或返回首页')
 
 onErrorCaptured((err, _instance, info) => {
-  console.error("[App] 组件错误:", info, err);
-  appError.value = true;
-  const msg = (err as any)?.message || String(err);
-  errorMessage.value = msg.length > 80 ? msg.slice(0, 80) + "…" : msg;
-  return false; // 阻止错误继续传播导致白屏
-});
+  console.error('[App] 组件错误:', info, err)
+  appError.value = true
+  const msg = (err as any)?.message || String(err)
+  errorMessage.value = msg.length > 80 ? msg.slice(0, 80) + '…' : msg
+  return false // 阻止错误继续传播导致白屏
+})
 
 // 路由切换时自动清除错误状态
 router.afterEach(() => {
-  if (appError.value) appError.value = false;
-});
+  if (appError.value) appError.value = false
+})
 
 function handleRetry() {
-  appError.value = false;
+  appError.value = false
 }
 </script>
 
@@ -65,9 +65,7 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family:
-    "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
-    sans-serif;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

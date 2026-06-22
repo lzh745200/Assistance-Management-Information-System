@@ -1,9 +1,7 @@
 <template>
   <div class="settlement-container">
     <el-page-header title="返回" @back="$router.back()">
-      <template #content
-        ><span class="page-title">决算与绩效评估</span></template
-      >
+      <template #content><span class="page-title">决算与绩效评估</span></template>
     </el-page-header>
 
     <!-- 绩效概览 -->
@@ -70,9 +68,7 @@
         </div>
       </template>
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="决算编号">{{
-          settlement.settlement_no
-        }}</el-descriptions-item>
+        <el-descriptions-item label="决算编号">{{ settlement.settlement_no }}</el-descriptions-item>
         <el-descriptions-item label="决算日期">{{
           settlement.settlement_date
         }}</el-descriptions-item>
@@ -86,10 +82,10 @@
           >{{ settlement.total_remaining }} 万元</el-descriptions-item
         >
         <el-descriptions-item label="审核人">{{
-          settlement.auditor || "未审核"
+          settlement.auditor || '未审核'
         }}</el-descriptions-item>
         <el-descriptions-item label="审核意见" :span="2">{{
-          settlement.audit_opinion || "无"
+          settlement.audit_opinion || '无'
         }}</el-descriptions-item>
         <el-descriptions-item label="绩效评分">
           <span v-if="settlement.performance_score !== null">
@@ -107,17 +103,12 @@
               size="small"
               class="ml-2"
             >
-              {{
-                settlement.performance_level_label ||
-                settlement.performance_level
-              }}
+              {{ settlement.performance_level_label || settlement.performance_level }}
             </el-tag>
           </span>
           <span v-else>未评分</span>
         </el-descriptions-item>
-        <el-descriptions-item label="创建人">{{
-          settlement.created_by
-        }}</el-descriptions-item>
+        <el-descriptions-item label="创建人">{{ settlement.created_by }}</el-descriptions-item>
       </el-descriptions>
     </el-card>
 
@@ -127,18 +118,9 @@
 
     <!-- 审批对话框 -->
     <el-dialog v-model="showApproveDialog" title="审批决算" width="500px">
-      <el-form
-        ref="approveFormRef"
-        :model="approveForm"
-        :rules="approveRules"
-        label-width="100px"
-      >
+      <el-form ref="approveFormRef" :model="approveForm" :rules="approveRules" label-width="100px">
         <el-form-item label="绩效评分" prop="performance_score">
-          <el-input-number
-            v-model="approveForm.performance_score"
-            :min="0"
-            :max="100"
-          />
+          <el-input-number v-model="approveForm.performance_score" :min="0" :max="100" />
         </el-form-item>
         <el-form-item label="绩效等级" prop="performance_level">
           <el-radio-group v-model="approveForm.performance_level">
@@ -160,131 +142,127 @@
       </el-form>
       <template #footer>
         <el-button @click="showApproveDialog = false">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="handleApprove"
-          >审批通过</el-button
-        >
+        <el-button type="primary" :loading="loading" @click="handleApprove">审批通过</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { ElMessage, type FormInstance } from "element-plus";
-import { fundLifecycleApi } from "@/api/fundLifecycle";
-import { parseError } from "@/utils/errorHandler";
-import { safeRouteParam } from "@/composables/useRouterSafe";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage, type FormInstance } from 'element-plus'
+import { fundLifecycleApi } from '@/api/fundLifecycle'
+import { parseError } from '@/utils/errorHandler'
+import { safeRouteParam } from '@/composables/useRouterSafe'
 
 interface BudgetSummary {
-  total_budget?: number;
-  total_used?: number;
-  execution_rate?: number;
+  total_budget?: number
+  total_used?: number
+  execution_rate?: number
 }
 
 interface AnomalySummary {
-  resolution_rate?: number;
+  resolution_rate?: number
 }
 
 interface SettlementData {
-  id: number;
-  settlement_no: string;
-  settlement_date: string;
-  total_budget: number;
-  total_spent: number;
-  total_remaining: number;
-  auditor?: string;
-  audit_opinion?: string;
-  performance_score: number | null;
-  performance_level: string | null;
-  performance_level_label?: string;
-  status: string;
-  status_label: string;
-  created_by: string;
+  id: number
+  settlement_no: string
+  settlement_date: string
+  total_budget: number
+  total_spent: number
+  total_remaining: number
+  auditor?: string
+  audit_opinion?: string
+  performance_score: number | null
+  performance_level: string | null
+  performance_level_label?: string
+  status: string
+  status_label: string
+  created_by: string
 }
 
 interface PerformanceData {
-  budget_summary?: BudgetSummary;
-  anomaly_summary?: AnomalySummary;
-  settlement?: SettlementData;
+  budget_summary?: BudgetSummary
+  anomaly_summary?: AnomalySummary
+  settlement?: SettlementData
 }
 
-const route = useRoute();
-const projectId = computed(() => safeRouteParam(route.params.projectId));
+const route = useRoute()
+const projectId = computed(() => safeRouteParam(route.params.projectId))
 
-const loading = ref(false);
-const performance = ref<PerformanceData | null>(null);
-const settlement = ref<SettlementData | null>(null);
-const showApproveDialog = ref(false);
-const approveFormRef = ref<FormInstance | null>(null);
+const loading = ref(false)
+const performance = ref<PerformanceData | null>(null)
+const settlement = ref<SettlementData | null>(null)
+const showApproveDialog = ref(false)
+const approveFormRef = ref<FormInstance | null>(null)
 const approveForm = reactive({
   performance_score: 80,
-  performance_level: "",
-  audit_opinion: "",
-});
+  performance_level: '',
+  audit_opinion: '',
+})
 
 const approveRules = {
   performance_score: [
-    { required: true, message: "请输入绩效评分", trigger: "change" },
+    { required: true, message: '请输入绩效评分', trigger: 'change' },
     {
-      type: "number" as const,
+      type: 'number' as const,
       min: 0,
       max: 100,
-      message: "绩效评分范围为 0-100",
-      trigger: "change",
+      message: '绩效评分范围为 0-100',
+      trigger: 'change',
     },
   ],
-  performance_level: [
-    { required: true, message: "请选择绩效等级", trigger: "change" },
-  ],
-};
+  performance_level: [{ required: true, message: '请选择绩效等级', trigger: 'change' }],
+}
 
 async function loadData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const data = await fundLifecycleApi.getPerformance(projectId.value);
-    performance.value = data;
-    settlement.value = data.settlement;
+    const data = await fundLifecycleApi.getPerformance(projectId.value)
+    performance.value = data
+    settlement.value = data.settlement
   } catch {
-    settlement.value = null;
-    performance.value = null;
+    settlement.value = null
+    performance.value = null
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function handleCreate() {
-  loading.value = true;
+  loading.value = true
   try {
-    await fundLifecycleApi.createSettlement(projectId.value);
-    ElMessage.success("决算报告已生成");
-    await loadData();
+    await fundLifecycleApi.createSettlement(projectId.value)
+    ElMessage.success('决算报告已生成')
+    await loadData()
   } catch (e: unknown) {
-    ElMessage.error(parseError(e).message || "生成失败");
+    ElMessage.error(parseError(e).message || '生成失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function handleApprove() {
-  if (!settlement.value || !approveFormRef.value) return;
-  const valid = await approveFormRef.value.validate().catch(() => false);
-  if (!valid) return;
+  if (!settlement.value || !approveFormRef.value) return
+  const valid = await approveFormRef.value.validate().catch(() => false)
+  if (!valid) return
 
-  loading.value = true;
+  loading.value = true
   try {
-    await fundLifecycleApi.approveSettlement(settlement.value.id, approveForm);
-    ElMessage.success("决算已审批通过");
-    showApproveDialog.value = false;
-    await loadData();
+    await fundLifecycleApi.approveSettlement(settlement.value.id, approveForm)
+    ElMessage.success('决算已审批通过')
+    showApproveDialog.value = false
+    await loadData()
   } catch (e: unknown) {
-    ElMessage.error(parseError(e).message || "审批失败");
+    ElMessage.error(parseError(e).message || '审批失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-onMounted(loadData);
+onMounted(loadData)
 </script>
 
 <style scoped>

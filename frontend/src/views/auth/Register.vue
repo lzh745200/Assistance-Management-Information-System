@@ -66,20 +66,11 @@
         </el-form-item>
 
         <el-form-item label="邮箱" prop="email">
-          <el-input
-            v-model="registerForm.email"
-            placeholder="请输入邮箱（可选）"
-            clearable
-          />
+          <el-input v-model="registerForm.email" placeholder="请输入邮箱（可选）" clearable />
         </el-form-item>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="loading"
-            style="width: 100%"
-            @click="handleRegister"
-          >
+          <el-button type="primary" :loading="loading" style="width: 100%" @click="handleRegister">
             注册
           </el-button>
         </el-form-item>
@@ -94,11 +85,7 @@
     </el-card>
 
     <!-- 通行码帮助对话框 -->
-    <el-dialog
-      v-model="helpDialogVisible"
-      title="如何获取通行码？"
-      width="500px"
-    >
+    <el-dialog v-model="helpDialogVisible" title="如何获取通行码？" width="500px">
       <div class="help-content">
         <el-steps direction="vertical" :active="3">
           <el-step title="步骤 1：获取机器码">
@@ -119,77 +106,73 @@
         </el-steps>
       </div>
       <template #footer>
-        <el-button type="primary" @click="helpDialogVisible = false">
-          我知道了
-        </el-button>
+        <el-button type="primary" @click="helpDialogVisible = false"> 我知道了 </el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import { QuestionFilled } from "@element-plus/icons-vue";
-import request from "@/api/request";
+import { ref, reactive } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { QuestionFilled } from '@element-plus/icons-vue'
+import request from '@/api/request'
 
-const { pushSafe } = useRouterSafe();
-const registerFormRef = ref<FormInstance>();
-const loading = ref(false);
-const helpDialogVisible = ref(false);
+const { pushSafe } = useRouterSafe()
+const registerFormRef = ref<FormInstance>()
+const loading = ref(false)
+const helpDialogVisible = ref(false)
 
 const registerForm = reactive({
-  username: "",
-  password: "",
-  confirmPassword: "",
-  passCode: "",
-  fullName: "",
-  email: "",
-});
+  username: '',
+  password: '',
+  confirmPassword: '',
+  passCode: '',
+  fullName: '',
+  email: '',
+})
 
 // 验证密码一致性
 const validateConfirmPassword = (_rule: any, value: any, callback: any) => {
-  if (value === "") {
-    callback(new Error("请再次输入密码"));
+  if (value === '') {
+    callback(new Error('请再次输入密码'))
   } else if (value !== registerForm.password) {
-    callback(new Error("两次输入的密码不一致"));
+    callback(new Error('两次输入的密码不一致'))
   } else {
-    callback();
+    callback()
   }
-};
+}
 
 const registerRules: FormRules = {
   username: [
-    { required: true, message: "请输入用户名", trigger: "blur" },
+    { required: true, message: '请输入用户名', trigger: 'blur' },
     {
       min: 3,
       max: 50,
-      message: "用户名长度在 3 到 50 个字符",
-      trigger: "blur",
+      message: '用户名长度在 3 到 50 个字符',
+      trigger: 'blur',
     },
   ],
   password: [
-    { required: true, message: "请输入密码", trigger: "blur" },
-    { min: 8, message: "密码至少8位", trigger: "blur" },
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 8, message: '密码至少8位', trigger: 'blur' },
   ],
-  confirmPassword: [
-    { required: true, validator: validateConfirmPassword, trigger: "blur" },
-  ],
-  passCode: [{ required: true, message: "请输入通行码", trigger: "blur" }],
-  email: [{ type: "email", message: "请输入正确的邮箱地址", trigger: "blur" }],
-};
+  confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
+  passCode: [{ required: true, message: '请输入通行码', trigger: 'blur' }],
+  email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }],
+}
 
 const handleRegister = async () => {
-  if (!registerFormRef.value) return;
+  if (!registerFormRef.value) return
 
   try {
-    await registerFormRef.value.validate();
-    loading.value = true;
+    await registerFormRef.value.validate()
+    loading.value = true
 
     await request({
-      url: "/auth/register",
-      method: "post",
+      url: '/auth/register',
+      method: 'post',
       data: {
         username: registerForm.username,
         password: registerForm.password,
@@ -197,25 +180,24 @@ const handleRegister = async () => {
         full_name: registerForm.fullName || registerForm.username,
         email: registerForm.email || undefined,
       },
-    });
+    })
 
-    ElMessage.success("注册成功！正在跳转到登录页面...");
+    ElMessage.success('注册成功！正在跳转到登录页面...')
     setTimeout(() => {
-      pushSafe("/login");
-    }, 1500);
+      pushSafe('/login')
+    }, 1500)
   } catch (error: any) {
-    console.error("注册失败:", error);
-    const message =
-      error.response?.data?.detail || error.message || "注册失败，请稍后重试";
-    ElMessage.error(message);
+    console.error('注册失败:', error)
+    const message = error.response?.data?.detail || error.message || '注册失败，请稍后重试'
+    ElMessage.error(message)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const showPassCodeHelp = () => {
-  helpDialogVisible.value = true;
-};
+  helpDialogVisible.value = true
+}
 </script>
 
 <style scoped lang="scss">
@@ -231,11 +213,7 @@ const showPassCodeHelp = () => {
   align-items: center;
   min-height: 100vh;
   overflow-y: auto;
-  background: linear-gradient(
-    135deg,
-    var(--military-dark) 0%,
-    var(--military-green) 100%
-  );
+  background: linear-gradient(135deg, var(--military-dark) 0%, var(--military-green) 100%);
   padding: 20px;
 }
 
@@ -247,11 +225,7 @@ const showPassCodeHelp = () => {
   background: rgba(255, 255, 255, 0.95);
 
   :deep(.el-card__header) {
-    background: linear-gradient(
-      135deg,
-      var(--military-green) 0%,
-      var(--military-dark) 100%
-    );
+    background: linear-gradient(135deg, var(--military-green) 0%, var(--military-dark) 100%);
     color: var(--text-white);
     border-radius: 12px 12px 0 0;
   }

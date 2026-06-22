@@ -15,11 +15,7 @@
               :src="userInfo.avatar"
               class="user-avatar"
             >
-              {{
-                userInfo.name
-                  ? userInfo.name.charAt(0)
-                  : userInfo.username?.charAt(0)
-              }}
+              {{ userInfo.name ? userInfo.name.charAt(0) : userInfo.username?.charAt(0) }}
             </el-avatar>
             <div v-else class="avatar-loading">
               <el-icon :size="40" class="el-icon-loading"><i /></el-icon>
@@ -47,30 +43,19 @@
           </div>
           <div class="user-basic-info">
             <h2 class="user-name">{{ userInfo.name || userInfo.username }}</h2>
-            <p class="user-role">{{ userInfo.roleName || "普通用户" }}</p>
+            <p class="user-role">{{ userInfo.roleName || '普通用户' }}</p>
             <p class="user-id">用户ID: {{ userInfo.id }}</p>
           </div>
         </div>
 
         <!-- 编辑/保存按钮 -->
         <div class="action-buttons">
-          <el-button
-            v-if="!editing"
-            type="primary"
-            :loading="saving"
-            @click="startEditing"
-          >
+          <el-button v-if="!editing" type="primary" :loading="saving" @click="startEditing">
             编辑资料
           </el-button>
           <div v-else class="save-cancel-group">
-            <el-button type="primary" :loading="saving" @click="saveProfile">
-              保存
-            </el-button>
-            <el-button
-              :loading="saving"
-              :disabled="saving"
-              @click="cancelEditing"
-            >
+            <el-button type="primary" :loading="saving" @click="saveProfile"> 保存 </el-button>
+            <el-button :loading="saving" :disabled="saving" @click="cancelEditing">
               取消
             </el-button>
           </div>
@@ -249,7 +234,7 @@
                 <span>上次登录时间</span>
               </div>
               <div class="security-value">
-                {{ userInfo.lastLoginTime || "暂无记录" }}
+                {{ userInfo.lastLoginTime || '暂无记录' }}
               </div>
             </div>
 
@@ -258,7 +243,7 @@
                 <span>上次登录IP</span>
               </div>
               <div class="security-value">
-                {{ userInfo.lastLoginIp || "暂无记录" }}
+                {{ userInfo.lastLoginIp || '暂无记录' }}
               </div>
             </div>
 
@@ -267,10 +252,8 @@
                 <span>账户状态</span>
               </div>
               <div class="security-value">
-                <el-tag
-                  :type="userInfo.status === 'active' ? 'success' : 'danger'"
-                >
-                  {{ userInfo.status === "active" ? "正常" : "禁用" }}
+                <el-tag :type="userInfo.status === 'active' ? 'success' : 'danger'">
+                  {{ userInfo.status === 'active' ? '正常' : '禁用' }}
                 </el-tag>
               </div>
             </div>
@@ -285,16 +268,10 @@
             </div>
 
             <div class="security-actions">
-              <el-button
-                type="primary"
-                :disabled="saving"
-                @click="navigateToChangePassword"
-              >
+              <el-button type="primary" :disabled="saving" @click="navigateToChangePassword">
                 修改密码
               </el-button>
-              <el-button type="warning" :disabled="saving" @click="bindMfa">
-                绑定MFA
-              </el-button>
+              <el-button type="warning" :disabled="saving" @click="bindMfa"> 绑定MFA </el-button>
             </div>
           </div>
         </el-card>
@@ -305,280 +282,275 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, reactive, computed, onMounted } from "vue";
-import { ElMessage, ElForm } from "element-plus";
-import { useRouterSafe } from "@/composables/useRouterSafe";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage, ElForm } from 'element-plus'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 
-import { useUserStore } from "@/stores/user";
+import { useUserStore } from '@/stores/user'
 
-const { pushSafe } = useRouterSafe();
-const userStore = useUserStore();
+const { pushSafe } = useRouterSafe()
+const userStore = useUserStore()
 
 // 表单引用
-const profileFormRef = ref<InstanceType<typeof ElForm> | null>(null);
+const profileFormRef = ref<InstanceType<typeof ElForm> | null>(null)
 
 // 状态变量
-const editing = ref(false);
-const saving = ref(false);
-const uploadingAvatar = ref(false);
+const editing = ref(false)
+const saving = ref(false)
+const uploadingAvatar = ref(false)
 
 // 用户信息接口
 interface UserInfo {
-  id: string;
-  username: string;
-  name: string;
-  avatar: string;
-  gender: string;
-  birthday: string;
-  phone: string;
-  email: string;
-  address: string;
-  department: string;
-  position: string;
-  remark: string;
-  roleName: string;
-  status: string;
-  lastLoginTime: string;
-  lastLoginIp: string;
+  id: string
+  username: string
+  name: string
+  avatar: string
+  gender: string
+  birthday: string
+  phone: string
+  email: string
+  address: string
+  department: string
+  position: string
+  remark: string
+  roleName: string
+  status: string
+  lastLoginTime: string
+  lastLoginIp: string
 }
 
 // 用户信息
 const userInfo = reactive<UserInfo>({
-  id: "",
-  username: "",
-  name: "",
-  avatar: "",
-  gender: "",
-  birthday: "",
-  phone: "",
-  email: "",
-  address: "",
-  department: "",
-  position: "",
-  remark: "",
-  roleName: "",
-  status: "active",
-  lastLoginTime: "",
-  lastLoginIp: "",
-});
+  id: '',
+  username: '',
+  name: '',
+  avatar: '',
+  gender: '',
+  birthday: '',
+  phone: '',
+  email: '',
+  address: '',
+  department: '',
+  position: '',
+  remark: '',
+  roleName: '',
+  status: 'active',
+  lastLoginTime: '',
+  lastLoginIp: '',
+})
 
 // 表单数据接口
 interface ProfileForm {
-  username?: string;
-  name?: string;
-  gender?: string;
-  birthday?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  department?: string;
-  position?: string;
-  remark?: string;
+  username?: string
+  name?: string
+  gender?: string
+  birthday?: string
+  phone?: string
+  email?: string
+  address?: string
+  department?: string
+  position?: string
+  remark?: string
 }
 
 // 表单数据
 const profileForm = reactive<ProfileForm>({
-  username: "",
-  name: "",
-  gender: "",
-  birthday: "",
-  phone: "",
-  email: "",
-  address: "",
-  department: "",
-  position: "",
-  remark: "",
-});
+  username: '',
+  name: '',
+  gender: '',
+  birthday: '',
+  phone: '',
+  email: '',
+  address: '',
+  department: '',
+  position: '',
+  remark: '',
+})
 
 // 验证规则接口
 interface ValidationRule {
-  required?: boolean;
-  message: string;
-  trigger: string | string[];
-  min?: number;
-  max?: number;
-  pattern?: RegExp;
-  validator?: (
-    rule: any,
-    value: any,
-    callback: (error?: string | Error) => void,
-  ) => void;
-  whitespace?: boolean;
-  enum?: Array<string | number | boolean | null | undefined>;
-  type?: string;
-  len?: number;
-  transform?: (value: any) => any;
-  fields?: Record<string, ValidationRule[]>;
-  defaultField?: ValidationRule | ValidationRule[];
+  required?: boolean
+  message: string
+  trigger: string | string[]
+  min?: number
+  max?: number
+  pattern?: RegExp
+  validator?: (rule: any, value: any, callback: (error?: string | Error) => void) => void
+  whitespace?: boolean
+  enum?: Array<string | number | boolean | null | undefined>
+  type?: string
+  len?: number
+  transform?: (value: any) => any
+  fields?: Record<string, ValidationRule[]>
+  defaultField?: ValidationRule | ValidationRule[]
 }
 
 // 表单验证规则
 const profileRules = reactive<Record<string, ValidationRule[]>>({
   name: [
-    { required: true, message: "请输入姓名", trigger: "blur" },
-    { min: 2, max: 20, message: "姓名长度应在2-20个字符之间", trigger: "blur" },
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { min: 2, max: 20, message: '姓名长度应在2-20个字符之间', trigger: 'blur' },
   ],
   phone: [
-    { required: true, message: "请输入手机号码", trigger: "blur" },
+    { required: true, message: '请输入手机号码', trigger: 'blur' },
     {
       pattern: /^1[3-9]\d{9}$/,
-      message: "请输入正确的手机号码",
-      trigger: "blur",
+      message: '请输入正确的手机号码',
+      trigger: 'blur',
     },
   ],
   email: [
-    { required: true, message: "请输入电子邮箱", trigger: "blur" },
-    { type: "email", message: "请输入正确的电子邮箱格式", trigger: "blur" },
+    { required: true, message: '请输入电子邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的电子邮箱格式', trigger: 'blur' },
   ],
-  gender: [{ required: false, message: "请选择性别", trigger: "change" }],
-  birthday: [{ required: false, message: "请选择出生日期", trigger: "change" }],
-});
+  gender: [{ required: false, message: '请选择性别', trigger: 'change' }],
+  birthday: [{ required: false, message: '请选择出生日期', trigger: 'change' }],
+})
 
 // 密码强度
 const passwordStrength = computed((): string => {
   // 实际项目中应该从后端获取密码强度信息
-  return "medium"; // 模拟中等强度
-});
+  return 'medium' // 模拟中等强度
+})
 
 // 获取用户信息
 const fetchUserProfile = async () => {
   try {
-    const profile = await userStore.getUserProfile();
-    if (!profile) return;
-    Object.assign(userInfo, profile);
+    const profile = await userStore.getUserProfile()
+    if (!profile) return
+    Object.assign(userInfo, profile)
     // 初始化表单数据
     Object.assign(profileForm, {
-      username: profile.username || "",
-      name: profile.name || "",
-      gender: profile.gender || "",
-      birthday: profile.birthday || "",
-      phone: profile.phone || "",
-      email: profile.email || "",
-      address: profile.address || "",
-      department: profile.department || "",
-      position: profile.position || "",
-      remark: profile.remark || "",
-    });
+      username: profile.username || '',
+      name: profile.name || '',
+      gender: profile.gender || '',
+      birthday: profile.birthday || '',
+      phone: profile.phone || '',
+      email: profile.email || '',
+      address: profile.address || '',
+      department: profile.department || '',
+      position: profile.position || '',
+      remark: profile.remark || '',
+    })
   } catch (error) {
-    ElMessage.error("获取用户信息失败");
+    ElMessage.error('获取用户信息失败')
   }
-};
+}
 
 // 开始编辑
 const startEditing = () => {
-  editing.value = true;
-};
+  editing.value = true
+}
 
 // 取消编辑
 const cancelEditing = () => {
-  editing.value = false;
+  editing.value = false
   // 重置表单数据
   Object.assign(profileForm, {
-    username: userInfo.username || "",
-    name: userInfo.name || "",
-    gender: userInfo.gender || "",
-    birthday: userInfo.birthday || "",
-    phone: userInfo.phone || "",
-    email: userInfo.email || "",
-    address: userInfo.address || "",
-    department: userInfo.department || "",
-    position: userInfo.position || "",
-    remark: userInfo.remark || "",
-  });
+    username: userInfo.username || '',
+    name: userInfo.name || '',
+    gender: userInfo.gender || '',
+    birthday: userInfo.birthday || '',
+    phone: userInfo.phone || '',
+    email: userInfo.email || '',
+    address: userInfo.address || '',
+    department: userInfo.department || '',
+    position: userInfo.position || '',
+    remark: userInfo.remark || '',
+  })
 
   // 重置表单验证状态
   if (profileFormRef.value) {
-    profileFormRef.value.clearValidate();
+    profileFormRef.value.clearValidate()
   }
-};
+}
 
 // 保存个人资料
 const saveProfile = async () => {
-  if (!profileFormRef.value) return;
+  if (!profileFormRef.value) return
 
   try {
     // 使用Promise包装validate方法
     const valid = await new Promise<boolean>((resolve) => {
       profileFormRef.value?.validate((valid: boolean) => {
-        resolve(valid);
-      });
-    });
+        resolve(valid)
+      })
+    })
 
     if (!valid) {
-      ElMessage.warning("请检查输入信息");
-      return;
+      ElMessage.warning('请检查输入信息')
+      return
     }
 
-    saving.value = true;
+    saving.value = true
 
-    const updatedData = await userStore.updateUserProfile({ ...profileForm });
-    Object.assign(userInfo, updatedData);
-    editing.value = false;
-    ElMessage.success("个人资料保存成功");
+    const updatedData = await userStore.updateUserProfile({ ...profileForm })
+    Object.assign(userInfo, updatedData)
+    editing.value = false
+    ElMessage.success('个人资料保存成功')
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "保存失败，请重试";
-    ElMessage.error(errorMessage);
+    const errorMessage = error instanceof Error ? error.message : '保存失败，请重试'
+    ElMessage.error(errorMessage)
   } finally {
-    saving.value = false;
+    saving.value = false
   }
-};
+}
 
 // 头像上传前检查
 const beforeUploadAvatar = (file: File) => {
-  const isJPG = file.type === "image/jpeg" || file.type === "image/png";
-  const isLt2M = file.size / 1024 / 1024 < 2;
+  const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
+  const isLt2M = file.size / 1024 / 1024 < 2
 
   if (!isJPG) {
-    ElMessage.error("只能上传JPG/JPEG/PNG格式的图片");
-    return false;
+    ElMessage.error('只能上传JPG/JPEG/PNG格式的图片')
+    return false
   }
   if (!isLt2M) {
-    ElMessage.error("图片大小不能超过2MB");
-    return false;
+    ElMessage.error('图片大小不能超过2MB')
+    return false
   }
 
-  return true;
-};
+  return true
+}
 
 // 处理头像上传
 const handleAvatarChange = async (file: { raw?: File }) => {
   if (file.raw) {
-    uploadingAvatar.value = true;
+    uploadingAvatar.value = true
     try {
-      const res = await userStore.uploadAvatar(file.raw!);
+      const res = await userStore.uploadAvatar(file.raw!)
       if (res?.avatar_url) {
-        userInfo.avatar = res.avatar_url;
+        userInfo.avatar = res.avatar_url
       } else if (res?.url) {
-        userInfo.avatar = res.url;
+        userInfo.avatar = res.url
       } else {
         // 回退：用本地 ObjectURL 预览
-        userInfo.avatar = URL.createObjectURL(file.raw!);
+        userInfo.avatar = URL.createObjectURL(file.raw!)
       }
 
-      ElMessage.success("头像上传成功");
+      ElMessage.success('头像上传成功')
     } catch (error) {
-      ElMessage.error("头像上传失败，请稍后重试");
+      ElMessage.error('头像上传失败，请稍后重试')
     } finally {
-      uploadingAvatar.value = false;
+      uploadingAvatar.value = false
     }
   }
-};
+}
 
 // 跳转到修改密码页面
 const navigateToChangePassword = () => {
-  pushSafe("/settings/change-password");
-};
+  pushSafe('/settings/change-password')
+}
 
 // 绑定MFA — 跳转到双因素认证设置页
 const bindMfa = () => {
-  pushSafe("/profile/two-factor");
-};
+  pushSafe('/profile/two-factor')
+}
 
 // 初始化
 onMounted(() => {
-  fetchUserProfile();
-});
+  fetchUserProfile()
+})
 </script>
 
 <style scoped>

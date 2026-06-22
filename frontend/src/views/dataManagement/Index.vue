@@ -15,18 +15,10 @@
           <el-statistic title="帮扶村总数" :value="stats.villageCount" />
         </el-col>
         <el-col :span="6">
-          <el-statistic
-            title="本月导入"
-            :value="stats.monthlyImports"
-            suffix="次"
-          />
+          <el-statistic title="本月导入" :value="stats.monthlyImports" suffix="次" />
         </el-col>
         <el-col :span="6">
-          <el-statistic
-            title="本月导出"
-            :value="stats.monthlyExports"
-            suffix="次"
-          />
+          <el-statistic title="本月导出" :value="stats.monthlyExports" suffix="次" />
         </el-col>
         <el-col :span="6">
           <el-statistic title="备份数量" :value="stats.backupCount" />
@@ -60,96 +52,86 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, onMounted, defineAsyncComponent } from "vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
+import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 // 异步加载子组件
-const ImportSection = defineAsyncComponent(
-  () => import("./components/ImportSection.vue"),
-);
-const ExportSection = defineAsyncComponent(
-  () => import("./components/ExportSection.vue"),
-);
-const BackupSection = defineAsyncComponent(
-  () => import("./components/BackupSection.vue"),
-);
-const QualitySection = defineAsyncComponent(
-  () => import("./components/QualitySection.vue"),
-);
+const ImportSection = defineAsyncComponent(() => import('./components/ImportSection.vue'))
+const ExportSection = defineAsyncComponent(() => import('./components/ExportSection.vue'))
+const BackupSection = defineAsyncComponent(() => import('./components/BackupSection.vue'))
+const QualitySection = defineAsyncComponent(() => import('./components/QualitySection.vue'))
 
 // 状态
-const activeTab = ref("import");
+const activeTab = ref('import')
 const stats = ref({
   villageCount: 0,
   monthlyImports: 0,
   monthlyExports: 0,
   backupCount: 0,
-});
+})
 
 const qualityStats = ref({
   totalRecords: 0,
   validRecords: 0,
   invalidRecords: 0,
   completenessRate: 0,
-  lastCheckTime: "",
-});
+  lastCheckTime: '',
+})
 // 加载统计数据
 async function loadStats() {
   try {
-    const res = await request.get("/statistics/summary");
-    const data = res.data || {};
+    const res = await request.get('/statistics/summary')
+    const data = res.data || {}
     stats.value = {
       villageCount: data.total_villages || 0,
       monthlyImports: data.total_funds || 0,
       monthlyExports: data.total_projects || 0,
       backupCount: data.total_schools || 0,
-    };
+    }
     // 加载帮扶村数据用于质量统计
-    const villageRes = await request.get("/supported-villages", {
+    const villageRes = await request.get('/supported-villages', {
       params: { page: 1, page_size: 200 },
-    });
-    const villages = villageRes.data?.items || [];
-    const totalRecords = villages.length;
+    })
+    const villages = villageRes.data?.items || []
+    const totalRecords = villages.length
     const validRecords = villages.filter(
-      (v: any) => v.department && v.village_name && v.county,
-    ).length;
+      (v: any) => v.department && v.village_name && v.county
+    ).length
     qualityStats.value = {
       totalRecords,
       validRecords,
       invalidRecords: totalRecords - validRecords,
       completenessRate:
-        totalRecords > 0
-          ? Math.round((validRecords / totalRecords) * 10000) / 100
-          : 0,
-      lastCheckTime: new Date().toLocaleString("zh-CN"),
-    };
+        totalRecords > 0 ? Math.round((validRecords / totalRecords) * 10000) / 100 : 0,
+      lastCheckTime: new Date().toLocaleString('zh-CN'),
+    }
   } catch (error) {
-    logger.error("加载统计数据失败:", error);
+    logger.error('加载统计数据失败:', error)
   }
 }
 
 // 事件处理
 function handleImportComplete() {
-  loadStats();
-  ElMessage.success("数据导入完成");
+  loadStats()
+  ElMessage.success('数据导入完成')
 }
 
 function handleExportComplete() {
-  loadStats();
-  ElMessage.success("数据导出完成");
+  loadStats()
+  ElMessage.success('数据导出完成')
 }
 
 function handleBackupComplete() {
-  loadStats();
-  ElMessage.success("数据备份完成");
+  loadStats()
+  ElMessage.success('数据备份完成')
 }
 
 onMounted(() => {
-  loadStats();
-});
+  loadStats()
+})
 </script>
 
 <style scoped lang="scss">

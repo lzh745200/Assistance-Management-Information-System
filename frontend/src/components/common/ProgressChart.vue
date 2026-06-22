@@ -1,11 +1,7 @@
 <template>
   <div class="progress-chart">
     <div class="progress-label">{{ label }}</div>
-    <el-progress
-      :percentage="percentage"
-      :color="color"
-      :stroke-width="strokeWidth"
-    />
+    <el-progress :percentage="percentage" :color="color" :stroke-width="strokeWidth" />
     <div class="progress-text">{{ text }}</div>
   </div>
 </template>
@@ -13,14 +9,14 @@
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    label?: string;
-    percentage: number;
-    color?: string;
-    strokeWidth?: number;
-    text?: string;
+    label?: string
+    percentage: number
+    color?: string
+    strokeWidth?: number
+    text?: string
   }>(),
-  { label: "", color: "#40916c", strokeWidth: 12, text: "" },
-);
+  { label: '', color: '#40916c', strokeWidth: 12, text: '' }
+)
 </script>
 
 <style scoped>

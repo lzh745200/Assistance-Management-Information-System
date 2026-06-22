@@ -23,34 +23,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
-import { useRoute } from "vue-router";
-import RuralWorkList from "./List.vue";
-import RuralWorkTask from "./Task.vue";
-import RuralWorkAnalysis from "./Analysis.vue";
-import RuralWorkReport from "./Report.vue";
+import { ref, reactive } from 'vue'
+import { useRoute } from 'vue-router'
+import RuralWorkList from './List.vue'
+import RuralWorkTask from './Task.vue'
+import RuralWorkAnalysis from './Analysis.vue'
+import RuralWorkReport from './Report.vue'
 
-const route = useRoute();
+const route = useRoute()
 
 // 根据路由参数决定默认标签
 const tabMap: Record<string, string> = {
-  tasks: "task",
-  analysis: "analysis",
-  report: "report",
-};
-const initialTab = (route.query.tab as string) || "list";
-const activeTab = ref(tabMap[initialTab] || initialTab);
+  tasks: 'task',
+  analysis: 'analysis',
+  report: 'report',
+}
+const initialTab = (route.query.tab as string) || 'list'
+const activeTab = ref(tabMap[initialTab] || initialTab)
 
 // 懒加载标记：分析和报告含 Chart.js，切换到时才加载
 const tabLoaded = reactive({
-  analysis: activeTab.value === "analysis",
-  report: activeTab.value === "report",
-});
+  analysis: activeTab.value === 'analysis',
+  report: activeTab.value === 'report',
+})
 
 function handleTabChange(name: string | number) {
-  const tab = String(name);
-  if (tab === "analysis") tabLoaded.analysis = true;
-  if (tab === "report") tabLoaded.report = true;
+  const tab = String(name)
+  if (tab === 'analysis') tabLoaded.analysis = true
+  if (tab === 'report') tabLoaded.report = true
 }
 </script>
 

@@ -12,9 +12,7 @@
           <div class="header-right">
             <el-breadcrumb separator="/">
               <el-breadcrumb-item><a href="/">首页</a></el-breadcrumb-item>
-              <el-breadcrumb-item
-                ><a href="/projects/list">项目管理</a></el-breadcrumb-item
-              >
+              <el-breadcrumb-item><a href="/projects/list">项目管理</a></el-breadcrumb-item>
               <el-breadcrumb-item>数据导入</el-breadcrumb-item>
             </el-breadcrumb>
           </div>
@@ -40,16 +38,9 @@
         <!-- 步骤1：下载模板 -->
         <div v-if="currentStep === 0" class="step-content">
           <div class="step-description">
-            <p class="important-text">
-              为确保数据正确导入，请严格按照模板格式填写项目数据
-            </p>
+            <p class="important-text">为确保数据正确导入，请严格按照模板格式填写项目数据</p>
             <div class="template-notice">
-              <el-alert
-                title="模板说明"
-                type="info"
-                :closable="false"
-                show-icon
-              >
+              <el-alert title="模板说明" type="info" :closable="false" show-icon>
                 <ul class="notice-list">
                   <li>支持导入.xlsx和.xls格式的Excel文件</li>
                   <li>请确保必填字段（项目名称、负责人、开始时间等）不为空</li>
@@ -69,11 +60,9 @@
               :loading="downloading"
               @click="downloadTemplate"
             >
-              {{ downloading ? "下载中..." : "下载导入模板 (.xlsx)" }}
+              {{ downloading ? '下载中...' : '下载导入模板 (.xlsx)' }}
             </el-button>
-            <el-button size="large" @click="currentStep = 1"
-              >已有模板，跳过此步</el-button
-            >
+            <el-button size="large" @click="currentStep = 1">已有模板，跳过此步</el-button>
           </div>
         </div>
 
@@ -142,9 +131,7 @@
               class="upload-container"
             >
               <el-icon class="upload-icon" :size="48"><Upload /></el-icon>
-              <div class="el-upload__text">
-                将文件拖到此处，或<em>点击上传</em>
-              </div>
+              <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
               <template #tip
                 ><div class="el-upload__tip">
                   请上传.xlsx或.xls格式的Excel文件，单个文件大小不超过10MB
@@ -160,9 +147,7 @@
                 @click="handleUpload"
                 >开始解析</el-button
               >
-              <el-button size="large" @click="currentStep = 1"
-                >返回修改</el-button
-              >
+              <el-button size="large" @click="currentStep = 1">返回修改</el-button>
             </div>
           </div>
         </div>
@@ -174,25 +159,13 @@
             <p>正在解析数据，请稍候...</p>
           </div>
           <div v-else-if="validationFailed" class="validation-error">
-            <el-alert
-              title="数据校验失败"
-              type="error"
-              :closable="false"
-              show-icon
-            >
-              <div
-                v-for="error in validationErrors"
-                :key="error.index"
-                class="error-item"
-              >
+            <el-alert title="数据校验失败" type="error" :closable="false" show-icon>
+              <div v-for="error in validationErrors" :key="error.index" class="error-item">
                 <strong>第{{ error.index }}行:</strong> {{ error.message }}
               </div>
             </el-alert>
             <div class="error-actions">
-              <el-button
-                type="primary"
-                class="military-btn"
-                @click="currentStep = 2"
+              <el-button type="primary" class="military-btn" @click="currentStep = 2"
                 >返回修改</el-button
               >
             </div>
@@ -202,64 +175,26 @@
               <h3>数据预览 (共 {{ totalRows }} 条记录)</h3>
               <p class="preview-tip">请确认数据无误后点击确认导入</p>
             </div>
-            <el-table
-              :data="previewData"
-              style="width: 100%"
-              size="small"
-              max-height="400"
-              border
-            >
+            <el-table :data="previewData" style="width: 100%" size="small" max-height="400" border>
               <el-table-column
                 prop="rowIndex"
                 label="序号"
                 width="80"
                 type="index"
               ></el-table-column>
-              <el-table-column
-                prop="projectName"
-                label="项目名称"
-                width="200"
-              ></el-table-column>
-              <el-table-column
-                prop="projectType"
-                label="项目类型"
-                width="120"
-              ></el-table-column>
+              <el-table-column prop="projectName" label="项目名称" width="200"></el-table-column>
+              <el-table-column prop="projectType" label="项目类型" width="120"></el-table-column>
               <el-table-column
                 prop="responsiblePerson"
                 label="负责人"
                 width="100"
               ></el-table-column>
-              <el-table-column
-                prop="contactPhone"
-                label="联系电话"
-                width="120"
-              ></el-table-column>
-              <el-table-column
-                prop="startDate"
-                label="开始时间"
-                width="120"
-              ></el-table-column>
-              <el-table-column
-                prop="endDate"
-                label="结束时间"
-                width="120"
-              ></el-table-column>
-              <el-table-column
-                prop="totalBudget"
-                label="总预算(元)"
-                width="120"
-              ></el-table-column>
-              <el-table-column
-                prop="status"
-                label="状态"
-                width="80"
-              ></el-table-column>
-              <el-table-column
-                prop="villageName"
-                label="帮扶村"
-                width="120"
-              ></el-table-column>
+              <el-table-column prop="contactPhone" label="联系电话" width="120"></el-table-column>
+              <el-table-column prop="startDate" label="开始时间" width="120"></el-table-column>
+              <el-table-column prop="endDate" label="结束时间" width="120"></el-table-column>
+              <el-table-column prop="totalBudget" label="总预算(元)" width="120"></el-table-column>
+              <el-table-column prop="status" label="状态" width="80"></el-table-column>
+              <el-table-column prop="villageName" label="帮扶村" width="120"></el-table-column>
               <el-table-column
                 prop="description"
                 label="项目描述"
@@ -268,10 +203,7 @@
             </el-table>
             <div class="preview-actions">
               <el-button @click="currentStep = 2">返回修改</el-button>
-              <el-button
-                type="primary"
-                class="military-btn"
-                @click="confirmImport"
+              <el-button type="primary" class="military-btn" @click="confirmImport"
                 >确认导入</el-button
               >
             </div>
@@ -291,23 +223,17 @@
                   <h3>🎉 数据导入完成！</h3>
                   <div class="success-stats">
                     <div class="stat-item">
-                      <span class="stat-value">{{
-                        importResult.successCount
-                      }}</span
+                      <span class="stat-value">{{ importResult.successCount }}</span
                       ><span class="stat-label">成功导入</span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                      <span class="stat-value">{{
-                        importResult.failureCount
-                      }}</span
+                      <span class="stat-value">{{ importResult.failureCount }}</span
                       ><span class="stat-label">失败</span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                      <span class="stat-value">{{
-                        importResult.totalCount
-                      }}</span
+                      <span class="stat-value">{{ importResult.totalCount }}</span
                       ><span class="stat-label">总记录数</span>
                     </div>
                   </div>
@@ -316,10 +242,7 @@
               <template #bottom>
                 <div class="result-actions">
                   <el-button @click="resetImport">重新导入</el-button>
-                  <el-button
-                    type="primary"
-                    class="military-btn"
-                    @click="redirectToList"
+                  <el-button type="primary" class="military-btn" @click="redirectToList"
                     >查看项目列表</el-button
                   >
                 </div>
@@ -332,16 +255,13 @@
                 <div class="failure-message">
                   <h3>导入失败，请检查后重试</h3>
                   <p class="failure-reason">
-                    {{ importResult.message || "未知错误" }}
+                    {{ importResult.message || '未知错误' }}
                   </p>
                 </div>
               </template>
               <template #bottom>
                 <div class="result-actions">
-                  <el-button
-                    type="primary"
-                    class="military-btn"
-                    @click="resetImport"
+                  <el-button type="primary" class="military-btn" @click="resetImport"
                     >重新导入</el-button
                   >
                 </div>
@@ -361,183 +281,177 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { Download, Upload, Loading } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import request from "@/api/request";
+import { ref, computed } from 'vue'
+import { Download, Upload, Loading } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import request from '@/api/request'
 
 interface ProjectData {
-  rowIndex: number;
-  projectName: string;
-  projectType: string;
-  responsiblePerson: string;
-  contactPhone: string;
-  startDate: string;
-  endDate: string;
-  totalBudget: number;
-  status: string;
-  villageName: string;
-  description: string;
+  rowIndex: number
+  projectName: string
+  projectType: string
+  responsiblePerson: string
+  contactPhone: string
+  startDate: string
+  endDate: string
+  totalBudget: number
+  status: string
+  villageName: string
+  description: string
 }
 
 interface ValidationError {
-  index: number;
-  message: string;
+  index: number
+  message: string
 }
 
 interface ImportResult {
-  success: boolean;
-  failure: boolean;
-  successCount: number;
-  failureCount: number;
-  totalCount: number;
-  message?: string;
+  success: boolean
+  failure: boolean
+  successCount: number
+  failureCount: number
+  totalCount: number
+  message?: string
 }
 
-const { pushSafe } = useRouterSafe();
+const { pushSafe } = useRouterSafe()
 
-const currentStep = ref(0);
-const fileList = ref<File[]>([]);
-const loading = ref(false);
-const importLoading = ref(false);
-const downloading = ref(false);
-const previewData = ref<ProjectData[]>([]);
-const totalRows = ref(0);
-const validationFailed = ref(false);
-const validationErrors = ref<ValidationError[]>([]);
+const currentStep = ref(0)
+const fileList = ref<File[]>([])
+const loading = ref(false)
+const importLoading = ref(false)
+const downloading = ref(false)
+const previewData = ref<ProjectData[]>([])
+const totalRows = ref(0)
+const validationFailed = ref(false)
+const validationErrors = ref<ValidationError[]>([])
 const importResult = ref<ImportResult>({
   success: false,
   failure: false,
   successCount: 0,
   failureCount: 0,
   totalCount: 0,
-});
+})
 
-const hasFile = computed(() => fileList.value.length > 0);
+const hasFile = computed(() => fileList.value.length > 0)
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const VALID_EXTENSIONS = [".xlsx", ".xls"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+const VALID_EXTENSIONS = ['.xlsx', '.xls']
 
 function clearFileList() {
-  fileList.value = [];
+  fileList.value = []
 }
 
 const downloadTemplate = async () => {
-  downloading.value = true;
+  downloading.value = true
   try {
-    const resp = await request.get("/import/template", {
-      params: { entity_type: "project" },
-      responseType: "blob",
+    const resp = await request.get('/import/template', {
+      params: { entity_type: 'project' },
+      responseType: 'blob',
       timeout: 15000,
-    } as any);
-    const url = window.URL.createObjectURL(new Blob([resp.data || resp]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "项目导入模板.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    } as any)
+    const url = window.URL.createObjectURL(new Blob([resp.data || resp]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '项目导入模板.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
     // 模板下载成功 — 浏览器已确认
   } catch {
-    ElMessage.error("模板下载失败，请重试");
+    ElMessage.error('模板下载失败，请重试')
   } finally {
-    downloading.value = false;
+    downloading.value = false
   }
-};
+}
 
 const handleFileChange = (file: any, files: any[]) => {
-  fileList.value = files.length > 1 ? files.slice(-1) : files;
-  const fileExtension = file.name
-    .substring(file.name.lastIndexOf("."))
-    .toLowerCase();
+  fileList.value = files.length > 1 ? files.slice(-1) : files
+  const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
   if (!VALID_EXTENSIONS.includes(fileExtension)) {
-    ElMessage.error("请上传.xlsx或.xls格式的文件");
-    clearFileList();
-    return false;
+    ElMessage.error('请上传.xlsx或.xls格式的文件')
+    clearFileList()
+    return false
   }
   if (file.size > MAX_FILE_SIZE) {
-    ElMessage.error("文件大小不能超过10MB");
-    clearFileList();
-    return false;
+    ElMessage.error('文件大小不能超过10MB')
+    clearFileList()
+    return false
   }
-  return true;
-};
+  return true
+}
 
 const handleExceed = () => {
-  ElMessage.error("只能上传一个文件");
-};
+  ElMessage.error('只能上传一个文件')
+}
 
 const handleUpload = async () => {
   if (fileList.value.length === 0) {
-    ElMessage.warning("请选择要上传的文件");
-    return;
+    ElMessage.warning('请选择要上传的文件')
+    return
   }
-  loading.value = true;
+  loading.value = true
   try {
-    const file = fileList.value[0] as any;
-    const formData = new FormData();
-    formData.append("file", file.raw || file);
+    const file = fileList.value[0] as any
+    const formData = new FormData()
+    formData.append('file', file.raw || file)
 
-    const resp: any = await request.post(
-      "/import/preview?entity_type=project",
-      formData,
-      { timeout: 120000 },
-    );
-    const response = resp?.data || resp;
+    const resp: any = await request.post('/import/preview?entity_type=project', formData, {
+      timeout: 120000,
+    })
+    const response = resp?.data || resp
 
     if (response?.rows) {
-      previewData.value = (response.rows as any[]).map(
-        (item: any, idx: number) => ({
-          rowIndex: item.row_number || idx + 1,
-          projectName: item.data?.name || item.data?.project_name || "",
-          projectType: item.data?.type || item.data?.project_type || "",
-          responsiblePerson: item.data?.responsible_person || "",
-          contactPhone: item.data?.contact_phone || "",
-          startDate: item.data?.start_date || "",
-          endDate: item.data?.end_date || "",
-          totalBudget: item.data?.budget || item.data?.total_budget || 0,
-          status: item.data?.status || "规划中",
-          villageName: item.data?.village_name || "",
-          description: item.data?.description || "",
-        }),
-      );
-      totalRows.value = previewData.value.length;
-      validationFailed.value = response.invalid_rows > 0;
+      previewData.value = (response.rows as any[]).map((item: any, idx: number) => ({
+        rowIndex: item.row_number || idx + 1,
+        projectName: item.data?.name || item.data?.project_name || '',
+        projectType: item.data?.type || item.data?.project_type || '',
+        responsiblePerson: item.data?.responsible_person || '',
+        contactPhone: item.data?.contact_phone || '',
+        startDate: item.data?.start_date || '',
+        endDate: item.data?.end_date || '',
+        totalBudget: item.data?.budget || item.data?.total_budget || 0,
+        status: item.data?.status || '规划中',
+        villageName: item.data?.village_name || '',
+        description: item.data?.description || '',
+      }))
+      totalRows.value = previewData.value.length
+      validationFailed.value = response.invalid_rows > 0
       validationErrors.value = (response.rows || [])
         .filter((r: any) => r.has_error)
         .map((r: any) => ({
           index: r.row_number,
-          message: (r.errors || []).map((e: any) => e.message).join("; "),
-        }));
+          message: (r.errors || []).map((e: any) => e.message).join('; '),
+        }))
       if (!validationFailed.value || previewData.value.length > 0) {
-        currentStep.value = 3;
+        currentStep.value = 3
       }
     } else {
-      ElMessage.error("文件解析失败，请检查文件格式");
+      ElMessage.error('文件解析失败，请检查文件格式')
     }
   } catch (e: any) {
-    const detail = e?.response?.data?.detail || e?.message || "文件解析失败";
-    ElMessage.error("解析失败: " + detail);
+    const detail = e?.response?.data?.detail || e?.message || '文件解析失败'
+    ElMessage.error('解析失败: ' + detail)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const confirmImport = async () => {
-  importLoading.value = true;
+  importLoading.value = true
   try {
-    const file = fileList.value[0] as any;
-    const formData = new FormData();
-    formData.append("file", file.raw || file);
-    formData.append("entity_type", "project");
-    formData.append("mode", "incremental");
+    const file = fileList.value[0] as any
+    const formData = new FormData()
+    formData.append('file', file.raw || file)
+    formData.append('entity_type', 'project')
+    formData.append('mode', 'incremental')
 
-    const resp: any = await request.post("/import/entities", formData, {
+    const resp: any = await request.post('/import/entities', formData, {
       timeout: 120000,
-    });
-    const response = resp?.data || resp;
+    })
+    const response = resp?.data || resp
 
     importResult.value = {
       success: true,
@@ -545,10 +459,10 @@ const confirmImport = async () => {
       successCount: Number(response?.success_rows) || 0,
       failureCount: Number(response?.failed_rows) || 0,
       totalCount: Number(response?.total_rows) || 0,
-    };
-    currentStep.value = 4;
+    }
+    currentStep.value = 4
   } catch (e: any) {
-    const detail = e?.response?.data?.detail || e?.message || "导入失败";
+    const detail = e?.response?.data?.detail || e?.message || '导入失败'
     importResult.value = {
       success: false,
       failure: true,
@@ -556,32 +470,32 @@ const confirmImport = async () => {
       failureCount: totalRows.value,
       totalCount: totalRows.value,
       message: detail,
-    };
-    currentStep.value = 4;
+    }
+    currentStep.value = 4
   } finally {
-    importLoading.value = false;
+    importLoading.value = false
   }
-};
+}
 
 const resetImport = () => {
-  currentStep.value = 0;
-  fileList.value = [];
-  previewData.value = [];
-  totalRows.value = 0;
-  validationFailed.value = false;
-  validationErrors.value = [];
+  currentStep.value = 0
+  fileList.value = []
+  previewData.value = []
+  totalRows.value = 0
+  validationFailed.value = false
+  validationErrors.value = []
   importResult.value = {
     success: false,
     failure: false,
     successCount: 0,
     failureCount: 0,
     totalCount: 0,
-  };
-};
+  }
+}
 
 const redirectToList = () => {
-  pushSafe("/projects");
-};
+  pushSafe('/projects')
+}
 </script>
 
 <style scoped lang="scss">
@@ -590,7 +504,7 @@ const redirectToList = () => {
   padding: 20px;
   background: #f5f7fa;
   position: relative;
-  font-family: "Microsoft YaHei", sans-serif;
+  font-family: 'Microsoft YaHei', sans-serif;
   .military-decoration-top,
   .military-decoration-bottom {
     position: absolute;
@@ -622,20 +536,8 @@ const redirectToList = () => {
     width: 100%;
     height: 100%;
     background-image:
-      repeating-linear-gradient(
-        45deg,
-        #000 0,
-        #000 1px,
-        transparent 1px,
-        transparent 10px
-      ),
-      repeating-linear-gradient(
-        -45deg,
-        #000 0,
-        #000 1px,
-        transparent 1px,
-        transparent 10px
-      );
+      repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 1px, transparent 10px),
+      repeating-linear-gradient(-45deg, #000 0, #000 1px, transparent 1px, transparent 10px);
   }
   .import-container {
     position: relative;

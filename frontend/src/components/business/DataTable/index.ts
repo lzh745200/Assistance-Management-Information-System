@@ -4,10 +4,10 @@
  * 需求: 2.1, 2.5, 2.8
  */
 
-import DataTable from "./DataTable.vue";
+import DataTable from './DataTable.vue'
 
-export { DataTable };
-export default DataTable;
+export { DataTable }
+export default DataTable
 
 // 导出类型
-export type { Column, DataTableProps, DataTableEmits } from "./types";
+export type { Column, DataTableProps, DataTableEmits } from './types'

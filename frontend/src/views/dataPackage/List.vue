@@ -20,12 +20,7 @@
     <el-card class="filter-card">
       <el-form :inline="true" :model="filters">
         <el-form-item label="状态">
-          <el-select
-            v-model="filters.status"
-            placeholder="全部状态"
-            clearable
-            style="width: 150px"
-          >
+          <el-select v-model="filters.status" placeholder="全部状态" clearable style="width: 150px">
             <el-option label="待处理" value="pending" />
             <el-option label="已验证" value="validated" />
             <el-option label="已导入" value="imported" />
@@ -64,12 +59,7 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              size="small"
-              @click="handlePreview(row)"
-            >
+            <el-button link type="primary" size="small" @click="handlePreview(row)">
               预览
             </el-button>
             <el-button
@@ -81,22 +71,10 @@
             >
               确认导入
             </el-button>
-            <el-button
-              link
-              type="primary"
-              size="small"
-              @click="handleDownload(row)"
-            >
+            <el-button link type="primary" size="small" @click="handleDownload(row)">
               下载
             </el-button>
-            <el-button
-              link
-              type="danger"
-              size="small"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
+            <el-button link type="danger" size="small" @click="handleDelete(row)"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -156,64 +134,61 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, reactive, computed, onMounted } from "vue";
-import { Upload, Download } from "@element-plus/icons-vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import ExportDialog from "@/components/dataPackage/ExportDialog.vue";
-import ImportDialog from "@/components/dataPackage/ImportDialog.vue";
-import { useDataPackageStore } from "@/stores/dataPackage";
-import { useOrganizationStore } from "@/stores/organization";
-import type { DataPackage, DataPackagePreviewData } from "@/types/organization";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { Upload, Download } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import ExportDialog from '@/components/dataPackage/ExportDialog.vue'
+import ImportDialog from '@/components/dataPackage/ImportDialog.vue'
+import { useDataPackageStore } from '@/stores/dataPackage'
+import { useOrganizationStore } from '@/stores/organization'
+import type { DataPackage, DataPackagePreviewData } from '@/types/organization'
 
-const packageStore = useDataPackageStore();
-const orgStore = useOrganizationStore();
+const packageStore = useDataPackageStore()
+const orgStore = useOrganizationStore()
 
 // State
-const showExportDialog = ref(false);
-const showImportDialog = ref(false);
-const showPreviewDialog = ref(false);
-const previewData = ref<DataPackagePreviewData[]>([]);
+const showExportDialog = ref(false)
+const showImportDialog = ref(false)
+const showPreviewDialog = ref(false)
+const previewData = ref<DataPackagePreviewData[]>([])
 
 const filters = reactive({
-  status: "",
-});
+  status: '',
+})
 
 const pagination = reactive({
   page: 1,
   pageSize: 20,
-});
+})
 
 // Computed
-const packages = computed(() => packageStore.packages);
-const loading = computed(() => packageStore.loading);
-const total = computed(() => packageStore.total);
-const currentOrgId = computed(() => orgStore.myOrganization?.id);
+const packages = computed(() => packageStore.packages)
+const loading = computed(() => packageStore.loading)
+const total = computed(() => packageStore.total)
+const currentOrgId = computed(() => orgStore.myOrganization?.id)
 
 const statusLabels: Record<string, string> = {
-  pending: "待处理",
-  validated: "已验证",
-  imported: "已导入",
-  failed: "失败",
-  cancelled: "已取消",
-};
+  pending: '待处理',
+  validated: '已验证',
+  imported: '已导入',
+  failed: '失败',
+  cancelled: '已取消',
+}
 
-const statusTypes: Record<
-  string,
-  "info" | "primary" | "success" | "warning" | "danger"
-> = {
-  pending: "warning",
-  validated: "success",
-  imported: "primary",
-  failed: "danger",
-  cancelled: "info",
-};
+const statusTypes: Record<string, 'info' | 'primary' | 'success' | 'warning' | 'danger'> = {
+  pending: 'warning',
+  validated: 'success',
+  imported: 'primary',
+  failed: 'danger',
+  cancelled: 'info',
+}
 
 const dataTypeLabels: Record<string, string> = {
-  villages: "村庄数据",
-  projects: "项目数据",
-  funds: "资金数据",
-  schools: "学校数据",
-};
+  villages: '村庄数据',
+  projects: '项目数据',
+  funds: '资金数据',
+  schools: '学校数据',
+}
 
 // Methods
 async function loadPackages() {
@@ -222,107 +197,105 @@ async function loadPackages() {
       page: pagination.page,
       page_size: pagination.pageSize,
       status: filters.status || undefined,
-    });
+    })
   } catch (error) {
-    ElMessage.error("加载数据包列表失败");
+    ElMessage.error('加载数据包列表失败')
   }
 }
 
 function resetFilters() {
-  filters.status = "";
-  pagination.page = 1;
-  loadPackages();
+  filters.status = ''
+  pagination.page = 1
+  loadPackages()
 }
 
 function getStatusLabel(status: string): string {
-  return statusLabels[status] || status;
+  return statusLabels[status] || status
 }
 
-function getStatusType(
-  status: string,
-): "success" | "info" | "warning" | "danger" | "primary" {
-  return statusTypes[status] || "info";
+function getStatusType(status: string): 'success' | 'info' | 'warning' | 'danger' | 'primary' {
+  return statusTypes[status] || 'info'
 }
 
 function getDataTypeLabel(type: string): string {
-  return dataTypeLabels[type] || type;
+  return dataTypeLabels[type] || type
 }
 
 function formatFileSize(bytes?: number): string {
-  if (!bytes) return "-";
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  if (!bytes) return '-'
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
 }
 
 function formatDate(dateStr?: string): string {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleString("zh-CN");
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 async function handlePreview(pkg: DataPackage) {
   try {
-    previewData.value = await packageStore.previewPackage(pkg.id);
-    showPreviewDialog.value = true;
+    previewData.value = await packageStore.previewPackage(pkg.id)
+    showPreviewDialog.value = true
   } catch (error) {
-    ElMessage.error("加载预览数据失败");
+    ElMessage.error('加载预览数据失败')
   }
 }
 
 async function handleConfirmImport(pkg: DataPackage) {
   try {
-    await ElMessageBox.confirm("确定要导入此数据包吗？", "确认导入", {
-      type: "warning",
-    });
-    await packageStore.confirmImport(pkg.id);
-    ElMessage.success("导入成功");
-    loadPackages();
+    await ElMessageBox.confirm('确定要导入此数据包吗？', '确认导入', {
+      type: 'warning',
+    })
+    await packageStore.confirmImport(pkg.id)
+    ElMessage.success('导入成功')
+    loadPackages()
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error((error as Error).message || "导入失败");
+    if (error !== 'cancel') {
+      ElMessage.error((error as Error).message || '导入失败')
     }
   }
 }
 
 async function handleDownload(pkg: DataPackage) {
   try {
-    await packageStore.downloadPackage(pkg.id);
+    await packageStore.downloadPackage(pkg.id)
   } catch (error) {
-    ElMessage.error("下载失败");
+    ElMessage.error('下载失败')
   }
 }
 
 async function handleDelete(pkg: DataPackage) {
   try {
-    await ElMessageBox.confirm("确定要删除此数据包吗？", "删除确认", {
-      type: "warning",
-    });
-    await packageStore.deletePackage(pkg.id);
-    ElMessage.success("删除成功");
-    loadPackages();
+    await ElMessageBox.confirm('确定要删除此数据包吗？', '删除确认', {
+      type: 'warning',
+    })
+    await packageStore.deletePackage(pkg.id)
+    ElMessage.success('删除成功')
+    loadPackages()
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error((error as Error).message || "删除失败");
+    if (error !== 'cancel') {
+      ElMessage.error((error as Error).message || '删除失败')
     }
   }
 }
 
 function handleExportSuccess() {
-  loadPackages();
+  loadPackages()
 }
 
 function handleImportSuccess() {
-  showImportDialog.value = false;
-  loadPackages();
+  showImportDialog.value = false
+  loadPackages()
 }
 
 // Lifecycle
 onMounted(() => {
-  loadPackages();
+  loadPackages()
   orgStore.fetchMyOrganization().catch((err) => {
-    console.error("[DataPackage/List] 加载组织失败:", err);
-  });
-});
+    console.error('[DataPackage/List] 加载组织失败:', err)
+  })
+})
 </script>
 
 <style scoped lang="scss">

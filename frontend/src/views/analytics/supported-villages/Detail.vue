@@ -37,23 +37,15 @@
       <div class="info-card">
         <h3 class="card-title">基本信息</h3>
         <el-descriptions :column="3" border>
-          <el-descriptions-item label="序号">{{
-            village.sequenceNo || "-"
-          }}</el-descriptions-item>
-          <el-descriptions-item label="部门">{{
-            village.department
-          }}</el-descriptions-item>
-          <el-descriptions-item label="帮扶单位">{{
-            village.supportUnit
-          }}</el-descriptions-item>
-          <el-descriptions-item label="帮扶村名称">{{
-            village.villageName
-          }}</el-descriptions-item>
+          <el-descriptions-item label="序号">{{ village.sequenceNo || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="部门">{{ village.department }}</el-descriptions-item>
+          <el-descriptions-item label="帮扶单位">{{ village.supportUnit }}</el-descriptions-item>
+          <el-descriptions-item label="帮扶村名称">{{ village.villageName }}</el-descriptions-item>
           <el-descriptions-item label="地区范围">{{
-            village.regionScope || "-"
+            village.regionScope || '-'
           }}</el-descriptions-item>
           <el-descriptions-item label="振兴梯队">{{
-            village.isRevitalizationTier ? "是" : "否"
+            village.isRevitalizationTier ? '是' : '否'
           }}</el-descriptions-item>
         </el-descriptions>
       </div>
@@ -65,16 +57,10 @@
           <div class="tag-section">
             <span class="section-label">地域属性：</span>
             <div class="tag-list">
-              <el-tag v-if="village.isThreeRegions" type="danger"
-                >三区三州</el-tag
-              >
-              <el-tag v-if="village.isBorderArea" type="warning"
-                >边疆地区</el-tag
-              >
+              <el-tag v-if="village.isThreeRegions" type="danger">三区三州</el-tag>
+              <el-tag v-if="village.isBorderArea" type="warning">边疆地区</el-tag>
               <el-tag v-if="village.isEthnicArea" type="info">民族地区</el-tag>
-              <el-tag v-if="village.isRevolutionaryArea" type="success"
-                >革命地区</el-tag
-              >
+              <el-tag v-if="village.isRevolutionaryArea" type="success">革命地区</el-tag>
               <el-tag v-if="village.isKeyCounty">重点帮扶县</el-tag>
               <span v-if="!hasRegionTags" class="no-data">无</span>
             </div>
@@ -82,15 +68,9 @@
           <div class="tag-section">
             <span class="section-label">振兴属性：</span>
             <div class="tag-list">
-              <el-tag v-if="village.isRevitalizationTier" type="danger"
-                >振兴梯队</el-tag
-              >
-              <el-tag v-if="village.isProvincialDemo" type="success"
-                >省级示范</el-tag
-              >
-              <el-tag v-if="village.isHundredVillageDemo" type="primary"
-                >百村示范</el-tag
-              >
+              <el-tag v-if="village.isRevitalizationTier" type="danger">振兴梯队</el-tag>
+              <el-tag v-if="village.isProvincialDemo" type="success">省级示范</el-tag>
+              <el-tag v-if="village.isHundredVillageDemo" type="primary">百村示范</el-tag>
               <el-tag v-if="village.isTieredDevelopment">梯次发展</el-tag>
               <span v-if="!hasRevitalizationTags" class="no-data">无</span>
             </div>
@@ -98,15 +78,9 @@
           <div class="tag-section">
             <span class="section-label">跨域帮扶：</span>
             <div class="tag-list">
-              <el-tag v-if="village.isCrossProvince" type="danger"
-                >跨省帮扶</el-tag
-              >
-              <el-tag v-if="village.isCrossCity" type="warning"
-                >跨市帮扶</el-tag
-              >
-              <span
-                v-if="!village.isCrossProvince && !village.isCrossCity"
-                class="no-data"
+              <el-tag v-if="village.isCrossProvince" type="danger">跨省帮扶</el-tag>
+              <el-tag v-if="village.isCrossCity" type="warning">跨市帮扶</el-tag>
+              <span v-if="!village.isCrossProvince && !village.isCrossCity" class="no-data"
                 >无</span
               >
             </div>
@@ -114,16 +88,10 @@
           <div class="tag-section">
             <span class="section-label">协作情况：</span>
             <div class="tag-list">
-              <el-tag v-if="village.isCrossUnitCooperation" type="info"
-                >跨单位协作</el-tag
-              >
-              <el-tag v-if="village.isInOverallPlan" type="success"
-                >纳入总盘子</el-tag
-              >
+              <el-tag v-if="village.isCrossUnitCooperation" type="info">跨单位协作</el-tag>
+              <el-tag v-if="village.isInOverallPlan" type="success">纳入总盘子</el-tag>
               <span
-                v-if="
-                  !village.isCrossUnitCooperation && !village.isInOverallPlan
-                "
+                v-if="!village.isCrossUnitCooperation && !village.isInOverallPlan"
                 class="no-data"
                 >无</span
               >
@@ -168,7 +136,7 @@
           <el-col :span="6">
             <div class="stat-card">
               <div class="stat-value">
-                {{ yearlyData?.income?.perCapitaIncome?.toFixed(2) || "0.00" }}
+                {{ yearlyData?.income?.perCapitaIncome?.toFixed(2) || '0.00' }}
               </div>
               <div class="stat-label">人均收入(万元)</div>
             </div>
@@ -176,7 +144,7 @@
           <el-col :span="6">
             <div class="stat-card">
               <div class="stat-value">
-                {{ yearlyData?.income?.collectiveIncome?.toFixed(2) || "0.00" }}
+                {{ yearlyData?.income?.collectiveIncome?.toFixed(2) || '0.00' }}
               </div>
               <div class="stat-label">集体收入(万元)</div>
             </div>
@@ -201,31 +169,30 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe, safeRouteParam } from "@/composables/useRouterSafe";
-import { ArrowLeft, Edit, Calendar } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import ChangeHistoryDialog from "@/components/common/ChangeHistoryDialog.vue";
-import { getChangeHistory } from "@/api/supportedVillage";
-import { logger } from "@/utils/logger";
-import { unwrapData } from "@/utils/unwrapData";
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { ArrowLeft, Edit, Calendar } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog.vue'
+import { getChangeHistory } from '@/api/supportedVillage'
+import { logger } from '@/utils/logger'
+import { unwrapData } from '@/utils/unwrapData'
 
-const changeHistoryVisible = ref(false);
-const changeHistoryLoading = ref(false);
-const changeHistory = ref<any[]>([]);
+const changeHistoryVisible = ref(false)
+const changeHistoryLoading = ref(false)
+const changeHistory = ref<any[]>([])
 
 async function openChangeHistory() {
-  changeHistoryVisible.value = true;
-  changeHistoryLoading.value = true;
+  changeHistoryVisible.value = true
+  changeHistoryLoading.value = true
   try {
-    const res = await getChangeHistory(safeRouteParam(route.params.id));
-    changeHistory.value =
-      (res as any)?.data?.items || (res as any)?.items || [];
+    const res = await getChangeHistory(safeRouteParam(route.params.id))
+    changeHistory.value = (res as any)?.data?.items || (res as any)?.items || []
   } catch {
-    ElMessage.error("加载变更历史失败");
+    ElMessage.error('加载变更历史失败')
   } finally {
-    changeHistoryLoading.value = false;
+    changeHistoryLoading.value = false
   }
 }
 
@@ -235,189 +202,179 @@ import {
   createSupportedVillage,
   updateSupportedVillage,
   saveTransitionFunding,
-} from "@/api/supportedVillage";
-import type {
-  SupportedVillage,
-  SupportedVillageCreate,
-  YearlyDataSummary,
-} from "@/types/analytics";
-import SupportedVillageForm from "./components/SupportedVillageForm.vue";
+} from '@/api/supportedVillage'
+import type { SupportedVillage, SupportedVillageCreate, YearlyDataSummary } from '@/types/analytics'
+import SupportedVillageForm from './components/SupportedVillageForm.vue'
 
-const route = useRoute();
-const { pushSafe } = useRouterSafe();
+const route = useRoute()
+const { pushSafe } = useRouterSafe()
 
-const loading = ref(false);
-const yearlyLoading = ref(false);
-const village = ref<SupportedVillage | null>(null);
-const yearlyData = ref<YearlyDataSummary | null>(null);
+const loading = ref(false)
+const yearlyLoading = ref(false)
+const village = ref<SupportedVillage | null>(null)
+const yearlyData = ref<YearlyDataSummary | null>(null)
 
-const currentYear = new Date().getFullYear();
-const availableYears = Array.from({ length: 6 }, (_, i) => currentYear - i + 1);
-const selectedYear = ref(currentYear);
+const currentYear = new Date().getFullYear()
+const availableYears = Array.from({ length: 6 }, (_, i) => currentYear - i + 1)
+const selectedYear = ref(currentYear)
 
 // 页面模式：根据路由自动判断
 const pageMode = computed(() => {
-  const path = route.path;
-  if (path.endsWith("/edit")) return "edit";
-  if (path.includes("/create") || !route.params.id) return "create";
-  return "view";
-});
+  const path = route.path
+  if (path.endsWith('/edit')) return 'edit'
+  if (path.includes('/create') || !route.params.id) return 'create'
+  return 'view'
+})
 
 const pageTitle = computed(() => {
-  if (pageMode.value === "create") return "新增帮扶村";
-  if (pageMode.value === "edit")
-    return `编辑 - ${village.value?.villageName || "帮扶村"}`;
-  return village.value?.villageName || "帮扶村详情";
-});
+  if (pageMode.value === 'create') return '新增帮扶村'
+  if (pageMode.value === 'edit') return `编辑 - ${village.value?.villageName || '帮扶村'}`
+  return village.value?.villageName || '帮扶村详情'
+})
 
 const hasRegionTags = computed(() => {
-  if (!village.value) return false;
+  if (!village.value) return false
   return (
     village.value.isThreeRegions ||
     village.value.isBorderArea ||
     village.value.isEthnicArea ||
     village.value.isRevolutionaryArea ||
     village.value.isKeyCounty
-  );
-});
+  )
+})
 
 const hasRevitalizationTags = computed(() => {
-  if (!village.value) return false;
+  if (!village.value) return false
   return (
     village.value.isRevitalizationTier ||
     village.value.isProvincialDemo ||
     village.value.isHundredVillageDemo ||
     village.value.isTieredDevelopment
-  );
-});
+  )
+})
 
 const totalInvestment = computed(() => {
-  if (!yearlyData.value) return 0;
-  let total = 0;
-  if (yearlyData.value.industry)
-    total += yearlyData.value.industry.investment || 0;
-  if (yearlyData.value.infrastructure)
-    total += yearlyData.value.infrastructure.investment || 0;
-  if (yearlyData.value.education)
-    total += yearlyData.value.education.investment || 0;
-  return total;
-});
+  if (!yearlyData.value) return 0
+  let total = 0
+  if (yearlyData.value.industry) total += yearlyData.value.industry.investment || 0
+  if (yearlyData.value.infrastructure) total += yearlyData.value.infrastructure.investment || 0
+  if (yearlyData.value.education) total += yearlyData.value.education.investment || 0
+  return total
+})
 
 const loadVillage = async () => {
-  const id = safeRouteParam(route.params.id);
-  if (!id) return;
+  const id = safeRouteParam(route.params.id)
+  if (!id) return
 
-  loading.value = true;
+  loading.value = true
   try {
-    const _raw = await getSupportedVillage(id);
-    village.value = unwrapData(_raw);
-    if (pageMode.value === "view") {
-      await loadYearlyData();
+    const _raw = await getSupportedVillage(id)
+    village.value = unwrapData(_raw)
+    if (pageMode.value === 'view') {
+      await loadYearlyData()
     }
   } catch (error) {
-    logger.error("加载帮扶村详情失败:", error);
-    ElMessage.error("加载数据失败");
+    logger.error('加载帮扶村详情失败:', error)
+    ElMessage.error('加载数据失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const loadYearlyData = async () => {
-  if (!village.value) return;
+  if (!village.value) return
 
-  yearlyLoading.value = true;
+  yearlyLoading.value = true
   try {
-    const _raw = await getYearlyData(village.value.id, selectedYear.value);
-    yearlyData.value = unwrapData(_raw);
+    const _raw = await getYearlyData(village.value.id, selectedYear.value)
+    yearlyData.value = unwrapData(_raw)
   } catch (error) {
-    logger.error("加载年度数据失败:", error);
-    yearlyData.value = null;
+    logger.error('加载年度数据失败:', error)
+    yearlyData.value = null
   } finally {
-    yearlyLoading.value = false;
+    yearlyLoading.value = false
   }
-};
+}
 
 const handleBack = () => {
-  pushSafe("/supported-villages");
-};
+  pushSafe('/supported-villages')
+}
 
 const handleEdit = () => {
   if (village.value) {
-    pushSafe(`/supported-villages/${village.value.id}?mode=edit`);
+    pushSafe(`/supported-villages/${village.value.id}?mode=edit`)
   }
-};
+}
 
 const handleYearlyData = () => {
   if (village.value) {
-    pushSafe(`/supported-villages/${village.value.id}/yearly`);
+    pushSafe(`/supported-villages/${village.value.id}/yearly`)
   }
-};
+}
 
 /** 表单提交（创建或编辑） */
 const handleFormSubmit = async (data: SupportedVillageCreate) => {
-  loading.value = true;
+  loading.value = true
   try {
     // 提取创建模式下的过渡期年度经费数据（不传给 create API）
-    const fundingItems = (data as any)._transitionFundingItems;
-    delete (data as any)._transitionFundingItems;
+    const fundingItems = (data as any)._transitionFundingItems
+    delete (data as any)._transitionFundingItems
 
-    if (pageMode.value === "create") {
-      const created = await createSupportedVillage(data);
-      const villageId = created?.data?.id || created?.id;
+    if (pageMode.value === 'create') {
+      const created = await createSupportedVillage(data)
+      const villageId = created?.data?.id || created?.id
       // 创建成功后保存过渡期经费按年度数据
       if (fundingItems?.length && villageId) {
         try {
-          await saveTransitionFunding(villageId, { items: fundingItems });
+          await saveTransitionFunding(villageId, { items: fundingItems })
         } catch (fundErr: any) {
-          console.error("[Detail] 保存过渡资金失败:", fundErr);
-          ElMessage.warning(
-            "村记录已创建，但过渡资金保存失败，请在编辑页面重新填写",
-          );
+          console.error('[Detail] 保存过渡资金失败:', fundErr)
+          ElMessage.warning('村记录已创建，但过渡资金保存失败，请在编辑页面重新填写')
         }
       }
-      ElMessage.success("创建成功");
-      pushSafe(`/supported-villages/${villageId}`);
+      ElMessage.success('创建成功')
+      pushSafe(`/supported-villages/${villageId}`)
     } else {
-      const id = safeRouteParam(route.params.id);
-      await updateSupportedVillage(id, data);
-      ElMessage.success("保存成功");
+      const id = safeRouteParam(route.params.id)
+      await updateSupportedVillage(id, data)
+      ElMessage.success('保存成功')
       // 刷新数据后切换回查看模式
-      const _raw = await getSupportedVillage(id);
-      village.value = unwrapData(_raw);
-      pushSafe(`/supported-villages/${id}`);
+      const _raw = await getSupportedVillage(id)
+      village.value = unwrapData(_raw)
+      pushSafe(`/supported-villages/${id}`)
     }
   } catch (error: any) {
-    const msg = error?.response?.data?.detail || error?.message || "操作失败";
-    ElMessage.error(msg);
+    const msg = error?.response?.data?.detail || error?.message || '操作失败'
+    ElMessage.error(msg)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 /** 表单取消 */
 const handleFormCancel = () => {
-  if (pageMode.value === "create") {
-    pushSafe("/supported-villages");
+  if (pageMode.value === 'create') {
+    pushSafe('/supported-villages')
   } else {
-    const id = safeRouteParam(route.params.id);
-    pushSafe(`/supported-villages/${id}`);
+    const id = safeRouteParam(route.params.id)
+    pushSafe(`/supported-villages/${id}`)
   }
-};
+}
 
 // 监听路由变化重新加载数据
 watch(
   () => route.params.id,
   (newId) => {
-    if (newId) loadVillage();
+    if (newId) loadVillage()
   },
-  { immediate: false },
-);
+  { immediate: false }
+)
 
 onMounted(() => {
-  if (pageMode.value !== "create") {
-    loadVillage();
+  if (pageMode.value !== 'create') {
+    loadVillage()
   }
-});
+})
 </script>
 
 <style scoped>

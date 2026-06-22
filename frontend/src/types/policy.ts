@@ -11,4 +11,4 @@ export type {
   LevelConfig,
   CategoriesConfig,
   PolicyStatistics,
-} from "@/api/policy";
+} from '@/api/policy'

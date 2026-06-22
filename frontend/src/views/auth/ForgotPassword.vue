@@ -22,11 +22,7 @@
         <div v-if="currentStep === 0" class="step-content">
           <el-form :model="resetForm" label-width="100px">
             <el-form-item label="用户名">
-              <el-input
-                v-model="resetForm.username"
-                placeholder="请输入您的用户名"
-                clearable
-              />
+              <el-input v-model="resetForm.username" placeholder="请输入您的用户名" clearable />
             </el-form-item>
 
             <el-form-item label="机器码">
@@ -81,9 +77,7 @@
             <p class="result-subtitle">您的新密码是：</p>
             <div class="password-box">
               <span class="password-text">{{ newPassword }}</span>
-              <el-button type="primary" size="small" @click="copyPassword">
-                复制密码
-              </el-button>
+              <el-button type="primary" size="small" @click="copyPassword"> 复制密码 </el-button>
             </div>
             <el-alert type="warning" :closable="false" class="password-tip">
               <template #title>
@@ -91,12 +85,7 @@
               </template>
               <div>登录后请尽快修改密码</div>
             </el-alert>
-            <el-button
-              type="primary"
-              size="large"
-              class="goto-login"
-              @click="goToLogin"
-            >
+            <el-button type="primary" size="large" class="goto-login" @click="goToLogin">
               前往登录
             </el-button>
           </div>
@@ -104,9 +93,7 @@
       </div>
 
       <div class="extra-links">
-        <router-link to="/get-machine-code" class="link">
-          获取机器码
-        </router-link>
+        <router-link to="/get-machine-code" class="link"> 获取机器码 </router-link>
         <span class="separator">|</span>
         <router-link to="/login" class="link">返回登录</router-link>
       </div>
@@ -115,24 +102,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
-import { CircleCheckFilled } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { CircleCheckFilled } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
-const router = useRouter();
+const router = useRouter()
 
-const currentStep = ref(0);
-const resetting = ref(false);
-const loadingMachineCode = ref(false);
-const newPassword = ref("");
+const currentStep = ref(0)
+const resetting = ref(false)
+const loadingMachineCode = ref(false)
+const newPassword = ref('')
 
 const resetForm = ref({
-  username: "",
-  machine_code: "",
-  verification_code: "",
-});
+  username: '',
+  machine_code: '',
+  verification_code: '',
+})
 
 const canSubmit = computed(() => {
   return (
@@ -140,94 +127,91 @@ const canSubmit = computed(() => {
     !!resetForm.value.machine_code &&
     !!resetForm.value.verification_code &&
     resetForm.value.verification_code.length === 4
-  );
-});
+  )
+})
 
 const useCurrentMachineCode = async () => {
-  loadingMachineCode.value = true;
+  loadingMachineCode.value = true
   try {
-    const response = await request.get("/machine-code/get-machine-code");
-    const resData = response.data;
-    const payload =
-      resData?.code === 200 ? resData.data : (resData?.data ?? resData);
+    const response = await request.get('/machine-code/get-machine-code')
+    const resData = response.data
+    const payload = resData?.code === 200 ? resData.data : (resData?.data ?? resData)
     if (payload?.machine_code) {
-      resetForm.value.machine_code = payload.machine_code;
-      resetForm.value.verification_code = payload.verification_code ?? "";
-      ElMessage.success("已自动填入当前机器码和校验码");
+      resetForm.value.machine_code = payload.machine_code
+      resetForm.value.verification_code = payload.verification_code ?? ''
+      ElMessage.success('已自动填入当前机器码和校验码')
     } else {
-      ElMessage.error(resData?.message || "获取机器码失败，请重试");
+      ElMessage.error(resData?.message || '获取机器码失败，请重试')
     }
   } catch (error: any) {
-    console.error("[ForgotPassword] 获取机器码失败:", error);
+    console.error('[ForgotPassword] 获取机器码失败:', error)
     const msg =
       error?.response?.data?.detail ||
       error?.response?.data?.message ||
       error?.message ||
-      "获取机器码失败，请检查系统服务是否正常";
-    ElMessage.error(msg);
+      '获取机器码失败，请检查系统服务是否正常'
+    ElMessage.error(msg)
   } finally {
-    loadingMachineCode.value = false;
+    loadingMachineCode.value = false
   }
-};
+}
 
 const handleResetPassword = async () => {
   if (!canSubmit.value) {
-    ElMessage.warning("请填写完整信息");
-    return;
+    ElMessage.warning('请填写完整信息')
+    return
   }
 
-  resetting.value = true;
+  resetting.value = true
 
   try {
     const response = await request.post(
-      "/machine-code/reset-password-with-machine-code",
+      '/machine-code/reset-password-with-machine-code',
       undefined,
-      { params: resetForm.value },
-    );
+      { params: resetForm.value }
+    )
 
-    const resData = response.data;
-    const payload =
-      resData?.code === 200 ? resData.data : (resData?.data ?? resData);
+    const resData = response.data
+    const payload = resData?.code === 200 ? resData.data : (resData?.data ?? resData)
     if (payload?.new_password) {
-      newPassword.value = payload.new_password;
-      currentStep.value = 1;
-      ElMessage.success("密码重置成功");
+      newPassword.value = payload.new_password
+      currentStep.value = 1
+      ElMessage.success('密码重置成功')
     } else {
-      const errMsg =
-        resData?.message || resData?.detail || "重置密码失败，请检查填写信息";
-      ElMessage.error(errMsg);
+      const errMsg = resData?.message || resData?.detail || '重置密码失败，请检查填写信息'
+      ElMessage.error(errMsg)
     }
   } catch (error: any) {
-    console.error("[ForgotPassword] 重置密码失败:", error);
+    console.error('[ForgotPassword] 重置密码失败:', error)
     const msg =
       error?.response?.data?.detail ||
       error?.response?.data?.message ||
       error?.message ||
-      "重置密码失败，请检查网络连接";
-    ElMessage.error(msg);
+      '重置密码失败，请检查网络连接'
+    ElMessage.error(msg)
   } finally {
-    resetting.value = false;
+    resetting.value = false
   }
-};
+}
 
 const copyPassword = () => {
   navigator.clipboard.writeText(newPassword.value).then(
     () => {
-      ElMessage.success("密码已复制到剪贴板");
+      ElMessage.success('密码已复制到剪贴板')
     },
     () => {
-      ElMessage.error("复制失败，请手动复制");
-    },
-  );
-};
+      ElMessage.error('复制失败，请手动复制')
+    }
+  )
+}
 
 const goBack = () => {
-  router.push("/login");
-};
+  router.push('/login')
+}
 
 const goToLogin = () => {
-  router.push("/login");
-};
+  router.push('/login')
+}
 </script>
 
 <style scoped lang="scss">
@@ -248,7 +232,7 @@ const goToLogin = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("/images/login-bg/bg1.jpg");
+  background-image: url('/images/login-bg/bg1.jpg');
   background-size: cover;
   background-position: center;
   opacity: 0.15;
@@ -349,7 +333,7 @@ const goToLogin = () => {
   font-weight: bold;
   color: #1b4332;
   letter-spacing: 2px;
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
 }
 
 .extra-links {
@@ -402,7 +386,7 @@ const goToLogin = () => {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 3px;
-  font-family: "Courier New", monospace;
+  font-family: 'Courier New', monospace;
   color: #e6a23c;
   user-select: all;
 }

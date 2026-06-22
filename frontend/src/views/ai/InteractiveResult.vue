@@ -3,15 +3,10 @@
     <div class="page-header">
       <div class="header-info">
         <h2 class="page-title">AI 智能分析</h2>
-        <p class="page-desc">
-          利用AI技术进行数据分析、趋势预测、异常检测和智能推荐
-        </p>
+        <p class="page-desc">利用AI技术进行数据分析、趋势预测、异常检测和智能推荐</p>
       </div>
-      <el-tag
-        :type="serviceStatus === 'available' ? 'success' : 'info'"
-        size="small"
-      >
-        {{ serviceStatus === "available" ? "服务可用" : "加载中..." }}
+      <el-tag :type="serviceStatus === 'available' ? 'success' : 'info'" size="small">
+        {{ serviceStatus === 'available' ? '服务可用' : '加载中...' }}
       </el-tag>
     </div>
 
@@ -37,11 +32,7 @@
               />
             </el-form-item>
             <el-form-item>
-              <el-button
-                type="primary"
-                :loading="analyzeLoading"
-                @click="runAnalyze"
-              >
+              <el-button type="primary" :loading="analyzeLoading" @click="runAnalyze">
                 <el-icon><DataAnalysis /></el-icon>开始分析
               </el-button>
             </el-form-item>
@@ -49,7 +40,7 @@
 
           <div v-if="analyzeResult" class="result-block">
             <el-divider />
-            <h4>{{ analyzeResult.analysis_type || "分析结果" }}</h4>
+            <h4>{{ analyzeResult.analysis_type || '分析结果' }}</h4>
             <el-descriptions :column="2" border>
               <el-descriptions-item
                 v-for="(value, key) in analyzeResult.flattened"
@@ -81,11 +72,7 @@
                       <el-option :value="5" label="5年" />
                     </el-select>
                   </el-form-item>
-                  <el-button
-                    type="primary"
-                    :loading="forecastLoading"
-                    @click="runForecastIncome"
-                  >
+                  <el-button type="primary" :loading="forecastLoading" @click="runForecastIncome">
                     预测
                   </el-button>
                 </el-form>
@@ -102,11 +89,7 @@
                   <span>经费完成率预测</span>
                 </template>
                 <p class="card-desc">预测年度经费的完成率趋势</p>
-                <el-button
-                  type="success"
-                  :loading="fundForecastLoading"
-                  @click="runForecastFunds"
-                >
+                <el-button type="success" :loading="fundForecastLoading" @click="runForecastFunds">
                   执行预测
                 </el-button>
                 <div v-if="fundForecastResult" class="result-text">
@@ -150,11 +133,7 @@
               />
             </el-form-item>
             <el-form-item>
-              <el-button
-                type="primary"
-                :loading="anomalyLoading"
-                @click="runAnomalyDetection"
-              >
+              <el-button type="primary" :loading="anomalyLoading" @click="runAnomalyDetection">
                 <el-icon><Warning /></el-icon>检测异常
               </el-button>
             </el-form-item>
@@ -170,19 +149,11 @@
               size="small"
             >
               <el-table-column type="index" label="#" width="50" />
-              <el-table-column
-                v-for="col in anomalyColumns"
-                :key="col"
-                :prop="col"
-                :label="col"
-              />
+              <el-table-column v-for="col in anomalyColumns" :key="col" :prop="col" :label="col" />
               <el-table-column label="异常" width="80">
                 <template #default="scope">
-                  <el-tag
-                    :type="scope.row.is_anomaly ? 'danger' : 'success'"
-                    size="small"
-                  >
-                    {{ scope.row.is_anomaly ? "是" : "否" }}
+                  <el-tag :type="scope.row.is_anomaly ? 'danger' : 'success'" size="small">
+                    {{ scope.row.is_anomaly ? '是' : '否' }}
                   </el-tag>
                 </template>
               </el-table-column>
@@ -225,14 +196,8 @@
                   </el-button>
                 </el-form>
                 <div v-if="recommendResults.length" class="result-list">
-                  <div
-                    v-for="(rec, i) in recommendResults"
-                    :key="i"
-                    class="rec-item"
-                  >
-                    <span class="rec-name">{{
-                      rec.name || rec.title || `推荐${i + 1}`
-                    }}</span>
+                  <div v-for="(rec, i) in recommendResults" :key="i" class="rec-item">
+                    <span class="rec-name">{{ rec.name || rec.title || `推荐${i + 1}` }}</span>
                     <el-tag v-if="rec.score" size="small" type="success">
                       {{ Number(rec.score).toFixed(1) }}
                     </el-tag>
@@ -253,11 +218,7 @@
                   获取系统建议
                 </el-button>
                 <div v-if="systemRecommendations.length" class="result-list">
-                  <div
-                    v-for="(rec, i) in systemRecommendations"
-                    :key="i"
-                    class="rec-item"
-                  >
+                  <div v-for="(rec, i) in systemRecommendations" :key="i" class="rec-item">
                     <el-tag
                       :type="
                         rec.priority === 'high'
@@ -268,7 +229,7 @@
                       "
                       size="small"
                     >
-                      {{ rec.priority || "info" }}
+                      {{ rec.priority || 'info' }}
                     </el-tag>
                     <span>{{ rec.content || rec.title || rec }}</span>
                   </div>
@@ -293,11 +254,7 @@
               />
             </el-form-item>
             <el-form-item>
-              <el-button
-                type="primary"
-                :loading="nlpLoading"
-                @click="runNlpQuery"
-              >
+              <el-button type="primary" :loading="nlpLoading" @click="runNlpQuery">
                 <el-icon><Search /></el-icon>查询
               </el-button>
             </el-form-item>
@@ -308,11 +265,7 @@
             <h4>查询结果</h4>
             <div class="nlp-answer">
               <el-alert
-                :title="
-                  nlpResult.answer ||
-                  nlpResult.result ||
-                  JSON.stringify(nlpResult)
-                "
+                :title="nlpResult.answer || nlpResult.result || JSON.stringify(nlpResult)"
                 type="info"
                 :closable="false"
                 show-icon
@@ -340,9 +293,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
-import { ElMessage } from "element-plus";
-import { DataAnalysis, Warning, Search } from "@element-plus/icons-vue";
+import { ref, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
+import { DataAnalysis, Warning, Search } from '@element-plus/icons-vue'
 import {
   getStatus,
   analyze,
@@ -352,135 +305,131 @@ import {
   detectAnomalies,
   recommendProjects,
   nlpQuery,
-} from "@/api/ai";
+} from '@/api/ai'
 
-const activeTab = ref("analyze");
-const serviceStatus = ref("loading");
+const activeTab = ref('analyze')
+const serviceStatus = ref('loading')
 
 // --- 数据分析 ---
-const analyzeForm = reactive({ type: "summary", description: "" });
-const analyzeLoading = ref(false);
-const analyzeResult = ref<any>(null);
+const analyzeForm = reactive({ type: 'summary', description: '' })
+const analyzeLoading = ref(false)
+const analyzeResult = ref<any>(null)
 
 // --- 趋势预测 ---
-const forecastYears = ref(2);
-const forecastLoading = ref(false);
-const forecastResult = ref<any>(null);
-const forecastItems = ref<any[]>([]);
-const fundForecastLoading = ref(false);
-const fundForecastResult = ref<any>(null);
-const fundForecastItems = ref<any[]>([]);
+const forecastYears = ref(2)
+const forecastLoading = ref(false)
+const forecastResult = ref<any>(null)
+const forecastItems = ref<any[]>([])
+const fundForecastLoading = ref(false)
+const fundForecastResult = ref<any>(null)
+const fundForecastItems = ref<any[]>([])
 
 // --- 异常检测 ---
-const anomalyForm = reactive({ method: "statistical", contamination: 5 });
-const anomalyInput = ref("");
-const anomalyLoading = ref(false);
-const anomalyResult = ref<any>(null);
-const anomalyColumns = ref<string[]>([]);
+const anomalyForm = reactive({ method: 'statistical', contamination: 5 })
+const anomalyInput = ref('')
+const anomalyLoading = ref(false)
+const anomalyResult = ref<any>(null)
+const anomalyColumns = ref<string[]>([])
 
 // --- 智能推荐 ---
-const recommendVillageId = ref(1);
-const recommendLimit = ref(5);
-const recommendLoading = ref(false);
-const recommendResults = ref<any[]>([]);
-const sysRecommendLoading = ref(false);
-const systemRecommendations = ref<any[]>([]);
+const recommendVillageId = ref(1)
+const recommendLimit = ref(5)
+const recommendLoading = ref(false)
+const recommendResults = ref<any[]>([])
+const sysRecommendLoading = ref(false)
+const systemRecommendations = ref<any[]>([])
 
 // --- NLP ---
-const nlpForm = reactive({ query: "" });
-const nlpLoading = ref(false);
-const nlpResult = ref<any>(null);
-const nlpHistory = ref<string[]>([]);
+const nlpForm = reactive({ query: '' })
+const nlpLoading = ref(false)
+const nlpResult = ref<any>(null)
+const nlpHistory = ref<string[]>([])
 
 function flattenObject(obj: any): Record<string, any> {
-  if (!obj || typeof obj !== "object") return {};
-  const result: Record<string, any> = {};
+  if (!obj || typeof obj !== 'object') return {}
+  const result: Record<string, any> = {}
   for (const [key, value] of Object.entries(obj)) {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      Object.assign(result, flattenObject(value));
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      Object.assign(result, flattenObject(value))
     } else {
-      result[key] = value;
+      result[key] = value
     }
   }
-  return result;
+  return result
 }
 
 async function checkStatus() {
   try {
-    const response = await getStatus();
-    const data = response?.data ?? response;
-    const svc = data?.data?.services || data?.services;
+    const response = await getStatus()
+    const data = response?.data ?? response
+    const svc = data?.data?.services || data?.services
     if (svc?.local_analysis) {
-      serviceStatus.value = svc.local_analysis.status || "available";
+      serviceStatus.value = svc.local_analysis.status || 'available'
     } else {
-      serviceStatus.value = "available";
+      serviceStatus.value = 'available'
     }
   } catch {
-    serviceStatus.value = "unavailable";
+    serviceStatus.value = 'unavailable'
   }
 }
 
 async function runAnalyze() {
-  analyzeLoading.value = true;
-  analyzeResult.value = null;
+  analyzeLoading.value = true
+  analyzeResult.value = null
   try {
     const response = await analyze({
       analysis_type: analyzeForm.type,
       description: analyzeForm.description || undefined,
-    });
-    const data = response?.data ?? response;
-    const inner = data?.data || data;
+    })
+    const data = response?.data ?? response
+    const inner = data?.data || data
     analyzeResult.value = {
       ...inner,
       flattened: flattenObject(inner?.result || inner || {}),
-    };
-    ElMessage.success("分析完成");
+    }
+    ElMessage.success('分析完成')
   } catch {
-    ElMessage.error("分析失败");
+    ElMessage.error('分析失败')
   } finally {
-    analyzeLoading.value = false;
+    analyzeLoading.value = false
   }
 }
 
 async function runForecastIncome() {
-  forecastLoading.value = true;
-  forecastResult.value = null;
+  forecastLoading.value = true
+  forecastResult.value = null
   try {
-    const response = await forecastIncome(forecastYears.value);
-    const data = response?.data ?? response;
-    forecastResult.value = data?.data || data;
-    const pred =
-      forecastResult.value?.predictions ||
-      forecastResult.value?.predicted ||
-      [];
+    const response = await forecastIncome(forecastYears.value)
+    const data = response?.data ?? response
+    forecastResult.value = data?.data || data
+    const pred = forecastResult.value?.predictions || forecastResult.value?.predicted || []
     forecastItems.value = Array.isArray(pred)
       ? pred
-      : Object.entries(pred).map(([k, v]) => ({ label: k, value: v }));
-    ElMessage.success("预测完成");
+      : Object.entries(pred).map(([k, v]) => ({ label: k, value: v }))
+    ElMessage.success('预测完成')
   } catch {
-    ElMessage.error("预测失败");
+    ElMessage.error('预测失败')
   } finally {
-    forecastLoading.value = false;
+    forecastLoading.value = false
   }
 }
 
 async function runForecastFunds() {
-  fundForecastLoading.value = true;
-  fundForecastResult.value = null;
+  fundForecastLoading.value = true
+  fundForecastResult.value = null
   try {
-    const response = await forecastFunds();
-    const data = response?.data ?? response;
-    fundForecastResult.value = data?.data || data;
-    const pred =
-      fundForecastResult.value?.predictions || fundForecastResult.value || {};
+    const response = await forecastFunds()
+    const data = response?.data ?? response
+    fundForecastResult.value = data?.data || data
+    const pred = fundForecastResult.value?.predictions || fundForecastResult.value || {}
     fundForecastItems.value = Array.isArray(pred)
       ? pred
-      : Object.entries(pred).map(([k, v]) => ({ label: k, value: v }));
-    ElMessage.success("预测完成");
+      : Object.entries(pred).map(([k, v]) => ({ label: k, value: v }))
+    ElMessage.success('预测完成')
   } catch {
-    ElMessage.error("预测失败");
+    ElMessage.error('预测失败')
   } finally {
-    fundForecastLoading.value = false;
+    fundForecastLoading.value = false
   }
 }
 
@@ -492,111 +441,104 @@ async function runAnomalyDetection() {
       // ignore
     }
   }
-  anomalyLoading.value = true;
-  anomalyResult.value = null;
+  anomalyLoading.value = true
+  anomalyResult.value = null
   try {
-    let dataInput: any[] = [];
+    let dataInput: any[] = []
     if (anomalyInput.value.trim()) {
       try {
-        dataInput = JSON.parse(anomalyInput.value);
-        if (!Array.isArray(dataInput)) dataInput = [dataInput];
+        dataInput = JSON.parse(anomalyInput.value)
+        if (!Array.isArray(dataInput)) dataInput = [dataInput]
       } catch {
-        ElMessage.error("数据格式错误，请检查JSON格式");
-        anomalyLoading.value = false;
-        return;
+        ElMessage.error('数据格式错误，请检查JSON格式')
+        anomalyLoading.value = false
+        return
       }
     } else {
       // 生成示例数据
       for (let i = 0; i < 20; i++) {
-        dataInput.push({ index: i, value: Math.random() * 100 });
+        dataInput.push({ index: i, value: Math.random() * 100 })
       }
     }
     const response = await detectAnomalies({
       data: dataInput,
-      value_field: "value",
+      value_field: 'value',
       method: anomalyForm.method,
       contamination: anomalyForm.contamination / 100,
-    });
-    const data = response?.data ?? response;
-    anomalyResult.value = data?.data || data;
+    })
+    const data = response?.data ?? response
+    anomalyResult.value = data?.data || data
     if (anomalyResult.value?.anomalies?.length) {
-      const first = anomalyResult.value.anomalies[0];
-      anomalyColumns.value = Object.keys(first).filter(
-        (k) => k !== "is_anomaly",
-      );
+      const first = anomalyResult.value.anomalies[0]
+      anomalyColumns.value = Object.keys(first).filter((k) => k !== 'is_anomaly')
     }
-    ElMessage.success(
-      `检测完成：发现 ${anomalyResult.value?.anomaly_count ?? "N/A"} 个异常`,
-    );
+    ElMessage.success(`检测完成：发现 ${anomalyResult.value?.anomaly_count ?? 'N/A'} 个异常`)
   } catch {
-    ElMessage.error("异常检测失败");
+    ElMessage.error('异常检测失败')
   } finally {
-    anomalyLoading.value = false;
+    anomalyLoading.value = false
   }
 }
 
 async function runRecommendProjects() {
   if (!recommendVillageId.value) {
-    ElMessage.warning("请输入村庄ID");
-    return;
+    ElMessage.warning('请输入村庄ID')
+    return
   }
-  recommendLoading.value = true;
-  recommendResults.value = [];
+  recommendLoading.value = true
+  recommendResults.value = []
   try {
-    const response = await recommendProjects(
-      recommendVillageId.value,
-      recommendLimit.value,
-    );
-    const data = response?.data ?? response;
-    const items = data?.data?.items || data?.items || data || [];
-    recommendResults.value = Array.isArray(items) ? items : [];
-    ElMessage.success("推荐完成");
+    const response = await recommendProjects(recommendVillageId.value, recommendLimit.value)
+    const data = response?.data ?? response
+    const items = data?.data?.items || data?.items || data || []
+    recommendResults.value = Array.isArray(items) ? items : []
+    ElMessage.success('推荐完成')
   } catch {
-    ElMessage.error("推荐失败");
+    ElMessage.error('推荐失败')
   } finally {
-    recommendLoading.value = false;
+    recommendLoading.value = false
   }
 }
 
 async function runSystemRecommend() {
-  sysRecommendLoading.value = true;
-  systemRecommendations.value = [];
+  sysRecommendLoading.value = true
+  systemRecommendations.value = []
   try {
-    const response = await getRecommendations({ context: {} });
-    const data = response?.data ?? response;
-    const recs = data?.data?.recommendations || data?.recommendations || [];
-    systemRecommendations.value = Array.isArray(recs) ? recs : [];
-    ElMessage.success("获取推荐成功");
+    const response = await getRecommendations({ context: {} })
+    const data = response?.data ?? response
+    const recs = data?.data?.recommendations || data?.recommendations || []
+    systemRecommendations.value = Array.isArray(recs) ? recs : []
+    ElMessage.success('获取推荐成功')
   } catch {
-    ElMessage.error("获取推荐失败");
+    ElMessage.error('获取推荐失败')
   } finally {
-    sysRecommendLoading.value = false;
+    sysRecommendLoading.value = false
   }
 }
 
 async function runNlpQuery() {
   if (!nlpForm.query.trim()) {
-    ElMessage.warning("请输入查询内容");
-    return;
+    ElMessage.warning('请输入查询内容')
+    return
   }
-  nlpLoading.value = true;
-  nlpResult.value = null;
+  nlpLoading.value = true
+  nlpResult.value = null
   try {
-    const response = await nlpQuery(nlpForm.query.trim());
-    const data = response?.data ?? response;
-    nlpResult.value = data?.data || data;
-    nlpHistory.value.unshift(nlpForm.query.trim());
-    if (nlpHistory.value.length > 10) nlpHistory.value.pop();
-    ElMessage.success("查询完成");
+    const response = await nlpQuery(nlpForm.query.trim())
+    const data = response?.data ?? response
+    nlpResult.value = data?.data || data
+    nlpHistory.value.unshift(nlpForm.query.trim())
+    if (nlpHistory.value.length > 10) nlpHistory.value.pop()
+    ElMessage.success('查询完成')
   } catch {
-    ElMessage.error("查询失败");
+    ElMessage.error('查询失败')
   } finally {
-    nlpLoading.value = false;
+    nlpLoading.value = false
   }
 }
 
 // 初始化
-checkStatus();
+checkStatus()
 </script>
 
 <style scoped>

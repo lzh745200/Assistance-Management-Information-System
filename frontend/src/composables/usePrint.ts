@@ -1,5 +1,5 @@
-import { logger } from "@/utils/logger";
-import { sanitizeHtml } from "@/utils/sanitize";
+import { logger } from '@/utils/logger'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 /**
  * 打印功能 composable
@@ -12,17 +12,17 @@ import { sanitizeHtml } from "@/utils/sanitize";
  * @param title 打印页面标题
  */
 export function printElement(elementId: string, title?: string) {
-  const el = document.getElementById(elementId);
+  const el = document.getElementById(elementId)
   if (!el) {
-    logger.warn(`[usePrint] 找不到元素: #${elementId}`);
-    return;
+    logger.warn(`[usePrint] 找不到元素: #${elementId}`)
+    return
   }
 
-  const printWindow = window.open("", "_blank", "width=900,height=700");
-  if (!printWindow) return;
+  const printWindow = window.open('', '_blank', 'width=900,height=700')
+  if (!printWindow) return
 
-  const content = sanitizeHtml(el.innerHTML);
-  const pageTitle = title || document.title;
+  const content = sanitizeHtml(el.innerHTML)
+  const pageTitle = title || document.title
 
   printWindow.document.write(`
     <!DOCTYPE html>
@@ -37,7 +37,7 @@ export function printElement(elementId: string, title?: string) {
     <body>
       <div class="print-header">
         <h1>${pageTitle}</h1>
-        <p class="print-date">打印时间: ${new Date().toLocaleString("zh-CN")}</p>
+        <p class="print-date">打印时间: ${new Date().toLocaleString('zh-CN')}</p>
       </div>
       <div class="print-content">
         ${content}
@@ -47,20 +47,20 @@ export function printElement(elementId: string, title?: string) {
       </div>
     </body>
     </html>
-  `);
-  printWindow.document.close();
+  `)
+  printWindow.document.close()
   // 等待资源加载后触发打印
   printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-  };
+    printWindow.focus()
+    printWindow.print()
+  }
 }
 
 /**
  * 直接打印当前页面（使用媒体查询隐藏非打印区域）
  */
 export function printCurrentPage() {
-  window.print();
+  window.print()
 }
 
 /** 打印专用 CSS */
@@ -80,12 +80,12 @@ const PRINT_CSS = `
   .el-table th.el-table__cell { background: #f0f0f0 !important; border: 1px solid #333 !important; }
   .el-table td.el-table__cell { border: 1px solid #333 !important; }
   @page { size: A4; margin: 15mm; }
-`;
+`
 
 /** 在 composable 形式中使用 */
 export function usePrint() {
   return {
     printElement,
     printCurrentPage,
-  };
+  }
 }

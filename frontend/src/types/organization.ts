@@ -8,257 +8,247 @@
 // ============================================================================
 
 export interface Organization {
-  id: number;
-  code: string;
-  name: string;
-  parent_id: number | null;
-  level: number;
-  path: string;
-  is_active: boolean;
-  description?: string;
-  contact_person?: string;
-  contact_phone?: string;
-  address?: string;
-  created_at: string;
-  created_by?: number;
-  updated_at?: string;
+  id: number
+  code: string
+  name: string
+  parent_id: number | null
+  level: number
+  path: string
+  is_active: boolean
+  description?: string
+  contact_person?: string
+  contact_phone?: string
+  address?: string
+  created_at: string
+  created_by?: number
+  updated_at?: string
 }
 
 export interface OrganizationTreeNode extends Organization {
-  children: OrganizationTreeNode[];
+  children: OrganizationTreeNode[]
 }
 
 export interface OrganizationCreate {
-  name: string;
-  code?: string;
-  code_prefix?: string;
-  parent_id?: number | null;
-  description?: string;
-  contact_person?: string;
-  contact_phone?: string;
-  address?: string;
+  name: string
+  code?: string
+  code_prefix?: string
+  parent_id?: number | null
+  description?: string
+  contact_person?: string
+  contact_phone?: string
+  address?: string
 }
 
 export interface OrganizationUpdate {
-  name?: string;
-  description?: string;
-  contact_person?: string;
-  contact_phone?: string;
-  address?: string;
-  is_active?: boolean;
+  name?: string
+  description?: string
+  contact_person?: string
+  contact_phone?: string
+  address?: string
+  is_active?: boolean
 }
 
 export interface OrganizationListResponse {
-  total: number;
-  page: number;
-  page_size: number;
-  items: Organization[];
+  total: number
+  page: number
+  page_size: number
+  items: Organization[]
 }
 
 // ============================================================================
 // Data Package Types
 // ============================================================================
 
-export type PackageStatus =
-  | "pending"
-  | "validated"
-  | "imported"
-  | "failed"
-  | "cancelled";
+export type PackageStatus = 'pending' | 'validated' | 'imported' | 'failed' | 'cancelled'
 
 export interface DataPackageManifest {
-  version: string;
-  org_code: string;
-  org_name: string;
-  export_time: string;
-  data_types: string[];
-  record_counts: Record<string, number>;
-  checksum?: string;
-  exported_by?: string;
-  description?: string;
+  version: string
+  org_code: string
+  org_name: string
+  export_time: string
+  data_types: string[]
+  record_counts: Record<string, number>
+  checksum?: string
+  exported_by?: string
+  description?: string
 }
 
 export interface DataPackage {
-  id: number;
-  package_code: string;
-  org_id: number;
-  file_path?: string;
-  file_name?: string;
-  file_size?: number;
-  manifest_json?: string;
-  status: PackageStatus;
-  version: string;
-  checksum?: string;
-  data_types?: string;
-  record_count?: number;
-  error_message?: string;
-  created_at: string;
-  created_by?: number;
-  imported_at?: string;
-  imported_by?: number;
+  id: number
+  package_code: string
+  org_id: number
+  file_path?: string
+  file_name?: string
+  file_size?: number
+  manifest_json?: string
+  status: PackageStatus
+  version: string
+  checksum?: string
+  data_types?: string
+  record_count?: number
+  error_message?: string
+  created_at: string
+  created_by?: number
+  imported_at?: string
+  imported_by?: number
 }
 
 export interface DataPackageExportRequest {
-  org_id?: number;
-  data_types: string[];
-  description?: string;
+  org_id?: number
+  data_types: string[]
+  description?: string
 }
 
 export interface DataPackageExportResult {
-  package_id: number;
-  package_code: string;
-  file_path: string;
-  file_name: string;
-  file_size: number;
-  manifest: DataPackageManifest;
-  download_url: string;
+  package_id: number
+  package_code: string
+  file_path: string
+  file_name: string
+  file_size: number
+  manifest: DataPackageManifest
+  download_url: string
 }
 
 export interface DataPackageValidationError {
-  field: string;
-  message: string;
-  row?: number;
-  data_type?: string;
+  field: string
+  message: string
+  row?: number
+  data_type?: string
 }
 
 export interface DataPackageValidationResult {
-  is_valid: boolean;
-  errors: DataPackageValidationError[];
-  warnings: string[];
-  manifest?: DataPackageManifest;
+  is_valid: boolean
+  errors: DataPackageValidationError[]
+  warnings: string[]
+  manifest?: DataPackageManifest
 }
 
 export interface DataPackagePreviewData {
-  data_type: string;
-  total: number;
-  sample: Record<string, unknown>[];
-  columns: string[];
+  data_type: string
+  total: number
+  sample: Record<string, unknown>[]
+  columns: string[]
 }
 
 export interface DataPackageImportResult {
-  package_id: number;
-  package_code: string;
-  status: PackageStatus;
-  manifest?: DataPackageManifest;
-  preview: DataPackagePreviewData[];
-  validation: DataPackageValidationResult;
+  package_id: number
+  package_code: string
+  status: PackageStatus
+  manifest?: DataPackageManifest
+  preview: DataPackagePreviewData[]
+  validation: DataPackageValidationResult
 }
 
 export interface DataPackageConfirmRequest {
-  overwrite_existing?: boolean;
-  selected_types?: string[];
+  overwrite_existing?: boolean
+  selected_types?: string[]
 }
 
 export interface DataPackageConfirmResult {
-  success: boolean;
-  package_id: number;
-  imported_counts: Record<string, number>;
-  skipped_counts: Record<string, number>;
-  error_counts: Record<string, number>;
-  errors: DataPackageValidationError[];
+  success: boolean
+  package_id: number
+  imported_counts: Record<string, number>
+  skipped_counts: Record<string, number>
+  error_counts: Record<string, number>
+  errors: DataPackageValidationError[]
 }
 
 export interface DataPackageListResponse {
-  total: number;
-  page: number;
-  page_size: number;
-  items: DataPackage[];
+  total: number
+  page: number
+  page_size: number
+  items: DataPackage[]
 }
 
 // ============================================================================
 // Data Report Types
 // ============================================================================
 
-export type ReportStatus =
-  | "draft"
-  | "submitted"
-  | "approved"
-  | "rejected"
-  | "cancelled";
+export type ReportStatus = 'draft' | 'submitted' | 'approved' | 'rejected' | 'cancelled'
 
 export interface DataReport {
-  id: number;
-  report_code: string;
-  package_id: number;
-  source_org_id: number;
-  target_org_id: number;
-  status: ReportStatus;
-  title?: string;
-  description?: string;
-  comment?: string;
-  rejection_reason?: string;
-  deadline?: string;
-  submitted_at?: string;
-  submitted_by?: number;
-  reviewed_at?: string;
-  reviewed_by?: number;
-  created_at: string;
-  created_by?: number;
+  id: number
+  report_code: string
+  package_id: number
+  source_org_id: number
+  target_org_id: number
+  status: ReportStatus
+  title?: string
+  description?: string
+  comment?: string
+  rejection_reason?: string
+  deadline?: string
+  submitted_at?: string
+  submitted_by?: number
+  reviewed_at?: string
+  reviewed_by?: number
+  created_at: string
+  created_by?: number
   // 关联字段（后端 JOIN 查询返回）
-  source_org_name?: string;
-  target_org_name?: string;
-  package_code?: string;
-  data_types?: string | string[];
-  record_count?: number;
+  source_org_name?: string
+  target_org_name?: string
+  package_code?: string
+  data_types?: string | string[]
+  record_count?: number
 }
 
 export interface DataReportCreate {
-  package_id: number;
-  target_org_id: number;
-  title?: string;
-  description?: string;
-  deadline?: string;
+  package_id: number
+  target_org_id: number
+  title?: string
+  description?: string
+  deadline?: string
 }
 
-export type ReviewAction = "approve" | "reject";
+export type ReviewAction = 'approve' | 'reject'
 
 export interface DataReportReview {
-  action: ReviewAction;
-  comment?: string;
-  rejection_reason?: string;
+  action: ReviewAction
+  comment?: string
+  rejection_reason?: string
 }
 
 export interface DataReportStatistics {
-  total: number;
-  draft: number;
-  submitted: number;
-  approved: number;
-  rejected: number;
-  cancelled: number;
-  overdue: number;
-  pending_review: number;
-  approval_rate: number;
-  by_source_org: Record<string, number>;
-  by_month: Record<string, number>;
+  total: number
+  draft: number
+  submitted: number
+  approved: number
+  rejected: number
+  cancelled: number
+  overdue: number
+  pending_review: number
+  approval_rate: number
+  by_source_org: Record<string, number>
+  by_month: Record<string, number>
 }
 
 export interface SubordinateReportSummary {
-  org_id: number;
-  org_name: string;
-  org_code: string;
-  total_reports: number;
-  pending_reports: number;
-  approved_reports: number;
-  rejected_reports: number;
-  latest_report_date?: string;
-  has_overdue: boolean;
+  org_id: number
+  org_name: string
+  org_code: string
+  total_reports: number
+  pending_reports: number
+  approved_reports: number
+  rejected_reports: number
+  latest_report_date?: string
+  has_overdue: boolean
 }
 
 export interface SubordinateReportDashboard {
-  total_subordinates: number;
-  reported_count: number;
-  not_reported_count: number;
-  pending_review_count: number;
-  overdue_count: number;
-  report_rate: number;
-  subordinates: SubordinateReportSummary[];
+  total_subordinates: number
+  reported_count: number
+  not_reported_count: number
+  pending_review_count: number
+  overdue_count: number
+  report_rate: number
+  subordinates: SubordinateReportSummary[]
 }
 
 export interface DataReportListResponse {
-  total: number;
-  page: number;
-  page_size: number;
-  items: DataReport[];
+  total: number
+  page: number
+  page_size: number
+  items: DataReport[]
 }
 
 // ============================================================================
@@ -266,26 +256,26 @@ export interface DataReportListResponse {
 // ============================================================================
 
 export type OperationType =
-  | "export"
-  | "import"
-  | "preview"
-  | "validate"
-  | "confirm"
-  | "cancel"
-  | "delete";
-export type OperationResult = "success" | "failed" | "partial";
+  | 'export'
+  | 'import'
+  | 'preview'
+  | 'validate'
+  | 'confirm'
+  | 'cancel'
+  | 'delete'
+export type OperationResult = 'success' | 'failed' | 'partial'
 
 export interface ImportExportHistory {
-  id: number;
-  package_id?: number;
-  operation_type: OperationType;
-  org_id: number;
-  user_id: number;
-  operation_time: string;
-  result: OperationResult;
-  file_name?: string;
-  file_size?: number;
-  record_count?: number;
-  duration_ms?: number;
-  error_message?: string;
+  id: number
+  package_id?: number
+  operation_type: OperationType
+  org_id: number
+  user_id: number
+  operation_time: string
+  result: OperationResult
+  file_name?: string
+  file_size?: number
+  record_count?: number
+  duration_ms?: number
+  error_message?: string
 }

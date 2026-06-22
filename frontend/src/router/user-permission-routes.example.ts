@@ -4,13 +4,13 @@
  */
 export const userPermissionRoutes = [
   {
-    path: "/profile",
-    name: "Profile",
-    meta: { title: "个人中心", roles: ["*"] },
+    path: '/profile',
+    name: 'Profile',
+    meta: { title: '个人中心', roles: ['*'] },
   },
   {
-    path: "/change-password",
-    name: "ChangePassword",
-    meta: { title: "修改密码", roles: ["*"] },
+    path: '/change-password',
+    name: 'ChangePassword',
+    meta: { title: '修改密码', roles: ['*'] },
   },
-];
+]

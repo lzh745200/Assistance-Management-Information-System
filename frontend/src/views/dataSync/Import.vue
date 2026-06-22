@@ -22,9 +22,7 @@
           >
             <el-button type="primary">选择文件</el-button>
             <template #tip>
-              <div class="el-upload__tip">
-                支持 .zip（旧版）和 .rrs（加密）格式的数据包文件
-              </div>
+              <div class="el-upload__tip">支持 .zip（旧版）和 .rrs（加密）格式的数据包文件</div>
             </template>
           </el-upload>
         </el-form-item>
@@ -100,9 +98,7 @@
       <!-- 冲突列表 -->
       <div v-if="importResult.conflicts.length > 0" class="conflicts-section">
         <h4>冲突记录</h4>
-        <el-button type="primary" size="small" @click="showConflicts">
-          查看并解决冲突
-        </el-button>
+        <el-button type="primary" size="small" @click="showConflicts"> 查看并解决冲突 </el-button>
       </div>
 
       <!-- 错误列表 -->
@@ -127,9 +123,7 @@
         <el-table-column prop="total_records" label="总记录数" width="100" />
         <el-table-column prop="success_records" label="成功" width="80">
           <template #default="{ row }">
-            <el-tag type="success" size="small">{{
-              row.success_records
-            }}</el-tag>
+            <el-tag type="success" size="small">{{ row.success_records }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="failed_records" label="失败" width="80">
@@ -161,53 +155,53 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
-import { importData, importEncryptedData, getSyncLogs } from "@/api/dataSync";
-import type { ImportDataResponse, SyncLog } from "@/api/dataSync";
-import type { UploadFile } from "element-plus";
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { importData, importEncryptedData, getSyncLogs } from '@/api/dataSync'
+import type { ImportDataResponse, SyncLog } from '@/api/dataSync'
+import type { UploadFile } from 'element-plus'
 
-const router = useRouter();
+const router = useRouter()
 
 const importForm = ref({
-  strategy: "merge" as "skip" | "overwrite" | "merge",
-  password: "",
-});
+  strategy: 'merge' as 'skip' | 'overwrite' | 'merge',
+  password: '',
+})
 
-const importing = ref(false);
-const selectedFile = ref<File | null>(null);
-const fileList = ref<UploadFile[]>([]);
-const importResult = ref<ImportDataResponse | null>(null);
-const importHistory = ref<SyncLog[]>([]);
+const importing = ref(false)
+const selectedFile = ref<File | null>(null)
+const fileList = ref<UploadFile[]>([])
+const importResult = ref<ImportDataResponse | null>(null)
+const importHistory = ref<SyncLog[]>([])
 
 const isEncryptedFile = computed(() => {
-  if (!selectedFile.value) return false;
-  return selectedFile.value.name.endsWith(".rrs");
-});
+  if (!selectedFile.value) return false
+  return selectedFile.value.name.endsWith('.rrs')
+})
 
 const handleFileChange = (file: UploadFile) => {
   if (file.raw) {
-    selectedFile.value = file.raw;
+    selectedFile.value = file.raw
   }
-};
+}
 
 const handleImport = async () => {
   if (!selectedFile.value) {
-    ElMessage.warning("请选择要导入的数据包");
-    return;
+    ElMessage.warning('请选择要导入的数据包')
+    return
   }
 
   if (isEncryptedFile.value && !importForm.value.password) {
-    ElMessage.warning("请输入解密密码");
-    return;
+    ElMessage.warning('请输入解密密码')
+    return
   }
 
-  importing.value = true;
-  importResult.value = null;
+  importing.value = true
+  importResult.value = null
 
   try {
-    let response;
+    let response
 
     if (isEncryptedFile.value) {
       // 加密文件导入
@@ -215,75 +209,69 @@ const handleImport = async () => {
         file: selectedFile.value,
         password: importForm.value.password,
         strategy: importForm.value.strategy,
-      });
+      })
     } else {
       // 旧版文件导入
-      response = await importData(
-        selectedFile.value,
-        importForm.value.strategy,
-      );
+      response = await importData(selectedFile.value, importForm.value.strategy)
     }
 
-    importResult.value = response;
+    importResult.value = response
 
     if (response.success) {
-      const stats = [
-        `成功 ${response.success_records} 条`,
-        `失败 ${response.failed_records} 条`,
-      ];
+      const stats = [`成功 ${response.success_records} 条`, `失败 ${response.failed_records} 条`]
       if (response.inserted_count !== undefined) {
-        stats.push(`新增 ${response.inserted_count} 条`);
+        stats.push(`新增 ${response.inserted_count} 条`)
       }
       if (response.updated_count !== undefined) {
-        stats.push(`更新 ${response.updated_count} 条`);
+        stats.push(`更新 ${response.updated_count} 条`)
       }
       if (response.skipped_count !== undefined) {
-        stats.push(`跳过 ${response.skipped_count} 条`);
+        stats.push(`跳过 ${response.skipped_count} 条`)
       }
 
-      ElMessage.success(`导入成功! ${stats.join(", ")}`);
+      ElMessage.success(`导入成功! ${stats.join(', ')}`)
       // 刷新历史
-      await loadImportHistory();
+      await loadImportHistory()
       // 清空密码
-      importForm.value.password = "";
+      importForm.value.password = ''
     }
   } catch (error: any) {
-    ElMessage.error(error.message || "导入失败");
+    ElMessage.error(error.message || '导入失败')
   } finally {
-    importing.value = false;
+    importing.value = false
   }
-};
+}
 
 const showConflicts = () => {
   if (importResult.value && importResult.value.conflicts.length > 0) {
     // 跳转到冲突解决页面
     router.push({
-      name: "DataSyncConflicts",
+      name: 'DataSyncConflicts',
       query: { syncLogId: importResult.value.sync_log_id.toString() },
-    });
+    })
   } else {
-    ElMessage.info("没有需要解决的冲突");
+    ElMessage.info('没有需要解决的冲突')
   }
-};
+}
 
 const loadImportHistory = async () => {
   try {
-    const response = await getSyncLogs("import", 20);
+    const response = await getSyncLogs('import', 20)
     if (response.success) {
-      importHistory.value = response;
+      importHistory.value = response
     }
   } catch (error) {
-    console.error("加载导入历史失败:", error);
+    console.error('加载导入历史失败:', error)
   }
-};
+}
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleString("zh-CN");
-};
+  return new Date(dateStr).toLocaleString('zh-CN')
+}
 
 onMounted(() => {
-  loadImportHistory();
-});
+  loadImportHistory()
+})
 </script>
 
 <style scoped lang="scss">

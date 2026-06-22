@@ -25,13 +25,9 @@
             accept=".xlsx,.xls"
           >
             <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
-            <div class="el-upload__text">
-              将文件拖到此处，或<em>点击上传</em>
-            </div>
+            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
             <template #tip>
-              <div class="el-upload__tip">
-                仅支持 .xlsx 或 .xls 格式，单次最多导入1000条记录
-              </div>
+              <div class="el-upload__tip">仅支持 .xlsx 或 .xls 格式，单次最多导入1000条记录</div>
             </template>
           </el-upload>
 
@@ -46,11 +42,7 @@
                 </el-radio-group>
               </el-form-item>
               <el-form-item>
-                <el-button
-                  type="primary"
-                  :loading="importing"
-                  @click="handleImport"
-                >
+                <el-button type="primary" :loading="importing" @click="handleImport">
                   开始导入
                 </el-button>
                 <el-button @click="handleClear">清除文件</el-button>
@@ -72,11 +64,7 @@
             </div>
           </template>
 
-          <el-table
-            v-loading="loadingHistory"
-            :data="historyList"
-            max-height="400"
-          >
+          <el-table v-loading="loadingHistory" :data="historyList" max-height="400">
             <el-table-column
               prop="file_name"
               label="文件名"
@@ -112,9 +100,7 @@
     <el-dialog v-model="showResultDialog" title="导入结果" width="600px">
       <div v-if="importResult" class="import-result">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="总行数">{{
-            importResult.total_rows
-          }}</el-descriptions-item>
+          <el-descriptions-item label="总行数">{{ importResult.total_rows }}</el-descriptions-item>
           <el-descriptions-item label="成功">
             <el-tag type="success">{{ importResult.success_rows }}</el-tag>
           </el-descriptions-item>
@@ -126,10 +112,7 @@
           </el-descriptions-item>
         </el-descriptions>
 
-        <div
-          v-if="importResult.errors && importResult.errors.length > 0"
-          class="error-list"
-        >
+        <div v-if="importResult.errors && importResult.errors.length > 0" class="error-list">
           <el-divider content-position="left">错误详情</el-divider>
           <el-table :data="importResult.errors" max-height="300">
             <el-table-column prop="row_number" label="行号" width="80" />
@@ -139,21 +122,19 @@
         </div>
       </div>
       <template #footer>
-        <el-button type="primary" @click="showResultDialog = false"
-          >确定</el-button
-        >
+        <el-button type="primary" @click="showResultDialog = false">确定</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Download, UploadFilled, Refresh } from "@element-plus/icons-vue";
-import type { UploadInstance, UploadFile, UploadRawFile } from "element-plus";
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Download, UploadFilled, Refresh } from '@element-plus/icons-vue'
+import type { UploadInstance, UploadFile, UploadRawFile } from 'element-plus'
 import {
   downloadImportTemplate,
   importVillages,
@@ -162,126 +143,121 @@ import {
   type ImportResult,
   type ImportHistory,
   type ImportMode,
-} from "@/api/import";
+} from '@/api/import'
 
 const emit = defineEmits<{
-  (e: "import-complete"): void;
-}>();
+  (e: 'import-complete'): void
+}>()
 
 // 状态
-const uploadRef = ref<UploadInstance>();
-const selectedFile = ref<File | null>(null);
-const importMode = ref<ImportMode>("incremental");
-const importing = ref(false);
-const loadingHistory = ref(false);
-const historyList = ref<ImportHistory[]>([]);
-const showResultDialog = ref(false);
-const importResult = ref<ImportResult | null>(null);
+const uploadRef = ref<UploadInstance>()
+const selectedFile = ref<File | null>(null)
+const importMode = ref<ImportMode>('incremental')
+const importing = ref(false)
+const loadingHistory = ref(false)
+const historyList = ref<ImportHistory[]>([])
+const showResultDialog = ref(false)
+const importResult = ref<ImportResult | null>(null)
 
 // 加载导入历史
 async function loadHistory() {
-  loadingHistory.value = true;
+  loadingHistory.value = true
   try {
-    const res = await getImportHistory(1, 10);
-    historyList.value = (res as any)?.data?.items || (res as any)?.items;
+    const res = await getImportHistory(1, 10)
+    historyList.value = (res as any)?.data?.items || (res as any)?.items
   } catch (error) {
-    logger.error("加载导入历史失败:", error);
+    logger.error('加载导入历史失败:', error)
   } finally {
-    loadingHistory.value = false;
+    loadingHistory.value = false
   }
 }
 
 // 下载模板
 async function handleDownloadTemplate() {
   try {
-    const blob = await downloadImportTemplate("supported_village");
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "帮扶村导入模板.xlsx";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    const blob = await downloadImportTemplate('supported_village')
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '帮扶村导入模板.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
     // 模板下载成功 — 浏览器已确认
   } catch (error) {
-    ElMessage.error("模板下载失败");
+    ElMessage.error('模板下载失败')
   }
 }
 
 // 文件选择
 function handleFileChange(file: UploadFile) {
-  selectedFile.value = file.raw as File;
+  selectedFile.value = file.raw as File
 }
 
 // 超出限制
 function handleExceed(files: File[]) {
-  uploadRef.value?.clearFiles();
-  const file = files[0] as UploadRawFile;
-  uploadRef.value?.handleStart(file);
+  uploadRef.value?.clearFiles()
+  const file = files[0] as UploadRawFile
+  uploadRef.value?.handleStart(file)
 }
 
 // 清除文件
 function handleClear() {
-  uploadRef.value?.clearFiles();
-  selectedFile.value = null;
+  uploadRef.value?.clearFiles()
+  selectedFile.value = null
 }
 
 // 执行导入
 async function handleImport() {
   if (!selectedFile.value) {
-    ElMessage.warning("请先选择文件");
-    return;
+    ElMessage.warning('请先选择文件')
+    return
   }
 
-  importing.value = true;
+  importing.value = true
   try {
-    const result = await importVillages(selectedFile.value, importMode.value);
-    importResult.value = result;
-    showResultDialog.value = true;
+    const result = await importVillages(selectedFile.value, importMode.value)
+    importResult.value = result
+    showResultDialog.value = true
 
     if (result.success) {
-      ElMessage.success(`导入成功：${result.success_rows}条记录`);
-      emit("import-complete");
+      ElMessage.success(`导入成功：${result.success_rows}条记录`)
+      emit('import-complete')
     } else {
-      ElMessage.warning(`导入完成，但有${result.failed_rows}条失败`);
+      ElMessage.warning(`导入完成，但有${result.failed_rows}条失败`)
     }
 
-    handleClear();
-    loadHistory();
+    handleClear()
+    loadHistory()
   } catch (error) {
-    ElMessage.error("导入失败，请检查文件格式");
+    ElMessage.error('导入失败，请检查文件格式')
   } finally {
-    importing.value = false;
+    importing.value = false
   }
 }
 
 // 获取状态类型
-function getStatusType(
-  status: string,
-): "success" | "info" | "warning" | "danger" | "primary" {
-  const typeMap: Record<
-    string,
-    "success" | "info" | "warning" | "danger" | "primary"
-  > = {
-    completed: "success",
-    failed: "danger",
-    processing: "warning",
-    pending: "info",
-  };
-  return typeMap[status] || "info";
+function getStatusType(status: string): 'success' | 'info' | 'warning' | 'danger' | 'primary' {
+  const typeMap: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'primary'> = {
+    completed: 'success',
+    failed: 'danger',
+    processing: 'warning',
+    pending: 'info',
+  }
+  return typeMap[status] || 'info'
 }
 
 // 格式化时间
 function formatTime(dateStr: string): string {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
 onMounted(() => {
-  loadHistory();
-});
+  loadHistory()
+})
 </script>
 
 <style scoped lang="scss">

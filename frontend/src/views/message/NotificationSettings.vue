@@ -8,12 +8,7 @@
         </div>
       </template>
 
-      <el-form
-        v-loading="loading"
-        :model="preferences"
-        label-width="150px"
-        class="settings-form"
-      >
+      <el-form v-loading="loading" :model="preferences" label-width="150px" class="settings-form">
         <!-- 站内消息设置 -->
         <el-divider content-position="left">
           <el-icon><Bell /></el-icon>
@@ -72,13 +67,7 @@
       </el-form>
 
       <!-- 说明信息 -->
-      <el-alert
-        title="温馨提示"
-        type="info"
-        :closable="false"
-        show-icon
-        class="tips-alert"
-      >
+      <el-alert title="温馨提示" type="info" :closable="false" show-icon class="tips-alert">
         <template #default>
           <ul class="tips-list">
             <li>关闭某类通知后，您将不会收到该类型的消息推送</li>
@@ -92,19 +81,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Bell, Message, Check, Refresh } from "@element-plus/icons-vue";
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Bell, Message, Check, Refresh } from '@element-plus/icons-vue'
 import {
   getNotificationPreferences,
   updateNotificationPreferences,
   type NotificationPreference,
-} from "@/api/message";
+} from '@/api/message'
 
 // ==================== 状态 ====================
 
-const loading = ref(false);
-const saving = ref(false);
+const loading = ref(false)
+const saving = ref(false)
 
 const preferences = ref<NotificationPreference>({
   email_approval: true,
@@ -113,9 +102,9 @@ const preferences = ref<NotificationPreference>({
   site_approval: true,
   site_task: true,
   site_system: true,
-});
+})
 
-const originalPreferences = ref<NotificationPreference | null>(null);
+const originalPreferences = ref<NotificationPreference | null>(null)
 
 // ==================== 方法 ====================
 
@@ -123,15 +112,15 @@ const originalPreferences = ref<NotificationPreference | null>(null);
  * 加载通知偏好
  */
 async function loadPreferences() {
-  loading.value = true;
+  loading.value = true
   try {
-    const data = await getNotificationPreferences();
-    preferences.value = { ...data };
-    originalPreferences.value = { ...data };
+    const data = await getNotificationPreferences()
+    preferences.value = { ...data }
+    originalPreferences.value = { ...data }
   } catch (error) {
-    ElMessage.error("加载通知设置失败");
+    ElMessage.error('加载通知设置失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -139,15 +128,15 @@ async function loadPreferences() {
  * 保存设置
  */
 async function handleSave() {
-  saving.value = true;
+  saving.value = true
   try {
-    await updateNotificationPreferences(preferences.value);
-    originalPreferences.value = { ...preferences.value };
-    ElMessage.success("设置保存成功");
+    await updateNotificationPreferences(preferences.value)
+    originalPreferences.value = { ...preferences.value }
+    ElMessage.success('设置保存成功')
   } catch (error) {
-    ElMessage.error("保存设置失败");
+    ElMessage.error('保存设置失败')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 
@@ -156,16 +145,16 @@ async function handleSave() {
  */
 function handleReset() {
   if (originalPreferences.value) {
-    preferences.value = { ...originalPreferences.value };
-    ElMessage.info("已重置为上次保存的设置");
+    preferences.value = { ...originalPreferences.value }
+    ElMessage.info('已重置为上次保存的设置')
   }
 }
 
 // ==================== 生命周期 ====================
 
 onMounted(() => {
-  loadPreferences();
-});
+  loadPreferences()
+})
 </script>
 
 <style scoped lang="scss">

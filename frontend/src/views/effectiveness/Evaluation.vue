@@ -17,30 +17,16 @@
             style="width: 240px"
             filterable
           >
-            <el-option
-              v-for="v in villageOptions"
-              :key="v.id"
-              :label="v.name"
-              :value="v.id"
-            />
+            <el-option v-for="v in villageOptions" :key="v.id" :label="v.name" :value="v.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="评估年度">
           <el-select v-model="evalForm.year" style="width: 140px">
-            <el-option
-              v-for="y in yearOptions"
-              :key="y"
-              :label="String(y)"
-              :value="y"
-            />
+            <el-option v-for="y in yearOptions" :key="y" :label="String(y)" :value="y" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="evaluating"
-            @click="handleEvaluate"
-          >
+          <el-button type="primary" :loading="evaluating" @click="handleEvaluate">
             <el-icon><DataAnalysis /></el-icon>开始评估
           </el-button>
         </el-form-item>
@@ -80,31 +66,16 @@
           <el-form :model="compareForm" inline>
             <el-form-item label="对比年度">
               <el-select v-model="compareForm.year1" style="width: 120px">
-                <el-option
-                  v-for="y in yearOptions"
-                  :key="y"
-                  :label="String(y)"
-                  :value="y"
-                />
+                <el-option v-for="y in yearOptions" :key="y" :label="String(y)" :value="y" />
               </el-select>
             </el-form-item>
             <el-form-item label="对比年度">
               <el-select v-model="compareForm.year2" style="width: 120px">
-                <el-option
-                  v-for="y in yearOptions"
-                  :key="y"
-                  :label="String(y)"
-                  :value="y"
-                />
+                <el-option v-for="y in yearOptions" :key="y" :label="String(y)" :value="y" />
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button
-                type="primary"
-                plain
-                :loading="comparing"
-                @click="handleCompare"
-              >
+              <el-button type="primary" plain :loading="comparing" @click="handleCompare">
                 对比
               </el-button>
             </el-form-item>
@@ -139,100 +110,94 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { ElMessage } from "element-plus";
-import { Loading, DataAnalysis } from "@element-plus/icons-vue";
-import { evaluateVillage, compareEvaluations } from "@/api/effectiveness";
-import request from "@/api/request";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Loading, DataAnalysis } from '@element-plus/icons-vue'
+import { evaluateVillage, compareEvaluations } from '@/api/effectiveness'
+import request from '@/api/request'
 
-const route = useRoute();
+const route = useRoute()
 
-const currentYear = new Date().getFullYear();
-const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
+const currentYear = new Date().getFullYear()
+const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i)
 
 const evalForm = reactive({
   villageId: 0,
   year: currentYear,
-});
+})
 
 const compareForm = reactive({
   year1: currentYear - 1,
   year2: currentYear,
-});
+})
 
-const villageOptions = ref<{ id: number; name: string }[]>([]);
-const evaluating = ref(false);
-const comparing = ref(false);
-const evaluationResult = ref<any>(null);
-const compareResult = ref<any>(null);
+const villageOptions = ref<{ id: number; name: string }[]>([])
+const evaluating = ref(false)
+const comparing = ref(false)
+const evaluationResult = ref<any>(null)
+const compareResult = ref<any>(null)
 
 const flatResult = computed(() => {
-  if (!evaluationResult.value) return {};
-  const r = evaluationResult.value;
-  if (r?.result) return r.result;
-  const exclude = ["village_id", "village_name"];
-  return Object.fromEntries(
-    Object.entries(r).filter(([k]) => !exclude.includes(k)),
-  );
-});
+  if (!evaluationResult.value) return {}
+  const r = evaluationResult.value
+  if (r?.result) return r.result
+  const exclude = ['village_id', 'village_name']
+  return Object.fromEntries(Object.entries(r).filter(([k]) => !exclude.includes(k)))
+})
 
 const flatCompareResult = computed(() => {
-  if (!compareResult.value) return {};
-  return compareResult.value;
-});
+  if (!compareResult.value) return {}
+  return compareResult.value
+})
 
 function fieldLabel(key: string): string {
   const map: Record<string, string> = {
-    total_score: "总分",
-    economic: "经济得分",
-    social: "社会得分",
-    project_completion: "项目完成率",
-    fund_execution: "资金执行率",
-    level: "等级",
-    rank: "排名",
-    per_capita_income: "人均收入",
-    collective_income: "集体收入",
-    total_projects: "项目总数",
-    completed_projects: "已完成项目",
-    project_completion_rate: "项目完成率",
-    total_funds: "资金总额",
-    growth_rate: "增长率",
-    score: "得分",
-  };
-  return map[key] || key.replace(/_/g, " ");
+    total_score: '总分',
+    economic: '经济得分',
+    social: '社会得分',
+    project_completion: '项目完成率',
+    fund_execution: '资金执行率',
+    level: '等级',
+    rank: '排名',
+    per_capita_income: '人均收入',
+    collective_income: '集体收入',
+    total_projects: '项目总数',
+    completed_projects: '已完成项目',
+    project_completion_rate: '项目完成率',
+    total_funds: '资金总额',
+    growth_rate: '增长率',
+    score: '得分',
+  }
+  return map[key] || key.replace(/_/g, ' ')
 }
 
 function formatValue(key: string, value: any): string {
-  if (value == null) return "-";
-  if (typeof value === "number") {
-    if (key.includes("rate") || key.includes("percent")) {
-      return (value * 100).toFixed(1) + "%";
+  if (value == null) return '-'
+  if (typeof value === 'number') {
+    if (key.includes('rate') || key.includes('percent')) {
+      return (value * 100).toFixed(1) + '%'
     }
-    if (
-      key.includes("income") ||
-      key.includes("funds") ||
-      key.includes("amount")
-    ) {
-      return value.toLocaleString();
+    if (key.includes('income') || key.includes('funds') || key.includes('amount')) {
+      return value.toLocaleString()
     }
-    return Number(value).toFixed(1);
+    return Number(value).toFixed(1)
   }
-  return String(value);
+  return String(value)
 }
 
 async function loadVillages() {
   try {
-    const response = await request.get("/supported-villages", {
+    const response = await request.get('/supported-villages', {
       params: { page_size: 1000 },
-    });
-    const data = response?.data ?? response;
-    const inner = data?.data || data;
-    const items = inner?.items || (Array.isArray(inner) ? inner : []);
+    })
+    const data = response?.data ?? response
+    const inner = data?.data || data
+    const items = inner?.items || (Array.isArray(inner) ? inner : [])
     villageOptions.value = items.map((v: any) => ({
       id: v.id,
       name: v.name || v.village_name || `ID:${v.id}`,
-    }));
+    }))
   } catch {
     // 静默处理
   }
@@ -240,62 +205,62 @@ async function loadVillages() {
 
 async function handleEvaluate() {
   if (!evalForm.villageId) {
-    ElMessage.warning("请选择村庄");
-    return;
+    ElMessage.warning('请选择村庄')
+    return
   }
-  evaluating.value = true;
-  evaluationResult.value = null;
-  compareResult.value = null;
+  evaluating.value = true
+  evaluationResult.value = null
+  compareResult.value = null
   try {
     const response = await evaluateVillage({
       village_id: evalForm.villageId,
       year: evalForm.year,
-    });
-    const data = response?.data ?? response;
-    evaluationResult.value = data;
-    ElMessage.success("评估完成");
+    })
+    const data = response?.data ?? response
+    evaluationResult.value = data
+    ElMessage.success('评估完成')
   } catch {
-    ElMessage.error("评估失败");
+    ElMessage.error('评估失败')
   } finally {
-    evaluating.value = false;
+    evaluating.value = false
   }
 }
 
 async function handleCompare() {
   if (!evalForm.villageId) {
-    ElMessage.warning("请先完成评估");
-    return;
+    ElMessage.warning('请先完成评估')
+    return
   }
   if (compareForm.year1 === compareForm.year2) {
-    ElMessage.warning("请选择不同的年度进行对比");
-    return;
+    ElMessage.warning('请选择不同的年度进行对比')
+    return
   }
-  comparing.value = true;
+  comparing.value = true
   try {
     const response = await compareEvaluations(
       evalForm.villageId,
       compareForm.year1,
-      compareForm.year2,
-    );
-    const data = response?.data ?? response;
-    compareResult.value = data;
-    ElMessage.success("对比完成");
+      compareForm.year2
+    )
+    const data = response?.data ?? response
+    compareResult.value = data
+    ElMessage.success('对比完成')
   } catch {
-    ElMessage.error("对比失败");
+    ElMessage.error('对比失败')
   } finally {
-    comparing.value = false;
+    comparing.value = false
   }
 }
 
 onMounted(() => {
-  loadVillages();
+  loadVillages()
   // 从URL参数初始化
-  const villageId = route.query.villageId;
-  const year = route.query.year;
-  if (villageId) evalForm.villageId = Number(villageId);
-  if (year) evalForm.year = Number(year);
-  if (villageId) handleEvaluate();
-});
+  const villageId = route.query.villageId
+  const year = route.query.year
+  if (villageId) evalForm.villageId = Number(villageId)
+  if (year) evalForm.year = Number(year)
+  if (villageId) handleEvaluate()
+})
 </script>
 
 <style scoped>

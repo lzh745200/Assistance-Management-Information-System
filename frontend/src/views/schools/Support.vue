@@ -9,18 +9,12 @@
       </template>
 
       <el-descriptions :column="4" border>
-        <el-descriptions-item label="学校类型">{{
-          schoolInfo.type
-        }}</el-descriptions-item>
-        <el-descriptions-item label="所在地区">{{
-          schoolInfo.location
-        }}</el-descriptions-item>
-        <el-descriptions-item label="帮扶单位">{{
-          schoolInfo.supportUnit
-        }}</el-descriptions-item>
+        <el-descriptions-item label="学校类型">{{ schoolInfo.type }}</el-descriptions-item>
+        <el-descriptions-item label="所在地区">{{ schoolInfo.location }}</el-descriptions-item>
+        <el-descriptions-item label="帮扶单位">{{ schoolInfo.supportUnit }}</el-descriptions-item>
         <el-descriptions-item label="帮扶状态">
           <el-tag :type="schoolInfo.status === 'active' ? 'success' : 'info'">
-            {{ schoolInfo.status === "active" ? "帮扶中" : "已完成" }}
+            {{ schoolInfo.status === 'active' ? '帮扶中' : '已完成' }}
           </el-tag>
         </el-descriptions-item>
       </el-descriptions>
@@ -50,20 +44,14 @@
             <p class="record-content">{{ item.content }}</p>
             <div class="record-meta">
               <el-tag size="small">{{ item.category }}</el-tag>
-              <span v-if="item.amount" class="amount"
-                >投入: {{ item.amount }}万元</span
-              >
+              <span v-if="item.amount" class="amount">投入: {{ item.amount }}万元</span>
               <span v-if="item.participants" class="participants"
                 >参与人数: {{ item.participants }}人</span
               >
             </div>
             <div class="record-actions">
-              <el-button size="small" type="primary" @click="handleEdit(item)"
-                >编辑</el-button
-              >
-              <el-button size="small" type="danger" @click="handleDelete(item)"
-                >删除</el-button
-              >
+              <el-button size="small" type="primary" @click="handleEdit(item)">编辑</el-button>
+              <el-button size="small" type="danger" @click="handleDelete(item)">删除</el-button>
             </div>
           </el-card>
         </el-timeline-item>
@@ -72,21 +60,12 @@
 
     <!-- 新增/编辑对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="rules"
-        label-width="100px"
-      >
+      <el-form ref="formRef" :model="formData" :rules="rules" label-width="100px">
         <el-form-item label="记录标题" prop="title">
           <el-input v-model="formData.title" placeholder="请输入记录标题" />
         </el-form-item>
         <el-form-item label="记录类别" prop="category">
-          <el-select
-            v-model="formData.category"
-            placeholder="请选择"
-            style="width: 100%"
-          >
+          <el-select v-model="formData.category" placeholder="请选择" style="width: 100%">
             <el-option label="基础设施" value="infrastructure" />
             <el-option label="教学设备" value="equipment" />
             <el-option label="师资培训" value="training" />
@@ -139,150 +118,150 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
-import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
-import { Plus } from "@element-plus/icons-vue";
-import { localDatabase } from "@/utils/LocalDatabase";
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import { localDatabase } from '@/utils/LocalDatabase'
 
-const router = useRouter();
-const route = useRoute();
-const formRef = ref<FormInstance>();
+const router = useRouter()
+const route = useRoute()
+const formRef = ref<FormInstance>()
 
 const schoolInfo = reactive({
-  id: "",
-  name: "",
-  type: "",
-  location: "",
-  supportUnit: "",
-  status: "",
-});
+  id: '',
+  name: '',
+  type: '',
+  location: '',
+  supportUnit: '',
+  status: '',
+})
 
-const records = ref<any[]>([]);
-const dialogVisible = ref(false);
-const dialogTitle = ref("新增帮扶记录");
-const isEdit = ref(false);
+const records = ref<any[]>([])
+const dialogVisible = ref(false)
+const dialogTitle = ref('新增帮扶记录')
+const isEdit = ref(false)
 
 const formData = reactive({
-  id: "",
-  schoolId: "",
-  title: "",
-  category: "",
-  date: "",
+  id: '',
+  schoolId: '',
+  title: '',
+  category: '',
+  date: '',
   amount: 0,
   participants: 0,
-  content: "",
-  type: "success",
-});
+  content: '',
+  type: 'success',
+})
 
 const rules = {
-  title: [{ required: true, message: "请输入记录标题", trigger: "blur" }],
-  category: [{ required: true, message: "请选择记录类别", trigger: "change" }],
-  date: [{ required: true, message: "请选择日期", trigger: "change" }],
-  content: [{ required: true, message: "请输入记录内容", trigger: "blur" }],
-};
+  title: [{ required: true, message: '请输入记录标题', trigger: 'blur' }],
+  category: [{ required: true, message: '请选择记录类别', trigger: 'change' }],
+  date: [{ required: true, message: '请选择日期', trigger: 'change' }],
+  content: [{ required: true, message: '请输入记录内容', trigger: 'blur' }],
+}
 
 const loadSchoolInfo = async (id: string) => {
   try {
-    const result = await localDatabase.get("school", id);
+    const result = await localDatabase.get('school', id)
     if (result) {
-      Object.assign(schoolInfo, result);
+      Object.assign(schoolInfo, result)
     }
   } catch (error) {
-    logger.error("加载学校信息失败:", error);
+    logger.error('加载学校信息失败:', error)
   }
-};
+}
 
 const loadRecords = async (schoolId: string) => {
   try {
-    const allRecords = await localDatabase.query("school_support", {
+    const allRecords = await localDatabase.query('school_support', {
       schoolId,
-    });
-    records.value = allRecords || [];
+    })
+    records.value = allRecords || []
   } catch (error) {
-    logger.error("加载帮扶记录失败:", error);
+    logger.error('加载帮扶记录失败:', error)
   }
-};
+}
 
 const handleAdd = () => {
-  isEdit.value = false;
-  dialogTitle.value = "新增帮扶记录";
+  isEdit.value = false
+  dialogTitle.value = '新增帮扶记录'
   Object.assign(formData, {
-    id: "",
+    id: '',
     schoolId: schoolInfo.id,
-    title: "",
-    category: "",
-    date: "",
+    title: '',
+    category: '',
+    date: '',
     amount: 0,
     participants: 0,
-    content: "",
-    type: "success",
-  });
-  dialogVisible.value = true;
-};
+    content: '',
+    type: 'success',
+  })
+  dialogVisible.value = true
+}
 
 const handleEdit = (item: any) => {
-  isEdit.value = true;
-  dialogTitle.value = "编辑帮扶记录";
-  Object.assign(formData, item);
-  dialogVisible.value = true;
-};
+  isEdit.value = true
+  dialogTitle.value = '编辑帮扶记录'
+  Object.assign(formData, item)
+  dialogVisible.value = true
+}
 
 const handleDelete = async (item: any) => {
   try {
-    await ElMessageBox.confirm("确定删除该记录吗？", "提示", {
-      type: "warning",
-    });
-    await localDatabase.delete("school_support", item.id);
-    ElMessage.success("删除成功");
-    loadRecords(schoolInfo.id);
+    await ElMessageBox.confirm('确定删除该记录吗？', '提示', {
+      type: 'warning',
+    })
+    await localDatabase.delete('school_support', item.id)
+    ElMessage.success('删除成功')
+    loadRecords(schoolInfo.id)
   } catch (error) {
-    if (error !== "cancel") {
-      ElMessage.error("删除失败");
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
     }
   }
-};
+}
 
 const handleSubmit = async () => {
-  if (!formRef.value) return;
+  if (!formRef.value) return
 
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
         if (isEdit.value) {
-          await localDatabase.update("school_support", formData);
-          ElMessage.success("修改成功");
+          await localDatabase.update('school_support', formData)
+          ElMessage.success('修改成功')
         } else {
-          formData.id = `support_${Date.now()}`;
-          await localDatabase.set("school_support", formData);
-          ElMessage.success("添加成功");
+          formData.id = `support_${Date.now()}`
+          await localDatabase.set('school_support', formData)
+          ElMessage.success('添加成功')
         }
-        dialogVisible.value = false;
-        loadRecords(schoolInfo.id);
+        dialogVisible.value = false
+        loadRecords(schoolInfo.id)
       } catch (error) {
-        ElMessage.error("保存失败");
+        ElMessage.error('保存失败')
       }
     }
-  });
-};
+  })
+}
 
 const handleCancel = () => {
-  dialogVisible.value = false;
-};
+  dialogVisible.value = false
+}
 
 const handleBack = () => {
-  router.back();
-};
+  router.back()
+}
 
 onMounted(() => {
-  const id = route.params.id as string;
+  const id = route.params.id as string
   if (id) {
-    loadSchoolInfo(id);
-    loadRecords(id);
+    loadSchoolInfo(id)
+    loadRecords(id)
   }
-});
+})
 </script>
 
 <style scoped>

@@ -22,21 +22,14 @@
         </el-descriptions-item>
       </el-descriptions>
 
-      <div
-        v-if="Object.keys(coverage.zoom_levels).length > 0"
-        class="zoom-levels"
-      >
+      <div v-if="Object.keys(coverage.zoom_levels).length > 0" class="zoom-levels">
         <h4>各级别瓦片数量</h4>
         <el-table :data="zoomLevelData" style="width: 100%">
           <el-table-column prop="level" label="缩放级别" width="120" />
           <el-table-column prop="count" label="瓦片数量" />
           <el-table-column label="操作" width="150">
             <template #default="{ row }">
-              <el-button
-                type="danger"
-                size="small"
-                @click="handleClearLevel(row.level)"
-              >
+              <el-button type="danger" size="small" @click="handleClearLevel(row.level)">
                 清理
               </el-button>
             </template>
@@ -46,21 +39,14 @@
 
       <div class="actions">
         <el-button type="primary" @click="loadStatus">刷新状态</el-button>
-        <el-button type="danger" @click="handleClearAll"
-          >清理所有瓦片</el-button
-        >
+        <el-button type="danger" @click="handleClearAll">清理所有瓦片</el-button>
       </div>
     </el-card>
 
     <!-- 下载瓦片 -->
     <el-card class="tile-download">
       <h3 class="section-title">下载瓦片</h3>
-      <el-alert
-        title="注意"
-        type="warning"
-        :closable="false"
-        style="margin-bottom: 20px"
-      >
+      <el-alert title="注意" type="warning" :closable="false" style="margin-bottom: 20px">
         下载瓦片需要网络连接,大范围下载可能需要较长时间
       </el-alert>
 
@@ -139,19 +125,11 @@
         </el-row>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="downloading"
-            @click="handleDownload"
-          >
+          <el-button type="primary" :loading="downloading" @click="handleDownload">
             开始下载
           </el-button>
-          <el-button @click="usePresetRegion('guizhou')">
-            使用贵州省预设
-          </el-button>
-          <el-button @click="usePresetRegion('bijie')">
-            使用毕节市预设
-          </el-button>
+          <el-button @click="usePresetRegion('guizhou')"> 使用贵州省预设 </el-button>
+          <el-button @click="usePresetRegion('bijie')"> 使用毕节市预设 </el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -160,16 +138,16 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { getMapStatus, downloadTiles, clearTiles } from "@/api/offlineMap";
-import type { MapCoverage } from "@/api/offlineMap";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getMapStatus, downloadTiles, clearTiles } from '@/api/offlineMap'
+import type { MapCoverage } from '@/api/offlineMap'
 
 const coverage = ref<MapCoverage>({
   total_tiles: 0,
   total_size_mb: 0,
   zoom_levels: {},
-});
+})
 
 const downloadForm = ref({
   min_lat: 24.5,
@@ -178,9 +156,9 @@ const downloadForm = ref({
   max_lon: 109.5,
   min_zoom: 4,
   max_zoom: 12,
-});
+})
 
-const downloading = ref(false);
+const downloading = ref(false)
 
 const zoomLevelData = computed(() => {
   return Object.entries(coverage.value.zoom_levels)
@@ -188,96 +166,86 @@ const zoomLevelData = computed(() => {
       level: parseInt(level),
       count,
     }))
-    .sort((a, b) => a.level - b.level);
-});
+    .sort((a, b) => a.level - b.level)
+})
 
 const loadStatus = async () => {
   try {
-    const response = await getMapStatus();
+    const response = await getMapStatus()
     if (response.success) {
-      coverage.value = response;
+      coverage.value = response
     }
   } catch (error: any) {
-    ElMessage.error(error.message || "加载状态失败");
+    ElMessage.error(error.message || '加载状态失败')
   }
-};
+}
 
 const handleDownload = async () => {
   try {
-    await ElMessageBox.confirm(
-      "下载瓦片可能需要较长时间,确定要继续吗?",
-      "确认下载",
-      {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      },
-    );
+    await ElMessageBox.confirm('下载瓦片可能需要较长时间,确定要继续吗?', '确认下载', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
 
-    downloading.value = true;
-    const response = await downloadTiles(downloadForm.value);
+    downloading.value = true
+    const response = await downloadTiles(downloadForm.value)
 
     if (response.success) {
-      ElMessage.success(
-        `下载完成! 成功 ${response.downloaded} 个, 失败 ${response.failed} 个`,
-      );
-      await loadStatus();
+      ElMessage.success(`下载完成! 成功 ${response.downloaded} 个, 失败 ${response.failed} 个`)
+      await loadStatus()
     }
   } catch (error: any) {
-    if (error !== "cancel") {
-      ElMessage.error(error.message || "下载失败");
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '下载失败')
     }
   } finally {
-    downloading.value = false;
+    downloading.value = false
   }
-};
+}
 
 const handleClearLevel = async (level: number) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要清理缩放级别 ${level} 的所有瓦片吗?`,
-      "确认清理",
-      {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      },
-    );
+    await ElMessageBox.confirm(`确定要清理缩放级别 ${level} 的所有瓦片吗?`, '确认清理', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
 
-    const response = await clearTiles(level);
+    const response = await clearTiles(level)
     if (response.success) {
-      ElMessage.success(`已清理 ${response.deleted_count} 个瓦片`);
-      await loadStatus();
+      ElMessage.success(`已清理 ${response.deleted_count} 个瓦片`)
+      await loadStatus()
     }
   } catch (error: any) {
-    if (error !== "cancel") {
-      ElMessage.error(error.message || "清理失败");
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '清理失败')
     }
   }
-};
+}
 
 const handleClearAll = async () => {
   try {
-    await ElMessageBox.confirm("确定要清理所有瓦片吗?", "确认清理", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning",
-    });
+    await ElMessageBox.confirm('确定要清理所有瓦片吗?', '确认清理', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
 
-    const response = await clearTiles();
+    const response = await clearTiles()
     if (response.success) {
-      ElMessage.success(`已清理 ${response.deleted_count} 个瓦片`);
-      await loadStatus();
+      ElMessage.success(`已清理 ${response.deleted_count} 个瓦片`)
+      await loadStatus()
     }
   } catch (error: any) {
-    if (error !== "cancel") {
-      ElMessage.error(error.message || "清理失败");
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '清理失败')
     }
   }
-};
+}
 
 const usePresetRegion = (region: string) => {
-  if (region === "guizhou") {
+  if (region === 'guizhou') {
     // 贵州省
     downloadForm.value = {
       min_lat: 24.5,
@@ -286,8 +254,8 @@ const usePresetRegion = (region: string) => {
       max_lon: 109.5,
       min_zoom: 4,
       max_zoom: 8,
-    };
-  } else if (region === "bijie") {
+    }
+  } else if (region === 'bijie') {
     // 毕节市
     downloadForm.value = {
       min_lat: 26.5,
@@ -296,13 +264,13 @@ const usePresetRegion = (region: string) => {
       max_lon: 106.8,
       min_zoom: 9,
       max_zoom: 12,
-    };
+    }
   }
-};
+}
 
 onMounted(() => {
-  loadStatus();
-});
+  loadStatus()
+})
 </script>
 
 <style scoped lang="scss">

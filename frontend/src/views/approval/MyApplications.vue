@@ -9,12 +9,7 @@
     <el-card class="filter-card">
       <el-form :inline="true" :model="filters">
         <el-form-item label="状态">
-          <el-select
-            v-model="filters.status"
-            clearable
-            placeholder="全部"
-            style="width: 140px"
-          >
+          <el-select v-model="filters.status" clearable placeholder="全部" style="width: 140px">
             <el-option label="待审批" value="pending" />
             <el-option label="已通过" value="approved" />
             <el-option label="已驳回" value="rejected" />
@@ -63,7 +58,7 @@
         <el-table-column prop="title" label="申请标题" min-width="200" />
         <el-table-column prop="type" label="类型" width="120">
           <template #default="{ row }">
-            <el-tag size="small">{{ row.type || "通用" }}</el-tag>
+            <el-tag size="small">{{ row.type || '通用' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -74,17 +69,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="提交时间" width="170">
-          <template #default="{ row }">{{
-            formatDate(row.created_at)
-          }}</template>
+          <template #default="{ row }">{{ formatDate(row.created_at) }}</template>
         </el-table-column>
         <el-table-column prop="reviewer_name" label="审批人" width="120" />
-        <el-table-column
-          prop="opinion"
-          label="审批意见"
-          min-width="200"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="opinion" label="审批意见" min-width="200" show-overflow-tooltip />
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button
@@ -111,76 +99,75 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { getApprovalHistory, type ApprovalTask } from "@/api/approval";
-import request from "@/api/request";
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getApprovalHistory, type ApprovalTask } from '@/api/approval'
+import request from '@/api/request'
 
-const loading = ref(false);
-const applications = ref<ApprovalTask[]>([]);
-const filters = reactive({ status: "", dateRange: null as any });
+const loading = ref(false)
+const applications = ref<ApprovalTask[]>([])
+const filters = reactive({ status: '', dateRange: null as any })
 
 const stats = computed(() => {
-  const list = applications.value;
+  const list = applications.value
   return {
     total: list.length,
-    pending: list.filter((a) => a.status === "pending").length,
-    approved: list.filter((a) => a.status === "approved").length,
-    rejected: list.filter((a) => a.status === "rejected").length,
-  };
-});
+    pending: list.filter((a) => a.status === 'pending').length,
+    approved: list.filter((a) => a.status === 'approved').length,
+    rejected: list.filter((a) => a.status === 'rejected').length,
+  }
+})
 
 const statusLabel = (s: string) =>
   ({
-    pending: "待审批",
-    approved: "已通过",
-    rejected: "已驳回",
-    withdrawn: "已撤回",
-  })[s] || s;
+    pending: '待审批',
+    approved: '已通过',
+    rejected: '已驳回',
+    withdrawn: '已撤回',
+  })[s] || s
 const statusTagType = (
-  s: string,
-): "success" | "warning" | "danger" | "info" | "primary" | undefined =>
+  s: string
+): 'success' | 'warning' | 'danger' | 'info' | 'primary' | undefined =>
   (
     ({
-      pending: "warning",
-      approved: "success",
-      rejected: "danger",
-      withdrawn: "info",
-    }) as Record<string, "success" | "warning" | "danger" | "info" | "primary">
-  )[s] || "info";
-const formatDate = (d: string) =>
-  d ? new Date(d).toLocaleString("zh-CN") : "-";
+      pending: 'warning',
+      approved: 'success',
+      rejected: 'danger',
+      withdrawn: 'info',
+    }) as Record<string, 'success' | 'warning' | 'danger' | 'info' | 'primary'>
+  )[s] || 'info'
+const formatDate = (d: string) => (d ? new Date(d).toLocaleString('zh-CN') : '-')
 
 async function loadData() {
-  loading.value = true;
+  loading.value = true
   try {
-    const params: Record<string, any> = {};
-    if (filters.status) params.status = filters.status;
+    const params: Record<string, any> = {}
+    if (filters.status) params.status = filters.status
     // 使用审批历史接口，当前用户的提交记录由后端根据 token 过滤
-    applications.value = await getApprovalHistory(params);
+    applications.value = await getApprovalHistory(params)
   } catch {
-    applications.value = [];
+    applications.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function resetFilters() {
-  filters.status = "";
-  filters.dateRange = null;
-  loadData();
+  filters.status = ''
+  filters.dateRange = null
+  loadData()
 }
 
 async function handleWithdraw(row: any) {
   try {
     await ElMessageBox.confirm(
-      `确认撤回「${row.title || "该申请"}」？撤回后审批流程将终止。`,
-      "撤回申请",
-      { type: "warning" },
-    );
-    await request.post(`/approval/tasks/${row.id}/withdraw`);
-    ElMessage.success("已撤回");
-    loadData();
+      `确认撤回「${row.title || '该申请'}」？撤回后审批流程将终止。`,
+      '撤回申请',
+      { type: 'warning' }
+    )
+    await request.post(`/approval/tasks/${row.id}/withdraw`)
+    ElMessage.success('已撤回')
+    loadData()
   } catch {
     // 用户取消
   }
@@ -188,19 +175,16 @@ async function handleWithdraw(row: any) {
 
 async function handleResubmit(row: any) {
   try {
-    await ElMessageBox.confirm(
-      `确认重新提交「${row.title || "该申请"}」？`,
-      "重新提交",
-    );
-    await request.post(`/approval/tasks/${row.id}/resubmit`);
-    ElMessage.success("已重新提交");
-    loadData();
+    await ElMessageBox.confirm(`确认重新提交「${row.title || '该申请'}」？`, '重新提交')
+    await request.post(`/approval/tasks/${row.id}/resubmit`)
+    ElMessage.success('已重新提交')
+    loadData()
   } catch {
     // 用户取消
   }
 }
 
-onMounted(loadData);
+onMounted(loadData)
 </script>
 
 <style scoped>

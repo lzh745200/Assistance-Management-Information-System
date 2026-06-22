@@ -17,16 +17,14 @@
         <el-col :span="20">
           <el-descriptions :column="3" border>
             <el-descriptions-item label="Python 版本">
-              <el-tag type="primary" size="large">{{
-                systemInfo?.python_version || "-"
-              }}</el-tag>
+              <el-tag type="primary" size="large">{{ systemInfo?.python_version || '-' }}</el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="操作系统">
-              {{ systemInfo?.platform || "-" }}
+              {{ systemInfo?.platform || '-' }}
             </el-descriptions-item>
             <el-descriptions-item label="运行模式">
               <el-tag :type="envModeTagType" size="small">
-                {{ systemInfo?.env_mode || "-" }}
+                {{ systemInfo?.env_mode || '-' }}
               </el-tag>
             </el-descriptions-item>
           </el-descriptions>
@@ -40,9 +38,7 @@
         <div class="card-header">
           <span>依赖包状态</span>
           <div class="header-info">
-            <el-tag type="success" size="small">
-              已安装: {{ installedCount }}
-            </el-tag>
+            <el-tag type="success" size="small"> 已安装: {{ installedCount }} </el-tag>
             <el-tag
               v-if="missingPackages.length > 0"
               type="danger"
@@ -73,12 +69,7 @@
         style="width: 300px; margin-bottom: 16px"
       />
 
-      <el-table
-        v-loading="checking"
-        :data="filteredDependencies"
-        stripe
-        max-height="500"
-      >
+      <el-table v-loading="checking" :data="filteredDependencies" stripe max-height="500">
         <el-table-column prop="name" label="包名" min-width="200" sortable />
         <el-table-column label="状态" width="120" align="center">
           <template #default="{ row }">
@@ -93,13 +84,13 @@
         <el-table-column label="安装状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="row.installed ? 'success' : 'danger'" size="small">
-              {{ row.installed ? "已安装" : "缺失" }}
+              {{ row.installed ? '已安装' : '缺失' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="version" label="版本" min-width="150">
           <template #default="{ row }">
-            {{ row.version || "-" }}
+            {{ row.version || '-' }}
           </template>
         </el-table-column>
       </el-table>
@@ -121,12 +112,7 @@
         style="margin-bottom: 12px"
       />
       <div class="missing-list">
-        <el-tag
-          v-for="pkg in missingPackages"
-          :key="pkg"
-          type="danger"
-          class="missing-tag"
-        >
+        <el-tag v-for="pkg in missingPackages" :key="pkg" type="danger" class="missing-tag">
           {{ pkg }}
         </el-tag>
       </div>
@@ -145,94 +131,85 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import {
-  Refresh,
-  Search,
-  SuccessFilled,
-  CircleCloseFilled,
-} from "@element-plus/icons-vue";
-import { envApi } from "@/api/env";
-import type { EnvCheckResult, SystemInfo } from "@/api/env";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Refresh, Search, SuccessFilled, CircleCloseFilled } from '@element-plus/icons-vue'
+import { envApi } from '@/api/env'
+import type { EnvCheckResult, SystemInfo } from '@/api/env'
 
-const checking = ref(false);
-const checkError = ref("");
-const envData = ref<EnvCheckResult | null>(null);
-const pkgFilter = ref("");
+const checking = ref(false)
+const checkError = ref('')
+const envData = ref<EnvCheckResult | null>(null)
+const pkgFilter = ref('')
 
-const systemInfo = ref<SystemInfo | null>(null);
-const missingPackages = ref<string[]>([]);
+const systemInfo = ref<SystemInfo | null>(null)
+const missingPackages = ref<string[]>([])
 
 const installedCount = computed(() => {
-  if (!envData.value?.packages) return 0;
-  return (
-    Object.keys(envData.value.packages).length - missingPackages.value.length
-  );
-});
+  if (!envData.value?.packages) return 0
+  return Object.keys(envData.value.packages).length - missingPackages.value.length
+})
 
 const healthScore = computed(() => {
-  if (!envData.value) return "--";
-  const total = Object.keys(envData.value.packages).length;
-  const missing = missingPackages.value.length;
-  if (total === 0) return 100;
-  return Math.round(((total - missing) / total) * 100);
-});
+  if (!envData.value) return '--'
+  const total = Object.keys(envData.value.packages).length
+  const missing = missingPackages.value.length
+  if (total === 0) return 100
+  return Math.round(((total - missing) / total) * 100)
+})
 
 const healthClass = computed(() => {
-  const score = healthScore.value;
-  if (score === "--") return "";
-  if (score >= 90) return "healthy";
-  if (score >= 70) return "warning";
-  return "danger";
-});
+  const score = healthScore.value
+  if (score === '--') return ''
+  if (score >= 90) return 'healthy'
+  if (score >= 70) return 'warning'
+  return 'danger'
+})
 
-const envModeTagType = computed<"success" | "warning" | "info">(() => {
-  const mode = systemInfo.value?.env_mode || "";
-  if (mode === "production") return "success";
-  if (mode === "development") return "warning";
-  return "info";
-});
+const envModeTagType = computed<'success' | 'warning' | 'info'>(() => {
+  const mode = systemInfo.value?.env_mode || ''
+  if (mode === 'production') return 'success'
+  if (mode === 'development') return 'warning'
+  return 'info'
+})
 
 const filteredDependencies = computed(() => {
-  if (!envData.value?.packages) return [];
-  const entries = Object.entries(envData.value.packages).map(
-    ([name, version]) => ({
-      name,
-      version: version || "-",
-      installed: !missingPackages.value.includes(name),
-    }),
-  );
-  if (!pkgFilter.value) return entries;
-  const kw = pkgFilter.value.toLowerCase();
-  return entries.filter((e) => e.name.toLowerCase().includes(kw));
-});
+  if (!envData.value?.packages) return []
+  const entries = Object.entries(envData.value.packages).map(([name, version]) => ({
+    name,
+    version: version || '-',
+    installed: !missingPackages.value.includes(name),
+  }))
+  if (!pkgFilter.value) return entries
+  const kw = pkgFilter.value.toLowerCase()
+  return entries.filter((e) => e.name.toLowerCase().includes(kw))
+})
 
 async function runCheck() {
-  checking.value = true;
-  checkError.value = "";
-  envData.value = null;
+  checking.value = true
+  checkError.value = ''
+  envData.value = null
   try {
-    const result = await envApi.check();
-    envData.value = result;
-    systemInfo.value = result.system;
-    missingPackages.value = result.missing_packages || [];
+    const result = await envApi.check()
+    envData.value = result
+    systemInfo.value = result.system
+    missingPackages.value = result.missing_packages || []
     if (missingPackages.value.length === 0) {
-      ElMessage.success("环境检查通过，所有依赖已就绪");
+      ElMessage.success('环境检查通过，所有依赖已就绪')
     } else {
-      ElMessage.warning(`发现 ${missingPackages.value.length} 个缺失依赖`);
+      ElMessage.warning(`发现 ${missingPackages.value.length} 个缺失依赖`)
     }
   } catch (err: any) {
-    checkError.value = err?.message || "环境检查失败";
-    ElMessage.error(checkError.value);
+    checkError.value = err?.message || '环境检查失败'
+    ElMessage.error(checkError.value)
   } finally {
-    checking.value = false;
+    checking.value = false
   }
 }
 
 onMounted(() => {
-  runCheck();
-});
+  runCheck()
+})
 </script>
 
 <style scoped>

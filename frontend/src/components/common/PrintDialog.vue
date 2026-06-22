@@ -34,56 +34,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import { escapeHtml, sanitizeHtml } from "@/utils/sanitize";
+import { ref, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { escapeHtml, sanitizeHtml } from '@/utils/sanitize'
 
 interface Column {
-  key: string;
-  label: string;
+  key: string
+  label: string
 }
 
 interface Props {
-  data: any[];
-  columns: Column[];
-  title: string;
-  visible: boolean;
+  data: any[]
+  columns: Column[]
+  title: string
+  visible: boolean
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits(["close", "update:visible"]);
+const props = defineProps<Props>()
+const emit = defineEmits(['close', 'update:visible'])
 
-const authStore = useAuthStore();
-const printContent = ref<HTMLElement>();
+const authStore = useAuthStore()
+const printContent = ref<HTMLElement>()
 
 const printTime = computed(() => {
-  return new Date().toLocaleString("zh-CN");
-});
+  return new Date().toLocaleString('zh-CN')
+})
 
 const printer = computed(() => {
-  return authStore.user?.username || "未知用户";
-});
+  return authStore.user?.username || '未知用户'
+})
 
 const handleUpdateVisible = (value: boolean) => {
-  emit("update:visible", value);
+  emit('update:visible', value)
   if (!value) {
-    emit("close");
+    emit('close')
   }
-};
+}
 
 const handleClose = () => {
-  emit("update:visible", false);
-  emit("close");
-};
+  emit('update:visible', false)
+  emit('close')
+}
 
 const handlePrint = () => {
-  if (!printContent.value) return;
+  if (!printContent.value) return
 
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
 
   // Escape title to prevent XSS
-  const safeTitle = escapeHtml(props.title);
+  const safeTitle = escapeHtml(props.title)
 
   const styles = `
     <style>
@@ -129,9 +129,9 @@ const handlePrint = () => {
         .no-print { display: none; }
       }
     </style>
-  `;
+  `
 
-  const tableHtml = sanitizeHtml(printContent.value.innerHTML);
+  const tableHtml = sanitizeHtml(printContent.value.innerHTML)
 
   printWindow.document.write(`
     <html>
@@ -148,12 +148,12 @@ const handlePrint = () => {
               window.close();
             };
           };
-        ${"<"}/script>
+        ${'<'}/script>
       </body>
     </html>
-  `);
-  printWindow.document.close();
-};
+  `)
+  printWindow.document.close()
+}
 </script>
 
 <style scoped>

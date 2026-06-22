@@ -7,34 +7,34 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed } from 'vue'
 
 interface Props {
-  passwordStrength: string;
+  passwordStrength: string
 }
 
-const props = defineProps<Props>();
+const props = defineProps<Props>()
 
 const level = computed(() => {
-  const strength = props.passwordStrength.toLowerCase();
-  if (strength === "weak" || strength === "弱") return "weak";
-  if (strength === "medium" || strength === "中") return "medium";
-  if (strength === "strong" || strength === "强") return "strong";
-  return "none";
-});
+  const strength = props.passwordStrength.toLowerCase()
+  if (strength === 'weak' || strength === '弱') return 'weak'
+  if (strength === 'medium' || strength === '中') return 'medium'
+  if (strength === 'strong' || strength === '强') return 'strong'
+  return 'none'
+})
 
 const text = computed(() => {
   switch (level.value) {
-    case "weak":
-      return "弱";
-    case "medium":
-      return "中";
-    case "strong":
-      return "强";
+    case 'weak':
+      return '弱'
+    case 'medium':
+      return '中'
+    case 'strong':
+      return '强'
     default:
-      return "未设置";
+      return '未设置'
   }
-});
+})
 </script>
 
 <style scoped>

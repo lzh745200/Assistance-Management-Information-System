@@ -7,20 +7,11 @@
         </div>
       </template>
 
-      <el-form
-        ref="searchFormRef"
-        :model="searchForm"
-        label-width="100px"
-        class="search-form"
-      >
+      <el-form ref="searchFormRef" :model="searchForm" label-width="100px" class="search-form">
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="政策标题">
-              <el-input
-                v-model="searchForm.title"
-                placeholder="请输入政策标题"
-                clearable
-              />
+              <el-input v-model="searchForm.title" placeholder="请输入政策标题" clearable />
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -42,11 +33,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="发布部门">
-              <el-input
-                v-model="searchForm.department"
-                placeholder="请输入发布部门"
-                clearable
-              />
+              <el-input v-model="searchForm.department" placeholder="请输入发布部门" clearable />
             </el-form-item>
           </el-col>
         </el-row>
@@ -80,11 +67,7 @@
           </el-col>
           <el-col :span="8">
             <el-form-item label="关键词">
-              <el-input
-                v-model="searchForm.keyword"
-                placeholder="请输入关键词"
-                clearable
-              />
+              <el-input v-model="searchForm.keyword" placeholder="请输入关键词" clearable />
             </el-form-item>
           </el-col>
         </el-row>
@@ -114,9 +97,7 @@
         <el-table-column type="selection" width="55" />
         <el-table-column prop="title" label="政策标题" min-width="200">
           <template #default="scope">
-            <el-link @click="handleViewDetail(scope.row.id)">{{
-              scope.row.title
-            }}</el-link>
+            <el-link @click="handleViewDetail(scope.row.id)">{{ scope.row.title }}</el-link>
           </template>
         </el-table-column>
         <el-table-column prop="categoryName" label="分类" width="120" />
@@ -124,19 +105,14 @@
         <el-table-column prop="publishDate" label="发布日期" width="120" />
         <el-table-column prop="status" label="状态" width="80" align="center">
           <template #default="scope">
-            <el-tag
-              :type="scope.row.status === 'active' ? 'success' : 'danger'"
-            >
-              {{ scope.row.status === "active" ? "启用" : "禁用" }}
+            <el-tag :type="scope.row.status === 'active' ? 'success' : 'danger'">
+              {{ scope.row.status === 'active' ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="scope">
-            <el-button
-              type="primary"
-              link
-              @click="handleViewDetail(scope.row.id)"
+            <el-button type="primary" link @click="handleViewDetail(scope.row.id)"
               >查看详情</el-button
             >
           </template>
@@ -158,86 +134,86 @@
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage } from "element-plus";
-import request from "@/api/request";
+import { ref, reactive, onMounted } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 interface Policy {
-  id: string;
-  title: string;
-  category: string;
-  categoryName?: string;
-  department: string;
-  publishDate: string;
-  status: "active" | "invalid" | "draft";
-  createTime: string;
-  updateTime: string;
+  id: string
+  title: string
+  category: string
+  categoryName?: string
+  department: string
+  publishDate: string
+  status: 'active' | 'invalid' | 'draft'
+  createTime: string
+  updateTime: string
 }
 
 interface Category {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
-const { pushSafe } = useRouterSafe();
+const { pushSafe } = useRouterSafe()
 
-const loading = ref(false);
-const tableData = ref<Policy[]>([]);
-const selectedRows = ref<Policy[]>([]);
+const loading = ref(false)
+const tableData = ref<Policy[]>([])
+const selectedRows = ref<Policy[]>([])
 
-const categoryOptions = ref<Category[]>([]);
+const categoryOptions = ref<Category[]>([])
 
 const searchForm = reactive({
-  title: "",
-  category: "",
-  department: "",
+  title: '',
+  category: '',
+  department: '',
   publishDate: [] as string[],
-  status: "",
-  keyword: "",
-});
+  status: '',
+  keyword: '',
+})
 
 const pagination = reactive({
   currentPage: 1,
   pageSize: 10,
   total: 0,
-});
+})
 
 // 加载分类选项
 const loadCategories = async () => {
   try {
-    const res = await request.get("/policies/categories");
-    const data = res.data?.data || res.data;
+    const res = await request.get('/policies/categories')
+    const data = res.data?.data || res.data
     // API may return array of categories or a config object
     if (Array.isArray(data)) {
-      categoryOptions.value = data as Category[];
+      categoryOptions.value = data as Category[]
     } else {
       // Convert config object to flat category list
-      const cats: Category[] = [];
+      const cats: Category[] = []
       for (const [key, val] of Object.entries(data || {})) {
-        cats.push({ id: key, name: (val as any).label || key });
+        cats.push({ id: key, name: (val as any).label || key })
       }
-      categoryOptions.value = cats;
+      categoryOptions.value = cats
     }
   } catch (error) {
-    logger.error("加载政策分类失败:", error);
+    logger.error('加载政策分类失败:', error)
   }
-};
+}
 
 // 加载数据
 const loadData = async () => {
-  loading.value = true;
+  loading.value = true
   try {
     // Build search keyword: combine title, department, keyword
-    const searchParts: string[] = [];
-    if (searchForm.title) searchParts.push(searchForm.title);
-    if (searchForm.department) searchParts.push(searchForm.department);
-    if (searchForm.keyword) searchParts.push(searchForm.keyword);
-    const searchStr = searchParts.join(" ") || undefined;
+    const searchParts: string[] = []
+    if (searchForm.title) searchParts.push(searchForm.title)
+    if (searchForm.department) searchParts.push(searchForm.department)
+    if (searchForm.keyword) searchParts.push(searchForm.keyword)
+    const searchStr = searchParts.join(' ') || undefined
 
-    const res = await request.get("/policies", {
+    const res = await request.get('/policies', {
       params: {
         page: pagination.currentPage,
         page_size: pagination.pageSize,
@@ -245,75 +221,75 @@ const loadData = async () => {
         category: searchForm.category || undefined,
         status: searchForm.status || undefined,
       },
-    });
-    const data = res.data?.data || res.data;
-    const items = data?.items || (Array.isArray(data) ? data : []);
+    })
+    const data = res.data?.data || res.data
+    const items = data?.items || (Array.isArray(data) ? data : [])
 
     tableData.value = items.map((item: any) => ({
       id: item.id,
       title: item.title,
       category: item.category,
       categoryName: item.category_name || item.category,
-      department: item.department || item.issuing_authority || "",
-      publishDate: item.publish_date ? item.publish_date.split("T")[0] : "",
+      department: item.department || item.issuing_authority || '',
+      publishDate: item.publish_date ? item.publish_date.split('T')[0] : '',
       status: item.status,
       createTime: item.created_at,
       updateTime: item.updated_at,
-    }));
-    pagination.total = data?.total || items.length;
+    }))
+    pagination.total = data?.total || items.length
   } catch (error) {
-    logger.error("加载政策数据失败:", error);
-    ElMessage.error("加载政策数据失败");
+    logger.error('加载政策数据失败:', error)
+    ElMessage.error('加载政策数据失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // 搜索
 const handleSearch = () => {
-  pagination.currentPage = 1;
-  loadData();
-};
+  pagination.currentPage = 1
+  loadData()
+}
 
 // 重置
 const handleReset = () => {
-  searchForm.title = "";
-  searchForm.category = "";
-  searchForm.department = "";
-  searchForm.publishDate = [];
-  searchForm.status = "";
-  searchForm.keyword = "";
-  pagination.currentPage = 1;
-  loadData();
-};
+  searchForm.title = ''
+  searchForm.category = ''
+  searchForm.department = ''
+  searchForm.publishDate = []
+  searchForm.status = ''
+  searchForm.keyword = ''
+  pagination.currentPage = 1
+  loadData()
+}
 
 // 查看详情
 const handleViewDetail = (id: string) => {
-  pushSafe(`/policies/${id}`);
-};
+  pushSafe(`/policies/${id}`)
+}
 
 // 选择变更
 const handleSelectionChange = (rows: Policy[]) => {
-  selectedRows.value = rows;
-};
+  selectedRows.value = rows
+}
 
 // 分页大小变更
 const handleSizeChange = (val: number) => {
-  pagination.pageSize = val;
-  pagination.currentPage = 1;
-  loadData();
-};
+  pagination.pageSize = val
+  pagination.currentPage = 1
+  loadData()
+}
 
 // 当前页变更
 const handleCurrentChange = (val: number) => {
-  pagination.currentPage = val;
-  loadData();
-};
+  pagination.currentPage = val
+  loadData()
+}
 
 onMounted(async () => {
-  await loadCategories();
-  await loadData();
-});
+  await loadCategories()
+  await loadData()
+})
 </script>
 
 <style scoped>

@@ -6,31 +6,25 @@
  */
 
 /** 确保值为数组，否则返回空数组 */
-export function safeArray<T = unknown>(
-  value: unknown,
-  fallback: T[] = [],
-): T[] {
-  return Array.isArray(value) ? (value as T[]) : fallback;
+export function safeArray<T = unknown>(value: unknown, fallback: T[] = []): T[] {
+  return Array.isArray(value) ? (value as T[]) : fallback
 }
 
 /** 确保值为非数组对象，否则返回默认对象 */
-export function safeObject<T extends Record<string, unknown>>(
-  value: unknown,
-  fallback: T,
-): T {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value as T;
+export function safeObject<T extends Record<string, unknown>>(value: unknown, fallback: T): T {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as T
   }
-  return fallback;
+  return fallback
 }
 
 /** 确保值为字符串，否则返回空字符串 */
-export function safeString(value: unknown, fallback: string = ""): string {
-  return typeof value === "string" ? value : fallback;
+export function safeString(value: unknown, fallback: string = ''): string {
+  return typeof value === 'string' ? value : fallback
 }
 
 /** 确保值为有效数字，NaN/Infinity/undefined/null → 默认值 */
 export function safeNumber(value: unknown, fallback: number = 0): number {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
 }

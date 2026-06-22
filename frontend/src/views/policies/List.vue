@@ -2,11 +2,7 @@
   <div class="policies-list">
     <!-- 搜索筛选卡片 -->
     <el-card class="search-card">
-      <el-form
-        :inline="true"
-        :model="searchForm"
-        @submit.prevent="handleSearch"
-      >
+      <el-form :inline="true" :model="searchForm" @submit.prevent="handleSearch">
         <el-form-item label="政策名称">
           <el-input
             v-model="searchForm.title"
@@ -115,60 +111,27 @@
         @sort-change="handleSortChange"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column
-          v-if="canDelete"
-          type="selection"
-          width="50"
-          align="center"
-        />
+        <el-table-column v-if="canDelete" type="selection" width="50" align="center" />
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column
-          prop="title"
-          label="政策名称"
-          min-width="200"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="category_name"
-          label="政策分类"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="title" label="政策名称" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="category_name" label="政策分类" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="row.category === 'military' ? 'danger' : 'primary'">
               {{ row.category_name || getCategoryLabel(row.category) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="level_name"
-          label="组织层级"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="level_name" label="组织层级" width="100" align="center">
           <template #default="{ row }">
-            {{
-              row.level_name ||
-              getLevelLabel(row.category, row.organization_level)
-            }}
+            {{ row.level_name || getLevelLabel(row.category, row.organization_level) }}
           </template>
         </el-table-column>
-        <el-table-column
-          prop="publish_date"
-          label="发布日期"
-          width="120"
-          sortable="custom"
-        >
+        <el-table-column prop="publish_date" label="发布日期" width="120" sortable="custom">
           <template #default="{ row }">
             {{ formatDate(row.publish_date) }}
           </template>
         </el-table-column>
-        <el-table-column
-          prop="department"
-          label="发布部门"
-          min-width="150"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="department" label="发布部门" min-width="150" show-overflow-tooltip />
         <el-table-column prop="status" label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="getStatusColor(row.status)">
@@ -178,30 +141,13 @@
         </el-table-column>
         <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button
-              type="primary"
-              size="small"
-              link
-              @click="handleDetail(row)"
-            >
+            <el-button type="primary" size="small" link @click="handleDetail(row)">
               详情
             </el-button>
-            <el-button
-              v-if="canEdit"
-              type="warning"
-              size="small"
-              link
-              @click="handleEdit(row)"
-            >
+            <el-button v-if="canEdit" type="warning" size="small" link @click="handleEdit(row)">
               编辑
             </el-button>
-            <el-button
-              v-if="canDelete"
-              type="danger"
-              size="small"
-              link
-              @click="handleDelete(row)"
-            >
+            <el-button v-if="canDelete" type="danger" size="small" link @click="handleDelete(row)">
               删除
             </el-button>
           </template>
@@ -225,22 +171,15 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, computed, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  Plus,
-  Search,
-  Refresh,
-  Upload,
-  Download,
-  Delete,
-} from "@element-plus/icons-vue";
-import { usePolicyStore } from "@/stores/policy";
-import { useAuthStore } from "@/stores/auth";
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Search, Refresh, Upload, Download, Delete } from '@element-plus/icons-vue'
+import { usePolicyStore } from '@/stores/policy'
+import { useAuthStore } from '@/stores/auth'
 import {
   getCategoryLabel,
   getLevelLabel,
@@ -254,83 +193,83 @@ import {
   type PolicyCategory,
   type PolicyStatus,
   type OrganizationLevel,
-} from "@/api/policy";
+} from '@/api/policy'
 
-const { pushSafe } = useRouterSafe();
-const route = useRoute();
-const policyStore = usePolicyStore();
-const authStore = useAuthStore();
+const { pushSafe } = useRouterSafe()
+const route = useRoute()
+const policyStore = usePolicyStore()
+const authStore = useAuthStore()
 
 // 搜索表单
 const searchForm = reactive({
-  title: "",
-  category: "" as PolicyCategory | "",
-  organization_level: "" as OrganizationLevel | "",
-  status: "" as PolicyStatus | "",
-});
+  title: '',
+  category: '' as PolicyCategory | '',
+  organization_level: '' as OrganizationLevel | '',
+  status: '' as PolicyStatus | '',
+})
 
 // 分页
-const currentPage = ref(1);
-const pageSize = ref(10);
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 // 批量选择
-const selectedIds = ref<number[]>([]);
+const selectedIds = ref<number[]>([])
 const handleSelectionChange = (rows: any[]) => {
-  selectedIds.value = rows.map((r) => r.id);
-};
+  selectedIds.value = rows.map((r) => r.id)
+}
 
 // 权限检查
 const canEdit = computed(() => {
-  const user = authStore.user;
-  if (!user) return false;
-  if (user.is_superuser) return true;
-  const role = (user.role || "").toLowerCase();
-  return role === "admin" || role === "super_admin" || role === "editor";
-});
+  const user = authStore.user
+  if (!user) return false
+  if (user.is_superuser) return true
+  const role = (user.role || '').toLowerCase()
+  return role === 'admin' || role === 'super_admin' || role === 'editor'
+})
 
 const canDelete = computed(() => {
-  const user = authStore.user;
-  if (!user) return false;
-  if (user.is_superuser) return true;
-  const role = (user.role || "").toLowerCase();
-  return role === "admin" || role === "super_admin";
-});
+  const user = authStore.user
+  if (!user) return false
+  if (user.is_superuser) return true
+  const role = (user.role || '').toLowerCase()
+  return role === 'admin' || role === 'super_admin'
+})
 
 // 层级选项（根据分类动态变化）
 const levelOptions = computed(() => {
-  if (!searchForm.category) return [];
-  return getLevelOptions(searchForm.category as PolicyCategory);
-});
+  if (!searchForm.category) return []
+  return getLevelOptions(searchForm.category as PolicyCategory)
+})
 
 // 格式化日期
 const formatDate = (dateStr: string) => {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("zh-CN");
-};
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('zh-CN')
+}
 
 // 分类变化时清空层级选择
 const handleCategoryChange = () => {
-  searchForm.organization_level = "";
-};
+  searchForm.organization_level = ''
+}
 
 // 搜索
 const handleSearch = () => {
-  currentPage.value = 1;
-  loadData();
-};
+  currentPage.value = 1
+  loadData()
+}
 
 // 重置
 const handleReset = () => {
   Object.assign(searchForm, {
-    title: "",
-    category: "",
-    organization_level: "",
-    status: "",
-  });
-  currentPage.value = 1;
-  loadData();
-};
+    title: '',
+    category: '',
+    organization_level: '',
+    status: '',
+  })
+  currentPage.value = 1
+  loadData()
+}
 
 // 加载数据
 const loadData = async () => {
@@ -342,153 +281,145 @@ const loadData = async () => {
       organization_level: searchForm.organization_level || undefined,
       status: searchForm.status || undefined,
       search: searchForm.title || undefined,
-    });
+    })
   } catch (error) {
-    ElMessage.error("加载数据失败");
+    ElMessage.error('加载数据失败')
   }
-};
+}
 
 // 排序变化
-const handleSortChange = ({
-  prop,
-  order,
-}: {
-  prop: string;
-  order: string | null;
-}) => {
+const handleSortChange = ({ prop, order }: { prop: string; order: string | null }) => {
   policyStore.setFilters({
-    order_by: prop || "publish_date",
-    order_desc: order !== "ascending",
-  });
-  loadData();
-};
+    order_by: prop || 'publish_date',
+    order_desc: order !== 'ascending',
+  })
+  loadData()
+}
 
 // 分页大小变化
 const handleSizeChange = (size: number) => {
-  pageSize.value = size;
-  currentPage.value = 1;
-  loadData();
-};
+  pageSize.value = size
+  currentPage.value = 1
+  loadData()
+}
 
 // 页码变化
 const handlePageChange = (page: number) => {
-  currentPage.value = page;
-  loadData();
-};
+  currentPage.value = page
+  loadData()
+}
 
 // 新增
 const handleAdd = () => {
-  pushSafe("/policies/create");
-};
+  pushSafe('/policies/create')
+}
 
 // 详情
 const handleDetail = (row: any) => {
-  pushSafe(`/policies/${row.id}`);
-};
+  pushSafe(`/policies/${row.id}`)
+}
 
 // 编辑
 const handleEdit = (row: any) => {
-  pushSafe(`/policies/${row.id}/edit`);
-};
+  pushSafe(`/policies/${row.id}/edit`)
+}
 
 // 删除
 const handleDelete = async (row: any) => {
   try {
-    await ElMessageBox.confirm(
-      `确定删除政策"${row.title}"吗？此操作不可恢复。`,
-      "删除确认",
-      { type: "warning" },
-    );
-    await policyStore.removePolicy(row.id);
-    ElMessage.success("删除成功");
+    await ElMessageBox.confirm(`确定删除政策"${row.title}"吗？此操作不可恢复。`, '删除确认', {
+      type: 'warning',
+    })
+    await policyStore.removePolicy(row.id)
+    ElMessage.success('删除成功')
   } catch (error: any) {
-    if (error !== "cancel") {
-      ElMessage.error(error.message || "删除失败");
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '删除失败')
     }
   }
-};
+}
 
 // 批量删除
 const handleBatchDelete = async () => {
-  if (selectedIds.value.length === 0) return;
+  if (selectedIds.value.length === 0) return
   try {
     await ElMessageBox.confirm(
       `确定删除选中的 ${selectedIds.value.length} 条政策吗？此操作不可恢复。`,
-      "批量删除确认",
-      { type: "warning" },
-    );
-    await policyStore.removePolicies(selectedIds.value);
-    selectedIds.value = [];
-    ElMessage.success("批量删除成功");
+      '批量删除确认',
+      { type: 'warning' }
+    )
+    await policyStore.removePolicies(selectedIds.value)
+    selectedIds.value = []
+    ElMessage.success('批量删除成功')
   } catch (error: any) {
-    if (error !== "cancel") {
-      ElMessage.error(error.message || "批量删除失败");
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '批量删除失败')
     }
   }
-};
+}
 
 // 导入
 const handleImport = () => {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".xlsx,.xls";
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.xlsx,.xls'
   input.onchange = async (e: any) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files[0]
+    if (!file) return
 
     try {
-      const result = await importPolicies(file);
+      const result = await importPolicies(file)
       if ((result as any).errors && (result as any).errors.length > 0) {
         const errorDetails = (result as any).errors
           .slice(0, 5)
           .map((err: any) => `第${err.row}行「${err.title}」: ${err.error}`)
-          .join("\n");
+          .join('\n')
         const moreText =
           (result as any).errors.length > 5
             ? `\n...还有 ${(result as any).errors.length - 5} 条错误`
-            : "";
+            : ''
 
         ElMessage.warning({
           message: `导入完成：成功${result.imported}条，${result.errors.length}条有错误`,
           duration: 5000,
-        });
+        })
 
         // 显示详细错误对话框
         ElMessageBox.alert(
           `导入完成：成功${result.imported}条，${result.errors.length}条有错误\n\n错误详情：\n${errorDetails}${moreText}`,
-          "导入结果",
+          '导入结果',
           {
-            confirmButtonText: "确定",
-            type: "warning",
-          },
-        );
+            confirmButtonText: '确定',
+            type: 'warning',
+          }
+        )
       } else {
-        ElMessage.success(`导入成功：${result.imported}条政策`);
+        ElMessage.success(`导入成功：${result.imported}条政策`)
       }
-      loadData();
+      loadData()
     } catch (error: any) {
-      ElMessage.error(error.message || "导入失败");
+      ElMessage.error(error.message || '导入失败')
     }
-  };
-  input.click();
-};
+  }
+  input.click()
+}
 
 // 下载导入模板
 const handleDownloadTemplate = async () => {
   try {
-    const res = await downloadImportTemplate();
-    const blob = res.data || res;
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "政策法规导入模板.xlsx";
-    link.click();
-    window.URL.revokeObjectURL(url);
+    const res = await downloadImportTemplate()
+    const blob = res.data || res
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '政策法规导入模板.xlsx'
+    link.click()
+    window.URL.revokeObjectURL(url)
     // 模板下载成功 — 浏览器已确认
   } catch (error: any) {
-    ElMessage.error("下载模板失败");
+    ElMessage.error('下载模板失败')
   }
-};
+}
 
 // 导出PDF
 const handleExportPDF = async () => {
@@ -498,22 +429,22 @@ const handleExportPDF = async () => {
       organization_level: searchForm.organization_level || undefined,
       status: searchForm.status || undefined,
       search: searchForm.title || undefined,
-    });
+    })
 
-    const blobPdf = resPdf.data || resPdf;
-    const url = window.URL.createObjectURL(blobPdf);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `政策法规_${new Date().getTime()}.pdf`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    const blobPdf = resPdf.data || resPdf
+    const url = window.URL.createObjectURL(blobPdf)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `政策法规_${new Date().getTime()}.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url)
 
-    ElMessage.success("导出PDF成功");
+    ElMessage.success('导出PDF成功')
   } catch (error: any) {
-    logger.error("导出PDF失败:", error);
-    ElMessage.error("导出PDF功能需要后端支持，请先启动后端服务");
+    logger.error('导出PDF失败:', error)
+    ElMessage.error('导出PDF功能需要后端支持，请先启动后端服务')
   }
-};
+}
 
 // 导出WPS
 const handleExportWPS = async () => {
@@ -523,49 +454,49 @@ const handleExportWPS = async () => {
       organization_level: searchForm.organization_level || undefined,
       status: searchForm.status || undefined,
       search: searchForm.title || undefined,
-    });
-    const blobWps = resWps.data || resWps;
+    })
+    const blobWps = resWps.data || resWps
 
-    const url = window.URL.createObjectURL(blobWps);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `政策法规_${new Date().getTime()}.wps`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    const url = window.URL.createObjectURL(blobWps)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `政策法规_${new Date().getTime()}.wps`
+    link.click()
+    window.URL.revokeObjectURL(url)
 
-    ElMessage.success("导出WPS成功");
+    ElMessage.success('导出WPS成功')
   } catch (error: any) {
-    logger.error("导出WPS失败:", error);
-    ElMessage.error("导出WPS功能需要后端支持，请先启动后端服务");
+    logger.error('导出WPS失败:', error)
+    ElMessage.error('导出WPS功能需要后端支持，请先启动后端服务')
   }
-};
+}
 
 // 监听路由参数变化（支持从分类页面跳转）
 watch(
   () => route.query,
   (query) => {
     if (query.category) {
-      searchForm.category = query.category as PolicyCategory;
+      searchForm.category = query.category as PolicyCategory
     }
     if (query.level) {
-      searchForm.organization_level = query.level as OrganizationLevel;
+      searchForm.organization_level = query.level as OrganizationLevel
     }
-    loadData();
+    loadData()
   },
-  { immediate: false },
-);
+  { immediate: false }
+)
 
 // 初始化
 onMounted(() => {
   // 从路由参数初始化筛选条件
   if (route.query.category) {
-    searchForm.category = route.query.category as PolicyCategory;
+    searchForm.category = route.query.category as PolicyCategory
   }
   if (route.query.level) {
-    searchForm.organization_level = route.query.level as OrganizationLevel;
+    searchForm.organization_level = route.query.level as OrganizationLevel
   }
-  loadData();
-});
+  loadData()
+})
 </script>
 
 <style scoped lang="scss">

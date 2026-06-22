@@ -19,12 +19,7 @@
       </el-table-column>
       <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">
-          <el-button
-            type="primary"
-            size="small"
-            link
-            @click.stop="goYearly(row)"
-          >
+          <el-button type="primary" size="small" link @click.stop="goYearly(row)">
             查看年度数据 →
           </el-button>
         </template>
@@ -34,38 +29,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { getSupportedVillages } from "@/api/supportedVillage";
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getSupportedVillages } from '@/api/supportedVillage'
 
-const router = useRouter();
-const villages = ref<any[]>([]);
-const loading = ref(false);
+const router = useRouter()
+const villages = ref<any[]>([])
+const loading = ref(false)
 
 async function loadVillages() {
-  loading.value = true;
+  loading.value = true
   try {
-    const resp: any = await getSupportedVillages({ page_size: 100, page: 1 });
-    villages.value = resp?.items || resp?.data?.items || resp || [];
+    const resp: any = await getSupportedVillages({ page_size: 100, page: 1 })
+    villages.value = resp?.items || resp?.data?.items || resp || []
     for (const v of villages.value) {
       v.latest_year =
         v.latest_year ||
-        (v.yearly_data
-          ? Math.max(...Object.keys(v.yearly_data).map(Number))
-          : null);
+        (v.yearly_data ? Math.max(...Object.keys(v.yearly_data).map(Number)) : null)
     }
   } catch {
-    villages.value = [];
+    villages.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function goYearly(row: any) {
-  router.push(`/supported-villages/${row.id}/yearly`);
+  router.push(`/supported-villages/${row.id}/yearly`)
 }
 
-onMounted(loadVillages);
+onMounted(loadVillages)
 </script>
 
 <style scoped>

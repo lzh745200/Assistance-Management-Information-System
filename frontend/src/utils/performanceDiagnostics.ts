@@ -12,137 +12,137 @@
 
 // ── FPS 监控 ──
 
-let _fpsFrames = 0;
-let _fpsLastTime = performance.now();
-let _fpsValue = 60;
-let _fpsRafId = 0;
+let _fpsFrames = 0
+let _fpsLastTime = performance.now()
+let _fpsValue = 60
+let _fpsRafId = 0
 
 export function startFpsMonitor(onUpdate?: (fps: number) => void): () => void {
   function _tick() {
-    _fpsFrames++;
-    const now = performance.now();
-    const elapsed = now - _fpsLastTime;
+    _fpsFrames++
+    const now = performance.now()
+    const elapsed = now - _fpsLastTime
     if (elapsed >= 1000) {
-      _fpsValue = Math.round((_fpsFrames * 1000) / elapsed);
-      _fpsFrames = 0;
-      _fpsLastTime = now;
-      onUpdate?.(_fpsValue);
+      _fpsValue = Math.round((_fpsFrames * 1000) / elapsed)
+      _fpsFrames = 0
+      _fpsLastTime = now
+      onUpdate?.(_fpsValue)
       // 低帧率警告
       if (_fpsValue < 30 && import.meta.env.DEV) {
-        console.warn(`[Perf] 低帧率: ${_fpsValue} FPS`);
+        console.warn(`[Perf] 低帧率: ${_fpsValue} FPS`)
       }
     }
-    _fpsRafId = requestAnimationFrame(_tick);
+    _fpsRafId = requestAnimationFrame(_tick)
   }
-  _fpsRafId = requestAnimationFrame(_tick);
-  return () => cancelAnimationFrame(_fpsRafId);
+  _fpsRafId = requestAnimationFrame(_tick)
+  return () => cancelAnimationFrame(_fpsRafId)
 }
 
 export function getCurrentFps(): number {
-  return _fpsValue;
+  return _fpsValue
 }
 
 // ── 内存监控 ──
 
 interface MemoryInfo {
-  jsHeapSizeLimit: number;
-  totalJSHeapSize: number;
-  usedJSHeapSize: number;
+  jsHeapSizeLimit: number
+  totalJSHeapSize: number
+  usedJSHeapSize: number
 }
 
 export function getMemoryInfo(): MemoryInfo | null {
-  const perf = performance as any;
+  const perf = performance as any
   if (perf?.memory) {
     return {
       jsHeapSizeLimit: perf.memory.jsHeapSizeLimit,
       totalJSHeapSize: perf.memory.totalJSHeapSize,
       usedJSHeapSize: perf.memory.usedJSHeapSize,
-    };
+    }
   }
-  return null;
+  return null
 }
 
-let _memIntervalId = 0;
+let _memIntervalId = 0
 
 export function startMemoryMonitor(
   intervalMs: number = 10000,
-  onLeak?: (growthMb: number) => void,
+  onLeak?: (growthMb: number) => void
 ): () => void {
-  let lastUsed = 0;
+  let lastUsed = 0
   _memIntervalId = window.setInterval(() => {
-    const mem = getMemoryInfo();
-    if (!mem) return;
-    const usedMb = mem.usedJSHeapSize / 1024 / 1024;
+    const mem = getMemoryInfo()
+    if (!mem) return
+    const usedMb = mem.usedJSHeapSize / 1024 / 1024
     if (lastUsed > 0) {
-      const growth = usedMb - lastUsed;
+      const growth = usedMb - lastUsed
       if (growth > 10) {
         console.warn(
           `[Perf] 内存增长 ${growth.toFixed(1)}MB (当前 ${usedMb.toFixed(1)}MB)` +
-            ` — 可能存在内存泄漏`,
-        );
-        onLeak?.(growth);
+            ` — 可能存在内存泄漏`
+        )
+        onLeak?.(growth)
       }
     }
-    lastUsed = usedMb;
-  }, intervalMs);
-  return () => clearInterval(_memIntervalId);
+    lastUsed = usedMb
+  }, intervalMs)
+  return () => clearInterval(_memIntervalId)
 }
 
 // ── 组件渲染耗时 ──
 
-const _renderTimes = new Map<string, number[]>();
+const _renderTimes = new Map<string, number[]>()
 
 export function recordRender(componentName: string): () => void {
-  const start = performance.now();
+  const start = performance.now()
   return () => {
-    const elapsed = performance.now() - start;
+    const elapsed = performance.now() - start
     if (!_renderTimes.has(componentName)) {
-      _renderTimes.set(componentName, []);
+      _renderTimes.set(componentName, [])
     }
-    _renderTimes.get(componentName)!.push(elapsed);
-  };
+    _renderTimes.get(componentName)!.push(elapsed)
+  }
 }
 
 export function getRenderStats(componentName: string) {
-  const times = _renderTimes.get(componentName) || [];
-  if (!times.length) return null;
-  const sum = times.reduce((a, b) => a + b, 0);
+  const times = _renderTimes.get(componentName) || []
+  if (!times.length) return null
+  const sum = times.reduce((a, b) => a + b, 0)
   return {
     count: times.length,
     avg_ms: Math.round(sum / times.length),
     max_ms: Math.round(Math.max(...times)),
     min_ms: Math.round(Math.min(...times)),
-  };
+  }
 }
 
 // ── 统一启动入口 ──
 
 interface PerfMonitorOptions {
-  logFps?: boolean;
-  logMemory?: boolean;
-  slowComponentMs?: number;
+  logFps?: boolean
+  logMemory?: boolean
+  slowComponentMs?: number
 }
 
-let _cleanups: (() => void)[] = [];
+let _cleanups: (() => void)[] = []
 
 export function startPerfMonitor(opts: PerfMonitorOptions = {}): () => void {
-  if (!import.meta.env.DEV) return () => {};
+  if (!import.meta.env.DEV) return () => {}
 
-  _cleanups.forEach((fn) => fn());
-  _cleanups = [];
+  _cleanups.forEach((fn) => fn())
+  _cleanups = []
 
   if (opts.logFps) {
     _cleanups.push(
       startFpsMonitor((fps) => {
-        if (fps < 30) console.debug(`[Perf] FPS: ${fps}`);
-      }),
-    );
+        if (fps < 30) console.debug(`[Perf] FPS: ${fps}`)
+      })
+    )
   }
 
   if (opts.logMemory) {
-    _cleanups.push(startMemoryMonitor(15000));
+    _cleanups.push(startMemoryMonitor(15000))
   }
 
-  console.log("[Perf] 性能监控已启动", opts);
-  return () => _cleanups.forEach((fn) => fn());
+  console.log('[Perf] 性能监控已启动', opts)
+  return () => _cleanups.forEach((fn) => fn())
 }

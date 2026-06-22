@@ -4,9 +4,7 @@
     <div class="page-header">
       <div class="page-header-inner">
         <h1 class="page-title">任务分配</h1>
-        <p class="page-subtitle">
-          精准分配乡村振兴工作任务，确保高效执行与责任到人
-        </p>
+        <p class="page-subtitle">精准分配乡村振兴工作任务，确保高效执行与责任到人</p>
       </div>
       <div class="decoration-line"></div>
     </div>
@@ -26,12 +24,7 @@
               ><el-icon><Search /></el-icon
             ></template>
           </el-input>
-          <el-select
-            v-model="selectedStatus"
-            placeholder="任务状态"
-            clearable
-            style="width: 130px"
-          >
+          <el-select v-model="selectedStatus" placeholder="任务状态" clearable style="width: 130px">
             <el-option label="全部状态" value="" />
             <el-option label="待分配" value="pending" />
             <el-option label="进行中" value="in_progress" />
@@ -39,23 +32,13 @@
             <el-option label="已延期" value="delayed" />
             <el-option label="已取消" value="cancelled" />
           </el-select>
-          <el-select
-            v-model="selectedPriority"
-            placeholder="优先级"
-            clearable
-            style="width: 120px"
-          >
+          <el-select v-model="selectedPriority" placeholder="优先级" clearable style="width: 120px">
             <el-option label="全部" value="" />
             <el-option label="高" value="high" />
             <el-option label="中" value="medium" />
             <el-option label="低" value="low" />
           </el-select>
-          <el-select
-            v-model="selectedAssignee"
-            placeholder="负责人"
-            clearable
-            style="width: 130px"
-          >
+          <el-select v-model="selectedAssignee" placeholder="负责人" clearable style="width: 130px">
             <el-option label="全部人员" value="" />
             <el-option
               v-for="person in staff"
@@ -117,28 +100,16 @@
                 size="small"
                 effect="dark"
                 class="priority-tag"
-                >{{
-                  getPriorityLabel(scope.row.priority).replace("优先级", "")
-                }}</el-tag
+                >{{ getPriorityLabel(scope.row.priority).replace('优先级', '') }}</el-tag
               >
               <span class="task-name-text">{{ scope.row.name }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="projectName"
-          label="所属项目"
-          width="150"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="assigneeName"
-          label="负责人"
-          width="100"
-          align="center"
-        >
+        <el-table-column prop="projectName" label="所属项目" width="150" show-overflow-tooltip />
+        <el-table-column prop="assigneeName" label="负责人" width="100" align="center">
           <template #default="scope">
-            <span>{{ scope.row.assigneeName || "未分配" }}</span>
+            <span>{{ scope.row.assigneeName || '未分配' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="90" align="center">
@@ -153,27 +124,16 @@
             <el-progress
               :percentage="scope.row.progress"
               :status="
-                scope.row.progress === 100
-                  ? 'success'
-                  : scope.row.progress > 60
-                    ? ''
-                    : 'warning'
+                scope.row.progress === 100 ? 'success' : scope.row.progress > 60 ? '' : 'warning'
               "
               :stroke-width="8"
             />
           </template>
         </el-table-column>
-        <el-table-column
-          prop="deadline"
-          label="截止日期"
-          width="110"
-          align="center"
-        >
+        <el-table-column prop="deadline" label="截止日期" width="110" align="center">
           <template #default="scope">
             <div>
-              <span :class="getDeadlineClass(scope.row)">{{
-                formatDate(scope.row.deadline)
-              }}</span>
+              <span :class="getDeadlineClass(scope.row)">{{ formatDate(scope.row.deadline) }}</span>
               <el-tag
                 v-if="isOverdue(scope.row)"
                 type="danger"
@@ -188,11 +148,7 @@
         <el-table-column label="操作" width="160" fixed="right" align="center">
           <template #default="scope">
             <div class="action-cell">
-              <el-button
-                link
-                type="primary"
-                size="small"
-                @click="editTask(scope.row)"
+              <el-button link type="primary" size="small" @click="editTask(scope.row)"
                 >编辑</el-button
               >
               <el-button
@@ -212,15 +168,10 @@
                 ></el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-if="scope.row.status !== 'cancelled'"
-                      command="progress"
+                    <el-dropdown-item v-if="scope.row.status !== 'cancelled'" command="progress"
                       >查看进度</el-dropdown-item
                     >
-                    <el-dropdown-item
-                      command="delete"
-                      divided
-                      style="color: #f56c6c"
+                    <el-dropdown-item command="delete" divided style="color: #f56c6c"
                       >删除任务</el-dropdown-item
                     >
                   </el-dropdown-menu>
@@ -270,11 +221,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="所属项目" prop="projectId">
-              <el-select
-                v-model="currentTask.projectId"
-                placeholder="请选择所属项目"
-                clearable
-              >
+              <el-select v-model="currentTask.projectId" placeholder="请选择所属项目" clearable>
                 <el-option
                   v-for="project in projects"
                   :key="project.id"
@@ -295,11 +242,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="负责人" prop="assigneeId">
-              <el-select
-                v-model="currentTask.assigneeId"
-                placeholder="请选择负责人"
-                clearable
-              >
+              <el-select v-model="currentTask.assigneeId" placeholder="请选择负责人" clearable>
                 <el-option
                   v-for="person in staff"
                   :key="person.id"
@@ -307,11 +250,7 @@
                   :value="person.id"
                 >
                   <div class="select-assignee-item">
-                    <el-avatar
-                      :size="24"
-                      :src="person.avatar"
-                      :alt="person.name"
-                    >
+                    <el-avatar :size="24" :src="person.avatar" :alt="person.name">
                       {{ person.name[0] }}
                     </el-avatar>
                     <span>{{ person.name }} - {{ person.position }}</span>
@@ -322,10 +261,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="状态" prop="status">
-              <el-select
-                v-model="currentTask.status"
-                placeholder="请选择任务状态"
-              >
+              <el-select v-model="currentTask.status" placeholder="请选择任务状态">
                 <el-option label="待分配" value="pending" />
                 <el-option label="进行中" value="in_progress" />
                 <el-option label="已完成" value="completed" />
@@ -349,11 +285,7 @@
                 v-model="currentTask.deadline"
                 type="date"
                 placeholder="选择截止日期"
-                :min-date="
-                  currentTask.startDate
-                    ? new Date(currentTask.startDate)
-                    : undefined
-                "
+                :min-date="currentTask.startDate ? new Date(currentTask.startDate) : undefined"
                 style="width: 100%"
               />
             </el-form-item>
@@ -397,12 +329,7 @@
     </el-dialog>
 
     <!-- 任务分配对话框 -->
-    <el-dialog
-      v-model="assignDialogVisible"
-      title="分配任务"
-      width="500px"
-      class="assign-dialog"
-    >
+    <el-dialog v-model="assignDialogVisible" title="分配任务" width="500px" class="assign-dialog">
       <el-form
         ref="assignFormRef"
         :model="assignForm"
@@ -468,41 +395,25 @@
                   <div class="assignee-wrapper">
                     <el-avatar
                       :size="24"
-                      :src="
-                        getAssigneeAvatar(currentTaskProgress?.assigneeId || '')
-                      "
+                      :src="getAssigneeAvatar(currentTaskProgress?.assigneeId || '')"
                       :alt="currentTaskProgress?.assigneeName || '未分配'"
                     >
                       {{
                         currentTaskProgress?.assigneeName
                           ? currentTaskProgress.assigneeName[0]
-                          : "未"
+                          : '未'
                       }}
                     </el-avatar>
-                    <span>{{
-                      currentTaskProgress?.assigneeName || "未分配"
-                    }}</span>
+                    <span>{{ currentTaskProgress?.assigneeName || '未分配' }}</span>
                   </div>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="截止日期">
-                  <span
-                    :class="
-                      currentTaskProgress
-                        ? getDeadlineClass(currentTaskProgress)
-                        : ''
-                    "
-                  >
-                    {{
-                      currentTaskProgress
-                        ? formatDate(currentTaskProgress.deadline)
-                        : ""
-                    }}
+                  <span :class="currentTaskProgress ? getDeadlineClass(currentTaskProgress) : ''">
+                    {{ currentTaskProgress ? formatDate(currentTaskProgress.deadline) : '' }}
                     <span
-                      v-if="
-                        currentTaskProgress && isOverdue(currentTaskProgress)
-                      "
+                      v-if="currentTaskProgress && isOverdue(currentTaskProgress)"
                       class="overdue-badge"
                       >已过期</span
                     >
@@ -513,11 +424,7 @@
                 <el-form-item label="当前进度">
                   <el-progress
                     :percentage="currentTaskProgress?.progress || 0"
-                    :status="
-                      getProgressStatus(
-                        currentTaskProgress?.progress || 0,
-                      ) as any
-                    "
+                    :status="getProgressStatus(currentTaskProgress?.progress || 0) as any"
                     :stroke-width="10"
                     :format="(percentage: number) => `${percentage}%`"
                   />
@@ -575,10 +482,7 @@
         <div class="task-progress-history">
           <h4 class="section-title">进度历史</h4>
           <div
-            v-if="
-              currentTaskProgress?.history &&
-              currentTaskProgress.history.length > 0
-            "
+            v-if="currentTaskProgress?.history && currentTaskProgress.history.length > 0"
             class="progress-history-list"
           >
             <div
@@ -588,22 +492,14 @@
             >
               <div class="history-header">
                 <div class="history-info">
-                  <span class="history-assignee">{{
-                    record.assigneeName
-                  }}</span>
-                  <span class="history-time">{{
-                    formatDateTime(record.timestamp)
-                  }}</span>
+                  <span class="history-assignee">{{ record.assigneeName }}</span>
+                  <span class="history-time">{{ formatDateTime(record.timestamp) }}</span>
                 </div>
                 <div class="history-progress-change">
                   进度更新:
-                  <span class="history-old-progress"
-                    >{{ record.oldProgress }}%</span
-                  >
+                  <span class="history-old-progress">{{ record.oldProgress }}%</span>
                   <span class="history-arrow">→</span>
-                  <span class="history-new-progress"
-                    >{{ record.newProgress }}%</span
-                  >
+                  <span class="history-new-progress">{{ record.newProgress }}%</span>
                 </div>
               </div>
               <div v-if="record.description" class="history-description">
@@ -635,9 +531,7 @@
             :disabled="currentTaskProgress?.status === 'completed'"
             @click="updateTaskProgress"
             >{{
-              currentTaskProgress?.status === "completed"
-                ? "任务已完成"
-                : "更新进度"
+              currentTaskProgress?.status === 'completed' ? '任务已完成' : '更新进度'
             }}</el-button
           >
         </span>
@@ -652,9 +546,7 @@
       class="batch-assign-dialog"
     >
       <div class="batch-assign-content">
-        <p class="batch-assign-count">
-          已选择 {{ selectedTasks.length }} 个任务
-        </p>
+        <p class="batch-assign-count">已选择 {{ selectedTasks.length }} 个任务</p>
         <el-form
           ref="batchAssignFormRef"
           :model="batchAssignForm"
@@ -663,10 +555,7 @@
           class="batch-assign-form"
         >
           <el-form-item label="负责人" prop="assigneeId">
-            <el-select
-              v-model="batchAssignForm.assigneeId"
-              placeholder="请选择负责人"
-            >
+            <el-select v-model="batchAssignForm.assigneeId" placeholder="请选择负责人">
               <el-option
                 v-for="person in staff"
                 :key="person.id"
@@ -711,132 +600,115 @@
 
 <script lang="ts" setup>
 // @ts-nocheck
-import { ref, computed, onMounted } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  Search,
-  Plus,
-  Upload,
-  Download,
-  ArrowDown,
-} from "@element-plus/icons-vue";
-import {
-  getRuralWorks,
-  createRuralWork,
-  updateRuralWork,
-  deleteRuralWork,
-} from "@/api/ruralWork";
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, Upload, Download, ArrowDown } from '@element-plus/icons-vue'
+import { getRuralWorks, createRuralWork, updateRuralWork, deleteRuralWork } from '@/api/ruralWork'
 // 为 FormRules 定义类型
-type FormRules = Record<string, any[]>;
+type FormRules = Record<string, any[]>
 
 // 修复FormRules类型导入 - 已使用正确的导入路径
 
 // 类型定义
 interface Task {
-  id: string;
-  name: string;
-  projectId: string;
-  projectName: string;
-  assigneeId: string;
-  assigneeName: string;
-  status: "pending" | "in_progress" | "completed" | "delayed" | "cancelled";
-  priority: "high" | "medium" | "low";
-  progress: number;
-  startDate: string;
-  deadline: string;
-  createdDate: string;
-  description: string;
-  attachments?: any[];
+  id: string
+  name: string
+  projectId: string
+  projectName: string
+  assigneeId: string
+  assigneeName: string
+  status: 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'
+  priority: 'high' | 'medium' | 'low'
+  progress: number
+  startDate: string
+  deadline: string
+  createdDate: string
+  description: string
+  attachments?: any[]
 }
 
 interface TaskProgress extends Task {
-  history?: TaskHistory[];
+  history?: TaskHistory[]
 }
 
 interface TaskHistory {
-  timestamp: string;
-  assigneeName: string;
-  oldProgress: number;
-  newProgress: number;
-  description: string;
-  attachments?: any[];
+  timestamp: string
+  assigneeName: string
+  oldProgress: number
+  newProgress: number
+  description: string
+  attachments?: any[]
 }
 
 interface Staff {
-  id: string;
-  name: string;
-  position: string;
-  avatar?: string;
+  id: string
+  name: string
+  position: string
+  avatar?: string
 }
 
 interface Project {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 // 状态管理
-const loading = ref(false);
-const searchQuery = ref("");
-const selectedStatus = ref("");
-const selectedPriority = ref("");
-const selectedAssignee = ref("");
-const selectedTasks = ref<Task[]>([]);
-const currentPage = ref(1);
-const pageSize = ref(10);
+const loading = ref(false)
+const searchQuery = ref('')
+const selectedStatus = ref('')
+const selectedPriority = ref('')
+const selectedAssignee = ref('')
+const selectedTasks = ref<Task[]>([])
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 // 对话框状态
-const taskDialogVisible = ref(false);
-const assignDialogVisible = ref(false);
-const progressDialogVisible = ref(false);
-const batchAssignDialogVisible = ref(false);
-const isEditMode = ref(false);
+const taskDialogVisible = ref(false)
+const assignDialogVisible = ref(false)
+const progressDialogVisible = ref(false)
+const batchAssignDialogVisible = ref(false)
+const isEditMode = ref(false)
 
 // 表单实例类型已在上方导入
 
 // 表单引用 - 修复Ref使用
-const taskFormRef = ref<InstanceType<
-  (typeof import("element-plus"))["ElForm"]
-> | null>(null);
-const assignFormRef = ref<InstanceType<
-  (typeof import("element-plus"))["ElForm"]
-> | null>(null);
-const batchAssignFormRef = ref<InstanceType<
-  (typeof import("element-plus"))["ElForm"]
-> | null>(null);
+const taskFormRef = ref<InstanceType<(typeof import('element-plus'))['ElForm']> | null>(null)
+const assignFormRef = ref<InstanceType<(typeof import('element-plus'))['ElForm']> | null>(null)
+const batchAssignFormRef = ref<InstanceType<(typeof import('element-plus'))['ElForm']> | null>(null)
 
 // 人员数据（从 API 加载，初始为空）
-const staff = ref<Staff[]>([]);
+const staff = ref<Staff[]>([])
 
 async function loadStaffFromApi() {
   try {
-    const { default: request } = await import("@/api/request");
-    const response = await request.get("/users/staff-list");
-    const users = response?.data?.items || response?.items || response || [];
+    const { default: request } = await import('@/api/request')
+    const response = await request.get('/users/staff-list')
+    const users = response?.data?.items || response?.items || response || []
     if (Array.isArray(users) && users.length > 0) {
       staff.value = users.map((u: any) => ({
         id: String(u.id),
         name: u.name || u.real_name || u.username || `用户${u.id}`,
-        position: u.position || u.role || "员工",
-        avatar: u.avatar || "",
-      }));
+        position: u.position || u.role || '员工',
+        avatar: u.avatar || '',
+      }))
     }
   } catch {
     // API不可用，保持空列表
   }
 }
 
-const projects = ref<Project[]>([]);
+const projects = ref<Project[]>([])
 
 async function loadProjectsFromApi() {
   try {
-    const { default: request } = await import("@/api/request");
-    const response = await request.get("/projects", { params: { limit: 100 } });
-    const items = response?.items || response?.data || response || [];
+    const { default: request } = await import('@/api/request')
+    const response = await request.get('/projects', { params: { limit: 100 } })
+    const items = response?.items || response?.data || response || []
     if (Array.isArray(items) && items.length > 0) {
       projects.value = items.map((p: any) => ({
         id: String(p.id),
         name: p.name || p.title || `项目${p.id}`,
-      }));
+      }))
     }
   } catch {
     // API不可用，保持空列表
@@ -844,756 +716,728 @@ async function loadProjectsFromApi() {
 }
 
 // 任务数据（从 API 加载，初始为空）
-const tasks = ref<Task[]>([]);
+const tasks = ref<Task[]>([])
 
 // 表单数据
 const currentTask = ref<Task>({
-  id: "",
-  name: "",
-  projectId: "",
-  projectName: "",
-  assigneeId: "",
-  assigneeName: "",
-  status: "pending",
-  priority: "medium",
+  id: '',
+  name: '',
+  projectId: '',
+  projectName: '',
+  assigneeId: '',
+  assigneeName: '',
+  status: 'pending',
+  priority: 'medium',
   progress: 0,
-  startDate: "",
-  deadline: "",
-  createdDate: new Date().toISOString().split("T")[0],
-  description: "",
+  startDate: '',
+  deadline: '',
+  createdDate: new Date().toISOString().split('T')[0],
+  description: '',
   attachments: [],
-});
+})
 
 interface AssignForm {
-  assigneeId: string;
-  note: string;
+  assigneeId: string
+  note: string
 }
 
 const assignForm = ref<AssignForm>({
-  assigneeId: "",
-  note: "",
-});
+  assigneeId: '',
+  note: '',
+})
 
 const batchAssignForm = ref<AssignForm>({
-  assigneeId: "",
-  note: "",
-});
+  assigneeId: '',
+  note: '',
+})
 
-const currentTaskProgress = ref<TaskProgress | null>(null);
+const currentTaskProgress = ref<TaskProgress | null>(null)
 
 interface ProgressUpdateForm {
-  progress: number;
-  description: string;
+  progress: number
+  description: string
   attachments: Array<{
-    name: string;
-    url: string;
-    uid: string;
-    status?: string;
-  }>;
+    name: string
+    url: string
+    uid: string
+    status?: string
+  }>
 }
 
 const progressUpdateForm = ref<ProgressUpdateForm>({
   progress: 0,
-  description: "",
+  description: '',
   attachments: [],
-});
+})
 
 // 表单验证规则 - 修复FormRules使用
 const taskRules: FormRules = {
   name: [
-    { required: true, message: "请输入任务名称", trigger: "blur" },
+    { required: true, message: '请输入任务名称', trigger: 'blur' },
     {
       min: 2,
       max: 100,
-      message: "任务名称长度应在 2 到 100 个字符之间",
-      trigger: "blur",
+      message: '任务名称长度应在 2 到 100 个字符之间',
+      trigger: 'blur',
     },
   ],
-  projectId: [{ required: true, message: "请选择所属项目", trigger: "change" }],
-  priority: [{ required: true, message: "请选择优先级", trigger: "change" }],
-  startDate: [{ required: true, message: "请选择开始日期", trigger: "change" }],
+  projectId: [{ required: true, message: '请选择所属项目', trigger: 'change' }],
+  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
+  startDate: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
   deadline: [
-    { required: true, message: "请选择截止日期", trigger: "change" },
+    { required: true, message: '请选择截止日期', trigger: 'change' },
     {
       validator: (_rule: any, value: any, callback: any) => {
         if (!value) {
-          callback(new Error("请选择截止日期"));
+          callback(new Error('请选择截止日期'))
         } else if (
           currentTask.value.startDate &&
           new Date(value) < new Date(currentTask.value.startDate)
         ) {
-          callback(new Error("截止日期不能早于开始日期"));
+          callback(new Error('截止日期不能早于开始日期'))
         } else {
-          callback();
+          callback()
         }
       },
-      trigger: "change",
+      trigger: 'change',
     },
   ],
-};
+}
 
 const assignRules: FormRules = {
-  assigneeId: [{ required: true, message: "请选择负责人", trigger: "change" }],
-};
+  assigneeId: [{ required: true, message: '请选择负责人', trigger: 'change' }],
+}
 
 const batchAssignRules: FormRules = {
-  assigneeId: [{ required: true, message: "请选择负责人", trigger: "change" }],
-};
+  assigneeId: [{ required: true, message: '请选择负责人', trigger: 'change' }],
+}
 
 // 计算属性
 const filteredTasks = computed(() => {
-  let filtered = [...tasks.value];
+  let filtered = [...tasks.value]
 
   // 搜索过滤
   if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
+    const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(
       (task) =>
         task.name.toLowerCase().includes(query) ||
-        (task.assigneeName &&
-          task.assigneeName.toLowerCase().includes(query)) ||
-        task.projectName.toLowerCase().includes(query),
-    );
+        (task.assigneeName && task.assigneeName.toLowerCase().includes(query)) ||
+        task.projectName.toLowerCase().includes(query)
+    )
   }
 
   // 状态过滤
   if (selectedStatus.value) {
-    filtered = filtered.filter((task) => task.status === selectedStatus.value);
+    filtered = filtered.filter((task) => task.status === selectedStatus.value)
   }
 
   // 优先级过滤
   if (selectedPriority.value) {
-    filtered = filtered.filter(
-      (task) => task.priority === selectedPriority.value,
-    );
+    filtered = filtered.filter((task) => task.priority === selectedPriority.value)
   }
 
   // 负责人过滤
   if (selectedAssignee.value) {
-    filtered = filtered.filter(
-      (task) => task.assigneeId === selectedAssignee.value,
-    );
+    filtered = filtered.filter((task) => task.assigneeId === selectedAssignee.value)
   }
 
   // 分页处理（客户端分页）
-  const start = (currentPage.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
 
-  return filtered.slice(start, end);
-});
+  return filtered.slice(start, end)
+})
 
 // 生命周期
 onMounted(() => {
-  loadStaffFromApi();
-  loadProjectsFromApi();
-  loadData();
-});
+  loadStaffFromApi()
+  loadProjectsFromApi()
+  loadData()
+})
 
 // 方法
 const loadData = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const res = await getRuralWorks({ limit: 100 });
+    const res = await getRuralWorks({ limit: 100 })
     if (res && (res as any).items && (res as any).items.length > 0) {
       tasks.value = (res as any).items.map((item: any, idx: number) => ({
-        id: String(item.id) || `T${String(idx + 1).padStart(3, "0")}`,
-        name: item.name || "",
-        projectId: "",
-        projectName: item.village_name || "",
-        assigneeId: "",
-        assigneeName: item.responsible_person || "",
-        status:
-          item.status === "planned" ? "pending" : item.status || "pending",
-        priority: "medium" as const,
+        id: String(item.id) || `T${String(idx + 1).padStart(3, '0')}`,
+        name: item.name || '',
+        projectId: '',
+        projectName: item.village_name || '',
+        assigneeId: '',
+        assigneeName: item.responsible_person || '',
+        status: item.status === 'planned' ? 'pending' : item.status || 'pending',
+        priority: 'medium' as const,
         progress: item.progress || 0,
-        startDate: item.start_date || "",
-        deadline: item.end_date || "",
-        createdDate: item.created_at ? item.created_at.split("T")[0] : "",
-        description: item.description || "",
-      }));
+        startDate: item.start_date || '',
+        deadline: item.end_date || '',
+        createdDate: item.created_at ? item.created_at.split('T')[0] : '',
+        description: item.description || '',
+      }))
     }
   } catch {
     // API不可用，使用本地模拟数据
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const handleSearch = () => {
-  currentPage.value = 1;
-  loadData();
-};
+  currentPage.value = 1
+  loadData()
+}
 
 const resetFilters = () => {
-  searchQuery.value = "";
-  selectedStatus.value = "";
-  selectedPriority.value = "";
-  selectedAssignee.value = "";
-  currentPage.value = 1;
-  loadData();
-};
+  searchQuery.value = ''
+  selectedStatus.value = ''
+  selectedPriority.value = ''
+  selectedAssignee.value = ''
+  currentPage.value = 1
+  loadData()
+}
 
 const handleSelectionChange = (val: Task[]) => {
-  selectedTasks.value = val;
-};
+  selectedTasks.value = val
+}
 
 const handleRowDoubleClick = (row: Task) => {
-  editTask(row);
-};
+  editTask(row)
+}
 
 const handleActionCommand = (command: string, row: Task) => {
   switch (command) {
-    case "progress":
-      viewTaskProgress(row);
-      break;
-    case "delete":
-      deleteTask(row.id);
-      break;
+    case 'progress':
+      viewTaskProgress(row)
+      break
+    case 'delete':
+      deleteTask(row.id)
+      break
   }
-};
+}
 
 const handleSizeChange = (size: number) => {
-  pageSize.value = size;
-  currentPage.value = 1;
-};
+  pageSize.value = size
+  currentPage.value = 1
+}
 
 const handleCurrentChange = (current: number) => {
-  currentPage.value = current;
-};
+  currentPage.value = current
+}
 
 const openCreateTaskDialog = () => {
-  isEditMode.value = false;
+  isEditMode.value = false
   // 重置表单
   if (taskFormRef.value) {
-    taskFormRef.value.resetFields();
+    taskFormRef.value.resetFields()
   }
   currentTask.value = {
-    id: "",
-    name: "",
-    projectId: "",
-    projectName: "",
-    assigneeId: "",
-    assigneeName: "",
-    status: "pending",
-    priority: "medium",
+    id: '',
+    name: '',
+    projectId: '',
+    projectName: '',
+    assigneeId: '',
+    assigneeName: '',
+    status: 'pending',
+    priority: 'medium',
     progress: 0,
-    startDate: "",
-    deadline: "",
-    createdDate: new Date().toISOString().split("T")[0],
-    description: "",
+    startDate: '',
+    deadline: '',
+    createdDate: new Date().toISOString().split('T')[0],
+    description: '',
     attachments: [],
-  };
-  taskDialogVisible.value = true;
-};
+  }
+  taskDialogVisible.value = true
+}
 
 const editTask = (task: Task) => {
-  isEditMode.value = true;
-  currentTask.value = { ...task };
+  isEditMode.value = true
+  currentTask.value = { ...task }
   // 设置项目名称
   if (currentTask.value.projectId) {
-    const project = projects.value.find(
-      (p) => p.id === currentTask.value.projectId,
-    );
+    const project = projects.value.find((p) => p.id === currentTask.value.projectId)
     if (project) {
-      currentTask.value.projectName = project.name;
+      currentTask.value.projectName = project.name
     }
   }
-  taskDialogVisible.value = true;
-};
+  taskDialogVisible.value = true
+}
 
 const saveTask = async () => {
-  if (!taskFormRef.value) return;
+  if (!taskFormRef.value) return
 
   try {
-    await taskFormRef.value.validate();
+    await taskFormRef.value.validate()
 
     // 设置项目名称
     if (currentTask.value.projectId) {
-      const project = projects.value.find(
-        (p) => p.id === currentTask.value.projectId,
-      );
+      const project = projects.value.find((p) => p.id === currentTask.value.projectId)
       if (project) {
-        currentTask.value.projectName = project.name;
+        currentTask.value.projectName = project.name
       }
     }
 
     // 设置负责人名称
     if (currentTask.value.assigneeId) {
-      const assignee = staff.value.find(
-        (s) => s.id === currentTask.value.assigneeId,
-      );
+      const assignee = staff.value.find((s) => s.id === currentTask.value.assigneeId)
       if (assignee) {
-        currentTask.value.assigneeName = assignee.name;
+        currentTask.value.assigneeName = assignee.name
       }
     } else {
-      currentTask.value.assigneeName = "";
+      currentTask.value.assigneeName = ''
     }
 
     // 构建API请求数据
     const apiPayload = {
       name: currentTask.value.name,
-      type: "infrastructure" as const,
+      type: 'infrastructure' as const,
       status:
-        currentTask.value.status === "pending"
-          ? ("planned" as const)
-          : currentTask.value.status === "in_progress"
-            ? ("in_progress" as const)
-            : ("completed" as const),
+        currentTask.value.status === 'pending'
+          ? ('planned' as const)
+          : currentTask.value.status === 'in_progress'
+            ? ('in_progress' as const)
+            : ('completed' as const),
       responsible_person: currentTask.value.assigneeName,
       start_date: currentTask.value.startDate,
       end_date: currentTask.value.deadline,
       description: currentTask.value.description,
       progress: currentTask.value.progress,
-    };
+    }
 
     if (isEditMode.value) {
       try {
-        await updateRuralWork(Number(currentTask.value.id), apiPayload as any);
-        ElMessage.success("任务更新成功");
+        await updateRuralWork(Number(currentTask.value.id), apiPayload as any)
+        ElMessage.success('任务更新成功')
       } catch {
         // API不可用，回退到本地
-        const index = tasks.value.findIndex(
-          (t) => t.id === currentTask.value.id,
-        );
+        const index = tasks.value.findIndex((t) => t.id === currentTask.value.id)
         if (index !== -1) {
-          tasks.value[index] = { ...currentTask.value };
+          tasks.value[index] = { ...currentTask.value }
         }
-        ElMessage.success("任务更新成功（本地）");
+        ElMessage.success('任务更新成功（本地）')
       }
     } else {
       try {
-        const result = await createRuralWork(apiPayload as any);
-        currentTask.value.id = String(result?.id || Date.now());
-        ElMessage.success("任务创建成功");
+        const result = await createRuralWork(apiPayload as any)
+        currentTask.value.id = String(result?.id || Date.now())
+        ElMessage.success('任务创建成功')
       } catch {
         // API不可用，回退到本地
         const newTask = {
           ...currentTask.value,
-          id: `T${String(tasks.value.length + 1).padStart(3, "0")}`,
-        };
-        tasks.value.unshift(newTask);
-        ElMessage.success("任务创建成功（本地）");
+          id: `T${String(tasks.value.length + 1).padStart(3, '0')}`,
+        }
+        tasks.value.unshift(newTask)
+        ElMessage.success('任务创建成功（本地）')
       }
     }
 
-    taskDialogVisible.value = false;
-    loadData();
+    taskDialogVisible.value = false
+    loadData()
   } catch (error) {
     // 表单验证失败
   }
-};
+}
 
 const assignTask = (task: Task) => {
-  currentTask.value = { ...task };
+  currentTask.value = { ...task }
   assignForm.value = {
-    assigneeId: "",
-    note: "",
-  };
-  assignDialogVisible.value = true;
-};
+    assigneeId: '',
+    note: '',
+  }
+  assignDialogVisible.value = true
+}
 
 const confirmAssign = async () => {
-  if (!assignFormRef.value) return;
+  if (!assignFormRef.value) return
 
   try {
-    await assignFormRef.value.validate();
+    await assignFormRef.value.validate()
 
     // 更新任务负责人
-    const index = tasks.value.findIndex((t) => t.id === currentTask.value.id);
+    const index = tasks.value.findIndex((t) => t.id === currentTask.value.id)
     if (index !== -1) {
-      const assignee = staff.value.find(
-        (s) => s.id === assignForm.value.assigneeId,
-      );
+      const assignee = staff.value.find((s) => s.id === assignForm.value.assigneeId)
       if (assignee) {
-        tasks.value[index].assigneeId = assignForm.value.assigneeId;
-        tasks.value[index].assigneeName = assignee.name;
-        tasks.value[index].status = "in_progress"; // 分配后自动设置为进行中
+        tasks.value[index].assigneeId = assignForm.value.assigneeId
+        tasks.value[index].assigneeName = assignee.name
+        tasks.value[index].status = 'in_progress' // 分配后自动设置为进行中
       }
     }
 
-    ElMessage.success("任务分配成功");
-    assignDialogVisible.value = false;
-    loadData();
+    ElMessage.success('任务分配成功')
+    assignDialogVisible.value = false
+    loadData()
   } catch (error) {
     // 表单验证失败
   }
-};
+}
 
 const batchAssignTasks = () => {
   if (selectedTasks.value.length === 0) {
-    ElMessage.warning("请先选择需要分配的任务");
-    return;
+    ElMessage.warning('请先选择需要分配的任务')
+    return
   }
 
   batchAssignForm.value = {
-    assigneeId: "",
-    note: "",
-  };
-  batchAssignDialogVisible.value = true;
-};
+    assigneeId: '',
+    note: '',
+  }
+  batchAssignDialogVisible.value = true
+}
 
 const confirmBatchAssign = async () => {
-  if (!batchAssignFormRef.value) return;
+  if (!batchAssignFormRef.value) return
 
   try {
-    await batchAssignFormRef.value.validate();
+    await batchAssignFormRef.value.validate()
 
     // 批量更新任务负责人
-    const assignee = staff.value.find(
-      (s) => s.id === batchAssignForm.value.assigneeId,
-    );
+    const assignee = staff.value.find((s) => s.id === batchAssignForm.value.assigneeId)
     if (assignee) {
       selectedTasks.value.forEach((selectedTask) => {
-        const index = tasks.value.findIndex((t) => t.id === selectedTask.id);
+        const index = tasks.value.findIndex((t) => t.id === selectedTask.id)
         if (index !== -1) {
-          tasks.value[index].assigneeId = batchAssignForm.value.assigneeId;
-          tasks.value[index].assigneeName = assignee.name;
-          tasks.value[index].status = "in_progress"; // 分配后自动设置为进行中
+          tasks.value[index].assigneeId = batchAssignForm.value.assigneeId
+          tasks.value[index].assigneeName = assignee.name
+          tasks.value[index].status = 'in_progress' // 分配后自动设置为进行中
         }
-      });
+      })
     }
 
-    ElMessage.success(`成功分配 ${selectedTasks.value.length} 个任务`);
-    selectedTasks.value = [];
-    batchAssignDialogVisible.value = false;
-    loadData();
+    ElMessage.success(`成功分配 ${selectedTasks.value.length} 个任务`)
+    selectedTasks.value = []
+    batchAssignDialogVisible.value = false
+    loadData()
   } catch (error) {
     // 表单验证失败
   }
-};
+}
 
 const viewTaskProgress = (task: Task) => {
   const progressTask: TaskProgress = {
     ...task,
     history: [],
-  };
+  }
 
-  currentTaskProgress.value = progressTask;
+  currentTaskProgress.value = progressTask
   progressUpdateForm.value = {
     progress: task.progress,
-    description: "",
+    description: '',
     attachments: [],
-  };
-  progressDialogVisible.value = true;
-};
+  }
+  progressDialogVisible.value = true
+}
 
 const updateTaskProgress = async () => {
-  if (!currentTaskProgress.value) return;
+  if (!currentTaskProgress.value) return
 
   // 验证进度是否有变化
-  if (
-    progressUpdateForm.value.progress === currentTaskProgress.value.progress
-  ) {
-    ElMessage.warning("进度没有变化");
-    return;
+  if (progressUpdateForm.value.progress === currentTaskProgress.value.progress) {
+    ElMessage.warning('进度没有变化')
+    return
   }
 
   // 更新任务进度
-  const index = tasks.value.findIndex(
-    (t) => t.id === currentTaskProgress.value!.id,
-  );
+  const index = tasks.value.findIndex((t) => t.id === currentTaskProgress.value!.id)
   if (index !== -1) {
-    const oldProgress = tasks.value[index].progress;
-    tasks.value[index].progress = progressUpdateForm.value.progress;
+    const oldProgress = tasks.value[index].progress
+    tasks.value[index].progress = progressUpdateForm.value.progress
 
     // 如果进度达到100%，自动设置为已完成
     if (progressUpdateForm.value.progress === 100) {
-      tasks.value[index].status = "completed";
-    } else if (tasks.value[index].status === "completed") {
-      tasks.value[index].status = "in_progress";
+      tasks.value[index].status = 'completed'
+    } else if (tasks.value[index].status === 'completed') {
+      tasks.value[index].status = 'in_progress'
     }
 
     // 更新进度历史
     if (!currentTaskProgress.value.history) {
-      currentTaskProgress.value.history = [];
+      currentTaskProgress.value.history = []
     }
 
     const newHistoryRecord = {
       timestamp: new Date().toISOString(),
-      assigneeName: currentTaskProgress.value.assigneeName || "系统",
+      assigneeName: currentTaskProgress.value.assigneeName || '系统',
       oldProgress,
       newProgress: progressUpdateForm.value.progress,
       description: progressUpdateForm.value.description,
       attachments: progressUpdateForm.value.attachments,
-    };
+    }
 
-    currentTaskProgress.value.history.unshift(newHistoryRecord);
-    currentTaskProgress.value.progress = progressUpdateForm.value.progress;
+    currentTaskProgress.value.history.unshift(newHistoryRecord)
+    currentTaskProgress.value.progress = progressUpdateForm.value.progress
 
     // 重置进度更新表单
     progressUpdateForm.value = {
       progress: progressUpdateForm.value.progress,
-      description: "",
+      description: '',
       attachments: [],
-    };
+    }
 
-    ElMessage.success("进度更新成功");
+    ElMessage.success('进度更新成功')
   }
-};
+}
 
 const deleteTask = (taskId: string) => {
-  ElMessageBox.confirm("确定要删除该任务吗？此操作不可恢复。", "警告", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning",
+  ElMessageBox.confirm('确定要删除该任务吗？此操作不可恢复。', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
   })
     .then(async () => {
       try {
-        await deleteRuralWork(Number(taskId));
-        ElMessage.success("任务删除成功");
+        await deleteRuralWork(Number(taskId))
+        ElMessage.success('任务删除成功')
       } catch {
         // API不可用，回退到本地
-        const index = tasks.value.findIndex((t) => t.id === taskId);
+        const index = tasks.value.findIndex((t) => t.id === taskId)
         if (index !== -1) {
-          tasks.value.splice(index, 1);
+          tasks.value.splice(index, 1)
         }
-        ElMessage.success("任务删除成功（本地）");
+        ElMessage.success('任务删除成功（本地）')
       }
-      loadData();
+      loadData()
     })
     .catch(() => {
       // 取消删除
-    });
-};
+    })
+}
 
 const importTasks = () => {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".csv,.xlsx,.xls";
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.csv,.xlsx,.xls'
   input.onchange = (e: any) => {
-    const file = e.target?.files?.[0];
-    if (!file) return;
+    const file = e.target?.files?.[0]
+    if (!file) return
 
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (event) => {
       try {
-        const text = event.target?.result as string;
-        const lines = text.split("\n").filter((line) => line.trim());
+        const text = event.target?.result as string
+        const lines = text.split('\n').filter((line) => line.trim())
         if (lines.length < 2) {
-          ElMessage.warning("文件内容为空或格式不正确");
-          return;
+          ElMessage.warning('文件内容为空或格式不正确')
+          return
         }
 
-        let importCount = 0;
+        let importCount = 0
         for (let i = 1; i < lines.length; i++) {
-          const cols = lines[i]
-            .split(",")
-            .map((c) => c.replace(/^"|"$/g, "").trim());
+          const cols = lines[i].split(',').map((c) => c.replace(/^"|"$/g, '').trim())
           if (cols.length >= 2 && cols[1]) {
             const newTask: Task = {
-              id: `T${String(tasks.value.length + importCount + 1).padStart(3, "0")}`,
+              id: `T${String(tasks.value.length + importCount + 1).padStart(3, '0')}`,
               name: cols[1] || `导入任务${i}`,
-              projectId: "",
-              projectName: cols[3] || "",
-              assigneeId: "",
-              assigneeName: cols[4] || "",
-              status: "pending",
-              priority: "medium",
+              projectId: '',
+              projectName: cols[3] || '',
+              assigneeId: '',
+              assigneeName: cols[4] || '',
+              status: 'pending',
+              priority: 'medium',
               progress: 0,
-              startDate: cols[7] || "",
-              deadline: cols[8] || "",
-              createdDate: new Date().toISOString().split("T")[0],
-              description: cols[9] || "",
-            };
-            tasks.value.push(newTask);
-            importCount++;
+              startDate: cols[7] || '',
+              deadline: cols[8] || '',
+              createdDate: new Date().toISOString().split('T')[0],
+              description: cols[9] || '',
+            }
+            tasks.value.push(newTask)
+            importCount++
           }
         }
-        ElMessage.success(`成功导入 ${importCount} 个任务`);
+        ElMessage.success(`成功导入 ${importCount} 个任务`)
       } catch {
-        ElMessage.error("文件解析失败，请检查文件格式");
+        ElMessage.error('文件解析失败，请检查文件格式')
       }
-    };
-    reader.readAsText(file, "UTF-8");
-  };
-  input.click();
-};
+    }
+    reader.readAsText(file, 'UTF-8')
+  }
+  input.click()
+}
 
 const exportTasks = () => {
   if (tasks.value.length === 0) {
-    ElMessage.warning("没有可导出的任务数据");
-    return;
+    ElMessage.warning('没有可导出的任务数据')
+    return
   }
 
   const statusMap: Record<string, string> = {
-    pending: "待分配",
-    in_progress: "进行中",
-    completed: "已完成",
-    delayed: "已延期",
-    cancelled: "已取消",
-  };
+    pending: '待分配',
+    in_progress: '进行中',
+    completed: '已完成',
+    delayed: '已延期',
+    cancelled: '已取消',
+  }
   const priorityMap: Record<string, string> = {
-    high: "高",
-    medium: "中",
-    low: "低",
-  };
+    high: '高',
+    medium: '中',
+    low: '低',
+  }
 
   const headers = [
-    "任务编号",
-    "任务名称",
-    "所属项目",
-    "负责人",
-    "状态",
-    "优先级",
-    "进度(%)",
-    "开始日期",
-    "截止日期",
-    "创建日期",
-    "描述",
-  ];
+    '任务编号',
+    '任务名称',
+    '所属项目',
+    '负责人',
+    '状态',
+    '优先级',
+    '进度(%)',
+    '开始日期',
+    '截止日期',
+    '创建日期',
+    '描述',
+  ]
   const rows = tasks.value.map((task) => [
     task.id,
     task.name,
     task.projectName,
-    task.assigneeName || "未分配",
+    task.assigneeName || '未分配',
     statusMap[task.status] || task.status,
     priorityMap[task.priority] || task.priority,
     task.progress,
     task.startDate,
     task.deadline,
     task.createdDate,
-    task.description || "",
-  ]);
+    task.description || '',
+  ])
 
-  const BOM = "\uFEFF";
+  const BOM = '\uFEFF'
   const csvContent =
     BOM +
     [headers, ...rows]
       .map((row) =>
         row
           .map((cell: any) => {
-            const str = String(cell).replace(/"/g, '""');
-            return `"${str}"`;
+            const str = String(cell).replace(/"/g, '""')
+            return `"${str}"`
           })
-          .join(","),
+          .join(',')
       )
-      .join("\n");
+      .join('\n')
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `任务分配列表_${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-  ElMessage.success("任务数据导出成功");
-};
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `任务分配列表_${new Date().toISOString().slice(0, 10)}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+  ElMessage.success('任务数据导出成功')
+}
 
 const handleFileChange = (_file: any, fileList: any[]) => {
-  currentTask.value.attachments = fileList;
-};
+  currentTask.value.attachments = fileList
+}
 
 const handleProgressFileChange = (_file: any, fileList: any[]) => {
-  progressUpdateForm.value.attachments = fileList;
-};
+  progressUpdateForm.value.attachments = fileList
+}
 
 // 辅助函数
 
 const getPriorityLabel = (priority: string) => {
   switch (priority) {
-    case "high":
-      return "高优先级";
-    case "medium":
-      return "中优先级";
-    case "low":
-      return "低优先级";
+    case 'high':
+      return '高优先级'
+    case 'medium':
+      return '中优先级'
+    case 'low':
+      return '低优先级'
     default:
-      return "未知优先级";
+      return '未知优先级'
   }
-};
+}
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case "pending":
-      return "待分配";
-    case "in_progress":
-      return "进行中";
-    case "completed":
-      return "已完成";
-    case "delayed":
-      return "已延期";
-    case "cancelled":
-      return "已取消";
+    case 'pending':
+      return '待分配'
+    case 'in_progress':
+      return '进行中'
+    case 'completed':
+      return '已完成'
+    case 'delayed':
+      return '已延期'
+    case 'cancelled':
+      return '已取消'
     default:
-      return "未知状态";
+      return '未知状态'
   }
-};
+}
 
 const getStatusTagType = (status: string) => {
   switch (status) {
-    case "pending":
-      return "info";
-    case "in_progress":
-      return "primary";
-    case "completed":
-      return "success";
-    case "delayed":
-      return "danger";
-    case "cancelled":
-      return "warning";
+    case 'pending':
+      return 'info'
+    case 'in_progress':
+      return 'primary'
+    case 'completed':
+      return 'success'
+    case 'delayed':
+      return 'danger'
+    case 'cancelled':
+      return 'warning'
     default:
-      return "info";
+      return 'info'
   }
-};
+}
 
-const getProgressStatus = (
-  progress: number,
-): "" | "success" | "warning" | "exception" => {
-  if (progress === 100) return "success";
-  if (progress > 70) return "";
-  if (progress > 30) return "warning";
-  return "";
-};
+const getProgressStatus = (progress: number): '' | 'success' | 'warning' | 'exception' => {
+  if (progress === 100) return 'success'
+  if (progress > 70) return ''
+  if (progress > 30) return 'warning'
+  return ''
+}
 
 const getAssigneeAvatar = (assigneeId: string) => {
-  if (!assigneeId) return "";
-  const assignee = staff.value.find((s) => s.id === assigneeId);
-  return assignee?.avatar || "";
-};
+  if (!assigneeId) return ''
+  const assignee = staff.value.find((s) => s.id === assigneeId)
+  return assignee?.avatar || ''
+}
 
 const getDeadlineClass = (task: Task) => {
-  if (task.status === "completed" || task.status === "cancelled") {
-    return "deadline-normal";
+  if (task.status === 'completed' || task.status === 'cancelled') {
+    return 'deadline-normal'
   }
 
-  const now = new Date();
-  const deadline = new Date(task.deadline);
-  const daysLeft = Math.floor(
-    (deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const now = new Date()
+  const deadline = new Date(task.deadline)
+  const daysLeft = Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 
   if (daysLeft < 0) {
-    return "deadline-overdue";
+    return 'deadline-overdue'
   } else if (daysLeft <= 3) {
-    return "deadline-warning";
+    return 'deadline-warning'
   } else {
-    return "deadline-normal";
+    return 'deadline-normal'
   }
-};
+}
 
 const isOverdue = (task: Task) => {
-  if (task.status === "completed" || task.status === "cancelled") {
-    return false;
+  if (task.status === 'completed' || task.status === 'cancelled') {
+    return false
   }
 
-  const now = new Date();
-  const deadline = new Date(task.deadline);
-  return now > deadline;
-};
+  const now = new Date()
+  const deadline = new Date(task.deadline)
+  return now > deadline
+}
 
 const formatDate = (dateString: string) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("zh-CN");
-};
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN')
+}
 
 const formatDateTime = (dateTimeString: string) => {
-  if (!dateTimeString) return "";
-  const date = new Date(dateTimeString);
-  return date.toLocaleString("zh-CN");
-};
+  if (!dateTimeString) return ''
+  const date = new Date(dateTimeString)
+  return date.toLocaleString('zh-CN')
+}
 </script>
 
 <style lang="scss" scoped>

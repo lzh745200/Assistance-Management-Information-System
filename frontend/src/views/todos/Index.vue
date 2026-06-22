@@ -98,16 +98,12 @@
         <div class="todo-content" @click="handleEdit(todo)">
           <div class="todo-title">{{ todo.title }}</div>
           <div class="todo-meta">
-            <el-tag
-              v-if="todo.priority"
-              :type="priorityTagType(todo.priority)"
-              size="small"
-            >
+            <el-tag v-if="todo.priority" :type="priorityTagType(todo.priority)" size="small">
               {{ priorityLabel(todo.priority) }}
             </el-tag>
             <span v-if="todo.deadline" class="todo-deadline">
               <el-icon><Calendar /></el-icon>
-              {{ todo.deadline?.split("T")[0] || todo.deadline }}
+              {{ todo.deadline?.split('T')[0] || todo.deadline }}
             </span>
             <span v-if="todo.created_at" class="todo-date">
               创建于 {{ formatDate(todo.created_at) }}
@@ -122,10 +118,7 @@
           <el-button type="primary" link size="small" @click="handleEdit(todo)">
             <el-icon><Edit /></el-icon>
           </el-button>
-          <el-popconfirm
-            title="确定删除该待办事项吗？"
-            @confirm="handleDelete(todo)"
-          >
+          <el-popconfirm title="确定删除该待办事项吗？" @confirm="handleDelete(todo)">
             <template #reference>
               <el-button type="danger" link size="small">
                 <el-icon><Delete /></el-icon>
@@ -150,12 +143,7 @@
     </div>
 
     <!-- 编辑对话框 -->
-    <el-dialog
-      v-model="editDialogVisible"
-      title="编辑待办事项"
-      width="480px"
-      destroy-on-close
-    >
+    <el-dialog v-model="editDialogVisible" title="编辑待办事项" width="480px" destroy-on-close>
       <el-form :model="editForm" label-width="80px">
         <el-form-item label="标题">
           <el-input v-model="editForm.title" />
@@ -185,155 +173,145 @@
       </el-form>
       <template #footer>
         <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave">
-          保存
-        </el-button>
+        <el-button type="primary" :loading="saving" @click="handleSave"> 保存 </el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
-import { ElMessage } from "element-plus";
-import { Plus, Edit, Delete, Loading, Calendar } from "@element-plus/icons-vue";
-import {
-  listTodos,
-  createTodo,
-  updateTodo,
-  deleteTodo,
-  toggleTodo,
-} from "@/api/todos";
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Plus, Edit, Delete, Loading, Calendar } from '@element-plus/icons-vue'
+import { listTodos, createTodo, updateTodo, deleteTodo, toggleTodo } from '@/api/todos'
 
 const addForm = reactive({
-  title: "",
-  priority: "medium" as string,
-  deadline: "" as string,
-});
+  title: '',
+  priority: 'medium' as string,
+  deadline: '' as string,
+})
 
 const editForm = reactive({
   id: 0,
-  title: "",
-  description: "",
-  priority: "medium" as string,
-  deadline: "" as string,
+  title: '',
+  description: '',
+  priority: 'medium' as string,
+  deadline: '' as string,
   completed: false,
-});
+})
 
-const todoList = ref<any[]>([]);
-const loading = ref(false);
-const loadError = ref(false);
-const adding = ref(false);
-const saving = ref(false);
-const editDialogVisible = ref(false);
+const todoList = ref<any[]>([])
+const loading = ref(false)
+const loadError = ref(false)
+const adding = ref(false)
+const saving = ref(false)
+const editDialogVisible = ref(false)
 
-const filterStatus = ref("");
-const filterPriority = ref("");
+const filterStatus = ref('')
+const filterPriority = ref('')
 
-const currentPage = ref(1);
-const pageSize = ref(20);
-const total = ref(0);
+const currentPage = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
 
 const priorityTagType = (p: string) => {
-  if (p === "high") return "danger";
-  if (p === "medium") return "warning";
-  return "info";
-};
+  if (p === 'high') return 'danger'
+  if (p === 'medium') return 'warning'
+  return 'info'
+}
 
 const priorityLabel = (p: string) => {
-  if (p === "high") return "高";
-  if (p === "medium") return "中";
-  return "低";
-};
+  if (p === 'high') return '高'
+  if (p === 'medium') return '中'
+  return '低'
+}
 
-const formatDate = (d: string) => (d ? d.split("T")[0] : "-");
+const formatDate = (d: string) => (d ? d.split('T')[0] : '-')
 
 function scrollToAdd() {
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 async function fetchTodos() {
-  loading.value = true;
-  loadError.value = false;
+  loading.value = true
+  loadError.value = false
   try {
     const params: Record<string, any> = {
       page: currentPage.value,
       page_size: pageSize.value,
-    };
-    if (filterStatus.value !== "") {
-      params.completed = filterStatus.value === "true";
+    }
+    if (filterStatus.value !== '') {
+      params.completed = filterStatus.value === 'true'
     }
     if (filterPriority.value) {
-      params.priority = filterPriority.value;
+      params.priority = filterPriority.value
     }
-    const response = await listTodos(params);
-    const data = response?.data ?? response;
-    todoList.value = data?.items ?? (Array.isArray(data) ? data : []);
-    total.value = data?.total ?? todoList.value.length;
+    const response = await listTodos(params)
+    const data = response?.data ?? response
+    todoList.value = data?.items ?? (Array.isArray(data) ? data : [])
+    total.value = data?.total ?? todoList.value.length
   } catch {
-    loadError.value = true;
+    loadError.value = true
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function handleFilterChange() {
-  currentPage.value = 1;
-  fetchTodos();
+  currentPage.value = 1
+  fetchTodos()
 }
 
 async function handleAdd() {
   if (!addForm.title.trim()) {
-    ElMessage.warning("请输入标题");
-    return;
+    ElMessage.warning('请输入标题')
+    return
   }
-  adding.value = true;
+  adding.value = true
   try {
     await createTodo({
       title: addForm.title.trim(),
       priority: addForm.priority,
       deadline: addForm.deadline || undefined,
-    });
-    ElMessage.success("已添加");
-    addForm.title = "";
-    addForm.deadline = "";
-    fetchTodos();
+    })
+    ElMessage.success('已添加')
+    addForm.title = ''
+    addForm.deadline = ''
+    fetchTodos()
   } catch {
-    ElMessage.error("添加失败");
+    ElMessage.error('添加失败')
   } finally {
-    adding.value = false;
+    adding.value = false
   }
 }
 
 async function handleToggle(todo: any) {
   try {
-    const response = await toggleTodo(todo.id);
-    const updated = response?.data ?? response;
-    todo.completed = updated?.completed ?? !todo.completed;
-    ElMessage.success(todo.completed ? "已完成" : "已取消完成");
+    const response = await toggleTodo(todo.id)
+    const updated = response?.data ?? response
+    todo.completed = updated?.completed ?? !todo.completed
+    ElMessage.success(todo.completed ? '已完成' : '已取消完成')
   } catch {
-    ElMessage.error("操作失败");
+    ElMessage.error('操作失败')
   }
 }
 
 function handleEdit(todo: any) {
-  editForm.id = todo.id;
-  editForm.title = todo.title || "";
-  editForm.description = todo.description || "";
-  editForm.priority = todo.priority || "medium";
-  editForm.deadline = todo.deadline
-    ? (todo.deadline.split("T")[0] ?? todo.deadline)
-    : "";
-  editForm.completed = todo.completed ?? false;
-  editDialogVisible.value = true;
+  editForm.id = todo.id
+  editForm.title = todo.title || ''
+  editForm.description = todo.description || ''
+  editForm.priority = todo.priority || 'medium'
+  editForm.deadline = todo.deadline ? (todo.deadline.split('T')[0] ?? todo.deadline) : ''
+  editForm.completed = todo.completed ?? false
+  editDialogVisible.value = true
 }
 
 async function handleSave() {
   if (!editForm.title.trim()) {
-    ElMessage.warning("标题不能为空");
-    return;
+    ElMessage.warning('标题不能为空')
+    return
   }
-  saving.value = true;
+  saving.value = true
   try {
     await updateTodo(editForm.id, {
       title: editForm.title.trim(),
@@ -341,30 +319,30 @@ async function handleSave() {
       priority: editForm.priority,
       deadline: editForm.deadline || undefined,
       completed: editForm.completed,
-    });
-    ElMessage.success("已保存");
-    editDialogVisible.value = false;
-    fetchTodos();
+    })
+    ElMessage.success('已保存')
+    editDialogVisible.value = false
+    fetchTodos()
   } catch {
-    ElMessage.error("保存失败");
+    ElMessage.error('保存失败')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 
 async function handleDelete(todo: any) {
   try {
-    await deleteTodo(todo.id);
-    ElMessage.success("已删除");
-    fetchTodos();
+    await deleteTodo(todo.id)
+    ElMessage.success('已删除')
+    fetchTodos()
   } catch {
-    ElMessage.error("删除失败");
+    ElMessage.error('删除失败')
   }
 }
 
 onMounted(() => {
-  fetchTodos();
-});
+  fetchTodos()
+})
 </script>
 
 <style scoped>

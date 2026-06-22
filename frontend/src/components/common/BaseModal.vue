@@ -4,11 +4,10 @@
     :title="title"
     :width="width"
     @update:model-value="$emit('close')"
-    ><slot /><template v-if="$slots.footer" #footer
-      ><slot name="footer" /></template
+    ><slot /><template v-if="$slots.footer" #footer><slot name="footer" /></template
   ></el-dialog>
 </template>
 <script setup lang="ts">
-defineProps<{ visible: boolean; title?: string; width?: string }>();
-defineEmits<{ (e: "close"): void }>();
+defineProps<{ visible: boolean; title?: string; width?: string }>()
+defineEmits<{ (e: 'close'): void }>()
 </script>

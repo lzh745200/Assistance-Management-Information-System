@@ -10,12 +10,7 @@
     <el-card class="filter-card">
       <el-form :inline="true" :model="filters">
         <el-form-item label="操作类型">
-          <el-select
-            v-model="filters.type"
-            placeholder="全部"
-            clearable
-            style="width: 140px"
-          >
+          <el-select v-model="filters.type" placeholder="全部" clearable style="width: 140px">
             <el-option label="创建" value="create" />
             <el-option label="更新" value="update" />
             <el-option label="删除" value="delete" />
@@ -54,11 +49,7 @@
               @click="handleClearLogs"
               >清除所有日志</el-button
             >
-            <el-button
-              type="success"
-              size="small"
-              :loading="exporting"
-              @click="handleExport"
+            <el-button type="success" size="small" :loading="exporting" @click="handleExport"
               >导出日志</el-button
             >
           </div>
@@ -76,33 +67,19 @@
           </template>
         </el-table-column>
         <el-table-column prop="module" label="模块" width="120" />
-        <el-table-column
-          prop="detail"
-          label="操作详情"
-          min-width="160"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="detail" label="操作详情" min-width="160" show-overflow-tooltip />
         <el-table-column label="结果" width="80">
           <template #default="{ row }">
             <el-tag :type="row.success ? 'success' : 'danger'" size="small">{{
-              row.success ? "成功" : "失败"
+              row.success ? '成功' : '失败'
             }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="ip" label="IP" width="130" />
-        <el-table-column
-          prop="remark"
-          label="备注"
-          min-width="140"
-          show-overflow-tooltip
-        />
+        <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
         <el-table-column label="操作" width="90" fixed="right">
           <template #default="{ row }">
-            <el-button
-              type="primary"
-              size="small"
-              link
-              @click="openRemarkDialog(row)"
+            <el-button type="primary" size="small" link @click="openRemarkDialog(row)"
               >编辑备注</el-button
             >
           </template>
@@ -128,240 +105,216 @@
       />
       <template #footer>
         <el-button @click="remarkDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="remarkSaving" @click="saveRemark"
-          >保存</el-button
-        >
+        <el-button type="primary" :loading="remarkSaving" @click="saveRemark">保存</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { logger } from "@/utils/logger";
+import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted, computed } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { auditApi } from "@/api/audit";
-import request from "@/api/request";
-import { useAuthStore } from "@/stores/auth";
+import { ref, reactive, onMounted, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { auditApi } from '@/api/audit'
+import request from '@/api/request'
+import { useAuthStore } from '@/stores/auth'
 
-const authStore = useAuthStore();
-const isAdmin = computed(() =>
-  ["admin", "super_admin"].includes(authStore.user?.role || ""),
-);
+const authStore = useAuthStore()
+const isAdmin = computed(() => ['admin', 'super_admin'].includes(authStore.user?.role || ''))
 
-const loading = ref(false);
-const exporting = ref(false);
-const clearing = ref(false);
-const page = ref(1);
-const pageSize = 20;
-const total = ref(0);
+const loading = ref(false)
+const exporting = ref(false)
+const clearing = ref(false)
+const page = ref(1)
+const pageSize = 20
+const total = ref(0)
 
 // 数据操作类型，排除登录、权限等系统审计日志
-const DATA_OPERATION_TYPES = [
-  "create",
-  "update",
-  "delete",
-  "import",
-  "export",
-  "backup",
-  "restore",
-];
-const filters = reactive({ type: "", dateRange: null as string[] | null });
+const DATA_OPERATION_TYPES = ['create', 'update', 'delete', 'import', 'export', 'backup', 'restore']
+const filters = reactive({ type: '', dateRange: null as string[] | null })
 
-const typeTagMap: Record<
-  string,
-  "success" | "info" | "warning" | "danger" | "primary"
-> = {
-  create: "success",
-  update: "primary",
-  delete: "danger",
-  import: "primary",
-  export: "success",
-  backup: "warning",
-  login: "success",
-  restore: "warning",
-  read: "info",
-};
+const typeTagMap: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'primary'> = {
+  create: 'success',
+  update: 'primary',
+  delete: 'danger',
+  import: 'primary',
+  export: 'success',
+  backup: 'warning',
+  login: 'success',
+  restore: 'warning',
+  read: 'info',
+}
 const typeNameMap: Record<string, string> = {
-  create: "创建",
-  update: "修改",
-  delete: "删除",
-  import: "导入",
-  export: "导出",
-  backup: "备份",
-  login: "登录",
-  restore: "恢复",
-  read: "查看",
-};
+  create: '创建',
+  update: '修改',
+  delete: '删除',
+  import: '导入',
+  export: '导出',
+  backup: '备份',
+  login: '登录',
+  restore: '恢复',
+  read: '查看',
+}
 
-const logs = ref<any[]>([]);
+const logs = ref<any[]>([])
 
 // 备注编辑
-const remarkDialogVisible = ref(false);
-const remarkSaving = ref(false);
-const remarkForm = reactive({ id: 0, remark: "" });
-let currentEditRow: any = null;
+const remarkDialogVisible = ref(false)
+const remarkSaving = ref(false)
+const remarkForm = reactive({ id: 0, remark: '' })
+let currentEditRow: any = null
 
 async function loadLogs() {
-  loading.value = true;
+  loading.value = true
   try {
     const params: Record<string, any> = {
       page: page.value,
       page_size: pageSize,
-    };
+    }
 
     // 如果用户筛选了类型，使用用户筛选的类型；否则默认只显示数据操作类型
     if (filters.type) {
-      params.action = filters.type;
+      params.action = filters.type
     } else {
       // 默认只显示数据操作日志，过滤掉登录、权限等系统审计日志
-      params.action_filter = DATA_OPERATION_TYPES.join(",");
+      params.action_filter = DATA_OPERATION_TYPES.join(',')
     }
 
     if (filters.dateRange?.length === 2) {
-      params.start_date = filters.dateRange[0];
-      params.end_date = filters.dateRange[1];
+      params.start_date = filters.dateRange[0]
+      params.end_date = filters.dateRange[1]
     }
-    const data = await auditApi.getLogs(params);
+    const data = await auditApi.getLogs(params)
 
     // 再次过滤确保只显示数据操作日志
-    const allItems = data.items || [];
+    const allItems = data.items || []
     const filteredItems = filters.type
       ? allItems
-      : allItems.filter((item: any) =>
-          DATA_OPERATION_TYPES.includes(item.action),
-        );
+      : allItems.filter((item: any) => DATA_OPERATION_TYPES.includes(item.action))
 
     logs.value = filteredItems.map((item: any) => ({
       id: item.id,
-      time: item.created_at || "",
-      operator: item.username || `用户${item.user_id || ""}`,
-      type: item.action || "",
-      module: item.resource_type || "",
-      detail: item.detail || "",
-      success: item.status !== "failed",
-      ip: item.ip_address || item.user_ip || "",
-      remark: (item.metadata || {}).remark || "",
-    }));
-    total.value = filteredItems.length;
+      time: item.created_at || '',
+      operator: item.username || `用户${item.user_id || ''}`,
+      type: item.action || '',
+      module: item.resource_type || '',
+      detail: item.detail || '',
+      success: item.status !== 'failed',
+      ip: item.ip_address || item.user_ip || '',
+      remark: (item.metadata || {}).remark || '',
+    }))
+    total.value = filteredItems.length
   } catch {
-    logs.value = [];
-    total.value = 0;
+    logs.value = []
+    total.value = 0
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 function handleSearch() {
-  page.value = 1;
-  loadLogs();
+  page.value = 1
+  loadLogs()
 }
 function handleReset() {
-  Object.assign(filters, { type: "", dateRange: null });
-  handleSearch();
+  Object.assign(filters, { type: '', dateRange: null })
+  handleSearch()
 }
 function handlePageChange(p: number) {
-  page.value = p;
-  loadLogs();
+  page.value = p
+  loadLogs()
 }
 
 function openRemarkDialog(row: any) {
-  currentEditRow = row;
-  remarkForm.id = row.id;
-  remarkForm.remark = row.remark || "";
-  remarkDialogVisible.value = true;
+  currentEditRow = row
+  remarkForm.id = row.id
+  remarkForm.remark = row.remark || ''
+  remarkDialogVisible.value = true
 }
 
 async function saveRemark() {
-  remarkSaving.value = true;
+  remarkSaving.value = true
   try {
     await request.patch(`/system/audit/logs/${remarkForm.id}/remark`, {
       remark: remarkForm.remark,
-    });
-    if (currentEditRow) currentEditRow.remark = remarkForm.remark;
-    ElMessage.success("备注保存成功");
-    remarkDialogVisible.value = false;
+    })
+    if (currentEditRow) currentEditRow.remark = remarkForm.remark
+    ElMessage.success('备注保存成功')
+    remarkDialogVisible.value = false
   } catch (error: any) {
-    const errorMsg =
-      error?.response?.data?.detail || error?.message || "备注保存失败";
-    ElMessage.error(errorMsg);
+    const errorMsg = error?.response?.data?.detail || error?.message || '备注保存失败'
+    ElMessage.error(errorMsg)
   } finally {
-    remarkSaving.value = false;
+    remarkSaving.value = false
   }
 }
 
 async function handleExport() {
-  exporting.value = true;
+  exporting.value = true
   try {
-    const params: Record<string, any> = {};
+    const params: Record<string, any> = {}
     if (filters.type) {
-      params.action = filters.type;
+      params.action = filters.type
     } else {
-      params.action_filter = DATA_OPERATION_TYPES.join(",");
+      params.action_filter = DATA_OPERATION_TYPES.join(',')
     }
     if (filters.dateRange?.length === 2) {
-      params.start_date = filters.dateRange[0];
-      params.end_date = filters.dateRange[1];
+      params.start_date = filters.dateRange[0]
+      params.end_date = filters.dateRange[1]
     }
-    const res = await request.get("/system/audit/logs/export", { params });
-    const data = res.data;
+    const res = await request.get('/system/audit/logs/export', { params })
+    const data = res.data
     // 生成CSV并下载
-    let csv = "\uFEFFID,时间,用户,操作类型,资源类型,状态,IP,备注\n";
+    let csv = '\uFEFFID,时间,用户,操作类型,资源类型,状态,IP,备注\n'
     for (const item of data.items || []) {
-      csv += `${item.id},"${item.time}","${item.user}","${item.action}","${item.resource_type}","${item.status}","${item.ip}","${item.detail}"\n`;
+      csv += `${item.id},"${item.time}","${item.user}","${item.action}","${item.resource_type}","${item.status}","${item.ip}","${item.detail}"\n`
     }
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `数据操作日志_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    ElMessage.success("日志导出成功");
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `数据操作日志_${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success('日志导出成功')
   } catch {
-    ElMessage.error("导出失败");
+    ElMessage.error('导出失败')
   } finally {
-    exporting.value = false;
+    exporting.value = false
   }
 }
 
 async function handleClearLogs() {
   try {
-    await ElMessageBox.confirm(
-      "此操作将清除所有数据操作日志记录，是否继续？",
-      "警告",
-      {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      },
-    );
+    await ElMessageBox.confirm('此操作将清除所有数据操作日志记录，是否继续？', '警告', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
 
-    clearing.value = true;
+    clearing.value = true
     try {
       // 注意：使用 actions（数组），与后端 BatchDeleteRequest.actions 字段对应
-      const res = await request.delete("/system/audit/logs/batch", {
+      const res = await request.delete('/system/audit/logs/batch', {
         data: { actions: DATA_OPERATION_TYPES },
-      });
-      const count = res?.data?.deleted_count ?? 0;
-      ElMessage.success(`日志清除成功，共删除 ${count} 条记录`);
-      await loadLogs();
+      })
+      const count = res?.data?.deleted_count ?? 0
+      ElMessage.success(`日志清除成功，共删除 ${count} 条记录`)
+      await loadLogs()
     } catch (err: any) {
       // 提取后端返回的具体错误信息
-      const detail = err?.response?.data?.detail;
+      const detail = err?.response?.data?.detail
       const errMsg =
-        typeof detail === "string"
+        typeof detail === 'string'
           ? detail
           : Array.isArray(detail)
-            ? detail
-                .map((d: any) => d.msg || d.message || JSON.stringify(d))
-                .join("；")
-            : "日志清除失败，请稍后重试";
-      logger.error("[handleClearLogs] 清除日志失败:", errMsg, err);
-      ElMessage.error(errMsg);
+            ? detail.map((d: any) => d.msg || d.message || JSON.stringify(d)).join('；')
+            : '日志清除失败，请稍后重试'
+      logger.error('[handleClearLogs] 清除日志失败:', errMsg, err)
+      ElMessage.error(errMsg)
     } finally {
-      clearing.value = false;
+      clearing.value = false
     }
   } catch {
     // 用户取消，静默处理
@@ -369,8 +322,8 @@ async function handleClearLogs() {
 }
 
 onMounted(() => {
-  loadLogs();
-});
+  loadLogs()
+})
 </script>
 
 <style scoped>

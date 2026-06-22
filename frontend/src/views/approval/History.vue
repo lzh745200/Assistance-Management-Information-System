@@ -15,11 +15,7 @@
       <!-- 筛选条件 -->
       <el-form :model="filterForm" inline>
         <el-form-item label="实体类型">
-          <el-select
-            v-model="filterForm.entity_type"
-            placeholder="全部"
-            clearable
-          >
+          <el-select v-model="filterForm.entity_type" placeholder="全部" clearable>
             <el-option label="帮扶村" value="supported_village" />
             <el-option label="项目" value="project" />
             <el-option label="经费" value="fund" />
@@ -27,12 +23,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select
-            v-model="filterForm.status"
-            placeholder="全部"
-            clearable
-            style="width: 140px"
-          >
+          <el-select v-model="filterForm.status" placeholder="全部" clearable style="width: 140px">
             <el-option label="待审批" value="pending" />
             <el-option label="已通过" value="approved" />
             <el-option label="已拒绝" value="rejected" />
@@ -55,10 +46,7 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="审批标题" min-width="200">
           <template #default="{ row }">
-            {{
-              row.title ||
-              `${formatEntityType(row.entity_type)} #${row.entity_id}`
-            }}
+            {{ row.title || `${formatEntityType(row.entity_type)} #${row.entity_id}` }}
           </template>
         </el-table-column>
         <el-table-column label="类型" width="100">
@@ -74,9 +62,7 @@
           </template>
         </el-table-column>
         <el-table-column label="审批级别" width="100" align="center">
-          <template #default="{ row }">
-            第 {{ row.current_level }} 级
-          </template>
+          <template #default="{ row }"> 第 {{ row.current_level }} 级 </template>
         </el-table-column>
         <el-table-column label="提交时间" width="180">
           <template #default="{ row }">
@@ -85,7 +71,7 @@
         </el-table-column>
         <el-table-column label="完成时间" width="180">
           <template #default="{ row }">
-            {{ row.completed_at ? formatDateTime(row.completed_at) : "-" }}
+            {{ row.completed_at ? formatDateTime(row.completed_at) : '-' }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
@@ -118,7 +104,7 @@
         <!-- 基本信息 -->
         <el-descriptions :column="2" border>
           <el-descriptions-item label="审批标题">
-            {{ currentTask.title || "-" }}
+            {{ currentTask.title || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="实体类型">
             {{ formatEntityType(currentTask.entity_type) }}
@@ -135,11 +121,7 @@
             {{ formatDateTime(currentTask.created_at) }}
           </el-descriptions-item>
           <el-descriptions-item label="完成时间">
-            {{
-              currentTask.completed_at
-                ? formatDateTime(currentTask.completed_at)
-                : "-"
-            }}
+            {{ currentTask.completed_at ? formatDateTime(currentTask.completed_at) : '-' }}
           </el-descriptions-item>
         </el-descriptions>
 
@@ -150,9 +132,7 @@
             <el-table-column prop="field" label="字段" width="150" />
             <el-table-column prop="original" label="原值">
               <template #default="{ row }">
-                <span :class="{ 'diff-changed': row.changed }">{{
-                  row.original ?? "-"
-                }}</span>
+                <span :class="{ 'diff-changed': row.changed }">{{ row.original ?? '-' }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="new" label="新值">
@@ -163,7 +143,7 @@
                     'diff-new': row.changed,
                   }"
                 >
-                  {{ row.new ?? "-" }}
+                  {{ row.new ?? '-' }}
                 </span>
               </template>
             </el-table-column>
@@ -186,10 +166,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { useRouterSafe } from "@/composables/useRouterSafe";
-import { ElMessage } from "element-plus";
-import { Refresh, Search, View } from "@element-plus/icons-vue";
+import { ref, computed, onMounted } from 'vue'
+import { useRouterSafe } from '@/composables/useRouterSafe'
+import { ElMessage } from 'element-plus'
+import { Refresh, Search, View } from '@element-plus/icons-vue'
 import {
   getApprovalHistory,
   getTaskDiff,
@@ -197,45 +177,45 @@ import {
   formatEntityType,
   type ApprovalTask,
   type TaskDiff,
-} from "@/api/approval";
+} from '@/api/approval'
 
 // ==================== 状态 ====================
 
-const { pushSafe } = useRouterSafe();
-const loading = ref(false);
-const historyList = ref<ApprovalTask[]>([]);
-const total = ref(0);
-const page = ref(1);
-const pageSize = ref(20);
+const { pushSafe } = useRouterSafe()
+const loading = ref(false)
+const historyList = ref<ApprovalTask[]>([])
+const total = ref(0)
+const page = ref(1)
+const pageSize = ref(20)
 
 const filterForm = ref({
   entity_type: undefined as string | undefined,
   status: undefined as string | undefined,
-});
+})
 
 // 详情对话框
-const detailDialogVisible = ref(false);
-const currentTask = ref<ApprovalTask | null>(null);
-const taskDiff = ref<TaskDiff | null>(null);
+const detailDialogVisible = ref(false)
+const currentTask = ref<ApprovalTask | null>(null)
+const taskDiff = ref<TaskDiff | null>(null)
 
 // ==================== 计算属性 ====================
 
 const diffTableData = computed(() => {
-  if (!taskDiff.value) return [];
+  if (!taskDiff.value) return []
 
-  const { original_data, change_data, diff_fields } = taskDiff.value;
+  const { original_data, change_data, diff_fields } = taskDiff.value
   const allFields = new Set([
     ...Object.keys(original_data || {}),
     ...Object.keys(change_data || {}),
-  ]);
+  ])
 
   return Array.from(allFields).map((field) => ({
     field,
     original: original_data?.[field],
     new: change_data?.[field],
     changed: diff_fields?.includes(field),
-  }));
-});
+  }))
+})
 
 // ==================== 方法 ====================
 
@@ -243,24 +223,24 @@ const diffTableData = computed(() => {
  * 加载审批历史
  */
 async function loadHistory() {
-  loading.value = true;
+  loading.value = true
   try {
-    const skip = (page.value - 1) * pageSize.value;
+    const skip = (page.value - 1) * pageSize.value
     historyList.value = await getApprovalHistory({
       entity_type: filterForm.value.entity_type,
       status: filterForm.value.status,
       skip,
       limit: pageSize.value,
-    });
+    })
     // 注意：实际API可能需要返回total，这里简化处理
     total.value =
       historyList.value.length >= pageSize.value
         ? page.value * pageSize.value + 1
-        : (page.value - 1) * pageSize.value + historyList.value.length;
+        : (page.value - 1) * pageSize.value + historyList.value.length
   } catch (error) {
-    ElMessage.error("加载审批历史失败");
+    ElMessage.error('加载审批历史失败')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
@@ -268,8 +248,8 @@ async function loadHistory() {
  * 搜索
  */
 function handleSearch() {
-  page.value = 1;
-  loadHistory();
+  page.value = 1
+  loadHistory()
 }
 
 /**
@@ -279,21 +259,21 @@ function handleReset() {
   filterForm.value = {
     entity_type: undefined,
     status: undefined,
-  };
-  page.value = 1;
-  loadHistory();
+  }
+  page.value = 1
+  loadHistory()
 }
 
 /**
  * 查看详情
  */
 async function handleViewDetail(task: any) {
-  currentTask.value = task;
-  taskDiff.value = null;
-  detailDialogVisible.value = true;
+  currentTask.value = task
+  taskDiff.value = null
+  detailDialogVisible.value = true
 
   try {
-    taskDiff.value = await getTaskDiff(task.id);
+    taskDiff.value = await getTaskDiff(task.id)
   } catch (error) {
     // 可能没有变更数据
   }
@@ -303,12 +283,12 @@ async function handleViewDetail(task: any) {
  * 跳转到实体详情
  */
 function handleViewEntity(task: any) {
-  if (task.entity_type === "rural_work") {
-    detailDialogVisible.value = false;
+  if (task.entity_type === 'rural_work') {
+    detailDialogVisible.value = false
     pushSafe({
-      path: "/rural-works",
-      query: { id: task.entity_id, action: "view" },
-    });
+      path: '/rural-works',
+      query: { id: task.entity_id, action: 'view' },
+    })
   }
 }
 
@@ -316,15 +296,15 @@ function handleViewEntity(task: any) {
  * 格式化日期时间
  */
 function formatDateTime(dateStr: string): string {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleString("zh-CN");
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString('zh-CN')
 }
 
 // ==================== 生命周期 ====================
 
 onMounted(() => {
-  loadHistory();
-});
+  loadHistory()
+})
 </script>
 
 <style scoped lang="scss">

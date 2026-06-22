@@ -13,30 +13,25 @@
  */
 export interface TableColumn<T = unknown> {
   /** 列标识 */
-  prop: keyof T | string;
+  prop: keyof T | string
   /** 列标题 */
-  label: string;
+  label: string
   /** 列宽度 */
-  width?: number | string;
+  width?: number | string
   /** 最小宽度 */
-  minWidth?: number | string;
+  minWidth?: number | string
   /** 是否可排序 */
-  sortable?: boolean | "custom";
+  sortable?: boolean | 'custom'
   /** 对齐方式 */
-  align?: "left" | "center" | "right";
+  align?: 'left' | 'center' | 'right'
   /** 是否固定 */
-  fixed?: boolean | "left" | "right";
+  fixed?: boolean | 'left' | 'right'
   /** 是否显示 */
-  visible?: boolean;
+  visible?: boolean
   /** 自定义插槽名 */
-  slot?: string;
+  slot?: string
   /** 格式化函数 */
-  formatter?: (
-    row: T,
-    column: TableColumn<T>,
-    cellValue: unknown,
-    index: number,
-  ) => string;
+  formatter?: (row: T, column: TableColumn<T>, cellValue: unknown, index: number) => string
 }
 
 /**
@@ -44,27 +39,27 @@ export interface TableColumn<T = unknown> {
  */
 export interface TableProps<T = unknown> {
   /** 表格数据 */
-  data: T[];
+  data: T[]
   /** 列配置 */
-  columns: TableColumn<T>[];
+  columns: TableColumn<T>[]
   /** 是否加载中 */
-  loading?: boolean;
+  loading?: boolean
   /** 是否显示序号 */
-  showIndex?: boolean;
+  showIndex?: boolean
   /** 是否显示选择框 */
-  showSelection?: boolean;
+  showSelection?: boolean
   /** 行唯一标识 */
-  rowKey?: string | ((row: T) => string);
+  rowKey?: string | ((row: T) => string)
   /** 表格高度 */
-  height?: number | string;
+  height?: number | string
   /** 最大高度 */
-  maxHeight?: number | string;
+  maxHeight?: number | string
   /** 是否带边框 */
-  border?: boolean;
+  border?: boolean
   /** 是否斜纹 */
-  stripe?: boolean;
+  stripe?: boolean
   /** 空数据提示 */
-  emptyText?: string;
+  emptyText?: string
 }
 
 // ============================================================================
@@ -76,21 +71,21 @@ export interface TableProps<T = unknown> {
  */
 export interface PaginationProps {
   /** 当前页 */
-  currentPage: number;
+  currentPage: number
   /** 每页条数 */
-  pageSize: number;
+  pageSize: number
   /** 总条数 */
-  total: number;
+  total: number
   /** 每页条数选项 */
-  pageSizes?: number[];
+  pageSizes?: number[]
   /** 布局 */
-  layout?: string;
+  layout?: string
   /** 是否禁用 */
-  disabled?: boolean;
+  disabled?: boolean
   /** 小型分页 */
-  small?: boolean;
+  small?: boolean
   /** 背景色 */
-  background?: boolean;
+  background?: boolean
 }
 
 // ============================================================================
@@ -102,38 +97,38 @@ export interface PaginationProps {
  */
 export interface FormItem {
   /** 字段名 */
-  prop: string;
+  prop: string
   /** 标签 */
-  label: string;
+  label: string
   /** 类型 */
   type:
-    | "input"
-    | "select"
-    | "date"
-    | "datetime"
-    | "textarea"
-    | "number"
-    | "switch"
-    | "radio"
-    | "checkbox"
-    | "upload"
-    | "custom";
+    | 'input'
+    | 'select'
+    | 'date'
+    | 'datetime'
+    | 'textarea'
+    | 'number'
+    | 'switch'
+    | 'radio'
+    | 'checkbox'
+    | 'upload'
+    | 'custom'
   /** 占位符 */
-  placeholder?: string;
+  placeholder?: string
   /** 是否必填 */
-  required?: boolean;
+  required?: boolean
   /** 是否禁用 */
-  disabled?: boolean;
+  disabled?: boolean
   /** 校验规则 */
-  rules?: unknown[];
+  rules?: unknown[]
   /** 选项（用于 select/radio/checkbox） */
-  options?: Array<{ label: string; value: unknown; disabled?: boolean }>;
+  options?: Array<{ label: string; value: unknown; disabled?: boolean }>
   /** 自定义插槽名 */
-  slot?: string;
+  slot?: string
   /** 栅格占位 */
-  span?: number;
+  span?: number
   /** 默认值 */
-  defaultValue?: unknown;
+  defaultValue?: unknown
 }
 
 /**
@@ -141,19 +136,19 @@ export interface FormItem {
  */
 export interface FormProps {
   /** 表单数据 */
-  model: Record<string, unknown>;
+  model: Record<string, unknown>
   /** 表单项配置 */
-  items: FormItem[];
+  items: FormItem[]
   /** 标签宽度 */
-  labelWidth?: string | number;
+  labelWidth?: string | number
   /** 标签位置 */
-  labelPosition?: "left" | "right" | "top";
+  labelPosition?: 'left' | 'right' | 'top'
   /** 是否禁用 */
-  disabled?: boolean;
+  disabled?: boolean
   /** 列数 */
-  columns?: number;
+  columns?: number
   /** 是否内联 */
-  inline?: boolean;
+  inline?: boolean
 }
 
 // ============================================================================
@@ -165,23 +160,23 @@ export interface FormProps {
  */
 export interface DialogProps {
   /** 是否显示 */
-  visible: boolean;
+  visible: boolean
   /** 标题 */
-  title?: string;
+  title?: string
   /** 宽度 */
-  width?: string | number;
+  width?: string | number
   /** 是否全屏 */
-  fullscreen?: boolean;
+  fullscreen?: boolean
   /** 是否显示关闭按钮 */
-  showClose?: boolean;
+  showClose?: boolean
   /** 是否可以通过点击遮罩关闭 */
-  closeOnClickModal?: boolean;
+  closeOnClickModal?: boolean
   /** 是否可以通过按下 ESC 关闭 */
-  closeOnPressEscape?: boolean;
+  closeOnPressEscape?: boolean
   /** 是否居中 */
-  center?: boolean;
+  center?: boolean
   /** 是否拖拽 */
-  draggable?: boolean;
+  draggable?: boolean
 }
 
 // ============================================================================
@@ -193,17 +188,17 @@ export interface DialogProps {
  */
 export interface ChartProps {
   /** 图表配置 */
-  option: Record<string, unknown>;
+  option: Record<string, unknown>
   /** 宽度 */
-  width?: string | number;
+  width?: string | number
   /** 高度 */
-  height?: string | number;
+  height?: string | number
   /** 是否加载中 */
-  loading?: boolean;
+  loading?: boolean
   /** 是否自动调整大小 */
-  autoresize?: boolean;
+  autoresize?: boolean
   /** 主题 */
-  theme?: string | Record<string, unknown>;
+  theme?: string | Record<string, unknown>
 }
 
 // ============================================================================
@@ -215,15 +210,15 @@ export interface ChartProps {
  */
 export interface CardProps {
   /** 标题 */
-  title?: string;
+  title?: string
   /** 是否显示边框 */
-  bordered?: boolean;
+  bordered?: boolean
   /** 是否悬浮时显示阴影 */
-  hoverable?: boolean;
+  hoverable?: boolean
   /** 是否加载中 */
-  loading?: boolean;
+  loading?: boolean
   /** 内边距 */
-  bodyStyle?: Record<string, string>;
+  bodyStyle?: Record<string, string>
 }
 
 // ============================================================================
@@ -233,27 +228,14 @@ export interface CardProps {
 /**
  * 按钮类型
  */
-export type ButtonType =
-  | "primary"
-  | "success"
-  | "warning"
-  | "danger"
-  | "info"
-  | "text"
-  | "default";
+export type ButtonType = 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'text' | 'default'
 
 /**
  * 尺寸类型
  */
-export type SizeType = "large" | "default" | "small";
+export type SizeType = 'large' | 'default' | 'small'
 
 /**
  * 状态类型
  */
-export type StatusType =
-  | "success"
-  | "warning"
-  | "error"
-  | "info"
-  | "processing"
-  | "default";
+export type StatusType = 'success' | 'warning' | 'error' | 'info' | 'processing' | 'default'
