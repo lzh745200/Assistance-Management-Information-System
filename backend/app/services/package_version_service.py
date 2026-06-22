@@ -3,7 +3,7 @@
 .. warning::
     本服务为占位实现，**尚未被任何路由调用**。``check_version`` / ``get_version``
     此前硬编码返回 ``"1.0.0"``，与项目实际版本（``config.PROJECT_VERSION``，
-    当前为 ``1.4.1``）不符，存在误导风险。
+    当前为 ``1.2.0``）不符，存在误导风险。
 
     完整实现（读取 ``config.PROJECT_VERSION`` 并与最新发布版本比对）超出本次
     BugFix 范围。为避免被误用，硬编码方法显式抛出 :class:`NotImplementedError`。

@@ -482,3 +482,425 @@ class TestDataIsolationSemantics:
         assert total == 1
         assert len(items) == 1
         assert items[0].id == 1
+
+
+# ══════════════════════════════════════════════════════════════
+# Task #4 补充: ai_service 5 个方法数据隔离测试
+# 验证 analyze_income_trend / analyze_fund_efficiency /
+#        compare_villages / forecast_income_trend / forecast_fund_completion
+# 正确调用 filter_by_data_scope 并传递 user。
+# ══════════════════════════════════════════════════════════════
+
+
+class TestAnalyzeIncomeTrendDataIsolation:
+    """验证 analyze_income_trend 正确调用 filter_by_data_scope 并传递 user。
+
+    VillageIncome 无 organization_id，需 JOIN SupportedVillage 后按数据权限过滤。
+    """
+
+    def test_analyze_income_trend_calls_filter_by_data_scope_with_user(self):
+        """analyze_income_trend 应将 user 透传给 filter_by_data_scope。"""
+        from app.models.supported_village import SupportedVillage
+
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[])
+        q.join.return_value = q
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        with patch("app.core.data_permission.filter_by_data_scope",
+                   wraps=_real_filter_by_data_scope) as mock_fbs:
+            service.analyze_income_trend(db, user=org_a_user)
+
+        mock_fbs.assert_called_once()
+        call_args = mock_fbs.call_args
+        assert call_args.args[2] is org_a_user or call_args.kwargs.get("user") is org_a_user
+        # 因 JOIN，传入的模型应为 SupportedVillage
+        assert call_args.args[1] is SupportedVillage
+
+    def test_analyze_income_trend_admin_bypasses_filtering(self):
+        """admin 用户：filter_by_data_scope 返回 query 不变，不追加 filter。"""
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[
+            (2021, 10000.0, 5000.0, 5),
+            (2022, 11000.0, 5500.0, 5),
+        ])
+        q.join.return_value = q
+        db.query.return_value = q
+
+        admin_user = _make_admin_user()
+        service = AIServiceManager()
+
+        result = service.analyze_income_trend(db, user=admin_user)
+
+        assert result["type"] == "income_trend"
+        assert result["status"] == "completed"
+        assert result["total_years"] == 2
+        # admin → filter_by_data_scope 直接返回 query → 无 .filter() 调用
+        q.filter.assert_not_called()
+
+    def test_analyze_income_trend_non_admin_gets_filtered(self):
+        """非 admin 用户：filter_by_data_scope 追加 .filter() 到 query。"""
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[])
+        q.join.return_value = q
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        result = service.analyze_income_trend(db, user=org_a_user)
+
+        # non-admin → filter_by_data_scope 调用 query.filter(perm)
+        q.filter.assert_called()
+        assert result["type"] == "income_trend"
+
+    def test_analyze_income_trend_user_none_gets_filtered(self):
+        """user=None 时：filter_by_data_scope 按 OWN scope 过滤。"""
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[])
+        q.join.return_value = q
+        db.query.return_value = q
+
+        service = AIServiceManager()
+
+        result = service.analyze_income_trend(db, user=None)
+
+        # user=None → is_admin(None)=False → filter applied
+        q.filter.assert_called()
+        assert result["yearly_data"] == []
+
+
+class TestAnalyzeFundEfficiencyDataIsolation:
+    """验证 analyze_fund_efficiency 正确调用 filter_by_data_scope 并传递 user。
+
+    Fund 有 organization_id，直接过滤。村庄聚合 + 全局聚合两处均需过滤。
+    """
+
+    def test_analyze_fund_efficiency_calls_filter_by_data_scope_with_user(self):
+        """analyze_fund_efficiency 应调用 filter_by_data_scope 2 次并传 user。"""
+        from app.models.fund import Fund
+
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[], first_result=(0.0, 0.0, 0.0))
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        with patch("app.core.data_permission.filter_by_data_scope",
+                   wraps=_real_filter_by_data_scope) as mock_fbs:
+            service.analyze_fund_efficiency(db, user=org_a_user)
+
+        # 2 次调用：村庄聚合 + 全局聚合
+        assert mock_fbs.call_count == 2
+        for c in mock_fbs.call_args_list:
+            assert c.args[2] is org_a_user or c.kwargs.get("user") is org_a_user
+            assert c.args[1] is Fund
+
+    def test_analyze_fund_efficiency_admin_bypasses_filtering(self):
+        """admin 用户：filter_by_data_scope 返回 query 不变。"""
+        db = MagicMock()
+        q = _make_self_chain_query(
+            all_result=[(1, 100000.0, 80000.0, 60000.0)],
+            first_result=(100000.0, 80000.0, 60000.0),
+        )
+        db.query.return_value = q
+
+        admin_user = _make_admin_user()
+        service = AIServiceManager()
+
+        result = service.analyze_fund_efficiency(db, user=admin_user)
+
+        assert result["type"] == "fund_efficiency"
+        assert result["status"] == "completed"
+        assert len(result["by_village"]) == 1
+        # admin: village 业务 filter(1) + 0 数据权限 filter = 1
+        assert q.filter.call_count == 1
+
+    def test_analyze_fund_efficiency_non_admin_gets_filtered(self):
+        """非 admin 用户：filter_by_data_scope 在两处 query 追加 .filter()。"""
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[], first_result=(0.0, 0.0, 0.0))
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        result = service.analyze_fund_efficiency(db, user=org_a_user)
+
+        # non-admin: village 业务 filter(1) + village 数据权限 filter(1)
+        #          + global 数据权限 filter(1) = 3
+        assert q.filter.call_count == 3
+        assert result["type"] == "fund_efficiency"
+
+    def test_analyze_fund_efficiency_user_none_gets_filtered(self):
+        """user=None 时：filter_by_data_scope 按 OWN scope 过滤两处 query。"""
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[], first_result=(0.0, 0.0, 0.0))
+        db.query.return_value = q
+
+        service = AIServiceManager()
+
+        result = service.analyze_fund_efficiency(db, user=None)
+
+        # user=None → 2 数据权限 filter + 1 业务 filter = 3
+        assert q.filter.call_count == 3
+        assert result["global"]["total_amount"] == 0.0
+
+
+class TestCompareVillagesDataIsolation:
+    """验证 compare_villages 正确调用 filter_by_data_scope 并传递 user。
+
+    SupportedVillage 有 organization_id，直接过滤。
+    额外验证：latest_income_year / latest_pop_year 子查询也加了
+    filter_by_data_scope + join（工程师的额外修复点）。
+    """
+
+    def test_compare_villages_calls_filter_by_data_scope_with_user(self):
+        """compare_villages 应调用 filter_by_data_scope 并传 user（子查询至少 2 次）。"""
+        from app.models.supported_village import SupportedVillage
+
+        db = MagicMock()
+        q = _make_self_chain_query()
+        q.join.return_value = q
+        q.scalar.return_value = None  # 跳过 county 块
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        with patch("app.core.data_permission.filter_by_data_scope",
+                   wraps=_real_filter_by_data_scope) as mock_fbs:
+            service.compare_villages(db, user=org_a_user)
+
+        # scalar=None → 仅 2 次调用：latest_income_year + latest_pop_year
+        assert mock_fbs.call_count == 2
+        for c in mock_fbs.call_args_list:
+            assert c.args[2] is org_a_user or c.kwargs.get("user") is org_a_user
+            assert c.args[1] is SupportedVillage
+
+    def test_compare_villages_latest_year_subquery_has_permission(self):
+        """额外验证：latest_year 子查询也加了 filter_by_data_scope + join。"""
+        db = MagicMock()
+        q = _make_self_chain_query()
+        q.join.return_value = q
+        q.scalar.return_value = None
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        with patch("app.core.data_permission.filter_by_data_scope",
+                   wraps=_real_filter_by_data_scope) as mock_fbs:
+            service.compare_villages(db, user=org_a_user)
+
+        # 2 次调用均来自 latest_year 子查询（scalar=None → county 块跳过）
+        assert mock_fbs.call_count == 2
+        # 子查询在 filter_by_data_scope 前做了 .join(SupportedVillage) → q.join 被调用
+        assert q.join.call_count >= 2
+
+    def test_compare_villages_admin_bypasses_filtering(self):
+        """admin 用户：filter_by_data_scope 返回 query 不变。"""
+        db = MagicMock()
+        q = _make_self_chain_query()
+        q.join.return_value = q
+        q.scalar.return_value = None
+        db.query.return_value = q
+
+        admin_user = _make_admin_user()
+        service = AIServiceManager()
+
+        result = service.compare_villages(db, user=admin_user)
+
+        assert result["type"] == "village_comparison"
+        assert result["status"] == "completed"
+        # admin → 无数据权限 filter
+        q.filter.assert_not_called()
+
+    def test_compare_villages_non_admin_gets_filtered(self):
+        """非 admin 用户：filter_by_data_scope 在子查询追加 .filter()。"""
+        db = MagicMock()
+        q = _make_self_chain_query()
+        q.join.return_value = q
+        q.scalar.return_value = None
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        result = service.compare_villages(db, user=org_a_user)
+
+        # non-admin → 2 数据权限 filter（latest_income_year + latest_pop_year）
+        assert q.filter.call_count == 2
+        assert result["type"] == "village_comparison"
+
+    def test_compare_villages_user_none_gets_filtered(self):
+        """user=None 时：filter_by_data_scope 按 OWN scope 过滤子查询。"""
+        db = MagicMock()
+        q = _make_self_chain_query()
+        q.join.return_value = q
+        q.scalar.return_value = None
+        db.query.return_value = q
+
+        service = AIServiceManager()
+
+        result = service.compare_villages(db, user=None)
+
+        # user=None → 2 数据权限 filter
+        assert q.filter.call_count == 2
+        assert result["county_income"] == []
+        assert result["county_population"] == []
+
+
+class TestForecastIncomeTrendDataIsolation:
+    """验证 forecast_income_trend 正确调用 filter_by_data_scope 并传递 user。
+
+    VillageIncome 无 organization_id，需 JOIN SupportedVillage 后按数据权限过滤。
+    """
+
+    def test_forecast_income_trend_calls_filter_by_data_scope_with_user(self):
+        """forecast_income_trend 应将 user 透传给 filter_by_data_scope。"""
+        from app.models.supported_village import SupportedVillage
+
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[])
+        q.join.return_value = q
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        with patch("app.core.data_permission.filter_by_data_scope",
+                   wraps=_real_filter_by_data_scope) as mock_fbs:
+            service.forecast_income_trend(db, user=org_a_user)
+
+        mock_fbs.assert_called_once()
+        call_args = mock_fbs.call_args
+        assert call_args.args[2] is org_a_user or call_args.kwargs.get("user") is org_a_user
+        assert call_args.args[1] is SupportedVillage
+
+    def test_forecast_income_trend_admin_bypasses_filtering(self):
+        """admin 用户：filter_by_data_scope 返回 query 不变。"""
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[
+            (2021, 10000.0, 5000.0),
+            (2022, 11000.0, 5500.0),
+        ])
+        q.join.return_value = q
+        db.query.return_value = q
+
+        admin_user = _make_admin_user()
+        service = AIServiceManager()
+
+        result = service.forecast_income_trend(db, forecast_years=1, user=admin_user)
+
+        assert result["type"] == "income_forecast"
+        assert result["status"] == "completed"
+        # admin → 无数据权限 filter
+        q.filter.assert_not_called()
+
+    def test_forecast_income_trend_non_admin_gets_filtered(self):
+        """非 admin 用户：filter_by_data_scope 追加 .filter() 到 query。"""
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[])
+        q.join.return_value = q
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        result = service.forecast_income_trend(db, user=org_a_user)
+
+        # non-admin → 数据权限 filter 被追加
+        q.filter.assert_called()
+        assert result["status"] == "insufficient_data"
+
+    def test_forecast_income_trend_user_none_gets_filtered(self):
+        """user=None 时：filter_by_data_scope 按 OWN scope 过滤。"""
+        db = MagicMock()
+        q = _make_self_chain_query(all_result=[])
+        q.join.return_value = q
+        db.query.return_value = q
+
+        service = AIServiceManager()
+
+        result = service.forecast_income_trend(db, user=None)
+
+        # user=None → filter applied
+        q.filter.assert_called()
+        assert result["status"] == "insufficient_data"
+
+
+class TestForecastFundCompletionDataIsolation:
+    """验证 forecast_fund_completion 正确调用 filter_by_data_scope 并传递 user。
+
+    Fund 有 organization_id，直接过滤。
+    """
+
+    def test_forecast_fund_completion_calls_filter_by_data_scope_with_user(self):
+        """forecast_fund_completion 应将 user 透传给 filter_by_data_scope。"""
+        from app.models.fund import Fund
+
+        db = MagicMock()
+        q = _make_self_chain_query(first_result=(0.0, 0.0, 0.0))
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        with patch("app.core.data_permission.filter_by_data_scope",
+                   wraps=_real_filter_by_data_scope) as mock_fbs:
+            service.forecast_fund_completion(db, user=org_a_user)
+
+        mock_fbs.assert_called_once()
+        call_args = mock_fbs.call_args
+        assert call_args.args[2] is org_a_user or call_args.kwargs.get("user") is org_a_user
+        assert call_args.args[1] is Fund
+
+    def test_forecast_fund_completion_admin_bypasses_filtering(self):
+        """admin 用户：filter_by_data_scope 返回 query 不变。"""
+        db = MagicMock()
+        q = _make_self_chain_query(first_result=(100000.0, 90000.0, 85000.0))
+        db.query.return_value = q
+
+        admin_user = _make_admin_user()
+        service = AIServiceManager()
+
+        result = service.forecast_fund_completion(db, user=admin_user)
+
+        assert result["type"] == "fund_completion_forecast"
+        assert result["status"] == "completed"
+        # admin: 仅业务 filter（Fund.date 范围），无数据权限 filter
+        assert q.filter.call_count == 1
+
+    def test_forecast_fund_completion_non_admin_gets_filtered(self):
+        """非 admin 用户：filter_by_data_scope 追加 .filter() 到 query。"""
+        db = MagicMock()
+        q = _make_self_chain_query(first_result=(0.0, 0.0, 0.0))
+        db.query.return_value = q
+
+        org_a_user = _make_org_a_user()
+        service = AIServiceManager()
+
+        result = service.forecast_fund_completion(db, user=org_a_user)
+
+        # non-admin: 业务 filter(1) + 数据权限 filter(1) = 2
+        assert q.filter.call_count == 2
+        assert result["type"] == "fund_completion_forecast"
+
+    def test_forecast_fund_completion_user_none_gets_filtered(self):
+        """user=None 时：filter_by_data_scope 按 OWN scope 过滤。"""
+        db = MagicMock()
+        q = _make_self_chain_query(first_result=(0.0, 0.0, 0.0))
+        db.query.return_value = q
+
+        service = AIServiceManager()
+
+        result = service.forecast_fund_completion(db, user=None)
+
+        # user=None → 业务 filter(1) + 数据权限 filter(1) = 2
+        assert q.filter.call_count == 2
+        assert result["current"]["usage_rate"] == 0.0

@@ -5,7 +5,7 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [1.4.1] - 2026-06-20
+## [1.2.0] - 2026-06-20
 
 ### 修复（生产崩溃）
 
@@ -33,7 +33,7 @@
 
 ### 文档
 
-- 📝 更新项目文件结构说明.md：新增 v1.4.1 版本记录、services 层补充 rural_work_service/user_cascade_delete_service 说明、新增开发约定章节（Service 序列化/async 调用/Pydantic 默认值/AuditLog 字段映射/Windows libmagic/测试环境变量/路由-service 契约/batch-delete body）
+- 📝 更新项目文件结构说明.md：新增 v1.2.0 版本记录、services 层补充 rural_work_service/user_cascade_delete_service 说明、新增开发约定章节（Service 序列化/async 调用/Pydantic 默认值/AuditLog 字段映射/Windows libmagic/测试环境变量/路由-service 契约/batch-delete body）
 
 ## [1.4.0] - 2026-06
 
