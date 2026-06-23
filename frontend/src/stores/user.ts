@@ -96,6 +96,11 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
+  async function changePassword(oldPassword: string, newPassword: string) {
+    if (!currentUser.value?.id) throw new Error('未登录')
+    return put(`/users/${currentUser.value.id}/password`, { old_password: oldPassword, new_password: newPassword })
+  }
+
   async function assignRole(userId: number, roleId: number) {
     return post<ApiResponse<null>>(`/user-management/${userId}/assign-role`, {
       role_id: roleId,
@@ -168,6 +173,7 @@ export const useUserStore = defineStore('user', () => {
     updateUser,
     deleteUser,
     resetUserPassword,
+    changePassword,
     assignRole,
     logout,
     getUserProfile,
