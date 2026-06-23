@@ -48,12 +48,12 @@ class TestVerifyEncryptionPassword:
         from app.api.v1.encryption import _verify_encryption_password
 
         # 构造合法 salt + hash，但密码不对
-        import hashlib, os
+        import hashlib
         from app.services.password_encryption_service import PasswordEncryptionService
 
         salt = PasswordEncryptionService.generate_salt()
         iterations = PasswordEncryptionService.DEFAULT_ITERATIONS
-        key = PasswordEncryptionService.derive_key("correct_pw", salt, iterations)
+        key = PasswordEncryptionService.derive_key_from_password("correct_pw", salt, iterations)
         stored_hash = hashlib.sha256(key).hexdigest()
 
         with patch("app.api.v1.encryption.SystemConfigService") as MockSvc:
@@ -77,7 +77,7 @@ class TestVerifyEncryptionPassword:
         password = "test_pass_123"
         salt = PasswordEncryptionService.generate_salt()
         iterations = PasswordEncryptionService.DEFAULT_ITERATIONS
-        key = PasswordEncryptionService.derive_key(password, salt, iterations)
+        key = PasswordEncryptionService.derive_key_from_password(password, salt, iterations)
         stored_hash = hashlib.sha256(key).hexdigest()
 
         with patch("app.api.v1.encryption.SystemConfigService") as MockSvc:
@@ -180,7 +180,7 @@ class TestDisableEncryption:
 
         salt = PasswordEncryptionService.generate_salt()
         iterations = PasswordEncryptionService.DEFAULT_ITERATIONS
-        key = PasswordEncryptionService.derive_key("test_pass_123", salt, iterations)
+        key = PasswordEncryptionService.derive_key_from_password("test_pass_123", salt, iterations)
         stored_hash = hashlib.sha256(key).hexdigest()
 
         # mock db.query().filter().first() 模拟找到配置行

@@ -170,6 +170,8 @@ backend/logs/
 # ===== PyInstaller 临时构建产物 =====
 backend/dist/
 *.spec.bak
+*.backup
+**/*.backup
 
 # ===== Electron 构建产物 =====
 electron/dist/

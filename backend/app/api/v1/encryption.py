@@ -50,7 +50,7 @@ def _verify_encryption_password(db: Session, password: str) -> None:
         svc.get(_CONFIG_KEY_ITERATIONS) or PasswordEncryptionService.DEFAULT_ITERATIONS
     )
     salt = bytes.fromhex(salt_hex)
-    key = PasswordEncryptionService.derive_key(password, salt, iterations)
+    key = PasswordEncryptionService.derive_key_from_password(password, salt, iterations)
 
     stored_hash = svc.get(_CONFIG_KEY_VERIFY_HASH)
     if stored_hash:
@@ -68,7 +68,7 @@ async def initialize_encryption(
     current_user=Depends(get_current_user),
 ):
     """初始化数据库加密"""
-    require_admin(current_user, "仅管理员可管理加密设置")
+    require_admin(current_user, error_message="仅管理员可管理加密设置")
 
     if request.password != request.confirm_password:
         raise HTTPException(status_code=400, detail="两次输入的密码不一致")
@@ -87,7 +87,7 @@ async def initialize_encryption(
     iterations = PasswordEncryptionService.DEFAULT_ITERATIONS
 
     # 生成验证哈希
-    verify_key = PasswordEncryptionService.derive_key(request.password, salt, iterations)
+    verify_key = PasswordEncryptionService.derive_key_from_password(request.password, salt, iterations)
     verify_hash = hashlib.sha256(verify_key).hexdigest()
 
     # 存储配置（不存储密码本身，只存储派生参数）
@@ -107,7 +107,7 @@ async def change_encryption_password(
     current_user=Depends(get_current_user),
 ):
     """修改加密密码（验证旧密码后更新派生参数）"""
-    require_admin(current_user, "仅管理员可管理加密设置")
+    require_admin(current_user, error_message="仅管理员可管理加密设置")
 
     if request.new_password != request.confirm_password:
         raise HTTPException(status_code=400, detail="两次输入的密码不一致")
@@ -123,7 +123,7 @@ async def change_encryption_password(
     salt_hex = salt.hex()
     iterations = PasswordEncryptionService.DEFAULT_ITERATIONS
 
-    verify_key = PasswordEncryptionService.derive_key(request.new_password, salt, iterations)
+    verify_key = PasswordEncryptionService.derive_key_from_password(request.new_password, salt, iterations)
     verify_hash = hashlib.sha256(verify_key).hexdigest()
 
     svc = SystemConfigService(db)
@@ -161,7 +161,7 @@ async def disable_encryption(
     current_user=Depends(get_current_user),
 ):
     """禁用数据库加密"""
-    require_admin(current_user, "仅管理员可管理加密设置")
+    require_admin(current_user, error_message="仅管理员可管理加密设置")
 
     # 验证密码
     _verify_encryption_password(db, request.password)
