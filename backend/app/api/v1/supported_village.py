@@ -520,8 +520,24 @@ async def delete_village(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除帮扶村"""
+    """删除帮扶村及其全部关联数据"""
     village = _get_village_or_404(db, village_id)
+
+    # 显式清理所有子表数据（SQLite 不强制外键，避免 orphan 记录）
+    child_models = [
+        VillagePopulation, VillageIncome, ForceInvestment,
+        IndustrySupport, InfrastructureImprovement,
+        PartyBuildingSupport, MedicalSupport, ConsumptionSupport,
+        EmploymentSupport, EducationSupport, VillageCommitteeInfo,
+    ]
+    for model in child_models:
+        db.query(model).filter(model.supported_village_id == village_id).delete()
+
+    # 清理村委成员（有 supported_village_id）
+    db.query(VillageCommitteeMember).filter(
+        VillageCommitteeMember.supported_village_id == village_id
+    ).delete()
+
     db.delete(village)
     db.commit()
     return {"message": "删除成功"}

@@ -7,12 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.v1.system_config import get_system_config, set_system_config
 from app.core.database import get_db
 from app.core.permission_utils import require_admin
 from app.core.security import get_current_user
 from app.models.system_config import SystemConfig
 from app.services.password_encryption_service import PasswordEncryptionService
+from app.services.system_config_service import SystemConfigService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/encryption", tags=["数据库加密"])
@@ -41,17 +41,18 @@ class DisableEncryptionRequest(BaseModel):
 
 def _verify_encryption_password(db: Session, password: str) -> None:
     """验证加密密码是否正确"""
-    salt_hex = get_system_config(db, _CONFIG_KEY_SALT)
+    svc = SystemConfigService(db)
+    salt_hex = svc.get(_CONFIG_KEY_SALT)
     if not salt_hex:
         raise HTTPException(status_code=400, detail="加密未初始化")
 
     iterations = int(
-        get_system_config(db, _CONFIG_KEY_ITERATIONS) or PasswordEncryptionService.DEFAULT_ITERATIONS
+        svc.get(_CONFIG_KEY_ITERATIONS) or PasswordEncryptionService.DEFAULT_ITERATIONS
     )
     salt = bytes.fromhex(salt_hex)
     key = PasswordEncryptionService.derive_key(password, salt, iterations)
 
-    stored_hash = get_system_config(db, _CONFIG_KEY_VERIFY_HASH)
+    stored_hash = svc.get(_CONFIG_KEY_VERIFY_HASH)
     if stored_hash:
         computed_hash = hashlib.sha256(key).hexdigest()
         if computed_hash != stored_hash:
@@ -76,7 +77,8 @@ async def initialize_encryption(
         raise HTTPException(status_code=400, detail="密码长度不能少于6位")
 
     # 检查是否已初始化
-    if get_system_config(db, _CONFIG_KEY_ENABLED) == "true":
+    svc = SystemConfigService(db)
+    if svc.get(_CONFIG_KEY_ENABLED) == "true":
         raise HTTPException(status_code=400, detail="加密已初始化，请使用修改密码功能")
 
     # 生成盐值
@@ -89,10 +91,10 @@ async def initialize_encryption(
     verify_hash = hashlib.sha256(verify_key).hexdigest()
 
     # 存储配置（不存储密码本身，只存储派生参数）
-    set_system_config(db, _CONFIG_KEY_ENABLED, "true", "数据库加密已启用")
-    set_system_config(db, _CONFIG_KEY_SALT, salt_hex, "加密盐值")
-    set_system_config(db, _CONFIG_KEY_ITERATIONS, str(iterations), "PBKDF2迭代次数")
-    set_system_config(db, _CONFIG_KEY_VERIFY_HASH, verify_hash, "加密验证哈希")
+    svc.set(_CONFIG_KEY_ENABLED, "true", "数据库加密已启用")
+    svc.set(_CONFIG_KEY_SALT, salt_hex, "加密盐值")
+    svc.set(_CONFIG_KEY_ITERATIONS, str(iterations), "PBKDF2迭代次数")
+    svc.set(_CONFIG_KEY_VERIFY_HASH, verify_hash, "加密验证哈希")
 
     logger.info("数据库加密已初始化")
     return {"success": True, "message": "数据库加密已启用"}
@@ -124,9 +126,10 @@ async def change_encryption_password(
     verify_key = PasswordEncryptionService.derive_key(request.new_password, salt, iterations)
     verify_hash = hashlib.sha256(verify_key).hexdigest()
 
-    set_system_config(db, _CONFIG_KEY_SALT, salt_hex)
-    set_system_config(db, _CONFIG_KEY_ITERATIONS, str(iterations))
-    set_system_config(db, _CONFIG_KEY_VERIFY_HASH, verify_hash)
+    svc = SystemConfigService(db)
+    svc.set(_CONFIG_KEY_SALT, salt_hex, "加密盐值")
+    svc.set(_CONFIG_KEY_ITERATIONS, str(iterations), "PBKDF2迭代次数")
+    svc.set(_CONFIG_KEY_VERIFY_HASH, verify_hash, "加密验证哈希")
 
     logger.info("加密密码参数已更新")
     return {"success": True, "message": "加密密码已更新"}
@@ -138,9 +141,10 @@ async def get_encryption_status(
     current_user=Depends(get_current_user),
 ):
     """获取加密状态"""
-    enabled = get_system_config(db, _CONFIG_KEY_ENABLED)
-    salt = get_system_config(db, _CONFIG_KEY_SALT)
-    iterations = get_system_config(db, _CONFIG_KEY_ITERATIONS)
+    svc = SystemConfigService(db)
+    enabled = svc.get(_CONFIG_KEY_ENABLED)
+    salt = svc.get(_CONFIG_KEY_SALT)
+    iterations = svc.get(_CONFIG_KEY_ITERATIONS)
 
     status = {
         "is_enabled": enabled == "true",
