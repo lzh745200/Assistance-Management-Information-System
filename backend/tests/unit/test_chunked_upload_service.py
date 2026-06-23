@@ -656,11 +656,10 @@ class TestChunkedUploadService:
             await service.upload_chunk(session.session_id, 0, b"x" * 6)
 
         # delete the session dir before merging
-        shutil = pytest.importorskip("shutil")
-        import shutil as _shutil
+        import shutil
         sess_dir = t / session.session_id
         if sess_dir.exists():
-            _shutil.rmtree(sess_dir)
+            shutil.rmtree(sess_dir)
 
         with patch("aiofiles.open", new_callable=MagicMock) as mock_aio:
             write_cm = MagicMock()

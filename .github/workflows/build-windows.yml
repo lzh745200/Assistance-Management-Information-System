@@ -13,46 +13,76 @@ env:
 jobs:
   build-windows:
     runs-on: windows-2022
-    timeout-minutes: 45
+    timeout-minutes: 90
     strategy:
+      fail-fast: false
       matrix:
         arch: [x64, x86]
-        # 为每个架构指定 Python 架构字符串
         include:
           - arch: x64
-            python-arch: x64
-            nsis-outdir: x64
+            conda-arch: win-64
           - arch: x86
-            python-arch: x86
-            nsis-outdir: x86
+            conda-arch: win-32
 
     steps:
       - uses: actions/checkout@v4
 
+      # ----- Node.js -----
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Setup Python (${{ matrix.arch }})
-        uses: actions/setup-python@v5
+      # ----- Conda 环境（统一管理 Python 及重型依赖）-----
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          architecture: ${{ matrix.python-arch }}
+          architecture: ${{ matrix.arch == 'x64' && 'x64' || 'x86' }}
+          activate-environment: build
+          auto-activate-base: false
+          use-only-tar-bz2: true
 
-      - name: Sync version (if tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: python scripts/sync_version.py ${{ github.ref_name }}
+      - name: Cache Conda packages
+        uses: actions/cache@v4
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ matrix.arch }}-${{ hashFiles('environment.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-conda-${{ matrix.arch }}-
 
-      # ------------------- 前端构建（每个架构都会构建，但产物相同） -------------------
+      # ----- 安装重型依赖（通过 Conda，避免源码编译）-----
+      - name: Install core packages via Conda
+        shell: bash -l {0}
+        run: |
+          # 基础计算库（所有架构都有预编译包）
+          conda install -c conda-forge numpy pandas scipy scikit-learn matplotlib openpyxl -y
+          # prophet 在 32 位下可能没有，条件安装
+          if [[ "${{ matrix.arch }}" == "x64" ]]; then
+            conda install -c conda-forge prophet -y
+          else
+            echo "PROPHET_UNAVAILABLE=true" >> $GITHUB_ENV
+          fi
+
+      # ----- 前端构建（若已缓存则跳过）-----
+      - name: Cache frontend dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Build frontend
+        shell: bash -l {0}
         run: |
           cd frontend
           npm config set registry https://registry.npmmirror.com
           npm install --legacy-peer-deps --network-timeout=600000
           npm run build
 
-      # ------------------- 准备前端资源给 PyInstaller -------------------
       - name: Prepare frontend resources
         shell: pwsh
         run: |
@@ -63,22 +93,34 @@ jobs:
             Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
             Write-Host "Frontend resources copied to $dest"
           } else {
-            Write-Error "frontend\dist not found – please check your frontend build output folder"
+            Write-Error "frontend\dist not found"
             exit 1
           }
 
-      # ------------------- 安装 Python 依赖（注意不同架构可能有些包需要不同） -------------------
-      - name: Install Python dependencies
-        run: |
-          pip install -r backend/requirements.txt pyinstaller
+      # ----- 版本同步（仅 tag 触发）-----
+      - name: Sync version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash -l {0}
+        run: python scripts/sync_version.py ${{ github.ref_name }}
 
-      # ------------------- 打包后端（使用修复后的 spec） -------------------
+      # ----- 安装其余纯 Python 依赖（通过 pip）-----
+      - name: Install remaining packages via pip
+        shell: bash -l {0}
+        run: |
+          # 先安装 Cython 和构建工具（预防某些包需要）
+          pip install --upgrade pip
+          pip install cython setuptools wheel meson-python
+          # 安装 requirements.txt 中剩余的包（pip 会跳过已由 conda 安装的）
+          pip install -r backend/requirements.txt pyinstaller \
+            --timeout 1000 --retries 5
+
+      # ----- PyInstaller 打包 -----
       - name: Build backend with PyInstaller
+        shell: bash -l {0}
         run: |
           cd backend
           python -m PyInstaller assistance-management-backend.spec --clean --noconfirm
 
-      # ------------------- 重命名生成的 exe 以区分架构 -------------------
       - name: Rename backend executable
         shell: pwsh
         run: |
@@ -86,32 +128,20 @@ jobs:
           if (Test-Path $exePath) {
             $newName = "assistance-management-backend-${{ matrix.arch }}.exe"
             Rename-Item -Path $exePath -NewName $newName
-            Write-Host "Renamed to $newName"
           } else {
             Write-Error "backend exe not found"
             exit 1
           }
 
-      # ------------------- NSIS 打包（传递架构参数） -------------------
+      # ----- NSIS 打包（通过环境变量传递架构）-----
       - name: Package installer with NSIS
         uses: joncloud/makensis-action@v4
         with:
           script-file: build-scripts/installer-simple.nsi
-          # 可以通过 arguments 传递架构变量，需在 NSIS 脚本中接收
-          # 例如 arguments: "/DARCH=${{ matrix.arch }}"
-          # 但 makensis-action 目前不支持直接传参，我们可以通过环境变量或修改脚本
-          # 我们采用在 NSIS 脚本中读取环境变量 ARCH 的方式
         env:
           ARCH: ${{ matrix.arch }}
 
-      # 注意：NSIS 脚本需要根据环境变量 ARCH 来设置输出文件名，例如：
-      # !ifdef ARCH
-      #   OutFile "build\dist\setup-${ARCH}.exe"
-      # !else
-      #   OutFile "build\dist\setup.exe"
-      # !endif
-
-      # ------------------- 上传 artifact（区分架构） -------------------
+      # ----- 上传制品 -----
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:

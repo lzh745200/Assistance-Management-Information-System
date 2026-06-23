@@ -84,7 +84,6 @@ class TestEncryptedPackageFlow:
         return villages
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="DataPackageExportResult await issue — pending refactor")
     async def test_export_unencrypted_package(
         self, service: DataPackageService, test_org: Organization, test_villages
     ):

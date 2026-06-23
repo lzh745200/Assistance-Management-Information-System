@@ -317,7 +317,15 @@ class TestDatabaseHealthService:
         mock_wait.assert_called()
 
     def test_monitor_loop_datetime_min_initial(self, service):
-        """测试监控循环 - datetime.min初始值导致首次全触发"""
+        """测试监控循环 - datetime.min初始值导致首次全触发
+
+        datetime.min 距 now() 极远，三档检查（integrity / quick / vacuum）
+        首次进入循环时条件全部成立，应当都被各调用一次。
+        关键点：stop_event 必须在 *三个检查都跑完后* 才置位；
+        通过让 Event.wait() 第一次返回后置位 stop_event 来终止循环，
+        而非用 check_integrity 的 side_effect 提前置位（那样会令第 2、3 个
+        if 中的 `not self._stop_event.is_set()` 为 False，跳过后续检查）。
+        """
         with patch.object(service, 'check_integrity') as mock_ci:
             with patch.object(service, 'quick_check') as mock_qc:
                 with patch.object(service, 'vacuum_database') as mock_vd:
@@ -327,13 +335,12 @@ class TestDatabaseHealthService:
 
                     service._stop_event.clear()
 
-                    def stop_after_one(*args):
+                    def stop_after_full_cycle(*args):
+                        # 一轮检查全部跑完后才终止循环，保证三个检查都被触发
                         service._stop_event.set()
 
-                    mock_ci.side_effect = stop_after_one
-
                     with patch.object(service._stop_event, 'wait',
-                                      return_value=None):
+                                      side_effect=stop_after_full_cycle):
                         service._monitor_loop()
 
                     mock_ci.assert_called_once()

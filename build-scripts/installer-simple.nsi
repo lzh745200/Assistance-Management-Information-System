@@ -1,3 +1,9 @@
+!include "LogicLib.nsh"
+!ifdef ARCH
+  OutFile "build\dist\setup-${ARCH}.exe"
+!else
+  OutFile "build\dist\setup.exe"
+!endif
 ; Assistance Management System - NSIS Installer Script
 ; Produces standalone .exe installer with all runtimes bundled
 

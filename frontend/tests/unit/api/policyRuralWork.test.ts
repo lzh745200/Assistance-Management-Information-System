@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockGet = vi.fn()
-const mockPost = vi.fn()
-const mockPut = vi.fn()
-const mockDelete = vi.fn()
+// 源代码（ruralWork.ts 等）会对 api.get/post/put/delete 的返回值链式调用 .then(r => r.data)，
+// 因此 mock 必须返回 Promise，否则会抛 "Cannot read properties of undefined (reading 'then')"。
+const mockGet = vi.fn().mockResolvedValue({ data: {} })
+const mockPost = vi.fn().mockResolvedValue({ data: {} })
+const mockPut = vi.fn().mockResolvedValue({ data: {} })
+const mockDelete = vi.fn().mockResolvedValue({ data: {} })
 
 vi.mock('@/utils/request', () => ({
   default: {

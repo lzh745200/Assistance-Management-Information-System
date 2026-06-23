@@ -761,6 +761,22 @@ class TestForecastIncomeTrendDataIsolation:
     VillageIncome 无 organization_id，需 JOIN SupportedVillage 后按数据权限过滤。
     """
 
+    @pytest.fixture(autouse=True)
+    def _ensure_sklearn_available(self):
+        """确保 sklearn.linear_model 在 sys.modules 中。
+
+        单元测试 conftest 会 mock sklearn/scipy，但可能未覆盖所有子模块
+       （如 scipy.sparse）。forecast_income_trend 内部 import
+        sklearn.linear_model 时可能触发 sklearn.utils → scipy.sparse
+        导入失败。此 fixture 确保 sklearn.linear_model 可用（mock 或真实），
+        避免全量测试套件中的 ModuleNotFoundError。
+        """
+        import sys
+        if "sklearn.linear_model" not in sys.modules:
+            sys.modules["sklearn.linear_model"] = MagicMock()
+        if "sklearn" not in sys.modules:
+            sys.modules["sklearn"] = MagicMock()
+
     def test_forecast_income_trend_calls_filter_by_data_scope_with_user(self):
         """forecast_income_trend 应将 user 透传给 filter_by_data_scope。"""
         from app.models.supported_village import SupportedVillage
@@ -784,6 +800,7 @@ class TestForecastIncomeTrendDataIsolation:
 
     def test_forecast_income_trend_admin_bypasses_filtering(self):
         """admin 用户：filter_by_data_scope 返回 query 不变。"""
+        import numpy as np
         db = MagicMock()
         q = _make_self_chain_query(all_result=[
             (2021, 10000.0, 5000.0),
@@ -795,7 +812,18 @@ class TestForecastIncomeTrendDataIsolation:
         admin_user = _make_admin_user()
         service = AIServiceManager()
 
-        result = service.forecast_income_trend(db, forecast_years=1, user=admin_user)
+        # mock LinearRegression 以避免全量套件中 sklearn 导入问题
+        with patch("sklearn.linear_model.LinearRegression") as mock_lr:
+            mock_model = MagicMock()
+            mock_model.fit.return_value = mock_model
+            mock_model.score.return_value = 0.95
+            mock_model.predict.side_effect = [
+                np.array([11000.0]),
+                np.array([5500.0]),
+            ]
+            mock_lr.return_value = mock_model
+
+            result = service.forecast_income_trend(db, forecast_years=1, user=admin_user)
 
         assert result["type"] == "income_forecast"
         assert result["status"] == "completed"

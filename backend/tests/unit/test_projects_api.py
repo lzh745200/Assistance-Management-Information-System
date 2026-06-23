@@ -558,35 +558,10 @@ class TestProjectsAPI:
         assert resp.status_code == 200
         assert "text/csv" in resp.headers["content-type"]
 
-    @pytest.mark.skip(reason="Template unified into centralized /import/template endpoint")
-    def test_download_project_template_standard(self, client, mock_db, admin_user):
-        pass
+    # 注：download/generate_project_template 的 standard/simplified/historical/yearly_update
+    # 变体端点已统一并入集中式 /import/template（委托 ExcelTemplateService），
+    # 对应空壳测试已删除——集中式端点的覆盖由 test_download_project_template 等保留用例承担。
 
-    @pytest.mark.skip(reason="Template unified into centralized /import/template endpoint")
-    def test_download_project_template_simplified(self, client, mock_db, admin_user):
-        pass
-
-    @pytest.mark.skip(reason="Template unified into centralized /import/template endpoint")
-    def test_download_project_template_historical(self, client, mock_db, admin_user):
-        pass
-
-    @pytest.mark.skip(reason="Template unified into centralized ExcelTemplateService")
-    def test_generate_project_template_standard(self):
-        pass
-
-    @pytest.mark.skip(reason="Template unified into centralized ExcelTemplateService")
-    def test_generate_project_template_simplified(self):
-        pass
-
-    @pytest.mark.skip(reason="Template unified into centralized ExcelTemplateService")
-    def test_generate_project_template_historical(self):
-        pass
-
-    @pytest.mark.skip(reason="Template unified into centralized ExcelTemplateService")
-    def test_generate_project_template_yearly_update(self):
-        pass
-
-    @pytest.mark.skip(reason="_COL_TO_FIELD removed; import now uses centralized EntityImportValidator")
     def test_import_projects(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
         import openpyxl
