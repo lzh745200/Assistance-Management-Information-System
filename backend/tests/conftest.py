@@ -39,6 +39,21 @@ def _strip_oversized_env_vars():
     yield
 
 
+# ── 根因修复：会话启动时强制导入全部模型子模块，确保 SQLAlchemy mapper 注册表完整 ──
+# app/models/__init__.py 采用懒加载，但部分模型用字符串 relationship 引用其他模型
+# （如 ImportExportHistory→"DataPackage"）。若目标模型未导入，mapper 配置时会抛
+# InvalidRequestError，且失败后整个会话的 mapper 都不可用。在 conftest 加载时
+# （早于任何测试）导入全部 59 个模型子模块，从源头保证 mapper 注册表完整。
+import importlib as _importlib
+import pkgutil as _pkgutil
+try:
+    import app.models as _models_pkg
+    for _mod_info in _pkgutil.iter_modules(_models_pkg.__path__):
+        _importlib.import_module(f"app.models.{_mod_info.name}")
+except Exception:
+    pass  # 容错：个别模型导入失败不应阻塞测试收集
+
+
 # 排除非 pytest 的独立测试脚本
 # test_system_api.py 是手动全模块 API 测试脚本，含模块级 sys.exit(1)
 # collect_ignore removed
