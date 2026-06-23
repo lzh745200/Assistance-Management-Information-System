@@ -550,16 +550,18 @@ def _seed_default_admin():
         _admin_password = generate_password(length=16, exclude_ambiguous=True)
         import hashlib
         _pw_hash_prefix = hashlib.sha256(_admin_password.encode()).hexdigest()[:8]
-        # 控制台打印明文密码（用户需要看到才能登录）
-        print(f"\n{'='*60}")
-        print("  [KEY] 默认管理员密码（自动生成）")
-        print("  用户名: admin")
-        print(f"  密码:   {_admin_password}")
-        print("  [WARN] 请立即复制保存！首次登录后须修改密码。")
-        print(f"{'='*60}\n")
-        # 日志中仅记录哈希前缀（安全）
+        # 将明文密码写入仅管理员可读的临时文件（不在控制台打印明文）
+        import tempfile as _tempfile
+        fd, _pwd_file = _tempfile.mkstemp(suffix=".txt", prefix="admin_pwd_")
+        with os.fdopen(fd, "w") as _f:
+            _f.write(f"用户名: admin\n密码: {_admin_password}\n")
+            _f.write("请立即复制保存！首次登录后须修改密码。\n")
+        if os.name != "nt":
+            os.chmod(_pwd_file, 0o600)
+        # 日志中仅记录哈希前缀和临时文件路径（安全）
         logger.warning(
-            "自动生成管理员密码（SHA256前缀: %s），请从控制台查看明文", _pw_hash_prefix
+            "自动生成管理员密码（SHA256前缀: %s），明文已写入临时文件: %s",
+            _pw_hash_prefix, _pwd_file,
         )
 
     db = SessionLocal()

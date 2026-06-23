@@ -46,8 +46,8 @@ try:
         _pb._BcryptCommon._finalize_backend_mixin = classmethod(_patched_finalize)
 except ValueError:
     logger.debug("bcrypt版本兼容检测跳过（版本不匹配），不影响正常使用")
-except Exception:
-    logger.error("安全模块bcrypt兼容补丁异常", exc_info=True)
+except Exception as e:
+    logger.error("安全模块bcrypt兼容补丁异常: %s", e, exc_info=True)
 
 from fastapi import Depends, HTTPException, Request, status  # noqa: E402
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer  # noqa: E402
@@ -145,8 +145,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return pwd_context.verify(_truncate_password(plain_password), hashed_password)
     except ValueError:
         return False  # passlib正常错误：密码格式不匹配
-    except Exception:
-        logger.critical("密码验证模块故障，可能影响所有用户登录", exc_info=True)
+    except Exception as e:
+        logger.critical("密码验证模块故障，可能影响所有用户登录: %s", e, exc_info=True)
         raise
 
 

@@ -387,13 +387,19 @@ async def reset_password_with_machine_code(
         from app.services.lockout_service import get_lockout_service
         get_lockout_service().clear(user, db)
 
-        # 离线单机环境：密码通过控制台输出给管理员，不在HTTP响应中返回
-        logger.info("用户 %s 密码已通过机器码验证重置", username)
-        print(f"\n{'='*60}\n[密码重置] 用户: {username}\n新密码: {new_password}\n请首次登录后立即修改\n{'='*60}\n")
+        # 离线单机环境：密码写入仅管理员可读的临时文件，不在控制台/HTTP响应中返回明文
+        import tempfile
+        import os as _os
+        fd, tmp_path = tempfile.mkstemp(suffix=".txt", prefix="pwd_reset_")
+        with _os.fdopen(fd, "w") as _f:
+            _f.write(f"用户: {username}\n新密码: {new_password}\n请首次登录后立即修改\n")
+        if _os.name != "nt":
+            _os.chmod(tmp_path, 0o600)
+        logger.info("用户 %s 密码已通过机器码验证重置，新密码已写入临时文件: %s", username, tmp_path)
         return {
             "code": 200,
-            "data": {"username": username},
-            "message": "密码已重置，新密码已显示在系统控制台，请首次登录后立即修改",
+            "data": {"username": username, "password_file": tmp_path},
+            "message": "密码已重置，新密码已写入临时文件（仅管理员可读），请首次登录后立即修改",
         }
     except HTTPException:
         raise

@@ -46,20 +46,35 @@ class DatabaseHealthService:
         }
 
     def _get_db_path(self) -> Path:
-        """获取数据库文件路径"""
+        """获取数据库文件路径
+
+        正确处理 config.py model_post_init 转换后的绝对路径，
+        以及测试环境中可能出现的 PostgreSQL URL。
+        """
         try:
             from app.core.config import settings
 
             db_url = settings.DATABASE_URL
-            # 解析SQLite URL: sqlite:///./data/xxx.db
-            if db_url.startswith("sqlite:///"):
-                db_file = db_url.replace("sqlite:///", "")
-                return self.base_dir / db_file
-            else:
-                logger.warning(f"不支持的数据库类型: {db_url}")
+
+            if not db_url:
+                logger.debug("DATABASE_URL 为空，使用默认路径")
                 return self.base_dir / "data" / "rural_revitalization.db"
+
+            # 解析 SQLite URL: sqlite:///path/to/db.db
+            if db_url.startswith("sqlite:///"):
+                db_file = db_url.replace("sqlite:///", "", 1)
+                db_path = Path(db_file)
+                # 如果路径已经是绝对路径，直接使用；否则拼接 base_dir
+                if db_path.is_absolute():
+                    return db_path
+                return self.base_dir / db_path
+
+            # 非 SQLite URL（如 PostgreSQL，通常仅在测试中出现）
+            # 不记录 ERROR，避免在测试环境中产生大量噪音日志
+            logger.debug("非 SQLite 数据库 URL，健康检查使用默认 SQLite 路径: %s", db_url)
+            return self.base_dir / "data" / "rural_revitalization.db"
         except Exception as e:
-            logger.error(f"获取数据库路径失败: {e}")
+            logger.debug("获取数据库路径失败，使用默认路径: %s", e)
             return self.base_dir / "data" / "rural_revitalization.db"
 
     def start_monitoring(self):

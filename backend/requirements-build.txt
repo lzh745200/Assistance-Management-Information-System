@@ -1,0 +1,6 @@
+# 构建专用依赖（不污染运行时 requirements.txt）
+# 由 PyInstaller 打包后端时使用，目标机器无需安装这些工具
+pyinstaller==6.11.1
+cython>=3.0.0
+setuptools>=69.0.0
+wheel>=0.42.0

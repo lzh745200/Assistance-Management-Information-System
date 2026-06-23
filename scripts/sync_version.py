@@ -1,10 +1,11 @@
-"""版本号同步脚本 — 从 version.txt 或 git tag 同步到所有配置文件
+"""版本号同步脚本 — 从 git tag 或 version.txt 同步到所有配置文件
 
 用法: python scripts/sync_version.py [version]
   - 不带参数：从 version.txt 读取
-  - 带参数：直接使用该版本号 (如 v1.4.0 → 1.4.0)
+  - 带参数：直接使用该版本号 (如 v1.4.0 -> 1.4.0)
 
-同步目标: config.py, package.json, NSIS 脚本, .env.example
+同步目标: 根 package.json、frontend/package.json、config.py、.env.example
+版本号权威来源: 根 package.json -> version (CI 中 tag 触发时由本脚本同步)
 """
 
 import json
@@ -50,12 +51,19 @@ def update_config_py(version: str):
 
 
 def update_package_json(version: str):
-    path = PROJECT_ROOT / "frontend" / "package.json"
-    pkg = json.loads(path.read_text())
-    if pkg.get("version") != version:
-        pkg["version"] = version
-        path.write_text(json.dumps(pkg, indent=2, ensure_ascii=False) + "\n")
-        print(f"  UPD: {path.relative_to(PROJECT_ROOT)}")
+    # 同步根 package.json（版本号权威来源，electron-builder 据此命名安装包）
+    # 与 frontend/package.json
+    for path in [
+        PROJECT_ROOT / "package.json",
+        PROJECT_ROOT / "frontend" / "package.json",
+    ]:
+        if not path.exists():
+            continue
+        pkg = json.loads(path.read_text())
+        if pkg.get("version") != version:
+            pkg["version"] = version
+            path.write_text(json.dumps(pkg, indent=2, ensure_ascii=False) + "\n")
+            print(f"  UPD: {path.relative_to(PROJECT_ROOT)}")
 
 
 def update_nsis_scripts(version: str):

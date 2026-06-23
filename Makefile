@@ -2,7 +2,8 @@
         build-deb build-deb-amd64 build-deb-arm64 build-deb-all \
         docker-build docker-build-amd64 docker-build-arm64 docker-build-all \
         deb-clean \
-        build-kylin build-kylin-arm64 kylin-clean kylin-verify
+        build-kylin build-kylin-arm64 kylin-clean kylin-verify \
+        build-win-x64 build-win-x86 build-win-all
 
 # 默认运行所有测试
 test: test-backend test-frontend
@@ -91,6 +92,50 @@ win-installer: electron-build
 	@echo ">>> 构建 Windows 安装程序..."
 	cd frontend && npm run electron:build:win
 	@echo "✓ Windows 安装程序构建完成"
+
+# ============================================================
+# Windows 离线安装包构建（electron-builder + PyInstaller）
+# 产物: dist/electron/帮扶管理系统-Setup-<version>.exe
+# 依赖: 对应架构的 Python 3.11 + Node.js + 前端依赖
+# ============================================================
+WIN_OUTPUT_DIR := dist/electron
+SYNC_FRONTEND := mkdir -p resources/frontend && cp -rf frontend/dist/* resources/frontend/
+
+# 构建 Windows x64 离线安装包
+build-win-x64:
+	@echo "=== 构建 Windows x64 离线安装包 ==="
+	@echo ">>> 构建前端..."
+	cd frontend && npm run build
+	@echo ">>> 同步前端到 resources/frontend..."
+	@$(SYNC_FRONTEND)
+	@echo ">>> PyInstaller 打包后端..."
+	cd backend && python -m PyInstaller assistance-backend.spec --clean --noconfirm
+	@echo ">>> 验证后端产物..."
+	@test -f backend/dist/assistance-backend.exe && echo "  ✓ backend/dist/assistance-backend.exe" || (echo "  ✗ 后端 exe 未生成" && exit 1)
+	@echo ">>> electron-builder 打包 (x64)..."
+	npx electron-builder --win --x64
+	@echo "=== x64 安装包构建完成 ==="
+	@ls -lh $(WIN_OUTPUT_DIR)/*.exe 2>/dev/null || echo "  检查输出目录: $(WIN_OUTPUT_DIR)"
+
+# 构建 Windows x86 离线安装包（需 32-bit Python 3.11）
+build-win-x86:
+	@echo "=== 构建 Windows x86 离线安装包 ==="
+	@echo ">>> 构建前端..."
+	cd frontend && npm run build
+	@echo ">>> 同步前端到 resources/frontend..."
+	@$(SYNC_FRONTEND)
+	@echo ">>> PyInstaller 打包后端..."
+	cd backend && python -m PyInstaller assistance-backend.spec --clean --noconfirm
+	@echo ">>> 验证后端产物..."
+	@test -f backend/dist/assistance-backend.exe && echo "  ✓ backend/dist/assistance-backend.exe" || (echo "  ✗ 后端 exe 未生成" && exit 1)
+	@echo ">>> electron-builder 打包 (ia32)..."
+	npx electron-builder --win --ia32
+	@echo "=== x86 安装包构建完成 ==="
+	@ls -lh $(WIN_OUTPUT_DIR)/*.exe 2>/dev/null || echo "  检查输出目录: $(WIN_OUTPUT_DIR)"
+
+# 构建双架构安装包
+build-win-all: build-win-x64 build-win-x86
+	@echo "=== Windows x64 + x86 安装包全部构建完成 ==="
 
 # ============================================================
 # DEB 包构建（Docker 跨平台构建，推荐方式）
@@ -240,6 +285,11 @@ help:
 	@echo "  make build        - 构建生产版本"
 	@echo "  make electron-build - 打包 Electron 应用"
 	@echo "  make win-installer  - 构建 Windows 安装程序"
+	@echo ""
+	@echo "Windows 离线安装包（electron-builder + PyInstaller）:"
+	@echo "  make build-win-x64  - 构建 x64 离线安装包"
+	@echo "  make build-win-x86  - 构建 x86 离线安装包"
+	@echo "  make build-win-all  - 构建双架构安装包"
 	@echo ""
 	@echo "DEB 包构建（Docker 跨平台，推荐）:"
 	@echo "  make build-deb           - 构建 amd64 DEB"

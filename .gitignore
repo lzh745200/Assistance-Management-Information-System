@@ -31,6 +31,7 @@ htmlcov/
 coverage.xml
 *.cover
 coverage_report.txt
+backend/coverage.json
 
 # Virtual environments
 **/.venv*/
@@ -61,6 +62,7 @@ frontend/coverage/
 backend/build/
 resources/frontend/
 resources/frontend_corrupted/
+resources/vcredist/
 
 # ===== Environment & Secrets =====
 .env
@@ -176,6 +178,8 @@ backend/dist/
 # ===== Electron 构建产物 =====
 electron/dist/
 electron/release/
+dist/electron/
+build/dist/
 
 # ===== 前端额外产物 =====
 frontend/.vite/

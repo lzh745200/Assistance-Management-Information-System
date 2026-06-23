@@ -50,6 +50,6 @@ class AuditMiddleware(BaseHTTPMiddleware):
                 options={"verify_exp": False},  # Don't re-verify expiry for audit log
             )
             return payload.get("sub", "unknown")
-        except Exception:
-            logger.debug("审计中间件: token 解析失败（可能是未认证请求）", exc_info=True)
+        except Exception as e:
+            logger.debug("审计中间件: token 解析失败（可能是未认证请求）: %s", e, exc_info=True)
             return "unauthenticated"

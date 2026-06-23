@@ -17,34 +17,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, x86]
         include:
           - arch: x64
-            conda-arch: win-64
+            conda-arch: x64
+            eb-arch: x64
           - arch: x86
-            conda-arch: win-32
+            conda-arch: x86
+            eb-arch: ia32
 
     steps:
+      # 1. Checkout
       - uses: actions/checkout@v4
 
-      # ----- Node.js -----
+      # 2. Node.js (electron-builder + 前端构建；缓存根 npm 缓存)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      # ----- Conda 环境（统一管理 Python 及重型依赖）-----
+      # 3. Conda (统一管理 Python + 重型 C 扩展，避免 x86 源码编译)
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          architecture: ${{ matrix.arch == 'x64' && 'x64' || 'x86' }}
+          architecture: ${{ matrix.conda-arch }}
           activate-environment: build
           auto-activate-base: false
           use-only-tar-bz2: true
 
+      # 4. 缓存 Conda 包
       - name: Cache Conda packages
         uses: actions/cache@v4
         with:
@@ -53,37 +56,34 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-conda-${{ matrix.arch }}-
 
-      # ----- 安装重型依赖（通过 Conda，避免源码编译）-----
-      - name: Install core packages via Conda
+      # 5. 安装重型依赖 (conda 预编译, 避免 x86 源码编译)
+      - name: Install heavy deps via Conda
         shell: bash -l {0}
         run: |
-          # 基础计算库（所有架构都有预编译包）
-          conda install -c conda-forge numpy pandas scipy scikit-learn matplotlib openpyxl -y
-          # prophet 在 32 位下可能没有，条件安装
+          conda install -c conda-forge numpy pandas scipy scikit-learn openpyxl -y
           if [[ "${{ matrix.arch }}" == "x64" ]]; then
             conda install -c conda-forge prophet -y
           else
             echo "PROPHET_UNAVAILABLE=true" >> $GITHUB_ENV
           fi
 
-      # ----- 前端构建（若已缓存则跳过）-----
+      # 6. 前端依赖缓存 + 构建
       - name: Cache frontend dependencies
         uses: actions/cache@v4
         with:
           path: frontend/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          key: ${{ runner.os }}-fe-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-fe-
 
       - name: Build frontend
         shell: bash -l {0}
         run: |
           cd frontend
-          npm config set registry https://registry.npmmirror.com
-          npm install --legacy-peer-deps --network-timeout=600000
+          npm ci --legacy-peer-deps
           npm run build
 
-      - name: Prepare frontend resources
+      - name: Sync frontend to resources
         shell: pwsh
         run: |
           $source = "frontend\dist"
@@ -91,67 +91,63 @@ jobs:
           if (Test-Path $source) {
             New-Item -ItemType Directory -Force -Path $dest | Out-Null
             Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
-            Write-Host "Frontend resources copied to $dest"
+            Write-Host "Frontend resources synced to $dest"
           } else {
             Write-Error "frontend\dist not found"
             exit 1
-          }
+          fi
 
-      # ----- 版本同步（仅 tag 触发）-----
+      # 7. 版本同步 (仅 tag 触发)
       - name: Sync version
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash -l {0}
         run: python scripts/sync_version.py ${{ github.ref_name }}
 
-      # ----- 安装其余纯 Python 依赖（通过 pip）-----
-      - name: Install remaining packages via pip
+      # 8. 安装 Python 依赖 + PyInstaller
+      - name: Install Python deps
         shell: bash -l {0}
         run: |
-          # 先安装 Cython 和构建工具（预防某些包需要）
-          pip install --upgrade pip
-          pip install cython setuptools wheel meson-python
-          # 安装 requirements.txt 中剩余的包（pip 会跳过已由 conda 安装的）
-          pip install -r backend/requirements.txt pyinstaller \
-            --timeout 1000 --retries 5
+          pip install --upgrade pip cython setuptools wheel
+          pip install -r backend/requirements.txt
+          pip install -r backend/requirements-build.txt
 
-      # ----- PyInstaller 打包 -----
-      - name: Build backend with PyInstaller
+      # 9. PyInstaller 打包后端
+      - name: Build backend (PyInstaller)
         shell: bash -l {0}
-        run: |
-          cd backend
-          python -m PyInstaller assistance-management-backend.spec --clean --noconfirm
+        run: cd backend && python -m PyInstaller assistance-backend.spec --clean --noconfirm
 
-      - name: Rename backend executable
+      # 10. 验证后端产物
+      - name: Verify backend exe
         shell: pwsh
         run: |
-          $exePath = "backend\dist\assistance-management-backend.exe"
-          if (Test-Path $exePath) {
-            $newName = "assistance-management-backend-${{ matrix.arch }}.exe"
-            Rename-Item -Path $exePath -NewName $newName
-          } else {
-            Write-Error "backend exe not found"
-            exit 1
+          if (-not (Test-Path "backend/dist/assistance-backend.exe")) {
+            throw "backend exe not found: backend/dist/assistance-backend.exe"
           }
+          $size = [math]::Round((Get-Item backend/dist/assistance-backend.exe).Length / 1MB, 1)
+          Write-Host "Backend exe size: ${size}MB"
 
-      # ----- NSIS 打包（通过环境变量传递架构）-----
-      - name: Package installer with NSIS
-        uses: joncloud/makensis-action@v4
-        with:
-          script-file: build-scripts/installer-simple.nsi
+      # 11. 安装 Electron 依赖 (根目录)
+      - name: Install Electron deps
+        run: npm ci
+
+      # 12. electron-builder 打包 (核心步骤)
+      - name: Build installer (electron-builder)
+        run: npx electron-builder --win --${{ matrix.eb-arch }}
         env:
-          ARCH: ${{ matrix.arch }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # ----- 上传制品 -----
+      # 13. 上传制品
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer-${{ matrix.arch }}
-          path: build/dist/*.exe
+          path: dist/electron/*.exe
           retention-days: 30
 
-      - name: Upload backend exe
-        uses: actions/upload-artifact@v4
+      # 14. 发布 Release (仅 tag 触发)
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
         with:
-          name: backend-exe-${{ matrix.arch }}
-          path: backend/dist/*.exe
-          retention-days: 30
+          files: dist/electron/*.exe
+          generate_release_notes: true

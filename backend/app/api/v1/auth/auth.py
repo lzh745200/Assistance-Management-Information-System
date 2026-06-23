@@ -307,8 +307,8 @@ async def verify_token(token: str, token_type: str = "access_token") -> Optional
         if username is None:
             return None
         return {"username": username, "token_type": token_type}
-    except Exception:
-        logger.warning("Token验证失败", exc_info=True)
+    except Exception as e:
+        logger.warning("Token验证失败: %s", e, exc_info=True)
         return None
 
 
@@ -372,8 +372,8 @@ async def logout(
                     user = user_service.get_user_by_username(username)
                     if user:
                         user_id = user.id
-        except Exception:
-            logger.debug("从 token 获取用户信息失败")
+        except Exception as e:
+            logger.debug("从 token 获取用户信息失败: %s", e, exc_info=True)
 
     # 吊销 Authorization 头中的 access_token
     if credentials and credentials.credentials:
@@ -385,8 +385,8 @@ async def logout(
             refresh_token = body.get("refresh_token")
             if refresh_token and isinstance(refresh_token, str):
                 token_manager.revoke_token(refresh_token)
-    except Exception:
-        logger.debug("吊销 refresh_token 失败，body 可能为空或非 JSON")
+    except Exception as e:
+        logger.debug("吊销 refresh_token 失败，body 可能为空或非 JSON: %s", e)
 
     # 记录登出审计日志
     if user_id and username:
@@ -665,8 +665,8 @@ async def register_user(
 
     except (HTTPException, UserAlreadyExistsError, BizValidationError):
         raise
-    except Exception:
-        logger.error("注册用户失败", exc_info=True)
+    except Exception as e:
+        logger.error("注册用户失败: %s", e, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="注册失败，请稍后重试",

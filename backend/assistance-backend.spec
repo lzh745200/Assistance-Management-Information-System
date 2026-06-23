@@ -1,29 +1,40 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller 完整打包配置 - 跨平台通用版
-将 FastAPI 后端打包为单文件可执行程序，包含所有依赖
-版本: 1.1.0
+PyInstaller 统一打包配置 - 跨平台 / x64-x86 通用版
+将 FastAPI 后端打包为单文件可执行程序 assistance-backend(.exe)，包含所有依赖。
+
+说明:
+  - 产物架构由运行时的 Python 解释器架构决定（64-bit Python -> x64 exe,
+    32-bit Python -> x86 exe），因此无需维护两份 spec。
+  - 前端静态资源不打包进 backend.exe，由 Electron 通过 FRONTEND_DIST_PATH
+    环境变量单独提供（resources/frontend/），节省约 15MB 体积。
+  - console=False：无控制台窗口，由 Electron 主进程管理生命周期。
+版本: 1.2.0
 """
 
 import os
 import sys
 from pathlib import Path
 
-block_cipher = None
-backend_dir = os.path.dirname(os.path.abspath(SPEC))
-
 from PyInstaller.compat import is_win
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
-# 数据文件列表
+# ========== 路径定义（使用 PyInstaller 预定义的 SPEC） ==========
+# SPEC 是 PyInstaller 在解析 spec 文件时自动注入的变量，表示 spec 文件的完整路径
+backend_dir = os.path.dirname(os.path.abspath(SPEC))          # backend 目录
+project_root = os.path.dirname(backend_dir)                  # 项目根目录
+resources_dir = os.path.join(project_root, 'resources')
+
+# ========== 数据文件列表 ==========
+# 注意：不再打包 resources/frontend —— Electron 通过 extraResources 单独提供，
+# 后端启动时通过 FRONTEND_DIST_PATH 环境变量定位前端静态资源。
 datas = [
     (os.path.join(backend_dir, 'alembic'), 'alembic'),
     (os.path.join(backend_dir, '.env.example'), '.'),
     (os.path.join(backend_dir, 'app'), 'app'),
-    (os.path.join(backend_dir, '..', 'resources', 'frontend'), 'resources/frontend'),
 ]
 
-# 自动收集 prophet 包数据
+# 自动收集 prophet 包数据（如果存在；x86 构建时可能未安装，自动跳过）
 import importlib.util as _ilu
 _prophet_spec = _ilu.find_spec('prophet')
 if _prophet_spec and _prophet_spec.submodule_search_locations:
@@ -39,11 +50,10 @@ if _snownlp_spec and _snownlp_spec.submodule_search_locations:
 # 自动收集 prometheus_client 包数据（包含 HTML 模板等静态文件）
 datas += collect_data_files('prometheus_client')
 
-# 二进制文件列表
+# ========== 二进制文件列表 ==========
 binaries = []
 
-# 优化的 hidden imports - 只保留关键框架级导入
-# 使用 collect_submodules 自动收集 app 包下的所有模块
+# ========== 隐藏导入（保持原有，并补充必要模块） ==========
 hiddenimports = [
     # FastAPI 和 Web 框架核心
     'uvicorn',
@@ -126,26 +136,22 @@ hiddenimports = [
 if is_win:
     hiddenimports.append('psutil._pswindows')
 
-# 自动收集 app 包下的所有子模块
+# 自动收集 app 包下的所有子模块（避免手动添加遗漏）
 hiddenimports += collect_submodules('app')
 
 # 显式添加所有 API v1 路由模块（确保 PyInstaller 能正确打包）
 hiddenimports += [
-    # 子模块包
     'app.api.v1.auth',
     'app.api.v1.data',
     'app.api.v1.import_export',
     'app.api.v1.system',
-    # System 子模块
     'app.api.v1.system.health',
     'app.api.v1.system.env',
     'app.api.v1.system.config_package',
-    # Monitoring 子模块
     'app.api.v1.monitoring',
     'app.api.v1.monitoring.metrics',
     'app.api.v1.monitoring.secrets',
     'app.api.v1.monitoring.data_tier',
-    # 业务模块
     'app.api.v1.organization',
     'app.api.v1.policy',
     'app.api.v1.projects',
@@ -187,30 +193,26 @@ hiddenimports += [
     'app.api.v1.search',
 ]
 
-# 排除不需要的模块（避免 Analysis 时间过长）
+# ========== 排除不需要的模块（减少打包体积，避免冲突） ==========
 excludes = [
     'pytest', 'pytest_asyncio', 'pytest_cov', 'pytest_mock',
     'hypothesis', 'flake8', 'black', 'mypy',
     'tkinter', 'test', 'tests',
     'matplotlib', 'IPython', 'jupyter',
     'notebook', 'spyder', 'pylint',
-    # 可选依赖（未安装的不需要导入）
     'docx', 'mammoth', 'apscheduler',
-    # 不必要的 jose 后端
     'jose.backends.native_types',
     'jose.backends.pycryptodome_backend',
-    # 不存在的旧路径
-    'app.api.v1.users',
-    'app.api.v1.user_management',
-    'app.api.v1.rbac',
-    'app.api.v1.analytics',
-    'app.api.v1.statistics',
-    # magic 模块导致 PyInstaller 子进程崩溃（需要 libmagic DLL）
-    # file_upload.py 中已用 try/except 保护，运行时自动降级
-    'magic',
+    'app.api.v1.users',           # 旧路径，已不存在
+    'app.api.v1.user_management', # 旧路径
+    'app.api.v1.rbac',            # 旧路径
+    'app.api.v1.analytics',       # 旧路径
+    'app.api.v1.statistics',      # 旧路径
 ]
 
-analysis_kwargs = dict(
+# ========== Analysis 阶段 ==========
+a = Analysis(
+    [os.path.join(backend_dir, 'start.py')],
     pathex=[backend_dir],
     binaries=binaries,
     datas=datas,
@@ -219,21 +221,17 @@ analysis_kwargs = dict(
     hooksconfig={},
     runtime_hooks=[],
     excludes=excludes,
-    cipher=block_cipher,
+    cipher=None,                     # 不加密字节码
     noarchive=False,
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
 )
 
-if is_win:
-    analysis_kwargs['win_no_prefer_redirects'] = False
-    analysis_kwargs['win_private_assemblies'] = False
+# ========== PYZ 阶段 ==========
+pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
-a = Analysis(
-    [os.path.join(backend_dir, 'start.py')],
-    **analysis_kwargs,
-)
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
-
+# ========== EXE 阶段 ==========
+icon_path = os.path.join(resources_dir, 'icons', 'app.ico')
 exe = EXE(
     pyz,
     a.scripts,
@@ -241,18 +239,18 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='assistance-management-backend',
+    name='assistance-backend',          # 统一名称（非 assistance-management-backend）
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=False,
+    upx=False,                       # 禁用 UPX 压缩以避免某些兼容性问题
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=False,                   # 不显示控制台窗口（适合 GUI 服务）
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
+    target_arch=None,                # 架构由 Python 解释器决定，无需指定
     codesign_identity=None,
     entitlements_file=None,
-    icon=os.path.join(backend_dir, '..', 'resources', 'icons', 'app.ico'),
+    icon=icon_path if os.path.exists(icon_path) else None,
 )

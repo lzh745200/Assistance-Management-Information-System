@@ -24,8 +24,8 @@ def _persist_revocation(jti: str, reason: str = "",
             add_to_db(jti, db, reason=reason, expires_at=expires_at, user_id=user_id)
         finally:
             db.close()
-    except Exception:
-        logger.debug("持久化 token 黑名单失败（非关键）", exc_info=True)
+    except Exception as e:
+        logger.debug("持久化 token 黑名单失败（非关键）: %s", e, exc_info=True)
 
 
 # ---------------------------------------------------------------------------
@@ -38,8 +38,8 @@ def _get_settings():
     try:
         from app.core.config import settings  # type: ignore[import-untyped]
         return settings
-    except Exception:
-        logger.warning("Token设置加载异常", exc_info=True)
+    except Exception as e:
+        logger.warning("Token设置加载异常: %s", e, exc_info=True)
         return None
 
 

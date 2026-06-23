@@ -81,8 +81,8 @@ def load_from_db(db_session) -> int:
         if entries:
             logger.info("从数据库加载 %d 条黑名单记录", len(entries))
         return len(entries)
-    except Exception:
-        logger.debug("数据库黑名单加载失败（可能表未创建）", exc_info=True)
+    except Exception as e:
+        logger.debug("数据库黑名单加载失败（可能表未创建）: %s", e, exc_info=True)
         return 0
 
 
@@ -136,9 +136,9 @@ def add_to_db(token_jti: str, db_session, *, reason: str = "",
         db_session.add(entry)
         db_session.commit()
         logger.info("Token 已加入数据库黑名单: %s", token_jti[:12])
-    except Exception:
-        logger.exception("数据库黑名单写入失败")
+    except Exception as e:
+        logger.exception("数据库黑名单写入失败: %s", e)
         try:
             db_session.rollback()
-        except Exception:
-            pass
+        except Exception as rollback_err:
+            logger.debug("Rollback failed after blacklist write error: %s", rollback_err)

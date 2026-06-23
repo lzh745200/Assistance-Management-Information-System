@@ -16,6 +16,9 @@
     "build:deb": "electron-builder --linux deb",
     "build:arm64": "electron-builder --linux deb --arm64",
     "build:all": "electron-builder --win --mac --linux",
+    "build:win-x64": "electron-builder --win --x64",
+    "build:win-x86": "electron-builder --win --ia32",
+    "build:win-all": "electron-builder --win --x64 && electron-builder --win --ia32",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win --mac --linux",
     "postinstall": "electron-builder install-app-deps"
@@ -38,26 +41,48 @@
       "electron/**/*",
       "frontend/dist/**/*",
       "node_modules/**/*",
-      "resources/icon.png"
+      "resources/icons/icon.png"
     ],
     "extraResources": [
       {
-        "from": "backend/dist/assistance-backend",
-        "to": "backend/assistance-backend"
+        "from": "backend/dist/assistance-backend.exe",
+        "to": "backend/assistance-backend.exe",
+        "filter": ["**/*"]
       },
       {
         "from": "frontend/dist",
         "to": "frontend",
         "filter": ["**/*"]
+      },
+      {
+        "from": "resources/vcredist",
+        "to": "vcredist",
+        "filter": ["**/*.exe"]
+      },
+      {
+        "from": "resources/icons/icon.png",
+        "to": "icon.png"
       }
     ],
     "win": {
       "target": ["nsis"],
-      "icon": "resources/icon.png"
+      "icon": "resources/icons/app.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "resources/icons/app.ico",
+      "uninstallerIcon": "resources/icons/app.ico",
+      "include": "build-scripts/electron-builder-nsis-hook.nsh",
+      "shortcutName": "帮扶管理系统",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false
     },
     "mac": {
       "target": ["dmg"],
-      "icon": "resources/icon.png"
+      "icon": "resources/icons/icon.png"
     },
     "linux": {
       "target": [
@@ -66,7 +91,7 @@
           "arch": ["arm64"]
         }
       ],
-      "icon": "resources/icon.png",
+      "icon": "resources/icons/icon.png",
       "category": "Office",
       "maintainer": "开发团队 <dev@bumofu.com>",
       "synopsis": "帮扶管理系统",

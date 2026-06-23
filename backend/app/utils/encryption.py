@@ -184,13 +184,20 @@ def calculate_file_checksum(file_path: str, algorithm: str = "sha256") -> str:
 
     Args:
         file_path: 文件路径
-        algorithm: 算法（md5, sha1, sha256）
+        algorithm: 算法（sha256 推荐; sha1 仅用于非安全场景; md5 已弃用，仅保留兼容性）
 
     Returns:
         校验和字符串
+
+    .. warning::
+        MD5 已被证明不安全，请勿用于密码哈希、数字签名等安全场景。
+        此处保留 MD5 选项仅为兼容旧数据包校验/缓存键等非安全用途。
+        新代码应使用 sha256。
     """
     if algorithm == "md5":
-        hash_func = hashlib.md5()
+        # nosec B324 -- MD5 仅用于文件校验/缓存键，非安全场景
+        logger.warning("MD5 算法已弃用，建议使用 sha256; 当前调用仅用于非安全场景")
+        hash_func = hashlib.md5(usedforsecurity=False)  # nosec B324
     elif algorithm == "sha1":
         hash_func = hashlib.sha1(usedforsecurity=False)
     elif algorithm == "sha256":

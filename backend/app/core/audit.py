@@ -64,28 +64,31 @@ def _persist_to_db(db, entry: dict) -> None:
 
     .. deprecated::
         直接 ORM 写入已标记为遗留模式。对于新的审计日志需求，
-        请使用 :class:`app.services.audit_service.AuditService.log`。
+        请使用 :class:`app.services.audit_service.AuditService.log`
+        或 :class:`app.utils.audit_logger.AuditLogger.log`（后者自动持久化到数据库）。
         此函数保留以支持现有的 `record_audit()` 公共 API 调用者。
     """
     try:
         from app.models.audit import AuditLog  # type: ignore[import-untyped]
 
         log_entry = AuditLog(
-            user_id=entry["user_id"],
-            action=entry["action"],
-            resource=entry["resource"],
-            resource_id=entry.get("resource_id"),
-            details=entry.get("details"),
-            ip_address=entry.get("ip_address"),
+            user_id=entry.get("user_id"),
+            action=entry.get("action", ""),
+            resource_type=entry.get("resource"),
+            resource_id=str(entry["resource_id"]) if entry.get("resource_id") else None,
+            new_value={"details": entry.get("details")} if entry.get("details") else None,
+            user_ip=entry.get("ip_address"),
+            status="success",
+            level="info",
         )
         db.add(log_entry)
         db.commit()
-    except Exception:
-        logger.exception("Failed to persist audit entry to database")
+    except Exception as e:
+        logger.exception("Failed to persist audit entry to database: %s", e)
         try:
             db.rollback()
-        except Exception:
-            pass
+        except Exception as rollback_err:
+            logger.debug("Rollback failed after audit persist error: %s", rollback_err)
 
 
 def get_audit_records(

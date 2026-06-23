@@ -32,9 +32,9 @@ const appVersion = (() => {
     const pkgPath = app.isPackaged
       ? path.join(process.resourcesPath, '..', 'package.json')
       : path.join(__dirname, '..', 'package.json');
-    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version || '1.4.1';
+    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version || '1.2.0';
   } catch (_) {
-    return '1.4.1';
+    return '1.2.0';
   }
 })();
 
@@ -73,14 +73,34 @@ function getIconPath() {
   return path.join(__dirname, '..', 'resources', 'icon.png');
 }
 
-// ─── 密钥持久化（与之前相同，省略以节省篇幅，请保留原实现） ───
-// 此处省略 getOrCreateSecrets、_writeSecrets、getDatabasePath 等函数
-// 请从您原有的 main.js 中复制这些函数，因为它们没有变化。
+// ─── 密钥持久化 ───
+// 后端启动时通过 app.utils.runtime_secrets.ensure_runtime_secrets() 自行生成并
+// 持久化运行时密钥（写入 %LOCALAPPDATA%\bumofu-assistance\runtime_secrets.json），
+// 因此 Electron 侧无需注入密钥环境变量。此处保留接口以兼容现有调用，返回空对象。
+function getOrCreateSecrets() {
+  return {};
+}
+function _writeSecrets(secrets, encrypt) {
+  // 密钥由后端自行管理，Electron 侧不持久化。保留空实现以兼容接口。
+}
 
-// 但为了完整性，我们在这里提供简化的存根（实际使用时请补全）
-function getOrCreateSecrets() { /* ... */ }
-function _writeSecrets(secrets, encrypt) { /* ... */ }
-function getDatabasePath() { /* ... */ }
+// ─── 数据库路径 ───
+// 数据库放在 %LOCALAPPDATA%\bumofu-assistance\data\ (而非安装目录)，
+// 避免 Program Files 非管理员用户写入失败。由 Electron 通过 DATABASE_URL
+// 环境变量注入后端，后端 paths.py 中 is_bundled() 作为兜底默认值。
+function getDatabasePath() {
+  // Windows: %LOCALAPPDATA% = C:\Users\<user>\AppData\Local
+  // Linux:   ~/.local/share (XDG_DATA_HOME 约定)
+  let localAppData;
+  if (process.platform === 'win32') {
+    localAppData = process.env.LOCALAPPDATA
+      || path.join(app.getPath('appData'), '..', 'Local');
+  } else {
+    localAppData = process.env.XDG_DATA_HOME
+      || path.join(app.getPath('home'), '.local', 'share');
+  }
+  return path.join(localAppData, 'bumofu-assistance', 'data', 'rural_revitalization.db');
+}
 
 // ─── 端口检测、启动错误分析等函数（与您原有的一致，保持不变） ───
 // 此处省略 checkPortInUse、killProcessOnPort、findAvailablePort 等函数
@@ -132,7 +152,7 @@ async function startBackend(stderrCapture = null) {
 
   const env = {
     ...process.env,
-    DATABASE_URL: `sqlite:///${dbPath}`,
+    DATABASE_URL: `sqlite:///${dbPath.replace(/\\/g, '/')}`,
     HOST: '127.0.0.1',
     PORT: String(backendPort),
     LOG_FILE: path.join(logsDir, 'app.log'),

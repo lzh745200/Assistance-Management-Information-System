@@ -308,9 +308,22 @@ def _verify_frontend_assets():
     frontend_dir = None
     candidates = [
         os.environ.get("FRONTEND_DIST_PATH", ""),
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "dist"),
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "resources", "frontend"),
     ]
+    # PyInstaller 冻结模式：exe 位于 resources/backend/assistance-backend.exe，
+    # 前端位于 resources/frontend/，即 exe 同级的 ../frontend（Electron 通过
+    # FRONTEND_DIST_PATH 环境变量注入，此处为兜底查找）。
+    if getattr(_sys, "frozen", False):
+        _exe_dir = os.path.dirname(os.path.abspath(_sys.executable))
+        candidates.extend([
+            os.path.join(_exe_dir, "..", "frontend"),
+            os.path.join(_exe_dir, "frontend"),
+            os.path.join(_exe_dir, "..", "resources", "frontend"),
+        ])
+    else:
+        candidates.extend([
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "dist"),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "resources", "frontend"),
+        ])
     for candidate in candidates:
         if candidate and os.path.isfile(os.path.join(candidate, "index.html")):
             frontend_dir = os.path.abspath(candidate)

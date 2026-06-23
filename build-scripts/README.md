@@ -1,36 +1,76 @@
-# build-scripts — Windows NSIS 安装包脚本
+# build-scripts — 构建脚本与配置
 
-> P2-5 整改说明：历史遗留 9 个 NSI 脚本（`build-scripts/` 7 个 + `installers/` 2 个），
-> 内容高度重复。本轮整改先标注主入口与废弃项，后续将抽取 `common.nsh` 公共 include
-> 进一步去重（L 工作量，单独 PR）。
+> Windows 离线安装包统一使用 **electron-builder**（内置 NSIS target）打包，
+> 不再使用手写 .nsi 脚本。历史 7 个 .nsi 文件与 3 个 .bat 脚本已废弃删除。
 
-## 主入口（推荐使用）
+## Windows 离线安装包构建
 
-| 脚本 | 用途 | 状态 |
+### 架构方案
+
+```
+PyInstaller (assistance-backend.spec)
+  └─ backend/dist/assistance-backend.exe   (~85MB, 内含 Python + 全部依赖)
+electron-builder (package.json build 段)
+  ├─ extraResources: assistance-backend.exe → resources/backend/
+  ├─ extraResources: frontend/dist         → resources/frontend/
+  ├─ extraResources: resources/vcredist    → resources/vcredist/
+  ├─ NSIS target (内置) + electron-builder-nsis-hook.nsh 钩子
+  └─ dist/electron/帮扶管理系统-Setup-<version>.exe  (~250MB)
+```
+
+### 关键文件
+
+| 文件 | 用途 |
+|------|------|
+| `electron-builder-nsis-hook.nsh` | electron-builder NSIS 钩子：VC++ 静默安装 + 进程终止 + 卸载数据清理 |
+| `build-config.json` | 构建元数据（架构、入口、版本等） |
+
+### 本地构建步骤
+
+```bash
+# 1. 前端构建并同步到 resources/frontend
+cd frontend && npm run build
+mkdir -p ../resources/frontend && cp -rf dist/* ../resources/frontend/
+
+# 2. 后端打包（需对应架构的 Python 3.11）
+cd ../backend && python -m PyInstaller assistance-backend.spec --clean --noconfirm
+
+# 3. Electron 打包
+cd ..
+npx electron-builder --win --x64    # 64 位安装包
+npx electron-builder --win --ia32   # 32 位安装包
+```
+
+也可使用 Makefile 快捷命令：`make build-win-x64` / `make build-win-x86` / `make build-win-all`
+
+### 产物位置
+
+- 安装包：`dist/electron/帮扶管理系统-Setup-<version>.exe`
+- 后端 exe：`backend/dist/assistance-backend.exe`
+
+### VC++ 运行库策略（双保险）
+
+| 层级 | 机制 | 说明 |
 |------|------|------|
-| `installer-combined.nsi` | **一体化安装包**（前端 + 后端 + 运行时），主入口 | ✅ 主入口 |
-| `installer.nsi` | 标准安装包（中文 PRODUCT_NAME） | ✅ 备用主入口 |
+| Layer 1 | PyInstaller 自动捆绑 | vcruntime140.dll / msvcp140.dll 打包进 backend.exe |
+| Layer 2 | NSIS 钩子静默安装 | `vc_redist.x64.exe /install /quiet /norestart`（失败不阻断） |
 
-## 按架构
+目标机器无需预装任何 VC++ 运行库。
 
-| 脚本 | 架构 | 状态 |
-|------|------|------|
-| `installer_x64.nsi` | 64 位 | ✅ 维护 |
-| `installer_x86.nsi` | 32 位 | ✅ 维护 |
-| `installers/installer_x64.nsi` | 64 位（installers/ 目录副本） | ⚠️ 与 build-scripts/ 重复，待合并 |
-| `installers/installer_x86.nsi` | 32 位（自带完整运行时） | ⚠️ 与 build-scripts/ 重复，待合并 |
+### 数据目录（非安装目录）
 
-## 已废弃（DEPRECATED，请勿使用，待删除）
+```
+%LOCALAPPDATA%\bumofu-assistance\
+├── data\rural_revitalization.db   (SQLite 数据库)
+├── logs\app.log
+├── uploads\
+└── ...
+```
 
-| 脚本 | 废弃原因 |
-|------|----------|
-| `installer-fixed.nsi` | 临时修复脚本，已被 `installer.nsi` 合并覆盖 |
-| `installer-simple.nsi` | 精简版，功能不全，已被 combined 取代 |
-| `installer-x86.nsi` | 命名不一致（连字符 vs 下划线），与 `installer_x86.nsi` 重复 |
+数据库放在 `%LOCALAPPDATA%` 而非安装目录，避免 Program Files 权限问题。
+卸载时由 NSIS 钩子询问是否删除。
 
-## 后续去重计划
+## CI/CD
 
-1. 抽取 `common.nsh`：PRODUCT_NAME/VERSION、卸载逻辑、组件分段等公共宏
-2. 各 NSI `!include "common.nsh"`，仅保留差异部分
-3. 删除上表"已废弃"脚本，合并 installers/ 与 build-scripts/ 重复项
-4. 单一主入口：`installer-combined.nsi`（x64/x86 通过 `!ifdef` 切换）
+GitHub Actions 工作流 `.github/workflows/build-windows.yml` 自动构建 x64 + x86
+双架构安装包，tag（`v*`）触发时自动发布 GitHub Release。

@@ -209,7 +209,7 @@ class EventBus:
 
         # 尝试获取事件循环
         loop = get_event_loop_safe()
-        if loop is None:
+        if loop is None:  # pragma: no cover - get_event_loop_safe 永不返回 None
             # 没有事件循环，使用线程池处理
             def run_async():
                 asyncio.run(self._dispatch_event(event))

@@ -241,15 +241,23 @@ async def get_database_metrics(
     except Exception as e:
         metrics["table_count_error"] = str(e)
 
-    # 关键表行数统计
+    # 关键表行数统计（白名单防御：仅允许预定义的安全表名）
     try:
+        # 白名单：仅允许查询这些预定义的安全表名，防止 SQL 注入
+        _SAFE_TABLE_NAMES = frozenset(
+            {"users", "organizations", "villages", "projects", "funds", "schools"}
+        )
         key_tables = ["users", "organizations", "villages", "projects", "funds", "schools"]
         row_counts = {}
         for table in key_tables:
+            if table not in _SAFE_TABLE_NAMES:
+                row_counts[table] = "N/A"
+                continue
             try:
                 result = db.execute(text(f"SELECT COUNT(*) FROM {table}"))
                 row_counts[table] = result.scalar()
-            except Exception:
+            except Exception as e:
+                logger.debug("统计表 %s 行数失败: %s", table, e)
                 row_counts[table] = "N/A"
         metrics["key_table_row_counts"] = row_counts
     except Exception as e:
