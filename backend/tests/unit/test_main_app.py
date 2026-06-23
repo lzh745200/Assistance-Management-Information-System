@@ -316,7 +316,7 @@ class TestSpaFallbackReservedPath:
 class TestMigrateMissingColumns:
     def test_disabled_by_env_var(self):
         with (
-            patch.dict(os.environ, {"DISABLE_AUTO_MIGRATION": "1"}, clear=True),
+            patch.dict(os.environ, {"DISABLE_AUTO_MIGRATION": "1"}),
             patch("app.main.logger.info") as mock_info,
         ):
             _migrate_missing_columns(None, None)
@@ -325,7 +325,7 @@ class TestMigrateMissingColumns:
 
     def test_inspector_creation_failure(self):
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect", side_effect=Exception("no insp")),
             patch("app.main.logger.warning") as mock_warn,
         ):
@@ -336,7 +336,7 @@ class TestMigrateMissingColumns:
         mock_base = MagicMock()
         mock_base.metadata.tables = {}
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect"),
         ):
             _migrate_missing_columns(MagicMock(), mock_base)
@@ -347,7 +347,7 @@ class TestMigrateMissingColumns:
         mock_table.name = "test_table"
         mock_base.metadata.tables = {"test_table": mock_table}
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect") as mock_insp,
         ):
             inspector = MagicMock()
@@ -364,7 +364,7 @@ class TestMigrateMissingColumns:
         mock_base = MagicMock()
         mock_base.metadata.tables = {"test_table": mock_table}
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect") as mock_insp,
         ):
             inspector = MagicMock()
@@ -382,7 +382,7 @@ class TestMigrateMissingColumns:
         mock_base.metadata.tables = {"test_table": mock_table}
         mock_engine = MagicMock()
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect") as mock_insp,
             patch("app.main._sqlite_col_spec", return_value=("INTEGER", "DEFAULT 0")),
             patch("app.main.logger.info"),
@@ -405,7 +405,7 @@ class TestMigrateMissingColumns:
         mock_base.metadata.tables = {"t1": mock_table}
         mock_engine = MagicMock()
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect") as mock_insp,
             patch("app.main._sqlite_col_spec", wraps=_sqlite_col_spec),
             patch("app.main.logger.info"),
@@ -425,7 +425,7 @@ class TestMigrateMissingColumns:
         mock_base = MagicMock()
         mock_base.metadata.tables = {"t1": mock_table}
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect") as mock_insp,
             patch("app.main._sqlite_col_spec", side_effect=ValueError("bad")),
             patch("app.main.logger.warning") as mock_warn,
@@ -443,7 +443,7 @@ class TestMigrateMissingColumns:
         mock_base = MagicMock()
         mock_base.metadata.tables = {"bad": mock_table}
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect") as mock_insp,
             patch("app.main.logger.warning") as mock_warn,
         ):
@@ -463,7 +463,7 @@ class TestMigrateMissingColumns:
         mock_base = MagicMock()
         mock_base.metadata.tables = {"t1": mock_table}
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect") as mock_insp,
             patch("app.main._sqlite_col_spec", return_value=("INTEGER", "")),
             patch("app.main.logger.info"),
@@ -478,7 +478,7 @@ class TestMigrateMissingColumns:
         mock_base = MagicMock()
         mock_base.metadata.tables = {}
         with (
-            patch.dict(os.environ, {}, clear=True),
+            patch.dict(os.environ, {}),
             patch("sqlalchemy.inspect"),
             patch("app.main.logger.info"),
         ):

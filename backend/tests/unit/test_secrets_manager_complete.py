@@ -32,7 +32,7 @@ class TestSecretsManagerCreation:
         """测试初始化 - Fernet导入失败回退"""
         from app.services.secrets_manager import SecretsManager
 
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {}):
             with patch('builtins.__import__', side_effect=ImportError("No module named 'cryptography'")):
                 manager = SecretsManager()
                 # 由于ImportError，应该使用secrets.token_urlsafe

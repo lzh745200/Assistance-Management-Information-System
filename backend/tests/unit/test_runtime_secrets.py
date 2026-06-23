@@ -15,7 +15,7 @@ import pytest
 
 class TestEnsureRuntimeSecretsEnvProvided:
     def test_both_env_vars_set_returns_immediately(self):
-        with patch.dict(os.environ, {"SECRET_KEY": "sk123", "CSRF_SECRET_KEY": "csrf456"}, clear=True):
+        with patch.dict(os.environ, {"SECRET_KEY": "sk123", "CSRF_SECRET_KEY": "csrf456"}):
             from app.utils.runtime_secrets import ensure_runtime_secrets
             ensure_runtime_secrets()
             assert os.environ["SECRET_KEY"] == "sk123"
@@ -23,7 +23,7 @@ class TestEnsureRuntimeSecretsEnvProvided:
 
     def test_missing_csrf_generates_and_writes(self, tmp_path):
         secrets_file = tmp_path / "runtime_secrets.json"
-        with patch.dict(os.environ, {"SECRET_KEY": "sk123", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"SECRET_KEY": "sk123", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import ensure_runtime_secrets
             ensure_runtime_secrets()
             assert os.environ["CSRF_SECRET_KEY"] != ""
@@ -36,7 +36,7 @@ class TestEnsureRuntimeSecretsFromFile:
     def test_loads_from_file_when_env_missing(self, tmp_path):
         secrets_file = tmp_path / "runtime_secrets.json"
         secrets_file.write_text(json.dumps({"SECRET_KEY": "file_sk", "CSRF_SECRET_KEY": "file_csrf"}), encoding="utf-8")
-        with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import ensure_runtime_secrets
             ensure_runtime_secrets()
             assert os.environ["SECRET_KEY"] == "file_sk"
@@ -45,7 +45,7 @@ class TestEnsureRuntimeSecretsFromFile:
     def test_partial_from_file_combined_with_env(self, tmp_path):
         secrets_file = tmp_path / "runtime_secrets.json"
         secrets_file.write_text(json.dumps({"SECRET_KEY": "file_sk"}), encoding="utf-8")
-        with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import ensure_runtime_secrets
             ensure_runtime_secrets()
             assert os.environ["SECRET_KEY"] == "file_sk"
@@ -53,7 +53,7 @@ class TestEnsureRuntimeSecretsFromFile:
 
     def test_file_not_found_generates_new(self, tmp_path):
         secrets_file = tmp_path / "nonexistent.json"
-        with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import ensure_runtime_secrets
             ensure_runtime_secrets()
             assert os.environ["SECRET_KEY"] != ""
@@ -63,7 +63,7 @@ class TestEnsureRuntimeSecretsFromFile:
         secrets_file = tmp_path / "corrupt.json"
         secrets_file.write_text("{bad json", encoding="utf-8")
         caplog.set_level(logging.WARNING)
-        with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import ensure_runtime_secrets
             ensure_runtime_secrets()
             assert "JSON 格式损坏" in caplog.text
@@ -74,7 +74,7 @@ class TestEnsureRuntimeSecretsFromFile:
         secrets_file.write_text(json.dumps({"SECRET_KEY": "sk", "CSRF_SECRET_KEY": "csr"}), encoding="utf-8")
         caplog.set_level(logging.WARNING)
         with patch("builtins.open", side_effect=PermissionError("access denied")):
-            with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+            with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 from app.utils.runtime_secrets import ensure_runtime_secrets
                 ensure_runtime_secrets()
                 assert "无读取权限" in caplog.text
@@ -83,7 +83,7 @@ class TestEnsureRuntimeSecretsFromFile:
         secrets_file = tmp_path / "runtime_secrets.json"
         caplog.set_level(logging.WARNING)
         with patch("builtins.open", side_effect=OSError("disk error")):
-            with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+            with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 from app.utils.runtime_secrets import ensure_runtime_secrets
                 ensure_runtime_secrets()
                 assert "读取运行时密钥文件失败" in caplog.text
@@ -92,7 +92,7 @@ class TestEnsureRuntimeSecretsFromFile:
         secrets_file = tmp_path / "runtime_secrets.json"
         caplog.set_level(logging.WARNING)
         with patch("app.utils.runtime_secrets._atomic_write_json", side_effect=PermissionError("no write")):
-            with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+            with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 from app.utils.runtime_secrets import ensure_runtime_secrets
                 ensure_runtime_secrets()
                 assert "无写入权限" in caplog.text
@@ -101,7 +101,7 @@ class TestEnsureRuntimeSecretsFromFile:
         secrets_file = tmp_path / "runtime_secrets.json"
         caplog.set_level(logging.WARNING)
         with patch("app.utils.runtime_secrets._atomic_write_json", side_effect=OSError("write fail")):
-            with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+            with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 from app.utils.runtime_secrets import ensure_runtime_secrets
                 ensure_runtime_secrets()
                 assert "落盘失败" in caplog.text
@@ -116,7 +116,7 @@ class TestGetOrCreateSecret:
     def test_existing_key_returned(self, tmp_path):
         secrets_file = tmp_path / "runtime_secrets.json"
         secrets_file.write_text(json.dumps({"MY_KEY": "existing_value"}), encoding="utf-8")
-        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import get_or_create_secret
             val = get_or_create_secret("MY_KEY")
             assert val == "existing_value"
@@ -124,7 +124,7 @@ class TestGetOrCreateSecret:
     def test_missing_key_generates_and_persists(self, tmp_path):
         secrets_file = tmp_path / "runtime_secrets.json"
         secrets_file.write_text(json.dumps({}), encoding="utf-8")
-        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import get_or_create_secret
             val = get_or_create_secret("NEW_KEY")
             assert val != ""
@@ -134,7 +134,7 @@ class TestGetOrCreateSecret:
     def test_custom_generate_function(self, tmp_path):
         secrets_file = tmp_path / "runtime_secrets.json"
         secrets_file.write_text(json.dumps({}), encoding="utf-8")
-        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import get_or_create_secret
             val = get_or_create_secret("CUSTOM", generate=lambda: "custom_val_42")
             assert val == "custom_val_42"
@@ -143,7 +143,7 @@ class TestGetOrCreateSecret:
 
     def test_file_not_found_generates_new(self, tmp_path):
         secrets_file = tmp_path / "runtime_secrets.json"
-        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import get_or_create_secret
             val = get_or_create_secret("FALLBACK")
             assert val != ""
@@ -154,7 +154,7 @@ class TestGetOrCreateSecret:
         secrets_file = tmp_path / "runtime_secrets.json"
         secrets_file.write_text("{bad", encoding="utf-8")
         caplog.set_level(logging.WARNING)
-        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}):
             from app.utils.runtime_secrets import get_or_create_secret
             val = get_or_create_secret("RECOVER")
             assert val != ""
@@ -163,7 +163,7 @@ class TestGetOrCreateSecret:
     def test_permission_error_logs_and_generates(self, tmp_path, caplog):
         caplog.set_level(logging.WARNING)
         with patch("builtins.open", side_effect=PermissionError("denied")):
-            with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(tmp_path / "runtime_secrets.json")}, clear=True):
+            with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(tmp_path / "runtime_secrets.json")}):
                 from app.utils.runtime_secrets import get_or_create_secret
                 val = get_or_create_secret("PERM")
                 assert val != ""
@@ -173,7 +173,7 @@ class TestGetOrCreateSecret:
         secrets_file.write_text(json.dumps({}), encoding="utf-8")
         caplog.set_level(logging.WARNING)
         with patch("app.utils.runtime_secrets._atomic_write_json", side_effect=OSError("write fail")):
-            with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}, clear=True):
+            with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 from app.utils.runtime_secrets import get_or_create_secret
                 val = get_or_create_secret("NO_PERSIST")
                 assert val != ""
@@ -194,13 +194,13 @@ class TestGetOrCreateSecret:
 
 class TestResolveSecretsFile:
     def test_uses_env_var(self):
-        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": "/custom/path/secrets.json"}, clear=True):
+        with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": "/custom/path/secrets.json"}):
             from app.utils.runtime_secrets import _resolve_secrets_file
             result = _resolve_secrets_file()
             assert result == Path("/custom/path/secrets.json")
 
     def test_falls_back_to_data_path(self):
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {}):
             with patch("app.utils.runtime_secrets.get_data_path", return_value=Path("/data/runtime_secrets.json")):
                 from app.utils.runtime_secrets import _resolve_secrets_file
                 result = _resolve_secrets_file()

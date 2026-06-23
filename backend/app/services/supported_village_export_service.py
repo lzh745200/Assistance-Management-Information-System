@@ -267,14 +267,14 @@ class SupportedVillageExportService:
             from decimal import Decimal
             if isinstance(value, Decimal):
                 return float(value)
-        except Exception:
+        except Exception:  # pragma: no cover - 标准库 import 永不失败
             pass
         # enum.Enum → 取 .value
         try:
             import enum
             if isinstance(value, enum.Enum):
                 return value.value
-        except Exception:
+        except Exception:  # pragma: no cover - 标准库 import 永不失败
             pass
         # 其它一律转字符串（兜底，保证不会因类型问题崩溃）
         return str(value)

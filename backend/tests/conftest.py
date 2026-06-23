@@ -24,6 +24,21 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 import os
 
+
+# ── 根因修复：移除超过 Windows 环境变量长度限制（32767 字符）的超长变量 ──
+# WorkBuddy 桌面端会注入 ACC_PRODUCT_CONFIG_V3（~288KB）等超长环境变量。
+# unittest.mock.patch.dict(os.environ) 在 teardown 时会保存并还原 *全部*
+# 环境变量，触发 ValueError: the environment variable is longer than 32767
+# characters，导致任何使用 patch.dict(os.environ) 的测试在退出时崩溃。
+# 这些超长变量是宿主注入的、被测应用不依赖，测试会话开始时一次性删除即可。
+@pytest.fixture(autouse=True, scope="session")
+def _strip_oversized_env_vars():
+    _WIN_ENV_LIMIT = 32767
+    for _key in [k for k, v in list(os.environ.items()) if len(v) > _WIN_ENV_LIMIT]:
+        del os.environ[_key]
+    yield
+
+
 # 排除非 pytest 的独立测试脚本
 # test_system_api.py 是手动全模块 API 测试脚本，含模块级 sys.exit(1)
 # collect_ignore removed

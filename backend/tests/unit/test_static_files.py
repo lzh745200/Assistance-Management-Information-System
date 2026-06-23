@@ -25,7 +25,7 @@ class TestFindFrontendDir:
             assert result is None
 
     def test_frozen_meipass(self):
-        with patch.dict(os.environ, {}, clear=True), patch.object(
+        with patch.dict(os.environ, {}), patch.object(
             sys, "_MEIPASS", "/frozen/app", create=True
         ), patch("os.path.isfile", side_effect=lambda p: "frozen" in p):
             from app.core.static_files import find_frontend_dir
@@ -34,7 +34,7 @@ class TestFindFrontendDir:
             assert "frozen" in result
 
     def test_no_candidates_found(self):
-        with patch.dict(os.environ, {}, clear=True), patch.object(
+        with patch.dict(os.environ, {}), patch.object(
             sys, "_MEIPASS", "", create=True
         ), patch("os.path.isfile", return_value=False):
             from app.core.static_files import find_frontend_dir
