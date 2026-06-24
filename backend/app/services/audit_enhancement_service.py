@@ -40,7 +40,9 @@ class AuditEnhancementService:
             metadata_={"detail": detail} if detail else None,
         )
         db.add(log)
-        db.flush()
+        # 显式提交——审计日志不应依赖调用方的事务提交，
+        # 否则一旦调用方未 commit，审计轨迹会静默丢失
+        db.commit()
         return log
 
     @staticmethod

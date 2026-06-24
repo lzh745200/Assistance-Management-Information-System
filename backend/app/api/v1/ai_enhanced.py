@@ -141,4 +141,4 @@ async def nlp_query(
 ) -> Dict[str, Any]:
     """自然语言查询 - 将自然语言问题转换为SQL查询并返回结果"""
     service = _get_nlp_service()
-    return service.execute_query(db=db, query_text=query)
+    return service.execute_query(db=db, query=query)

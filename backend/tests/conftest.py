@@ -359,6 +359,16 @@ def client():
                 pass
 
         from app.core.database import get_db
+        import app.core.database as _db_module
+
+        # 关键修复：AuditLogger._persist_to_db 等绕过 get_db 直接 SessionLocal()
+        # 的代码路径，在测试下会连到生产 test.db（0 张表），INSERT 抛
+        # OperationalError 被吞。把 module 级 engine/SessionLocal 也指向内存库，
+        # 保证审计落库链路在测试环境真正可被断言。
+        _original_engine = _db_module.engine
+        _original_session_local = _db_module.SessionLocal
+        _db_module.engine = engine
+        _db_module.SessionLocal = TestingSessionLocal
 
         # 保存原始的依赖覆盖
         original_overrides = app.dependency_overrides.copy()
@@ -366,8 +376,10 @@ def client():
 
         yield TestClient(app, raise_server_exceptions=False)
 
-        # 清理：恢复原始的依赖覆盖
+        # 清理：恢复原始依赖覆盖与全局 engine/SessionLocal
         app.dependency_overrides = original_overrides
+        _db_module.engine = _original_engine
+        _db_module.SessionLocal = _original_session_local
         db.close()
     except Exception as e:
         pass  # skip removed

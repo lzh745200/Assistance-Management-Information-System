@@ -23,7 +23,8 @@ class TestCreateAuditLog:
         assert log.level == "info"
         assert log.metadata_ == {"detail": "created"}
         db.add.assert_called_once_with(log)
-        db.flush.assert_called_once()
+        # 修复后改为显式 commit（原 flush 会让无 commit 的调用方静默丢失审计）
+        db.commit.assert_called_once()
 
     def test_without_detail(self):
         db = MagicMock()

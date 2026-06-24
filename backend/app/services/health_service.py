@@ -22,8 +22,18 @@ class HealthService:
         """检查数据库健康状态。"""
         from app.services.database_health_service import DatabaseHealthService
 
-        service = DatabaseHealthService(self.db) if self.db else DatabaseHealthService()
-        return service.check()
+        # DatabaseHealthService.__init__ 不收参数（内部从 settings 读取路径）；
+        # 调用真实存在的 check_integrity + quick_check + get_health_status。
+        service = DatabaseHealthService()
+        result: dict = service.get_health_status()
+        # 补充一次即时完整性 + 快速检查结果
+        try:
+            result.update(service.check_integrity())
+            result.update(service.quick_check())
+        except Exception as e:
+            logger.warning("数据库健康检查异常: %s", e, exc_info=True)
+            result.setdefault("issues", []).append(str(e))
+        return result
 
     def check_funds(self) -> dict:
         """检查资金健康状态。"""

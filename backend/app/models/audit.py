@@ -56,6 +56,10 @@ class AuditLog(Base):
     __table_args__ = (
         Index("ix_audit_user_action", "user_id", "action"),
         Index("ix_audit_timestamp", "created_at"),
+        Index("idx_audit_user_action", "user_id", "action"),
+        Index("idx_audit_resource", "resource_type", "resource_id"),
+        Index("idx_audit_created", "created_at"),
+        Index("idx_audit_logs_user_created", "user_id", "created_at"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
@@ -89,13 +93,6 @@ class AuditLog(Base):
     trace_id = Column(String(100), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-
-    __table_args__ = (
-        Index("idx_audit_user_action", "user_id", "action"),
-        Index("idx_audit_resource", "resource_type", "resource_id"),
-        Index("idx_audit_created", "created_at"),
-        Index("idx_audit_logs_user_created", "user_id", "created_at"),
-    )
 
 
 class SecurityEvent(Base):
