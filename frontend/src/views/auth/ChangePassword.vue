@@ -152,13 +152,12 @@
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox, ElForm } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { useRouterSafe } from '@/composables/useRouterSafe'
 import { WarningFilled } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
+import { freezeRequests, cancelAllRequests } from '@/api/request'
 
 const router = useRouter()
-const { pushSafe } = useRouterSafe()
 const userStore = useUserStore()
 const authStore = useAuthStore()
 
@@ -312,22 +311,31 @@ const handleChangePassword = async () => {
     loading.value = true
     await userStore.changePassword(passwordForm.oldPassword, passwordForm.newPassword)
 
-    // 密码修改成功后立即清除 token 并跳转登录页
-    // 后端已 revoke 所有 token，必须立即同步本地状态防止 401
-    ElMessage.success('密码修改成功，即将跳转到登录页')
+    // 密码修改成功 — 后端已 revoke 所有 token（token_version+1），必须立即清理
+    // 1. 立即冻结所有后续请求 + 取消 pending 请求
+    //    （防止 setTimeout 跳转期间 Vue 组件发请求触发 401 竞态，覆盖成功消息）
+    freezeRequests()
+    cancelAllRequests()
 
-    // 先清除 token（阻止任何组件在此期间发起已失效的请求）
+    // 2. 同步清 token（阻止任何残留请求带失效 token）
     try {
       if (authStore && typeof authStore.logout === 'function') {
         authStore.logout()
-      } else {
+      }
+      if (userStore && typeof userStore.logout === 'function') {
         userStore.logout()
       }
     } catch (_) {
       // 即使退出失败也要清 token 跳转
     }
-    // 跳转登录页
-    await pushSafe({ path: '/login' })
+
+    // 3. 提示用户
+    ElMessage.success('密码修改成功，请使用新密码重新登录')
+
+    // 4. 硬跳转登录页（用极短延迟让 ElMessage 渲染一帧，冻结机制保证期间无 401）
+    setTimeout(() => {
+      window.location.href = '/login'
+    }, 100)
   } catch (error) {
     if (error instanceof Error && error.name !== 'Cancel') {
       const errorMessage = error.message || '密码修改失败，请重试'

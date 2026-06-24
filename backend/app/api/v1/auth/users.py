@@ -752,6 +752,21 @@ async def change_password(
     user.must_change_password = False
     db.commit()
 
+    # 审计日志（密码修改已提交，审计失败不影响主流程）
+    try:
+        from app.services.work_log_service import write_work_log
+
+        write_work_log(
+            db=db,
+            log_type="user",
+            action="change_password",
+            entity_id=user.id,
+            entity_name=user.username,
+            username=current_user.username,
+        )
+    except Exception:
+        pass
+
     return {"code": 200, "message": "密码修改成功"}
 
 

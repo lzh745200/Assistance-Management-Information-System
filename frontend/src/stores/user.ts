@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { get, post, put, del } from '@/api/request'
 import type { ApiResponse } from '@/types/api'
 import { AuthStorage } from '@/utils/authStorage'
+import { useAuthStore } from '@/stores/auth'
 
 export interface User {
   id: number
@@ -24,7 +25,9 @@ interface UserListData {
 
 export const useUserStore = defineStore('user', () => {
   const userList = ref<User[]>([])
-  const currentUser = ref<User | null>(null)
+  // 初始化时从 AuthStorage 恢复 currentUser（防止页面刷新后丢失）
+  const _initialUser = AuthStorage.getUser()
+  const currentUser = ref<User | null>(_initialUser ? (_initialUser as unknown as User) : null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const total = ref(0)
@@ -97,8 +100,10 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function changePassword(oldPassword: string, newPassword: string) {
-    if (!currentUser.value?.id) throw new Error('未登录')
-    return put(`/users/${currentUser.value.id}/password`, {
+    // 优先从 currentUser 取，其次从 authStore.user 取，最后从 JWT token 解析
+    const userId = currentUser.value?.id || useAuthStore().user?.id || _getCurrentUserId()
+    if (!userId) throw new Error('无法获取用户信息，请重新登录')
+    return put(`/users/${userId}/password`, {
       old_password: oldPassword,
       new_password: newPassword,
     })
@@ -122,7 +127,11 @@ export const useUserStore = defineStore('user', () => {
       const token = AuthStorage.getToken()
       if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]))
-        return payload?.sub || payload?.user_id || null
+        // JWT payload 中 sub 是 username（字符串），不是 user_id
+        // 优先取 user_id 字段（部分 token 可能包含），没有则返回 null
+        const userId = payload?.user_id
+        if (typeof userId === 'number') return userId
+        return null
       }
     } catch {
       /* ignore */

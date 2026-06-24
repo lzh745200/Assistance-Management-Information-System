@@ -24,6 +24,17 @@ const pendingRequests = new Map<string, Canceler>()
 /** 内存缓存 token，避免每条请求都读 sessionStorage */
 let _cachedToken: string | null = null
 
+// ── 请求冻结机制 ──
+// 改密/登出后立即冻结，防止 setTimeout 跳转期间 Vue 组件发请求触发 401 竞态。
+// 冻结期间所有请求被直接取消（不触发 401 拦截器），页面跳转后自动解冻。
+let _requestFrozen = false
+export function freezeRequests(): void {
+  _requestFrozen = true
+}
+export function unfreezeRequests(): void {
+  _requestFrozen = false
+}
+
 // ── CSRF Token 管理（Double Submit Cookie 模式）──
 // 后端开启 CSRF 保护后，POST/PUT/DELETE/PATCH 需在 X-CSRF-Token 头回填 token。
 // token 来源：优先从 csrftoken Cookie 读取；若无则懒加载 GET /auth/csrf-token 获取
@@ -93,6 +104,10 @@ function _makeRequestKey(method: string | undefined, url: string | undefined, pa
 }
 
 request.interceptors.request.use(async (config) => {
+  // 请求被冻结时直接取消（改密/登出后跳转期间，防止组件发请求触发 401 竞态）
+  if (_requestFrozen) {
+    return Promise.reject(new axios.Cancel('Requests frozen after logout/password-change'))
+  }
   if (_cachedToken === null) {
     _cachedToken = AuthStorage.getToken()
   }
@@ -193,11 +208,15 @@ request.interceptors.response.use(
       if (status === 401) {
         _cachedToken = null
         AuthStorage.clear()
-        ElMessage.error('登录已过期，请重新登录')
+        // 冻结期间不弹"登录已过期"消息（改密成功消息优先级更高）
+        if (!_requestFrozen) {
+          ElMessage.error('登录已过期，请重新登录')
+        }
         // 跳转登录页：避免在测试环境/已登录页重复跳转
         if (
           typeof window !== 'undefined' &&
           !_isTestEnv &&
+          !_requestFrozen &&
           !window.location.pathname.startsWith('/login')
         ) {
           window.location.href = '/login'

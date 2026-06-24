@@ -18,7 +18,7 @@ vi.mock('@/api/request', () => ({
 }))
 
 vi.mock('@/utils/authStorage', () => ({
-  AuthStorage: { clear: vi.fn(), getToken: vi.fn(), setToken: vi.fn() },
+  AuthStorage: { clear: vi.fn(), getToken: vi.fn(), setToken: vi.fn(), getUser: vi.fn(() => null) },
 }))
 
 import { get, post, put, del } from '@/api/request'
