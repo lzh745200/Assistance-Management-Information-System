@@ -46,9 +46,9 @@
           <div v-if="showPasswordHint" class="password-hint" :class="{ active: showPasswordHint }">
             <!-- 密码规则提示 -->
             <ul class="hint-list">
-              <li :class="{ valid: passwordStrengthData.length >= 8 }">
-                <span v-if="passwordStrengthData.length >= 8">✓ </span>
-                密码长度至少8个字符
+              <li :class="{ valid: passwordStrengthData.length >= 12 }">
+                <span v-if="passwordStrengthData.length >= 12">✓ </span>
+                密码长度至少12个字符
               </li>
               <li :class="{ valid: passwordStrengthData.hasUppercase }">
                 <span v-if="passwordStrengthData.hasUppercase">✓ </span>
@@ -206,8 +206,8 @@ const passwordRules: Record<string, any[]> = reactive({
           callback(new Error('请输入新密码'))
         } else if (value === passwordForm.oldPassword) {
           callback(new Error('新密码不能与当前密码相同'))
-        } else if (passwordStrengthData.validCount < 3) {
-          callback(new Error('密码强度不足，请满足至少3项密码规则'))
+        } else if (passwordStrengthData.validCount < 5 || passwordStrengthData.length < 12) {
+          callback(new Error('密码强度不足，需满足全部5项规则且长度≥12位'))
         } else {
           callback()
         }
@@ -236,7 +236,8 @@ const passwordRules: Record<string, any[]> = reactive({
 // 计算密码是否有效
 const isPasswordValid = computed((): boolean => {
   return (
-    passwordStrengthData.validCount >= 3 &&
+    passwordStrengthData.validCount >= 5 &&
+    passwordStrengthData.length >= 12 &&
     passwordForm.newPassword !== '' &&
     passwordForm.newPassword === passwordForm.confirmPassword
   )

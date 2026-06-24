@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { get, post, put, del } from '@/api/request'
 import type { ApiResponse } from '@/types/api'
 import { AuthStorage } from '@/utils/authStorage'
-import { useAuthStore } from '@/stores/auth'
 
 export interface User {
   id: number
@@ -100,10 +99,8 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function changePassword(oldPassword: string, newPassword: string) {
-    // 优先从 currentUser 取，其次从 authStore.user 取，最后从 JWT token 解析
-    const userId = currentUser.value?.id || useAuthStore().user?.id || _getCurrentUserId()
-    if (!userId) throw new Error('无法获取用户信息，请重新登录')
-    return put(`/users/${userId}/password`, {
+    if (!currentUser.value?.id) throw new Error('无法获取用户信息，请重新登录')
+    return put(`/users/${currentUser.value.id}/password`, {
       old_password: oldPassword,
       new_password: newPassword,
     })
