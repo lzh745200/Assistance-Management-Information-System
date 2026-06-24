@@ -312,22 +312,22 @@ const handleChangePassword = async () => {
     loading.value = true
     await userStore.changePassword(passwordForm.oldPassword, passwordForm.newPassword)
 
+    // 密码修改成功后立即清除 token 并跳转登录页
+    // 后端已 revoke 所有 token，必须立即同步本地状态防止 401
     ElMessage.success('密码修改成功，即将跳转到登录页')
 
-    // 密码修改成功后，立即退出登录并跳转到登录页，确保新密码立即生效
-    setTimeout(async () => {
-      try {
-        // 优先使用 authStore 退出（清除 token）
-        if (authStore && typeof authStore.logout === 'function') {
-          await authStore.logout()
-        } else {
-          await userStore.logout()
-        }
-      } catch (_) {
-        // 即使退出失败也要跳转登录页
+    // 先清除 token（阻止任何组件在此期间发起已失效的请求）
+    try {
+      if (authStore && typeof authStore.logout === 'function') {
+        authStore.logout()
+      } else {
+        userStore.logout()
       }
-      await pushSafe({ path: '/login' })
-    }, 1000)
+    } catch (_) {
+      // 即使退出失败也要清 token 跳转
+    }
+    // 跳转登录页
+    await pushSafe({ path: '/login' })
   } catch (error) {
     if (error instanceof Error && error.name !== 'Cancel') {
       const errorMessage = error.message || '密码修改失败，请重试'

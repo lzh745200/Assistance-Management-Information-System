@@ -2,7 +2,7 @@
 
 const { app, BrowserWindow, dialog, Menu, Tray, shell, ipcMain, safeStorage } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const crypto = require('crypto');
 const http = require('http');
 const fs = require('fs');
@@ -32,14 +32,13 @@ const appVersion = (() => {
     const pkgPath = app.isPackaged
       ? path.join(process.resourcesPath, '..', 'package.json')
       : path.join(__dirname, '..', 'package.json');
-    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version || '1.2.0';
+    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version || '1.4.1';
   } catch (_) {
-    return '1.2.0';
+    return '1.4.1';
   }
 })();
 
 // ─── 路径解析 ───
-
 function getUserDataPath() {
   if (process.env.ELECTRON_USER_DATA_PATH) return process.env.ELECTRON_USER_DATA_PATH;
   if (!app.isPackaged) return path.join(__dirname, '..', 'data');
@@ -66,7 +65,6 @@ function getFrontendPath() {
 }
 
 function getIconPath() {
-  // 统一使用 resources/icon.png（打包后位于 /opt/.../resources/icon.png）
   if (app.isPackaged) {
     return path.join(process.resourcesPath, 'icon.png');
   }
@@ -74,38 +72,124 @@ function getIconPath() {
 }
 
 // ─── 密钥持久化 ───
-// 后端启动时通过 app.utils.runtime_secrets.ensure_runtime_secrets() 自行生成并
-// 持久化运行时密钥（写入 %LOCALAPPDATA%\bumofu-assistance\runtime_secrets.json），
-// 因此 Electron 侧无需注入密钥环境变量。此处保留接口以兼容现有调用，返回空对象。
 function getOrCreateSecrets() {
-  return {};
+  const canEncrypt = safeStorage.isEncryptionAvailable();
+  try {
+    if (fs.existsSync(SECRETS_FILE)) {
+      const raw = fs.readFileSync(SECRETS_FILE);
+      let data;
+      if (canEncrypt) {
+        try {
+          const decrypted = safeStorage.decryptString(raw);
+          data = JSON.parse(decrypted);
+        } catch (_) {
+          try {
+            data = JSON.parse(raw.toString('utf-8'));
+            _writeSecrets(data, true);
+          } catch (__) { data = {}; }
+        }
+      } else {
+        data = JSON.parse(raw.toString('utf-8'));
+      }
+      if (data.SECRET_KEY && data.CSRF_SECRET_KEY) return data;
+    }
+  } catch (e) { console.warn('[Secrets] 读取失败:', e.message); }
+  const secrets = {
+    SECRET_KEY: crypto.randomBytes(32).toString('hex'),
+    CSRF_SECRET_KEY: crypto.randomBytes(32).toString('hex'),
+  };
+  _writeSecrets(secrets, canEncrypt);
+  return secrets;
 }
+
 function _writeSecrets(secrets, encrypt) {
-  // 密钥由后端自行管理，Electron 侧不持久化。保留空实现以兼容接口。
+  try {
+    if (encrypt) {
+      const encrypted = safeStorage.encryptString(JSON.stringify(secrets));
+      fs.writeFileSync(SECRETS_FILE, encrypted);
+    } else {
+      fs.writeFileSync(SECRETS_FILE, JSON.stringify(secrets), 'utf-8');
+    }
+  } catch (e) { console.error('[Secrets] 写入失败:', e.message); }
 }
 
-// ─── 数据库路径 ───
-// 数据库放在 %LOCALAPPDATA%\bumofu-assistance\data\ (而非安装目录)，
-// 避免 Program Files 非管理员用户写入失败。由 Electron 通过 DATABASE_URL
-// 环境变量注入后端，后端 paths.py 中 is_bundled() 作为兜底默认值。
 function getDatabasePath() {
-  // Windows: %LOCALAPPDATA% = C:\Users\<user>\AppData\Local
-  // Linux:   ~/.local/share (XDG_DATA_HOME 约定)
-  let localAppData;
-  if (process.platform === 'win32') {
-    localAppData = process.env.LOCALAPPDATA
-      || path.join(app.getPath('appData'), '..', 'Local');
+  let dbDir;
+  if (process.platform === 'linux') {
+    const homeDir = process.env.HOME || '/root';
+    dbDir = path.join(homeDir, '.bumofu', 'data');
   } else {
-    localAppData = process.env.XDG_DATA_HOME
-      || path.join(app.getPath('home'), '.local', 'share');
+    dbDir = path.join(getUserDataPath(), 'database');
   }
-  return path.join(localAppData, 'bumofu-assistance', 'data', 'rural_revitalization.db');
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+  const dbPath = path.join(dbDir, 'bumofu.db');
+  if (!fs.existsSync(dbPath)) {
+    const sourceDb = getResourcePath('database', 'bumofu.db');
+    if (fs.existsSync(sourceDb)) fs.copyFileSync(sourceDb, dbPath);
+  }
+  return dbPath;
 }
 
-// ─── 端口检测、启动错误分析等函数（与您原有的一致，保持不变） ───
-// 此处省略 checkPortInUse、killProcessOnPort、findAvailablePort 等函数
+// ─── 日志写入 ───
+function writeDiagnosticLog(message) {
+  try {
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(CRASH_LOG_FILE, `[${timestamp}] ${message}\n`);
+  } catch (_) {}
+}
 
-// ─── 后端启动（直接运行二进制） ───
+// ─── 端口检测 ───
+function checkPortInUse(port) {
+  return new Promise((resolve) => {
+    const net = require('net');
+    const server = net.createServer();
+    server.once('error', (err) => { resolve(err.code === 'EADDRINUSE'); });
+    server.once('listening', () => { server.close(); resolve(false); });
+    server.listen(port, '127.0.0.1');
+  });
+}
+
+function killProcessOnPort(port) {
+  return new Promise((resolve) => {
+    console.warn(`[Port] 强制终止端口 ${port}`);
+    writeDiagnosticLog(`强制终止端口 ${port}`);
+    const onExit = () => setTimeout(resolve, 500);
+    if (process.platform === 'win32') {
+      const proc = spawn('cmd.exe', ['/c', `for /f "tokens=5" %a in ('netstat -aon ^| findstr :${port} ^| findstr LISTENING') do taskkill /f /pid %a`], { windowsHide: true });
+      proc.on('exit', onExit);
+    } else {
+      const proc = spawn('sh', ['-c', `lsof -ti:${port} | xargs kill -9 2>/dev/null`]);
+      proc.on('exit', onExit);
+    }
+  });
+}
+
+async function findAvailablePort(startPort, maxAttempts) {
+  for (let i = 0; i < maxAttempts; i++) {
+    const port = startPort + i;
+    const inUse = await checkPortInUse(port);
+    if (!inUse) return port;
+    if (i === 0) {
+      await killProcessOnPort(port);
+      const still = await checkPortInUse(port);
+      if (!still) return port;
+    }
+  }
+  return null;
+}
+
+function analyzeStartupError(stderrCapture) {
+  const logs = stderrCapture.join('\n').toLowerCase();
+  if (logs.includes('vcruntime') || logs.includes('msvcp')) return '缺少 VC++ 运行时库。';
+  if (logs.includes('address already in use') || logs.includes('eaddrinuse')) return '端口被占用。';
+  if (logs.includes('database') || logs.includes('sqlite')) return '数据库错误。';
+  if (logs.includes('permission denied') || logs.includes('eacces')) return '权限不足。';
+  if (logs.includes('importerror') || logs.includes('modulenotfounderror')) return 'Python 依赖缺失。';
+  if (logs.includes('timeout') || stderrCapture.length === 0) return '启动超时。';
+  return '未知错误，请查看日志。';
+}
+
+// ─── 后端启动 ───
 async function startBackend(stderrCapture = null) {
   const exePath = getBackendExePath();
   console.log('[Backend] 启动路径:', exePath);
@@ -120,7 +204,6 @@ async function startBackend(stderrCapture = null) {
     return null;
   }
 
-  // 赋予执行权限（如果缺失）
   try {
     fs.accessSync(exePath, fs.constants.X_OK);
   } catch (_) {
@@ -152,7 +235,7 @@ async function startBackend(stderrCapture = null) {
 
   const env = {
     ...process.env,
-    DATABASE_URL: `sqlite:///${dbPath.replace(/\\/g, '/')}`,
+    DATABASE_URL: `sqlite:///${dbPath}`,
     HOST: '127.0.0.1',
     PORT: String(backendPort),
     LOG_FILE: path.join(logsDir, 'app.log'),
@@ -167,13 +250,11 @@ async function startBackend(stderrCapture = null) {
     ...getOrCreateSecrets(),
   };
 
-  // Linux 下设置 LD_LIBRARY_PATH（如果有 lib 目录）
   if (process.platform === 'linux') {
     const libDir = path.join(path.dirname(exePath), '..', 'lib');
     if (fs.existsSync(libDir)) {
       const existing = env.LD_LIBRARY_PATH || '';
       env.LD_LIBRARY_PATH = libDir + (existing ? ':' + existing : '');
-      console.log('[Backend] LD_LIBRARY_PATH:', env.LD_LIBRARY_PATH);
     }
   }
 
@@ -297,16 +378,34 @@ function waitForBackend(stderrCapture = []) {
   });
 }
 
-// ─── 窗口管理、托盘、备份等（与您原有的完全相同，但需更新图标路径） ───
-// 这里仅展示关键修改：createMainWindow 和 createTray 中调用 getIconPath()
+// ─── 窗口状态 ───
+function loadWindowState() {
+  try {
+    if (fs.existsSync(WINDOW_STATE_FILE)) {
+      return JSON.parse(fs.readFileSync(WINDOW_STATE_FILE, 'utf-8'));
+    }
+  } catch (e) {}
+  return null;
+}
+
+function saveWindowState() {
+  if (!mainWindow) return;
+  try {
+    const bounds = mainWindow.getBounds();
+    const isMaximized = mainWindow.isMaximized();
+    fs.writeFileSync(WINDOW_STATE_FILE, JSON.stringify({ bounds, isMaximized }), 'utf-8');
+  } catch (e) {}
+}
+
+// ─── 窗口管理 ───
 function createMainWindow() {
   const iconPath = getIconPath();
-  const savedState = loadWindowState();
-  const windowOptions = {
-    width: savedState?.bounds?.width || 1400,
-    height: savedState?.bounds?.height || 900,
-    x: savedState?.bounds?.x,
-    y: savedState?.bounds?.y,
+  const saved = loadWindowState();
+  const winOptions = {
+    width: saved?.bounds?.width || 1400,
+    height: saved?.bounds?.height || 900,
+    x: saved?.bounds?.x,
+    y: saved?.bounds?.y,
     minWidth: 1024,
     minHeight: 768,
     title: APP_TITLE,
@@ -320,8 +419,8 @@ function createMainWindow() {
     show: false,
     autoHideMenuBar: true,
   };
-  mainWindow = new BrowserWindow(windowOptions);
-  if (savedState?.isMaximized) mainWindow.maximize();
+  mainWindow = new BrowserWindow(winOptions);
+  if (saved?.isMaximized) mainWindow.maximize();
   const url = `http://127.0.0.1:${backendPort}`;
   mainWindow.loadURL(url).catch((err) => {
     const msg = `加载页面失败: ${url}\n${err?.message || err}`;
@@ -348,6 +447,13 @@ function createMainWindow() {
   });
 }
 
+async function restartBackend() {
+  await stopBackend();
+  const stderr = [];
+  backendProcess = await startBackend(stderr);
+}
+
+// ─── 系统托盘 ───
 function createTray() {
   const iconPath = getIconPath();
   if (!fs.existsSync(iconPath)) return;
@@ -365,9 +471,124 @@ function createTray() {
   tray.on('double-click', () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } });
 }
 
-// ─── 其他函数（loadWindowState, saveWindowState, restartBackend, showTrayNotification 等）请保留原有实现 ───
+function showTrayNotification(title, body) {
+  try {
+    const { Notification } = require('electron');
+    if (Notification.isSupported()) {
+      new Notification({ title: `${APP_TITLE} - ${title}`, body }).show();
+    }
+  } catch (_) {}
+}
 
-// ─── 应用生命周期（与您原有的相同，但需确保调用 createTray 等） ───
+// ─── 自动备份 ───
+function startAutoBackup() {
+  setTimeout(() => {
+    performAutoBackup();
+    setInterval(performAutoBackup, AUTO_BACKUP_INTERVAL);
+  }, 5 * 60 * 1000);
+  console.log('[AutoBackup] 已调度');
+}
+
+function performAutoBackup() {
+  const req = http.request({
+    hostname: '127.0.0.1',
+    port: backendPort,
+    path: '/api/v1/system/backup',
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Internal-Backup': INTERNAL_BACKUP_KEY },
+    timeout: 30000,
+  }, (res) => {
+    let body = '';
+    res.on('data', (chunk) => { body += chunk; });
+    res.on('end', () => {
+      if (res.statusCode === 200 || res.statusCode === 201) {
+        console.log('[AutoBackup] 成功');
+        showTrayNotification('备份完成', '自动备份成功');
+        cleanupOldBackups();
+      } else console.warn(`[AutoBackup] 状态码 ${res.statusCode}`);
+    });
+  });
+  req.on('error', (err) => { console.warn('[AutoBackup] 请求失败:', err.message); });
+  req.write(JSON.stringify({ description: '自动定时备份' }));
+  req.end();
+}
+
+function cleanupOldBackups() {
+  const req = http.get(`http://127.0.0.1:${backendPort}/api/v1/system/backup`, (res) => {
+    let body = '';
+    res.on('data', (chunk) => { body += chunk; });
+    res.on('end', () => {
+      try {
+        const backups = JSON.parse(body);
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        for (const backup of backups) {
+          const createdAt = new Date(backup.created_at).getTime();
+          if (createdAt < sevenDaysAgo && backup.filename.startsWith('backup_')) {
+            const delReq = http.request({
+              hostname: '127.0.0.1',
+              port: backendPort,
+              path: `/api/v1/system/backup/${backup.filename}`,
+              method: 'DELETE',
+              timeout: 10000,
+            }, (res) => { if (res.statusCode >= 400) console.warn(`删除 ${backup.filename} 失败`); });
+            delReq.on('error', (err) => { console.warn(`删除 ${backup.filename} 错误:`, err.message); });
+            delReq.end();
+            console.log(`[AutoBackup] 删除旧备份: ${backup.filename}`);
+          }
+        }
+      } catch (e) { console.warn('[AutoBackup] 清理失败:', e.message); }
+    });
+  });
+  req.on('error', (err) => { console.warn('[AutoBackup] 获取列表失败:', err.message); });
+}
+
+// ─── VC++ 检查（Windows，但保留定义） ───
+function checkVCRuntime() { return true; }
+async function tryInstallVCRuntime() { return false; }
+
+// ─── IPC 处理器 ───
+function setupIpcHandlers() {
+  ipcMain.handle('get-app-version', () => appVersion);
+  ipcMain.handle('get-platform', () => process.platform);
+  ipcMain.handle('get-user-data-path', () => getUserDataPath());
+  ipcMain.on('window-minimize', () => { if (mainWindow) mainWindow.minimize(); });
+  ipcMain.on('window-maximize', () => { if (mainWindow) { mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize(); } });
+  ipcMain.on('window-close', () => { if (mainWindow) mainWindow.close(); });
+  ipcMain.handle('show-save-dialog', async (_, opts) => {
+    if (!mainWindow) return { canceled: true };
+    return dialog.showSaveDialog(mainWindow, opts || { title: '保存文件', filters: [{ name: '所有文件', extensions: ['*'] }] });
+  });
+  ipcMain.handle('show-open-dialog', async (_, opts) => {
+    if (!mainWindow) return { canceled: true };
+    return dialog.showOpenDialog(mainWindow, opts || { title: '选择文件', properties: ['openFile'] });
+  });
+  ipcMain.handle('send-notification', (_, title, body) => { showTrayNotification(title, body); });
+  ipcMain.handle('open-path', async (_, p) => { shell.openPath(p); });
+  // worker-pool 如果不存在，可忽略或提供占位
+  try {
+    const { workerPool } = require('./worker-pool');
+    ipcMain.handle('worker-exec', async (_, task, payload, timeout) => {
+      try { const result = await workerPool.exec(task, payload, timeout); return { success: true, data: result }; }
+      catch (err) { return { success: false, error: err.message }; }
+    });
+    ipcMain.handle('worker-stats', () => workerPool.stats);
+  } catch (_) {}
+  ipcMain.handle('read-file-chunked', async (_, filePath, chunkSize) => {
+    return new Promise((resolve) => {
+      const chunks = [];
+      const stream = fs.createReadStream(filePath, { highWaterMark: chunkSize || 256 * 1024, encoding: 'base64' });
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('end', () => resolve({ data: chunks.join('') }));
+      stream.on('error', () => resolve({ error: 'read-failed' }));
+    });
+  });
+  ipcMain.on('window-force-redraw', () => {
+    if (mainWindow) { mainWindow.webContents.invalidate(); mainWindow.focus(); mainWindow.webContents.focus(); }
+  });
+  console.log('[IPC] 注册完成');
+}
+
+// ─── 应用生命周期 ───
 app.whenReady().then(async () => {
   console.log('[App] 启动...');
   setupIpcHandlers();
@@ -446,8 +667,5 @@ if (!gotLock) { app.quit(); } else {
     if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show(); mainWindow.focus(); }
   });
 }
-
-// ─── IPC 处理器、自动备份（与原有相同，此处省略） ───
-// 请确保 setupIpcHandlers、startAutoBackup、performAutoBackup、cleanupOldBackups 等函数已存在。
 
 console.log('[Main] 主进程加载完成');
