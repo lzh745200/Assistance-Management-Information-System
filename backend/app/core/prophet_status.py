@@ -10,7 +10,7 @@ PROPHET_AVAILABLE = False
 
 if not FORCE_DISABLE:
     try:
-        from prophet import Prophet  # 尝试导入
+        from prophet import Prophet  # noqa: F401  尝试导入
         PROPHET_AVAILABLE = True
         logger.info("Prophet 已成功加载，AI预测功能可用")
     except ImportError as e:
@@ -19,6 +19,7 @@ if not FORCE_DISABLE:
         logger.error(f"Prophet 初始化异常: {e}")
 else:
     logger.info("根据环境变量 PROPHET_UNAVAILABLE，强制禁用 Prophet")
+
 
 def is_prophet_available() -> bool:
     """外部调用检查 Prophet 是否可用"""

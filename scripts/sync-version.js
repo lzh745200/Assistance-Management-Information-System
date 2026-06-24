@@ -124,6 +124,7 @@ const TARGETS = [
   {
     name: "Dockerfile.runtime (LABEL version)",
     file: "Dockerfile.runtime",
+    optional: true,
     describe(c) {
       const m = c.match(/image\.version="([^"]+)"/);
       return m ? m[1] : null;

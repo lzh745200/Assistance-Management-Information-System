@@ -32,7 +32,7 @@ if ($buildKit) {
 
 # 3. 设置构建参数
 $PACKAGE_NAME = "military-rural-revitalization-system"
-$PACKAGE_VERSION = "1.4.1"
+$PACKAGE_VERSION = "1.2.0"
 $PACKAGE_ARCH = "arm64"
 $OUTPUT_DIR = "./build"
 
