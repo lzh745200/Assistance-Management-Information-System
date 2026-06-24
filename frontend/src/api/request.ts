@@ -236,8 +236,19 @@ request.interceptors.response.use(
         ElMessage.warning(data?.detail || data?.message || `请求的资源不存在: ${url}`)
       } else if (status >= 500) {
         ElMessage.error('服务器错误，请稍后重试')
+      } else if (status === 422) {
+        // 422 验证错误：提取第一个字段错误展示
+        const detail: any = data?.detail
+        if (Array.isArray(detail) && detail.length > 0) {
+          const first = detail[0]
+          ElMessage.warning(`${first.loc?.join('.') || ''}: ${first.msg || first.message}`)
+        } else {
+          ElMessage.warning(typeof detail === 'string' ? detail : '输入数据校验失败')
+        }
       } else {
-        console.error('[API] Request failed:', status, data?.detail || data?.message || '')
+        // 400 等客户端错误：显示服务端返回的详情
+        const msg = data?.detail || data?.message || ''
+        if (msg) ElMessage.warning(typeof msg === 'string' ? msg : JSON.stringify(msg))
       }
     } else if (error.code === 'ERR_NETWORK' || error.message?.includes('NetworkError')) {
       // 离线回退：检查是否处于离线模式，尝试从离线 Mock 提供数据

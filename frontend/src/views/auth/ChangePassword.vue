@@ -336,10 +336,18 @@ const handleChangePassword = async () => {
     setTimeout(() => {
       window.location.href = '/login'
     }, 100)
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'Cancel') {
-      const errorMessage = error.message || '密码修改失败，请重试'
-      ElMessage.error(errorMessage)
+  } catch (error: any) {
+    if (error?.name === 'Cancel') return
+    // 提取服务端真实错误（400/422 由拦截器自动展示，此处兜底网络/超时错误）
+    const serverMsg =
+      error?.response?.data?.detail ||
+      error?.response?.data?.message
+    if (serverMsg) {
+      ElMessage.error(typeof serverMsg === 'string' ? serverMsg : '密码修改失败')
+    } else if (!error?.response) {
+      // 无 response = 网络级错误，拦截器已处理，不额外弹窗
+    } else {
+      ElMessage.error('密码修改失败，请重试')
     }
   } finally {
     loading.value = false

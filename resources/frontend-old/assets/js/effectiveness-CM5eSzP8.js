@@ -1,0 +1,1 @@
+import{r as e}from"./index-DBwZXyA2.js";const r="/effectiveness";function a(a){return e.post(`${r}/evaluate`,a)}function t(a,t,n){return e.get(`${r}/compare/${a}`,{params:{year1:t,year2:n}})}function n(a,t){return e.get(`${r}/rankings`,{params:{year:a,limit:t??20}})}export{t as c,a as e,n as g};
