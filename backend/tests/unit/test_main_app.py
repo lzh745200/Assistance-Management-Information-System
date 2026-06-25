@@ -1031,18 +1031,9 @@ class TestDbMaintenance:
 
 class TestCsrfMiddlewareEnabled:
     def test_csrf_middleware_added_when_enabled(self):
-        import importlib
-        from app.core import config
-        original_setting = config.settings.CSRF_ENABLED
-        config.settings.CSRF_ENABLED = True
-        try:
-            import app.main as m
-            importlib.reload(m)
-            mids = [x.cls.__name__ for x in m.app.user_middleware]
-            assert "CSRFMiddleware" in mids
-        finally:
-            config.settings.CSRF_ENABLED = original_setting
-            importlib.reload(m)
+        from app.main import app
+        mids = [x.cls.__name__ for x in app.user_middleware]
+        assert "CSRFMiddleware" in mids
 
 
 class TestFrontendStaticNotFound:

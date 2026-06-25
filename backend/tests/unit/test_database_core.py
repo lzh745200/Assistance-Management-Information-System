@@ -386,5 +386,5 @@ class TestModuleAliases:
         assert engine is not None
 
     def test_session_local_bound_to_engine(self):
-        from app.core.database import SessionLocal
-        assert SessionLocal.kw["bind"] is engine
+        from app.core.database import SessionLocal as SL
+        assert SL.kw["bind"] is database.engine

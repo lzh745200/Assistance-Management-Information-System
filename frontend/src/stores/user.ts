@@ -101,7 +101,11 @@ export const useUserStore = defineStore('user', () => {
   async function changePassword(oldPassword: string, newPassword: string) {
     // 确保 currentUser 已加载（Profile 页面不可见时可能为 null）
     if (!currentUser.value?.id) {
-      try { await getUserProfile() } catch { /* 预加载失败不影响后续流程 */ }
+      try {
+        await getUserProfile()
+      } catch {
+        /* 预加载失败不影响后续流程 */
+      }
     }
     if (!currentUser.value?.id) throw new Error('无法获取用户信息，请重新登录')
     return put(`/users/${currentUser.value.id}/password`, {

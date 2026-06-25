@@ -135,7 +135,7 @@ class Settings(BaseSettings):
 
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: str = "GET,POST,PUT,DELETE,OPTIONS,PATCH"
-    CORS_ALLOW_HEADERS: str = "Content-Type,Authorization,X-Requested-With"
+    CORS_ALLOW_HEADERS: str = "Content-Type,Authorization,X-Requested-With,X-CSRF-Token"
 
     # CSRF配置
     # 启用后，所有状态变更请求（POST/PUT/DELETE/PATCH）需要携带有效的 CSRF token

@@ -254,9 +254,9 @@ const validatePassword = (value: string) => {
   passwordStrengthData.hasNumber = /\d/.test(value)
   passwordStrengthData.hasSpecial = /[!@#$%^&*]/.test(value)
 
-  // 计算符合规则的数量
+  // 计算符合规则的数量（与后端 PasswordPolicy 一致：长度≥12）
   const validCount = [
-    passwordStrengthData.length >= 8,
+    passwordStrengthData.length >= 12,
     passwordStrengthData.hasUppercase,
     passwordStrengthData.hasLowercase,
     passwordStrengthData.hasNumber,
@@ -339,16 +339,11 @@ const handleChangePassword = async () => {
     }, 100)
   } catch (error: any) {
     if (error?.name === 'Cancel') return
-    // 提取服务端真实错误（400/422 由拦截器自动展示，此处兜底网络/超时错误）
-    const serverMsg =
-      error?.response?.data?.detail ||
-      error?.response?.data?.message
+    const serverMsg = error?.response?.data?.detail || error?.response?.data?.message || error?.message
     if (serverMsg) {
       ElMessage.error(typeof serverMsg === 'string' ? serverMsg : '密码修改失败')
-    } else if (!error?.response) {
-      // 无 response = 网络级错误，拦截器已处理，不额外弹窗
     } else {
-      ElMessage.error('密码修改失败，请重试')
+      ElMessage.error('密码修改失败，请检查网络连接或联系管理员')
     }
   } finally {
     loading.value = false

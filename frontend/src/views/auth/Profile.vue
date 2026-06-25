@@ -539,7 +539,7 @@ const handleAvatarChange = async (file: { raw?: File }) => {
 
 // 跳转到修改密码页面
 const navigateToChangePassword = () => {
-  pushSafe('/settings/change-password')
+  pushSafe('/change-password')
 }
 
 // 绑定MFA — 跳转到双因素认证设置页
