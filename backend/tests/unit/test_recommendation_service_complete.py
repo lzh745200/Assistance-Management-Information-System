@@ -195,6 +195,10 @@ class TestRecommendFundAllocationComplete:
         """创建模拟的模型类"""
         import sys
 
+        # 保存原始模块引用，以便恢复而非删除，避免污染 sys.modules 缓存
+        self._orig_annual_population = sys.modules.get('app.models.annual_population')
+        self._orig_annual_income = sys.modules.get('app.models.annual_income')
+
         mock_annual_pop = MagicMock()
         mock_annual_pop_class = MagicMock()
         mock_annual_pop_class.village_id = MagicMock()
@@ -212,9 +216,20 @@ class TestRecommendFundAllocationComplete:
 
         return mock_annual_pop_class, mock_annual_inc_class
 
+    def _restore_modules(self):
+        """恢复原始模块，避免污染其他测试的 sys.modules 缓存"""
+        import sys
+        for mod_key, orig_val in [
+            ('app.models.annual_population', getattr(self, '_orig_annual_population', None)),
+            ('app.models.annual_income', getattr(self, '_orig_annual_income', None)),
+        ]:
+            if orig_val is not None:
+                sys.modules[mod_key] = orig_val
+            elif mod_key in sys.modules:
+                del sys.modules[mod_key]
+
     def test_recommend_fund_allocation_success_path(self):
         """测试资金分配成功路径 - 覆盖157-242行"""
-        import sys
         from app.services.ai.recommendation_service import RecommendationService
 
         # 使用普通对象代替MagicMock来避免比较问题
@@ -270,16 +285,13 @@ class TestRecommendFundAllocationComplete:
         try:
             result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1], user=_admin)
         finally:
-            for mod in ['app.models.annual_population', 'app.models.annual_income']:
-                if mod in sys.modules:
-                    del sys.modules[mod]
+            self._restore_modules()
 
         assert result["total_budget"] == 1000000
         assert result["method"] == "weighted_by_need"
 
     def test_recommend_fund_allocation_no_population_data(self):
         """测试资金分配 - 无人口数据（覆盖207-213行）"""
-        import sys
         from app.services.ai.recommendation_service import RecommendationService
 
         class MockVillage:
@@ -320,16 +332,13 @@ class TestRecommendFundAllocationComplete:
         try:
             result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1], user=_admin)
         finally:
-            for mod in ['app.models.annual_population', 'app.models.annual_income']:
-                if mod in sys.modules:
-                    del sys.modules[mod]
+            self._restore_modules()
 
         assert result["total_budget"] == 1000000
         # 验证allocations中有数据（无人口数据时population_score为0）
 
     def test_recommend_fund_allocation_no_income_data(self):
         """测试资金分配 - 无收入数据（覆盖214行）"""
-        import sys
         from app.services.ai.recommendation_service import RecommendationService
 
         mock_village = MagicMock()
@@ -367,15 +376,12 @@ class TestRecommendFundAllocationComplete:
         try:
             result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1], user=_admin)
         finally:
-            for mod in ['app.models.annual_population', 'app.models.annual_income']:
-                if mod in sys.modules:
-                    del sys.modules[mod]
+            self._restore_modules()
 
         assert result["total_budget"] == 1000000
 
     def test_recommend_fund_allocation_calculation(self):
         """测试资金分配计算逻辑（覆盖216-237行）"""
-        import sys
         from app.services.ai.recommendation_service import RecommendationService
 
         class MockVillage1:
@@ -436,9 +442,7 @@ class TestRecommendFundAllocationComplete:
         try:
             result = RecommendationService.recommend_fund_allocation(mock_db, 1000000, [1, 2], user=_admin)
         finally:
-            for mod in ['app.models.annual_population', 'app.models.annual_income']:
-                if mod in sys.modules:
-                    del sys.modules[mod]
+            self._restore_modules()
 
         assert len(result["allocations"]) == 2
         # 验证按推荐金额排序

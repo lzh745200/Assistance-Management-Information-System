@@ -13,6 +13,7 @@ class AnnualIncome(BaseModel):
         UniqueConstraint("supported_village_id", "year", name="uq_annual_income_year"),
         Index("ix_annual_income_village_id", "supported_village_id"),
         Index("ix_annual_income_village_year", "supported_village_id", "year"),
+        {"extend_existing": True},
     )
 
     supported_village_id = Column(

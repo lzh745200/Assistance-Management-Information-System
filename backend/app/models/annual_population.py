@@ -13,6 +13,7 @@ class AnnualPopulation(BaseModel):
         UniqueConstraint("supported_village_id", "year", name="uq_annual_population_year"),
         Index("ix_annual_population_village_id", "supported_village_id"),
         Index("ix_annual_pop_village_year", "supported_village_id", "year"),
+        {"extend_existing": True},
     )
 
     supported_village_id = Column(

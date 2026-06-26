@@ -1031,8 +1031,14 @@ class TestDbMaintenance:
 
 class TestCsrfMiddlewareEnabled:
     def test_csrf_middleware_added_when_enabled(self):
-        from app.main import app
-        mids = [x.cls.__name__ for x in app.user_middleware]
+        import sys
+        import importlib
+        from app.core.config import settings
+        settings.CSRF_ENABLED = True
+        if "app.main" in sys.modules:
+            del sys.modules["app.main"]
+        mod = importlib.import_module("app.main")
+        mids = [x.cls.__name__ for x in mod.app.user_middleware]
         assert "CSRFMiddleware" in mids
 
 

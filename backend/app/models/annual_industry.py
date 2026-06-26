@@ -12,6 +12,7 @@ class AnnualIndustry(BaseModel):
     __table_args__ = (
         UniqueConstraint("supported_village_id", "year", name="uq_annual_industry_year"),
         Index("ix_annual_industry_village_id", "supported_village_id"),
+        {"extend_existing": True},
     )
 
     supported_village_id = Column(

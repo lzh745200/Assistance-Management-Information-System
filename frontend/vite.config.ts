@@ -307,10 +307,6 @@ export default defineConfig(({ mode }) => {
               return 'lodash'
             }
             
-            // 进度条
-            if (id.includes('node_modules/nprogress')) {
-              return 'nprogress'
-            }
             
             // 安全相关
             if (id.includes('node_modules/dompurify')) {
@@ -333,7 +329,7 @@ export default defineConfig(({ mode }) => {
             }
             // 第三方库
             if (['vue-core', 'vue-router', 'pinia', 'axios', 'dayjs', 'lodash', 
-                 'el-', 'echarts', 'vendor', 'nprogress', 'security'].some(
+                 'el-', 'echarts', 'vendor', 'security'].some(
                    prefix => name.startsWith(prefix) || name.includes(prefix)
                  )) {
               return 'assets/js/vendor/[name]-[hash].js'
@@ -387,7 +383,6 @@ export default defineConfig(({ mode }) => {
         'axios',
         'dayjs',
         'lodash-es',
-        'nprogress'
       ],
       // 排除不需要预构建的依赖
       exclude: [

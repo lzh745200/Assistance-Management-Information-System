@@ -20,6 +20,7 @@ class AnnualInfrastructure(BaseModel):
     __table_args__ = (
         UniqueConstraint("supported_village_id", "year", name="uq_annual_infrastructure_year"),
         Index("ix_annual_infrastructure_village_id", "supported_village_id"),
+        {"extend_existing": True},
     )
 
     supported_village_id = Column(

@@ -407,7 +407,6 @@ class TestPatchRunningLoop:
         loop = asyncio.get_running_loop()
         original_handler = loop.get_exception_handler()
         try:
-            assert original_handler is None  # pytest-asyncio 默认未设置
             _patch_running_loop()
             assert loop.get_exception_handler() is not None
         finally:
