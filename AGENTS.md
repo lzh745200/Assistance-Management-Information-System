@@ -137,6 +137,14 @@ Passlib + bcrypt 5.x incompatibility fixed in `app/core/security.py`. Verify `ve
 
 After `npm run build`, run `scripts/build/sync-frontend-dist.sh` to sync. Browser cache may need clearing.
 
+### ARM64 Build: Never Use --no-cache
+
+`build-arm64.yml` uses Docker buildx with QEMU (ARM64 emulation on x86 CI runners). Docker layer caching is the only reason builds finish in ~30min instead of hours. Never add `--no-cache` to the `docker buildx build` command.
+
+### Dockerfile Output Truncation (Intentional)
+
+`Dockerfile.kylin-standalone` pipes RUN commands through `tail -N` (npm ci: `-5`, build: `-10`, pip: `-10`, pyinstaller: `-20`) to keep CI logs manageable. Downstream `test -f`/`test -d` commands in the same stage still catch failures. Don't remove `tail` pipes.
+
 ## Security Checklist (Military Audit Required)
 
 Every new feature must verify:
@@ -158,3 +166,4 @@ Every new feature must verify:
 |贵州 region data | `frontend/src/data/guizhouRegion.ts` |
 | Electron main | `electron/main.js` |
 | CI pipeline | `.github/workflows/ci-cd.yml` |
+| ARM64 build | `.github/workflows/build-arm64.yml` + `docker/Dockerfile.kylin-standalone` |
