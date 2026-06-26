@@ -334,8 +334,11 @@ class OrganizationService:
         if not org:
             raise OrganizationNotFoundError(org_id)
 
-        # 检查是否有下级单位
-        subordinate_count = self.db.query(Organization).filter(Organization.parent_id == org_id).count()
+        # 检查是否有激活的下级单位（软删除的不阻止删除）
+        subordinate_count = self.db.query(Organization).filter(
+            Organization.parent_id == org_id,
+            Organization.is_active == True
+        ).count()
 
         if subordinate_count > 0:
             raise OrganizationHasSubordinatesError(org_id, subordinate_count)

@@ -408,6 +408,10 @@ async def update_organization(
 
     update_data = data.model_dump(exclude_unset=True)
 
+    # 安全检查：禁止将 parent_id 设为自身（防止循环引用）
+    if "parent_id" in update_data and update_data["parent_id"] == org_id:
+        raise HTTPException(status_code=400, detail="不能将组织自身设为上级组织")
+
     # 转换枚举类型
     if "org_type" in update_data and update_data["org_type"]:
         update_data["org_type"] = OrganizationType(update_data["org_type"])
@@ -457,8 +461,11 @@ async def delete_organization(
 
     logger.info(f"找到组织: id={org.id}, name={org.name}")
 
-    # 检查是否有子组织（检查所有子组织，不论是否激活）
-    children = db.query(Organization).filter(Organization.parent_id == org_id).count()
+    # 检查是否有激活的子组织（软删除的子组织不阻止父级删除）
+    children = db.query(Organization).filter(
+        Organization.parent_id == org_id,
+        Organization.is_active == True
+    ).count()
     if children > 0:
         logger.warning(f"组织有子组织: org_id={org_id}, children_count={children}")
         raise HTTPException(status_code=400, detail="该组织下有子组织，请先删除子组织")
