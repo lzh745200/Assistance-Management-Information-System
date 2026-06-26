@@ -29,7 +29,7 @@ RUN test -f frontend/dist/index.html || (echo "ERROR: 前端构建失败，index
 
 
 # ── Stage 2: 构建后端 (PyInstaller ARM64) ──
-FROM --platform=linux/arm64 python:3.11-slim-bookworm AS backend-builder
+FROM --platform=linux/arm64 python:3.9-slim-buster AS backend-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
@@ -76,7 +76,7 @@ RUN test -d dist/assistance-management-backend || (echo "ERROR: PyInstaller 打�
 
 
 # ── Stage 3: 组装 DEB 包 ──
-FROM --platform=linux/arm64 debian:bookworm-slim AS deb-package
+FROM --platform=linux/arm64 debian:buster-slim AS deb-package
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -111,7 +111,7 @@ COPY --from=backend-builder /build/dist/assistance-management-backend/ ./opt/ass
 # 复制部署配置
 COPY deploy/kylin/config/kylin.env ./opt/assistance-management-system/config/
 COPY deploy/kylin/scripts/start-kylin.sh ./opt/assistance-management-system/scripts/
-COPY deploy/kylin/systemd/assistance-management.service ./opt/assistance-management-system/systemd/
+COPY deploy/kylin/systemd/assistance-management-system.service ./opt/assistance-management-system/systemd/
 COPY deploy/kylin/desktop/assistance-management-system.desktop ./opt/assistance-management-system/desktop/
 
 # 复制 DEBIAN 控制脚本
@@ -132,7 +132,7 @@ RUN echo "Package: assistance-management-system" > DEBIAN/control && \
     echo "Section: admin" >> DEBIAN/control && \
     echo "Priority: optional" >> DEBIAN/control && \
     echo "Installed-Size: $(du -sk opt/ | cut -f1)" >> DEBIAN/control && \
-    echo "Depends: libmagic1 (>= 1:5.35), libsqlite3-0 (>= 3.34), ca-certificates, curl" >> DEBIAN/control && \
+    echo "Depends: libmagic1, libsqlite3-0, ca-certificates, curl" >> DEBIAN/control && \
     echo "Recommends: firefox-esr | chromium | chromium-browser" >> DEBIAN/control && \
     echo "Description: 军队全面推进乡村振兴工作综合管理平台" >> DEBIAN/control && \
     echo " 完全单机版，适用于麒麟 V10 ARM64 系统。" >> DEBIAN/control && \

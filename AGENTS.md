@@ -17,7 +17,7 @@ cd backend
 python -m pytest tests/ -v --tb=short -q --timeout=60  # Run all tests (~2300)
 python -m pytest tests/unit/test_xxx.py -v              # Run single test file
 python -m flake8 app/ --max-line-length=120             # Lint (CI gate)
-python -m mypy app/ --ignore-missing-imports            # Type check (non-blocking)
+python -m mypy app/ --config-file=mypy.ini --ignore-missing-imports  # Type check (non-blocking)
 python -m bandit -r app/ -ll                            # Security scan
 ```
 

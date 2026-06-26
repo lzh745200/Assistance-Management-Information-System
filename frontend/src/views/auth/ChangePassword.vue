@@ -339,7 +339,8 @@ const handleChangePassword = async () => {
     }, 100)
   } catch (error: any) {
     if (error?.name === 'Cancel') return
-    const serverMsg = error?.response?.data?.detail || error?.response?.data?.message || error?.message
+    const serverMsg =
+      error?.response?.data?.detail || error?.response?.data?.message || error?.message
     if (serverMsg) {
       ElMessage.error(typeof serverMsg === 'string' ? serverMsg : '密码修改失败')
     } else {

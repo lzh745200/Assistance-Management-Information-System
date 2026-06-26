@@ -11,14 +11,17 @@
   "homepage": "https://bumofu.com",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
+    "build": "npm run build:backend:x64 && electron-builder",
+    "build:backend": "cd backend && python -m PyInstaller assistance-backend.spec --clean --noconfirm",
+    "build:backend:x64": "cd backend && C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python311\\python.exe -m PyInstaller assistance-backend.spec --clean --noconfirm",
+    "build:backend:x86": "cd backend && C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python311-32\\python.exe -m PyInstaller assistance-backend.spec --clean --noconfirm",
     "build:linux": "electron-builder --linux",
     "build:deb": "electron-builder --linux deb",
     "build:arm64": "electron-builder --linux deb --arm64",
-    "build:all": "electron-builder --win --mac --linux",
-    "build:win-x64": "electron-builder --win --x64",
-    "build:win-x86": "electron-builder --win --ia32",
-    "build:win-all": "electron-builder --win --x64 && electron-builder --win --ia32",
+    "build:all": "npm run build:backend:x64 && electron-builder",
+    "build:win-x64": "npm run build:backend:x64 && electron-builder --win --x64",
+    "build:win-x86": "npm run build:backend:x86 && electron-builder --win --ia32",
+    "build:win-all": "npm run build:backend:x64 && electron-builder --win --x64 && npm run build:backend:x86 && electron-builder --win --ia32",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win --mac --linux",
     "postinstall": "electron-builder install-app-deps"
@@ -78,7 +81,8 @@
       "shortcutName": "帮扶管理系统",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": false,
+      "warningsAsErrors": false
     },
     "mac": {
       "target": ["dmg"],
