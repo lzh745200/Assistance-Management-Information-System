@@ -314,7 +314,7 @@ async def delete_category(
 
     children = db.query(PolicyCategory).filter(
         PolicyCategory.parent_id == category_id,
-        PolicyCategory.is_active == True
+        PolicyCategory.is_active == True  # noqa: E712 — SQLAlchemy boolean filter
     ).count()
     if children > 0:
         raise HTTPException(status_code=400, detail="该分类下有子分类，无法删除")

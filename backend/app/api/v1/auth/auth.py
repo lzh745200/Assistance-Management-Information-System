@@ -515,6 +515,18 @@ async def get_csrf_token(request: Request, response: Response) -> dict:
     Returns:
         dict: 包含 CSRF token 的响应
     """
+    client_ip = get_client_ip(request)
+    is_allowed = await check_rate_limit(
+        key=f"csrf:{client_ip}",
+        limit=30,
+        window=60,
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="CSRF token 请求过于频繁，请稍后再试",
+        )
+
     from app.middleware.csrf_middleware import (
         CSRF_COOKIE_NAME,
         CSRF_TOKEN_EXPIRY,

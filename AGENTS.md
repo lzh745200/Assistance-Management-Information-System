@@ -145,6 +145,30 @@ After `npm run build`, run `scripts/build/sync-frontend-dist.sh` to sync. Browse
 
 `Dockerfile.kylin-standalone` pipes RUN commands through `tail -N` (npm ci: `-5`, build: `-10`, pip: `-10`, pyinstaller: `-20`) to keep CI logs manageable. Downstream `test -f`/`test -d` commands in the same stage still catch failures. Don't remove `tail` pipes.
 
+### Pre-commit Hooks: Dockerfile Check
+
+`.pre-commit-config.yaml` includes a `check-dockerfile-tail` hook that rejects Dockerfile RUN commands ending in `2>&1` without `| tail`. This prevents accidental removal of output truncation in ARM64 builds.
+
+## Rate Limiting
+
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| `/auth/login` | 5 | 60s |
+| `/auth/register` | 3 | 60s |
+| `/auth/refresh` | 10 | 60s |
+| `/auth/csrf-token` | 30 | 60s |
+
+Implementation: `app/core/security.py` → `check_rate_limit()` (sliding window, in-memory).
+CSRF token rate limiting added in `app/api/v1/auth/auth.py` line ~509.
+
+## CI Workflow Permissions
+
+| Workflow | Explicit permissions | Rationale |
+|----------|---------------------|-----------|
+| `pr-checks.yml` | `contents: read`, `pull-requests: read` | Read-only; no releases |
+| `build-arm64.yml` | `contents: write` | Needs write for `softprops/action-gh-release` |
+| `build-windows.yml` | `contents: write` | Needs write for `electron-builder` + gh-release |
+
 ## Security Checklist (Military Audit Required)
 
 Every new feature must verify:

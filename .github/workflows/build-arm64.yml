@@ -7,6 +7,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-kylin-deb:
     name: Build Kylin V10 ARM64 Standalone DEB

@@ -464,7 +464,7 @@ async def delete_organization(
     # 检查是否有激活的子组织（软删除的子组织不阻止父级删除）
     children = db.query(Organization).filter(
         Organization.parent_id == org_id,
-        Organization.is_active == True
+        Organization.is_active == True  # noqa: E712 — SQLAlchemy boolean filter
     ).count()
     if children > 0:
         logger.warning(f"组织有子组织: org_id={org_id}, children_count={children}")

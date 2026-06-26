@@ -337,7 +337,7 @@ class OrganizationService:
         # 检查是否有激活的下级单位（软删除的不阻止删除）
         subordinate_count = self.db.query(Organization).filter(
             Organization.parent_id == org_id,
-            Organization.is_active == True
+            Organization.is_active == True  # noqa: E712 — SQLAlchemy boolean filter
         ).count()
 
         if subordinate_count > 0:

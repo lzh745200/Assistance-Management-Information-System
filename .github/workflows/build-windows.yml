@@ -6,6 +6,9 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   NODE_VERSION: '22'
   PYTHON_VERSION: '3.11'

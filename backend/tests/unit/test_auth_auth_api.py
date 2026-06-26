@@ -635,6 +635,12 @@ class TestCsrfToken:
         assert data["data"]["csrf_token"] == "raw_csrf_token"
         assert data["data"]["csrf_signed_token"] == "signed_csrf_token"
 
+    @patch("app.api.v1.auth.auth.check_rate_limit", new_callable=AsyncMock)
+    def test_csrf_token_rate_limit(self, mock_rl, client):
+        mock_rl.return_value = False
+        response = client.get(f"{self.prefix}/csrf-token")
+        assert response.status_code == 429
+
 
 class TestRegister:
     prefix = "/api/v1/auth"
