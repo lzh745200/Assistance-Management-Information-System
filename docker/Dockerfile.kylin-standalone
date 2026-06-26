@@ -11,14 +11,14 @@
 # ============================================================
 
 # ── Stage 1: 构建前端 (Vue 3 + Vite) ──
-FROM --platform=linux/arm64 node:20-bookworm AS frontend-builder
+FROM --platform=linux/arm64 node:22-bookworm AS frontend-builder
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 WORKDIR /build
 
 # 先复制依赖文件（利用 Docker 层缓存）
 COPY frontend/package.json frontend/package-lock.json* ./frontend/
-RUN cd frontend && npm ci --registry=https://registry.npmmirror.com --legacy-peer-deps 2>&1 | tail -5
+RUN cd frontend && npm ci --legacy-peer-deps 2>&1 | tail -5
 
 # 复制前端源码并构建
 COPY frontend/ ./frontend/
@@ -29,7 +29,7 @@ RUN test -f frontend/dist/index.html || (echo "ERROR: 前端构建失败，index
 
 
 # ── Stage 2: 构建后端 (PyInstaller ARM64) ──
-FROM --platform=linux/arm64 python:3.9-slim-buster AS backend-builder
+FROM --platform=linux/arm64 python:3.11-slim-bookworm AS backend-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
@@ -76,7 +76,7 @@ RUN test -d dist/assistance-management-backend || (echo "ERROR: PyInstaller 打�
 
 
 # ── Stage 3: 组装 DEB 包 ──
-FROM --platform=linux/arm64 debian:buster-slim AS deb-package
+FROM --platform=linux/arm64 debian:bookworm-slim AS deb-package
 
 ENV DEBIAN_FRONTEND=noninteractive
 
