@@ -1,4 +1,4 @@
-name: Build Windows Installer (x64 & x86)
+name: Build Windows Installer (x64)
 
 on:
   push:
@@ -14,22 +14,12 @@ jobs:
   build-windows:
     runs-on: windows-2022
     timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            py-arch: x64
-            eb-arch: x64
-          - arch: x86
-            py-arch: x86
-            eb-arch: ia32
 
     steps:
       # 1. Checkout
       - uses: actions/checkout@v4
 
-      # 2. Node.js (electron-builder + 前端构建；缓存根 npm 缓存)
+      # 2. Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
@@ -37,13 +27,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      # 3. Python (使用 actions/setup-python 而非 Conda，因为 Conda win-32
-      #    已不再提供 Python 3.11；pip wheels 覆盖 x64 和 x86 两种架构)
+      # 3. Python x64（x86/32-bit 已放弃：上游科学计算包不再提供 win32 cp311 wheels）
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          architecture: ${{ matrix.py-arch }}
+          architecture: x64
 
       # 4. 前端依赖缓存 + 构建
       - name: Cache frontend dependencies
@@ -86,10 +75,9 @@ jobs:
         shell: bash
         run: |
           pip install --upgrade pip cython setuptools wheel
-          # 过滤 prophet 及其依赖（x86 无 wheel，需 cmdstan 编译；系统自动降级离线模式）
+          # prophet 依赖 cmdstan C++ 编译，单独处理（失败不阻断，系统自动降级离线模式）
           grep -vE '^(prophet|cmdstanpy|stanio|pytokens)=' backend/requirements.txt > req-core.txt
           pip install -r req-core.txt
-          # prophet 单独尝试安装，失败不阻断
           pip install prophet==1.3.0 2>/dev/null || echo "PROPHET_UNAVAILABLE=true" >> $GITHUB_ENV
           pip install -r backend/requirements-build.txt
 
@@ -112,9 +100,9 @@ jobs:
       - name: Install Electron deps
         run: npm ci
 
-      # 10. electron-builder 打包 (核心步骤)
+      # 10. electron-builder 打包
       - name: Build installer (electron-builder)
-        run: npx electron-builder --win --${{ matrix.eb-arch }}
+        run: npx electron-builder --win --x64
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -122,7 +110,7 @@ jobs:
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: windows-installer-${{ matrix.arch }}
+          name: windows-installer-x64
           path: dist/electron/*.exe
           retention-days: 30
 
