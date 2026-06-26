@@ -312,7 +312,10 @@ async def delete_category(
     if not category:
         raise HTTPException(status_code=404, detail="分类不存在")
 
-    children = db.query(PolicyCategory).filter(PolicyCategory.parent_id == category_id).count()
+    children = db.query(PolicyCategory).filter(
+        PolicyCategory.parent_id == category_id,
+        PolicyCategory.is_active == True
+    ).count()
     if children > 0:
         raise HTTPException(status_code=400, detail="该分类下有子分类，无法删除")
 
