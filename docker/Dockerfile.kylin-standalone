@@ -4,8 +4,9 @@
 # ============================================================
 # 构建方式:
 #   docker buildx build --platform linux/arm64 \
-#     --build-arg VERSION=1.1.0 \
-#     -t assistance-management-kylin:1.1.0 \
+#     --build-arg VERSION=1.2.0 \
+#     --target output \
+#     -t assistance-management-kylin:1.2.0 \
 #     -f docker/Dockerfile.kylin-standalone \
 #     --output type=local,dest=dist/deb/kylin .
 # ============================================================
@@ -85,7 +86,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fakeroot \
     && rm -rf /var/lib/apt/lists/*
 
-ARG VERSION=1.1.0
+ARG VERSION=1.2.0
 WORKDIR /package
 
 # 创建目录结构
@@ -143,3 +144,8 @@ RUN mkdir -p /output && \
     dpkg-deb --build --root-owner-group . /output/assistance-management-system_${VERSION}_arm64.deb && \
     echo "=== DEB 包构建完成 ===" && \
     ls -lh /output/*.deb
+
+
+# ── Stage 4: 输出层（仅导出 DEB 文件）──
+FROM scratch AS output
+COPY --from=deb-package /output/*.deb /output/

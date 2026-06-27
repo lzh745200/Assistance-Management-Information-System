@@ -479,7 +479,11 @@ class AnalyticsService:
             },
             "population": {"totalPopulation": 0, "totalHouseholds": 0, "povertyHouseholds": 0},
             "income": {"avgPerCapitaIncome": 0, "totalCollectiveIncome": 0},
-            "investment": {"industry": 0, "infrastructure": 0, "infrastructureRoadKm": 0, "education": 0, "educationAidedStudents": 0},
+            "investment": {
+                "industry": 0, "infrastructure": 0,
+                "infrastructureRoadKm": 0, "education": 0,
+                "educationAidedStudents": 0,
+            },
         }
 
     def get_summary_statistics(self, filters: Optional[Dict] = None, year: Optional[int] = None) -> Dict[str, Any]:

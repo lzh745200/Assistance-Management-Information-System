@@ -135,7 +135,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="地址" min-width="160" show-overflow-tooltip">
+        <el-table-column prop="address" label="地址" min-width="160" show-overflow-tooltip>
           <template #default="scope">
             {{ ds(scope.row.address, 'address') }}
           </template>

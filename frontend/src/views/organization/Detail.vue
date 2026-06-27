@@ -20,7 +20,9 @@
             {{ org.is_active ? '正常' : '停用' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="联系人">{{ ds(org.contact_person, 'name') || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="联系人">{{
+          ds(org.contact_person, 'name') || '无'
+        }}</el-descriptions-item>
         <el-descriptions-item label="联系电话">{{
           ds(org.contact_phone, 'phone') || '无'
         }}</el-descriptions-item>

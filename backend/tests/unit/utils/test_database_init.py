@@ -168,8 +168,9 @@ class TestResetDatabase:
 
 
 class TestGetDatabaseInfo:
+    @patch("app.utils.database_init.SessionLocal")
     @patch("app.utils.database_init.inspect")
-    def test_get_info(self, mock_inspect):
+    def test_get_info(self, mock_inspect, mock_session_local):
         mock_inspector = MagicMock()
         mock_inspector.get_table_names.return_value = ["users", "roles"]
         mock_inspector.get_columns.return_value = [
@@ -177,6 +178,11 @@ class TestGetDatabaseInfo:
             {"name": "name"},
         ]
         mock_inspect.return_value = mock_inspector
+
+        mock_db = MagicMock()
+        mock_db.query.return_value.count.return_value = 0
+        mock_session_local.return_value = mock_db
+
         get_database_info()
 
     @patch("app.utils.database_init.inspect")

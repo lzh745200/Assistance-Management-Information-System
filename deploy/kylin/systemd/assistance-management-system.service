@@ -6,8 +6,8 @@ Wants=network.target
 
 [Service]
 Type=simple
-User=assistance-management
-Group=assistance-management
+User=assistance-management-system
+Group=assistance-management-system
 WorkingDirectory=/opt/assistance-management-system
 
 # 环境变量

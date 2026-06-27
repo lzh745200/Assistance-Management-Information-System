@@ -408,6 +408,7 @@ class TestPolicyAPI:
              patch("app.core.config.settings") as mock_settings, \
              patch("builtins.open", create=True) as mock_open:
             mock_settings.UPLOAD_DIR = "/tmp"
+            mock_settings.CSRF_ENABLED = False
             mock_open.return_value.__enter__.return_value = MagicMock()
             resp = client.post(
                 "/api/v1/policies/1/upload",

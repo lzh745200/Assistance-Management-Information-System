@@ -80,7 +80,9 @@
             <el-descriptions-item label="联系电话">{{
               ds(school.contact_phone, 'phone')
             }}</el-descriptions-item>
-            <el-descriptions-item label="邮箱">{{ ds(school.email, 'email') }}</el-descriptions-item>
+            <el-descriptions-item label="邮箱">{{
+              ds(school.email, 'email')
+            }}</el-descriptions-item>
           </el-descriptions>
         </div>
       </div>

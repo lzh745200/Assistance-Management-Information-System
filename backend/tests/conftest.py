@@ -622,11 +622,21 @@ def mock_settings():
     os.environ["CSRF_ENABLED"] = "false"
     # 强制覆盖 settings 对象，防止模块已在 env 设置前实例化
     from app.core.config import settings
+    _saved = {
+        "SECRET_KEY": settings.SECRET_KEY,
+        "ENVIRONMENT": settings.ENVIRONMENT,
+        "DEBUG": settings.DEBUG,
+        "DATABASE_URL": settings.DATABASE_URL,
+        "CSRF_ENABLED": settings.CSRF_ENABLED,
+    }
     settings.SECRET_KEY = "test-secret-key-32-chars-long!!!!!"
     settings.ENVIRONMENT = "testing"
     settings.DEBUG = True
     settings.DATABASE_URL = "sqlite:///./test.db"
     settings.CSRF_ENABLED = False
     yield
+    # 恢复 settings 对象属性，防止状态泄漏到其他测试
+    for key, val in _saved.items():
+        setattr(settings, key, val)
     for key in ["SECRET_KEY", "ENVIRONMENT", "DEBUG", "DATABASE_URL", "CSRF_ENABLED"]:
         os.environ.pop(key, None)

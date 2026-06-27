@@ -64,19 +64,6 @@ if [ -f "${INSTALL_DIR}/backend/assistance-management-backend" ]; then
     chmod +x "${INSTALL_DIR}/backend/assistance-management-backend"
 fi
 
-# ── chrome-sandbox SUID 权限（Chromium 渲染进程沙箱必需）──
-# 军用安全基线：必须启用 Chromium 沙箱，禁止无条件 --no-sandbox。
-# chrome-sandbox 需要 root:root 属主 + 4755 权限位才能生效。
-CHROME_SANDBOX="${INSTALL_DIR}/chrome-sandbox"
-if [ -f "${CHROME_SANDBOX}" ]; then
-    chown root:root "${CHROME_SANDBOX}" 2>/dev/null || true
-    chmod 4755 "${CHROME_SANDBOX}" 2>/dev/null || true
-    echo "  chrome-sandbox SUID 已设置 (4755 root:root)"
-else
-    # electron-builder 较新版本可能将 sandbox 嵌入二进制，此处不报错
-    echo "  提示: 未找到 chrome-sandbox（可能已内嵌），跳过 SUID 设置"
-fi
-
 # 启动脚本权限
 if [ -f "${INSTALL_DIR}/scripts/start-kylin.sh" ]; then
     chmod 755 "${INSTALL_DIR}/scripts/start-kylin.sh"
@@ -84,8 +71,8 @@ fi
 
 # ── 4. 安装 systemd 服务 ──
 echo "[4/6] 配置系统服务..."
-if [ -f "${INSTALL_DIR}/systemd/assistance-management.service" ]; then
-    cp "${INSTALL_DIR}/systemd/assistance-management.service" /etc/systemd/system/${APP_NAME}.service
+if [ -f "${INSTALL_DIR}/systemd/${APP_NAME}.service" ]; then
+    cp "${INSTALL_DIR}/systemd/${APP_NAME}.service" /etc/systemd/system/${APP_NAME}.service
     systemctl daemon-reload
     systemctl enable ${APP_NAME}.service 2>/dev/null || true
     echo "  系统服务已安装并启用"

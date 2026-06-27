@@ -615,6 +615,7 @@ class TestProjectsAPI:
                 mock_settings.UPLOAD_DIR = tmpdir
                 mock_settings.allowed_file_types_list = ["pdf", "doc", "docx"]
                 mock_settings.MAX_FILE_SIZE = 50 * 1024 * 1024
+                mock_settings.CSRF_ENABLED = False
                 mock_open.return_value.__enter__.return_value = MagicMock()
                 resp = client.post(
                     "/api/v1/projects/1/files",
@@ -641,6 +642,7 @@ class TestProjectsAPI:
         with patch("app.api.v1.projects.os.path.splitext", return_value=("doc", ".exe")), \
              patch("app.core.config.settings") as mock_settings:
             mock_settings.allowed_file_types_list = ["pdf", "doc"]
+            mock_settings.CSRF_ENABLED = False
             resp = client.post(
                 "/api/v1/projects/1/files",
                 data={"category": "research"},

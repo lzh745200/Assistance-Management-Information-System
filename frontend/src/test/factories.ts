@@ -4,8 +4,12 @@
  */
 
 let _idCounter = 1
-export function resetIdCounter() { _idCounter = 1 }
-export function nextId() { return _idCounter++ }
+export function resetIdCounter() {
+  _idCounter = 1
+}
+export function nextId() {
+  return _idCounter++
+}
 
 export function buildUser(overrides: Record<string, any> = {}) {
   const id = nextId()
@@ -111,7 +115,11 @@ export function buildWorkLog(overrides: Record<string, any> = {}) {
   }
 }
 
-export function buildListResponse(items: any[], total?: number, overrides: Record<string, any> = {}) {
+export function buildListResponse(
+  items: any[],
+  total?: number,
+  overrides: Record<string, any> = {}
+) {
   return {
     code: 200,
     message: '成功',

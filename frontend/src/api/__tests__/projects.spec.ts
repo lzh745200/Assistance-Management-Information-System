@@ -23,7 +23,9 @@ const mockPut = api.put as ReturnType<typeof vi.fn>
 const mockDelete = api.delete as ReturnType<typeof vi.fn>
 
 describe('projectsApi', () => {
-  beforeEach(() => { vi.clearAllMocks() })
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('list calls GET /projects', async () => {
     mockGet.mockResolvedValueOnce({ data: { items: [] } })
