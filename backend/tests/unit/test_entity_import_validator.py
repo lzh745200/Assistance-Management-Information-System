@@ -2,8 +2,6 @@
 通用实体导入验证器测试
 覆盖 projects、funds、schools 导入验证逻辑
 """
-import pytest
-from datetime import datetime
 
 from app.services.entity_import_validator import (
     EntityImportValidator,

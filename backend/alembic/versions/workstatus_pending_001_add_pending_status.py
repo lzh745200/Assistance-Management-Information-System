@@ -6,8 +6,6 @@ Create Date: 2026-03-14 14:00:00.000000
 
 添加 'pending' 到 WorkStatus 枚举
 """
-from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.

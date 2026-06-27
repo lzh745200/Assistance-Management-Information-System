@@ -8,7 +8,7 @@ import pytest
 
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 # ============================================================
 # 修复2: 日期时间验证 (rural_work schema)
@@ -295,4 +295,3 @@ class TestVersionConsistency:
                         break
 
         assert settings.PROJECT_VERSION == expected_version
-

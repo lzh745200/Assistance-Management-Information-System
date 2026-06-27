@@ -39,6 +39,71 @@ class MachineCodeService:
     _cached_machine_code: Optional[str] = None
 
     @staticmethod
+    def _collect_wmic_info() -> list:
+        if platform.system() != "Windows":
+            return []
+
+        wmic_queries = [
+            (["wmic", "cpu", "get", "ProcessorId"], None),
+            (["wmic", "baseboard", "get", "SerialNumber"], "To be filled by O.E.M."),
+            (["wmic", "diskdrive", "get", "SerialNumber"], None),
+        ]
+        procs = []
+        for cmd, _ in wmic_queries:
+            try:
+                procs.append(
+                    (
+                        subprocess.Popen(
+                            cmd,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL,
+                            text=True,
+                            encoding="utf-8",
+                            errors="ignore",
+                            creationflags=0x08000000,
+                        ),
+                        _,
+                    )
+                )
+            except Exception:
+                procs.append((None, _))
+
+        info = []
+        for proc, skip_val in procs:
+            if proc is None:
+                continue
+            try:
+                stdout, _ = proc.communicate(timeout=2)
+                val = stdout.strip().split("\n")[-1].strip()
+                if val and val != skip_val:
+                    info.append(val)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    logger.debug("终止机器信息采集进程失败")
+        return info
+
+    @staticmethod
+    def _get_mac_address() -> Optional[str]:
+        try:
+            return ":".join(
+                ["{:02x}".format((uuid.getnode() >> elements) & 0xFF) for elements in range(0, 2 * 6, 2)][::-1]
+            )
+        except Exception:
+            logger.debug("获取 MAC 地址失败")
+            return None
+
+    @staticmethod
+    def _get_computer_name() -> Optional[str]:
+        try:
+            name = platform.node()
+            return name if name else None
+        except Exception:
+            logger.debug("获取计算机名失败")
+            return None
+
+    @staticmethod
     def get_machine_code() -> str:
         """
         获取当前机器的唯一标识码
@@ -52,75 +117,22 @@ class MachineCodeService:
         if MachineCodeService._cached_machine_code is not None:
             return MachineCodeService._cached_machine_code
 
-        # 收集机器信息
         machine_info = []
+        machine_info.extend(MachineCodeService._collect_wmic_info())
 
-        # 1-3. Windows 硬件信息（并发获取，单次超时 2s）
-        if platform.system() == "Windows":
-            wmic_queries = [
-                (["wmic", "cpu", "get", "ProcessorId"], None),
-                (["wmic", "baseboard", "get", "SerialNumber"], "To be filled by O.E.M."),
-                (["wmic", "diskdrive", "get", "SerialNumber"], None),
-            ]
-            procs = []
-            for cmd, _ in wmic_queries:
-                try:
-                    procs.append(
-                        (
-                            subprocess.Popen(
-                                cmd,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.DEVNULL,
-                                text=True,
-                                encoding="utf-8",
-                                errors="ignore",
-                                creationflags=0x08000000,  # CREATE_NO_WINDOW
-                            ),
-                            _,
-                        )
-                    )
-                except Exception:
-                    procs.append((None, _))
-            for proc, skip_val in procs:
-                if proc is None:
-                    continue
-                try:
-                    stdout, _ = proc.communicate(timeout=2)
-                    val = stdout.strip().split("\n")[-1].strip()
-                    if val and val != skip_val:
-                        machine_info.append(val)
-                except Exception:
-                    try:
-                        proc.kill()
-                    except Exception:
-                        logger.debug("终止机器信息采集进程失败")
-
-        # 4. MAC 地址
-        try:
-            mac = ":".join(
-                ["{:02x}".format((uuid.getnode() >> elements) & 0xFF) for elements in range(0, 2 * 6, 2)][::-1]
-            )
+        mac = MachineCodeService._get_mac_address()
+        if mac:
             machine_info.append(mac)
-        except Exception:
-            logger.debug("获取 MAC 地址失败")
 
-        # 5. 计算机名
-        try:
-            computer_name = platform.node()
-            if computer_name:
-                machine_info.append(computer_name)
-        except Exception:
-            logger.debug("获取计算机名失败")
+        computer_name = MachineCodeService._get_computer_name()
+        if computer_name:
+            machine_info.append(computer_name)
 
-        # 如果没有收集到任何信息，使用 UUID
         if not machine_info:
             machine_info.append(str(uuid.uuid4()))
 
-        # 组合所有信息并生成哈希
         combined = "|".join(machine_info)
         machine_code = hashlib.sha256(combined.encode()).hexdigest()
-
-        # 缓存结果，后续调用直接返回（进程生命周期内机器码不变）
         MachineCodeService._cached_machine_code = machine_code
 
         return machine_code
@@ -137,7 +149,7 @@ class MachineCodeService:
             4位数字校验码
         """
         # 使用机器码的哈希值生成4位数字
-        hash_value = hashlib.md5(machine_code.encode()).hexdigest()
+        hash_value = hashlib.md5(machine_code.encode(), usedforsecurity=False).hexdigest()
 
         # 取哈希值的前8位，转换为整数
         num = int(hash_value[:8], 16)
@@ -517,7 +529,7 @@ class MachineCodeService:
         combined = f"{organization_id}:{organization_name}"
 
         # 使用 MD5 哈希
-        hash_value = hashlib.md5(combined.encode()).hexdigest()
+        hash_value = hashlib.md5(combined.encode(), usedforsecurity=False).hexdigest()
 
         # 取哈希值的前8位，转换为整数
         num = int(hash_value[:8], 16)

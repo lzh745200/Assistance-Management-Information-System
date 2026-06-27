@@ -21,7 +21,7 @@ if _sys.stderr and hasattr(_sys.stderr, 'reconfigure'):
 import pytest
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 import os
 
 
@@ -381,7 +381,7 @@ def client():
         _db_module.engine = _original_engine
         _db_module.SessionLocal = _original_session_local
         db.close()
-    except Exception as e:
+    except Exception:
         pass  # skip removed
 
 

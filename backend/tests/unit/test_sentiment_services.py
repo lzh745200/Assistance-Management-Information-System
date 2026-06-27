@@ -2,9 +2,7 @@
 测试 - app.services.sentiment 模块
 覆盖率目标: 100%
 """
-import pytest
 from datetime import datetime
-from unittest.mock import MagicMock, patch
 
 class TestSentimentData:
     """测试 SentimentData 数据类"""

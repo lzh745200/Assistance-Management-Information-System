@@ -1,6 +1,5 @@
 """Tests for app.core.static_files — 100% coverage."""
 
-import pytest
 import os
 import sys
 from unittest.mock import MagicMock, patch

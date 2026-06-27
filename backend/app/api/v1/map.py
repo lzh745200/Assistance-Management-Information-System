@@ -132,7 +132,8 @@ def _get_coords(lat, lng, county_or_district, record_id=None, name=""):
     MAX_OFFSET = 0.008  # ±0.9km，不会跨越县界
 
     # 确定性随机种子：相同记录始终得到相同偏移
-    seed = int(hashlib.md5(f"{record_id}:{name}:{county_or_district}".encode()).hexdigest()[:8], 16)
+    raw = hashlib.md5(f"{record_id}:{name}:{county_or_district}".encode(), usedforsecurity=False)
+    seed = int(raw.hexdigest()[:8], 16)
     rng = random.Random(seed)
 
     if county_or_district:

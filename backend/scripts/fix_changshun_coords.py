@@ -6,7 +6,6 @@
 """
 import sqlite3
 import os
-import glob
 
 # 坐标修正映射：(old_lat, old_lng) -> (new_lat, new_lng)
 FIXES = [

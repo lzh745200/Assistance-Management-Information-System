@@ -3,10 +3,8 @@
 
 测试 app/utils/system_metrics.py 模块
 """
-import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 from app.utils.system_metrics import SystemMetrics, get_system_metrics
-from unittest.mock import MagicMock  # auto-added
 
 # psutil 已安装，系统指标功能已实现
 

@@ -3,7 +3,6 @@ Excel 导出服务单元测试
 覆盖: app/services/export_service.py
 """
 import pytest
-from io import BytesIO
 
 
 @pytest.fixture

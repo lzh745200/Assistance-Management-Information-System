@@ -1,7 +1,6 @@
 """Tests for app/core/async_utils.py — 100% coverage."""
 import asyncio
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestGetExecutor:

@@ -3,8 +3,7 @@ import pytest
 """
 专门覆盖 rbac_service 第303行的测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 class TestRBACServiceLine303:
     """覆盖 rbac_service 第303行: 角色权限循环"""
@@ -13,7 +12,7 @@ class TestRBACServiceLine303:
     async def test_role_permissions_loop_execution(self):
         """测试角色权限循环实际执行 (line 302-303)"""
         from app.services.rbac_service import RBACService
-        from app.models.rbac import RolePermission, UserPermission, UserRole, RbacRole
+        from app.models.rbac import RolePermission, UserPermission
         from app.models.user import User
 
         service = RBACService()

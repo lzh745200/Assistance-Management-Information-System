@@ -1,7 +1,7 @@
 """Tests for app/api/v1/work_logs.py — comprehensive coverage."""
 from datetime import date, datetime
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 

@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import MagicMock
 
 
@@ -188,7 +188,7 @@ class TestAuditService:
         assert result.method == "GET"
 
     def test_log_export_success(self, audit_svc, mock_db):
-        from app.services.audit_service import AuditStatus, AuditAction
+        from app.services.audit_service import AuditStatus
         result = audit_svc.log_export(
             user_id=1, username="admin", export_type="projects",
             data_types=["name", "budget"], file_format="xlsx",

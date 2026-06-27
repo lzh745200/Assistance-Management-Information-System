@@ -4,14 +4,12 @@
 通过 monkeypatch 控制 sys.frozen / platform.system / 环境变量 / Path.home / cwd，
 绝不用 patch.dict(os.environ, clear=True)。
 """
-import os
 import platform
 import sys
 from pathlib import Path
 
 import pytest
 
-from app.utils import paths
 from app.utils.paths import (
     PathTraversalError,
     _safe_join,

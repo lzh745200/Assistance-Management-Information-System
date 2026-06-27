@@ -1,6 +1,4 @@
 """Excel模板服务单元测试"""
-import pytest
-from unittest.mock import MagicMock, patch
 
 def test_village_fields_defined():
     from app.services.excel_template_service import ExcelTemplateService

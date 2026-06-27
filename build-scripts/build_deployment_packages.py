@@ -78,7 +78,7 @@ print("\n[4] Docker 检查")
 print("-" * 60)
 
 try:
-    result = subprocess.run(['docker', '--version'], 
+    result = subprocess.run(['docker', '--version'],
                           capture_output=True, text=True, timeout=5)
     if result.returncode == 0:
         print(f"  OK: {result.stdout.strip()}")
@@ -92,7 +92,7 @@ print("\n[5] Node.js 检查")
 print("-" * 60)
 
 try:
-    result = subprocess.run(['node', '--version'], 
+    result = subprocess.run(['node', '--version'],
                           capture_output=True, text=True, timeout=5)
     if result.returncode == 0:
         print(f"  OK: Node.js {result.stdout.strip()}")
@@ -102,7 +102,7 @@ except Exception as e:
     print(f"  FAIL: Node.js 检查失败 - {e}")
 
 try:
-    result = subprocess.run(['npm', '--version'], 
+    result = subprocess.run(['npm', '--version'],
                           capture_output=True, text=True, timeout=5)
     if result.returncode == 0:
         print(f"  OK: npm {result.stdout.strip()}")

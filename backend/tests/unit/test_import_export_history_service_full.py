@@ -11,17 +11,16 @@
 - record (async): 创建记录并 commit+refresh
 """
 import importlib
-import json
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.models import _MODULE_MAP
 from app.models.base import Base
-from app.models.import_export_history import ImportExportHistory, OperationResult
+from app.models.import_export_history import OperationResult
 from app.services.import_export_history_service import ImportExportHistoryService
 
 

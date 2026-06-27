@@ -1,9 +1,7 @@
 """Tests for app/utils/file_response.py — 100% coverage."""
 
-import os
-import tempfile
 from io import BytesIO
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.responses import FileResponse

@@ -1,7 +1,6 @@
 """
 API Coverage Integration Tests — health endpoints refactored to /health
 """
-import pytest
 from fastapi.testclient import TestClient
 
 # pytestmark removed
@@ -164,6 +163,6 @@ class TestTwoFactorAuth:
         assert hasattr(two_factor, "router")
 
     def test_two_factor_schemas(self):
-        from app.api.v1.auth.two_factor import EnableTwoFactorResponse, VerifyTokenRequest
+        from app.api.v1.auth.two_factor import EnableTwoFactorResponse
         r = EnableTwoFactorResponse(secret="test", qr_code="qr", backup_codes=[])
         assert r.secret == "test"

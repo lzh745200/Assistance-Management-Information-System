@@ -1,5 +1,4 @@
 """TDD: 数据质量自动评分."""
-import pytest
 
 
 class TestQualityScorer:

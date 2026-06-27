@@ -7,7 +7,9 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.v1.deps import get_current_active_user, get_db
+from app.core.data_permission import filter_by_data_scope
 from app.models.user import User
+from app.models.village import Village
 from app.services.effectiveness_service import EffectivenessService
 
 router = APIRouter(prefix="/effectiveness", tags=["成效评估"])
@@ -55,6 +57,15 @@ async def get_evaluation_report(
     db: Session = Depends(get_db),
 ):
     """获取评估报告"""
+    village = filter_by_data_scope(
+        db.query(Village).filter(Village.id == village_id),
+        Village, current_user, db=db
+    ).first()
+    if not village:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="评估报告不存在")
+
     report = EffectivenessService.get_evaluation_report(db=db, village_id=village_id, year=year)
 
     if not report:
@@ -74,6 +85,15 @@ async def compare_evaluations(
     db: Session = Depends(get_db),
 ):
     """对比两年的评估结果"""
+    village = filter_by_data_scope(
+        db.query(Village).filter(Village.id == village_id),
+        Village, current_user, db=db
+    ).first()
+    if not village:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="评估报告不存在")
+
     comparison = EffectivenessService.compare_evaluations(db=db, village_id=village_id, year1=year1, year2=year2)
 
     if "error" in comparison:
@@ -93,16 +113,14 @@ async def get_rankings(
 ):
     """获取排名列表"""
     from app.models.effectiveness import EffectivenessEvaluation
-    from app.models.village import Village
 
-    evaluations = (
+    query = (
         db.query(EffectivenessEvaluation, Village.name)
         .join(Village, EffectivenessEvaluation.village_id == Village.id)
         .filter(EffectivenessEvaluation.year == year)
-        .order_by(EffectivenessEvaluation.rank)
-        .limit(limit)
-        .all()
     )
+    query = filter_by_data_scope(query, Village, current_user, db=db)
+    evaluations = query.order_by(EffectivenessEvaluation.rank).limit(limit).all()
 
     return {
         "year": year,

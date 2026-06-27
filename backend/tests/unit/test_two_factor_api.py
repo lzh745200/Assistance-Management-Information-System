@@ -1,7 +1,7 @@
 """Tests for app.api.v1.auth.two_factor - zero coverage → 100%"""
 
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 

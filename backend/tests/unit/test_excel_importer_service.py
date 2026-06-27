@@ -1,8 +1,7 @@
 """Tests for ExcelImporterService — 100% code coverage."""
 
 import io
-from unittest.mock import MagicMock, patch, PropertyMock
-from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
 
 import pytest
 from openpyxl import Workbook
@@ -14,8 +13,6 @@ from app.services.excel_importer_service import (
     ImportResult,
 )
 from app.models.import_history import ImportMode, ImportStatus
-from app.models.organization import Organization
-from app.models.project import Project
 
 
 # ---------------------------------------------------------------------------
@@ -433,7 +430,6 @@ class TestImportData:
             mock_val.validate_batch.return_value = MagicMock(is_valid=True, errors=[])
             mock_val.check_duplicates.return_value = []
             mock_val.convert_row_types.side_effect = lambda r: r
-            from sqlalchemy import func as sql_func
 
             mock_filter = db.query.return_value.filter.return_value
             mock_filter.all.return_value = [("existing",)]

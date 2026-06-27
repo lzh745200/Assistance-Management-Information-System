@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, AsyncMock
 import asyncio
 import time
 
@@ -210,7 +210,7 @@ class TestLocalTaskQueue:
 
     @pytest.mark.asyncio
     async def test_worker_task_failure(self):
-        from app.services.task_queue import LocalTaskQueue, Task, TaskStatus
+        from app.services.task_queue import LocalTaskQueue, Task
         q = LocalTaskQueue()
         q._queue = asyncio.PriorityQueue()
         q._running = True
@@ -230,7 +230,7 @@ class TestLocalTaskQueue:
 
     @pytest.mark.asyncio
     async def test_worker_cancelled_during_exec(self):
-        from app.services.task_queue import LocalTaskQueue, Task, TaskStatus
+        from app.services.task_queue import LocalTaskQueue, Task
         q = LocalTaskQueue()
         q._queue = asyncio.PriorityQueue()
         q._running = True
@@ -248,7 +248,7 @@ class TestLocalTaskQueue:
 
     @pytest.mark.asyncio
     async def test_queue_timeout(self):
-        from app.services.task_queue import LocalTaskQueue, Task
+        from app.services.task_queue import LocalTaskQueue
         q = LocalTaskQueue()
         q._queue = asyncio.PriorityQueue()
         q._running = True

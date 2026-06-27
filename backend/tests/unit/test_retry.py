@@ -1,6 +1,6 @@
 """Tests for offline fault tolerance retry utility — 100% coverage."""
 import pytest
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 
 class TestRetryOnLock:

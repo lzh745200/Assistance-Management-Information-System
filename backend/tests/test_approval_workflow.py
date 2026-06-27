@@ -4,9 +4,7 @@
 """
 
 import pytest
-from datetime import datetime
 
-from app.core.exceptions import ValidationError, NotFoundException, BusinessError
 from app.models.approval import ApprovalStatus
 
 
@@ -99,7 +97,6 @@ class TestApprovalWorkflowService:
 
     def test_create_workflow_without_name(self, service):
         """测试创建流程时名称为空"""
-        from app.models.approval import ApprovalNode
         with pytest.raises(ValueError, match="至少需要1个审批节点"):
             service.create_workflow(
                 name="",

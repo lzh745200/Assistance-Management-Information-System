@@ -1,5 +1,4 @@
-import pytest
-from unittest.mock import Mock, patch, MagicMock, PropertyMock
+from unittest.mock import Mock, patch
 
 
 # =========== validate_config ===========

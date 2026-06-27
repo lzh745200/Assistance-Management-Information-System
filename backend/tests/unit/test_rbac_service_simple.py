@@ -2,8 +2,6 @@
 简化测试 - app.services.rbac_service
 只测试可以工作的部分
 """
-import pytest
-from unittest.mock import MagicMock, patch
 
 class TestPermission:
     """测试 Permission 枚举"""

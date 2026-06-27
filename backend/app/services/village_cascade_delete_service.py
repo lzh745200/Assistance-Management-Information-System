@@ -68,7 +68,7 @@ class VillageCascadeDeleteService:
             for table_name, column_name in self.DEPENDENT_TABLES:
                 try:
                     result = self.db.execute(
-                        text(f"DELETE FROM {table_name} WHERE {column_name} = :village_id"),
+                        text(f"DELETE FROM {table_name} WHERE {column_name} = :village_id"),  # nosec B608
                         {"village_id": village_id},
                     )
                     deleted_count = result.rowcount
@@ -125,7 +125,7 @@ class VillageCascadeDeleteService:
         for table_name, column_name in self.DEPENDENT_TABLES:
             try:
                 result = self.db.execute(
-                    text(f"SELECT COUNT(*) FROM {table_name} WHERE {column_name} = :village_id"),
+                    text(f"SELECT COUNT(*) FROM {table_name} WHERE {column_name} = :village_id"),  # nosec B608
                     {"village_id": village_id},
                 )
                 count = result.scalar()

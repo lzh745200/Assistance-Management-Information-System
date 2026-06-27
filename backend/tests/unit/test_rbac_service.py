@@ -3,7 +3,7 @@ RBAC权限管理服务单元测试
 覆盖: app/services/rbac_service.py
 """
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 class TestPermissionEnum:

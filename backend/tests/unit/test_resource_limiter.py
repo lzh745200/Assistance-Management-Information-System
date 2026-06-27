@@ -1,5 +1,4 @@
 """Tests for resource_limiter and validation_engine services (low coverage modules)."""
-import pytest
 
 
 class TestRateLimiter:

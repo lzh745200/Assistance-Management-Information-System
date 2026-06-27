@@ -1,8 +1,6 @@
 """Tests for batch_service.py — 100% coverage target."""
 
 import pytest
-import sys
-import types
 from unittest.mock import Mock, MagicMock, patch
 from types import SimpleNamespace
 

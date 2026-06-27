@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-import pytest
 from starlette.testclient import TestClient
 
 from app.middleware.query_counter import QueryCounterMiddleware, increment_query_count

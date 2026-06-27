@@ -1,6 +1,5 @@
 """基于密码的加密服务单元测试 (100% coverage)"""
 import os
-from unittest.mock import MagicMock, patch
 
 import pytest
 

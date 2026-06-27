@@ -1,5 +1,4 @@
 """TDD: fund_anomaly_engine — 组合异常检测引擎."""
-import pytest
 
 
 class TestAnomalyResult:

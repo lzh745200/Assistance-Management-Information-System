@@ -1,6 +1,6 @@
 """Comprehensive tests for machine_code.py — all endpoints, full branch coverage."""
 
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient

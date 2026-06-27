@@ -3,9 +3,8 @@
 
 测试 app/utils/audit_logger.py 模块
 """
-import pytest
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from app.utils.audit_logger import (
     AuditLogger,
     AuditAction,

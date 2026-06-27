@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 
+from app.core.permission_utils import is_admin
 from app.models.rural_work import RuralWork, WorkStatus, WorkType
 from app.schemas.rural_work import RuralWorkStatistics
 from app.services.work_log_service import write_work_log
@@ -108,9 +109,13 @@ class RuralWorkService:
         year: Optional[int] = None,
         order_by: str = "created_at",
         order_desc: bool = True,
+        current_user: Any = None,
     ) -> Tuple[List[Dict[str, Any]], int]:
-        """获取乡村工作列表（含筛选）"""
+        """获取乡村工作列表（含筛选及数据权限）"""
         query = self.db.query(RuralWork)
+
+        if current_user is not None and not is_admin(current_user):
+            query = query.filter(RuralWork.created_by == getattr(current_user, "id", None))
 
         if status:
             query = query.filter(RuralWork.status == status)

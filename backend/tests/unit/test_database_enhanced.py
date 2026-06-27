@@ -1,6 +1,5 @@
 """Tests for database enhancements."""
 
-import pytest
 from sqlalchemy import create_engine, text
 
 

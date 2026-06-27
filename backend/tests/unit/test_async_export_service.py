@@ -1,8 +1,7 @@
 """TDD: 异步导出服务 — 实例方法 API."""
 import os
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+from datetime import datetime
 
 
 class TestAsyncExportThreshold:

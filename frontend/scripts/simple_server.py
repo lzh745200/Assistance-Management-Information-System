@@ -36,13 +36,13 @@ PORT}")            print("")            print("访问地址:")            print(
 面: http://{HOST}:{PORT}/login.html")            print(f"  系统主页: http://{HOST}:{PORT}/index.html")            print("")            print("提示:")            print("  1. 系统已配置为离线模式，将使用本地验证进行登录")            print("  2. 默认账号: admin / 123456")            print("  3. 按 Ctrl+C 停止服务器")            print("=" * 60)
             # 尝试自动打开浏览器            try:                login_url = f"http://{HO
 ST}:{PORT}/login.html"                print(f"正在打开浏览器访问登录页面: {login_url}")
-           webbrowser.open(login_url)            except Exception as e:        
+           webbrowser.open(login_url)            except Exception as e:
         print(f"无法自动打开浏览器: {e}")                print("请手动在浏览器中输入上述地址访问系统")
             # 启动服务器            httpd.serve_forever()
     except OSError as e:        if "Address already in use" in str(
     e):            print(f"错误: 端口 {PORT} 已被占用")            print("请关闭占用该端口的程序，或
 修改本脚本中的PORT变量")        else:            print(f"服务器启动失败: {e}")        sys.exit(
-1)    except KeyboardInterrupt:        print("\n服务器已停止")        sys.exit(0)    
+1)    except KeyboardInterrupt:        print("\n服务器已停止")        sys.exit(0)
 except Exception as e:        print(f"未知错误: {e}")        sys.exit(1)
 
 if __name__ == "__main__":    run_server()

@@ -1,5 +1,4 @@
 """TDD: 智能报表摘要生成."""
-import pytest
 
 
 class TestSmartSummary:

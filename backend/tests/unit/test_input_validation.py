@@ -1,5 +1,4 @@
 """Tests for app/core/input_validation.py — 100% coverage."""
-import pytest
 
 
 class TestValidateRequired:

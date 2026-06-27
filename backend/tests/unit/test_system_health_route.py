@@ -1,8 +1,7 @@
 """Tests for app.api.v1.system_health API routes."""
 
 import pytest
-import os
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 

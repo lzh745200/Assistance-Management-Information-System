@@ -33,7 +33,6 @@ def test_db():
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA foreign_keys=ON")
 
-    from sqlalchemy import event
     from app.models.base import Base
 
     Base.metadata.create_all(bind=engine)

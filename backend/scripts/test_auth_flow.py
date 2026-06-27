@@ -8,7 +8,6 @@ backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, backend_dir)
 
 import requests
-import json
 
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 TEST_RESULTS = []
@@ -41,7 +40,7 @@ def test_login():
                 refresh_token = data.get("refresh_token")
                 user = data["data"].get("user", {})
 
-                log_test("登录接口", True, f"获取到 access_token 和 refresh_token")
+                log_test("登录接口", True, "获取到 access_token 和 refresh_token")
                 log_test("用户角色", user.get("role") in ["admin", "super_admin"],
                         f"角色: {user.get('role')}")
 

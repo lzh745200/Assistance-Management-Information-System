@@ -1,5 +1,4 @@
 """TDD: 经费↔项目双向联动."""
-import pytest
 from unittest.mock import MagicMock
 
 

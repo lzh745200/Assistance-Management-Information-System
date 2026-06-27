@@ -2,11 +2,9 @@
 全面功能测试套件
 """
 
-import pytest
 
 
-import pytest
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from tests.utils import HTTP_SUCCESS_OR_ERROR
 

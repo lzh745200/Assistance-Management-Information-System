@@ -1,7 +1,7 @@
 """Tests for batch_import_optimizer.py — 100% coverage target."""
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from io import BytesIO
 
 
@@ -303,7 +303,7 @@ class TestBatchInsertOptimized:
         model_class = Mock()
         rows = [{"id": i} for i in range(7)]
 
-        from app.services.batch_import_optimizer import batch_insert_optimized, BATCH_SIZE
+        from app.services.batch_import_optimizer import batch_insert_optimized
         # Force small batch size
         total = batch_insert_optimized(mock_db, model_class, rows,
                                        batch_size=3)

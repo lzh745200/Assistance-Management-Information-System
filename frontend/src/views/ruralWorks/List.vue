@@ -89,7 +89,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="village_name" label="所属村庄" width="120" />
-        <el-table-column prop="responsible_person" label="负责人" width="100" />
+        <el-table-column prop="responsible_person" label="负责人" width="100">
+          <template #default="{ row }">
+            {{ ds(row.responsible_person, 'name') }}
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="statusColors[row.status] || 'info'" size="small">{{
@@ -247,6 +251,7 @@
 // @ts-nocheck
 import { ref, computed, onMounted, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useDesensitize } from '@/composables/useDesensitize'
 import { Search, Plus, Download } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import type { WorkStatus, WorkType } from '@/api/ruralWork'
@@ -273,6 +278,8 @@ const statusColors: Record<string, 'info' | 'primary' | 'success' | 'warning' | 
   completed: 'success',
   delayed: 'danger',
 }
+
+const { ds } = useDesensitize()
 
 // 状态
 const loading = ref(false)

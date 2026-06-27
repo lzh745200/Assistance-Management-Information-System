@@ -2,11 +2,6 @@
 AI服务完整测试
 覆盖 anomaly_detection_service, nlp_query_service, recommendation_service, trend_prediction_service
 """
-import pytest
-from datetime import datetime, timedelta
-from decimal import Decimal
-from unittest.mock import patch, MagicMock, Mock
-from unittest.mock import MagicMock  # auto-added
 
 class TestAnomalyDetectionService:
     """测试异常检测服务"""

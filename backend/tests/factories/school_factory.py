@@ -12,16 +12,17 @@ class SchoolFactory:
         data = dict(
             name="测试学校",
             code="SCH-" + str(id(now))[-6:],
-            type="primary",
+            type="小学",
             province="贵州省",
             city="贵阳市",
-            county="测试县",
+            district="测试县",
             address="测试地址",
             principal="校长",
-            phone="0851-1234567",
+            contact_phone="0851-1234567",
             student_count=500,
             teacher_count=30,
-            is_supported=True,
+            support_status="supported",
+            is_active=True,
             created_at=now,
             updated_at=now,
         )
@@ -42,12 +43,11 @@ class SchoolSupportFactory:
         now = datetime.now(timezone.utc)
         data = dict(
             school_id=school_id,
-            year=2024,
-            support_type="equipment",
-            amount=100000.00,
+            support_type="设备捐赠",
+            amount=100000,
             description="教学设备捐赠",
+            support_date=now,
             created_at=now,
-            updated_at=now,
         )
         data.update(kwargs)
         return SchoolSupport(**data)
@@ -67,11 +67,12 @@ class SchoolProjectFactory:
         data = dict(
             school_id=school_id,
             name="校园改造项目",
+            phase="planning",
+            category="infrastructure",
             description="改善教学环境",
-            status="in_progress",
             budget=500000.00,
             actual_cost=300000.00,
-            start_date=now.date(),
+            start_date=now,
             created_at=now,
             updated_at=now,
         )
@@ -92,11 +93,12 @@ class ScholarshipStudentFactory:
         now = datetime.now(timezone.utc)
         data = dict(
             school_id=school_id,
-            name="张三",
+            student_name="张三",
             grade="三年级",
+            year=2024,
             amount=2000.00,
             reason="品学兼优",
-            year=2024,
+            status="active",
             created_at=now,
             updated_at=now,
         )

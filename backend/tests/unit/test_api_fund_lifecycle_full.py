@@ -1,5 +1,4 @@
 """Tests for fund lifecycle API — 44 routes across 7 phases."""
-import pytest
 
 
 class TestFundLifecyclePhaseManagement:

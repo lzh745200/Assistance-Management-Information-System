@@ -5,9 +5,6 @@
 执行全面的系统测试，确保系统稳定运行
 """
 import sys
-import os
-import subprocess
-import time
 from pathlib import Path
 import requests
 import sqlite3

@@ -10,7 +10,6 @@
 6. 权限控制
 """
 import pytest
-import io
 from datetime import date
 from unittest.mock import Mock
 
@@ -182,7 +181,6 @@ class TestPermissions:
     def test_list_requires_auth(self, client):
         """未认证用户无法访问"""
         # 清除认证覆盖
-        from app.core.security import get_current_user
         client.app.dependency_overrides.clear()
         try:
             resp = client.get("/api/v1/funds")

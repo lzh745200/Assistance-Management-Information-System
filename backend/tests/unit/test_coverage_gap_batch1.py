@@ -1,4 +1,3 @@
-import asyncio
 import hashlib
 import json
 import os
@@ -14,7 +13,7 @@ import pytest
 from app.services.permission_package_service import PermissionPackageService
 from app.services.query_analyzer_service import QueryAnalyzer
 from app.services.rural_work_service import RuralWorkService, _iso, _safe_enum_value
-from app.services.update_log_service import UpdateLogService, get_update_log_service, VERSION_HISTORY_DATA
+from app.services.update_log_service import UpdateLogService, get_update_log_service
 from app.services.organization_code_service import OrganizationCodeService
 from app.services.repositories.base import BaseRepository
 from app.services.repositories.fund_repository import FundRepository

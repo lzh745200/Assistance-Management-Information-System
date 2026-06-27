@@ -1,5 +1,5 @@
 """Deep service tests — call actual methods with real DB session."""
-import pytest,io
+import io
 def test_ds01(real_db_session):
     import openpyxl;wb=openpyxl.Workbook();ws=wb.active
     ws.append(["village_name","department","support_unit","province","city","county","township"])

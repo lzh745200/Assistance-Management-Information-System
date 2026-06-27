@@ -3,11 +3,8 @@
 覆盖app/api/v1/rural_tasks.py和rural_works.py的所有路由
 """
 
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestRuralTasksAPI:
     """测试乡村振兴任务API"""

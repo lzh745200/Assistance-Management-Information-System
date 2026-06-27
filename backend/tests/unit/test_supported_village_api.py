@@ -2,10 +2,9 @@
 
 import io
 import json
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi import UploadFile
 from fastapi.testclient import TestClient
 
 from app.core.database import get_db
@@ -641,7 +640,7 @@ class TestDeleteSectionAttachment:
         assert resp.status_code == 200
 
     def test_attachment_not_found(self, client, mock_db):
-        from app.models.supported_village import SupportedVillage, VillageAttachment
+        from app.models.supported_village import SupportedVillage
         village_q = MagicMock()
         village_q.first.return_value = _make_mock_village(1)
         att_q = MagicMock()

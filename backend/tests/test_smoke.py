@@ -6,7 +6,6 @@
 - 登录 / 登出
 - 受保护端点（需认证）
 """
-import pytest
 
 from tests.utils import HTTP_SUCCESS_OR_ERROR
 

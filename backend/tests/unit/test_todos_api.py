@@ -1,7 +1,7 @@
 """Tests for app.api.v1.todos — 5 CRUD endpoints."""
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 from fastapi import FastAPI

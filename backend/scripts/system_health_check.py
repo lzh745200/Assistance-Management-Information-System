@@ -5,7 +5,6 @@
 检查系统配置、依赖、数据库、文件权限等
 """
 import sys
-import os
 import sqlite3
 from pathlib import Path
 import importlib.util

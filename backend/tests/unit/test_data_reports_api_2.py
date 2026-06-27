@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, call, ANY, PropertyMock
+from unittest.mock import Mock, patch, AsyncMock, ANY
 from datetime import datetime
 from fastapi.testclient import TestClient
 

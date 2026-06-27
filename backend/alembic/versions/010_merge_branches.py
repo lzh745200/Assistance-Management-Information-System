@@ -5,8 +5,6 @@ Revises: 009, workstatus_pending_001
 Create Date: 2026-03-15 15:22:00.000000
 
 """
-from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.

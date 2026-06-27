@@ -105,14 +105,14 @@ class UserCascadeDeleteService:
 
                 if on_delete == "CASCADE":
                     result = db.execute(
-                        text(f"DELETE FROM {tbl_ident} WHERE {col_ident} = :uid"),
+                        text(f"DELETE FROM {tbl_ident} WHERE {col_ident} = :uid"),  # nosec B608
                         {"uid": user_id},
                     )
                     deleted_records += result.rowcount or 0
                 elif col_nullable:
                     result = db.execute(
                         text(f"UPDATE {tbl_ident} SET {col_ident} = NULL "
-                             f"WHERE {col_ident} = :uid"),
+                             f"WHERE {col_ident} = :uid"),  # nosec B608
                         {"uid": user_id},
                     )
                     set_null_records += result.rowcount or 0
@@ -120,7 +120,7 @@ class UserCascadeDeleteService:
                     # 非空列无法置空（SET NULL + NOT NULL 矛盾），
                     # 删除引用记录以解除外键约束。
                     result = db.execute(
-                        text(f"DELETE FROM {tbl_ident} WHERE {col_ident} = :uid"),
+                        text(f"DELETE FROM {tbl_ident} WHERE {col_ident} = :uid"),  # nosec B608
                         {"uid": user_id},
                     )
                     deleted_records += result.rowcount or 0

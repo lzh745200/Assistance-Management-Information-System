@@ -130,7 +130,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="village_name" label="所属村庄" width="120" />
-        <el-table-column prop="responsible_person" label="负责人" width="100" />
+        <el-table-column prop="responsible_person" label="负责人" width="100">
+          <template #default="{ row }">
+            {{ ds(row.responsible_person, 'name') }}
+          </template>
+        </el-table-column>
         <el-table-column prop="statusName" label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="getStatusTagType(row.status)" size="small">{{ row.statusName }}</el-tag>
@@ -168,6 +172,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useDesensitize } from '@/composables/useDesensitize'
 import { Search, Refresh, Download } from '@element-plus/icons-vue'
 import { Chart } from 'chart.js/auto'
 import { getRuralWorks } from '@/api/ruralWork'
@@ -186,6 +191,8 @@ const STATUS_LABELS: Record<string, string> = {
   completed: '已完成',
   delayed: '已延期',
 }
+
+const { ds } = useDesensitize()
 
 // 状态
 const loading = ref(false)

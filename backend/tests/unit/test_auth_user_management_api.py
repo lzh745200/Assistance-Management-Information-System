@@ -1,13 +1,10 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock, patch, call
+from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from fastapi.testclient import TestClient
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.core.permission_utils import is_superuser
 
 
 def _make_user(**kwargs):

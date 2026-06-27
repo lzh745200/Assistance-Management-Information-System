@@ -5,7 +5,6 @@ csrf_middleware, rbac, utils, prometheus_middleware
 """
 
 import anyio
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest

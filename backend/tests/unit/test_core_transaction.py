@@ -1,6 +1,6 @@
 """Tests for app.core.transaction (100% coverage)."""
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.exc import SQLAlchemyError

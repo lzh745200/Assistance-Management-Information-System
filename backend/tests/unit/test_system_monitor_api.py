@@ -3,9 +3,7 @@ Tests for app.api.v1.system.monitor — 100% coverage
 """
 
 import builtins
-import sys
 from datetime import datetime
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest

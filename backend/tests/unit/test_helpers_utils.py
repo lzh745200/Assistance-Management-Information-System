@@ -1,10 +1,9 @@
 """Tests for app/utils/helpers.py — 100% coverage."""
 
 from datetime import date, datetime
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import json
 
-import pytest
 
 from app.utils.helpers import (
     generate_random_string,

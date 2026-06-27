@@ -69,6 +69,7 @@ async def list_rural_works(
         year=year,
         order_by=order_by,
         order_desc=order_desc,
+        current_user=current_user,
     )
     return RuralWorkListResponse(
         total=total,

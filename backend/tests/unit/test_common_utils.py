@@ -1,9 +1,8 @@
 """Tests for app/utils/common.py — 100% coverage."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
-import pytest
 from pydantic import BaseModel
 
 from app.utils.common import (

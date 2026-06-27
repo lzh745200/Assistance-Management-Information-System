@@ -167,6 +167,77 @@ async def get_organizations(
         raise HTTPException(status_code=500, detail=f"获取组织列表失败: {str(e)}")
 
 
+def _set_no_cache_headers(response: Response):
+    """设置无缓存响应头"""
+    if response:
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
+
+def _org_level_to_number(org: Organization) -> int:
+    """将组织 level 枚举值转为数字"""
+    if not org.level:
+        return 0
+    level_str = str(org.level)
+    if not level_str.startswith("level_"):
+        return 0
+    try:
+        return int(level_str.split("_")[1])
+    except (ValueError, IndexError):
+        return 0
+
+
+def _org_to_tree_node(org: Organization, org_dict: dict) -> dict:
+    """将组织对象转为树节点字典"""
+    path = _build_org_path(org.id, org_dict)
+    return {
+        "id": str(org.id),
+        "name": org.name,
+        "code": org.code or "",
+        "org_type": str(org.org_type) if org.org_type else None,
+        "level": _org_level_to_number(org),
+        "parent_id": str(org.parent_id) if org.parent_id is not None else None,
+        "is_active": org.is_active,
+        "path": path,
+        "description": org.description or "",
+        "contact_person": org.contact_person or "",
+        "contact_phone": org.contact_phone or "",
+        "address": org.address or "",
+        "created_at": org.created_at.isoformat() if org.created_at else None,
+        "updated_at": org.updated_at.isoformat() if org.updated_at else None,
+        "children": [],
+    }
+
+
+def _build_org_path(org_id: int, org_dict: dict, visited: set = None) -> str:
+    """构建组织路径（避免循环）"""
+    if visited is None:
+        visited = set()
+    if org_id in visited:
+        return ""
+    visited.add(org_id)
+    org = org_dict.get(org_id)
+    if not org:
+        return ""
+    if not org.parent_id or org.parent_id not in org_dict:
+        return f"/{org.name}"
+    parent_path = _build_org_path(org.parent_id, org_dict, visited)
+    return f"{parent_path}/{org.name}" if parent_path else f"/{org.name}"
+
+
+def _build_org_tree(organizations: list, org_map: dict) -> list:
+    """将扁平的节点字典构建为树形结构"""
+    tree = []
+    for org in organizations:
+        node = org_map[org.id]
+        if org.parent_id and org.parent_id in org_map:
+            org_map[org.parent_id]["children"].append(node)
+        else:
+            tree.append(node)
+    return tree
+
+
 @router.get("/tree")
 async def get_organization_tree(
     org_type: Optional[str] = None,
@@ -175,11 +246,7 @@ async def get_organization_tree(
     response: Response = None,
 ):
     """获取组织树形结构"""
-    # 禁用缓存，确保数据实时性
-    if response:
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
+    _set_no_cache_headers(response)
     try:
         query = db.query(Organization).filter(Organization.is_active == True)  # noqa: E712
 
@@ -187,70 +254,13 @@ async def get_organization_tree(
             query = query.filter(Organization.org_type == org_type)
 
         organizations = query.order_by(Organization.sort_order, Organization.id).all()
-
-        # 构建路径映射（避免递归查询）
         org_dict = {org.id: org for org in organizations}
 
-        def build_path(org_id: int, visited: set = None) -> str:
-            """构建组织路径（避免循环）"""
-            if visited is None:
-                visited = set()
-            if org_id in visited:
-                return ""  # 防止循环
-            visited.add(org_id)
-
-            org = org_dict.get(org_id)
-            if not org:
-                return ""
-
-            if not org.parent_id or org.parent_id not in org_dict:
-                return f"/{org.name}"
-
-            parent_path = build_path(org.parent_id, visited)
-            return f"{parent_path}/{org.name}" if parent_path else f"/{org.name}"
-
-        # 构建树形结构
         org_map = {}
         for org in organizations:
-            # 计算层级深度（从level字符串提取数字）
-            level_num = 0
-            if org.level:
-                level_str = str(org.level)
-                if level_str.startswith("level_"):
-                    try:
-                        level_num = int(level_str.split("_")[1])
-                    except (ValueError, IndexError):
-                        level_num = 0
+            org_map[org.id] = _org_to_tree_node(org, org_dict)
 
-            # 构建路径
-            path = build_path(org.id)
-
-            org_map[org.id] = {
-                "id": str(org.id),  # 字符串 ID — 防止 el-tree setAttribute 数值型 DOM 异常
-                "name": org.name,
-                "code": org.code or "",
-                "org_type": str(org.org_type) if org.org_type else None,
-                "level": level_num,  # 返回数字而不是枚举值
-                "parent_id": str(org.parent_id) if org.parent_id is not None else None,
-                "is_active": org.is_active,
-                "path": path,
-                "description": org.description or "",
-                "contact_person": org.contact_person or "",
-                "contact_phone": org.contact_phone or "",
-                "address": org.address or "",
-                "created_at": org.created_at.isoformat() if org.created_at else None,
-                "updated_at": org.updated_at.isoformat() if org.updated_at else None,
-                "children": [],
-            }
-
-        tree = []
-        for org in organizations:
-            node = org_map[org.id]
-            if org.parent_id and org.parent_id in org_map:
-                org_map[org.parent_id]["children"].append(node)
-            else:
-                tree.append(node)
-
+        tree = _build_org_tree(organizations, org_map)
         return tree
     except Exception as e:
         logger.error(f"获取组织树失败: {e}", exc_info=True)

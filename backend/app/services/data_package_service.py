@@ -417,6 +417,37 @@ class DataPackageService:
                 errors=[DataPackageValidationError(field="import", message=str(e))],
             )
 
+    def _clean_import_record(
+        self, record: Dict, valid_columns: set, org_id: int, i: int, model: Any
+    ) -> Optional[Dict]:
+        clean_data = {}
+        for k, v in record.items():
+            if k not in valid_columns:
+                continue
+            if isinstance(v, str) and "T" in v:
+                try:
+                    clean_data[k] = datetime.fromisoformat(v.replace("Z", "+00:00"))
+                    continue
+                except ValueError:
+                    pass
+            clean_data[k] = v
+
+        if "organization_id" in valid_columns:
+            clean_data["organization_id"] = org_id
+        elif "org_id" in valid_columns:
+            clean_data["org_id"] = org_id
+
+        return clean_data
+
+    def _build_upsert_statement(self, model: Any, clean_records: List[Dict], pk_name: str, overwrite: bool):
+        stmt = sqlite_insert(model).values(clean_records)
+        if overwrite:
+            update_cols = {c.name: c for c in stmt.excluded if c.name != pk_name}
+            stmt = stmt.on_conflict_do_update(index_elements=[pk_name], set_=update_cols)
+        else:
+            stmt = stmt.on_conflict_do_nothing(index_elements=[pk_name])
+        return stmt
+
     def _bulk_upsert_records(
         self, model: Any, records: List[Dict], org_id: int, overwrite: bool
     ) -> Tuple[int, int, List[DataPackageValidationError]]:
@@ -424,10 +455,7 @@ class DataPackageService:
         if not records:
             return 0, 0, []
 
-        imported = 0
-        skipped = 0
         errors = []
-
         mapper = inspect(model)
         pk_name = mapper.primary_key[0].name
         valid_columns = {c.key for c in mapper.column_attrs}
@@ -435,39 +463,18 @@ class DataPackageService:
         clean_records = []
         for i, record in enumerate(records):
             try:
-                clean_data = {}
-                for k, v in record.items():
-                    if k not in valid_columns:
-                        continue
-                    if isinstance(v, str) and "T" in v:
-                        try:
-                            clean_data[k] = datetime.fromisoformat(v.replace("Z", "+00:00"))
-                            continue
-                        except ValueError:
-                            pass
-                    clean_data[k] = v
-
-                if "organization_id" in valid_columns:
-                    clean_data["organization_id"] = org_id
-                elif "org_id" in valid_columns:
-                    clean_data["org_id"] = org_id
-
-                clean_records.append(clean_data)
+                cleaned = self._clean_import_record(record, valid_columns, org_id, i, model)
+                if cleaned is not None:
+                    clean_records.append(cleaned)
             except Exception as e:
                 errors.append(DataPackageValidationError(
-                    field=model.__tablename__, message=f"行{i}数据清洗失败: {e}", row=i+1, data_type=model.__tablename__
+                    field=model.__tablename__, message=f"行{i}数据清洗失败: {e}", row=i + 1, data_type=model.__tablename__
                 ))
 
         if not clean_records:
             return 0, 0, errors
 
-        # 构建 SQLAlchemy 2.0 批量 Upsert 语句 (SQLite 方言)
-        stmt = sqlite_insert(model).values(clean_records)
-        if overwrite:
-            update_cols = {c.name: c for c in stmt.excluded if c.name != pk_name}
-            stmt = stmt.on_conflict_do_update(index_elements=[pk_name], set_=update_cols)
-        else:
-            stmt = stmt.on_conflict_do_nothing(index_elements=[pk_name])
+        stmt = self._build_upsert_statement(model, clean_records, pk_name, overwrite)
 
         try:
             self.db.execute(stmt)
@@ -477,8 +484,9 @@ class DataPackageService:
                 field=model.__tablename__, message=f"批量写入数据库失败: {e}", data_type=model.__tablename__
             ))
             self.db.rollback()
+            imported = 0
 
-        return imported, skipped, errors
+        return imported, 0, errors
 
     # ========================================================================
     # 3. 加密导入导出功能

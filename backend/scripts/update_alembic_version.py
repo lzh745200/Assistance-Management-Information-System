@@ -17,5 +17,3 @@ with engine.connect() as conn:
         conn.execute(text("INSERT INTO alembic_version (version_num) VALUES ('008')"))
         conn.commit()
         print('已创建 alembic_version 表并设置版本号为 008')
-
-

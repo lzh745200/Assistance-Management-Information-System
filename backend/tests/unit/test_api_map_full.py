@@ -2,9 +2,6 @@
 地图API全面测试
 覆盖app/api/v1/map.py的所有路由
 """
-import pytest
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestMapAPI:
     """测试地图API"""

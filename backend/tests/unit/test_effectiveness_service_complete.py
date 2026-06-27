@@ -2,9 +2,7 @@
 完整测试 - app.services.effectiveness_service
 覆盖率目标: 100%
 """
-import pytest
 from datetime import datetime
-from unittest.mock import MagicMock
 
 class TestEffectivenessMetrics:
     """测试 EffectivenessMetrics 数据类"""
@@ -119,7 +117,7 @@ class TestEffectivenessService:
 
     def test_compare_effectiveness_periods(self):
         """测试对比时期效果"""
-        from app.services.effectiveness_service import EffectivenessService, EffectivenessMetrics
+        from app.services.effectiveness_service import EffectivenessService
         service = EffectivenessService()
         result = service.compare_effectiveness_periods(
             1, "2024-01-01", "2024-06-30", "2024-07-01", "2024-12-31"

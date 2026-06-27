@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
-import pytest
 
-from app.models.audit import AuditAction, AuditStatus
+from app.models.audit import AuditAction
 from app.services.audit_enhancement_service import AuditEnhancementService
 
 

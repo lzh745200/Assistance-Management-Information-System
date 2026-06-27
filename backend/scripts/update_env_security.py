@@ -25,7 +25,7 @@ def fix_cors_origins(content):
     """修复CORS配置，移除0.0.0.0"""
     lines = content.split('\n')
     fixed_lines = []
-    
+
     for line in lines:
         if line.startswith('CORS_ORIGINS='):
             # 移除0.0.0.0相关的源
@@ -35,30 +35,30 @@ def fix_cors_origins(content):
             filtered = [o for o in origin_list if '0.0.0.0' not in o]
             fixed_line = 'CORS_ORIGINS=' + ','.join(filtered)
             fixed_lines.append(fixed_line)
-            print(f"✓ 修复CORS配置: 移除了0.0.0.0源")
+            print("✓ 修复CORS配置: 移除了0.0.0.0源")
         else:
             fixed_lines.append(line)
-    
+
     return '\n'.join(fixed_lines)
 
 def add_security_warnings(content):
     """添加安全警告注释"""
     lines = content.split('\n')
     fixed_lines = []
-    
+
     for i, line in enumerate(lines):
         # 在SECRET_KEY前添加警告
         if line.startswith('SECRET_KEY=') and i > 0:
             if '警告' not in lines[i-1]:
                 fixed_lines.append('# 警告：生产环境应从环境变量或密钥管理系统获取密钥')
-        
+
         # 在CORS_ORIGINS前添加警告
         if line.startswith('CORS_ORIGINS=') and i > 0:
             if '警告' not in lines[i-1]:
                 fixed_lines.append('# 警告：生产环境应仅包含实际的前端域名')
-        
+
         fixed_lines.append(line)
-    
+
     return '\n'.join(fixed_lines)
 
 def main():
@@ -66,28 +66,28 @@ def main():
     print("=" * 60)
     print("安全配置更新脚本")
     print("=" * 60)
-    
+
     if not os.path.exists('.env'):
         print("✗ 错误: .env文件不存在")
         return 1
-    
+
     # 1. 备份
     backup_file = backup_env()
-    
+
     # 2. 读取当前配置
     with open('.env', 'r', encoding='utf-8') as f:
         content = f.read()
-    
+
     # 3. 修复CORS配置
     content = fix_cors_origins(content)
-    
+
     # 4. 添加安全警告
     content = add_security_warnings(content)
-    
+
     # 5. 写入修复后的配置
     with open('.env', 'w', encoding='utf-8') as f:
         f.write(content)
-    
+
     print("✓ 已更新.env文件")
     print()
     print("=" * 60)
@@ -103,7 +103,7 @@ def main():
     print("建议的密钥管理方式:")
     print("  export SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(64))')")
     print("  export CSRF_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(64))')")
-    
+
     return 0
 
 if __name__ == '__main__':

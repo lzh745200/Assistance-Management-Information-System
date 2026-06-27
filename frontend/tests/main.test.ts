@@ -26,7 +26,7 @@ describe('Stores', () => {
     it('应该初始化默认配置', async () => {
       const { useConfigStore } = await import('../src/stores/config')
       const store = useConfigStore()
-      
+
       expect(store.theme).toBe('military')
       expect(store.locale).toBe('zh-CN')
       expect(store.pageSize).toBe(20)
@@ -35,7 +35,7 @@ describe('Stores', () => {
     it('应该能够切换主题', async () => {
       const { useConfigStore } = await import('../src/stores/config')
       const store = useConfigStore()
-      
+
       store.setTheme('dark')
       expect(store.theme).toBe('dark')
       expect(store.isDarkMode).toBe(true)
@@ -44,14 +44,14 @@ describe('Stores', () => {
     it('应该能够持久化配置', async () => {
       const { useConfigStore } = await import('../src/stores/config')
       const store = useConfigStore()
-      
+
       store.setTheme('light')
       store.persist()
-      
+
       // 验证localStorage
       const saved = localStorage.getItem('app_config')
       expect(saved).toBeTruthy()
-      
+
       const config = JSON.parse(saved!)
       expect(config.theme).toBe('light')
     })
@@ -61,7 +61,7 @@ describe('Stores', () => {
     it('应该能够设置token', async () => {
       const { useAuthStore } = await import('../src/stores/auth')
       const store = useAuthStore()
-      
+
       store.setToken('test_token')
       expect(store.token).toBe('test_token')
       expect(store.isAuthenticated).toBe(true)
@@ -70,10 +70,10 @@ describe('Stores', () => {
     it('应该能够清除认证信息', async () => {
       const { useAuthStore } = await import('../src/stores/auth')
       const store = useAuthStore()
-      
+
       store.setToken('test_token')
       store.logout()
-      
+
       expect(store.token).toBeNull()
       expect(store.isAuthenticated).toBe(false)
     })
@@ -88,7 +88,7 @@ describe('Components', () => {
     const wrapper = mount({
       template: '<div>Test Component</div>'
     })
-    
+
     expect(wrapper.text()).toBe('Test Component')
   })
 })
@@ -113,7 +113,7 @@ describe('API Requests', () => {
 describe('Router', () => {
   it('应该能够导航到不同路由', async () => {
     const { createRouter, createWebHistory } = await import('vue-router')
-    
+
     const router = createRouter({
       history: createWebHistory(),
       routes: [
@@ -161,7 +161,7 @@ describe('Performance', () => {
     // 执行一些操作
     const end = performance.now()
     const duration = end - start
-    
+
     expect(duration).toBeLessThan(1000) // 应该小于1秒
   })
 })

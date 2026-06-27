@@ -2,9 +2,7 @@
 完整测试 - app.services.ai.recommendation_service
 覆盖率目标: 100%
 """
-import pytest
-from unittest.mock import MagicMock, patch
-from sqlalchemy import and_
+from unittest.mock import MagicMock
 
 # admin user mock — 使 filter_by_data_scope 跳过过滤（保持 mock 链不变）
 _admin = MagicMock()

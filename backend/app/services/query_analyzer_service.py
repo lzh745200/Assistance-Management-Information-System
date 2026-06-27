@@ -100,8 +100,9 @@ class QueryAnalyzer:
         current_time = time.time()
         cache_key = f"{context}:{query_signature}"
 
-        # 清理过期缓存(超过1秒)
-        expired_keys = [k for k, v in self._n_plus_one_cache.items() if current_time - v > 1.0]
+        # 清理过期缓存(超过1秒) — 跳过 _count 键
+        expired_keys = [k for k, v in self._n_plus_one_cache.items()
+                        if not k.endswith("_count") and current_time - v > 1.0]
         for k in expired_keys:
             del self._n_plus_one_cache[k]
 

@@ -1,6 +1,5 @@
 """Tests for app.services.village.data_permission - zero coverage → 100%"""
 
-import pytest
 from unittest.mock import MagicMock, patch
 from app.services.village.data_permission import filter_villages_by_permission
 

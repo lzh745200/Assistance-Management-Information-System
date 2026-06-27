@@ -910,7 +910,7 @@ async def confirm_import_with_conflict_resolution(
         history_service.create_history(
             package_id=package_id,
             operation_type="import",
-            result=OperationResult.FAILURE,
+            result=OperationResult.FAILED,
             user_id=current_user.id,
             duration_ms=duration_ms,
             client_ip=client_ip,

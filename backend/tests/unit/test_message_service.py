@@ -3,7 +3,7 @@
 覆盖: app/services/message_service.py
 """
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from datetime import datetime, timezone, timedelta
 
 

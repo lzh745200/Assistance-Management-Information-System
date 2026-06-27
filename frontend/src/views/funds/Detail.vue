@@ -96,13 +96,13 @@
                     fundData.date || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="申请人">{{
-                    fundData.applicant || '-'
+                    ds(fundData.applicant, 'name') || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="经办人">{{
-                    fundData.operator || '-'
+                    ds(fundData.operator, 'name') || '-'
                   }}</el-descriptions-item>
                   <el-descriptions-item label="接收人">{{
-                    fundData.receiver || '-'
+                    ds(fundData.receiver, 'name') || '-'
                   }}</el-descriptions-item>
                 </el-descriptions>
               </div>
@@ -222,7 +222,7 @@
                         }}</el-tag>
                       </div>
                       <div class="timeline-info">
-                        操作人: {{ item.operator_name || '-' }}
+                        操作人: {{ ds(item.operator_name, 'name') || '-' }}
                         <span v-if="item.remark" style="margin-left: 16px"
                           >备注: {{ item.remark }}</span
                         >
@@ -557,12 +557,14 @@ import { useAuthStore } from '@/stores/auth'
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Edit, Delete, Loading } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { fundApi } from '@/api/funds'
 
 const { pushSafe } = useRouterSafe()
+const { ds } = useDesensitize()
 const route = useRoute()
 const authStore = useAuthStore()
 const loading = ref(true)

@@ -9,11 +9,8 @@
 - GET /village-comparison
 """
 
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestAssessmentAPI:
     """测试评估API - 使用正确的 router prefix=/assessment"""

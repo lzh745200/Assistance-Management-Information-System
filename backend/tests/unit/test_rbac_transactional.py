@@ -9,9 +9,9 @@ RBAC 事务性修复单元测试
 利用 MagicMock 的 __getattr__ 特性——MagicMock 自动 mock 任意属性访问。"""
 import asyncio
 import pytest
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import MagicMock
 
-from app.services.rbac_service import RBACService, Permission
+from app.services.rbac_service import RBACService
 
 
 # ──────────────────────────────────────────────
@@ -101,7 +101,6 @@ def mkq_multi(db, spec: dict):
 # 模型导入 — 测试需要真实列属性以便 SQLAlchemy query 正常运行
 # ──────────────────────────────────────────────
 
-from app.models.rbac import RbacRole, RolePermission, UserRole, UserPermission
 
 
 # ──────────────────────────────────────────────

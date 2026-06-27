@@ -252,7 +252,7 @@ async def list_villages(
                 [keyword, department, county, isRevitalizationTier, isThreeRegions],
                 default=str,
             ).encode()
-            _ckey = f"villages:list:{page}:{page_size}:{hashlib.md5(_key_data).hexdigest()}"
+            _ckey = f"villages:list:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
             _cached = await _cache.get(_ckey)
             if _cached is not None:
                 return _cached

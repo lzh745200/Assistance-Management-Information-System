@@ -10,6 +10,7 @@ import decimal
 import json
 import uuid
 from enum import Enum
+from typing import Optional
 
 
 class AppJSONEncoder(json.JSONEncoder):
@@ -50,7 +51,7 @@ class AppJSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def dumps(obj, *, indent: int = None, ensure_ascii: bool = False, **kwargs) -> str:
+def dumps(obj, *, indent: Optional[int] = None, ensure_ascii: bool = False, **kwargs) -> str:
     """Serialise obj to a JSON string using AppJSONEncoder."""
     return json.dumps(obj, cls=AppJSONEncoder, indent=indent, ensure_ascii=ensure_ascii, **kwargs)
 

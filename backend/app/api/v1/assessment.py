@@ -9,6 +9,7 @@ from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.core.cache import get_cache_service
+from app.core.data_permission import filter_by_data_scope
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.fund import Fund
@@ -52,7 +53,7 @@ async def get_village_scores(
         return cached
 
     # 预加载关联数据，避免N+1查询
-    villages = db.query(SupportedVillage).limit(5000).all()
+    villages = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user).limit(5000).all()
 
     if not villages:
         return {
@@ -143,18 +144,37 @@ async def detect_anomalies(
     """检测数据异常（首页预警卡片用）"""
     anomalies = []
 
-    # 1. 收入突降检测: 与上一年度相比降幅 > 30%
     current_year = date.today().year
-    incomes_current = db.query(VillageIncome).filter(VillageIncome.year == current_year).all()
+
+    # 获取当前用户有权访问的村庄ID列表
+    allowed_villages = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user).all()
+    allowed_village_ids = {v.id for v in allowed_villages}
+
+    # 1. 收入突降检测: 与上一年度相比降幅 > 30%
+    incomes_current = (
+        db.query(VillageIncome)
+        .filter(
+            VillageIncome.year == current_year,
+            VillageIncome.supported_village_id.in_(allowed_village_ids),
+        )
+        .all()
+    )
 
     # 批量查询上一年度数据和村庄信息，避免N+1查询
     prev_incomes = {
         inc.supported_village_id: inc
-        for inc in db.query(VillageIncome).filter(VillageIncome.year == current_year - 1).all()
+        for inc in (
+            db.query(VillageIncome)
+            .filter(
+                VillageIncome.year == current_year - 1,
+                VillageIncome.supported_village_id.in_(allowed_village_ids),
+            )
+            .all()
+        )
     }
 
     village_ids = [inc.supported_village_id for inc in incomes_current]
-    villages_dict = {v.id: v for v in db.query(SupportedVillage).filter(SupportedVillage.id.in_(village_ids)).all()}
+    villages_dict = {v.id: v for v in allowed_villages if v.id in village_ids}
 
     for inc in incomes_current:
         prev = prev_incomes.get(inc.supported_village_id)
@@ -177,7 +197,7 @@ async def detect_anomalies(
 
     # 2. 逾期项目检测
     overdue_projects = (
-        db.query(Project)
+        filter_by_data_scope(db.query(Project), Project, current_user)
         .filter(
             Project.end_date < date.today(),
             Project.status.notin_(["completed", "cancelled"]),
@@ -199,7 +219,11 @@ async def detect_anomalies(
             )
 
     # 3. 预算超支检测
-    over_budget = db.query(Project).filter(Project.budget > 0, Project.actual_cost > Project.budget).all()
+    over_budget = (
+        filter_by_data_scope(db.query(Project), Project, current_user)
+        .filter(Project.budget > 0, Project.actual_cost > Project.budget)
+        .all()
+    )
     for p in over_budget:
         ratio = round((float(p.actual_cost) - float(p.budget)) / float(p.budget) * 100, 1)
         anomalies.append(
@@ -228,7 +252,16 @@ async def get_trend_prediction(
     """基于历史数据的简单线性回归趋势预测"""
     col = VillageIncome.per_capita_income if metric == "per_capita_income" else VillageIncome.collective_income
 
-    rows = db.query(VillageIncome.year, func.avg(col)).group_by(VillageIncome.year).order_by(VillageIncome.year).all()
+    # 仅统计用户有权访问的村庄
+    allowed_villages = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user).all()
+    allowed_village_ids = {v.id for v in allowed_villages}
+    rows = (
+        db.query(VillageIncome.year, func.avg(col))
+        .filter(VillageIncome.supported_village_id.in_(allowed_village_ids))
+        .group_by(VillageIncome.year)
+        .order_by(VillageIncome.year)
+        .all()
+    )
 
     if len(rows) < 2:
         return {
@@ -280,9 +313,16 @@ async def compare_villages(
     if not ids:
         return {"items": [], "total": 0}
 
-    # 批量查询村庄信息，避免 N+1
-    villages = db.query(SupportedVillage).filter(SupportedVillage.id.in_(ids)).all()
+    # 批量查询村庄信息，避免 N+1，且仅查询用户有权访问的村庄
+    villages = (
+        filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user)
+        .filter(SupportedVillage.id.in_(ids))
+        .all()
+    )
+    if not villages:
+        return {"items": [], "total": 0}
     villages_dict = {v.id: v for v in villages}
+    allowed_ids = [v.id for v in villages]
 
     # 批量查询最新收入数据
     latest_incomes_subq = (
@@ -290,7 +330,7 @@ async def compare_villages(
             VillageIncome.supported_village_id,
             func.max(VillageIncome.year).label("max_year"),
         )
-        .filter(VillageIncome.supported_village_id.in_(ids))
+        .filter(VillageIncome.supported_village_id.in_(allowed_ids))
         .group_by(VillageIncome.supported_village_id)
         .subquery()
     )
@@ -312,7 +352,7 @@ async def compare_villages(
             func.count(Project.id).label("total"),
             func.sum(case((Project.status == "completed", 1), else_=0)).label("completed"),
         )
-        .filter(Project.village_id.in_(ids))
+        .filter(Project.village_id.in_(allowed_ids))
         .group_by(Project.village_id)
         .all()
     )
@@ -324,7 +364,7 @@ async def compare_villages(
             Fund.village_id,
             func.coalesce(func.sum(Fund.amount), 0).label("total_funds"),
         )
-        .filter(Fund.village_id.in_(ids))
+        .filter(Fund.village_id.in_(allowed_ids))
         .group_by(Fund.village_id)
         .all()
     )
@@ -332,7 +372,7 @@ async def compare_villages(
 
     # 组装结果
     results = []
-    for vid in ids:
+    for vid in allowed_ids:
         village = villages_dict.get(vid)
         if not village:
             continue

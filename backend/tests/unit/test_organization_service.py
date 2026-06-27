@@ -2,7 +2,6 @@
 组织管理服务单元测试
 覆盖: app/services/organization_service.py
 """
-import pytest
 from unittest.mock import MagicMock
 
 

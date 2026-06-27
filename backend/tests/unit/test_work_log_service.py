@@ -1,6 +1,6 @@
 """Work log服务单元测试"""
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 @pytest.fixture
 def mock_db(): return MagicMock()

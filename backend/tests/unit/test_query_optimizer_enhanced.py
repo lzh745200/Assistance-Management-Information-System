@@ -1,7 +1,7 @@
 """Tests for query optimizer enhancements."""
 
 import pytest
-from sqlalchemy import create_engine, text, Column, Integer, String, select
+from sqlalchemy import create_engine, Column, Integer, String, select
 from sqlalchemy.orm import declarative_base, Session
 
 Base = declarative_base()

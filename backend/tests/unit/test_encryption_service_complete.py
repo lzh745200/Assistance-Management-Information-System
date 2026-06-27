@@ -4,10 +4,8 @@
 """
 import pytest
 import os
-import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
+from unittest.mock import patch
 
 class TestDataPackageEncryption:
     """测试 DataPackageEncryption 类"""

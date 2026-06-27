@@ -3,11 +3,8 @@
 覆盖app/api/v1/messages.py的所有路由
 """
 
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestMessagesAPI:
     """测试消息API"""

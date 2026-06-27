@@ -2,8 +2,7 @@
 import os
 os.environ["BACKUP_ENABLED"] = "true"  # Enable for backup tests (uses tmp_path)
 import time
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestBackupScheduler:

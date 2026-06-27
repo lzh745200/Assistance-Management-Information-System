@@ -2,9 +2,7 @@
 完整测试 - app.services.ai.nlp_query_service
 覆盖率目标: 100%
 """
-import pytest
 from unittest.mock import MagicMock, patch
-from sqlalchemy import text
 
 class TestNLPQueryServiceParseQuery:
     """测试 parse_query 方法"""

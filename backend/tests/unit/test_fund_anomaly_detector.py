@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -22,14 +22,8 @@ from app.services.fund_anomaly_detector import (
     _check_contract_split,
     _check_single_source,
     FundAnomalyDetector,
-    OVERSPEND_DANGER,
-    OVERSPEND_WARNING,
-    DEVIATION_THRESHOLD,
-    IDLE_DAYS,
     LARGE_CASH_THRESHOLD,
-    CONTRACT_SPLIT_DAYS,
     CONTRACT_SPLIT_COUNT,
-    DUPLICATE_DATE_DAYS,
 )
 
 

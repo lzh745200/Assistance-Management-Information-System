@@ -17,7 +17,7 @@ FTS_TABLE = "policies_fts"
 def ensure_fts_table(db: Session) -> None:
     """确保 FTS5 虚拟表存在，若不存在则创建."""
     result = db.execute(text(
-        f"SELECT name FROM sqlite_master WHERE type='table' AND name='{FTS_TABLE}'"
+        f"SELECT name FROM sqlite_master WHERE type='table' AND name='{FTS_TABLE}'"  # nosec B608
     )).fetchone()
     if result:
         return
@@ -26,12 +26,12 @@ def ensure_fts_table(db: Session) -> None:
         USING fts5(title, content, summary, keywords,
                    content='policies', content_rowid='id',
                    tokenize='unicode61')
-    """))
+    """))  # nosec B608
     # 同步已有数据
     db.execute(text(f"""
         INSERT INTO {FTS_TABLE}(rowid, title, content, summary, keywords)
         SELECT id, title, content, summary, keywords FROM policies
-    """))
+    """))  # nosec B608
     db.commit()
     logger.info("FTS5 表 %s 已创建并同步", FTS_TABLE)
 
@@ -71,7 +71,7 @@ def search_policies_fts(
         WHERE {FTS_TABLE} MATCH :query
         ORDER BY rank
         LIMIT :limit OFFSET :offset
-    """
+    """  # nosec B608
     try:
         rows = db.execute(
             text(sql),

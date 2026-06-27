@@ -173,15 +173,18 @@ class UserAlreadyExistsError(BusinessError):
 # ── Backward-compat aliases (extend BusinessError for isinstance checks) ──
 
 class NotFoundException(BusinessError):
-    def __init__(self, msg="Not found"): super().__init__(msg, 404)
+    def __init__(self, msg="Not found"):
+        super().__init__(msg, 404)
 
 
 class AuthenticationException(BusinessError):
-    def __init__(self, msg="Authentication failed"): super().__init__(msg, 401)
+    def __init__(self, msg="Authentication failed"):
+        super().__init__(msg, 401)
 
 
 class ForbiddenException(BusinessError):
-    def __init__(self, msg="Forbidden"): super().__init__(msg, 403)
+    def __init__(self, msg="Forbidden"):
+        super().__init__(msg, 403)
 
 
 def exc_paginated_response(items: list, total: int, page: int, page_size: int) -> dict:

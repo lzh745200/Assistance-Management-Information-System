@@ -1,6 +1,5 @@
 """Tests for app.utils.permission_filter - zero coverage → 100%"""
 
-import pytest
 from unittest.mock import MagicMock
 from app.utils.permission_filter import (
     get_org_hierarchy_cached,

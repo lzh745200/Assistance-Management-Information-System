@@ -2,7 +2,6 @@
 Tests for help.py — static help articles API (no auth required, no DB needed).
 """
 
-import pytest
 
 
 BASE = "/api/v1/system/help"

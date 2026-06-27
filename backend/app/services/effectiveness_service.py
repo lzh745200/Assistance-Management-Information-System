@@ -5,7 +5,7 @@
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from typing import Any, Dict, List, Optional
 from datetime import timezone, datetime
 
 
@@ -130,7 +130,7 @@ class EffectivenessService:
         return b"Mock report content"
 
     def compare_effectiveness_periods(
-        self, entity_id: int, period1: str, period2: str, period3: str = None, period4: str = None
+        self, entity_id: int, period1: str, period2: str, period3: Optional[str] = None, period4: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         对比不同时期的效果

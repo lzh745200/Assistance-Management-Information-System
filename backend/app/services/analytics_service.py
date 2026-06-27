@@ -5,11 +5,18 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import text
+from sqlalchemy import Integer, cast, func, text
 from sqlalchemy.orm import Session
 
 from app.core.error_handler import app_logger
-from app.models.supported_village import SupportedVillage
+from app.models.supported_village import (
+    SupportedVillage,
+    VillagePopulation,
+    EducationSupport,
+    IndustrySupport,
+    InfrastructureImprovement,
+    VillageIncome,
+)
 
 
 class AnalyticsService:
@@ -355,229 +362,148 @@ class AnalyticsService:
             app_logger.error(f"生成报表数据失败: {e}")
             return {}
 
+    @staticmethod
+    def _apply_year_filter(query, model, year, village_subq, db):
+        """对查询应用年份过滤，未指定时取最新年份"""
+        if year:
+            return query.filter(model.year == year)
+        latest = (
+            db.query(func.max(model.year))
+            .filter(model.supported_village_id.in_(db.query(village_subq.c.id)))
+            .scalar_subquery()
+        )
+        return query.filter(model.year == latest)
+
+    def _build_village_query(self, filters, db):
+        """构建帮扶村查询并返回子查询和总数"""
+        village_query = db.query(SupportedVillage)
+        if filters:
+            if filters.get("department"):
+                village_query = village_query.filter(SupportedVillage.department == filters["department"])
+            if filters.get("is_three_regions"):
+                village_query = village_query.filter(SupportedVillage.is_three_regions == True)  # noqa: E712
+            if filters.get("is_key_county"):
+                village_query = village_query.filter(SupportedVillage.is_key_county == True)  # noqa: E712
+        village_subq = village_query.with_entities(SupportedVillage.id).subquery()
+        total_villages = db.query(func.count()).select_from(village_subq).scalar() or 0
+        return village_subq, total_villages
+
+    def _calc_village_features(self, db, village_subq, result):
+        """统计帮扶村特征（三区三州、重点县等）"""
+        feature_row = (
+            db.query(
+                func.coalesce(func.sum(cast(SupportedVillage.is_three_regions, Integer)), 0),
+                func.coalesce(func.sum(cast(SupportedVillage.is_key_county, Integer)), 0),
+                func.coalesce(func.sum(cast(SupportedVillage.is_provincial_demo, Integer)), 0),
+                func.coalesce(func.sum(cast(SupportedVillage.is_cross_province, Integer)), 0),
+            )
+            .filter(SupportedVillage.id.in_(db.query(village_subq.c.id)))
+            .first()
+        )
+        if feature_row:
+            result["villages"]["threeRegionsCount"] = int(feature_row[0] or 0)
+            result["villages"]["keyCountyCount"] = int(feature_row[1] or 0)
+            result["villages"]["provincialDemoCount"] = int(feature_row[2] or 0)
+            result["villages"]["crossProvinceCount"] = int(feature_row[3] or 0)
+
+    def _calc_population(self, db, village_subq, year, result):
+        """统计人口数据"""
+        pop_query = db.query(
+            func.sum(VillagePopulation.total_population).label("total_pop"),
+            func.sum(VillagePopulation.total_households).label("total_households"),
+            func.sum(
+                VillagePopulation.unstable_poverty_households
+                + VillagePopulation.marginal_poverty_households
+                + VillagePopulation.sudden_difficulty_households
+            ).label("poverty_households"),
+        ).filter(VillagePopulation.supported_village_id.in_(db.query(village_subq.c.id)))
+        pop_query = self._apply_year_filter(pop_query, VillagePopulation, year, village_subq, db)
+        pop_result = pop_query.first()
+        if pop_result:
+            result["population"]["totalPopulation"] = int(pop_result.total_pop or 0)
+            result["population"]["totalHouseholds"] = int(pop_result.total_households or 0)
+            result["population"]["povertyHouseholds"] = int(pop_result.poverty_households or 0)
+
+    def _calc_income(self, db, village_subq, year, result):
+        """统计收入数据"""
+        income_query = db.query(
+            func.avg(VillageIncome.per_capita_income).label("avg_income"),
+            func.sum(VillageIncome.collective_income).label("total_collective"),
+        ).filter(VillageIncome.supported_village_id.in_(db.query(village_subq.c.id)))
+        income_query = self._apply_year_filter(income_query, VillageIncome, year, village_subq, db)
+        income_result = income_query.first()
+        if income_result:
+            result["income"]["avgPerCapitaIncome"] = float(income_result.avg_income or 0)
+            result["income"]["totalCollectiveIncome"] = float(income_result.total_collective or 0)
+
+    def _calc_industry(self, db, village_subq, year, result):
+        """统计产业投资"""
+        industry_query = db.query(func.sum(IndustrySupport.investment).label("total_investment")).filter(
+            IndustrySupport.supported_village_id.in_(db.query(village_subq.c.id))
+        )
+        industry_query = self._apply_year_filter(industry_query, IndustrySupport, year, village_subq, db)
+        result["investment"]["industry"] = float(industry_query.scalar() or 0)
+
+    def _calc_infrastructure(self, db, village_subq, year, result):
+        """统计基础设施投资"""
+        infra_query = db.query(
+            func.sum(InfrastructureImprovement.investment).label("total_investment"),
+            func.sum(InfrastructureImprovement.road_km).label("total_road_km"),
+        ).filter(InfrastructureImprovement.supported_village_id.in_(db.query(village_subq.c.id)))
+        infra_query = self._apply_year_filter(infra_query, InfrastructureImprovement, year, village_subq, db)
+        infra_result = infra_query.first()
+        if infra_result:
+            result["investment"]["infrastructure"] = float(infra_result.total_investment or 0)
+            result["investment"]["infrastructureRoadKm"] = float(infra_result.total_road_km or 0)
+
+    def _calc_education(self, db, village_subq, year, result):
+        """统计教育投资"""
+        edu_query = db.query(
+            func.sum(EducationSupport.investment).label("total_investment"),
+            func.sum(EducationSupport.aided_students).label("total_aided_students"),
+        ).filter(EducationSupport.supported_village_id.in_(db.query(village_subq.c.id)))
+        edu_query = self._apply_year_filter(edu_query, EducationSupport, year, village_subq, db)
+        edu_result = edu_query.first()
+        if edu_result:
+            result["investment"]["education"] = float(edu_result.total_investment or 0)
+            result["investment"]["educationAidedStudents"] = int(edu_result.total_aided_students or 0)
+
+    @staticmethod
+    def _empty_summary(year):
+        """返回空汇总数据结构"""
+        return {
+            "year": year or datetime.now().year,
+            "villages": {
+                "totalVillages": 0, "threeRegionsCount": 0, "keyCountyCount": 0,
+                "provincialDemoCount": 0, "crossProvinceCount": 0,
+            },
+            "population": {"totalPopulation": 0, "totalHouseholds": 0, "povertyHouseholds": 0},
+            "income": {"avgPerCapitaIncome": 0, "totalCollectiveIncome": 0},
+            "investment": {"industry": 0, "infrastructure": 0, "infrastructureRoadKm": 0, "education": 0, "educationAidedStudents": 0},
+        }
+
     def get_summary_statistics(self, filters: Optional[Dict] = None, year: Optional[int] = None) -> Dict[str, Any]:
         """汇总统计（同步，供 reports/analytics/summary 使用）"""
         try:
-            from sqlalchemy import func
-            from app.models.supported_village import (
-                VillagePopulation,
-                VillageIncome,
-                IndustrySupport,
-                InfrastructureImprovement,
-                EducationSupport,
-            )
-
             db = self.db
             current_year = year or datetime.now().year
+            village_subq, total_villages = self._build_village_query(filters, db)
 
-            # 构建帮扶村查询
-            village_query = db.query(SupportedVillage)
-
-            if filters:
-                if filters.get("department"):
-                    village_query = village_query.filter(SupportedVillage.department == filters["department"])
-                if filters.get("is_three_regions"):
-                    village_query = village_query.filter(SupportedVillage.is_three_regions == True)  # noqa: E712
-                if filters.get("is_key_county"):
-                    village_query = village_query.filter(SupportedVillage.is_key_county == True)  # noqa: E712
-
-            # 使用子查询代替物化 ID 列表，避免大数据集时把所有村 ID 拉到 Python 内存
-            village_subq = village_query.with_entities(SupportedVillage.id).subquery()
-            total_villages = db.query(func.count()).select_from(village_subq).scalar() or 0
-
-            # 初始化返回数据结构
-            result = {
-                "year": current_year,
-                "villages": {
-                    "totalVillages": total_villages,
-                    "threeRegionsCount": 0,
-                    "keyCountyCount": 0,
-                    "provincialDemoCount": 0,
-                    "crossProvinceCount": 0,
-                },
-                "population": {
-                    "totalPopulation": 0,
-                    "totalHouseholds": 0,
-                    "povertyHouseholds": 0,
-                },
-                "income": {
-                    "avgPerCapitaIncome": 0,
-                    "totalCollectiveIncome": 0,
-                },
-                "investment": {
-                    "industry": 0,
-                    "infrastructure": 0,
-                    "infrastructureRoadKm": 0,
-                    "education": 0,
-                    "educationAidedStudents": 0,
-                },
-            }
-
-            # 如果没有帮扶村，直接返回空数据
+            result = self._empty_summary(current_year)
+            result["villages"]["totalVillages"] = total_villages
             if total_villages == 0:
                 return result
 
-            # 统计帮扶村特征（一次 SQL 完成，避免 Python 循环）
-            from sqlalchemy import Integer, cast
-
-            feature_row = (
-                db.query(
-                    func.coalesce(func.sum(cast(SupportedVillage.is_three_regions, Integer)), 0),
-                    func.coalesce(func.sum(cast(SupportedVillage.is_key_county, Integer)), 0),
-                    func.coalesce(func.sum(cast(SupportedVillage.is_provincial_demo, Integer)), 0),
-                    func.coalesce(func.sum(cast(SupportedVillage.is_cross_province, Integer)), 0),
-                )
-                .filter(SupportedVillage.id.in_(db.query(village_subq.c.id)))
-                .first()
-            )
-
-            if feature_row:
-                result["villages"]["threeRegionsCount"] = int(feature_row[0] or 0)
-                result["villages"]["keyCountyCount"] = int(feature_row[1] or 0)
-                result["villages"]["provincialDemoCount"] = int(feature_row[2] or 0)
-                result["villages"]["crossProvinceCount"] = int(feature_row[3] or 0)
-
-            # 统计人口数据（使用最新年份或指定年份）
-            pop_query = db.query(
-                func.sum(VillagePopulation.total_population).label("total_pop"),
-                func.sum(VillagePopulation.total_households).label("total_households"),
-                func.sum(
-                    VillagePopulation.unstable_poverty_households
-                    + VillagePopulation.marginal_poverty_households
-                    + VillagePopulation.sudden_difficulty_households
-                ).label("poverty_households"),
-            ).filter(VillagePopulation.supported_village_id.in_(db.query(village_subq.c.id)))
-
-            if year:
-                pop_query = pop_query.filter(VillagePopulation.year == year)
-            else:
-                # 使用最新年份的数据
-                latest_year_subquery = (
-                    db.query(func.max(VillagePopulation.year))
-                    .filter(VillagePopulation.supported_village_id.in_(db.query(village_subq.c.id)))
-                    .scalar_subquery()
-                )
-                pop_query = pop_query.filter(VillagePopulation.year == latest_year_subquery)
-
-            pop_result = pop_query.first()
-            if pop_result:
-                result["population"]["totalPopulation"] = int(pop_result.total_pop or 0)
-                result["population"]["totalHouseholds"] = int(pop_result.total_households or 0)
-                result["population"]["povertyHouseholds"] = int(pop_result.poverty_households or 0)
-
-            # 统计收入数据
-            income_query = db.query(
-                func.avg(VillageIncome.per_capita_income).label("avg_income"),
-                func.sum(VillageIncome.collective_income).label("total_collective"),
-            ).filter(VillageIncome.supported_village_id.in_(db.query(village_subq.c.id)))
-
-            if year:
-                income_query = income_query.filter(VillageIncome.year == year)
-            else:
-                latest_year_subquery = (
-                    db.query(func.max(VillageIncome.year))
-                    .filter(VillageIncome.supported_village_id.in_(db.query(village_subq.c.id)))
-                    .scalar_subquery()
-                )
-                income_query = income_query.filter(VillageIncome.year == latest_year_subquery)
-
-            income_result = income_query.first()
-            if income_result:
-                result["income"]["avgPerCapitaIncome"] = float(income_result.avg_income or 0)
-                result["income"]["totalCollectiveIncome"] = float(income_result.total_collective or 0)
-
-            # 统计投资数据
-            # 产业投资
-            industry_query = db.query(func.sum(IndustrySupport.investment).label("total_investment")).filter(
-                IndustrySupport.supported_village_id.in_(db.query(village_subq.c.id))
-            )
-
-            if year:
-                industry_query = industry_query.filter(IndustrySupport.year == year)
-            else:
-                latest_year_subquery = (
-                    db.query(func.max(IndustrySupport.year))
-                    .filter(IndustrySupport.supported_village_id.in_(db.query(village_subq.c.id)))
-                    .scalar_subquery()
-                )
-                industry_query = industry_query.filter(IndustrySupport.year == latest_year_subquery)
-
-            industry_result = industry_query.scalar()
-            result["investment"]["industry"] = float(industry_result or 0)
-
-            # 基础设施投资
-            infra_query = db.query(
-                func.sum(InfrastructureImprovement.investment).label("total_investment"),
-                func.sum(InfrastructureImprovement.road_km).label("total_road_km"),
-            ).filter(InfrastructureImprovement.supported_village_id.in_(db.query(village_subq.c.id)))
-
-            if year:
-                infra_query = infra_query.filter(InfrastructureImprovement.year == year)
-            else:
-                latest_year_subquery = (
-                    db.query(func.max(InfrastructureImprovement.year))
-                    .filter(InfrastructureImprovement.supported_village_id.in_(db.query(village_subq.c.id)))
-                    .scalar_subquery()
-                )
-                infra_query = infra_query.filter(InfrastructureImprovement.year == latest_year_subquery)
-
-            infra_result = infra_query.first()
-            if infra_result:
-                result["investment"]["infrastructure"] = float(infra_result.total_investment or 0)
-                result["investment"]["infrastructureRoadKm"] = float(infra_result.total_road_km or 0)
-
-            # 教育投资
-            edu_query = db.query(
-                func.sum(EducationSupport.investment).label("total_investment"),
-                func.sum(EducationSupport.aided_students).label("total_aided_students"),
-            ).filter(EducationSupport.supported_village_id.in_(db.query(village_subq.c.id)))
-
-            if year:
-                edu_query = edu_query.filter(EducationSupport.year == year)
-            else:
-                latest_year_subquery = (
-                    db.query(func.max(EducationSupport.year))
-                    .filter(EducationSupport.supported_village_id.in_(db.query(village_subq.c.id)))
-                    .scalar_subquery()
-                )
-                edu_query = edu_query.filter(EducationSupport.year == latest_year_subquery)
-
-            edu_result = edu_query.first()
-            if edu_result:
-                result["investment"]["education"] = float(edu_result.total_investment or 0)
-                result["investment"]["educationAidedStudents"] = int(edu_result.total_aided_students or 0)
-
+            self._calc_village_features(db, village_subq, result)
+            self._calc_population(db, village_subq, year, result)
+            self._calc_income(db, village_subq, year, result)
+            self._calc_industry(db, village_subq, year, result)
+            self._calc_infrastructure(db, village_subq, year, result)
+            self._calc_education(db, village_subq, year, result)
             return result
-
         except Exception as e:
             app_logger.error(f"获取汇总统计失败: {e}", exc_info=True)
-            # 返回空数据结构，避免前端报错
-            return {
-                "year": year or datetime.now().year,
-                "villages": {
-                    "totalVillages": 0,
-                    "threeRegionsCount": 0,
-                    "keyCountyCount": 0,
-                    "provincialDemoCount": 0,
-                    "crossProvinceCount": 0,
-                },
-                "population": {
-                    "totalPopulation": 0,
-                    "totalHouseholds": 0,
-                    "povertyHouseholds": 0,
-                },
-                "income": {
-                    "avgPerCapitaIncome": 0,
-                    "totalCollectiveIncome": 0,
-                },
-                "investment": {
-                    "industry": 0,
-                    "infrastructure": 0,
-                    "infrastructureRoadKm": 0,
-                    "education": 0,
-                    "educationAidedStudents": 0,
-                },
-            }
+            return self._empty_summary(year)
 
     def drill_down(self, query_params: Dict[str, Any]) -> Dict[str, Any]:
         """数据钻取（同步，供 reports 路由使用）"""

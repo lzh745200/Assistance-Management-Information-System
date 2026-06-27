@@ -80,7 +80,7 @@ for (let i = 0; i < 10000; i++) {
       <el-button @click="scrollToBottom">滚动到底部</el-button>
       <el-button @click="scrollToIndex(500)">滚动到第500项</el-button>
     </div>
-    
+
     <VirtualList
       ref="listRef"
       :data="items"

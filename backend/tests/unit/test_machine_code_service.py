@@ -3,7 +3,7 @@
 覆盖: app/services/machine_code_service.py
 """
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from app.services.machine_code_service import MachineCodeService
 
 

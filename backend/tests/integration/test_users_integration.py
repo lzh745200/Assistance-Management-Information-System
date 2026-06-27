@@ -2,7 +2,6 @@
 用户管理 API 集成测试
 覆盖: app/api/v1/users.py
 """
-import pytest
 
 
 class TestUserProfile:

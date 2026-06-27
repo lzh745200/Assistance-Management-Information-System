@@ -1,7 +1,5 @@
 """Tests for centralized import template endpoint and ExcelTemplateService."""
 import pytest
-from unittest.mock import MagicMock, patch
-from io import BytesIO
 
 
 class TestCentralizedTemplateEndpoint:
@@ -16,7 +14,6 @@ class TestCentralizedTemplateEndpoint:
     ])
     def test_all_entity_types_supported(self, entity_type, expected_label):
         """Verify all 5 entity types are in the method_map."""
-        from app.api.v1.import_export.import_data import download_import_template
         # Verify the function accepts all types (won't raise HTTPException)
         assert entity_type in ["supported_village", "project", "fund", "school", "policy"]
 

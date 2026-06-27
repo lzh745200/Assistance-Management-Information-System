@@ -1,7 +1,7 @@
 """Tests for app.core.error_handler — 100% coverage."""
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from app.core.error_handler import (

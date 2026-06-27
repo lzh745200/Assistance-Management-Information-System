@@ -3,12 +3,9 @@
 覆盖率目标: 100%
 """
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-import math
+from unittest.mock import patch
 import tempfile
-import os
 from pathlib import Path
-from unittest.mock import MagicMock  # auto-added
 
 class TestOfflineMapService:
     """测试 OfflineMapService 类"""
@@ -48,7 +45,6 @@ class TestOfflineMapService:
     async def test_get_tile_exception(self):
         """测试获取瓦片时的异常处理"""
         from app.services.offline_map_service import OfflineMapService
-        import aiofiles
         with tempfile.TemporaryDirectory() as tmpdir:
             service = OfflineMapService(cache_dir=Path(tmpdir))
             # 创建一个文件路径但模拟读取异常

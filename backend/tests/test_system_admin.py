@@ -3,7 +3,6 @@
 测试系统信息、备份恢复、系统配置等功能
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from pathlib import Path
 
@@ -29,7 +28,7 @@ class TestSystemAdmin:
 
     def test_create_backup(self, client: TestClient, admin_token_headers: dict, tmp_path: Path):
         """测试创建备份（使用临时目录，避免产生真实备份文件）"""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
 
         backup_dir = tmp_path / "backups"
         backup_dir.mkdir(parents=True, exist_ok=True)

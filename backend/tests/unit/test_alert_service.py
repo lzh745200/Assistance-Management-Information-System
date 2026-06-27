@@ -1,6 +1,6 @@
 """告警服务单元测试 — 100% line/branch coverage"""
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch, ANY
+from unittest.mock import MagicMock, AsyncMock, patch
 
 
 class TestSendEmailAlert:

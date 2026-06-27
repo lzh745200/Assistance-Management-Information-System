@@ -280,7 +280,6 @@ class TestPolicyAPI:
 
     def test_get_statistics(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
-        from sqlalchemy import func
         row1 = MagicMock(); row1.category = "military"; row1.level = "national"; row1.count = 3
         row2 = MagicMock(); row2.category = "local"; row2.level = "provincial"; row2.count = 2
         mock_db.query.return_value.group_by.return_value.all.return_value = [row1, row2]
@@ -318,7 +317,7 @@ class TestPolicyAPI:
 
     def test_import_policies_invalid_file(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
-        with patch("app.core.upload_security.validate_excel_upload",
+        with patch("app.services.policy_import_service.validate_excel_upload",
                     new_callable=AsyncMock, side_effect=Exception("invalid")):
             resp = client.post(
                 "/api/v1/policies/import",

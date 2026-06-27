@@ -28,7 +28,7 @@ from fastapi.testclient import TestClient
 
 from app.models.base import Base
 from app.core.database import get_db
-from app.core.security import hash_password, security_scheme, decode_token
+from app.core.security import hash_password, decode_token
 from app.main import app as fastapi_app
 
 # ==================== 测试数据库引擎 ====================

@@ -3,11 +3,8 @@
 覆盖app/api/v1/school.py的所有路由
 """
 
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestSchoolsAPI:
     """测试学校API"""

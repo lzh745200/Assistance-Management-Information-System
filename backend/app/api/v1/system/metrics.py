@@ -254,7 +254,7 @@ async def get_database_metrics(
                 row_counts[table] = "N/A"
                 continue
             try:
-                result = db.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                result = db.execute(text(f"SELECT COUNT(*) FROM {table}"))  # nosec B608 — _SAFE_TABLE_NAMES 白名单
                 row_counts[table] = result.scalar()
             except Exception as e:
                 logger.debug("统计表 %s 行数失败: %s", table, e)

@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 
 class TestPermissionDeniedError:
@@ -104,7 +104,6 @@ class TestGetAccessibleOrganizations:
 
     def test_superuser_no_org_all_orgs(self):
         from app.services.organization_permission_service import OrganizationPermissionService
-        from app.models.organization import Organization
         mock_db = MagicMock()
         user = MagicMock()
         user.organization_id = None

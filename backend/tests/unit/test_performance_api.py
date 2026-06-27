@@ -9,7 +9,6 @@ Covers all 5 endpoints (all admin-only):
   POST /performance/cache/clear
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from fastapi import FastAPI

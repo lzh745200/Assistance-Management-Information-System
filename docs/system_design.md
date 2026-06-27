@@ -1,8 +1,8 @@
 # 帮扶管理信息系统 — Windows x64/x86 离线安装包打包方案（系统设计）
 
-> 架构师：高见远（Gao）  
-> 版本：1.0  
-> 日期：2026-06-24  
+> 架构师：高见远（Gao）
+> 版本：1.0
+> 日期：2026-06-24
 > 范围：Windows x64 / x86 离线 .exe 安装包的构建、打包与 CI/CD 自动化
 
 ---
@@ -202,7 +202,7 @@ classDiagram
         +String fileName 帮扶管理系统-Setup-1.2.0.exe
         +String arch x64|x86
         +Number sizeMB ~250
-        +install() 
+        +install()
         +uninstall()
     }
 

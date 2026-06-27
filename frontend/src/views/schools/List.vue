@@ -135,7 +135,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="地址" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="address" label="地址" min-width="160" show-overflow-tooltip">
+          <template #default="scope">
+            {{ ds(scope.row.address, 'address') }}
+          </template>
+        </el-table-column>
         <el-table-column prop="created_at" label="创建时间" width="110" align="center">
           <template #default="scope">
             {{ scope.row.created_at ? String(scope.row.created_at).split('T')[0] : '-' }}
@@ -214,6 +218,7 @@ import { AuthStorage } from '@/utils/authStorage'
 
 import { ref, reactive, computed, onMounted, onActivated } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage } from 'element-plus'
 import { Plus, Download, Upload, Search } from '@element-plus/icons-vue'
 import request from '@/api/request'
@@ -221,6 +226,7 @@ import { schoolApi } from '@/api/schools'
 import { downloadImportTemplate } from '@/api/import'
 
 const { pushSafe } = useRouterSafe()
+const { ds } = useDesensitize()
 const tableData = ref<any[]>([])
 const loading = ref(false)
 const total = ref(0)

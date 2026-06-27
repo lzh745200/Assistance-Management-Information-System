@@ -1,4 +1,4 @@
-import pytest,io;from unittest.mock import MagicMock as M
+import io
 def test_v01(real_db_session):from app.services.data_package_service import DataPackageService;s=DataPackageService(real_db_session);assert s is not None
 def test_v02(real_db_session):from app.services.config_package_service import ConfigPackageService;s=ConfigPackageService(real_db_session);assert s is not None
 def test_v03(real_db_session):from app.services.backup_service import BackupService;s=BackupService(real_db_session);assert s is not None

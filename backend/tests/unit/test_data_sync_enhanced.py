@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timezone
 from decimal import Decimal
 

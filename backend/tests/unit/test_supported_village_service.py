@@ -1,6 +1,6 @@
 """帮扶村服务单元测试"""
 import pytest
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock
 
 @pytest.fixture
 def mock_db():

@@ -1,8 +1,7 @@
 """Tests for app.core.query_optimizer — 100% coverage."""
 
 import pytest
-import threading
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 from app.core.query_optimizer import (
     with_eager_load,
     paginate,
@@ -15,7 +14,6 @@ from app.core.query_optimizer import (
     reset_query_count,
     analyze_n_plus_one,
     _slow_query_log,
-    _slow_threshold_ms,
 )
 
 

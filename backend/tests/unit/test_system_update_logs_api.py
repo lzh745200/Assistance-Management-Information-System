@@ -2,7 +2,6 @@
 Tests for update_logs.py — system update logs API.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
 BASE = "/api/v1/system/update-logs"

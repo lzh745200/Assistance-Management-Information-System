@@ -3,7 +3,6 @@
 覆盖率目标: 100%
 """
 
-import pytest
 
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch

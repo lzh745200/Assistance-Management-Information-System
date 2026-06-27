@@ -7,7 +7,7 @@ import sqlite3
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, call, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -1164,7 +1164,6 @@ class TestEdgeCases:
         bdir = str(tmp_path / "backups")
         os.makedirs(bdir)
         zip_path = os.path.join(bdir, "crc.zip")
-        import struct
         with zipfile.ZipFile(zip_path, "w") as zf:
             zf.writestr("good.txt", "ok")
             zf.writestr("backup_info.json", json.dumps({"ts": "2025"}))

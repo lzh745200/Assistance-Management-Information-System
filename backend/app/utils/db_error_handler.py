@@ -23,6 +23,41 @@ logger = logging.getLogger(__name__)
 F = TypeVar("F", bound=Callable[..., Any])
 
 
+def _extract_db_session(args, kwargs) -> Session | None:
+    for arg in args:
+        if isinstance(arg, Session):
+            return arg
+    return kwargs.get("db")
+
+
+def _handle_db_exception(func_name: str, db: Session | None, exc: Exception) -> None:
+    if db:
+        db.rollback()
+
+    if isinstance(exc, IntegrityError):
+        logger.error(f"Database integrity error in {func_name}: {exc}")
+        error_msg = str(exc.orig) if hasattr(exc, "orig") else str(exc)
+        if "UNIQUE constraint failed" in error_msg or "duplicate key" in error_msg.lower():
+            raise HTTPException(status_code=409, detail="数据已存在，请检查唯一性约束")
+        if "FOREIGN KEY constraint failed" in error_msg:
+            raise HTTPException(status_code=400, detail="关联数据不存在或已被删除")
+        raise HTTPException(status_code=400, detail=f"数据完整性错误: {error_msg[:100]}")
+
+    if isinstance(exc, OperationalError):
+        logger.error(f"Database operational error in {func_name}: {exc}")
+        raise HTTPException(status_code=503, detail="数据库操作失败，请稍后重试")
+
+    if isinstance(exc, (HTTPException, BusinessError)):
+        raise exc
+
+    if isinstance(exc, SQLAlchemyError):
+        logger.error(f"Database error in {func_name}: {exc}")
+        raise HTTPException(status_code=500, detail="数据库错误，请联系管理员")
+
+    logger.error(f"Unexpected error in {func_name}: {exc}", exc_info=True)
+    raise HTTPException(status_code=500, detail=f"操作失败: {str(exc)[:100]}")
+
+
 def handle_db_errors(func: F) -> F:
     """
     数据库操作错误处理装饰器
@@ -32,65 +67,11 @@ def handle_db_errors(func: F) -> F:
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        # 尝试从参数中获取db session
-        db: Session | None = None
-
-        # 检查位置参数
-        for arg in args:
-            if isinstance(arg, Session):
-                db = arg
-                break
-
-        # 检查关键字参数
-        if db is None and "db" in kwargs:
-            db = kwargs["db"]
-
+        db = _extract_db_session(args, kwargs)
         try:
             return func(*args, **kwargs)
-        except IntegrityError as e:
-            if db:
-                db.rollback()
-            logger.error(f"Database integrity error in {func.__name__}: {e}")
-
-            # 解析具体错误
-            error_msg = str(e.orig) if hasattr(e, "orig") else str(e)
-
-            if "UNIQUE constraint failed" in error_msg or "duplicate key" in error_msg.lower():
-                raise HTTPException(status_code=409, detail="数据已存在，请检查唯一性约束")
-            elif "FOREIGN KEY constraint failed" in error_msg:
-                raise HTTPException(status_code=400, detail="关联数据不存在或已被删除")
-            else:
-                raise HTTPException(status_code=400, detail=f"数据完整性错误: {error_msg[:100]}")
-
-        except OperationalError as e:
-            if db:
-                db.rollback()
-            logger.error(f"Database operational error in {func.__name__}: {e}")
-            raise HTTPException(status_code=503, detail="数据库操作失败，请稍后重试")
-
-        except SQLAlchemyError as e:
-            if db:
-                db.rollback()
-            logger.error(f"Database error in {func.__name__}: {e}")
-            raise HTTPException(status_code=500, detail="数据库错误，请联系管理员")
-
-        except HTTPException:
-            # 重新抛出HTTP异常
-            if db:
-                db.rollback()
-            raise
-
-        except BusinessError:
-            # 重新抛出业务异常
-            if db:
-                db.rollback()
-            raise
-
-        except Exception as e:
-            if db:
-                db.rollback()
-            logger.error(f"Unexpected error in {func.__name__}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"操作失败: {str(e)[:100]}")
+        except (IntegrityError, OperationalError, SQLAlchemyError, HTTPException, BusinessError, Exception) as e:
+            _handle_db_exception(func.__name__, db, e)
 
     return wrapper  # type: ignore
 
@@ -102,61 +83,11 @@ def handle_db_errors_async(func: F) -> F:
 
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
-        # 尝试从参数中获取db session
-        db: Session | None = None
-
-        for arg in args:
-            if isinstance(arg, Session):
-                db = arg
-                break
-
-        if db is None and "db" in kwargs:
-            db = kwargs["db"]
-
+        db = _extract_db_session(args, kwargs)
         try:
             return await func(*args, **kwargs)
-        except IntegrityError as e:
-            if db:
-                db.rollback()
-            logger.error(f"Database integrity error in {func.__name__}: {e}")
-
-            error_msg = str(e.orig) if hasattr(e, "orig") else str(e)
-
-            if "UNIQUE constraint failed" in error_msg or "duplicate key" in error_msg.lower():
-                raise HTTPException(status_code=409, detail="数据已存在，请检查唯一性约束")
-            elif "FOREIGN KEY constraint failed" in error_msg:
-                raise HTTPException(status_code=400, detail="关联数据不存在或已被删除")
-            else:
-                raise HTTPException(status_code=400, detail=f"数据完整性错误: {error_msg[:100]}")
-
-        except OperationalError as e:
-            if db:
-                db.rollback()
-            logger.error(f"Database operational error in {func.__name__}: {e}")
-            raise HTTPException(status_code=503, detail="数据库操作失败，请稍后重试")
-
-        except SQLAlchemyError as e:
-            if db:
-                db.rollback()
-            logger.error(f"Database error in {func.__name__}: {e}")
-            raise HTTPException(status_code=500, detail="数据库错误，请联系管理员")
-
-        except HTTPException:
-            if db:
-                db.rollback()
-            raise
-
-        except BusinessError:
-            # 重新抛出业务异常
-            if db:
-                db.rollback()
-            raise
-
-        except Exception as e:
-            if db:
-                db.rollback()
-            logger.error(f"Unexpected error in {func.__name__}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"操作失败: {str(e)[:100]}")
+        except (IntegrityError, OperationalError, SQLAlchemyError, HTTPException, BusinessError, Exception) as e:
+            _handle_db_exception(func.__name__, db, e)
 
     return wrapper  # type: ignore
 

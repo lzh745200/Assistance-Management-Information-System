@@ -1,5 +1,4 @@
 """Tests for event bus enhancements (dead letter queue, system event types)."""
-import pytest
 
 
 class TestDeadLetterQueue:

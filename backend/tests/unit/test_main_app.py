@@ -1,16 +1,13 @@
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 from app.main import (
     CachedStaticFiles,
-    _approval_reminder,
     _check_and_record_version_change,
     _check_required_packages,
     _init_database_tables,

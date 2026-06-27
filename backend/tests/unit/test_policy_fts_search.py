@@ -1,5 +1,4 @@
 """TDD: FTS5 全文搜索 + 关键词高亮."""
-import pytest
 
 
 class TestPolicyFTSService:

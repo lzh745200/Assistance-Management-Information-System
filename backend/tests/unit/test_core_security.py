@@ -1,8 +1,5 @@
-import asyncio
-import os
-import time
-from datetime import timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException, Request
@@ -25,7 +22,6 @@ from app.core.security import (
     TokenBlacklist,
     _ensure_secret_key,
     _rate_limit_store,
-    _rate_limit_lock,
     _truncate_password,
     check_rate_limit,
     check_sql_injection,

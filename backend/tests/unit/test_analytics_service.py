@@ -1,12 +1,10 @@
 """
 100% coverage tests for AnalyticsService.
 """
-import pytest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 from datetime import datetime
 
 from app.services.analytics_service import AnalyticsService
-from app.models.supported_village import SupportedVillage
 
 
 # ──────────────────────────────────────────────

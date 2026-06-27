@@ -2,7 +2,6 @@
 政策法规 API 集成测试
 覆盖: app/api/v1/policy.py
 """
-import pytest
 
 
 class TestPolicyCRUD:

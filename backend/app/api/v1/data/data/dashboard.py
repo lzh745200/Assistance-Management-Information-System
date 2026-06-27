@@ -10,6 +10,7 @@
 - recent-activities 覆盖项目、经费、审批多类事件
 """
 
+import asyncio
 import logging
 import os
 from datetime import datetime
@@ -22,7 +23,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api.v1.data_scope import DataScope, get_data_scope
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import SessionLocal, get_db
 from app.core.security import get_current_user
 from app.models.approval import ApprovalTask
 from app.models.fund import Fund
@@ -344,6 +345,103 @@ async def get_dashboard_summary(
     return result
 
 
+def _fetch_hidden_activities() -> set:
+    sess = SessionLocal()
+    try:
+        return {r[0] for r in sess.query(HiddenDashboardActivity.activity_id).all()}
+    except Exception as e:
+        logger.warning("获取隐藏动态列表失败: %s", e)
+        return set()
+    finally:
+        sess.close()
+
+
+def _fetch_custom_activities() -> list:
+    sess = SessionLocal()
+    items = []
+    try:
+        for act in sess.query(DashboardActivity).order_by(DashboardActivity.created_at.desc()).limit(10).all():
+            items.append({
+                "id": f"custom_{act.id}", "type": act.type or "project",
+                "action": act.action or "", "target": act.target or "",
+                "user": act.user or "系统",
+                "time": act.created_at.strftime("%m-%d %H:%M") if act.created_at else "",
+                "_custom": True,
+            })
+    except Exception as e:
+        logger.warning("获取自定义动态失败: %s", e)
+    finally:
+        sess.close()
+    return items
+
+
+def _fetch_project_activities() -> list:
+    sess = SessionLocal()
+    items = []
+    try:
+        for p in sess.query(Project).order_by(Project.updated_at.desc()).limit(5).all():
+            action = "更新了" if p.updated_at != p.created_at else "创建了"
+            items.append({
+                "id": f"project_{p.id}", "type": "project", "action": action,
+                "target": p.name or "",
+                "user": p.responsible_person or getattr(p, "leader", None) or "系统",
+                "time": p.updated_at.strftime("%m-%d %H:%M") if p.updated_at else "",
+            })
+    except Exception as e:
+        logger.warning("获取项目动态失败: %s", e)
+    finally:
+        sess.close()
+    return items
+
+
+def _fetch_fund_activities() -> list:
+    sess = SessionLocal()
+    items = []
+    try:
+        status_label_map = {"approved": "审批通过", "allocated": "已拨付", "pending": "待审批", "planned": "已规划"}
+        for f in sess.query(Fund).order_by(Fund.updated_at.desc()).limit(5).all():
+            items.append({
+                "id": f"fund_{f.id}", "type": "fund",
+                "action": status_label_map.get(f.status, "更新了"),
+                "target": f.name or "",
+                "user": getattr(f, "applicant", None) or "系统",
+                "time": f.updated_at.strftime("%m-%d %H:%M") if f.updated_at else "",
+            })
+    except Exception as e:
+        logger.warning("获取经费动态失败: %s", e)
+    finally:
+        sess.close()
+    return items
+
+
+def _fetch_approval_activities() -> list:
+    sess = SessionLocal()
+    items = []
+    try:
+        status_label_map = {"pending": "待审批", "approved": "已通过", "rejected": "已驳回", "withdrawn": "已撤回"}
+        for a in (
+            sess.query(ApprovalTask)
+            .options(joinedload(ApprovalTask.submitter))
+            .order_by(ApprovalTask.updated_at.desc())
+            .limit(5).all()
+        ):
+            items.append({
+                "id": f"approval_{a.id}", "type": "approval",
+                "action": status_label_map.get(a.status, a.status),
+                "target": a.title or f"{a.entity_type}#{a.entity_id}",
+                "user": (a.submitter.username if a.submitter else None) or "系统",
+                "time": (a.updated_at or a.created_at).strftime("%m-%d %H:%M")
+                if (a.updated_at or a.created_at)
+                else "",
+            }
+            )
+    except Exception as e:
+        logger.warning("获取审批动态失败: %s", e)
+    finally:
+        sess.close()
+    return items
+
+
 @router.get("/recent-activities")
 async def get_recent_activities(
     current_user=Depends(get_current_user),
@@ -358,121 +456,22 @@ async def get_recent_activities(
     if cached is not None:
         return cached
 
-    import asyncio
-    from app.core.database import SessionLocal
-
-    def _fetch_hidden():
-        sess = SessionLocal()
-        try:
-            return {r[0] for r in sess.query(HiddenDashboardActivity.activity_id).all()}
-        except Exception as e:
-            logger.warning("获取隐藏动态列表失败: %s", e)
-            return set()
-        finally:
-            sess.close()
-
-    def _fetch_custom():
-        sess = SessionLocal()
-        items = []
-        try:
-            for act in sess.query(DashboardActivity).order_by(DashboardActivity.created_at.desc()).limit(10).all():
-                items.append({
-                    "id": f"custom_{act.id}", "type": act.type or "project",
-                    "action": act.action or "", "target": act.target or "",
-                    "user": act.user or "系统",
-                    "time": act.created_at.strftime("%m-%d %H:%M") if act.created_at else "",
-                    "_custom": True,
-                })
-        except Exception as e:
-            logger.warning("获取自定义动态失败: %s", e)
-        finally:
-            sess.close()
-        return items
-
-    def _fetch_projects():
-        sess = SessionLocal()
-        items = []
-        try:
-            for p in sess.query(Project).order_by(Project.updated_at.desc()).limit(5).all():
-                action = "更新了" if p.updated_at != p.created_at else "创建了"
-                items.append({
-                    "id": f"project_{p.id}", "type": "project", "action": action,
-                    "target": p.name or "",
-                    "user": p.responsible_person or getattr(p, "leader", None) or "系统",
-                    "time": p.updated_at.strftime("%m-%d %H:%M") if p.updated_at else "",
-                })
-        except Exception as e:
-            logger.warning("获取项目动态失败: %s", e)
-        finally:
-            sess.close()
-        return items
-
-    def _fetch_funds():
-        sess = SessionLocal()
-        items = []
-        try:
-            status_label_map = {"approved": "审批通过", "allocated": "已拨付", "pending": "待审批", "planned": "已规划"}
-            for f in sess.query(Fund).order_by(Fund.updated_at.desc()).limit(5).all():
-                items.append({
-                    "id": f"fund_{f.id}", "type": "fund",
-                    "action": status_label_map.get(f.status, "更新了"),
-                    "target": f.name or "",
-                    "user": getattr(f, "applicant", None) or "系统",
-                    "time": f.updated_at.strftime("%m-%d %H:%M") if f.updated_at else "",
-                })
-        except Exception as e:
-            logger.warning("获取经费动态失败: %s", e)
-        finally:
-            sess.close()
-        return items
-
-    def _fetch_approvals():
-        sess = SessionLocal()
-        items = []
-        try:
-            status_label_map = {"pending": "待审批", "approved": "已通过", "rejected": "已驳回", "withdrawn": "已撤回"}
-            for a in (
-                sess.query(ApprovalTask)
-                .options(joinedload(ApprovalTask.submitter))
-                .order_by(ApprovalTask.updated_at.desc())
-                .limit(5).all()
-            ):
-                items.append({
-                    "id": f"approval_{a.id}", "type": "approval",
-                    "action": status_label_map.get(a.status, a.status),
-                    "target": a.title or f"{a.entity_type}#{a.entity_id}",
-                    "user": (a.submitter.username if a.submitter else None) or "系统",
-                    "time": (a.updated_at or a.created_at).strftime("%m-%d %H:%M")
-                    if (a.updated_at or a.created_at)
-                    else "",
-                }
-                )
-        except Exception as e:
-            logger.warning("获取审批动态失败: %s", e)
-        finally:
-            sess.close()
-        return items
-
-    # 并行执行 5 个独立查询（响应时间 ≈ max(单次) 而非 sum(5次)）
     hidden_ids, custom_items, project_items, fund_items, approval_items = await asyncio.gather(
-        asyncio.to_thread(_fetch_hidden),
-        asyncio.to_thread(_fetch_custom),
-        asyncio.to_thread(_fetch_projects),
-        asyncio.to_thread(_fetch_funds),
-        asyncio.to_thread(_fetch_approvals),
+        asyncio.to_thread(_fetch_hidden_activities),
+        asyncio.to_thread(_fetch_custom_activities),
+        asyncio.to_thread(_fetch_project_activities),
+        asyncio.to_thread(_fetch_fund_activities),
+        asyncio.to_thread(_fetch_approval_activities),
     )
 
-    # 合并所有动态
     items = custom_items + project_items + fund_items + approval_items
 
-    # 过滤已隐藏的动态
     if hidden_ids:
         items = [item for item in items if item["id"] not in hidden_ids]
 
-    # 按时间排序，取前10条
     items.sort(key=lambda x: x.get("time", ""), reverse=True)
     result = {"items": items[:10]}
-    _set_cached(cache_key, result, ttl=60)  # 动态缓存 1 分钟
+    _set_cached(cache_key, result, ttl=60)
     return result
 
 

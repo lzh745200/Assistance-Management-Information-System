@@ -88,39 +88,39 @@ const handlePrint = () => {
 
   const styles = `
     <style>
-      body { 
-        font-family: 'Microsoft YaHei', Arial, sans-serif; 
+      body {
+        font-family: 'Microsoft YaHei', Arial, sans-serif;
         margin: 20px;
         color: #000;
       }
-      .print-table { 
-        width: 100%; 
-        border-collapse: collapse; 
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
         margin-bottom: 20px;
       }
-      .print-table th, 
-      .print-table td { 
-        border: 1px solid #000; 
-        padding: 8px 12px; 
+      .print-table th,
+      .print-table td {
+        border: 1px solid #000;
+        padding: 8px 12px;
         text-align: left;
         font-size: 12px;
       }
-      .print-table th { 
-        background-color: #f0f0f0; 
+      .print-table th {
+        background-color: #f0f0f0;
         font-weight: bold;
       }
-      .print-header { 
-        text-align: center; 
+      .print-header {
+        text-align: center;
         margin-bottom: 20px;
         border-bottom: 2px solid #000;
         padding-bottom: 10px;
       }
-      .print-header h2 { 
-        margin: 0; 
+      .print-header h2 {
+        margin: 0;
         font-size: 18px;
       }
-      .print-footer { 
-        text-align: right; 
+      .print-footer {
+        text-align: right;
         margin-top: 20px;
         font-size: 12px;
         color: #666;

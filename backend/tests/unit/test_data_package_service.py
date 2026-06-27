@@ -1,10 +1,9 @@
 """数据包管理服务单元测试 (100% coverage)"""
 import json
-import os
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, patch, ANY, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -611,7 +610,6 @@ class TestDataPackageService:
         model.__tablename__ = "test_table"
         mapper = MagicMock()
         mapper.primary_key = [MagicMock(name="id")]
-        from sqlalchemy import inspect
         excluded = [MagicMock(name="id"), MagicMock(name="name")]
         with patch("app.services.data_package_service.inspect", return_value=mapper):
             mapper.column_attrs = {MagicMock(key="id"), MagicMock(key="name")}

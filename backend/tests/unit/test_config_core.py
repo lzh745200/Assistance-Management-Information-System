@@ -15,7 +15,6 @@ import json
 import sys
 from unittest.mock import MagicMock
 
-import pytest
 
 from app.core.config import (
     Settings,

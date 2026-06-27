@@ -20,7 +20,6 @@
 import datetime
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 import app.services.db_maintenance as dm
 

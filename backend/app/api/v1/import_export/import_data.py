@@ -269,6 +269,78 @@ async def _import_entities(
     return ImportResultResponse(**result.to_dict())
 
 
+def _resolve_validator(entity_type: str):
+    """根据实体类型选择验证器和解析配置"""
+    if entity_type == "supported_village":
+        validator = DataValidatorService()
+        header_parser = validator.parse_excel_headers
+        example_markers = ["某某部门", "示例部门"]
+    else:
+        validator = EntityImportValidator(entity_type)
+        header_parser = validator.parse_excel_headers
+        example_markers = ["某某村", "示例名称", "某某希望小学", "某某帮扶单位"]
+    return validator, header_parser, example_markers
+
+
+def _parse_excel_rows(file_content: bytes, header_parser, example_markers):
+    """解析Excel文件，返回行数据列表"""
+    from io import BytesIO
+    from openpyxl import load_workbook
+
+    wb = load_workbook(filename=BytesIO(file_content), data_only=True)
+    ws = wb.active
+    rows = []
+    header_mapping = {}
+
+    for row_idx, row in enumerate(ws.iter_rows(values_only=True), 1):
+        if row_idx == 1:
+            headers = [str(cell).strip() if cell else "" for cell in row]
+            header_mapping = header_parser(headers)
+            continue
+        if row_idx == 2:
+            first_value = row[0] if len(row) > 0 else None
+            if first_value and str(first_value).strip() in example_markers:
+                continue
+        if all(cell is None or (isinstance(cell, str) and not cell.strip()) for cell in row):
+            continue
+        row_data = {}
+        for col_idx, cell_value in enumerate(row):
+            if col_idx in header_mapping:
+                row_data[header_mapping[col_idx]] = cell_value
+        if row_data:
+            rows.append(row_data)
+
+    wb.close()
+    return rows
+
+
+def _build_entity_validation_summary(result, validator):
+    """为实体类型构建完整验证摘要，含错误分组统计"""
+    summary = {
+        "is_valid": result.is_valid,
+        "total_rows": result.total_rows,
+        "valid_rows": result.valid_rows,
+        "invalid_rows": result.total_rows - result.valid_rows,
+        "error_count": len(result.errors),
+        "warning_count": len(result.warnings),
+        "errors_by_type": {},
+        "errors_by_field": {},
+        "warnings": result.warnings,
+        "first_errors": [e.to_dict() for e in result.errors[:10]],
+    }
+    error_by_type = {}
+    error_by_field = {}
+    for error in result.errors:
+        code = error.error_code.value if hasattr(error.error_code, "value") else str(error.error_code)
+        error_by_type[code] = error_by_type.get(code, 0) + 1
+        if error.field_name:
+            label = validator._get_field_label(error.field_name)
+            error_by_field[label] = error_by_field.get(label, 0) + 1
+    summary["errors_by_type"] = error_by_type
+    summary["errors_by_field"] = error_by_field
+    return summary
+
+
 @router.post("/validate", response_model=ValidationSummaryResponse)
 async def validate_import_data(
     file: UploadFile = File(..., description="Excel文件 (.xlsx/.xls)"),
@@ -294,68 +366,22 @@ async def validate_import_data(
             detail=f"不支持的实体类型: {entity_type}，支持 {', '.join(VALID_ENTITY_TYPES)}",
         )
 
-    # 根据实体类型选择验证器
-    if entity_type == "supported_village":
-        validator = DataValidatorService()
-        header_parser = validator.parse_excel_headers
-        example_markers = ["某某部门", "示例部门"]
-    else:
-        validator = EntityImportValidator(entity_type)
-        header_parser = validator.parse_excel_headers
-        example_markers = ["某某村", "示例名称", "某某希望小学", "某某帮扶单位"]
+    validator, header_parser, example_markers = _resolve_validator(entity_type)
 
     is_valid, error_msg = validator.validate_file_format(file.filename)
     if not is_valid:
         raise HTTPException(status_code=400, detail=error_msg)
 
     file_content = await file.read()
-    file_size = len(file_content)
-
-    is_valid, error_msg = validator.validate_file_size(file_size)
+    is_valid, error_msg = validator.validate_file_size(len(file_content))
     if not is_valid:
         raise HTTPException(status_code=400, detail=error_msg)
 
     try:
-        from io import BytesIO
-
-        from openpyxl import load_workbook
-
-        wb = load_workbook(filename=BytesIO(file_content), data_only=True)
-        ws = wb.active
-
-        rows = []
-        headers = []
-        header_mapping = {}
-
-        for row_idx, row in enumerate(ws.iter_rows(values_only=True), 1):
-            if row_idx == 1:
-                headers = [str(cell).strip() if cell else "" for cell in row]
-                header_mapping = header_parser(headers)
-                continue
-
-            if row_idx == 2:
-                first_value = row[0] if len(row) > 0 else None
-                if first_value and str(first_value).strip() in example_markers:
-                    continue
-
-            if all(cell is None or (isinstance(cell, str) and not cell.strip()) for cell in row):
-                continue
-
-            row_data = {}
-            for col_idx, cell_value in enumerate(row):
-                if col_idx in header_mapping:
-                    field_name = header_mapping[col_idx]
-                    row_data[field_name] = cell_value
-
-            if row_data:
-                rows.append(row_data)
-
-        wb.close()
-
+        rows = _parse_excel_rows(file_content, header_parser, example_markers)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Excel文件解析失败: {str(e)}")
 
-    # 执行验证
     if entity_type == "supported_village":
         result = validator.validate_import_data(
             rows=rows,
@@ -365,29 +391,7 @@ async def validate_import_data(
         summary = validator.get_validation_summary(result)
     else:
         result = validator.validate_batch(rows)
-        summary = {
-            "is_valid": result.is_valid,
-            "total_rows": result.total_rows,
-            "valid_rows": result.valid_rows,
-            "invalid_rows": result.total_rows - result.valid_rows,
-            "error_count": len(result.errors),
-            "warning_count": len(result.warnings),
-            "errors_by_type": {},
-            "errors_by_field": {},
-            "warnings": result.warnings,
-            "first_errors": [e.to_dict() for e in result.errors[:10]],
-        }
-        # 补充错误分组统计
-        error_by_type = {}
-        error_by_field = {}
-        for error in result.errors:
-            code = error.error_code.value if hasattr(error.error_code, "value") else str(error.error_code)
-            error_by_type[code] = error_by_type.get(code, 0) + 1
-            if error.field_name:
-                label = validator._get_field_label(error.field_name)
-                error_by_field[label] = error_by_field.get(label, 0) + 1
-        summary["errors_by_type"] = error_by_type
-        summary["errors_by_field"] = error_by_field
+        summary = _build_entity_validation_summary(result, validator)
 
     return ValidationSummaryResponse(**summary)
 
@@ -411,6 +415,51 @@ class ImportPreviewResponse(BaseModel):
     duplicate_in_db_rows: int = Field(0, description="与数据库已有记录重复的行数")
     rows: List[PreviewRowResponse] = Field(default_factory=list, description="前50行预览数据")
     warnings: List[str] = Field(default_factory=list)
+
+
+def _setup_preview_entity(entity_type: str, db: Session):
+    """设置预览所需的验证器和重复检测字段"""
+    if entity_type == "supported_village":
+        validator = DataValidatorService()
+        duplicate_field = "village_name"
+        from app.models.supported_village import SupportedVillage
+        existing_names = set(
+            name[0].strip().lower() for name in db.query(SupportedVillage.village_name).all() if name[0]
+        )
+    else:
+        validator = EntityImportValidator(entity_type)
+        duplicate_field = validator.config.get("duplicate_key", "name")
+        if entity_type == "project":
+            from app.models.project import Project as EntityModel
+        elif entity_type == "fund":
+            from app.models.fund import Fund as EntityModel
+        elif entity_type == "school":
+            from app.models.school import School as EntityModel
+        existing_names = set(
+            name[0].strip().lower() for name in db.query(getattr(EntityModel, duplicate_field)).all() if name[0]
+        )
+    return validator, duplicate_field, existing_names
+
+
+def _build_preview_row_response(row, idx, validator, existing_names, duplicate_field):
+    """处理单行预览数据，返回错误列表和重复标记"""
+    row_errors = validator.validate_row(row, idx)
+    is_dup = False
+    dup_value = (row.get(duplicate_field) or "").strip()
+    if dup_value and dup_value.lower() in existing_names:
+        is_dup = True
+    return row_errors, is_dup
+
+
+def _to_import_error_response(e):
+    """将导入错误转换为响应对象"""
+    return ImportErrorResponse(
+        row_number=e.row_number,
+        field_name=e.field_name,
+        error_code=(e.error_code.value if hasattr(e.error_code, "value") else str(e.error_code)),
+        message=e.message,
+        value=str(e.value) if e.value is not None else None,
+    )
 
 
 @router.post("/preview", response_model=ImportPreviewResponse)
@@ -441,32 +490,12 @@ async def preview_import_data(
             detail=f"不支持的实体类型: {entity_type}，支持 {', '.join(VALID_ENTITY_TYPES)}",
         )
 
-    if entity_type == "supported_village":
-        validator = DataValidatorService()
-        duplicate_field = "village_name"
-        from app.models.supported_village import SupportedVillage
+    validator, duplicate_field, existing_names = _setup_preview_entity(entity_type, db)
 
-        existing_names = set(
-            name[0].strip().lower() for name in db.query(SupportedVillage.village_name).all() if name[0]
-        )
-    else:
-        validator = EntityImportValidator(entity_type)
-        duplicate_field = validator.config.get("duplicate_key", "name")
-        if entity_type == "project":
-            from app.models.project import Project as EntityModel
-        elif entity_type == "fund":
-            from app.models.fund import Fund as EntityModel
-        elif entity_type == "school":
-            from app.models.school import School as EntityModel
-        existing_names = set(
-            name[0].strip().lower() for name in db.query(getattr(EntityModel, duplicate_field)).all() if name[0]
-        )
-
+    file_content = await file.read()
     is_valid, error_msg = validator.validate_file_format(file.filename)
     if not is_valid:
         raise HTTPException(status_code=400, detail=error_msg)
-
-    file_content = await file.read()
     is_valid, error_msg = validator.validate_file_size(len(file_content))
     if not is_valid:
         raise HTTPException(status_code=400, detail=error_msg)
@@ -483,19 +512,11 @@ async def preview_import_data(
     db_dup_count = 0
 
     for idx, row in enumerate(rows, 1):
-        if entity_type == "supported_village":
-            row_errors = validator.validate_row(row, idx)
-        else:
-            row_errors = validator.validate_row(row, idx)
+        row_errors, is_dup = _build_preview_row_response(row, idx, validator, existing_names, duplicate_field)
 
-        is_dup = False
-        dup_value = (row.get(duplicate_field) or "").strip()
-        if dup_value and dup_value.lower() in existing_names:
-            is_dup = True
+        if is_dup:
             db_dup_count += 1
-
-        has_err = len(row_errors) > 0
-        if has_err:
+        if len(row_errors) > 0:
             invalid_count += 1
         else:
             valid_count += 1
@@ -505,17 +526,8 @@ async def preview_import_data(
                 PreviewRowResponse(
                     row_number=idx,
                     data=row,
-                    has_error=has_err,
-                    errors=[
-                        ImportErrorResponse(
-                            row_number=e.row_number,
-                            field_name=e.field_name,
-                            error_code=(e.error_code.value if hasattr(e.error_code, "value") else str(e.error_code)),
-                            message=e.message,
-                            value=str(e.value) if e.value is not None else None,
-                        )
-                        for e in row_errors
-                    ],
+                    has_error=len(row_errors) > 0,
+                    errors=[_to_import_error_response(e) for e in row_errors],
                     is_duplicate_in_db=is_dup,
                 )
             )

@@ -1,7 +1,6 @@
 """Tests for VersionService — 100% code coverage."""
 
 import json
-from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

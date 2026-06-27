@@ -16,8 +16,6 @@
   2 = 存在CRITICAL问题
 """
 
-import json
-import os
 import sys
 from pathlib import Path
 
@@ -100,7 +98,7 @@ def main():
     # 3. 加密模块检查
     print("\n[CRYPT] 加密模块检查")
     try:
-        from app.services.encryption_service import EncryptionService, _get_cipher
+        from app.services.encryption_service import _get_cipher
 
         cipher = _get_cipher()
         backend = getattr(cipher, '_backend', 'unknown')
@@ -141,7 +139,7 @@ def main():
     # 5. 文件系统检查
     print("\n[FS] 文件系统检查")
     try:
-        from app.utils.paths import get_app_data_dir, get_database_path
+        from app.utils.paths import get_database_path
 
         db_path = get_database_path()
         check("数据库文件存在", db_path.exists(), CRITICAL)
@@ -182,4 +180,3 @@ def main():
 if __name__ == "__main__":
     exit_code = main()
     sys.exit(exit_code)
-

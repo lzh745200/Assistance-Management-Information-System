@@ -2,12 +2,10 @@
 完整测试 - app.services.cache_service (CacheManager internals refactored)
 """
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
-from unittest.mock import MagicMock, patch, AsyncMock
-import hashlib
-import json
+from unittest.mock import AsyncMock
 
 class TestCacheStrategy:
     """测试 CacheStrategy 类"""

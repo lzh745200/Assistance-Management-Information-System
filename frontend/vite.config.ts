@@ -1,6 +1,6 @@
 /**
  * Vite 构建配置
- * 
+ *
  * 包含：
  * - Gzip/Brotli 压缩
  * - 代码分割策略
@@ -9,7 +9,7 @@
  * - 构建优化
  * - 路由懒加载优化
  * - 资源预加载
- * 
+ *
  * 需求: 4.1, 4.2, 4.3, 10.5
  */
 
@@ -88,7 +88,7 @@ export default defineConfig(({ mode }) => {
       vue({
         // 使用默认配置，避免编译问题
       }),
-      
+
       // Element Plus 按需自动导入
       AutoImport({
         resolvers: [ElementPlusResolver()],
@@ -98,7 +98,7 @@ export default defineConfig(({ mode }) => {
           enabled: false
         }
       }),
-      
+
       // Element Plus 组件按需自动导入
       Components({
         resolvers: [
@@ -120,7 +120,7 @@ export default defineConfig(({ mode }) => {
         // 允许覆盖已存在的组件
         allowOverrides: false
       }),
-      
+
       // Gzip 压缩 (生产环境)
       isProduction && viteCompression({
         verbose: true,
@@ -130,7 +130,7 @@ export default defineConfig(({ mode }) => {
         ext: '.gz',
         deleteOriginFile: false
       }),
-      
+
       // Brotli 压缩 (生产环境，压缩率更高)
       isProduction && viteCompression({
         verbose: true,
@@ -141,13 +141,13 @@ export default defineConfig(({ mode }) => {
         deleteOriginFile: false
       })
     ].filter(Boolean),
-    
+
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src')
       }
     },
-    
+
     // CSS 预处理器配置
     css: {
       preprocessorOptions: {
@@ -160,7 +160,7 @@ export default defineConfig(({ mode }) => {
       // 开发环境启用 source map
       devSourcemap: !isProduction
     },
-    
+
     server: {
       port: 5173,
       host: '127.0.0.1',
@@ -186,10 +186,10 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
-    
+
     // 跨过损坏的目录
     publicDir: 'public',
-    
+
     build: {
       outDir: 'dist',
       // 生产环境禁用 source map
@@ -248,31 +248,31 @@ export default defineConfig(({ mode }) => {
           // 代码分割策略 - 优化后的分割逻辑
           manualChunks: (id) => {
             // Vue 核心库 - 最高优先级，单独打包
-            if (id.includes('node_modules/vue/') || 
+            if (id.includes('node_modules/vue/') ||
                 id.includes('node_modules/@vue/')) {
               return 'vue-core'
             }
-            
+
             // Vue Router - 路由库单独打包
             if (id.includes('node_modules/vue-router')) {
               return 'vue-router'
             }
-            
+
             // Pinia - 状态管理单独打包
             if (id.includes('node_modules/pinia')) {
               return 'pinia'
             }
-            
+
             // Element Plus - 统一打包以解决循环依赖警告
             if (id.includes('node_modules/element-plus')) {
               return 'element-plus'
             }
-            
+
             // Element Plus 图标 - 单独打包
             if (id.includes('node_modules/@element-plus/icons-vue')) {
               return 'element-plus-icons'
             }
-            
+
             // ECharts - 统一打包以解决循环依赖警告
             if (id.includes('node_modules/echarts') ||
                 id.includes('node_modules/zrender')) {
@@ -298,21 +298,21 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/axios')) {
               return 'axios'
             }
-            
+
             // 日期处理 - 合并到vendor避免空chunk
             // dayjs 如果未被直接使用会产生空chunk，合并到vendor
-            
+
             // Lodash 工具函数
             if (id.includes('node_modules/lodash-es')) {
               return 'lodash'
             }
-            
-            
+
+
             // 安全相关
             if (id.includes('node_modules/dompurify')) {
               return 'security'
             }
-            
+
             // 其他第三方库
             if (id.includes('node_modules')) {
               return 'vendor'
@@ -328,7 +328,7 @@ export default defineConfig(({ mode }) => {
               return 'assets/js/views/[name]-[hash].js'
             }
             // 第三方库
-            if (['vue-core', 'vue-router', 'pinia', 'axios', 'dayjs', 'lodash', 
+            if (['vue-core', 'vue-router', 'pinia', 'axios', 'dayjs', 'lodash',
                  'el-', 'echarts', 'vendor', 'security'].some(
                    prefix => name.startsWith(prefix) || name.includes(prefix)
                  )) {
@@ -339,22 +339,22 @@ export default defineConfig(({ mode }) => {
           // 静态资源命名
           assetFileNames: (assetInfo) => {
             const name = assetInfo.name || ''
-            
+
             // 图片资源
             if (/\.(png|jpe?g|gif|svg|webp|ico|avif)$/i.test(name)) {
               return 'assets/images/[name]-[hash][extname]'
             }
-            
+
             // 字体资源
             if (/\.(woff2?|eot|ttf|otf)$/i.test(name)) {
               return 'assets/fonts/[name]-[hash][extname]'
             }
-            
+
             // CSS 资源
             if (/\.css$/i.test(name)) {
               return 'assets/css/[name]-[hash][extname]'
             }
-            
+
             // 其他资源
             return 'assets/[name]-[hash][extname]'
           }
@@ -373,7 +373,7 @@ export default defineConfig(({ mode }) => {
       // 资源内联阈值（4KB 以下的资源内联为 base64）
       assetsInlineLimit: 4096
     },
-    
+
     // 优化依赖预构建
     optimizeDeps: {
       include: [
@@ -395,7 +395,7 @@ export default defineConfig(({ mode }) => {
         'src/main.ts'
       ]
     },
-    
+
     // esbuild 配置
     esbuild: {
       // 开发环境移除 console（生产环境由 terser 处理，避免冲突）
@@ -405,14 +405,14 @@ export default defineConfig(({ mode }) => {
       // 目标环境 - 提升到 es2020 以支持 import.meta
       target: 'es2020'
     },
-    
+
     // 预览服务器配置
     preview: {
       port: 4173,
       host: true,
       strictPort: true
     },
-    
+
     // JSON 处理
     json: {
       // 支持命名导入
@@ -420,7 +420,7 @@ export default defineConfig(({ mode }) => {
       // 字符串化（减小体积）
       stringify: false
     },
-    
+
     // Worker 配置
     worker: {
       format: 'es'

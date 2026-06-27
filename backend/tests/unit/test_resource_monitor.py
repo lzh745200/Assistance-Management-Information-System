@@ -1,5 +1,4 @@
 """资源监控服务单元测试"""
-import pytest
 
 def test_psutil_available_boolean():
     from app.services.resource_monitor import PSUTIL_AVAILABLE

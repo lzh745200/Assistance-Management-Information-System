@@ -3,12 +3,7 @@
 覆盖率目标: 100%
 """
 import json
-import os
-import pytest
-import zipfile
-from datetime import datetime, timezone
-from io import BytesIO
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch
 
 class TestConstants:
     """测试常量"""
@@ -517,7 +512,6 @@ class TestImportOrganizations:
     def test_import_new_organization(self):
         """测试导入新组织"""
         from app.services.config_package_service import ConfigPackageService
-        from app.models.organization import Organization
 
         mock_db = MagicMock()
         mock_db.query.return_value.filter.return_value.first.return_value = None

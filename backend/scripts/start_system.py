@@ -8,7 +8,6 @@ import sys
 import os
 from pathlib import Path
 import subprocess
-import time
 
 # 设置Windows控制台UTF-8编码
 if sys.platform == 'win32':

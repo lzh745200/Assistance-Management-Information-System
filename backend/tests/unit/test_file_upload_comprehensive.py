@@ -1,10 +1,8 @@
 """Comprehensive tests for file_upload module (0% -> 100%)."""
 
 import os
-import tempfile
 from unittest.mock import patch, MagicMock
 
-import pytest
 
 from app.core.file_upload import (
     detect_mime_type,

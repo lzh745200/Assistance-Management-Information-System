@@ -15,7 +15,7 @@ if ($registryMirrors) {
 } else {
     Write-Host "⚠️  Registry Mirrors 未配置或未生效" -ForegroundColor Yellow
     Write-Host "   请检查 Docker Desktop 设置中的 Docker Engine 配置" -ForegroundColor Yellow
-    
+
     $continue = Read-Host "是否继续构建？(y/n)"
     if ($continue -ne 'y') {
         exit 1
@@ -68,7 +68,7 @@ docker build -f docker/Dockerfile.fpm `
 if ($LASTEXITCODE -eq 0) {
     $endTime = Get-Date
     $duration = $endTime - $startTime
-    
+
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "✅ 构建成功！" -ForegroundColor Green

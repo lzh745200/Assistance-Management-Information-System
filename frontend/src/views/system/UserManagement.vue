@@ -88,7 +88,11 @@
       <el-table v-loading="loading" :data="tableData" stripe border>
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="username" label="用户名" min-width="120" />
-        <el-table-column prop="full_name" label="姓名" min-width="100" />
+        <el-table-column prop="full_name" label="姓名" min-width="100">
+          <template #default="{ row }">
+            {{ ds(row.full_name, 'name') }}
+          </template>
+        </el-table-column>
         <el-table-column prop="role" label="角色" width="130">
           <template #default="{ row }">
             <el-tag :type="getRoleTagType(row.role)">{{ getRoleName(row.role) }}</el-tag>
@@ -105,7 +109,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="department" label="部门" min-width="120" />
-        <el-table-column prop="phone" label="手机号" width="130" />
+        <el-table-column prop="phone" label="手机号" width="130">
+          <template #default="{ row }">
+            {{ ds(row.phone, 'phone') }}
+          </template>
+        </el-table-column>
         <el-table-column prop="machine_code" label="机器码" width="120">
           <template #default="{ row }">
             <el-tag v-if="row.machine_code" type="success" size="small">
@@ -326,10 +334,12 @@ import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { Plus, Key, ArrowDown } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { useAuthStore } from '@/stores/auth'
+import { useDesensitize } from '@/composables/useDesensitize'
 import PermissionAssignmentDrawer from '@/components/permission/PermissionAssignmentDrawer.vue'
 
 const authStore = useAuthStore()
 const isAdmin = computed(() => authStore.isAdmin)
+const { ds } = useDesensitize()
 
 interface User {
   id: number

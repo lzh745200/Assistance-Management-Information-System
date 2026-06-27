@@ -3,11 +3,8 @@
 覆盖app/api/v1/data/statistics.py和dashboard.py的所有路由
 """
 
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestDataStatisticsAPI:
     """测试数据统计API"""

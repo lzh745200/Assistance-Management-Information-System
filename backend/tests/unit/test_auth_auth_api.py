@@ -1,16 +1,11 @@
 import asyncio
-import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock, patch, call
+from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime, timezone, timedelta
 
-from fastapi import HTTPException
-from fastapi.testclient import TestClient
 
 from app.core.database import get_db
 from app.core.security import get_current_user as _get_current_user
 
-from app.core.exceptions import InvalidCredentialsError, UserAlreadyExistsError
-from app.core.exceptions import ValidationError as BizValidationError
 
 
 def _make_user(**kwargs):

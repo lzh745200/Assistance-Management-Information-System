@@ -3,11 +3,8 @@ API认证模块全面测试
 覆盖app/api/v1/auth/下的所有路由
 """
 
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestAuthAPI:
     """测试认证API"""

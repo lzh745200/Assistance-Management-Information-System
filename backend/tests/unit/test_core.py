@@ -9,7 +9,6 @@ import pytest
 
 from app.core.errors import ErrorCode, ERROR_MESSAGES, get_error_message
 from app.core.exceptions import (
-    AppError,
     BusinessError,
     DatabaseError,
     UserAlreadyExistsError,

@@ -3,8 +3,7 @@
 覆盖: app/services/approval_workflow_service.py
 """
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
 
 # 预加载所有模型以避免懒加载导致的 mapper 解析错误
 import app.models

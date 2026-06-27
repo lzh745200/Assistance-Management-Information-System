@@ -1,6 +1,6 @@
 """批量操作API路由"""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 import logging
@@ -173,8 +173,8 @@ async def batch_export(
 
 @router.post("/validate")
 async def validate_batch(
-    table_name: str,
-    ids: List[int],
+    table_name: str = Query(..., description="表名"),
+    ids: List[int] = Query(..., description="ID列表"),
     current_user: User = Depends(get_current_user),
 ):
     """验证批量操作"""

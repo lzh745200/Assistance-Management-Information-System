@@ -3,11 +3,8 @@ Auto-generated API endpoint tests
 Coverage for all main API routes
 """
 
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestAIAPIEndpoints:
     """Test AI API endpoints"""

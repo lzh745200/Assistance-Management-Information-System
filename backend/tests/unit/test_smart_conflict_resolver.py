@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from datetime import datetime
 
 from app.services.smart_conflict_resolver import (
     SmartConflictResolver,
@@ -8,7 +7,6 @@ from app.services.smart_conflict_resolver import (
     DataConflict,
     ConflictDetectionResult,
     BUSINESS_KEY_FIELDS,
-    DATA_TYPE_MODELS,
 )
 
 

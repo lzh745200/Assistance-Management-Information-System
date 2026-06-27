@@ -1,11 +1,8 @@
 """
 健康检查API全面测试 — health endpoints refactored
 """
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestHealthAPI:
     """测试健康检查API"""

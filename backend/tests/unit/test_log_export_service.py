@@ -1,11 +1,9 @@
 """Tests for LogExportService — 100% code coverage."""
 
-import io
 import os
 import zipfile
-from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 

@@ -1,6 +1,6 @@
 /**
  * 无障碍访问属性测试
- * 
+ *
  * 验证无障碍访问合规性
  * Requirements: 8.1, 8.2, 8.3, 8.4
  */
@@ -15,7 +15,7 @@ describe('无障碍访问属性测试', () => {
     describe('颜色对比度测试', () => {
       // WCAG 2.1 AA标准要求普通文本对比度至少为4.5:1
       // 大文本（18pt或14pt粗体）对比度至少为3:1
-      
+
       /**
        * 计算两个颜色之间的相对亮度
        * 基于WCAG 2.1标准
@@ -53,11 +53,11 @@ describe('无障碍访问属性测试', () => {
       it('白色文字在军绿色背景上应有足够对比度', () => {
         const white = parseHexColor('#ffffff')
         const militaryDark = parseHexColor('#1b4332')
-        
+
         const whiteLum = getLuminance(...white)
         const darkLum = getLuminance(...militaryDark)
         const ratio = getContrastRatio(whiteLum, darkLum)
-        
+
         // WCAG AA标准要求至少4.5:1
         expect(ratio).toBeGreaterThanOrEqual(4.5)
       })
@@ -65,11 +65,11 @@ describe('无障碍访问属性测试', () => {
       it('金色文字在深绿色背景上应有足够对比度', () => {
         const gold = parseHexColor('#d4af37')
         const militaryDark = parseHexColor('#081c15')
-        
+
         const goldLum = getLuminance(...gold)
         const darkLum = getLuminance(...militaryDark)
         const ratio = getContrastRatio(goldLum, darkLum)
-        
+
         // 大文本（标题）至少需要3:1
         expect(ratio).toBeGreaterThanOrEqual(3)
       })
@@ -77,11 +77,11 @@ describe('无障碍访问属性测试', () => {
       it('浅灰色文字在深色背景上应有足够对比度', () => {
         const lightGray = parseHexColor('#a8dadc')
         const militaryMedium = parseHexColor('#1b4332')
-        
+
         const grayLum = getLuminance(...lightGray)
         const mediumLum = getLuminance(...militaryMedium)
         const ratio = getContrastRatio(grayLum, mediumLum)
-        
+
         // 次要文本至少需要4.5:1
         expect(ratio).toBeGreaterThanOrEqual(4.5)
       })
@@ -89,11 +89,11 @@ describe('无障碍访问属性测试', () => {
       it('错误提示红色应有足够对比度', () => {
         const alertRed = parseHexColor('#e63946')
         const cardBg = parseHexColor('#0a1e14') // 近似卡片背景色
-        
+
         const redLum = getLuminance(...alertRed)
         const bgLum = getLuminance(...cardBg)
         const ratio = getContrastRatio(redLum, bgLum)
-        
+
         // 错误提示至少需要3:1（大文本标准）
         expect(ratio).toBeGreaterThanOrEqual(3)
       })
@@ -101,11 +101,11 @@ describe('无障碍访问属性测试', () => {
       it('成功提示绿色应有足够对比度', () => {
         const successGreen = parseHexColor('#2ecc71')
         const cardBg = parseHexColor('#0a1e14')
-        
+
         const greenLum = getLuminance(...successGreen)
         const bgLum = getLuminance(...cardBg)
         const ratio = getContrastRatio(greenLum, bgLum)
-        
+
         // 成功提示至少需要4.5:1
         expect(ratio).toBeGreaterThanOrEqual(4.5)
       })
@@ -118,7 +118,7 @@ describe('无障碍访问属性测试', () => {
           { id: 'username', label: '账号', required: true },
           { id: 'password', label: '密码', required: true }
         ]
-        
+
         formFields.forEach(field => {
           expect(field.id).toBeDefined()
           expect(field.label).toBeDefined()
@@ -131,10 +131,10 @@ describe('无障碍访问属性测试', () => {
           { id: 'username', label: '账号', required: true },
           { id: 'password', label: '密码', required: true }
         ]
-        
+
         const requiredFields = formFields.filter(f => f.required)
         expect(requiredFields.length).toBeGreaterThan(0)
-        
+
         requiredFields.forEach(field => {
           expect(field.required).toBe(true)
         })
@@ -145,7 +145,7 @@ describe('无障碍访问属性测试', () => {
           username: '请输入账号',
           password: '请输入密码'
         }
-        
+
         Object.entries(fieldErrors).forEach(([field, message]) => {
           expect(field).toBeDefined()
           expect(message).toBeDefined()
@@ -163,7 +163,7 @@ describe('无障碍访问属性测试', () => {
           { type: 'checkbox', name: 'rememberMe', tabIndex: 0 },
           { type: 'button', name: 'submit', tabIndex: 0 }
         ]
-        
+
         focusableElements.forEach(element => {
           expect(element.tabIndex).toBeGreaterThanOrEqual(0)
         })
@@ -171,7 +171,7 @@ describe('无障碍访问属性测试', () => {
 
       it('Tab顺序应符合逻辑', () => {
         const tabOrder = ['username', 'password', 'rememberMe', 'submit']
-        
+
         // 验证顺序是从上到下，从左到右
         expect(tabOrder[0]).toBe('username')
         expect(tabOrder[1]).toBe('password')
@@ -183,7 +183,7 @@ describe('无障碍访问属性测试', () => {
           type: 'button',
           keyboardActivation: ['Enter', 'Space']
         }
-        
+
         expect(buttonConfig.keyboardActivation).toContain('Enter')
       })
 
@@ -192,7 +192,7 @@ describe('无障碍访问属性测试', () => {
           type: 'checkbox',
           keyboardActivation: ['Space']
         }
-        
+
         expect(checkboxConfig.keyboardActivation).toContain('Space')
       })
     })
@@ -205,7 +205,7 @@ describe('无障碍访问属性测试', () => {
           outlineColor: '#40916c',
           outlineOffset: '2px'
         }
-        
+
         expect(focusStyles.outline).toBeDefined()
         expect(focusStyles.outlineColor).toBeDefined()
       })
@@ -213,7 +213,7 @@ describe('无障碍访问属性测试', () => {
       it('焦点颜色应与背景有足够对比', () => {
         const focusColor = '#40916c'
         const backgroundColor = '#1b4332'
-        
+
         // 简单验证颜色不同
         expect(focusColor).not.toBe(backgroundColor)
       })
@@ -225,7 +225,7 @@ describe('无障碍访问属性测试', () => {
           role: 'form',
           ariaLabel: '登录表单'
         }
-        
+
         expect(formConfig.role).toBe('form')
         expect(formConfig.ariaLabel).toBeDefined()
       })
@@ -236,7 +236,7 @@ describe('无障碍访问属性测试', () => {
           ariaBusy: true,
           ariaLive: 'polite'
         }
-        
+
         expect(loadingState.ariaBusy).toBe(loadingState.isLoading)
       })
 
@@ -245,7 +245,7 @@ describe('无障碍访问属性测试', () => {
           role: 'alert',
           ariaLive: 'assertive'
         }
-        
+
         expect(errorConfig.role).toBe('alert')
         expect(errorConfig.ariaLive).toBe('assertive')
       })
@@ -255,7 +255,7 @@ describe('无障碍访问属性测试', () => {
           ariaPressed: false,
           ariaLabel: '显示密码'
         }
-        
+
         expect(typeof toggleConfig.ariaPressed).toBe('boolean')
         expect(toggleConfig.ariaLabel).toBeDefined()
       })
@@ -267,13 +267,13 @@ describe('触摸目标尺寸测试', () => {
   it('触摸目标应至少为44x44像素', () => {
     // WCAG 2.1 AAA标准要求触摸目标至少44x44像素
     const minTouchTargetSize = 44
-    
+
     const touchTargets = [
       { name: 'button', width: 48, height: 48 },
       { name: 'checkbox', width: 44, height: 44 },
       { name: 'menuItem', width: 220, height: 50 }
     ]
-    
+
     touchTargets.forEach(target => {
       expect(target.width).toBeGreaterThanOrEqual(minTouchTargetSize)
       expect(target.height).toBeGreaterThanOrEqual(minTouchTargetSize)
@@ -282,13 +282,13 @@ describe('触摸目标尺寸测试', () => {
 
   it('触摸目标之间应有足够间距', () => {
     const minSpacing = 8 // 最小间距8像素
-    
+
     const elementSpacing = [
       { name: 'formFields', spacing: 28 },
       { name: 'buttons', spacing: 16 },
       { name: 'menuItems', spacing: 0 } // 菜单项可以相邻
     ]
-    
+
     elementSpacing.forEach(item => {
       if (item.name !== 'menuItems') {
         expect(item.spacing).toBeGreaterThanOrEqual(minSpacing)
@@ -304,7 +304,7 @@ describe('屏幕阅读器支持测试', () => {
       { name: 'user', ariaLabel: '用户' },
       { name: 'lock', ariaLabel: '密码' }
     ]
-    
+
     icons.forEach(icon => {
       expect(icon.ariaLabel).toBeDefined()
       expect(icon.ariaLabel.length).toBeGreaterThan(0)
@@ -317,7 +317,7 @@ describe('屏幕阅读器支持测试', () => {
       { name: 'scanLine', ariaHidden: true },
       { name: 'cornerDecoration', ariaHidden: true }
     ]
-    
+
     decorativeElements.forEach(element => {
       expect(element.ariaHidden).toBe(true)
     })
@@ -329,7 +329,7 @@ describe('屏幕阅读器支持测试', () => {
       { event: 'loginError', announcement: '登录失败' },
       { event: 'loading', announcement: '正在登录' }
     ]
-    
+
     stateChanges.forEach(change => {
       expect(change.announcement).toBeDefined()
       expect(change.announcement.length).toBeGreaterThan(0)

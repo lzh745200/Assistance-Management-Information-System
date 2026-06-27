@@ -153,6 +153,49 @@ class DataCleaningService:
         return address
 
     @staticmethod
+    def _fill_default(
+        records: List[Dict[str, Any]], field_name: str, default_value: Any
+    ) -> None:
+        for record in records:
+            if record.get(field_name) is None or record.get(field_name) == "":
+                record[field_name] = default_value
+
+    @staticmethod
+    def _fill_mean(records: List[Dict[str, Any]], field_name: str) -> None:
+        values = [record.get(field_name) for record in records if record.get(field_name) is not None]
+        if not values:
+            return
+        try:
+            mean_value = sum(values) / len(values)
+            for record in records:
+                if record.get(field_name) is None:
+                    record[field_name] = mean_value
+        except (TypeError, ValueError):
+            logger.warning(f"无法计算{field_name}的平均值")
+
+    @staticmethod
+    def _fill_median(records: List[Dict[str, Any]], field_name: str) -> None:
+        values = sorted([record.get(field_name) for record in records if record.get(field_name) is not None])
+        if not values:
+            return
+        median_value = values[len(values) // 2]
+        for record in records:
+            if record.get(field_name) is None:
+                record[field_name] = median_value
+
+    @staticmethod
+    def _fill_mode(records: List[Dict[str, Any]], field_name: str) -> None:
+        from collections import Counter
+
+        values = [record.get(field_name) for record in records if record.get(field_name) is not None]
+        if not values:
+            return
+        mode_value = Counter(values).most_common(1)[0][0]
+        for record in records:
+            if record.get(field_name) is None:
+                record[field_name] = mode_value
+
+    @staticmethod
     def fill_missing_values(
         records: List[Dict[str, Any]],
         field_name: str,
@@ -175,41 +218,13 @@ class DataCleaningService:
             return []
 
         if strategy == "default":
-            for record in records:
-                if record.get(field_name) is None or record.get(field_name) == "":
-                    record[field_name] = default_value
-
+            DataCleaningService._fill_default(records, field_name, default_value)
         elif strategy == "mean":
-            # 计算平均值
-            values = [record.get(field_name) for record in records if record.get(field_name) is not None]
-            if values:
-                try:
-                    mean_value = sum(values) / len(values)
-                    for record in records:
-                        if record.get(field_name) is None:
-                            record[field_name] = mean_value
-                except (TypeError, ValueError):
-                    logger.warning(f"无法计算{field_name}的平均值")
-
+            DataCleaningService._fill_mean(records, field_name)
         elif strategy == "median":
-            # 计算中位数
-            values = sorted([record.get(field_name) for record in records if record.get(field_name) is not None])
-            if values:
-                median_value = values[len(values) // 2]
-                for record in records:
-                    if record.get(field_name) is None:
-                        record[field_name] = median_value
-
+            DataCleaningService._fill_median(records, field_name)
         elif strategy == "mode":
-            # 计算众数
-            from collections import Counter
-
-            values = [record.get(field_name) for record in records if record.get(field_name) is not None]
-            if values:
-                mode_value = Counter(values).most_common(1)[0][0]
-                for record in records:
-                    if record.get(field_name) is None:
-                        record[field_name] = mode_value
+            DataCleaningService._fill_mode(records, field_name)
 
         return records
 

@@ -2,7 +2,6 @@
 完整测试 - app.services.validation_engine_service
 覆盖率目标: 100%
 """
-import pytest
 from unittest.mock import MagicMock, patch
 
 class TestValidationResult:

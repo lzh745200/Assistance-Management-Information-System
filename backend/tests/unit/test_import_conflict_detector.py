@@ -1,5 +1,4 @@
 """TDD: 导入冲突检测引擎."""
-import pytest
 
 
 class TestIdConflict:

@@ -3,7 +3,6 @@
 测试组织CRUD操作、树形结构、权限检查等功能
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 

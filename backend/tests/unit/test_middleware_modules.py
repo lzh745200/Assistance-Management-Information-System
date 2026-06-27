@@ -3,10 +3,8 @@ Middleware模块全面测试
 覆盖app/middleware/下的所有模块
 """
 
-import pytest
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
+from unittest.mock import MagicMock
 
 # 注：app.middleware.auth 与 app.middleware.rbac 模块已移除
 # （认证改由 app.core.security 依赖注入；RBAC 改由 app.core.rbac 依赖注入），

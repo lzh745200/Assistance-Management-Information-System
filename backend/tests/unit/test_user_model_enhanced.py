@@ -1,5 +1,4 @@
 """Tests for User model enhancements (revoke_all_tokens)."""
-import pytest
 
 
 class TestUserRevokeTokens:
@@ -8,7 +7,7 @@ class TestUserRevokeTokens:
     def test_revoke_all_tokens_increments_version(self):
         """revoke_all_tokens() should increment token_version and set password_changed_at."""
         from app.models.user import User
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         user = User(username="test_user", role="operator")
         original_version = user.token_version_safe

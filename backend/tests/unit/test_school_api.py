@@ -1,5 +1,4 @@
 """学校 API 基础测试"""
-import pytest
 
 class TestSchoolModel:
     """学校模型字段验证"""

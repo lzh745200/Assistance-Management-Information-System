@@ -5,7 +5,6 @@
 """
 import pytest
 import time
-from unittest.mock import Mock, patch
 from app.utils.db_metrics import DatabaseMetrics, get_db_metrics
 
 class TestDatabaseMetrics:

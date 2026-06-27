@@ -1,8 +1,7 @@
 """Tests for app.core.cookie_security (100% coverage)."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 from fastapi import Response
 
 from app.core.cookie_security import delete_cookie, get_cookie_domain, set_secure_cookie

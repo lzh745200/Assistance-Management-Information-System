@@ -301,7 +301,9 @@ class DataValidatorService:
             errors=all_errors,
         )
 
-    def check_duplicates(self, rows: List[Dict[str, Any]], key_fields: List[str] = None) -> List[ValidationError]:
+    def check_duplicates(
+        self, rows: List[Dict[str, Any]], key_fields: Optional[List[str]] = None
+    ) -> List[ValidationError]:
         """
         检查重复数据
 
@@ -315,8 +317,8 @@ class DataValidatorService:
         if key_fields is None:
             key_fields = ["village_name"]
 
-        seen = {}
-        errors = []
+        seen: dict[tuple, int] = {}
+        errors: list[ValidationError] = []
 
         for idx, row in enumerate(rows, 1):
             key = tuple(str(row.get(f, "")).strip().lower() for f in key_fields)
@@ -355,70 +357,76 @@ class DataValidatorService:
                     mapping[idx] = field_name
         return mapping
 
+    def _validate_int_field(
+        self, field_name: str, value: Any, row_number: int
+    ) -> Optional[ValidationError]:
+        if isinstance(value, str):
+            parsed_value = int(value.strip())
+        elif isinstance(value, (int, float)):
+            parsed_value = int(value)
+        else:
+            raise ValueError("不是有效的整数")
+
+        if field_name in self.NUMERIC_FIELD_RANGES:
+            min_val, max_val = self.NUMERIC_FIELD_RANGES[field_name]
+            if parsed_value < min_val or parsed_value > max_val:
+                return ValidationError(
+                    row_number=row_number,
+                    field_name=field_name,
+                    error_code=ValidationErrorCode.VALUE_OUT_OF_RANGE,
+                    message=f"字段 '{self._get_field_label(field_name)}' 值超出范围，应在 {min_val} 到 {max_val} 之间",
+                    value=value,
+                )
+        return None
+
+    def _validate_float_field(self, value: Any) -> None:
+        if isinstance(value, str):
+            float(value.strip())
+        elif not isinstance(value, (int, float)):
+            raise ValueError("不是有效的数字")
+
+    def _validate_bool_field(self, value: Any) -> None:
+        if isinstance(value, str):
+            if value.strip().lower() not in (
+                "是", "否", "true", "false", "1", "0", "yes", "no",
+            ):
+                raise ValueError("请填写'是'或'否'")
+        elif not isinstance(value, bool):
+            raise ValueError("不是有效的布尔值")
+
+    def _validate_county_field(
+        self, field_name: str, value: Any, row_number: int
+    ) -> Optional[ValidationError]:
+        str_value = str(value).strip() if value else ""
+        if str_value and str_value not in QIANNAN_COUNTIES:
+            return ValidationError(
+                row_number=row_number,
+                field_name=field_name,
+                error_code=ValidationErrorCode.INVALID_COUNTY,
+                message=(
+                    f"字段 '{self._get_field_label(field_name)}' 值无效，"
+                    f"必须是黔南州12个县市之一: {', '.join(QIANNAN_COUNTIES)}"
+                ),
+                value=value,
+            )
+        return None
+
     def _validate_field_format(
         self, field_name: str, value: Any, field_type: str, row_number: int
     ) -> Optional[ValidationError]:
         """验证字段格式"""
         try:
             if field_type == "int":
-                if isinstance(value, str):
-                    parsed_value = int(value.strip())
-                elif isinstance(value, (int, float)):
-                    parsed_value = int(value)
-                else:
-                    raise ValueError("不是有效的整数")
-
-                # 检查数值范围
-                if field_name in self.NUMERIC_FIELD_RANGES:
-                    min_val, max_val = self.NUMERIC_FIELD_RANGES[field_name]
-                    if parsed_value < min_val or parsed_value > max_val:
-                        return ValidationError(
-                            row_number=row_number,
-                            field_name=field_name,
-                            error_code=ValidationErrorCode.VALUE_OUT_OF_RANGE,
-                            message=f"字段 '{self._get_field_label(field_name)}' 值超出范围，应在 {min_val} 到 {max_val} 之间",
-                            value=value,
-                        )
-
-            elif field_type == "float":
-                if isinstance(value, str):
-                    float(value.strip())
-                elif not isinstance(value, (int, float)):
-                    raise ValueError("不是有效的数字")
-
-            elif field_type == "bool":
-                if isinstance(value, str):
-                    if value.strip().lower() not in (
-                        "是",
-                        "否",
-                        "true",
-                        "false",
-                        "1",
-                        "0",
-                        "yes",
-                        "no",
-                    ):
-                        raise ValueError("请填写'是'或'否'")
-                elif not isinstance(value, bool):
-                    raise ValueError("不是有效的布尔值")
-
-            elif field_type == "county":
-                # 验证县 / 市是否在黔南州12个县市范围内
-                str_value = str(value).strip() if value else ""
-                if str_value and str_value not in QIANNAN_COUNTIES:
-                    return ValidationError(
-                        row_number=row_number,
-                        field_name=field_name,
-                        error_code=ValidationErrorCode.INVALID_COUNTY,
-                        message=(
-                            f"字段 '{self._get_field_label(field_name)}' 值无效，"
-                            f"必须是黔南州12个县市之一: {', '.join(QIANNAN_COUNTIES)}"
-                        ),
-                        value=value,
-                    )
-
+                return self._validate_int_field(field_name, value, row_number)
+            if field_type == "float":
+                self._validate_float_field(value)
+                return None
+            if field_type == "bool":
+                self._validate_bool_field(value)
+                return None
+            if field_type == "county":
+                return self._validate_county_field(field_name, value, row_number)
             return None
-
         except (ValueError, TypeError) as e:
             return ValidationError(
                 row_number=row_number,
@@ -470,7 +478,7 @@ class DataValidatorService:
         Returns:
             类型转换后的数据行
         """
-        converted = {}
+        converted: dict[str, Any] = {}
 
         for field_name, value in row.items():
             if value is None or (isinstance(value, str) and not value.strip()):
@@ -594,7 +602,7 @@ class DataValidatorService:
         warnings = []
 
         # 检查是否有大量空字段
-        empty_field_counts = {}
+        empty_field_counts: dict[str, int] = {}
         for row in rows:
             for field_name, value in row.items():
                 if value is None or (isinstance(value, str) and not value.strip()):
@@ -626,7 +634,7 @@ class DataValidatorService:
             验证摘要字典
         """
         # 按错误类型分组
-        error_by_type = {}
+        error_by_type: dict[str, list] = {}
         for error in result.errors:
             error_type = (
                 error.error_code.value if isinstance(error.error_code, ValidationErrorCode) else error.error_code
@@ -636,7 +644,7 @@ class DataValidatorService:
             error_by_type[error_type].append(error)
 
         # 按字段分组
-        error_by_field = {}
+        error_by_field: dict[str, list] = {}
         for error in result.errors:
             if error.field_name:
                 if error.field_name not in error_by_field:

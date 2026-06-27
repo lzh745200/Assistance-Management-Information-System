@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 
 
 @pytest.fixture
@@ -21,8 +21,7 @@ class TestSchedulerFunctionsExist:
         from app.services.backup_scheduler import (
             auto_backup_job, kpi_precalculate_job, anomaly_detection_job,
             todo_reminder_job, weekly_report_job, database_maintenance_job,
-            start_backup_scheduler, stop_backup_scheduler, get_scheduler_status,
-            scheduler
+            start_backup_scheduler, stop_backup_scheduler, get_scheduler_status
         )
         assert callable(auto_backup_job)
         assert callable(kpi_precalculate_job)

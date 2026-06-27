@@ -161,112 +161,104 @@ class LogExportService:
 
         return sanitized
 
+    def _write_system_info(self, f) -> None:
+        """写入系统信息"""
+        import platform
+        import sys
+        f.write("[系统信息]\n")
+        f.write(f"操作系统: {platform.system()} {platform.release()}\n")
+        f.write(f"Python版本: {sys.version}\n")
+        f.write(f"架构: {platform.machine()}\n")
+        f.write(f"处理器: {platform.processor()}\n\n")
+
+    def _write_app_info(self, f) -> None:
+        """写入应用信息"""
+        f.write("[应用信息]\n")
+        try:
+            from app.core.config import settings
+            f.write(f"项目名称: {settings.PROJECT_NAME}\n")
+            f.write(f"项目版本: {settings.PROJECT_VERSION}\n")
+            f.write(f"调试模式: {settings.DEBUG}\n")
+        except Exception as e:
+            f.write(f"无法获取应用信息: {e}\n")
+        f.write("\n")
+
+    def _write_performance_metrics(self, f) -> None:
+        """写入性能指标"""
+        f.write("[性能指标]\n")
+        try:
+            import psutil
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage(os.environ.get("SystemDrive", "C:\\"))
+            f.write(f"CPU使用率: {cpu_percent}%\n")
+            memory_used_gb = memory.used / 1024 / 1024 / 1024
+            memory_total_gb = memory.total / 1024 / 1024 / 1024
+            f.write(f"内存使用: {memory_used_gb:.2f}GB / {memory_total_gb:.2f}GB ({memory.percent}%)\n")
+            disk_used_gb = disk.used / 1024 / 1024 / 1024
+            disk_total_gb = disk.total / 1024 / 1024 / 1024
+            f.write(f"磁盘使用: {disk_used_gb:.2f}GB / {disk_total_gb:.2f}GB ({disk.percent}%)\n")
+        except ImportError:
+            f.write("psutil未安装，无法获取性能指标\n")
+        except Exception as e:
+            f.write(f"获取性能指标失败: {e}\n")
+        f.write("\n")
+
+    def _write_db_status(self, f) -> None:
+        """写入数据库状态"""
+        f.write("[数据库状态]\n")
+        try:
+            from app.core.database import SessionLocal
+            db = SessionLocal()
+            try:
+                from sqlalchemy import text
+                db.execute(text("SELECT 1"))
+                f.write("数据库连接: 正常\n")
+            except Exception as e:
+                f.write(f"数据库连接: 失败 - {e}\n")
+            finally:
+                db.close()
+        except Exception as e:
+            f.write(f"数据库检查失败: {e}\n")
+        f.write("\n")
+
+    def _write_env_vars(self, f) -> None:
+        """写入环境变量（脱敏）"""
+        f.write("[环境变量]\n")
+        sensitive_env_keys = ["PASSWORD", "SECRET", "KEY", "TOKEN", "CREDENTIAL"]
+        for key, value in sorted(os.environ.items()):
+            if any(s in key.upper() for s in sensitive_env_keys):
+                f.write(f"{key}=***REDACTED***\n")
+            else:
+                f.write(f"{key}={value}\n")
+        f.write("\n")
+
+    def _write_dependencies(self, f) -> None:
+        """写入依赖包版本"""
+        f.write("[依赖包版本]\n")
+        try:
+            import pkg_resources
+            installed_packages = [f"{pkg.key}=={pkg.version}" for pkg in pkg_resources.working_set]
+            for pkg in sorted(installed_packages):
+                f.write(f"{pkg}\n")
+        except Exception as e:
+            f.write(f"获取依赖包版本失败: {e}\n")
+
     def _generate_diagnostic_report(self, output_dir: Path) -> Path:
         """生成诊断报告"""
         report_file = output_dir / "diagnostic_report.txt"
 
         try:
-            import platform
-            import sys
-
             with open(report_file, "w", encoding="utf-8") as f:
-                f.write("=" * 80 + "\n")
-                f.write("系统诊断报告\n")
-                f.write("=" * 80 + "\n\n")
-
-                # 系统信息
-                f.write("[系统信息]\n")
-                f.write(f"操作系统: {platform.system()} {platform.release()}\n")
-                f.write(f"Python版本: {sys.version}\n")
-                f.write(f"架构: {platform.machine()}\n")
-                f.write(f"处理器: {platform.processor()}\n\n")
-
-                # 应用信息
-                f.write("[应用信息]\n")
-                try:
-                    from app.core.config import settings
-
-                    f.write(f"项目名称: {settings.PROJECT_NAME}\n")
-                    f.write(f"项目版本: {settings.PROJECT_VERSION}\n")
-                    f.write(f"调试模式: {settings.DEBUG}\n")
-                except Exception as e:
-                    f.write(f"无法获取应用信息: {e}\n")
-                f.write("\n")
-
-                # 性能指标
-                f.write("[性能指标]\n")
-                try:
-                    import psutil
-
-                    cpu_percent = psutil.cpu_percent(interval=1)
-                    memory = psutil.virtual_memory()
-                    disk = psutil.disk_usage(os.environ.get("SystemDrive", "C:\\"))
-
-                    f.write(f"CPU使用率: {cpu_percent}%\n")
-                    memory_used_gb = memory.used / 1024 / 1024 / 1024
-                    memory_total_gb = memory.total / 1024 / 1024 / 1024
-                    f.write(f"内存使用: {memory_used_gb:.2f}GB / " f"{memory_total_gb:.2f}GB ({memory.percent}%)\n")
-                    disk_used_gb = disk.used / 1024 / 1024 / 1024
-                    disk_total_gb = disk.total / 1024 / 1024 / 1024
-                    f.write(f"磁盘使用: {disk_used_gb:.2f}GB / " f"{disk_total_gb:.2f}GB ({disk.percent}%)\n")
-                except ImportError:
-                    f.write("psutil未安装，无法获取性能指标\n")
-                except Exception as e:
-                    f.write(f"获取性能指标失败: {e}\n")
-                f.write("\n")
-
-                # 数据库状态
-                f.write("[数据库状态]\n")
-                try:
-                    from app.core.database import SessionLocal
-
-                    db = SessionLocal()
-                    try:
-                        # 执行简单查询测试连接
-                        from sqlalchemy import text
-                        db.execute(text("SELECT 1"))
-                        f.write("数据库连接: 正常\n")
-                    except Exception as e:
-                        f.write(f"数据库连接: 失败 - {e}\n")
-                    finally:
-                        db.close()
-                except Exception as e:
-                    f.write(f"数据库检查失败: {e}\n")
-                f.write("\n")
-
-                # 环境变量（脱敏）
-                f.write("[环境变量]\n")
-                sensitive_env_keys = [
-                    "PASSWORD",
-                    "SECRET",
-                    "KEY",
-                    "TOKEN",
-                    "CREDENTIAL",
-                ]
-                for key, value in sorted(os.environ.items()):
-                    if any(s in key.upper() for s in sensitive_env_keys):
-                        f.write(f"{key}=***REDACTED***\n")
-                    else:
-                        f.write(f"{key}={value}\n")
-                f.write("\n")
-
-                # 依赖包版本
-                f.write("[依赖包版本]\n")
-                try:
-                    import pkg_resources
-
-                    installed_packages = [f"{pkg.key}=={pkg.version}" for pkg in pkg_resources.working_set]
-                    for pkg in sorted(installed_packages):
-                        f.write(f"{pkg}\n")
-                except Exception as e:
-                    f.write(f"获取依赖包版本失败: {e}\n")
-
-                f.write("\n" + "=" * 80 + "\n")
-                f.write("报告生成时间: " + datetime.now().isoformat() + "\n")
-                f.write("=" * 80 + "\n")
-
+                f.write("=" * 80 + "\n系统诊断报告\n" + "=" * 80 + "\n\n")
+                self._write_system_info(f)
+                self._write_app_info(f)
+                self._write_performance_metrics(f)
+                self._write_db_status(f)
+                self._write_env_vars(f)
+                self._write_dependencies(f)
+                f.write("\n" + "=" * 80 + "\n报告生成时间: " + datetime.now().isoformat() + "\n" + "=" * 80 + "\n")
             return report_file
-
         except Exception as e:
             logger.error(f"生成诊断报告失败: {e}", exc_info=True)
             raise

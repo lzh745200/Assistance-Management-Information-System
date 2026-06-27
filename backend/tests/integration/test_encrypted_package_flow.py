@@ -8,9 +8,6 @@ import pytest
 import os
 import tempfile
 import uuid
-import pytest
-import pytest_asyncio
-from unittest.mock import Mock, patch
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -18,7 +15,6 @@ from sqlalchemy.orm import sessionmaker
 from app.models.village import Village
 from app.models.organization import Organization
 from app.services.data_package_service import DataPackageService
-from app.services.password_encryption_service import PasswordEncryptionService
 
 
 # Create a real SQLite database for testing

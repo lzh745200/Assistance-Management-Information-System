@@ -3,7 +3,6 @@
 import pytest
 import random
 from datetime import datetime, timezone
-from unittest.mock import patch
 from app.core.mock_data import (
     _random_date,
     _random_string,

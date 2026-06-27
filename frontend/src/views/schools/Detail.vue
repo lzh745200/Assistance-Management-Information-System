@@ -43,7 +43,7 @@
               school.district || '-'
             }}</el-descriptions-item>
             <el-descriptions-item label="详细地址" :span="3">{{
-              school.address || '-'
+              ds(school.address, 'address')
             }}</el-descriptions-item>
           </el-descriptions>
         </div>
@@ -75,12 +75,12 @@
           </div>
           <el-descriptions :column="3" border style="margin-top: 16px">
             <el-descriptions-item label="校长姓名">{{
-              school.principal || '-'
+              ds(school.principal, 'name')
             }}</el-descriptions-item>
             <el-descriptions-item label="联系电话">{{
-              school.contact_phone || '-'
+              ds(school.contact_phone, 'phone')
             }}</el-descriptions-item>
-            <el-descriptions-item label="邮箱">{{ school.email || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="邮箱">{{ ds(school.email, 'email') }}</el-descriptions-item>
           </el-descriptions>
         </div>
       </div>
@@ -220,12 +220,14 @@ import { AuthStorage } from '@/utils/authStorage'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Edit, Delete, Loading } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { schoolApi } from '@/api/schools'
 
 const { pushSafe } = useRouterSafe()
+const { ds } = useDesensitize()
 const route = useRoute()
 const loading = ref(true)
 

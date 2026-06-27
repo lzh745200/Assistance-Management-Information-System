@@ -2,7 +2,6 @@
 所有模型导入测试
 通过导入所有模型提升覆盖率
 """
-import pytest
 
 class TestAllModelsImport:
     """测试所有模型导入"""

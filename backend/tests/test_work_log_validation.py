@@ -4,8 +4,6 @@
 import pytest
 
 
-import pytest
-from fastapi.testclient import TestClient
 
 
 def test_create_work_log_with_empty_string(client, user_headers):

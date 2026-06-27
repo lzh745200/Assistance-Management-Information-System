@@ -1,6 +1,5 @@
 """Tests for app.api.v1.search — helpers + global search."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
 

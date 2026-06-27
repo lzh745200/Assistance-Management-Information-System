@@ -286,6 +286,95 @@ class BackupService:
                 continue
             zipf.extract(member, dest_dir)
 
+    def _resolve_restore_source(self, backup_file_path: str, password: str | None = None):
+        """处理加密检测和解密，返回(restore_source, decrypted_temp_path)"""
+        if self._is_encrypted(backup_file_path):
+            if not password:
+                raise ValueError("备份文件已加密，请提供密码")
+            logger.info("检测到加密备份，正在解密到临时文件...")
+            decrypted_temp_path = self._decrypt_to_temp(backup_file_path, password)
+            return decrypted_temp_path, decrypted_temp_path
+        else:
+            if password:
+                logger.warning("提供了密码但备份文件未加密，密码将被忽略")
+            return backup_file_path, None
+
+    def _create_snapshots(self):
+        """创建当前状态的快照"""
+        snapshot_db_path = None
+        snapshot_uploads_dir = None
+        if os.path.exists(self.database_path):
+            snapshot_db_path = f"{self.database_path}.snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            shutil.copy(self.database_path, snapshot_db_path)
+        if os.path.exists(self.uploads_dir):
+            snapshot_uploads_dir = f"{self.uploads_dir}_snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            shutil.copytree(self.uploads_dir, snapshot_uploads_dir)
+        return snapshot_db_path, snapshot_uploads_dir
+
+    def _restore_database_from_backup(self, temp_dir: str) -> bool:
+        """从备份中恢复数据库"""
+        backup_db_path = os.path.join(temp_dir, "data/rural_revitalization.db")
+        if not os.path.exists(backup_db_path):
+            return False
+        os.makedirs(os.path.dirname(self.database_path), exist_ok=True)
+        shutil.copy(backup_db_path, self.database_path)
+        try:
+            from app.core.database import engine
+            engine.dispose()
+            logger.info("数据库连接池已释放，后续请求将自动重连到已恢复的数据库")
+        except Exception as _dispose_err:
+            logger.warning("释放连接池失败（不影响恢复）: %s", _dispose_err)
+        return True
+
+    def _restore_uploads_from_backup(self, temp_dir: str) -> bool:
+        """从备份中恢复上传文件"""
+        backup_uploads_dir = os.path.join(temp_dir, "uploads")
+        if not os.path.exists(backup_uploads_dir):
+            return False
+        if os.path.exists(self.uploads_dir):
+            shutil.rmtree(self.uploads_dir, ignore_errors=True)
+        shutil.copytree(backup_uploads_dir, self.uploads_dir)
+        return True
+
+    def _cleanup_snapshots(self, snapshot_db_path, snapshot_uploads_dir):
+        """恢复成功后删除快照"""
+        if snapshot_db_path and os.path.exists(snapshot_db_path):
+            try:
+                os.unlink(snapshot_db_path)
+            except FileNotFoundError:
+                pass
+        if snapshot_uploads_dir and os.path.exists(snapshot_uploads_dir):
+            shutil.rmtree(snapshot_uploads_dir, ignore_errors=True)
+
+    def _rollback_to_snapshots(self, snapshot_db_path, snapshot_uploads_dir):
+        """恢复失败时回滚到快照"""
+        if snapshot_db_path and os.path.exists(snapshot_db_path):
+            if os.path.exists(self.database_path):
+                try:
+                    os.unlink(self.database_path)
+                except FileNotFoundError:
+                    pass
+            shutil.copy(snapshot_db_path, self.database_path)
+            try:
+                os.unlink(snapshot_db_path)
+            except FileNotFoundError:
+                pass
+        if snapshot_uploads_dir and os.path.exists(snapshot_uploads_dir):
+            if os.path.exists(self.uploads_dir):
+                shutil.rmtree(self.uploads_dir, ignore_errors=True)
+            shutil.copytree(snapshot_uploads_dir, self.uploads_dir)
+            shutil.rmtree(snapshot_uploads_dir, ignore_errors=True)
+
+    def _cleanup_temp(self, temp_dir, decrypted_temp_path):
+        """清理临时文件"""
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+        if decrypted_temp_path and os.path.exists(decrypted_temp_path):
+            try:
+                os.unlink(decrypted_temp_path)
+            except OSError:
+                pass
+
     def restore_backup(self, backup_file_path: str, password: str | None = None) -> Dict:
         """
         从备份恢复系统（带事务保护 + 加密检测）
@@ -303,73 +392,18 @@ class BackupService:
         if not os.path.exists(backup_file_path):
             raise FileNotFoundError(f"备份文件不存在: {backup_file_path}")
 
-        # 检测加密备份
-        decrypted_temp_path = None
-        if self._is_encrypted(backup_file_path):
-            if not password:
-                raise ValueError("备份文件已加密，请提供密码")
-            logger.info("检测到加密备份，正在解密到临时文件...")
-            decrypted_temp_path = self._decrypt_to_temp(backup_file_path, password)
-            restore_source = decrypted_temp_path
-        else:
-            if password:
-                logger.warning("提供了密码但备份文件未加密，密码将被忽略")
-            restore_source = backup_file_path
-
-        # 解压备份文件到临时目录
+        restore_source, decrypted_temp_path = self._resolve_restore_source(backup_file_path, password)
         temp_dir = tempfile.mkdtemp(prefix="restore_")
-
-        # 保存当前状态的快照路径
-        snapshot_db_path = None
-        snapshot_uploads_dir = None
+        snapshot_db_path, snapshot_uploads_dir = self._create_snapshots()
 
         try:
-            # 创建当前数据库快照
-            if os.path.exists(self.database_path):
-                snapshot_db_path = f"{self.database_path}.snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                shutil.copy(self.database_path, snapshot_db_path)
-
-            # 创建上传文件快照
-            if os.path.exists(self.uploads_dir):
-                snapshot_uploads_dir = f"{self.uploads_dir}_snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                shutil.copytree(self.uploads_dir, snapshot_uploads_dir)
-
-            # 解压备份文件（使用安全解压，防止 zip slip）
             with zipfile.ZipFile(restore_source, "r") as zipf:
                 self._safe_extractall(zipf, temp_dir)
 
-            # 恢复数据库
-            backup_db_path = os.path.join(temp_dir, "data/rural_revitalization.db")
-            database_restored = False
-            if os.path.exists(backup_db_path):
-                os.makedirs(os.path.dirname(self.database_path), exist_ok=True)
-                shutil.copy(backup_db_path, self.database_path)
-                database_restored = True
-                # 释放旧数据库连接池，强制 SQLAlchemy 重新连接新恢复的数据库文件
-                try:
-                    from app.core.database import engine
-                    engine.dispose()
-                    logger.info("数据库连接池已释放，后续请求将自动重连到已恢复的数据库")
-                except Exception as _dispose_err:
-                    logger.warning("释放连接池失败（不影响恢复）: %s", _dispose_err)
+            database_restored = self._restore_database_from_backup(temp_dir)
+            uploads_restored = self._restore_uploads_from_backup(temp_dir)
 
-            # 恢复上传文件
-            backup_uploads_dir = os.path.join(temp_dir, "uploads")
-            uploads_restored = False
-            if os.path.exists(backup_uploads_dir):
-                if os.path.exists(self.uploads_dir):
-                    shutil.rmtree(self.uploads_dir, ignore_errors=True)
-                shutil.copytree(backup_uploads_dir, self.uploads_dir)
-                uploads_restored = True
-
-            # 恢复成功，删除快照
-            if snapshot_db_path and os.path.exists(snapshot_db_path):
-                try:
-                    os.unlink(snapshot_db_path)
-                except FileNotFoundError:
-                    pass
-            if snapshot_uploads_dir and os.path.exists(snapshot_uploads_dir):
-                shutil.rmtree(snapshot_uploads_dir, ignore_errors=True)
+            self._cleanup_snapshots(snapshot_db_path, snapshot_uploads_dir)
 
             return {
                 "success": True,
@@ -379,36 +413,11 @@ class BackupService:
             }
 
         except Exception as e:
-            # 恢复失败，回滚到快照
-            if snapshot_db_path and os.path.exists(snapshot_db_path):
-                if os.path.exists(self.database_path):
-                    try:
-                        os.unlink(self.database_path)
-                    except FileNotFoundError:
-                        pass
-                shutil.copy(snapshot_db_path, self.database_path)
-                try:
-                    os.unlink(snapshot_db_path)
-                except FileNotFoundError:
-                    pass
-
-            if snapshot_uploads_dir and os.path.exists(snapshot_uploads_dir):
-                if os.path.exists(self.uploads_dir):
-                    shutil.rmtree(self.uploads_dir, ignore_errors=True)
-                shutil.copytree(snapshot_uploads_dir, self.uploads_dir)
-                shutil.rmtree(snapshot_uploads_dir, ignore_errors=True)
-
+            self._rollback_to_snapshots(snapshot_db_path, snapshot_uploads_dir)
             raise BackupRestoreError(f"恢复失败，已回滚到原始状态: {e}")
 
         finally:
-            # 清理临时文件
-            if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir, ignore_errors=True)
-            if decrypted_temp_path and os.path.exists(decrypted_temp_path):
-                try:
-                    os.unlink(decrypted_temp_path)
-                except OSError:
-                    pass
+            self._cleanup_temp(temp_dir, decrypted_temp_path)
 
     def list_backups(self) -> List[BackupRecord]:
         """
@@ -593,6 +602,93 @@ class BackupService:
             logger.error(f"获取文件清单失败: {e}")
             return manifest
 
+    def _build_current_manifest(self, include_uploads: bool) -> Dict:
+        """构建当前文件清单（数据库 + 上传文件）"""
+        current_manifest = {}
+        if os.path.exists(self.database_path):
+            current_manifest[self.database_path] = {
+                "size": os.path.getsize(self.database_path),
+                "mtime": os.path.getmtime(self.database_path),
+                "hash": self._calculate_file_hash(self.database_path),
+            }
+        if include_uploads:
+            uploads_manifest = self._get_file_manifest(self.uploads_dir)
+            current_manifest.update(uploads_manifest)
+        return current_manifest
+
+    def _find_changed_files(self, current_manifest: Dict) -> List[str]:
+        """比较当前清单与上次备份，找出变更的文件列表"""
+        if not self.last_backup_manifest:
+            return list(current_manifest.keys())
+        changed_files = []
+        for file_path, file_info in current_manifest.items():
+            last_info = self.last_backup_manifest.get(file_path)
+            if not last_info or last_info["hash"] != file_info["hash"]:
+                changed_files.append(file_path)
+        return changed_files
+
+    def _write_incremental_backup_zip(
+        self, backup_file_path: str, changed_files: List[str],
+        current_manifest: Dict, timestamp: str, description: str,
+        include_uploads: bool,
+    ):
+        """写入增量备份 ZIP 文件"""
+        with zipfile.ZipFile(
+            backup_file_path,
+            "w",
+            zipfile.ZIP_DEFLATED,
+            compresslevel=self.compression_level,
+        ) as zipf:
+            for file_path in changed_files:
+                if os.path.exists(file_path):
+                    try:
+                        arcname = os.path.relpath(file_path)
+                    except ValueError:
+                        arcname = os.path.basename(file_path)
+                    zipf.write(file_path, arcname)
+
+            backup_info = {
+                "timestamp": timestamp,
+                "description": description,
+                "backup_type": "incremental",
+                "include_uploads": include_uploads,
+                "changed_files": len(changed_files),
+                "created_at": datetime.now().isoformat(),
+                "manifest": current_manifest,
+            }
+            zipf.writestr(
+                "backup_info.json",
+                json.dumps(backup_info, indent=2, ensure_ascii=False),
+            )
+
+    def _save_incremental_backup_record(
+        self, backup_file_path: str, description: str,
+        changed_files: List[str], timestamp: str,
+    ):
+        """保存增量备份记录到数据库"""
+        file_size = os.path.getsize(backup_file_path)
+        config_key = f"backup_incremental_{timestamp}"
+        config = SystemConfig(
+            key=config_key,
+            value=backup_file_path,
+            description=f"增量备份: {description} ({len(changed_files)}个文件)",
+        )
+        self.db.add(config)
+
+        from app.services.system_config_service import SystemConfigService
+        config_service = SystemConfigService(self.db)
+        try:
+            config_service.set("last_backup_time", datetime.now().isoformat())
+        except Exception as e:
+            logger.warning(f"更新last_backup_time失败，尝试更新: {e}")
+            existing = self.db.query(SystemConfig).filter(SystemConfig.key == "last_backup_time").first()
+            if existing:
+                existing.value = datetime.now().isoformat()
+                existing.updated_at = datetime.now()
+
+        self.db.commit()
+        return config, file_size
+
     def create_incremental_backup(self, description: str = "增量备份", include_uploads: bool = True) -> Dict:
         """
         创建增量备份（仅备份变更的文件）
@@ -607,7 +703,6 @@ class BackupService:
         if not self.incremental_enabled:
             logger.warning("增量备份未启用，执行完整备份")
             result = self.create_backup(description, include_uploads)
-            # 转换BackupRecord为Dict
             if result:
                 return {
                     "status": "success",
@@ -625,37 +720,12 @@ class BackupService:
         logger.info("开始创建增量备份...")
 
         try:
-            # 生成备份文件名
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             backup_file_name = f"backup_incremental_{timestamp}.zip"
             backup_file_path = os.path.join(self.backup_dir, backup_file_name)
 
-            # 获取当前文件清单
-            current_manifest = {}
-
-            # 数据库文件
-            if os.path.exists(self.database_path):
-                current_manifest[self.database_path] = {
-                    "size": os.path.getsize(self.database_path),
-                    "mtime": os.path.getmtime(self.database_path),
-                    "hash": self._calculate_file_hash(self.database_path),
-                }
-
-            # 上传文件
-            if include_uploads:
-                uploads_manifest = self._get_file_manifest(self.uploads_dir)
-                current_manifest.update(uploads_manifest)
-
-            # 比较清单，找出变更的文件
-            changed_files = []
-            if self.last_backup_manifest:
-                for file_path, file_info in current_manifest.items():
-                    last_info = self.last_backup_manifest.get(file_path)
-                    if not last_info or last_info["hash"] != file_info["hash"]:
-                        changed_files.append(file_path)
-            else:
-                # 没有上次备份，所有文件都是变更的
-                changed_files = list(current_manifest.keys())
+            current_manifest = self._build_current_manifest(include_uploads)
+            changed_files = self._find_changed_files(current_manifest)
 
             if not changed_files:
                 logger.info("没有文件变更，跳过增量备份")
@@ -667,69 +737,17 @@ class BackupService:
 
             logger.info(f"发现 {len(changed_files)} 个变更文件")
 
-            # 创建增量备份
-            with zipfile.ZipFile(
-                backup_file_path,
-                "w",
-                zipfile.ZIP_DEFLATED,
-                compresslevel=self.compression_level,
-            ) as zipf:
-                for file_path in changed_files:
-                    if os.path.exists(file_path):
-                        # 使用相对路径作为 arcname，防止绝对路径写入 zip（zip slip 风险）
-                        try:
-                            arcname = os.path.relpath(file_path)
-                        except ValueError:
-                            # Windows 上跨盘符 relpath 会抛 ValueError，回退到文件名
-                            arcname = os.path.basename(file_path)
-                        zipf.write(file_path, arcname)
+            self._write_incremental_backup_zip(
+                backup_file_path, changed_files, current_manifest,
+                timestamp, description, include_uploads,
+            )
 
-                # 添加备份信息
-                backup_info = {
-                    "timestamp": timestamp,
-                    "description": description,
-                    "backup_type": "incremental",
-                    "include_uploads": include_uploads,
-                    "changed_files": len(changed_files),
-                    "created_at": datetime.now().isoformat(),
-                    "manifest": current_manifest,
-                }
-                zipf.writestr(
-                    "backup_info.json",
-                    json.dumps(backup_info, indent=2, ensure_ascii=False),
-                )
-
-            # 保存清单
             self._save_manifest(current_manifest)
             self.last_backup_manifest = current_manifest
 
-            # 获取文件大小
-            file_size = os.path.getsize(backup_file_path)
-
-            # 保存备份记录到数据库
-            config_key = f"backup_incremental_{timestamp}"
-            config = SystemConfig(
-                key=config_key,
-                value=backup_file_path,
-                description=f"增量备份: {description} ({len(changed_files)}个文件)",
+            config, file_size = self._save_incremental_backup_record(
+                backup_file_path, description, changed_files, timestamp,
             )
-            self.db.add(config)
-
-            # 更新最后备份时间
-            from app.services.system_config_service import SystemConfigService
-
-            config_service = SystemConfigService(self.db)
-            try:
-                config_service.set("last_backup_time", datetime.now().isoformat())
-            except Exception as e:
-                # 如果key已存在，更新而不是插入
-                logger.warning(f"更新last_backup_time失败，尝试更新: {e}")
-                existing = self.db.query(SystemConfig).filter(SystemConfig.key == "last_backup_time").first()
-                if existing:
-                    existing.value = datetime.now().isoformat()
-                    existing.updated_at = datetime.now()
-
-            self.db.commit()
 
             logger.info(f"增量备份完成: {backup_file_name} ({file_size / 1024 / 1024:.2f}MB)")
 

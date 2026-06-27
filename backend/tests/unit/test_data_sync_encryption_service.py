@@ -4,11 +4,8 @@
 """
 import pytest
 import os
-import json
 import struct
 import hashlib
-from unittest.mock import MagicMock, patch, mock_open
-from pathlib import Path
 
 class TestDataSyncEncryptionService:
     """测试 DataSyncEncryptionService"""

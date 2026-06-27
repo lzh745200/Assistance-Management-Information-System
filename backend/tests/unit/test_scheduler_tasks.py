@@ -1,8 +1,7 @@
 """Tests for app/utils/scheduler_tasks.py — 100% coverage."""
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from app.utils.scheduler_tasks import (
     SchedulerTask,

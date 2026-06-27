@@ -2,7 +2,6 @@
 测试权限修复
 验证未绑定组织的用户不会被错误地当作超级管理员
 """
-import pytest
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.organization import Organization

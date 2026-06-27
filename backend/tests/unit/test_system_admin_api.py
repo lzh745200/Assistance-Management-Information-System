@@ -2,7 +2,6 @@
 Tests for app.api.v1.system.admin — 100% coverage
 """
 
-import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock, mock_open
 

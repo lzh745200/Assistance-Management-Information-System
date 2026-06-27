@@ -1,6 +1,4 @@
-import pytest
-from unittest.mock import Mock, MagicMock, patch, AsyncMock, PropertyMock
-from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch, AsyncMock
 
 
 class TestGetApiPerformanceStats:

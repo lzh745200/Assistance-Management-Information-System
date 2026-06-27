@@ -2,7 +2,6 @@
 Tests for init.py — system initialization API.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
 BASE = "/api/v1/system/init"

@@ -1,6 +1,5 @@
 """Tests for app.core.i18n - zero coverage → 100%"""
 
-import pytest
 import app.core.i18n as i18n
 
 

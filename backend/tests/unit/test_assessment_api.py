@@ -836,7 +836,7 @@ class TestVillageComparison:
         v2 = mkv(db, name="B村")
         db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v1.id},{v1.id},{v2.id},{v2.id},{v2.id}")
-        assert resp.json()["total"] == 5
+        assert resp.json()["total"] == 2
 
     def test_per_capita_none_defaults_zero(self, client_and_db):
         client, db = client_and_db

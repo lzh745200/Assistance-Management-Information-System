@@ -220,90 +220,109 @@ async def validate_data(
 
 def _check_rule(rule: ValidationRule, value, params: dict, full_data: dict) -> bool:
     """检查单条规则，返回 True 表示校验失败"""
-    rt = rule.rule_type
-
-    if rt == RuleType.required:
+    if rule.rule_type == RuleType.required:
         return value is None or (isinstance(value, str) and value.strip() == "")
-
     if value is None:
-        return False  # 非必填字段为空时跳过其他校验
+        return False
+    handler = _RULE_HANDLERS.get(rule.rule_type)
+    return handler(value, params, full_data) if handler else False
 
-    if rt == RuleType.positive:
-        try:
-            return float(value) <= 0
-        except (ValueError, TypeError):
+
+def _check_positive(value, params, full_data):
+    try:
+        return float(value) <= 0
+    except (ValueError, TypeError):
+        return True
+
+
+def _check_non_negative(value, params, full_data):
+    try:
+        return float(value) < 0
+    except (ValueError, TypeError):
+        return True
+
+
+def _check_max_length(value, params, full_data):
+    return len(str(value)) > params.get("max", 255)
+
+
+def _check_min_length(value, params, full_data):
+    return len(str(value)) < params.get("min", 0)
+
+
+def _check_range(value, params, full_data):
+    try:
+        v = float(value)
+        min_v = params.get("min")
+        max_v = params.get("max")
+        if min_v is not None and v < float(min_v):
             return True
-
-    if rt == RuleType.non_negative:
-        try:
-            return float(value) < 0
-        except (ValueError, TypeError):
+        if max_v is not None and v > float(max_v):
             return True
-
-    if rt == RuleType.max_length:
-        max_len = params.get("max", 255)
-        return len(str(value)) > max_len
-
-    if rt == RuleType.min_length:
-        min_len = params.get("min", 0)
-        return len(str(value)) < min_len
-
-    if rt == RuleType.range:
-        try:
-            v = float(value)
-            min_v = params.get("min")
-            max_v = params.get("max")
-            if min_v is not None and v < float(min_v):
-                return True
-            if max_v is not None and v > float(max_v):
-                return True
-        except (ValueError, TypeError):
-            return True
-
-    if rt == RuleType.regex:
-        import re
-
-        pattern = params.get("pattern", "")
-        return not re.match(pattern, str(value))
-
-    if rt == RuleType.date_format:
-        from datetime import datetime
-
-        fmt = params.get("format", "%Y-%m-%d")
-        try:
-            datetime.strptime(str(value), fmt)
-        except ValueError:
-            return True
-
-    if rt == RuleType.file_type:
-        allowed = params.get("allowed", [])
-        if isinstance(value, str):
-            ext = value.rsplit(".", 1)[-1].lower() if "." in value else ""
-            return ext not in allowed
-
-    if rt == RuleType.enum_values:
-        allowed = params.get("values", [])
-        return str(value) not in [str(v) for v in allowed]
-
-    if rt == RuleType.cross_field:
-        # 跨字段逻辑: params = {"operator": "<=", "other_field": "total_budget"}
-        other_field = params.get("other_field")
-        operator = params.get("operator", "<=")
-        if other_field and other_field in full_data:
-            try:
-                v1 = float(value)
-                v2 = float(full_data[other_field])
-                if operator == "<=" and v1 > v2:
-                    return True
-                if operator == ">=" and v1 < v2:
-                    return True
-                if operator == "<" and v1 >= v2:
-                    return True
-                if operator == ">" and v1 <= v2:
-                    return True
-                if operator == "==" and v1 != v2:
-                    return True
-            except (ValueError, TypeError):
-                return True
-
+    except (ValueError, TypeError):
+        return True
     return False
+
+
+def _check_regex(value, params, full_data):
+    import re
+    return not re.match(params.get("pattern", ""), str(value))
+
+
+def _check_date_format(value, params, full_data):
+    from datetime import datetime
+    fmt = params.get("format", "%Y-%m-%d")
+    try:
+        datetime.strptime(str(value), fmt)
+    except ValueError:
+        return True
+    return False
+
+
+def _check_file_type(value, params, full_data):
+    allowed = params.get("allowed", [])
+    if isinstance(value, str):
+        ext = value.rsplit(".", 1)[-1].lower() if "." in value else ""
+        return ext not in allowed
+    return False
+
+
+def _check_enum_values(value, params, full_data):
+    allowed = params.get("values", [])
+    return str(value) not in [str(v) for v in allowed]
+
+
+def _check_cross_field(value, params, full_data):
+    other_field = params.get("other_field")
+    operator = params.get("operator", "<=")
+    if other_field and other_field in full_data:
+        try:
+            v1 = float(value)
+            v2 = float(full_data[other_field])
+            if operator == "<=" and v1 > v2:
+                return True
+            if operator == ">=" and v1 < v2:
+                return True
+            if operator == "<" and v1 >= v2:
+                return True
+            if operator == ">" and v1 <= v2:
+                return True
+            if operator == "==" and v1 != v2:
+                return True
+        except (ValueError, TypeError):
+            return True
+    return False
+
+
+_RULE_HANDLERS = {
+    RuleType.positive: _check_positive,
+    RuleType.non_negative: _check_non_negative,
+    RuleType.max_length: _check_max_length,
+    RuleType.min_length: _check_min_length,
+    RuleType.range: _check_range,
+    RuleType.regex: _check_regex,
+    RuleType.date_format: _check_date_format,
+    RuleType.file_type: _check_file_type,
+    RuleType.enum_values: _check_enum_values,
+    RuleType.cross_field: _check_cross_field,
+}

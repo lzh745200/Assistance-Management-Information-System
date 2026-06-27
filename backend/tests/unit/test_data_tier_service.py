@@ -5,8 +5,8 @@
 import pytest
 import json
 import gzip
-from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch, mock_open
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
 from pathlib import Path
 import tempfile
 import os

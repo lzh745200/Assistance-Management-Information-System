@@ -1,6 +1,6 @@
 import pytest
-from unittest.mock import Mock, patch, MagicMock, PropertyMock
-from sqlalchemy import Column, Integer, String, Boolean, Float, Text, Date, DateTime
+from unittest.mock import Mock, patch, MagicMock
+from sqlalchemy import Column, Integer, String, Boolean, Float, Date, DateTime
 
 
 @pytest.fixture(autouse=True)
@@ -138,7 +138,6 @@ class TestMigrateMissingColumns:
 
     def test_inspector_creation_failure(self):
         from app.core.migration_helper import migrate_missing_columns
-        from sqlalchemy import inspect as sa_inspect
         with patch("app.core.migration_helper.sa_inspect", side_effect=Exception("no engine")):
             engine = Mock()
             model_base = Mock()

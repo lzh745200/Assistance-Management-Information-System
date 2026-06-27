@@ -1,6 +1,6 @@
 """Shared test utilities."""
 
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
 # Acceptable HTTP status codes for success/error responses in tests
 HTTP_SUCCESS_OR_ERROR: Tuple[int, ...] = (200, 201, 400, 401, 403, 404, 422, 500)

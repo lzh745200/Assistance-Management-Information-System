@@ -1,5 +1,4 @@
 """TDD: 自动化提醒引擎."""
-import pytest
 from unittest.mock import MagicMock
 
 

@@ -288,27 +288,41 @@ class PermissionPackageService:
     # ================================================================
 
     def confirm_import(self, file_path: str, overwrite_existing: bool = True) -> Dict[str, Any]:
-        """
-        确认导入权限配置包（应用阶段 — 完全替换）
-
-        Args:
-            file_path: ZIP 文件路径
-            overwrite_existing: 是否覆盖已有配置（当前固定为 True mirror mode）
-
-        Returns:
-            PermissionPackageConfirmResult 字典
-        """
+        """确认导入权限配置包（应用阶段 — 完全替换）"""
         if not os.path.exists(file_path) or not zipfile.is_zipfile(file_path):
             return {"success": False, "errors": ["无效的文件"], "message": "无效的文件"}
 
-        errors = []
-        roles_created = 0
-        roles_updated = 0
-        user_roles_assigned = 0
-        user_permissions_assigned = 0
-        user_menus_updated = 0
-        user_legacy_updated = 0
+        parsed = self._parse_import_zip(file_path)
+        if not parsed:
+            return {"success": False, "errors": ["解析 ZIP 失败"], "message": "解析失败"}
 
+        roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data = parsed
+
+        errors = []
+        stats = self._init_import_stats()
+
+        try:
+            if overwrite_existing:
+                self._clear_existing_data()
+
+            role_id_map, stats, errors = self._import_roles(roles_data, stats, errors)
+            self.db.flush()
+
+            stats, errors = self._import_user_roles(user_roles_data, role_id_map, stats, errors)
+            stats, errors = self._import_user_permissions(user_permissions_data, stats, errors)
+            stats, errors = self._import_user_menus(user_menus_data, stats, errors)
+            stats, errors = self._import_user_legacy(user_legacy_data, stats, errors)
+
+            self.db.commit()
+            self._log_import_result(stats)
+            return self._build_import_response(stats, errors)
+        except Exception as e:
+            self.db.rollback()
+            logger.error("权限配置包导入失败: %s", e, exc_info=True)
+            return {"success": False, "errors": [str(e)], "message": f"导入失败: {e}"}
+
+    def _parse_import_zip(self, file_path: str):
+        """解析 ZIP 导入包，返回各数据段。"""
         try:
             with zipfile.ZipFile(file_path, "r") as zf:
                 roles_data = json.loads(zf.read("data/roles.json").decode("utf-8"))
@@ -325,200 +339,176 @@ class PermissionPackageService:
                     if "data/user_menus.json" in zf.namelist() else []
                 )
                 user_legacy_data = json.loads(zf.read("data/user_legacy.json").decode("utf-8"))
+            return roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data
+        except Exception:
+            return None
 
-            if overwrite_existing:
-                # ── 完全替换模式 ──
+    def _init_import_stats(self) -> Dict[str, int]:
+        return {
+            "roles_created": 0, "roles_updated": 0,
+            "user_roles_assigned": 0, "user_permissions_assigned": 0,
+            "user_menus_updated": 0, "user_legacy_updated": 0,
+        }
 
-                # 1. 删除非系统角色的 role permissions
-                system_role_ids = {
-                    r.id for r in self.db.query(RbacRole)
-                    .filter(RbacRole.name.in_(SYSTEM_ROLE_NAMES))
-                    .all()
-                }
-                # 只删除非系统角色的权限（保留系统角色权限）
-                non_system_roles = (
-                    self.db.query(RbacRole)
-                    .filter(~RbacRole.name.in_(SYSTEM_ROLE_NAMES))
-                    .all()
+    def _clear_existing_data(self):
+        """完全替换模式：删除现有非系统角色和权限关联。"""
+        system_role_ids = {
+            r.id for r in self.db.query(RbacRole)
+            .filter(RbacRole.name.in_(SYSTEM_ROLE_NAMES))
+            .all()
+        }
+        non_system_roles = (
+            self.db.query(RbacRole)
+            .filter(~RbacRole.name.in_(SYSTEM_ROLE_NAMES))
+            .all()
+        )
+        for role in non_system_roles:
+            self.db.execute(delete(RolePermission).where(RolePermission.role_id == role.id))
+            self.db.delete(role)
+        for sid in system_role_ids:
+            self.db.execute(delete(RolePermission).where(RolePermission.role_id == sid))
+
+        self.db.execute(delete(UserRole))
+        self.db.execute(delete(UserPermission))
+        self.db.flush()
+
+    def _import_roles(self, roles_data, stats, errors):
+        """导入角色及角色权限。"""
+        role_id_map: Dict[str, str] = {}
+        for role_data in roles_data:
+            try:
+                old_id, new_id = self._upsert_role(role_data, stats)
+                role_id_map[old_id] = new_id
+                for perm in role_data.get("permissions", []):
+                    self.db.add(RolePermission(role_id=new_id, permission=perm))
+            except Exception as e:
+                errors.append(f"角色「{role_data.get('name', '未知')}」导入失败: {e}")
+        return role_id_map, stats, errors
+
+    def _upsert_role(self, role_data, stats):
+        """创建或更新单个角色。"""
+        name = role_data.get("name", "")
+        existing = self.db.query(RbacRole).filter(RbacRole.name == name).first()
+        if existing:
+            existing.description = role_data.get("description", existing.description)
+            existing.is_active = role_data.get("is_active", True)
+            existing.priority = role_data.get("priority", 100)
+            stats["roles_updated"] += 1
+            return role_data["id"], existing.id
+        new_role = RbacRole(
+            name=name,
+            description=role_data.get("description"),
+            is_system=role_data.get("is_system", False),
+            is_active=role_data.get("is_active", True),
+            priority=role_data.get("priority", 100),
+        )
+        self.db.add(new_role)
+        self.db.flush()
+        stats["roles_created"] += 1
+        return role_data["id"], new_role.id
+
+    def _import_user_roles(self, user_roles_data, role_id_map, stats, errors):
+        """导入用户-角色关联。"""
+        for ur_data in user_roles_data:
+            try:
+                old_role_id = ur_data.get("role_id", "")
+                new_role_id = role_id_map.get(old_role_id, old_role_id)
+                user_id = ur_data.get("user_id")
+                existing_user = self.db.query(User).filter(User.id == user_id).first()
+                if not existing_user:
+                    continue
+                self.db.add(UserRole(
+                    user_id=existing_user.id,
+                    role_id=new_role_id,
+                    expires_at=(
+                        datetime.fromisoformat(ur_data["expires_at"])
+                        if ur_data.get("expires_at") else None
+                    ),
+                ))
+                stats["user_roles_assigned"] += 1
+            except Exception as e:
+                errors.append(f"用户-角色关联导入失败: {e}")
+        return stats, errors
+
+    def _import_user_permissions(self, user_permissions_data, stats, errors):
+        """导入用户直接权限。"""
+        for up_data in user_permissions_data:
+            try:
+                user_id = up_data.get("user_id")
+                existing_user = self.db.query(User).filter(User.id == user_id).first()
+                if not existing_user:
+                    continue
+                self.db.add(UserPermission(
+                    user_id=existing_user.id,
+                    permission=up_data.get("permission", ""),
+                    expires_at=(
+                        datetime.fromisoformat(up_data["expires_at"])
+                        if up_data.get("expires_at") else None
+                    ),
+                ))
+                stats["user_permissions_assigned"] += 1
+            except Exception as e:
+                errors.append(f"用户权限导入失败: {e}")
+        return stats, errors
+
+    def _import_user_menus(self, user_menus_data, stats, errors):
+        """导入用户菜单覆盖。"""
+        for menu_data in user_menus_data:
+            try:
+                username = menu_data.get("username", "")
+                user = self.db.query(User).filter(User.username == username).first()
+                if not user:
+                    continue
+                user.allowed_menus = json.dumps(
+                    menu_data.get("allowed_menus", []), ensure_ascii=False
                 )
-                for role in non_system_roles:
-                    self.db.execute(
-                        delete(RolePermission).where(RolePermission.role_id == role.id)
-                    )
-                    self.db.delete(role)
-                # 清除系统角色的权限（将被导入数据重新设置）
-                for sid in system_role_ids:
-                    self.db.execute(
-                        delete(RolePermission).where(RolePermission.role_id == sid)
-                    )
+                stats["user_menus_updated"] += 1
+            except Exception as e:
+                errors.append(f"用户菜单「{username}」导入失败: {e}")
+        return stats, errors
 
-                # 2. 删除所有用户-角色关联
-                self.db.execute(delete(UserRole))
-                # 3. 删除所有用户直接权限
-                self.db.execute(delete(UserPermission))
+    def _import_user_legacy(self, user_legacy_data, stats, errors):
+        """导入遗留权限字段。"""
+        for legacy_data in user_legacy_data:
+            try:
+                username = legacy_data.get("username", "")
+                user = self.db.query(User).filter(User.username == username).first()
+                if not user:
+                    continue
+                user.role = legacy_data.get("role", "operator")
+                user.permissions = legacy_data.get("permissions", "")
+                user.data_scope = legacy_data.get("data_scope", "org")
+                stats["user_legacy_updated"] += 1
+            except Exception as e:
+                errors.append(f"用户遗留权限「{username}」导入失败: {e}")
+        return stats, errors
 
-                self.db.flush()
+    def _log_import_result(self, stats):
+        logger.info(
+            "权限配置包导入完成: 角色创建%d/更新%d, 用户角色%d, 用户权限%d, 菜单%d, 遗留%d",
+            stats["roles_created"], stats["roles_updated"],
+            stats["user_roles_assigned"], stats["user_permissions_assigned"],
+            stats["user_menus_updated"], stats["user_legacy_updated"],
+        )
 
-            # ── 导入角色 ──
-            role_id_map: Dict[str, str] = {}  # old_id → new_id
-
-            for role_data in roles_data:
-                try:
-                    old_id = role_data.get("id")
-                    name = role_data.get("name", "")
-
-                    # 按名称查找现有角色
-                    existing = self.db.query(RbacRole).filter(RbacRole.name == name).first()
-                    if existing:
-                        # 更新现有角色
-                        existing.description = role_data.get("description", existing.description)
-                        existing.is_active = role_data.get("is_active", True)
-                        existing.priority = role_data.get("priority", 100)
-                        new_id = existing.id
-                        roles_updated += 1
-                    else:
-                        # 创建新角色
-                        new_role = RbacRole(
-                            name=name,
-                            description=role_data.get("description"),
-                            is_system=role_data.get("is_system", False),
-                            is_active=role_data.get("is_active", True),
-                            priority=role_data.get("priority", 100),
-                        )
-                        self.db.add(new_role)
-                        self.db.flush()
-                        new_id = new_role.id
-                        roles_created += 1
-
-                    role_id_map[old_id] = new_id
-
-                    # 导入角色权限
-                    for perm in role_data.get("permissions", []):
-                        rp = RolePermission(role_id=new_id, permission=perm)
-                        self.db.add(rp)
-
-                except Exception as e:
-                    errors.append(f"角色「{role_data.get('name', '未知')}」导入失败: {e}")
-
-            self.db.flush()
-
-            # ── 导入用户-角色关联 ──
-            # 需要构建 username → user_id 映射
-            username_to_user_id = {}
-            all_users = self.db.query(User).all()
-            for u in all_users:
-                username_to_user_id[u.username] = u.id
-
-            for ur_data in user_roles_data:
-                try:
-                    old_role_id = ur_data.get("role_id", "")
-                    new_role_id = role_id_map.get(old_role_id, old_role_id)
-                    user_id = ur_data.get("user_id")
-
-                    # 尝试通过旧 user_id 直接匹配
-                    existing_user = self.db.query(User).filter(User.id == user_id).first()
-                    if not existing_user:
-                        continue  # 用户不存在，跳过
-
-                    new_ur = UserRole(
-                        user_id=existing_user.id,
-                        role_id=new_role_id,
-                        expires_at=(
-                            datetime.fromisoformat(ur_data["expires_at"])
-                            if ur_data.get("expires_at")
-                            else None
-                        ),
-                    )
-                    self.db.add(new_ur)
-                    user_roles_assigned += 1
-                except Exception as e:
-                    errors.append(f"用户-角色关联导入失败: {e}")
-
-            # ── 导入用户直接权限 ──
-            for up_data in user_permissions_data:
-                try:
-                    user_id = up_data.get("user_id")
-                    existing_user = self.db.query(User).filter(User.id == user_id).first()
-                    if not existing_user:
-                        continue
-
-                    new_up = UserPermission(
-                        user_id=existing_user.id,
-                        permission=up_data.get("permission", ""),
-                        expires_at=(
-                            datetime.fromisoformat(up_data["expires_at"])
-                            if up_data.get("expires_at")
-                            else None
-                        ),
-                    )
-                    self.db.add(new_up)
-                    user_permissions_assigned += 1
-                except Exception as e:
-                    errors.append(f"用户权限导入失败: {e}")
-
-            # ── 导入用户菜单覆盖 ──
-            for menu_data in user_menus_data:
-                try:
-                    username = menu_data.get("username", "")
-                    user = self.db.query(User).filter(User.username == username).first()
-                    if not user:
-                        continue
-                    user.allowed_menus = json.dumps(
-                        menu_data.get("allowed_menus", []), ensure_ascii=False
-                    )
-                    user_menus_updated += 1
-                except Exception as e:
-                    errors.append(f"用户菜单「{username}」导入失败: {e}")
-
-            # ── 导入遗留权限字段 ──
-            for legacy_data in user_legacy_data:
-                try:
-                    username = legacy_data.get("username", "")
-                    user = self.db.query(User).filter(User.username == username).first()
-                    if not user:
-                        continue
-                    user.role = legacy_data.get("role", "operator")
-                    user.permissions = legacy_data.get("permissions", "")
-                    user.data_scope = legacy_data.get("data_scope", "org")
-                    # 不覆盖 is_superuser（安全考虑）
-                    user_legacy_updated += 1
-                except Exception as e:
-                    errors.append(f"用户遗留权限「{username}」导入失败: {e}")
-
-            self.db.commit()
-
-            logger.info(
-                "权限配置包导入完成: 角色创建%d/更新%d, 用户角色%d, 用户权限%d, 菜单%d, 遗留%d",
-                roles_created,
-                roles_updated,
-                user_roles_assigned,
-                user_permissions_assigned,
-                user_menus_updated,
-                user_legacy_updated,
-            )
-
-            return {
-                "success": True,
-                "roles_created": roles_created,
-                "roles_updated": roles_updated,
-                "user_roles_assigned": user_roles_assigned,
-                "user_permissions_assigned": user_permissions_assigned,
-                "user_menus_updated": user_menus_updated,
-                "user_legacy_updated": user_legacy_updated,
-                "errors": errors,
-                "message": (
-                    f"导入完成: 角色 {roles_created}新建/{roles_updated}更新, "
-                    f"用户角色关联 {user_roles_assigned}, "
-                    f"用户权限 {user_permissions_assigned}, "
-                    f"菜单覆盖 {user_menus_updated}, "
-                    f"遗留字段 {user_legacy_updated}"
-                ),
-            }
-
-        except Exception as e:
-            self.db.rollback()
-            logger.error("权限配置包导入失败: %s", e, exc_info=True)
-            return {"success": False, "errors": [str(e)], "message": f"导入失败: {e}"}
+    def _build_import_response(self, stats, errors):
+        return {
+            "success": True,
+            "roles_created": stats["roles_created"],
+            "roles_updated": stats["roles_updated"],
+            "user_roles_assigned": stats["user_roles_assigned"],
+            "user_permissions_assigned": stats["user_permissions_assigned"],
+            "user_menus_updated": stats["user_menus_updated"],
+            "user_legacy_updated": stats["user_legacy_updated"],
+            "errors": errors,
+            "message": (
+                f"导入完成: 角色 {stats['roles_created']}新建/{stats['roles_updated']}更新, "
+                f"用户角色关联 {stats['user_roles_assigned']}, "
+                f"用户权限 {stats['user_permissions_assigned']}, "
+                f"菜单覆盖 {stats['user_menus_updated']}, "
+                f"遗留字段 {stats['user_legacy_updated']}"
+            ),
+        }
 
     # ================================================================
     # 工具方法

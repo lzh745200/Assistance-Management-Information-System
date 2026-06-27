@@ -4,7 +4,7 @@ PolicyService 单元测试
 """
 import pytest
 from datetime import datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 from types import SimpleNamespace
 
 class TestPolicyServiceCRUD:

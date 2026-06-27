@@ -1,5 +1,4 @@
 """菜单 API 测试"""
-import pytest
 
 class TestMenuAPI:
     """菜单 API 测试"""

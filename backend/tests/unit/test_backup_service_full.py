@@ -7,12 +7,8 @@
 - _safe_extractall 的 ValueError 分支（target.relative_to 抛异常）
 - restore_backup 加密备份检测 + 解密恢复 + engine.dispose 异常 + 临时文件清理 OSError
 """
-import hashlib
-import json
 import os
-import sqlite3
 import zipfile
-from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -20,7 +16,6 @@ import pytest
 from cryptography.fernet import Fernet
 
 from app.services.backup_service import (
-    BackupRestoreError,
     BackupService,
 )
 

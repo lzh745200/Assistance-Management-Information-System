@@ -14,7 +14,6 @@
 """
 import time
 
-import pytest
 
 from app.services.secrets_manager import SecretsManager, secrets_manager
 

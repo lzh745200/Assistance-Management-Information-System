@@ -7,19 +7,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.api.v1.data_scope import DataScope, get_data_scope
-from app.api.v1.report_templates import router as report_router
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models import Base
 from app.models.report_template import ReportTemplate
-from app.models.supported_village import SupportedVillage
 from app.models.school import School
-from app.models.project import Project
-from app.models.rural_work import RuralWork
 
 API_PREFIX = "/api/v1"
 P = lambda p: f"{API_PREFIX}/report-templates{p}"
@@ -734,5 +730,3 @@ class TestDirectFunctions:
         data, errors, rows = _parse_template_excel(buf.getvalue(),
             [{"excel_col": "A", "excel_header": "名称", "db_field": "name", "required": True}])
         assert len(errors) >= 1
-
-

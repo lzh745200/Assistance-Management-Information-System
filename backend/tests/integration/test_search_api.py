@@ -4,9 +4,6 @@
 测试全局搜索功能的 API 端点。
 """
 import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 
 class TestGlobalSearchAPI:

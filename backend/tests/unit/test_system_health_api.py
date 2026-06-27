@@ -7,12 +7,10 @@ import time
 from unittest.mock import patch, MagicMock
 
 import pytest
-from fastapi.testclient import TestClient
 
 
 @pytest.fixture(autouse=True)
 def reset_start_time():
-    from app.api.v1.system.health import _START_TIME
     import app.api.v1.system.health as health_mod
     orig = health_mod._START_TIME
     health_mod._START_TIME = time.time() - 3600

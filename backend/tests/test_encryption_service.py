@@ -6,15 +6,12 @@
 import pytest
 import os
 import tempfile
-from pathlib import Path
 
 from app.services.encryption_service import (
     DataPackageEncryption,
     encrypt_package,
     decrypt_package,
     generate_encryption_key,
-    encrypt_field,
-    decrypt_field,
 )
 
 
@@ -220,7 +217,6 @@ class TestEncryptDecryptField:
     def test_encrypt_decrypt_field(self):
         """测试字段加密和解密 - 使用有效的Fernet密钥"""
         from cryptography.fernet import Fernet
-        import base64
 
         # 生成有效的Fernet密钥
         key = Fernet.generate_key()

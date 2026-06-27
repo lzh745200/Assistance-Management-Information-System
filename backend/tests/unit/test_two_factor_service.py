@@ -1,6 +1,5 @@
 import pytest
-from unittest.mock import Mock, MagicMock, patch, PropertyMock
-from io import BytesIO
+from unittest.mock import MagicMock, patch
 
 
 class TestGenerateSecret:

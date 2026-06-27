@@ -43,7 +43,6 @@ class SupportedVillageFactory:
 
     @staticmethod
     def build_with_full_info(**kwargs):
-        """Build a village with all boolean flags set for comprehensive testing."""
         kwargs.setdefault("is_three_regions", True)
         kwargs.setdefault("is_border_area", True)
         kwargs.setdefault("is_ethnic_area", True)
@@ -61,20 +60,26 @@ class SupportedVillageFactory:
 
 class VillagePopulationFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
         data = dict(
-            village_id=village_id,
+            supported_village_id=supported_village_id,
             year=2024,
             total_households=500,
             total_population=2000,
-            male_population=1050,
-            female_population=950,
-            ethnic_population=800,
+            resident_population=1800,
             labor_force=1200,
             migrant_workers=300,
-            poor_households=50,
-            poor_population=180,
+            poverty_population=180,
+            poverty_households=50,
+            unstable_poverty_households=10,
+            unstable_poverty_population=30,
+            marginal_poverty_households=5,
+            marginal_poverty_population=15,
+            sudden_difficulty_households=3,
+            sudden_difficulty_population=8,
+            veteran_village_secretary=1,
+            veteran_village_committee=3,
             created_at=now,
             updated_at=now,
         )
@@ -82,8 +87,8 @@ class VillagePopulationFactory:
         return VillagePopulation(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = VillagePopulationFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = VillagePopulationFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -91,19 +96,14 @@ class VillagePopulationFactory:
 
 class VillageIncomeFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
         data = dict(
-            village_id=village_id,
+            supported_village_id=supported_village_id,
             year=2024,
-            total_income=5000000.00,
-            collective_income=200000.00,
             per_capita_income=12500.00,
-            farming_income=2000000.00,
-            business_income=1500000.00,
-            wage_income=1000000.00,
-            property_income=300000.00,
-            transfer_income=200000.00,
+            county_per_capita_income=12000.00,
+            collective_income=200000.00,
             created_at=now,
             updated_at=now,
         )
@@ -111,8 +111,8 @@ class VillageIncomeFactory:
         return VillageIncome(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = VillageIncomeFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = VillageIncomeFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -120,14 +120,15 @@ class VillageIncomeFactory:
 
 class SupportFundingFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
         data = dict(
-            village_id=village_id,
+            supported_village_id=supported_village_id,
             year=2024,
-            military_fund=1000000.00,
-            local_fund=500000.00,
-            other_fund=100000.00,
+            funding_type="total",
+            military_investment=1000000.00,
+            local_investment=500000.00,
+            planned_investment=1500000.00,
             created_at=now,
             updated_at=now,
         )
@@ -135,26 +136,28 @@ class SupportFundingFactory:
         return SupportFunding(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = SupportFundingFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = SupportFundingFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
 
 
-# Industry, Infrastructure, PartyBuilding, etc. factory classes
 class ForceInvestmentFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
-        data = dict(village_id=village_id, year=2024, force_count=10,
-                     investment_amount=500000.00, created_at=now, updated_at=now)
+        data = dict(
+            supported_village_id=supported_village_id, year=2024,
+            senior_leader_visits=10, unit_soldier_visits=200,
+            created_at=now, updated_at=now,
+        )
         data.update(kwargs)
         return ForceInvestment(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = ForceInvestmentFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = ForceInvestmentFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -162,16 +165,20 @@ class ForceInvestmentFactory:
 
 class IndustrySupportFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
-        data = dict(village_id=village_id, year=2024, industry_count=3,
-                     total_investment=800000.00, created_at=now, updated_at=now)
+        data = dict(
+            supported_village_id=supported_village_id, year=2024,
+            investment=800000.00, planned_investment=1000000.00,
+            planting_breeding=3, workshop=1, rural_tourism=1, other_industry=1,
+            created_at=now, updated_at=now,
+        )
         data.update(kwargs)
         return IndustrySupport(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = IndustrySupportFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = IndustrySupportFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -179,16 +186,21 @@ class IndustrySupportFactory:
 
 class InfrastructureImprovementFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
-        data = dict(village_id=village_id, year=2024, project_count=5,
-                     total_investment=2000000.00, created_at=now, updated_at=now)
+        data = dict(
+            supported_village_id=supported_village_id, year=2024,
+            investment=2000000.00, planned_investment=2500000.00,
+            road_km=5.5, housing_renovation=50, water_facilities=3,
+            cultural_plaza=1, library_cafe=1,
+            created_at=now, updated_at=now,
+        )
         data.update(kwargs)
         return InfrastructureImprovement(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = InfrastructureImprovementFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = InfrastructureImprovementFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -196,16 +208,21 @@ class InfrastructureImprovementFactory:
 
 class PartyBuildingSupportFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
-        data = dict(village_id=village_id, year=2024, activity_count=12,
-                     participant_count=300, created_at=now, updated_at=now)
+        data = dict(
+            supported_village_id=supported_village_id, year=2024,
+            investment=50000.00, planned_investment=80000.00,
+            paired_branches=3, party_instructors=2,
+            joint_activities=12, civilization_activities=6,
+            created_at=now, updated_at=now,
+        )
         data.update(kwargs)
         return PartyBuildingSupport(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = PartyBuildingSupportFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = PartyBuildingSupportFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -213,16 +230,20 @@ class PartyBuildingSupportFactory:
 
 class MedicalSupportFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
-        data = dict(village_id=village_id, year=2024, clinic_count=1,
-                     doctor_count=3, patient_count=500, created_at=now, updated_at=now)
+        data = dict(
+            supported_village_id=supported_village_id, year=2024,
+            investment=300000.00, planned_investment=400000.00,
+            clinics_built=1, patients_served=500,
+            created_at=now, updated_at=now,
+        )
         data.update(kwargs)
         return MedicalSupport(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = MedicalSupportFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = MedicalSupportFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -230,16 +251,21 @@ class MedicalSupportFactory:
 
 class ConsumptionSupportFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
-        data = dict(village_id=village_id, year=2024, consumption_amount=300000.00,
-                     participant_count=200, created_at=now, updated_at=now)
+        data = dict(
+            supported_village_id=supported_village_id, year=2024,
+            village_products_purchase=200000.00,
+            other_products_purchase=100000.00,
+            sales_counters=2, benefited_population=300,
+            created_at=now, updated_at=now,
+        )
         data.update(kwargs)
         return ConsumptionSupport(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = ConsumptionSupportFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = ConsumptionSupportFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -247,16 +273,20 @@ class ConsumptionSupportFactory:
 
 class EmploymentSupportFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
-        data = dict(village_id=village_id, year=2024, trained_count=150,
-                     employed_count=80, created_at=now, updated_at=now)
+        data = dict(
+            supported_village_id=supported_village_id, year=2024,
+            hired_population=150, trained_population=200,
+            recommended_employment=80,
+            created_at=now, updated_at=now,
+        )
         data.update(kwargs)
         return EmploymentSupport(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = EmploymentSupportFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = EmploymentSupportFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj
@@ -264,16 +294,22 @@ class EmploymentSupportFactory:
 
 class EducationSupportFactory:
     @staticmethod
-    def build(village_id=1, **kwargs):
+    def build(supported_village_id=1, **kwargs):
         now = datetime.now(timezone.utc)
-        data = dict(village_id=village_id, year=2024, school_count=2,
-                     student_count=300, scholarship_count=20, created_at=now, updated_at=now)
+        data = dict(
+            supported_village_id=supported_village_id, year=2024,
+            investment=200000.00,
+            donated_schools=1, aided_external_schools=1,
+            education_activities=10, aided_students=50,
+            volunteer_counselors=5,
+            created_at=now, updated_at=now,
+        )
         data.update(kwargs)
         return EducationSupport(**data)
 
     @staticmethod
-    def create(db, village_id=1, **kwargs):
-        obj = EducationSupportFactory.build(village_id=village_id, **kwargs)
+    def create(db, supported_village_id=1, **kwargs):
+        obj = EducationSupportFactory.build(supported_village_id=supported_village_id, **kwargs)
         db.add(obj)
         db.flush()
         return obj

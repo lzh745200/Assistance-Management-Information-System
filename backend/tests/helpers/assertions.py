@@ -3,7 +3,7 @@
 Covers both response formats (Bare and Envelope) used in the system.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 
 def assert_envelope_response(

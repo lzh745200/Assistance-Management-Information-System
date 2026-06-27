@@ -3,11 +3,8 @@
 覆盖app/api/v1/approval.py的所有路由
 """
 
-import pytest
 
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestApprovalAPI:
     """测试审批API - 使用正确的 router prefix=/approval"""

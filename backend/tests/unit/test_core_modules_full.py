@@ -1,11 +1,8 @@
 """
 核心模块全面测试 — Base import path changed
 """
-import pytest
 
 
-from unittest.mock import Mock, MagicMock, patch
-from unittest.mock import MagicMock  # auto-added
 
 class TestCoreConfig:
     """测试核心配置"""

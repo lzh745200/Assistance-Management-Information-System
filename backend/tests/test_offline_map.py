@@ -2,7 +2,6 @@
 离线地图服务测试
 """
 import pytest
-import asyncio
 from pathlib import Path
 from app.services.offline_map_service import offline_map_service
 

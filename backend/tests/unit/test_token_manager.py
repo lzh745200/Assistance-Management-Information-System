@@ -1,9 +1,8 @@
 """Tests for app.core.token_manager (100% coverage)."""
 
-from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, call, patch
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 from app.core.token_manager import (
     TokenManager,

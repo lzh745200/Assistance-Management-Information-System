@@ -9,7 +9,6 @@ from app.core.database import SessionLocal
 from app.models.user import User
 from app.models.school import School
 from app.models.organization import Organization
-from app.core.security import verify_password
 
 db = SessionLocal()
 
@@ -60,7 +59,7 @@ try:
     # 检查用户权限逻辑
     if admin:
         is_admin_role = admin.role in ("admin", "super_admin")
-        print(f"\n  管理员角色检查:")
+        print("\n  管理员角色检查:")
         print(f"    角色: {admin.role}")
         print(f"    is_admin_role: {is_admin_role}")
         print(f"    is_superuser: {admin.is_superuser}")

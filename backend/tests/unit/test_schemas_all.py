@@ -2,7 +2,6 @@
 所有Schemas全面测试
 通过导入和验证所有schemas提升覆盖率
 """
-import pytest
 from pydantic import BaseModel
 
 class TestAllSchemasImport:
@@ -81,7 +80,7 @@ class TestDocumentSchemas:
 
     def test_document_schema_import(self):
         """测试文档schema导入"""
-        from app.schemas.document import DocumentCreate, DocumentUpdate, DocumentResponse
+        from app.schemas.document import DocumentCreate
         assert DocumentCreate is not None
 
 class TestDataPackageEncryptedSchemas:
@@ -171,7 +170,6 @@ class TestSchemaValidation:
     def test_fund_schema_validation(self):
         """测试资金schema验证"""
         from app.schemas.fund import FundCreate
-        from datetime import date
         fund = FundCreate(
             code="FUND001",
             name="测试资金",

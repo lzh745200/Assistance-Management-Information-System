@@ -20,12 +20,12 @@
             {{ org.is_active ? '正常' : '停用' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="联系人">{{ org.contact_person || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="联系人">{{ ds(org.contact_person, 'name') || '无' }}</el-descriptions-item>
         <el-descriptions-item label="联系电话">{{
-          org.contact_phone || '无'
+          ds(org.contact_phone, 'phone') || '无'
         }}</el-descriptions-item>
         <el-descriptions-item label="地址" :span="2">{{
-          org.address || '无'
+          ds(org.address, 'address') || '无'
         }}</el-descriptions-item>
         <el-descriptions-item label="描述" :span="2">{{
           org.description || '无'
@@ -48,10 +48,12 @@ import { logger } from '@/utils/logger'
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage } from 'element-plus'
 import { getOrganization } from '@/api/organization'
 
 const { pushSafe } = useRouterSafe()
+const { ds } = useDesensitize()
 const route = useRoute()
 const loading = ref(false)
 

@@ -1,5 +1,4 @@
 """数据清洗服务单元测试"""
-import pytest
 from unittest.mock import patch
 from app.services.data_cleaning_service import DataCleaningService
 

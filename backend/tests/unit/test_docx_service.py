@@ -5,7 +5,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
 import sys
-import importlib
 
 class TestDocxService:
     """测试 DocxReportService 和 DocxService"""

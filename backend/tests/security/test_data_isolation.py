@@ -1,5 +1,4 @@
 """Data isolation tests — verify Organization multi-tenant boundaries."""
-import pytest
 
 
 class TestDataIsolationSmoke:

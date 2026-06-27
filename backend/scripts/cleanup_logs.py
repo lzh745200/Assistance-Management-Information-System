@@ -11,7 +11,6 @@
 import argparse
 import gzip
 import logging
-import os
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -201,7 +200,7 @@ def main():
     )
 
     if deleted_count > 0:
-        logger.info(f"\n清理完成:")
+        logger.info("\n清理完成:")
         logger.info(f"  处理文件数: {deleted_count}")
         logger.info(f"  释放空间: {format_size(freed_space)}")
     else:

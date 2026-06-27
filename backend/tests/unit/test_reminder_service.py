@@ -1,6 +1,4 @@
-import pytest
-from unittest.mock import Mock, MagicMock, patch, PropertyMock
-import threading
+from unittest.mock import MagicMock, patch
 
 
 def _make_approval_task(id_val, title, approver_id, created_at):
@@ -89,7 +87,6 @@ class TestApprovalReminderService:
 
     def test_check_overdue_approvals_no_results(self):
         from app.services.reminder_service import ApprovalReminderService
-        from datetime import datetime, timezone, timedelta
 
         mock_db = MagicMock()
 

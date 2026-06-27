@@ -1,6 +1,5 @@
 """Tests for app.services.village.mixins - zero coverage → 100%"""
 
-import pytest
 from unittest.mock import MagicMock, patch
 from app.services.village.mixins import (
     VillageQueryMixin,

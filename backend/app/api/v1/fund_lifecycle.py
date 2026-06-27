@@ -108,6 +108,64 @@ class PhaseAdvanceRequest(BaseModel):
     remarks: Optional[str] = None
 
 
+def _find_current_phase(phases: list) -> Optional[ProjectFundPhase]:
+    for p in phases:
+        if p.status == PhaseStatus.IN_PROGRESS.value:
+            return p
+    for p in phases:
+        if p.status == PhaseStatus.NOT_STARTED.value:
+            return p
+    return None
+
+
+def _check_phase_danger_anomalies(db: Session, project_id: int) -> None:
+    danger_count = (
+        db.query(sa_func.count(FundAnomaly.id))
+        .filter(
+            FundAnomaly.project_id == project_id,
+            FundAnomaly.resolved == False,  # noqa: E712
+            FundAnomaly.severity == "danger",
+        )
+        .scalar()
+        or 0
+    )
+    if danger_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"存在 {danger_count} 个未解决的严重异常，请先处理后再推进阶段",
+        )
+
+
+def _start_current_phase(
+    phase: ProjectFundPhase, now: datetime, username: str, remarks: Optional[str]
+) -> None:
+    phase.status = PhaseStatus.IN_PROGRESS.value
+    phase.entered_at = now
+    phase.operator = username
+    if remarks:
+        phase.remarks = remarks
+
+
+def _complete_and_advance_phase(
+    phases: list, current: ProjectFundPhase, now: datetime, username: str, remarks: Optional[str]
+) -> None:
+    current.status = PhaseStatus.COMPLETED.value
+    current.completed_at = now
+
+    next_phase = None
+    for p in phases:
+        if p.phase == current.phase + 1:
+            next_phase = p
+            break
+
+    if next_phase:
+        next_phase.status = PhaseStatus.IN_PROGRESS.value
+        next_phase.entered_at = now
+        next_phase.operator = username
+        if remarks:
+            next_phase.remarks = remarks
+
+
 @router.post("/phases/{project_id}/advance")
 async def advance_phase(
     project_id: int,
@@ -127,70 +185,21 @@ async def advance_phase(
     if not phases:
         phases = _init_phases(db, project_id)
 
-    # 找到当前阶段
-    current = None
-    for p in phases:
-        if p.status == PhaseStatus.IN_PROGRESS.value:
-            current = p
-            break
-
-    if current is None:
-        # 找第一个 not_started
-        for p in phases:
-            if p.status == PhaseStatus.NOT_STARTED.value:
-                current = p
-                break
-
+    current = _find_current_phase(phases)
     if current is None:
         raise HTTPException(status_code=400, detail="所有阶段已完成，无法继续推进")
 
-    # 准入校验：存在未解决 danger 级异常时阻止推进
-    danger_count = (
-        db.query(sa_func.count(FundAnomaly.id))
-        .filter(
-            FundAnomaly.project_id == project_id,
-            FundAnomaly.resolved == False,  # noqa: E712
-            FundAnomaly.severity == "danger",
-        )
-        .scalar()
-        or 0
-    )
-    if danger_count > 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"存在 {danger_count} 个未解决的严重异常，请先处理后再推进阶段",
-        )
+    _check_phase_danger_anomalies(db, project_id)
 
     now = datetime.now()
     username = _get_username(current_user)
     remarks = data.remarks if data else None
 
     if current.status == PhaseStatus.NOT_STARTED.value:
-        # 开始当前阶段
-        current.status = PhaseStatus.IN_PROGRESS.value
-        current.entered_at = now
-        current.operator = username
-        if remarks:
-            current.remarks = remarks
+        _start_current_phase(current, now, username, remarks)
     else:
-        # 完成当前阶段，开始下一阶段
-        current.status = PhaseStatus.COMPLETED.value
-        current.completed_at = now
+        _complete_and_advance_phase(phases, current, now, username, remarks)
 
-        next_phase = None
-        for p in phases:
-            if p.phase == current.phase + 1:
-                next_phase = p
-                break
-
-        if next_phase:
-            next_phase.status = PhaseStatus.IN_PROGRESS.value
-            next_phase.entered_at = now
-            next_phase.operator = username
-            if remarks:
-                next_phase.remarks = remarks
-
-    # 同步更新 Fund.lifecycle_phase
     funds = db.query(Fund).filter(Fund.project_id == project_id).all()
     new_phase = current.phase if current.status == PhaseStatus.IN_PROGRESS.value else current.phase + 1
     for f in funds:

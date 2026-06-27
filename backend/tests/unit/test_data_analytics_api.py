@@ -1,6 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, PropertyMock
-from datetime import datetime
+from unittest.mock import Mock, patch, AsyncMock
 from fastapi.testclient import TestClient
 
 
@@ -328,8 +327,6 @@ class TestGetKpiSummary:
     @patch("app.api.v1.data.data.analytics._get_cached", new_callable=AsyncMock)
     def test_safe_api_exception(self, mock_get, client):
         mock_get.return_value = None
-        from sqlalchemy import func as sa_func
-        from app.models.supported_village import SupportedVillage
         from app.core.database import get_db
 
         mock_db = Mock()

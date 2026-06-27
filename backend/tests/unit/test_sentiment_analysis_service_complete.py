@@ -3,7 +3,6 @@
 覆盖率目标: 100%
 """
 import pytest
-from unittest.mock import patch
 
 class TestSentimentResult:
     """测试 SentimentResult 数据类"""

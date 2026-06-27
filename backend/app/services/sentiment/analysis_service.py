@@ -134,7 +134,7 @@ def extract_keywords(text: str, top_n: int = 5) -> List[str]:
     """
     # 简单的关键词提取（基于词频）
     words = re.findall(r"\b\w+\b", text)
-    word_freq = {}
+    word_freq: dict[str, int] = {}
     for word in words:
         if len(word) > 1:
             word_freq[word] = word_freq.get(word, 0) + 1

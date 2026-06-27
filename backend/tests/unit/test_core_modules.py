@@ -3,10 +3,7 @@ Core模块全面测试
 覆盖app/core/下的所有模块
 """
 
-import pytest
 
-from unittest.mock import patch, MagicMock
-from unittest.mock import MagicMock  # auto-added
 
 class TestSecurity:
     """测试安全模块"""

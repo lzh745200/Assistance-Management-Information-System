@@ -1,11 +1,8 @@
 """Tests for app/core/upload_security.py — 100% coverage."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from app.core.upload_security import (
-    DEFAULT_ALLOWED_EXTENSIONS,
-    FORBIDDEN_EXTENSIONS,
     full_upload_validation,
     sanitize_filename,
     sanitize_upload_filename,

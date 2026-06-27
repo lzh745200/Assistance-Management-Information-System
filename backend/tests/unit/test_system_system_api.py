@@ -2,8 +2,7 @@
 Tests for system.py — core system API.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 BASE = "/api/v1/system/system"
 

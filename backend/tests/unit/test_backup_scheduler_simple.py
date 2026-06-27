@@ -3,14 +3,13 @@
 使用 conftest fixtures
 """
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch
 from datetime import datetime
 
 from app.services.backup_scheduler import (
     auto_backup_job, kpi_precalculate_job, anomaly_detection_job,
     todo_reminder_job, weekly_report_job,
-    start_backup_scheduler, stop_backup_scheduler, get_scheduler_status,
-    scheduler
+    start_backup_scheduler, stop_backup_scheduler, get_scheduler_status
 )
 
 class TestSchedulerFunctionsExist:

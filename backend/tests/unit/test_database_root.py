@@ -1,7 +1,6 @@
 """Tests for app.core.database_root - zero coverage → 100%"""
 
 import pytest
-import sys
 from unittest.mock import MagicMock, patch
 import app.core.database_root as db_root
 

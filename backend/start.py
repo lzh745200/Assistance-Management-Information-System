@@ -83,7 +83,7 @@ def _check_python_arch():
                     break
             print("  或通过 .venv\\Scripts\\python start.py 启动（64-bit）")
         else:
-            print(f"[INFO] 32-bit Python on 32-bit OS — this is expected")
+            print("[INFO] 32-bit Python on 32-bit OS — this is expected")
     else:
         print(f"[OK] Python {bits}-bit — optimal")
 

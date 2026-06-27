@@ -99,7 +99,7 @@ def delete_directory(path: Union[str, Path], *, missing_ok: bool = True) -> None
 
 def file_md5(path: Union[str, Path]) -> str:
     """Compute the MD5 hash of a file."""
-    h = hashlib.md5()
+    h = hashlib.md5(usedforsecurity=False)
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)

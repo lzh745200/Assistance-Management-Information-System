@@ -2,10 +2,9 @@
 完整测试 - app.services.secrets_manager
 覆盖率目标: 100%
 """
-import pytest
 import time
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 class TestSecretsManagerCreation:
     """测试 SecretsManager 创建"""

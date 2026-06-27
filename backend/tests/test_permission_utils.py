@@ -2,18 +2,11 @@
 权限工具函数测试
 """
 
-import pytest
-from fastapi import HTTPException
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 from app.core.permission_utils import (
     get_user_org_id,
-    is_superuser,
-    require_organization,
-    check_org_access,
-    get_org_with_fallback,
-    require_permission,
-    require_admin
+    is_superuser
 )
 
 

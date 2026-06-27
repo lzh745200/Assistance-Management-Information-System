@@ -1,7 +1,7 @@
 """Tests for app.api.v1.data.data.data_packages."""
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 
 

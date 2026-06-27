@@ -1,6 +1,6 @@
 /**
  * 主布局属性测试
- * 
+ *
  * 验证侧边栏折叠/展开功能和响应式布局
  * Requirements: 4.7, 5.1, 5.2, 5.3, 5.4
  */
@@ -45,22 +45,22 @@ describe('侧边栏折叠/展开属性测试', () => {
 
     it('点击折叠按钮后侧边栏应变为折叠状态', () => {
       const isCollapsed = ref(false)
-      
+
       const toggleSidebar = () => {
         isCollapsed.value = !isCollapsed.value
       }
-      
+
       toggleSidebar()
       expect(isCollapsed.value).toBe(true)
     })
 
     it('再次点击折叠按钮后侧边栏应变为展开状态', () => {
       const isCollapsed = ref(false)
-      
+
       const toggleSidebar = () => {
         isCollapsed.value = !isCollapsed.value
       }
-      
+
       toggleSidebar() // 折叠
       toggleSidebar() // 展开
       expect(isCollapsed.value).toBe(false)
@@ -69,40 +69,40 @@ describe('侧边栏折叠/展开属性测试', () => {
     it('侧边栏折叠状态切换应为幂等操作（偶数次切换回到初始状态）', () => {
       const isCollapsed = ref(false)
       const initialState = isCollapsed.value
-      
+
       const toggleSidebar = () => {
         isCollapsed.value = !isCollapsed.value
       }
-      
+
       // Toggle even number of times
       for (let i = 0; i < 6; i++) {
         toggleSidebar()
       }
-      
+
       expect(isCollapsed.value).toBe(initialState)
     })
 
     it('侧边栏折叠状态应为布尔值', () => {
       const isCollapsed = ref(false)
-      
+
       expect(typeof isCollapsed.value).toBe('boolean')
-      
+
       isCollapsed.value = true
       expect(typeof isCollapsed.value).toBe('boolean')
     })
 
     it('折叠状态变化应触发宽度变化', () => {
       const isCollapsed = ref(false)
-      
+
       const sidebarWidth = computed(() => {
         return isCollapsed.value ? 64 : 220
       })
-      
+
       expect(sidebarWidth.value).toBe(220)
-      
+
       isCollapsed.value = true
       expect(sidebarWidth.value).toBe(64)
-      
+
       isCollapsed.value = false
       expect(sidebarWidth.value).toBe(220)
     })
@@ -113,11 +113,11 @@ describe('侧边栏折叠/展开属性测试', () => {
       const isCollapsed = ref(false)
       const SIDEBAR_WIDTH = 220
       const SIDEBAR_COLLAPSED_WIDTH = 64
-      
+
       const sidebarWidth = computed(() => {
         return isCollapsed.value ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH
       })
-      
+
       expect(sidebarWidth.value).toBe(SIDEBAR_WIDTH)
     })
 
@@ -125,11 +125,11 @@ describe('侧边栏折叠/展开属性测试', () => {
       const isCollapsed = ref(true)
       const SIDEBAR_WIDTH = 220
       const SIDEBAR_COLLAPSED_WIDTH = 64
-      
+
       const sidebarWidth = computed(() => {
         return isCollapsed.value ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH
       })
-      
+
       expect(sidebarWidth.value).toBe(SIDEBAR_COLLAPSED_WIDTH)
     })
 
@@ -137,13 +137,13 @@ describe('侧边栏折叠/展开属性测试', () => {
       const isCollapsed = ref(false)
       const SIDEBAR_WIDTH = 220
       const SIDEBAR_COLLAPSED_WIDTH = 64
-      
+
       const sidebarWidth = computed(() => {
         return isCollapsed.value ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH
       })
-      
+
       expect(sidebarWidth.value).toBeGreaterThan(0)
-      
+
       isCollapsed.value = true
       expect(sidebarWidth.value).toBeGreaterThan(0)
     })
@@ -182,11 +182,11 @@ describe('响应式布局属性测试', () => {
     it('移动端应隐藏系统标题', () => {
       const isMobile = (width: number) => width <= BREAKPOINTS.mobile
       const shouldShowTitle = (width: number) => !isMobile(width)
-      
+
       // 移动端
       expect(shouldShowTitle(375)).toBe(false)
       expect(shouldShowTitle(768)).toBe(false)
-      
+
       // 非移动端
       expect(shouldShowTitle(769)).toBe(true)
       expect(shouldShowTitle(1024)).toBe(true)
@@ -195,11 +195,11 @@ describe('响应式布局属性测试', () => {
     it('移动端侧边栏应默认折叠', () => {
       const isMobile = (width: number) => width <= BREAKPOINTS.mobile
       const shouldCollapseSidebar = (width: number) => isMobile(width)
-      
+
       // 移动端
       expect(shouldCollapseSidebar(375)).toBe(true)
       expect(shouldCollapseSidebar(768)).toBe(true)
-      
+
       // 非移动端
       expect(shouldCollapseSidebar(769)).toBe(false)
       expect(shouldCollapseSidebar(1024)).toBe(false)
@@ -245,9 +245,9 @@ describe('响应式布局属性测试', () => {
 describe('导航菜单属性测试', () => {
   it('当前路由应正确高亮', () => {
     const currentPath = '/dashboard'
-    
+
     const isActive = (path: string) => path === currentPath
-    
+
     expect(isActive('/dashboard')).toBe(true)
     expect(isActive('/projects')).toBe(false)
     expect(isActive('/villages')).toBe(false)
@@ -256,14 +256,14 @@ describe('导航菜单属性测试', () => {
   it('管理员应能看到系统管理菜单', () => {
     const isAdmin = true
     const showSystemMenu = isAdmin
-    
+
     expect(showSystemMenu).toBe(true)
   })
 
   it('非管理员不应看到系统管理菜单', () => {
     const isAdmin = false
     const showSystemMenu = isAdmin
-    
+
     expect(showSystemMenu).toBe(false)
   })
 })

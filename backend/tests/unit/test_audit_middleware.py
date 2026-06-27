@@ -1,7 +1,6 @@
 """Tests for app.middleware.audit_middleware — 100% coverage target."""
 
 import anyio
-import pytest
 from starlette.testclient import TestClient
 
 from app.middleware.audit_middleware import AuditMiddleware
@@ -70,7 +69,7 @@ class TestAuditMiddleware:
         import logging
         caplog.set_level(logging.INFO)
 
-        from unittest.mock import AsyncMock, MagicMock
+        from unittest.mock import MagicMock
         from starlette.requests import Request
         from starlette.responses import JSONResponse
 

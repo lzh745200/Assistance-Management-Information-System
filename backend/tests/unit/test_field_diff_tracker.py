@@ -1,5 +1,4 @@
 """TDD: 字段级变更差异追踪."""
-import pytest
 
 
 class TestFieldDiff:

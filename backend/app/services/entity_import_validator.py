@@ -244,6 +244,74 @@ class EntityImportValidator:
             return False, f"数据行数超过限制，单次最多导入 {self.MAX_ROWS} 条记录，当前 {row_count} 条"
         return True, None
 
+    def _validate_int_field(self, str_value: str) -> None:
+        int(str_value)
+
+    def _validate_float_field(
+        self, field_name: str, str_value: str, value: Any, label: str, row_number: int
+    ) -> Optional[ValidationError]:
+        float(str_value)
+        if field_name == "amount" and float(str_value) < 0:
+            return ValidationError(
+                row_number=row_number,
+                field_name=field_name,
+                error_code=ValidationErrorCode.VALUE_OUT_OF_RANGE,
+                message=f"字段 '{label}' 不能为负数",
+                value=value,
+            )
+        return None
+
+    def _validate_bool_field(self, str_value: str) -> None:
+        if str_value.lower() not in ("是", "否", "true", "false", "1", "0", "yes", "no"):
+            raise ValueError("请填写'是'或'否'")
+
+    def _validate_date_field(self, str_value: str) -> None:
+        from datetime import datetime
+
+        datetime.strptime(str_value, "%Y-%m-%d")
+
+    def _validate_phone_field(
+        self, field_name: str, str_value: str, value: Any, label: str, row_number: int
+    ) -> Optional[ValidationError]:
+        import re
+
+        if not re.match(r"^1[3-9]\d{9}$", str_value):
+            return ValidationError(
+                row_number=row_number,
+                field_name=field_name,
+                error_code=ValidationErrorCode.INVALID_PHONE,
+                message=f"字段 '{label}' 手机号格式不正确",
+                value=value,
+            )
+        return None
+
+    def _validate_county_field(
+        self, field_name: str, str_value: str, value: Any, label: str, row_number: int
+    ) -> Optional[ValidationError]:
+        if str_value and str_value not in QIANNAN_COUNTIES:
+            return ValidationError(
+                row_number=row_number,
+                field_name=field_name,
+                error_code=ValidationErrorCode.INVALID_COUNTY,
+                message=f"字段 '{label}' 必须是黔南州12个县市之一",
+                value=value,
+            )
+        return None
+
+    def _validate_enum_field(
+        self, field_name: str, field_type: str, str_value: str, value: Any, label: str, row_number: int
+    ) -> Optional[ValidationError]:
+        valid_values = self.ENUM_VALUES[field_type]
+        if str_value.lower() not in [v.lower() for v in valid_values]:
+            return ValidationError(
+                row_number=row_number,
+                field_name=field_name,
+                error_code=ValidationErrorCode.INVALID_ENUM_VALUE,
+                message=f"字段 '{label}' 值无效，可选: {', '.join(valid_values)}",
+                value=value,
+            )
+        return None
+
     def _validate_field_format(
         self, field_name: str, value: Any, field_type: str, row_number: int
     ) -> Optional[ValidationError]:
@@ -255,54 +323,19 @@ class EntityImportValidator:
 
         try:
             if field_type == "int":
-                int(str_value)
+                self._validate_int_field(str_value)
             elif field_type == "float":
-                float(str_value)
-                if field_name == "amount" and float(str_value) < 0:
-                    return ValidationError(
-                        row_number=row_number,
-                        field_name=field_name,
-                        error_code=ValidationErrorCode.VALUE_OUT_OF_RANGE,
-                        message=f"字段 '{label}' 不能为负数",
-                        value=value,
-                    )
+                return self._validate_float_field(field_name, str_value, value, label, row_number)
             elif field_type == "bool":
-                if str_value.lower() not in ("是", "否", "true", "false", "1", "0", "yes", "no"):
-                    raise ValueError("请填写'是'或'否'")
+                self._validate_bool_field(str_value)
             elif field_type == "date":
-                from datetime import datetime
-
-                datetime.strptime(str_value, "%Y-%m-%d")
+                self._validate_date_field(str_value)
             elif field_type == "phone":
-                import re
-
-                if not re.match(r"^1[3-9]\d{9}$", str_value):
-                    return ValidationError(
-                        row_number=row_number,
-                        field_name=field_name,
-                        error_code=ValidationErrorCode.INVALID_PHONE,
-                        message=f"字段 '{label}' 手机号格式不正确",
-                        value=value,
-                    )
+                return self._validate_phone_field(field_name, str_value, value, label, row_number)
             elif field_type == "county":
-                if str_value and str_value not in QIANNAN_COUNTIES:
-                    return ValidationError(
-                        row_number=row_number,
-                        field_name=field_name,
-                        error_code=ValidationErrorCode.INVALID_COUNTY,
-                        message=f"字段 '{label}' 必须是黔南州12个县市之一",
-                        value=value,
-                    )
+                return self._validate_county_field(field_name, str_value, value, label, row_number)
             elif field_type in self.ENUM_VALUES:
-                valid_values = self.ENUM_VALUES[field_type]
-                if str_value.lower() not in [v.lower() for v in valid_values]:
-                    return ValidationError(
-                        row_number=row_number,
-                        field_name=field_name,
-                        error_code=ValidationErrorCode.INVALID_ENUM_VALUE,
-                        message=f"字段 '{label}' 值无效，可选: {', '.join(valid_values)}",
-                        value=value,
-                    )
+                return self._validate_enum_field(field_name, field_type, str_value, value, label, row_number)
             return None
         except (ValueError, TypeError) as e:
             return ValidationError(
@@ -387,8 +420,8 @@ class EntityImportValidator:
 
     def check_duplicates(self, rows: List[Dict[str, Any]]) -> List[ValidationError]:
         key_field = self.config.get("duplicate_key", "name")
-        seen = {}
-        errors = []
+        seen: dict[str, int] = {}
+        errors: list[ValidationError] = []
         for idx, row in enumerate(rows, 1):
             key = str(row.get(key_field, "")).strip().lower()
             if not key:
@@ -410,7 +443,7 @@ class EntityImportValidator:
     def _generate_warnings(self, rows: List[Dict[str, Any]]) -> List[str]:
         warnings = []
         required = set(self.get_required_fields())
-        empty_counts = {}
+        empty_counts: dict[str, int] = {}
         for row in rows:
             for field_name, value in row.items():
                 if value is None or (isinstance(value, str) and not value.strip()):
@@ -428,7 +461,7 @@ class EntityImportValidator:
         return field_name
 
     def convert_row_types(self, row: Dict[str, Any]) -> Dict[str, Any]:
-        converted = {}
+        converted: dict[str, Any] = {}
         fields_def = {f["name"]: f for f in self.config.get("fields", [])}
         for field_name, value in row.items():
             if value is None or (isinstance(value, str) and not value.strip()):

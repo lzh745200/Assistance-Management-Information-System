@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.permission_utils import is_admin
 from app.core.security import get_current_user
 from app.interfaces.schemas.responses import ResponseModel
 from app.models.rural_task import RuralTask, TaskStatus
@@ -69,6 +70,8 @@ async def list_tasks(
 ):
     """获取任务列表"""
     query = db.query(RuralTask)
+    if not is_admin(current_user):
+        query = query.filter(RuralTask.created_by == current_user.id)
 
     if rural_work_id:
         query = query.filter(RuralTask.rural_work_id == rural_work_id)
@@ -104,6 +107,8 @@ async def get_statistics(
 ):
     """获取任务统计"""
     query = db.query(RuralTask)
+    if not is_admin(current_user):
+        query = query.filter(RuralTask.created_by == current_user.id)
     if year:
         query = query.filter(RuralTask.year == year)
     if rural_work_id:

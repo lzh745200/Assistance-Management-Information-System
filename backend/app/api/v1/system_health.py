@@ -183,7 +183,7 @@ async def get_table_stats(
     total_rows = 0
     for (table_name,) in tables:
         try:
-            count = db.execute(text(f'SELECT COUNT(*) FROM "{table_name}"')).scalar()
+            count = db.execute(text(f'SELECT COUNT(*) FROM "{table_name}"')).scalar()  # nosec B608 — sqlite_master 系统表名
             stats.append({"table": table_name, "rows": count})
             total_rows += count
         except Exception:

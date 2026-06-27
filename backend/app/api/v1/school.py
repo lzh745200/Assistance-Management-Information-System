@@ -554,7 +554,7 @@ async def list_schools(
             _key_data = json.dumps(
                 [keyword, name, type, status_filter], default=str
             ).encode()
-            _ckey = f"schools:list:{page}:{page_size}:{hashlib.md5(_key_data).hexdigest()}"
+            _ckey = f"schools:list:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
             _cached = await _cache.get(_ckey)
             if _cached is not None:
                 return _cached

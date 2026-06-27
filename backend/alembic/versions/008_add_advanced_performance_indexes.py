@@ -7,7 +7,6 @@ Create Date: 2026-03-11
 添加复合索引和覆盖索引以优化常见查询场景
 """
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.

@@ -534,30 +534,79 @@ def _parse_template_excel(
     return parsed_data, errors, rows
 
 
+# ---- 导入辅助函数 ----
+
+
+def _to_bool(val):
+    if val is None:
+        return False
+    s = str(val).strip()
+    return s in ("是", "true", "True", "1", "yes", "Yes")
+
+
+def _safe_str(val):
+    if val is None:
+        return None
+    s = str(val).strip()
+    return s if s else None
+
+
+def _safe_int(val, default=0):
+    if val is None:
+        return default
+    try:
+        return int(float(str(val)))
+    except (ValueError, TypeError):
+        return default
+
+
+def _safe_decimal(val, default="0"):
+    if val is None:
+        return Decimal(default)
+    try:
+        return Decimal(str(val))
+    except Exception:
+        return Decimal(default)
+
+
+def _safe_date(val):
+    if val is None:
+        return None
+    s = str(val).strip()[:10]
+    try:
+        return date_type.fromisoformat(s)
+    except ValueError:
+        return None
+
+
+def _safe_datetime(val):
+    if val is None:
+        return None
+    s = str(val).strip()[:19]
+    try:
+        return datetime.fromisoformat(s.replace("/", "-"))
+    except ValueError:
+        try:
+            return datetime.strptime(s, "%Y-%m-%d")
+        except ValueError:
+            return None
+
+
 # ---- 帮扶村导入 ----
 
 
-def _import_village_data(
-    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
-) -> Dict[str, Any]:
-    """导入帮扶村数据
-
-    Args:
-        mode: "incremental"=跳过重复, "overwrite"=清空后全量导入
-    """
+def _village_prepare_import(
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str
+) -> Tuple[int, set, dict]:
+    """Prepare village import: handle overwrite, find existing names, preload village map."""
     from app.models.supported_village import SupportedVillage
+    from app.models.village import Village
 
-    created = 0
-    skipped = 0
     deleted = 0
-    errors = []
-
-    # overwrite 模式：清空现有记录
     if mode == "overwrite":
         deleted = db.query(SupportedVillage).delete()
         db.commit()
 
-    # 增量模式：仅查询本次导入涉及的村名（避免全表扫描）
     existing_names = set()
     if mode == "incremental":
         from sqlalchemy import func as sql_func
@@ -573,8 +622,6 @@ def _import_village_data(
                 .all() if r[0]
             }
 
-    # 批量预加载 Village 名称映射（避免 N+1 逐行查询）
-    from app.models.village import Village
     all_village_names = list({
         str(r.get("village_name", "")).strip()
         for r in parsed_data if r.get("village_name")
@@ -583,6 +630,20 @@ def _import_village_data(
     if all_village_names:
         villages = db.query(Village).filter(Village.name.in_(all_village_names)).all()
         village_map = {v.name: v for v in villages}
+
+    return deleted, existing_names, village_map
+
+
+def _village_process_rows(
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str,
+    existing_names: set, village_map: dict, user_id: Optional[int]
+) -> Tuple[int, int, list]:
+    """Process village data rows, returning (created, skipped, errors)."""
+    from app.models.supported_village import SupportedVillage
+
+    created = 0
+    skipped = 0
+    errors = []
 
     for idx, data in enumerate(parsed_data):
         try:
@@ -595,44 +656,22 @@ def _import_village_data(
                 skipped += 1
                 continue
 
-            # 布尔字段转换
-            def to_bool(val):
-                if val is None:
-                    return False
-                s = str(val).strip()
-                return s in ("是", "true", "True", "1", "yes", "Yes")
-
-            def safe_str(val):
-                if val is None:
-                    return None
-                s = str(val).strip()
-                return s if s else None
-
-            def safe_int(val, default=0):
-                if val is None:
-                    return default
-                try:
-                    return int(float(str(val)))
-                except (ValueError, TypeError):
-                    return default
-
-            # O(1) 查找 village_name → village_id（已预加载）
             village_obj = village_map.get(name)
 
             record = SupportedVillage(
                 village_name=name,
-                province=safe_str(data.get("province")) or "贵州省",
-                prefecture=safe_str(data.get("prefecture")) or "黔南布依族苗族自治州",
-                county=safe_str(data.get("county")),
-                region_scope=safe_str(data.get("region_scope")),
-                is_three_regions=to_bool(data.get("is_three_regions")),
-                is_key_county=to_bool(data.get("is_key_county")),
-                support_unit=safe_str(data.get("support_unit")),
-                department=safe_str(data.get("department")),
-                longitude=safe_str(data.get("longitude")),
-                latitude=safe_str(data.get("latitude")),
-                total_households=safe_int(data.get("total_households")),
-                registered_population=safe_int(data.get("registered_population")),
+                province=_safe_str(data.get("province")) or "贵州省",
+                prefecture=_safe_str(data.get("prefecture")) or "黔南布依族苗族自治州",
+                county=_safe_str(data.get("county")),
+                region_scope=_safe_str(data.get("region_scope")),
+                is_three_regions=_to_bool(data.get("is_three_regions")),
+                is_key_county=_to_bool(data.get("is_key_county")),
+                support_unit=_safe_str(data.get("support_unit")),
+                department=_safe_str(data.get("department")),
+                longitude=_safe_str(data.get("longitude")),
+                latitude=_safe_str(data.get("latitude")),
+                total_households=_safe_int(data.get("total_households")),
+                registered_population=_safe_int(data.get("registered_population")),
                 created_by=user_id,
             )
             if village_obj:
@@ -643,6 +682,22 @@ def _import_village_data(
         except Exception as e:
             errors.append(f"第{idx + 3}行: {str(e)}")
 
+    return created, skipped, errors
+
+
+def _import_village_data(
+    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
+) -> Dict[str, Any]:
+    """导入帮扶村数据
+
+    Args:
+        mode: "incremental"=跳过重复, "overwrite"=清空后全量导入
+    """
+    deleted, existing_names, village_map = _village_prepare_import(db, parsed_data, mode)
+    created, skipped, errors = _village_process_rows(
+        db, parsed_data, mode, existing_names, village_map, user_id,
+    )
+
     db.commit()
     msg = (
         f"成功导入 {created} 条（全量覆盖，删除 {deleted} 条旧记录）"
@@ -650,10 +705,8 @@ def _import_village_data(
         else f"成功导入 {created} 条，跳过 {skipped} 条重复记录"
     )
 
-    # 自动记录工作日志
     try:
         from app.services.work_log_service import get_work_log_recorder
-
         recorder = get_work_log_recorder(db)
         recorder.record_batch_import("village", created, mode, user_id=user_id, username="系统")
     except Exception:
@@ -725,37 +778,23 @@ def _import_school_data(
                 skipped += 1
                 continue
 
-            def safe_str(val):
-                if val is None:
-                    return None
-                s = str(val).strip()
-                return s if s else None
-
-            def safe_int(val, default=0):
-                if val is None:
-                    return default
-                try:
-                    return int(float(str(val)))
-                except (ValueError, TypeError):
-                    return default
-
             school_type_str = TYPE_MAP.get(str(data.get("type", "")), data.get("type", "primary") or "primary")
             status_str = STATUS_MAP.get(str(data.get("support_status", "")), "inactive")
 
             record = School(
                 name=name,
-                code=safe_str(data.get("code")),
+                code=_safe_str(data.get("code")),
                 type=SchoolType(school_type_str),
-                province=safe_str(data.get("province")),
-                city=safe_str(data.get("city")),
-                district=safe_str(data.get("district")),
-                address=safe_str(data.get("address")),
-                student_count=safe_int(data.get("student_count")),
-                teacher_count=safe_int(data.get("teacher_count")),
+                province=_safe_str(data.get("province")),
+                city=_safe_str(data.get("city")),
+                district=_safe_str(data.get("district")),
+                address=_safe_str(data.get("address")),
+                student_count=_safe_int(data.get("student_count")),
+                teacher_count=_safe_int(data.get("teacher_count")),
                 support_status=SupportStatus(status_str),
-                support_unit=safe_str(data.get("support_unit")),
-                principal=safe_str(data.get("principal")),
-                contact_phone=safe_str(data.get("contact_phone")),
+                support_unit=_safe_str(data.get("support_unit")),
+                principal=_safe_str(data.get("principal")),
+                contact_phone=_safe_str(data.get("contact_phone")),
             )
             db.add(record)
             created += 1
@@ -810,18 +849,13 @@ _PROJECT_STATUS_MAP = {
 _PROJECT_URGENCY_MAP = {"紧急": "urgent", "重要": "important", "一般": "normal"}
 
 
-def _import_project_data(
-    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
-) -> Dict[str, Any]:
-    """导入帮扶项目数据"""
+def _project_prepare_import(
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str
+) -> Tuple[int, set]:
+    """Prepare project import: handle overwrite, find existing names."""
     from app.models.project import Project
 
-    created = 0
-    skipped = 0
     deleted = 0
-    errors = []
-
-    # overwrite 模式：清空现有记录
     if mode == "overwrite":
         deleted = db.query(Project).delete()
         db.commit()
@@ -841,40 +875,23 @@ def _import_project_data(
                 .all() if r[0]
             }
 
-    def safe_str(val):
-        if val is None:
-            return None
-        s = str(val).strip()
-        return s if s else None
+    return deleted, existing_names
 
-    def safe_decimal(val, default="0"):
-        if val is None:
-            return Decimal(default)
-        try:
-            return Decimal(str(val))
-        except Exception:
-            return Decimal(default)
 
-    def safe_int(val, default=0):
-        if val is None:
-            return default
-        try:
-            return int(float(str(val)))
-        except (ValueError, TypeError):
-            return default
+def _project_process_rows(
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str,
+    existing_names: set, user_id: Optional[int],
+) -> Tuple[int, int, list]:
+    """Process project data rows, returning (created, skipped, errors)."""
+    from app.models.project import Project
 
-    def parse_date(val):
-        if val is None:
-            return None
-        s = str(val).strip()[:10]
-        try:
-            return date_type.fromisoformat(s)
-        except ValueError:
-            return None
+    created = 0
+    skipped = 0
+    errors = []
 
     for idx, data in enumerate(parsed_data):
         try:
-            name = safe_str(data.get("name"))
+            name = _safe_str(data.get("name"))
             if not name:
                 errors.append(f"第{idx + 3}行: 项目名称为空")
                 continue
@@ -883,21 +900,17 @@ def _import_project_data(
                 skipped += 1
                 continue
 
-            # 类型/状态/紧急程度转换
             proj_type = _PROJECT_TYPE_MAP.get(str(data.get("type", "")), data.get("type") or "other")
             proj_status = _PROJECT_STATUS_MAP.get(str(data.get("status", "")), "draft")
             urgency = _PROJECT_URGENCY_MAP.get(str(data.get("urgency_level", "")), "normal")
 
-            # 项目编号
-            code = safe_str(data.get("code"))
+            code = _safe_str(data.get("code"))
             if not code:
                 code = f"PRJ-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
-            # 查找帮扶村关联
             village_id = None
             if data.get("village_name"):
                 from app.models.village import Village
-
                 v = db.query(Village).filter(Village.name == data["village_name"]).first()
                 if v:
                     village_id = v.id
@@ -907,36 +920,36 @@ def _import_project_data(
                 code=code,
                 type=proj_type,
                 status=proj_status,
-                description=safe_str(data.get("description")),
-                objectives=safe_str(data.get("objectives")),
-                budget=safe_decimal(data.get("budget")),
-                invested_amount=safe_decimal(data.get("invested_amount")),
-                progress=safe_int(data.get("progress")),
-                start_date=parse_date(data.get("start_date")),
-                end_date=parse_date(data.get("end_date")),
-                responsible_unit=safe_str(data.get("responsible_unit")),
-                responsible_person=safe_str(data.get("responsible_person")),
-                contact_phone=safe_str(data.get("contact_phone")),
-                contract_number=safe_str(data.get("contract_number")),
-                fund_manager=safe_str(data.get("fund_manager")),
-                fund_usage_plan=safe_str(data.get("fund_usage_plan")),
-                fund_source=safe_str(data.get("fund_source")),
+                description=_safe_str(data.get("description")),
+                objectives=_safe_str(data.get("objectives")),
+                budget=_safe_decimal(data.get("budget")),
+                invested_amount=_safe_decimal(data.get("invested_amount")),
+                progress=_safe_int(data.get("progress")),
+                start_date=_safe_date(data.get("start_date")),
+                end_date=_safe_date(data.get("end_date")),
+                responsible_unit=_safe_str(data.get("responsible_unit")),
+                responsible_person=_safe_str(data.get("responsible_person")),
+                contact_phone=_safe_str(data.get("contact_phone")),
+                contract_number=_safe_str(data.get("contract_number")),
+                fund_manager=_safe_str(data.get("fund_manager")),
+                fund_usage_plan=_safe_str(data.get("fund_usage_plan")),
+                fund_source=_safe_str(data.get("fund_source")),
                 urgency_level=urgency,
                 is_delayed=str(data.get("is_delayed", "")).strip() in ("是", "true", "True"),
-                delay_reason=safe_str(data.get("delay_reason")),
-                expected_benefits=safe_str(data.get("expected_benefits")),
-                achievements=safe_str(data.get("achievements")),
-                remarks=safe_str(data.get("remarks")),
-                payer_account_name=safe_str(data.get("payer_account_name")),
-                payer_account_number=safe_str(data.get("payer_account_number")),
-                payer_bank=safe_str(data.get("payer_bank")),
-                payer_handler=safe_str(data.get("payer_handler")),
-                payer_contact=safe_str(data.get("payer_contact")),
-                payee_account_name=safe_str(data.get("payee_account_name")),
-                payee_account_number=safe_str(data.get("payee_account_number")),
-                payee_bank=safe_str(data.get("payee_bank")),
-                payee_handler=safe_str(data.get("payee_handler")),
-                payee_contact=safe_str(data.get("payee_contact")),
+                delay_reason=_safe_str(data.get("delay_reason")),
+                expected_benefits=_safe_str(data.get("expected_benefits")),
+                achievements=_safe_str(data.get("achievements")),
+                remarks=_safe_str(data.get("remarks")),
+                payer_account_name=_safe_str(data.get("payer_account_name")),
+                payer_account_number=_safe_str(data.get("payer_account_number")),
+                payer_bank=_safe_str(data.get("payer_bank")),
+                payer_handler=_safe_str(data.get("payer_handler")),
+                payer_contact=_safe_str(data.get("payer_contact")),
+                payee_account_name=_safe_str(data.get("payee_account_name")),
+                payee_account_number=_safe_str(data.get("payee_account_number")),
+                payee_bank=_safe_str(data.get("payee_bank")),
+                payee_handler=_safe_str(data.get("payee_handler")),
+                payee_contact=_safe_str(data.get("payee_contact")),
                 village_id=village_id,
                 created_by=user_id,
             )
@@ -945,6 +958,18 @@ def _import_project_data(
         except Exception as e:
             errors.append(f"第{idx + 3}行: {str(e)}")
 
+    return created, skipped, errors
+
+
+def _import_project_data(
+    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
+) -> Dict[str, Any]:
+    """导入帮扶项目数据"""
+    deleted, existing_names = _project_prepare_import(db, parsed_data, mode)
+    created, skipped, errors = _project_process_rows(
+        db, parsed_data, mode, existing_names, user_id,
+    )
+
     db.commit()
     msg = (
         f"成功导入 {created} 个项目（全量覆盖，删除 {deleted} 条旧记录）"
@@ -952,10 +977,8 @@ def _import_project_data(
         else f"成功导入 {created} 个项目，跳过 {skipped} 条重复记录"
     )
 
-    # 自动记录工作日志
     try:
         from app.services.work_log_service import get_work_log_recorder
-
         recorder = get_work_log_recorder(db)
         recorder.record_batch_import("project", created, mode, user_id=user_id, username="系统")
     except Exception:
@@ -992,18 +1015,13 @@ _RURAL_WORK_STATUS_MAP = {
 }
 
 
-def _import_rural_work_data(
-    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
-) -> Dict[str, Any]:
-    """导入乡村工作数据"""
-    from app.models.rural_work import RuralWork, WorkStatus, WorkType
+def _rural_work_prepare_import(
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str
+) -> Tuple[int, set]:
+    """Prepare rural work import: handle overwrite, find existing names."""
+    from app.models.rural_work import RuralWork
 
-    created = 0
-    skipped = 0
     deleted = 0
-    errors = []
-
-    # overwrite 模式：清空现有记录
     if mode == "overwrite":
         deleted = db.query(RuralWork).delete()
         db.commit()
@@ -1023,35 +1041,23 @@ def _import_rural_work_data(
                 .all() if r[0]
             }
 
-    def safe_str(val):
-        if val is None:
-            return None
-        s = str(val).strip()
-        return s if s else None
+    return deleted, existing_names
 
-    def safe_int(val, default=0):
-        if val is None:
-            return default
-        try:
-            return int(float(str(val)))
-        except (ValueError, TypeError):
-            return default
 
-    def parse_datetime(val):
-        if val is None:
-            return None
-        s = str(val).strip()[:19]
-        try:
-            return datetime.fromisoformat(s.replace("/", "-"))
-        except ValueError:
-            try:
-                return datetime.strptime(s, "%Y-%m-%d")
-            except ValueError:
-                return None
+def _rural_work_process_rows(
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str,
+    existing_names: set, user_id: Optional[int],
+) -> Tuple[int, int, list]:
+    """Process rural work data rows, returning (created, skipped, errors)."""
+    from app.models.rural_work import RuralWork, WorkStatus, WorkType
+
+    created = 0
+    skipped = 0
+    errors = []
 
     for idx, data in enumerate(parsed_data):
         try:
-            name = safe_str(data.get("name"))
+            name = _safe_str(data.get("name"))
             if not name:
                 errors.append(f"第{idx + 3}行: 工作名称为空")
                 continue
@@ -1063,11 +1069,9 @@ def _import_rural_work_data(
             work_type_str = _RURAL_WORK_TYPE_MAP.get(str(data.get("type", "")), "infrastructure")
             status_str = _RURAL_WORK_STATUS_MAP.get(str(data.get("status", "")), "planned")
 
-            # 查找帮扶村关联
             village_id = None
             if data.get("village_name"):
                 from app.models.village import Village
-
                 v = db.query(Village).filter(Village.name == data["village_name"]).first()
                 if v:
                     village_id = v.id
@@ -1077,13 +1081,13 @@ def _import_rural_work_data(
                 name=name,
                 type=WorkType(work_type_str),
                 status=WorkStatus(status_str),
-                description=safe_str(data.get("description")),
-                target=safe_str(data.get("target")),
-                responsible_person=safe_str(data.get("responsible_person")),
-                contact_phone=safe_str(data.get("contact_phone")),
-                start_date=parse_datetime(data.get("start_date")),
-                end_date=parse_datetime(data.get("end_date")),
-                progress=safe_int(data.get("progress")),
+                description=_safe_str(data.get("description")),
+                target=_safe_str(data.get("target")),
+                responsible_person=_safe_str(data.get("responsible_person")),
+                contact_phone=_safe_str(data.get("contact_phone")),
+                start_date=_safe_datetime(data.get("start_date")),
+                end_date=_safe_datetime(data.get("end_date")),
+                progress=_safe_int(data.get("progress")),
                 village_id=village_id,
                 created_by=user_id,
                 updated_by=user_id,
@@ -1093,6 +1097,18 @@ def _import_rural_work_data(
         except Exception as e:
             errors.append(f"第{idx + 3}行: {str(e)}")
 
+    return created, skipped, errors
+
+
+def _import_rural_work_data(
+    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
+) -> Dict[str, Any]:
+    """导入乡村工作数据"""
+    deleted, existing_names = _rural_work_prepare_import(db, parsed_data, mode)
+    created, skipped, errors = _rural_work_process_rows(
+        db, parsed_data, mode, existing_names, user_id,
+    )
+
     db.commit()
     msg = (
         f"成功导入 {created} 条乡村工作（全量覆盖，删除 {deleted} 条旧记录）"
@@ -1100,10 +1116,8 @@ def _import_rural_work_data(
         else f"成功导入 {created} 条乡村工作记录，跳过 {skipped} 条重复记录"
     )
 
-    # 自动记录工作日志
     try:
         from app.services.work_log_service import get_work_log_recorder
-
         recorder = get_work_log_recorder(db)
         recorder.record_batch_import("rural_work", created, mode, user_id=user_id, username="系统")
     except Exception:

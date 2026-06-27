@@ -1,5 +1,4 @@
 """API 层完整测试 - 覆盖所有 v1 路由模块"""
-import pytest
 
 class TestHealthEndpoints:
     """健康检查接口测试"""

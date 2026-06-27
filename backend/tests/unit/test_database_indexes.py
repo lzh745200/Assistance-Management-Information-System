@@ -1,8 +1,6 @@
 """
 数据库索引测试
 """
-import pytest
-from unittest.mock import MagicMock, patch
 from sqlalchemy import create_engine, text
 from app.core.database_indexes import (
     INDEX_DEFINITIONS,
@@ -44,18 +42,18 @@ class TestCreateIndexes:
     def test_create_indexes_empty_database(self):
         """测试空数据库创建索引"""
         engine = create_engine("sqlite:///:memory:")
-        
+
         create_indexes(engine)
 
     def test_create_indexes_with_tables(self):
         """测试有表时创建索引"""
         engine = create_engine("sqlite:///:memory:")
-        
+
         with engine.connect() as conn:
             conn.execute(text("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, email TEXT)"))
             conn.execute(text("CREATE TABLE projects (id INTEGER PRIMARY KEY, status TEXT, created_at TEXT)"))
             conn.commit()
-        
+
         create_indexes(engine)
 
 class TestDropIndexes:
@@ -64,7 +62,7 @@ class TestDropIndexes:
     def test_drop_indexes_safely(self):
         """测试安全删除索引"""
         engine = create_engine("sqlite:///:memory:")
-        
+
         drop_indexes(engine)
 
 class TestAnalyzeTableStats:
@@ -73,21 +71,21 @@ class TestAnalyzeTableStats:
     def test_analyze_empty_database(self):
         """测试空数据库统计"""
         engine = create_engine("sqlite:///:memory:")
-        
+
         stats = analyze_table_stats(engine)
         assert isinstance(stats, dict)
 
     def test_analyze_with_data(self):
         """测试有数据统计"""
         engine = create_engine("sqlite:///:memory:")
-        
+
         with engine.connect() as conn:
             conn.execute(text("CREATE TABLE test_table (id INTEGER PRIMARY KEY)"))
             conn.execute(text("INSERT INTO test_table VALUES (1)"))
             conn.execute(text("INSERT INTO test_table VALUES (2)"))
             conn.execute(text("INSERT INTO test_table VALUES (3)"))
             conn.commit()
-        
+
         stats = analyze_table_stats(engine)
         assert "test_table" in stats
         assert stats["test_table"]["row_count"] == 3
@@ -98,9 +96,9 @@ class TestIndexPerformance:
     def test_index_creation_performance(self):
         """测试索引创建性能"""
         import time
-        
+
         engine = create_engine("sqlite:///:memory:")
-        
+
         with engine.connect() as conn:
             conn.execute(text("""
                 CREATE TABLE large_table (
@@ -113,9 +111,9 @@ class TestIndexPerformance:
             for i in range(100):
                 conn.execute(text(f"INSERT INTO large_table VALUES ({i}, 'a{i}', 'b{i}', {i})"))
             conn.commit()
-        
+
         start = time.time()
         create_indexes(engine)
         elapsed = time.time() - start
-        
+
         assert elapsed < 5.0

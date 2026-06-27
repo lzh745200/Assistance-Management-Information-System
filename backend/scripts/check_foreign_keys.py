@@ -136,7 +136,7 @@ def check_village_references(village_id: int):
                 if count > 0:
                     print(f"  {table}: {count} 条记录")
                     total_refs += count
-            except Exception as e:
+            except Exception:
                 # 表可能不存在或列名不同
                 pass
 

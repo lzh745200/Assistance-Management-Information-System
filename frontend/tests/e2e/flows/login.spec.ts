@@ -1,6 +1,6 @@
 /**
  * 登录流程 E2E 测试
- * 
+ *
  * 测试场景：
  * - 登录成功流程
  * - 登录失败流程（错误密码、空输入）
@@ -31,10 +31,10 @@ test.describe('登录流程', () => {
     // 输入用户名和密码
     await page.locator('input[placeholder*="用户名"], input[type="text"]').first().fill(TEST_USER.username);
     await page.locator('input[type="password"]').fill(TEST_USER.password);
-    
+
     // 点击登录按钮
     await page.locator('button[type="submit"], button:has-text("登录")').click();
-    
+
     // 验证跳转到首页或仪表盘
     await expect(page).toHaveURL(/\/(dashboard|home|$)/);
   });
@@ -43,10 +43,10 @@ test.describe('登录流程', () => {
     // 输入用户名和错误密码
     await page.locator('input[placeholder*="用户名"], input[type="text"]').first().fill(TEST_USER.username);
     await page.locator('input[type="password"]').fill('wrong_password');
-    
+
     // 点击登录按钮
     await page.locator('button[type="submit"], button:has-text("登录")').click();
-    
+
     // 验证显示错误提示
     await expect(page.locator('.el-message--error, .error-message, [role="alert"]')).toBeVisible({ timeout: 5000 });
   });
@@ -54,10 +54,10 @@ test.describe('登录流程', () => {
   test('空用户名显示验证错误', async ({ page }) => {
     // 只输入密码，不输入用户名
     await page.locator('input[type="password"]').fill(TEST_USER.password);
-    
+
     // 点击登录按钮
     await page.locator('button[type="submit"], button:has-text("登录")').click();
-    
+
     // 验证显示验证错误
     await expect(page.locator('.el-form-item__error, .validation-error')).toBeVisible({ timeout: 3000 });
   });
@@ -65,20 +65,20 @@ test.describe('登录流程', () => {
   test('空密码显示验证错误', async ({ page }) => {
     // 只输入用户名，不输入密码
     await page.locator('input[placeholder*="用户名"], input[type="text"]').first().fill(TEST_USER.username);
-    
+
     // 点击登录按钮
     await page.locator('button[type="submit"], button:has-text("登录")').click();
-    
+
     // 验证显示验证错误
     await expect(page.locator('.el-form-item__error, .validation-error')).toBeVisible({ timeout: 3000 });
   });
 
   test('密码输入框支持显示/隐藏切换', async ({ page }) => {
     const passwordInput = page.locator('input[type="password"]');
-    
+
     // 初始状态为密码隐藏
     await expect(passwordInput).toHaveAttribute('type', 'password');
-    
+
     // 如果有显示/隐藏按钮，点击切换
     const toggleButton = page.locator('.el-input__suffix-inner .el-icon, [aria-label*="显示密码"]');
     if (await toggleButton.isVisible()) {
@@ -93,10 +93,10 @@ test.describe('登录流程', () => {
     await page.locator('input[placeholder*="用户名"], input[type="text"]').first().fill(TEST_USER.username);
     await page.locator('input[type="password"]').fill(TEST_USER.password);
     await page.locator('button[type="submit"], button:has-text("登录")').click();
-    
+
     // 等待登录成功
     await expect(page).toHaveURL(/\/(dashboard|home|$)/, { timeout: 10000 });
-    
+
     // 查找并点击登出按钮
     const logoutButton = page.locator('text=退出, text=登出, [aria-label*="logout"]');
     if (await logoutButton.isVisible()) {

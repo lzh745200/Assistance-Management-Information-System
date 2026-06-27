@@ -1,10 +1,8 @@
 import pytest
 import os
 import hashlib
-from unittest.mock import patch, MagicMock, PropertyMock, mock_open
 from pathlib import Path
 import tempfile
-import shutil
 
 
 # =========== ensure_dir ===========

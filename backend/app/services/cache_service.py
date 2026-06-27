@@ -244,12 +244,13 @@ def cache_key(*args, **kwargs) -> str:
             key_parts.append(str(arg))
         else:
             # 对于复杂对象，使用哈希
-            key_parts.append(hashlib.md5(json.dumps(arg, sort_keys=True).encode()).hexdigest())
+            key_parts.append(hashlib.md5(json.dumps(arg, sort_keys=True).encode(), usedforsecurity=False).hexdigest())
 
     # 添加关��字参数
     if kwargs:
         sorted_kwargs = sorted(kwargs.items())
-        key_parts.append(hashlib.md5(json.dumps(sorted_kwargs, sort_keys=True).encode()).hexdigest())
+        raw = hashlib.md5(json.dumps(sorted_kwargs, sort_keys=True).encode(), usedforsecurity=False)
+        key_parts.append(raw.hexdigest())
 
     return ":".join(key_parts)
 

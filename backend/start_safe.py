@@ -7,7 +7,6 @@
 import os
 import sys
 import time
-import signal
 import traceback
 from pathlib import Path
 
@@ -127,7 +126,6 @@ def initialize_database():
         print("[INFO] 正在初始化数据库...")
         from app.core.database import engine
         from app.models.base import Base
-        import app.models  # 导入所有模型
 
         Base.metadata.create_all(bind=engine)
         print("[OK] 数据库初始化完成")
@@ -171,7 +169,7 @@ def check_dependencies():
         print(f"[INFO] 请运行: pip install {' '.join(missing)}")
         return False
 
-    print(f"[OK] 所有依赖包已安装")
+    print("[OK] 所有依赖包已安装")
     return True
 
 def check_config_file():
@@ -290,10 +288,10 @@ def start_server():
         host = os.getenv('HOST', '0.0.0.0')
         port = int(os.getenv('PORT', '8000'))
 
-        print(f"\n[INFO] 正在启动服务器...")
+        print("\n[INFO] 正在启动服务器...")
         print(f"[INFO] 地址: http://{host}:{port}")
         print(f"[INFO] API文档: http://{host}:{port}/docs")
-        print(f"[INFO] 按 Ctrl+C 停止服务\n")
+        print("[INFO] 按 Ctrl+C 停止服务\n")
 
         # 配置uvicorn
         config = uvicorn.Config(

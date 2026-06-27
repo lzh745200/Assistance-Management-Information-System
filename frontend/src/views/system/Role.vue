@@ -112,8 +112,16 @@
       <el-table v-loading="loadingUsers" :data="roleUsers" border stripe>
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="username" label="用户名" min-width="120" />
-        <el-table-column prop="real_name" label="姓名" min-width="100" />
-        <el-table-column prop="email" label="邮箱" min-width="150" />
+        <el-table-column prop="real_name" label="姓名" min-width="100">
+          <template #default="{ row }">
+            {{ ds(row.real_name, 'name') }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="email" label="邮箱" min-width="150">
+          <template #default="{ row }">
+            {{ ds(row.email, 'email') }}
+          </template>
+        </el-table-column>
         <el-table-column prop="is_active" label="状态" width="80">
           <template #default="{ row }">
             <el-tag :type="row.is_active ? 'success' : 'info'" size="small">
@@ -169,6 +177,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, ElTree } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import { useDesensitize } from '@/composables/useDesensitize'
 import request from '@/api/request'
 
 interface RoleItem {
@@ -199,6 +208,8 @@ interface TreeNode {
   label: string
   children?: TreeNode[]
 }
+
+const { ds } = useDesensitize()
 
 const searchForm = reactive({
   name: '',

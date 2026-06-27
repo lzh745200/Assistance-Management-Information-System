@@ -1,4 +1,3 @@
-import pytest
 def test_api_000(auth_client):r=auth_client.get("/api/v1/system/health");assert r.status_code in(200,201,204,400,401,403,404,405,422)
 def test_api_001(auth_client):r=auth_client.get("/api/v1/system/status");assert r.status_code in(200,201,204,400,401,403,404,405,422)
 def test_api_002(auth_client):r=auth_client.get("/api/v1/system/info");assert r.status_code in(200,201,204,400,401,403,404,405,422)

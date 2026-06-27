@@ -18,18 +18,15 @@ sys.modules["app.api.v1.data.dashboard"] = _dash_mod
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.api.v1.data_scope import DataScope, get_data_scope
-from app.api.v1.school import router as school_router
 from app.core.database import get_db
 from app.core.errors import AppError
 from app.core.security import get_current_user
 from app.models import Base
 from app.models.school import (
-    ProjectPhase,
-    ScholarshipStatus,
     ScholarshipStudent,
     School,
     SchoolAttachment,

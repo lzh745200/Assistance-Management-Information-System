@@ -493,8 +493,8 @@ class QueryOptimizer:
 
                 # 获取行数
                 try:
-                    count_result = db.execute(  # nosec B608 — safe_pattern 白名单已防御
-                        text(f"SELECT COUNT(*) FROM [{table_name}]"))
+                    count_result = db.execute(
+                        text(f"SELECT COUNT(*) FROM [{table_name}]"))  # nosec B608
                     row_count = count_result.scalar()
                 except Exception:
                     row_count = 0

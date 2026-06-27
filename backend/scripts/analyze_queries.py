@@ -190,4 +190,3 @@ if __name__ == "__main__":
     analyze_query_plans()
     check_table_indexes()
     generate_index_recommendations()
-

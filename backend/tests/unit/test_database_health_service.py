@@ -5,9 +5,6 @@
 import pytest
 import tempfile
 import sqlite3
-import threading
-import time
-from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

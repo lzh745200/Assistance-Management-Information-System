@@ -2,10 +2,8 @@
 完整测试 - app.services.resource_limiter
 覆盖率目标: 100%
 """
-import pytest
 import time
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from datetime import datetime
 
 class TestRateLimit:
     """测试 RateLimit 数据类"""

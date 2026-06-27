@@ -1,12 +1,12 @@
 /**
  * Property Test: Auth State Persistence Round-Trip
- * 
+ *
  * Feature: frontend-architecture-enhancement
  * Property 1: 认证状态持久化往返一致性
- * 
+ *
  * 对于任意有效的用户认证信息，将其设置到AuthStore后，
  * 从localStorage恢复应产生等价的认证状态。
- * 
+ *
  * 验证: 需求 1.5
  */
 
@@ -57,16 +57,16 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Auth state per
           setActivePinia(createPinia())
           const store = useAuthStore()
           localStorage.clear()
-          
+
           // Act: 设置用户并持久化
           store.setUser(user as User)
           store.persist()
-          
+
           // 创建新的store实例并恢复
           setActivePinia(createPinia())
           const newStore = useAuthStore()
           newStore.restore()
-          
+
           // Assert: 验证用户数据一致
           expect(newStore.user).toEqual(user)
         }
@@ -85,17 +85,17 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Auth state per
           setActivePinia(createPinia())
           const store = useAuthStore()
           localStorage.clear()
-          
+
           // Act: 设置token并持久化
           store.setToken(token, expiresIn)
           const originalExpiry = store.tokenExpiry
           store.persist()
-          
+
           // 创建新的store实例并恢复
           setActivePinia(createPinia())
           const newStore = useAuthStore()
           newStore.restore()
-          
+
           // Assert: 验证token一致
           expect(newStore.token).toEqual(token)
           expect(newStore.tokenExpiry).toEqual(originalExpiry)
@@ -114,16 +114,16 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Auth state per
           setActivePinia(createPinia())
           const store = useAuthStore()
           localStorage.clear()
-          
+
           // Act: 设置刷新token并持久化
           store.setRefreshToken(refreshToken)
           store.persist()
-          
+
           // 创建新的store实例并恢复
           setActivePinia(createPinia())
           const newStore = useAuthStore()
           newStore.restore()
-          
+
           // Assert: 验证刷新token一致
           expect(newStore.refreshToken).toEqual(refreshToken)
         }
@@ -144,26 +144,26 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Auth state per
           setActivePinia(createPinia())
           const store = useAuthStore()
           localStorage.clear()
-          
+
           // Act: 设置完整认证状态
           store.setUser(user as User)
           store.setToken(token, expiresIn)
           store.setRefreshToken(refreshToken)
-          
+
           const originalState: AuthState = {
             user: store.user,
             token: store.token,
             refreshToken: store.refreshToken,
             tokenExpiry: store.tokenExpiry
           }
-          
+
           store.persist()
-          
+
           // 创建新的store实例并恢复
           setActivePinia(createPinia())
           const newStore = useAuthStore()
           newStore.restore()
-          
+
           // Assert: 验证完整状态一致
           expect(newStore.state).toEqual(originalState)
         }
@@ -186,7 +186,7 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Auth state per
           setActivePinia(createPinia())
           const store = useAuthStore()
           localStorage.clear()
-          
+
           // Act: 根据标志设置状态
           if (hasUser) {
             store.setUser(user as User)
@@ -197,21 +197,21 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Auth state per
           if (hasRefreshToken && refreshToken) {
             store.setRefreshToken(refreshToken)
           }
-          
+
           const originalState: AuthState = {
             user: store.user,
             token: store.token,
             refreshToken: store.refreshToken,
             tokenExpiry: store.tokenExpiry
           }
-          
+
           store.persist()
-          
+
           // 创建新的store实例并恢复
           setActivePinia(createPinia())
           const newStore = useAuthStore()
           newStore.restore()
-          
+
           // Assert: 验证状态一致（包括null值）
           expect(newStore.state).toEqual(originalState)
         }
@@ -241,11 +241,11 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Permission che
           setActivePinia(createPinia())
           const store = useAuthStore()
           store.setUser(user as User)
-          
+
           // Act & Assert
           const userPermissions = user.permissions || []
           const isAdmin = user.role === 'admin'
-          
+
           if (isAdmin) {
             // Admin应该有所有权限
             expect(store.hasPermission(permissionToCheck)).toBe(true)
@@ -271,11 +271,11 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Permission che
           setActivePinia(createPinia())
           const store = useAuthStore()
           store.setUser(user as User)
-          
+
           // Act & Assert
           const userPermissions = user.permissions || []
           const isAdmin = user.role === 'admin'
-          
+
           if (isAdmin) {
             expect(store.hasAnyPermission(permissionsToCheck)).toBe(true)
           } else {
@@ -298,11 +298,11 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Permission che
           setActivePinia(createPinia())
           const store = useAuthStore()
           store.setUser(user as User)
-          
+
           // Act & Assert
           const userPermissions = user.permissions || []
           const isAdmin = user.role === 'admin'
-          
+
           if (isAdmin) {
             expect(store.hasAllPermissions(permissionsToCheck)).toBe(true)
           } else {
@@ -325,7 +325,7 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Permission che
           setActivePinia(createPinia())
           const store = useAuthStore()
           store.setUser(user as User)
-          
+
           // Act & Assert
           expect(store.hasRole(roleToCheck)).toBe(user.role === roleToCheck)
         }
@@ -344,7 +344,7 @@ describe('Feature: frontend-architecture-enhancement, Property 1: Permission che
           setActivePinia(createPinia())
           const store = useAuthStore()
           store.setUser(user as User)
-          
+
           // Act & Assert
           expect(store.hasAnyRole(rolesToCheck)).toBe(rolesToCheck.includes(user.role))
         }

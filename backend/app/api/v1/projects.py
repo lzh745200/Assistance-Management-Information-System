@@ -813,6 +813,111 @@ async def create_project(
     return {"id": project.id, "name": project.name, "code": project.code}
 
 
+# ── 项目更新辅助函数 ──
+
+
+def _convert_update_fields(update_data: dict) -> dict:
+    """日期和预算字段转换"""
+    for date_field in ("start_date", "end_date"):
+        if date_field in update_data and update_data[date_field]:
+            update_data[date_field] = date.fromisoformat(update_data[date_field])
+    if "budget" in update_data and update_data["budget"] is not None:
+        update_data["budget"] = Decimal(str(update_data["budget"]))
+    return update_data
+
+
+def _validate_update_dates(update_data: dict, project: Project) -> None:
+    """日期交叉验证"""
+    new_start = update_data.get("start_date", project.start_date)
+    new_end = update_data.get("end_date", project.end_date)
+    if new_start and new_end and new_end < new_start:
+        raise AppError.bad_request("结束日期不能早于开始日期")
+
+
+def _apply_project_changes(project: Project, update_data: dict) -> List[str]:
+    """应用字段变更，返回变更的字段列表"""
+    changed_fields = []
+    for key, value in update_data.items():
+        try:
+            old = getattr(project, key)
+        except AttributeError:
+            logger.warning(f"跳过未知字段 '{key}' (模型无此列)")
+            continue
+        if old != value:
+            changed_fields.append(key)
+        setattr(project, key, value)
+    return changed_fields
+
+
+def _handle_status_change_event(db: Session, project_id: int, old_status: str, new_status: str, current_user) -> None:
+    """触发经费阶段联动事件"""
+    from app.services.fund_event_handler import on_project_status_change
+
+    operator = getattr(current_user, "full_name", None) or getattr(current_user, "username", "")
+    on_project_status_change(db, project_id, old_status, new_status, operator)
+
+
+async def _log_project_update_audit(
+    db: Session,
+    request: Request,
+    project: Project,
+    project_id: int,
+    changed_fields: List[str],
+    old_project_data: dict,
+    current_user,
+) -> None:
+    """记录审计日志、Diff 留痕和工作日志"""
+    audit = AuditLogService(db)
+    await audit.log(
+        db=db,
+        action="update_project",
+        user_id=getattr(current_user, "id", None),
+        username=getattr(current_user, "username", None),
+        resource="project",
+        resource_id=str(project_id),
+        details=f"更新字段: {', '.join(changed_fields)}",
+        ip_address=get_client_ip(request),
+    )
+    try:
+        audit_log = AuditEnhancementService.create_audit_log(
+            db,
+            AuditAction.UPDATE,
+            current_user,
+            "project",
+            str(project_id),
+            detail=f"更新项目: {project.name}",
+        )
+        AuditEnhancementService.record_changes(
+            db,
+            audit_log,
+            old_project_data,
+            _project_to_diff_dict(project),
+            "update",
+            _PROJECT_KEY_FIELDS,
+        )
+    except Exception as diff_err:
+        logger.warning(f"项目更新 Diff 留痕失败: {diff_err}")
+    write_work_log(
+        db,
+        "project",
+        "update",
+        project.id,
+        project.name,
+        user_id=current_user.id,
+        username=getattr(current_user, "username", "系统"),
+    )
+
+
+def _invalidate_project_cache() -> None:
+    """失效仪表盘缓存"""
+    try:
+        from app.api.v1.data.dashboard import invalidate_dashboard_cache
+
+        invalidate_dashboard_cache()
+    except Exception:
+        logger.debug("仪表盘缓存失效失败")
+
+
 @router.put("/{project_id}", summary="更新项目")
 @handle_db_errors_async
 async def update_project(
@@ -825,107 +930,35 @@ async def update_project(
     """更新项目。进度 0-100，状态仅限有效枚举值。"""
     project = _get_project_or_404(db, project_id)
 
-    # 权限检查：管理员或项目创建者
     if not _can_modify_project(project, current_user):
         raise AppError.forbidden("仅管理员或项目创建者可更新项目")
 
-    # 记录更新前的旧值（用于 Diff 留痕）
     old_project_data = _project_to_diff_dict(project)
-
     update_data = data.model_dump(exclude_unset=True)
 
-    # 日期字段转换
-    for date_field in ("start_date", "end_date"):
-        if date_field in update_data and update_data[date_field]:
-            update_data[date_field] = date.fromisoformat(update_data[date_field])
+    update_data = _convert_update_fields(update_data)
+    _validate_update_dates(update_data, project)
 
-    if "budget" in update_data and update_data["budget"] is not None:
-        update_data["budget"] = Decimal(str(update_data["budget"]))
-
-    # 日期交叉验证
-    new_start = update_data.get("start_date", project.start_date)
-    new_end = update_data.get("end_date", project.end_date)
-    if new_start and new_end and new_end < new_start:
-        raise AppError.bad_request("结束日期不能早于开始日期")
-
-    # 记录旧状态用于事件触发
     old_status = project.status
-
-    changed_fields = []
-    for key, value in update_data.items():
-        try:
-            old = getattr(project, key)
-        except AttributeError:
-            logger.warning(f"跳过未知字段 '{key}' (模型无此列)")
-            continue
-        if old != value:
-            changed_fields.append(key)
-        setattr(project, key, value)
+    changed_fields = _apply_project_changes(project, update_data)
 
     if "status" in changed_fields and old_status != project.status:
         try:
-            from app.services.fund_event_handler import on_project_status_change
-
-            operator = getattr(current_user, "full_name", None) or getattr(current_user, "username", "")
-            on_project_status_change(db, project_id, old_status, project.status, operator)
+            _handle_status_change_event(db, project_id, old_status, project.status, current_user)
         except Exception as evt_err:
             db.rollback()
             logger.error(f"经费阶段联动失败，项目更新已回滚: {evt_err}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"项目更新失败: 经费阶段联动异常 ({evt_err})")
 
     if changed_fields:
-        audit = AuditLogService(db)
-        await audit.log(
-            db=db,
-            action="update_project",
-            user_id=getattr(current_user, "id", None),
-            username=getattr(current_user, "username", None),
-            resource="project",
-            resource_id=str(project_id),
-            details=f"更新字段: {', '.join(changed_fields)}",
-            ip_address=get_client_ip(request),
-        )
-
-        # Diff 留痕
-        try:
-            audit_log = AuditEnhancementService.create_audit_log(
-                db,
-                AuditAction.UPDATE,
-                current_user,
-                "project",
-                str(project_id),
-                detail=f"更新项目: {project.name}",
-            )
-            AuditEnhancementService.record_changes(
-                db,
-                audit_log,
-                old_project_data,
-                _project_to_diff_dict(project),
-                "update",
-                _PROJECT_KEY_FIELDS,
-            )
-        except Exception as diff_err:
-            logger.warning(f"项目更新 Diff 留痕失败: {diff_err}")
-
-        write_work_log(
-            db,
-            "project",
-            "update",
-            project.id,
-            project.name,
-            user_id=current_user.id,
-            username=getattr(current_user, "username", "系统"),
+        await _log_project_update_audit(
+            db, request, project, project_id,
+            changed_fields, old_project_data, current_user,
         )
 
     db.commit()
     db.refresh(project)
-
-    try:
-        from app.api.v1.data.dashboard import invalidate_dashboard_cache
-
-        invalidate_dashboard_cache()
-    except Exception:
-        logger.debug("仪表盘缓存失效失败")
+    _invalidate_project_cache()
 
     return {"message": "更新成功", "data": _project_to_dict(project)}
 
@@ -1523,6 +1556,147 @@ _FUND_SOURCE_MAP = {
 }
 
 
+# ── 项目导入辅助函数 ──
+
+
+async def _check_import_rate_limit(user_id: int, client_ip: str) -> None:
+    """导入速率限制：每用户每小时最多 5 次"""
+    user_key = f"import_projects:{user_id}:{client_ip}"
+    is_allowed = await check_rate_limit(key=user_key, limit=5, window=3600)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="导入操作过于频繁，请稍后再试（每小时最多 5 次）",
+        )
+
+
+async def _parse_import_excel(file: UploadFile):
+    """验证文件类型并解析 Excel，返回 worksheet"""
+    if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="请上传 .xlsx 或 .xls 格式文件")
+    try:
+        import openpyxl
+
+        content = await file.read()
+        wb = openpyxl.load_workbook(BytesIO(content), data_only=True)
+        return wb.active
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Excel 解析失败: {e}")
+
+
+def _detect_import_headers(ws):
+    """解析表头，返回 (header_row_number, headers_dict)"""
+    for ri, row in enumerate(ws.iter_rows(min_row=1, values_only=True), 1):
+        cells = [str(c).strip() if c else "" for c in row]
+        matched = {}
+        for ci, val in enumerate(cells):
+            if val in _COL_TO_FIELD:
+                matched[ci] = _COL_TO_FIELD[val]
+        if len(matched) >= 3:
+            return ri, matched
+    return None, {}
+
+
+def _extract_row_data(row: tuple, headers: dict) -> dict:
+    """从 Excel 行中提取字段数据"""
+    data = {}
+    for ci, field in headers.items():
+        val = row[ci] if ci < len(row) else None
+        if val is not None and isinstance(val, str):
+            val = val.strip()
+        if val is not None and val != "":
+            data[field] = val
+    return data
+
+
+def _build_import_project(db: Session, data: dict, current_user) -> Project:
+    """根据提取的数据构建 Project 对象"""
+    proj_type = _TYPE_MAP.get(data.get("type", ""), data.get("type", "other")) or "other"
+    proj_status = _STATUS_MAP.get(data.get("status", ""), data.get("status", "draft")) or "draft"
+    urgency = _URGENCY_MAP.get(data.get("urgency_level", ""), data.get("urgency_level", "normal")) or "normal"
+
+    code = data.get("code") or f"PRJ-{datetime.now().strftime('%Y%m%d')}-{_uuid.uuid4().hex[:6].upper()}"
+    if db.query(Project).filter(Project.code == code).first():
+        code = f"PRJ-{datetime.now().strftime('%Y%m%d')}-{_uuid.uuid4().hex[:6].upper()}"
+
+    budget_val = data.get("budget")
+    invested_val = data.get("invested_amount")
+    progress_val = data.get("progress")
+
+    return Project(
+        name=data["name"],
+        code=code,
+        type=proj_type,
+        status=proj_status,
+        description=data.get("description"),
+        objectives=data.get("objectives"),
+        budget=(Decimal(str(budget_val)) if budget_val is not None else Decimal("0")),
+        invested_amount=(Decimal(str(invested_val)) if invested_val is not None else Decimal("0")),
+        progress=int(float(progress_val)) if progress_val is not None else 0,
+        start_date=(date.fromisoformat(str(data["start_date"])[:10]) if data.get("start_date") else None),
+        end_date=(date.fromisoformat(str(data["end_date"])[:10]) if data.get("end_date") else None),
+        responsible_unit=data.get("responsible_unit"),
+        responsible_person=data.get("responsible_person"),
+        contact_phone=(str(data.get("contact_phone", "")) if data.get("contact_phone") else None),
+        urgency_level=urgency,
+        contract_number=data.get("contract_number"),
+        fund_manager=data.get("fund_manager"),
+        fund_usage_plan=data.get("fund_usage_plan"),
+        fund_source=(
+            _FUND_SOURCE_MAP.get(data.get("fund_source", ""), data.get("fund_source"))
+            if data.get("fund_source")
+            else None
+        ),
+        payer_account_name=data.get("payer_account_name"),
+        payer_account_number=(
+            str(data.get("payer_account_number", "")) if data.get("payer_account_number") else None
+        ),
+        payer_bank=data.get("payer_bank"),
+        payer_handler=data.get("payer_handler"),
+        payer_contact=(str(data.get("payer_contact", "")) if data.get("payer_contact") else None),
+        payee_account_name=data.get("payee_account_name"),
+        payee_bank=data.get("payee_bank"),
+        payee_handler=data.get("payee_handler"),
+        payee_contact=(str(data.get("payee_contact", "")) if data.get("payee_contact") else None),
+        is_delayed=str(data.get("is_delayed", "")).strip() == "是",
+        delay_reason=data.get("delay_reason"),
+        expected_benefits=data.get("expected_benefits"),
+        achievements=data.get("achievements"),
+        tags=data.get("tags"),
+        remarks=data.get("remarks"),
+        created_by=getattr(current_user, "id", None),
+        organization_id=getattr(current_user, "organization_id", None),
+    )
+
+
+def _process_import_rows(db: Session, ws, header_row: int, headers: dict, current_user) -> tuple:
+    """逐行解析数据并创建项目，返回 (created, failed, errors)"""
+    created = 0
+    failed = 0
+    errors = []
+    example_hints = {"XX村饮水安全工程", "某某帮扶单位", "张三"}
+
+    for ri, row in enumerate(ws.iter_rows(min_row=header_row + 1, values_only=True), header_row + 1):
+        if not row or all(c is None or (isinstance(c, str) and not c.strip()) for c in row):
+            continue
+        data = _extract_row_data(row, headers)
+        if data.get("name") in example_hints or data.get("responsible_unit") in example_hints:
+            continue
+        if not data.get("name"):
+            continue
+        try:
+            project = _build_import_project(db, data, current_user)
+            db.add(project)
+            db.flush()
+            created += 1
+        except Exception as e:
+            failed += 1
+            errors.append({"row": ri, "name": data.get("name", ""), "error": str(e)})
+            logger.warning(f"导入第{ri}行失败: {e}")
+
+    return created, failed, errors
+
+
 @router.post("/import", summary="批量导入帮扶项目")
 async def import_projects(
     file: UploadFile = File(..., description="Excel文件"),
@@ -1532,140 +1706,16 @@ async def import_projects(
     db: Session = Depends(get_db),
 ):
     """批量导入帮扶项目数据。"""
-    # 导入速率限制：每用户每小时最多 5 次
     client_ip = get_client_ip(request) if request else "unknown"
-    user_key = f"import_projects:{current_user.id}:{client_ip}"
-    is_allowed = await check_rate_limit(
-        key=user_key,
-        limit=5,
-        window=3600,
-    )
-    if not is_allowed:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="导入操作过于频繁，请稍后再试（每小时最多 5 次）",
-        )
+    await _check_import_rate_limit(current_user.id, client_ip)
 
-    if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
-        raise HTTPException(status_code=400, detail="请上传 .xlsx 或 .xls 格式文件")
-
-    try:
-        import openpyxl
-
-        content = await file.read()
-        wb = openpyxl.load_workbook(BytesIO(content), data_only=True)
-        ws = wb.active
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Excel 解析失败: {e}")
-
-    # 解析表头（跳过标题行，找到列头行）
-    header_row = None
-    headers = {}
-    for ri, row in enumerate(ws.iter_rows(min_row=1, values_only=True), 1):
-        cells = [str(c).strip() if c else "" for c in row]
-        # 列头行特征：包含 "项目名称" 字样
-        matched = {}
-        for ci, val in enumerate(cells):
-            if val in _COL_TO_FIELD:
-                matched[ci] = _COL_TO_FIELD[val]
-        if len(matched) >= 3:
-            header_row = ri
-            headers = matched
-            break
+    ws = await _parse_import_excel(file)
+    header_row, headers = _detect_import_headers(ws)
 
     if not header_row:
         raise HTTPException(status_code=400, detail="未找到有效表头，请使用系统提供的模板")
 
-    # 解析数据行
-    created = 0
-    failed = 0
-    errors = []
-    example_hints = {"XX村饮水安全工程", "某某帮扶单位", "张三"}
-
-    for ri, row in enumerate(ws.iter_rows(min_row=header_row + 1, values_only=True), header_row + 1):
-        if not row or all(c is None or (isinstance(c, str) and not c.strip()) for c in row):
-            continue
-
-        # 提取字段
-        data = {}
-        for ci, field in headers.items():
-            val = row[ci] if ci < len(row) else None
-            if val is not None and isinstance(val, str):
-                val = val.strip()
-            if val is not None and val != "":
-                data[field] = val
-
-        # 跳过示例行
-        if data.get("name") in example_hints or data.get("responsible_unit") in example_hints:
-            continue
-        if not data.get("name"):
-            continue
-
-        try:
-            # 转换枚举值
-            proj_type = _TYPE_MAP.get(data.get("type", ""), data.get("type", "other")) or "other"
-            proj_status = _STATUS_MAP.get(data.get("status", ""), data.get("status", "draft")) or "draft"
-            urgency = _URGENCY_MAP.get(data.get("urgency_level", ""), data.get("urgency_level", "normal")) or "normal"
-
-            code = data.get("code") or f"PRJ-{datetime.now().strftime('%Y%m%d')}-{_uuid.uuid4().hex[:6].upper()}"
-            if db.query(Project).filter(Project.code == code).first():
-                code = f"PRJ-{datetime.now().strftime('%Y%m%d')}-{_uuid.uuid4().hex[:6].upper()}"
-
-            budget_val = data.get("budget")
-            invested_val = data.get("invested_amount")
-            progress_val = data.get("progress")
-
-            project = Project(
-                name=data["name"],
-                code=code,
-                type=proj_type,
-                status=proj_status,
-                description=data.get("description"),
-                objectives=data.get("objectives"),
-                budget=(Decimal(str(budget_val)) if budget_val is not None else Decimal("0")),
-                invested_amount=(Decimal(str(invested_val)) if invested_val is not None else Decimal("0")),
-                progress=int(float(progress_val)) if progress_val is not None else 0,
-                start_date=(date.fromisoformat(str(data["start_date"])[:10]) if data.get("start_date") else None),
-                end_date=(date.fromisoformat(str(data["end_date"])[:10]) if data.get("end_date") else None),
-                responsible_unit=data.get("responsible_unit"),
-                responsible_person=data.get("responsible_person"),
-                contact_phone=(str(data.get("contact_phone", "")) if data.get("contact_phone") else None),
-                urgency_level=urgency,
-                contract_number=data.get("contract_number"),
-                fund_manager=data.get("fund_manager"),
-                fund_usage_plan=data.get("fund_usage_plan"),
-                fund_source=(
-                    _FUND_SOURCE_MAP.get(data.get("fund_source", ""), data.get("fund_source"))
-                    if data.get("fund_source")
-                    else None
-                ),
-                payer_account_name=data.get("payer_account_name"),
-                payer_account_number=(
-                    str(data.get("payer_account_number", "")) if data.get("payer_account_number") else None
-                ),
-                payer_bank=data.get("payer_bank"),
-                payer_handler=data.get("payer_handler"),
-                payer_contact=(str(data.get("payer_contact", "")) if data.get("payer_contact") else None),
-                payee_account_name=data.get("payee_account_name"),
-                payee_bank=data.get("payee_bank"),
-                payee_handler=data.get("payee_handler"),
-                payee_contact=(str(data.get("payee_contact", "")) if data.get("payee_contact") else None),
-                is_delayed=str(data.get("is_delayed", "")).strip() == "是",
-                delay_reason=data.get("delay_reason"),
-                expected_benefits=data.get("expected_benefits"),
-                achievements=data.get("achievements"),
-                tags=data.get("tags"),
-                remarks=data.get("remarks"),
-                created_by=getattr(current_user, "id", None),
-                organization_id=getattr(current_user, "organization_id", None),
-            )
-            db.add(project)
-            db.flush()
-            created += 1
-        except Exception as e:
-            failed += 1
-            errors.append({"row": ri, "name": data.get("name", ""), "error": str(e)})
-            logger.warning(f"导入第{ri}行失败: {e}")
+    created, failed, errors = _process_import_rows(db, ws, header_row, headers, current_user)
 
     try:
         db.commit()

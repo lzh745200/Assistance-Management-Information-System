@@ -1,6 +1,6 @@
 """数据验证服务单元测试 (100% coverage)"""
 import pytest
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import patch
 
 
 class TestValidationErrorCode:

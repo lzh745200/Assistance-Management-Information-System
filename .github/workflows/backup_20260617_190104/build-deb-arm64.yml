@@ -18,7 +18,7 @@ jobs:
   build-arm64-deb:
     name: 构建 ARM64 .deb 安装包
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 检出代码
         uses: actions/checkout@v4

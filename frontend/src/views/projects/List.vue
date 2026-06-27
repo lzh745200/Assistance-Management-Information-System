@@ -173,7 +173,11 @@
             {{ row.budget?.toLocaleString() || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="responsible_person" label="负责人" width="100" />
+        <el-table-column prop="responsible_person" label="负责人" width="100">
+          <template #default="{ row }">
+            {{ ds(row.responsible_person, 'name') }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleView(row)">查看</el-button>
@@ -209,11 +213,13 @@ import { logger } from '@/utils/logger'
 
 import { ref, reactive, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage, ElMessageBox, ElTable } from 'element-plus'
 import { Plus, Download, Search, Upload, TrendCharts } from '@element-plus/icons-vue'
 import { projectApi, type Project } from '@/api/projects'
 
 const { pushSafe } = useRouterSafe()
+const { ds } = useDesensitize()
 const loading = ref(false)
 const selectedRows = ref<Project[]>([])
 const tableRef = ref<InstanceType<typeof ElTable> | null>(null)

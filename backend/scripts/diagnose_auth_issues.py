@@ -11,7 +11,6 @@ from app.core.database import SessionLocal, engine
 from app.core.token_blacklist import token_blacklist
 from app.core.token_manager import token_manager
 from sqlalchemy import text
-from jose import jwt
 
 def check_database():
     """检查数据库连接"""
@@ -122,8 +121,8 @@ def test_token_creation():
         access_token = tokens["access_token"]
         refresh_token = tokens["refresh_token"]
 
-        print(f"[OK] Access Token 创建成功")
-        print(f"[OK] Refresh Token 创建成功")
+        print("[OK] Access Token 创建成功")
+        print("[OK] Refresh Token 创建成功")
 
         # 解码验证
         access_payload = token_manager.decode_token(access_token, expected_type="access")

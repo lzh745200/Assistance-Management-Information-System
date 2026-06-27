@@ -7,8 +7,6 @@ Create Date: 2026-03-14 13:30:00.000000
 修复 supported_villages 表的外键级联删除问题
 SQLite 不支持直接修改外键约束,需要重建表
 """
-from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
