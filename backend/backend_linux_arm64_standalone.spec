@@ -15,7 +15,6 @@ a = Analysis(
     binaries=[],
     datas=[
         ('app/**/*.py', 'app'),
-        ('app/**/*.html', 'app'),
         ('app/data/*.json', 'app/data'),
         ('alembic/**/*.py', 'alembic'),
         ('alembic/**/*.mako', 'alembic'),
