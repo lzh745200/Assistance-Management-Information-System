@@ -16,6 +16,7 @@ a = Analysis(
     datas=[
         ('app/**/*.py', 'app'),
         ('app/**/*.html', 'app'),
+        ('app/data/*.json', 'app/data'),
         ('alembic/**/*.py', 'alembic'),
         ('alembic/**/*.mako', 'alembic'),
         ('alembic/versions/*.py', 'alembic/versions'),
@@ -59,14 +60,14 @@ a = Analysis(
         'PIL', 'PIL.Image', 'qrcode',
 
         # ── 中文处理 ──
-        'jieba', 'snownlp',
+        'jieba',
 
         # ── Web 工具 ──
         'bleach', 'email_validator', 'multipart', 'python_multipart',
         'httpx', 'aiofiles',
 
         # ── 日志与监控 ──
-        'structlog', 'prometheus_client',
+        'prometheus_client',
 
         # ── 文件类型检测 ──
         'magic',

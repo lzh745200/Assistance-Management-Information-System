@@ -19,11 +19,15 @@ WORKDIR /build
 
 # 先复制依赖文件（利用 Docker 层缓存）
 COPY frontend/package.json frontend/package-lock.json* ./frontend/
-RUN cd frontend && npm ci --legacy-peer-deps 2>&1 | tail -5
+RUN cd frontend && npm install --legacy-peer-deps --no-fund --no-audit > /tmp/npm-install.log 2>&1; \
+    code=$?; tail -20 /tmp/npm-install.log; \
+    if [ $code -ne 0 ]; then echo "ERROR: npm install 失败 (exit code $code)"; exit 1; fi
 
 # 复制前端源码并构建
 COPY frontend/ ./frontend/
-RUN cd frontend && npm run build 2>&1 | tail -10
+RUN cd frontend && npm run build > /tmp/npm-build.log 2>&1; \
+    code=$?; tail -20 /tmp/npm-build.log; \
+    if [ $code -ne 0 ]; then echo "ERROR: npm run build 失败 (exit code $code)"; exit 1; fi
 
 # 验证构建产物
 RUN test -f frontend/dist/index.html || (echo "ERROR: 前端构建失败，index.html 不存在" && exit 1)
@@ -60,15 +64,19 @@ RUN grep -v -E '^(prophet|cmdstanpy|stanio|scikit-learn|scipy|Scrapy|Twisted|mat
     echo "--- ARM64 requirements ---" && \
     wc -l requirements-arm64.txt
 
-# 安装 Python 依赖（使用清华镜像加速）
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    -r requirements-arm64.txt pyinstaller 2>&1 | tail -10
+# 安装 Python 依赖（使用默认 PyPI + 重试机制确保可靠性）
+RUN pip install --retries 3 --timeout 120 \
+    -r requirements-arm64.txt pyinstaller > /tmp/pip-install.log 2>&1; \
+    code=$?; tail -20 /tmp/pip-install.log; \
+    if [ $code -ne 0 ]; then echo "ERROR: pip install 失败 (exit code $code)"; exit 1; fi
 
 # 复制后端源码
 COPY backend/ .
 
 # PyInstaller 打包
-RUN pyinstaller --clean --noconfirm backend_linux_arm64_standalone.spec 2>&1 | tail -20
+RUN pyinstaller --clean --noconfirm backend_linux_arm64_standalone.spec > /tmp/pyinstaller.log 2>&1; \
+    code=$?; tail -30 /tmp/pyinstaller.log; \
+    if [ $code -ne 0 ]; then echo "ERROR: PyInstaller 打包失败 (exit code $code)"; exit 1; fi
 
 # 验证打包产物
 RUN test -d dist/assistance-management-backend || (echo "ERROR: PyInstaller 打包失败" && exit 1) && \
