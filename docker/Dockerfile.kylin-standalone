@@ -73,6 +73,19 @@ RUN pip install --retries 3 --timeout 120 \
 # 复制后端源码
 COPY backend/ .
 
+# 诊断：确认关键文件存在（避免 PyInstaller 因找不到文件而失败）
+RUN echo "=== 诊断 alembic 目录 ===" && \
+    ls -la alembic/ && \
+    echo "=== 诊断 alembic.ini ===" && \
+    test -f alembic.ini && echo "OK: alembic.ini 存在" || (echo "ERROR: alembic.ini 不存在" && exit 1) && \
+    echo "=== 诊断 script.py.mako ===" && \
+    test -f alembic/script.py.mako && echo "OK: script.py.mako 存在" || (echo "ERROR: script.py.mako 不存在" && exit 1) && \
+    echo "=== 诊断 app 目录 ===" && \
+    test -d app && echo "OK: app 目录存在" || (echo "ERROR: app 目录不存在" && exit 1) && \
+    echo "=== 诊断 start.py ===" && \
+    test -f start.py && echo "OK: start.py 存在" || (echo "ERROR: start.py 不存在" && exit 1) && \
+    echo "=== 所有关键文件检查通过 ==="
+
 # PyInstaller 打包
 RUN pyinstaller --clean --noconfirm backend_linux_arm64_standalone.spec > /tmp/pyinstaller.log 2>&1; \
     code=$?; tail -30 /tmp/pyinstaller.log; \
@@ -80,7 +93,11 @@ RUN pyinstaller --clean --noconfirm backend_linux_arm64_standalone.spec > /tmp/p
 
 # 验证打包产物
 RUN test -d dist/assistance-management-backend || (echo "ERROR: PyInstaller 打包失败" && exit 1) && \
+    echo "=== 后端打包产物 ===" && \
     du -sh dist/assistance-management-backend && \
+    echo "=== 验证 alembic 数据文件已打包 ===" && \
+    (test -f dist/assistance-management-backend/alembic/script.py.mako && echo "OK: mako 模板已打包" || echo "WARN: mako 模板未找到") && \
+    (test -f dist/assistance-management-backend/alembic.ini && echo "OK: alembic.ini 已打包" || echo "WARN: alembic.ini 未找到") && \
     echo "后端打包成功"
 
 
@@ -133,7 +150,7 @@ RUN chmod 755 DEBIAN/postinst DEBIAN/prerm DEBIAN/postrm && \
     chmod 755 opt/assistance-management-system/scripts/start-kylin.sh && \
     chmod 755 opt/assistance-management-system/backend/assistance-management-backend 2>/dev/null || true
 
-# 生成 DEBIAN/control
+# 生成 DEBIAN/control — 无外部依赖（完全自包含，libmagic/libsqlite3 已打包进后端）
 RUN echo "Package: assistance-management-system" > DEBIAN/control && \
     echo "Version: ${VERSION}" >> DEBIAN/control && \
     echo "Architecture: arm64" >> DEBIAN/control && \
@@ -141,17 +158,23 @@ RUN echo "Package: assistance-management-system" > DEBIAN/control && \
     echo "Section: admin" >> DEBIAN/control && \
     echo "Priority: optional" >> DEBIAN/control && \
     echo "Installed-Size: $(du -sk opt/ | cut -f1)" >> DEBIAN/control && \
-    echo "Depends: libmagic1, libsqlite3-0, ca-certificates, curl" >> DEBIAN/control && \
+    echo "Depends: " >> DEBIAN/control && \
     echo "Recommends: firefox-esr | chromium | chromium-browser" >> DEBIAN/control && \
     echo "Description: 军队全面推进乡村振兴工作综合管理平台" >> DEBIAN/control && \
     echo " 完全单机版，适用于麒麟 V10 ARM64 系统。" >> DEBIAN/control && \
-    echo " 集成村庄管理、项目跟踪、资金监管、数据分析等功能。" >> DEBIAN/control
+    echo " 集成村庄管理、项目跟踪、资金监管、数据分析等功能。" >> DEBIAN/control && \
+    echo " 无外部依赖，安装即用。" >> DEBIAN/control
 
 # 构建 DEB 包
 RUN mkdir -p /output && \
     dpkg-deb --build --root-owner-group . /output/assistance-management-system_${VERSION}_arm64.deb && \
     echo "=== DEB 包构建完成 ===" && \
-    ls -lh /output/*.deb
+    ls -lh /output/*.deb && \
+    echo "=== 验证 DEB 包结构 ===" && \
+    dpkg-deb -I /output/assistance-management-system_${VERSION}_arm64.deb && \
+    echo "=== 验证关键文件存在 ===" && \
+    dpkg-deb -c /output/assistance-management-system_${VERSION}_arm64.deb | grep -E "assistance-management-backend$|start-kylin.sh|\.desktop|\.service|kylin.env" | head -10 && \
+    echo "=== DEB 包验证通过 ==="
 
 
 # ── Stage 4: 输出层（仅导出 DEB 文件）──

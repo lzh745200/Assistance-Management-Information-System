@@ -5,75 +5,105 @@
 
 构建命令:
   pyinstaller --clean --noconfirm backend_linux_arm64_standalone.spec
+
+datas 使用目录收集方式（非 glob），避免 PyInstaller 6.21 glob 解析问题。
+参照 backend_linux_arm64.spec 的稳健写法。
 """
 
+import os
+import glob
+from PyInstaller.utils.hooks import collect_submodules
+
 block_cipher = None
+backend_dir = os.path.dirname(os.path.abspath(SPEC))
+
+# ── 数据文件：直接收集整个目录，避免 glob 解析问题 ──
+datas = [
+    # 收集整个 app 目录（含 .py / .json / .html 等所有数据文件）
+    (os.path.join(backend_dir, 'app'), 'app'),
+    # 收集整个 alembic 目录（含 env.py / script.py.mako / versions/*.py）
+    (os.path.join(backend_dir, 'alembic'), 'alembic'),
+    # alembic 配置文件
+    (os.path.join(backend_dir, 'alembic.ini'), '.'),
+]
+
+# ── 二进制文件：手动收集 libmagic 共享库（确保离线可用） ──
+binaries = []
+for libmagic_path in glob.glob('/usr/lib/*/libmagic.so*') + glob.glob('/lib/*/libmagic.so*'):
+    binaries.append((libmagic_path, 'lib'))
+    print(f"[SPEC] 收集 libmagic: {libmagic_path}")
+# 同时收集 libsqlite3（虽然 Python 自带，但确保系统库可用）
+for libsqlite_path in glob.glob('/usr/lib/*/libsqlite3.so*') + glob.glob('/lib/*/libsqlite3.so*'):
+    binaries.append((libsqlite_path, 'lib'))
+    print(f"[SPEC] 收集 libsqlite3: {libsqlite_path}")
+
+hiddenimports = [
+    # ── FastAPI + Starlette + Uvicorn ──
+    'fastapi', 'starlette', 'uvicorn',
+    'uvicorn.logging', 'uvicorn.loops', 'uvicorn.loops.auto',
+    'uvicorn.protocols', 'uvicorn.protocols.http',
+    'uvicorn.protocols.http.auto', 'uvicorn.protocols.websockets',
+    'uvicorn.protocols.websockets.auto', 'uvicorn.lifespan',
+    'uvicorn.lifespan.on',
+    'httptools', 'websockets', 'watchfiles',
+
+    # ── SQLAlchemy + SQLite + Alembic ──
+    'sqlalchemy', 'sqlalchemy.dialects.sqlite',
+    'sqlalchemy.ext.asyncio', 'aiosqlite',
+    'alembic', 'alembic.config', 'alembic.command',
+    'alembic.script', 'alembic.runtime.environment',
+    'alembic.migration', 'alembic.autogenerate',
+
+    # ── 应用模块（确保所有子模块被扫描） ──
+    'app.models', 'app.api', 'app.services', 'app.core',
+    'app.middleware', 'app.utils', 'app.schemas',
+    'app.api.v1', 'app.static_files',
+
+    # ── 认证与安全 ──
+    'jose', 'jose.jwt', 'bcrypt', 'passlib', 'passlib.hash',
+    'pyotp', 'cryptography', 'cryptography.hazmat',
+
+    # ── 调度与缓存 ──
+    'apscheduler', 'apscheduler.schedulers.asyncio',
+    'apscheduler.triggers.cron', 'apscheduler.triggers.interval',
+    'diskcache',
+
+    # ── 数据处理 ──
+    'pandas', 'numpy', 'openpyxl', 'xlsxwriter',
+
+    # ── 文档生成 ──
+    'reportlab', 'docx', 'pptx', 'mammoth',
+
+    # ── 图像处理 ──
+    'PIL', 'PIL.Image', 'qrcode',
+
+    # ── 中文处理 ──
+    'jieba',
+
+    # ── Web 工具 ──
+    'email_validator', 'multipart', 'python_multipart',
+    'httpx', 'aiofiles',
+
+    # ── 日志与监控 ──
+    'prometheus_client',
+
+    # ── 文件类型检测 ──
+    'magic',
+
+    # ── 配置 ──
+    'pydantic', 'pydantic_settings', 'dotenv',
+]
+
+# 自动收集 uvicorn 和 sqlalchemy 的所有子模块
+hiddenimports += collect_submodules('uvicorn')
+hiddenimports += collect_submodules('sqlalchemy')
 
 a = Analysis(
     ['start.py'],
-    pathex=[],
-    binaries=[],
-    datas=[
-        ('app/**/*.py', 'app'),
-        ('app/data/*.json', 'app/data'),
-        ('alembic/**/*.py', 'alembic'),
-        ('alembic/**/*.mako', 'alembic'),
-        ('alembic/versions/*.py', 'alembic/versions'),
-        ('alembic.ini', '.'),
-    ],
-    hiddenimports=[
-        # ── FastAPI + Starlette + Uvicorn ──
-        'fastapi', 'starlette', 'uvicorn',
-        'uvicorn.logging', 'uvicorn.loops', 'uvicorn.loops.auto',
-        'uvicorn.protocols', 'uvicorn.protocols.http',
-        'uvicorn.protocols.http.auto', 'uvicorn.protocols.websockets',
-        'uvicorn.protocols.websockets.auto', 'uvicorn.lifespan',
-        'uvicorn.lifespan.on',
-        'httptools', 'websockets', 'watchfiles',
-
-        # ── SQLAlchemy + SQLite ──
-        'sqlalchemy', 'sqlalchemy.dialects.sqlite',
-        'sqlalchemy.ext.asyncio', 'aiosqlite',
-
-        # ── 应用模块（确保所有子模块被扫描） ──
-        'app.models', 'app.api', 'app.services', 'app.core',
-        'app.middleware', 'app.utils', 'app.schemas',
-        'app.api.v1', 'app.static_files',
-
-        # ── 认证与安全 ──
-        'jose', 'jose.jwt', 'bcrypt', 'passlib', 'passlib.hash',
-        'pyotp', 'cryptography', 'cryptography.hazmat',
-
-        # ── 调度与缓存 ──
-        'apscheduler', 'apscheduler.schedulers.asyncio',
-        'apscheduler.triggers.cron', 'apscheduler.triggers.interval',
-        'diskcache',
-
-        # ── 数据处理 ──
-        'pandas', 'numpy', 'openpyxl', 'xlsxwriter',
-
-        # ── 文档生成 ──
-        'reportlab', 'fpdf2', 'docx', 'pptx', 'mammoth',
-
-        # ── 图像处理 ──
-        'PIL', 'PIL.Image', 'qrcode',
-
-        # ── 中文处理 ──
-        'jieba',
-
-        # ── Web 工具 ──
-        'bleach', 'email_validator', 'multipart', 'python_multipart',
-        'httpx', 'aiofiles',
-
-        # ── 日志与监控 ──
-        'prometheus_client',
-
-        # ── 文件类型检测 ──
-        'magic',
-
-        # ── 配置 ──
-        'pydantic', 'pydantic_settings', 'dotenv',
-    ],
+    pathex=[backend_dir],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     excludes=[
