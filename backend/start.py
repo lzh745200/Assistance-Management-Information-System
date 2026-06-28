@@ -24,17 +24,31 @@ os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
 # ── 关键修复：PyInstaller 无控制台模式（windowed）下 sys.stdout/stderr 为 None ──
 # Uvicorn logging 配置会调用 sys.stderr.isatty()，None 没有该方法导致崩溃。
-# 修复：将 None 替换为 devnull writer，确保任何 Logger 都能安全初始化。
+# 修复：将 None 替换为日志文件 writer（优先）或 devnull，确保错误可追踪。
 _NONE_STREAM_FIXED = False
+
+
+def _get_fallback_stream():
+    """获取 fallback 输出流：优先写入日志文件，不可写则用 devnull"""
+    _log_dir = os.environ.get("LOG_DIR", "")
+    if _log_dir:
+        try:
+            os.makedirs(_log_dir, exist_ok=True)
+            return open(os.path.join(_log_dir, "startup.log"), "a", encoding="utf-8")
+        except Exception:
+            pass
+    return open(os.devnull, "w")
+
+
 if sys.stdout is None:
-    sys.stdout = open(os.devnull, 'w')
+    sys.stdout = _get_fallback_stream()
     _NONE_STREAM_FIXED = True
 if sys.stderr is None:
-    sys.stderr = open(os.devnull, 'w')
+    sys.stderr = _get_fallback_stream()
     _NONE_STREAM_FIXED = True
 if _NONE_STREAM_FIXED:
     # 延迟输出——此时 stderr 刚修复，print 才安全
-    print("[FIX] PyInstaller 无控制台模式：stdout/stderr 已修复为 devnull", flush=True)
+    print("[FIX] PyInstaller 无控制台模式：stdout/stderr 已重定向到日志文件", flush=True)
 
 # PyInstaller 打包后, 确保能正确找到 app 模块
 if getattr(sys, 'frozen', False):
@@ -334,6 +348,11 @@ def _verify_frontend_assets():
         print("  如需前端界面，请执行: cd frontend && npm run build")
         return  # 允许纯 API 模式启动
 
+    # PyInstaller 冻结模式下审计脚本不在打包中，跳过深度校验
+    if getattr(_sys, "frozen", False):
+        print("[OK] 前端静态资源已找到（冻结模式跳过深度校验）")
+        return
+
     # 调用审计脚本的核心校验逻辑（优先进程内调用，失败退回子进程）
     try:
         # 进程内调用：更快，无需路径解析/超时/编码处理
@@ -362,7 +381,7 @@ def _verify_frontend_assets():
                 print("[OK] 前端静态资源完整性校验通过")
         else:
             raise ImportError("无法加载审计模块")
-    except Exception as _audit_import_err:
+    except Exception:
         # 回退到子进程方式（兼容 PyInstaller 打包场景）
         try:
             _audit_script = os.path.join(

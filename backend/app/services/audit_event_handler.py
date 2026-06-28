@@ -65,6 +65,18 @@ def _get_entity_type(instance) -> str:
         "UserPermission": "permission",
         "UserRole": "user_role",
         "Organization": "org",
+        "RuralTask": "rural_task",
+        "Message": "message",
+        "Feedback": "feedback",
+        "MachineCode": "machine_code",
+        "EffectivenessEvaluation": "effectiveness",
+        "FundTransaction": "fund_transaction",
+        "Todo": "todo",
+        "PolicyCategory": "policy_category",
+        "Policy": "policy",
+        "Project": "project",
+        "School": "school",
+        "User": "user",
     }
     return mapping.get(cls_name, cls_name.lower())
 
@@ -122,20 +134,33 @@ def setup_audit_events(models: list = None):
         from app.models.fund import Fund
         from app.models.fund_allocation_order import FundAllocationOrder
         from app.models.fund_budget import FundBudget, FundTransaction
+        from app.models.fund_lifecycle import FundTransferVoucher, FundContract, FundAnomaly
+        from app.models.issue_tracking import Feedback
+        from app.models.machine_code import MachineCode
+        from app.models.message import Message
         from app.models.organization import Organization
         from app.models.policy import Policy, PolicyCategory
         from app.models.project import Project
+        from app.models.rbac import RbacRole, UserPermission, UserRole
+        from app.models.rural_task import RuralTask
         from app.models.school import ScholarshipStudent, School, SchoolProject
         from app.models.supported_village import SupportedVillage
         from app.models.todo import Todo
         from app.models.user import User
-        from app.models.rbac import RbacRole, UserPermission, UserRole
+        from app.models.approval import ApprovalTask, ApprovalWorkflow
 
         models = [
             Fund, FundAllocationOrder, FundBudget, FundTransaction,
-            Organization, Policy, PolicyCategory, Project, ScholarshipStudent,
-            School, SchoolProject, SupportedVillage, Todo, User,
+            FundTransferVoucher, FundContract, FundAnomaly,
+            Feedback,
+            MachineCode,
+            Message,
+            Organization, Policy, PolicyCategory, Project,
             RbacRole, UserPermission, UserRole,
+            RuralTask,
+            ScholarshipStudent, School, SchoolProject,
+            SupportedVillage, Todo, User,
+            ApprovalTask, ApprovalWorkflow,
         ]
 
     registered = 0
@@ -153,19 +178,30 @@ def teardown_audit_events(models: list = None):
     """移除审计事件监听（测试环境使用）。"""
     if models is None:
         from app.models.fund import Fund
-        from app.models.project import Project
-        from app.models.school import School
-        from app.models.supported_village import SupportedVillage
-        from app.models.user import User
-        from app.models.fund_budget import FundBudget
+        from app.models.fund_budget import FundBudget, FundTransaction
+        from app.models.fund_lifecycle import FundTransferVoucher, FundContract, FundAnomaly
+        from app.models.fund_allocation_order import FundAllocationOrder
+        from app.models.issue_tracking import Feedback
+        from app.models.machine_code import MachineCode
+        from app.models.message import Message
         from app.models.organization import Organization
-        from app.models.policy import Policy
-        from app.models.todo import Todo
+        from app.models.policy import Policy, PolicyCategory
+        from app.models.project import Project
         from app.models.rbac import RbacRole, UserPermission, UserRole
+        from app.models.rural_task import RuralTask
+        from app.models.school import ScholarshipStudent, School, SchoolProject
+        from app.models.supported_village import SupportedVillage
+        from app.models.todo import Todo
+        from app.models.user import User
+        from app.models.approval import ApprovalTask, ApprovalWorkflow
 
-        models = [Fund, Project, School, SupportedVillage, User,
-                  FundBudget, Organization, Policy, Todo,
-                  RbacRole, UserPermission, UserRole]
+        models = [Fund, FundAllocationOrder, FundBudget, FundTransaction,
+                  FundTransferVoucher, FundContract, FundAnomaly,
+                  Feedback, MachineCode, Message,
+                  Organization, Policy, PolicyCategory, Project,
+                  RbacRole, RuralTask, ScholarshipStudent,
+                  School, SchoolProject, SupportedVillage, Todo, User,
+                  UserPermission, UserRole, ApprovalTask, ApprovalWorkflow]
 
     for model in models:
         event.remove(model, "after_insert", _after_insert)

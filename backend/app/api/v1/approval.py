@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.permission_utils import is_admin
 from app.core.security import get_current_user
 from app.models.message import Message
 from app.models.user import User
@@ -160,6 +161,8 @@ def list_workflows(
     """获取审批流程列表"""
     service = ApprovalWorkflowService(db)
     workflows = service.list_workflows(entity_type=entity_type, is_active=is_active, skip=skip, limit=limit)
+    if not is_admin(current_user):
+        workflows = [w for w in workflows if w.created_by == current_user.id]
     return {
         "code": 200,
         "data": [
@@ -601,14 +604,10 @@ def get_pending_tasks(
         from app.models.approval import ApprovalStatus as AS
         from app.models.approval import ApprovalTask as AT
 
-        tasks = (
-            db.query(AT)
-            .filter(AT.status == AS.PENDING.value)
-            .order_by(AT.priority.desc(), AT.created_at.asc())
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+        query = db.query(AT).filter(AT.status == AS.PENDING.value)
+        if not is_admin(current_user):
+            query = query.filter(AT.submitter_id == current_user.id)
+        tasks = query.order_by(AT.priority.desc(), AT.created_at.asc()).offset(skip).limit(limit).all()
 
     return {
         "code": 200,

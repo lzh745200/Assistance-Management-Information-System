@@ -544,26 +544,6 @@ def _seed_default_admin():
     from app.core.database import SessionLocal
     from app.models.user import User
 
-    _admin_password = os.getenv("DEFAULT_ADMIN_PASSWORD", "").strip()
-    if not _admin_password:
-        from app.core.security import generate_password
-        _admin_password = generate_password(length=16, exclude_ambiguous=True)
-        import hashlib
-        _pw_hash_prefix = hashlib.sha256(_admin_password.encode()).hexdigest()[:8]
-        # 将明文密码写入仅管理员可读的临时文件（不在控制台打印明文）
-        import tempfile as _tempfile
-        fd, _pwd_file = _tempfile.mkstemp(suffix=".txt", prefix="admin_pwd_")
-        with os.fdopen(fd, "w") as _f:
-            _f.write(f"用户名: admin\n密码: {_admin_password}\n")
-            _f.write("请立即复制保存！首次登录后须修改密码。\n")
-        if os.name != "nt":
-            os.chmod(_pwd_file, 0o600)
-        # 日志中仅记录哈希前缀和临时文件路径（安全）
-        logger.warning(
-            "自动生成管理员密码（SHA256前缀: %s），明文已写入临时文件: %s",
-            _pw_hash_prefix, _pwd_file,
-        )
-
     db = SessionLocal()
     try:
         from app.services.lockout_service import get_lockout_service
@@ -575,6 +555,27 @@ def _seed_default_admin():
 
         admin = db.query(User).filter(User.username == DEFAULT_ADMIN_USERNAME).first()
         if not admin:
+            # 仅在管理员不存在时才生成密码，避免每次重启都生成 admin_pwd_*.txt
+            _admin_password = os.getenv("DEFAULT_ADMIN_PASSWORD", "").strip()
+            if not _admin_password:
+                from app.core.security import generate_password
+                _admin_password = generate_password(length=16, exclude_ambiguous=True)
+                import hashlib
+                _pw_hash_prefix = hashlib.sha256(_admin_password.encode()).hexdigest()[:8]
+                # 将明文密码写入仅管理员可读的临时文件（不在控制台打印明文）
+                import tempfile as _tempfile
+                fd, _pwd_file = _tempfile.mkstemp(suffix=".txt", prefix="admin_pwd_")
+                with os.fdopen(fd, "w") as _f:
+                    _f.write(f"用户名: admin\n密码: {_admin_password}\n")
+                    _f.write("请立即复制保存！首次登录后须修改密码。\n")
+                if os.name != "nt":
+                    os.chmod(_pwd_file, 0o600)
+                # 日志中仅记录哈希前缀和临时文件路径（安全）
+                logger.warning(
+                    "自动生成管理员密码（SHA256前缀: %s），明文已写入临时文件: %s",
+                    _pw_hash_prefix, _pwd_file,
+                )
+
             # 尝试获取顶级组织作为管理员的所属组织
             top_org_id = None
             try:

@@ -189,9 +189,9 @@ class TestAuditEventLifecycle:
         from app.services.audit_event_handler import setup_audit_events
         with patch("app.services.audit_event_handler.event.listen") as mock_listen:
             result = setup_audit_events()
-            # 17 个默认模型 * 3 个事件 = 51
-            assert result == 17
-            assert mock_listen.call_count == 51
+            # 26 个默认模型 * 3 个事件 = 78
+            assert result == 26
+            assert mock_listen.call_count == 78
 
     def test_setup_custom_models(self):
         from app.services.audit_event_handler import setup_audit_events
@@ -209,8 +209,8 @@ class TestAuditEventLifecycle:
         from app.services.audit_event_handler import teardown_audit_events
         with patch("app.services.audit_event_handler.event.remove") as mock_remove:
             teardown_audit_events()
-            # 12 个模型 * 3 个事件 = 36
-            assert mock_remove.call_count == 36
+            # 26 个模型 * 3 个事件 = 78
+            assert mock_remove.call_count == 78
 
     def test_teardown_custom_models(self):
         from app.services.audit_event_handler import teardown_audit_events
