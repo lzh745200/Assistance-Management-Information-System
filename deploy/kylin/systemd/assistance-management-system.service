@@ -20,9 +20,9 @@ ExecReload=/bin/kill -HUP $MAINPID
 # 进程管理
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=60
-StartLimitBurst=3
-TimeoutStartSec=60
+StartLimitIntervalSec=120
+StartLimitBurst=10
+TimeoutStartSec=120
 TimeoutStopSec=15
 
 # 日志
@@ -30,13 +30,14 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=assistance-management-system
 
-# 安全加固
+# 安全加固（适度放宽以兼容 PyInstaller 运行时）
 NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
+ProtectSystem=full
+ProtectHome=false
 PrivateTmp=true
 ReadWritePaths=/var/lib/assistance-management-system
 ReadWritePaths=/var/log/assistance-management-system
+ReadWritePaths=/tmp
 
 # 资源限制
 LimitNOFILE=65536

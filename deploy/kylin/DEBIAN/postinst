@@ -17,7 +17,7 @@ echo "======================================================"
 echo ""
 
 # ── 1. 创建系统用户和组 ──
-echo "[1/6] 创建系统用户..."
+echo "[1/8] 创建系统用户..."
 if ! getent group ${APP_NAME} > /dev/null 2>&1; then
     groupadd --system ${APP_NAME}
     echo "  已创建系统组: ${APP_NAME}"
@@ -39,7 +39,7 @@ else
 fi
 
 # ── 2. 创建数据目录 ──
-echo "[2/6] 创建数据目录..."
+echo "[2/8] 创建数据目录..."
 mkdir -p "${DATA_DIR}"/{database,uploads,exports,cache,backups}
 mkdir -p "${LOG_DIR}"
 
@@ -53,7 +53,7 @@ if [ ! -f "${DATA_DIR}/database/rural_revitalization.db" ]; then
 fi
 
 # ── 3. 设置权限 ──
-echo "[3/6] 设置权限..."
+echo "[3/8] 设置权限..."
 chown -R ${APP_NAME}:${APP_NAME} "${DATA_DIR}"
 chown -R ${APP_NAME}:${APP_NAME} "${LOG_DIR}"
 chmod 750 "${DATA_DIR}"
@@ -70,7 +70,7 @@ if [ -f "${INSTALL_DIR}/scripts/start-kylin.sh" ]; then
 fi
 
 # ── 4. 安装 systemd 服务 ──
-echo "[4/6] 配置系统服务..."
+echo "[4/8] 配置系统服务..."
 if [ -f "${INSTALL_DIR}/systemd/${APP_NAME}.service" ]; then
     cp "${INSTALL_DIR}/systemd/${APP_NAME}.service" /etc/systemd/system/${APP_NAME}.service
     systemctl daemon-reload
@@ -80,8 +80,52 @@ else
     echo "  警告: systemd 服务文件不存在，跳过"
 fi
 
-# ── 5. 安装桌面快捷方式 ──
-echo "[5/6] 安装桌面快捷方式..."
+# ── 5. 安装 polkit 免密规则 ──
+echo "[5/8] 配置 polkit 免密启动规则..."
+if [ -f "${INSTALL_DIR}/polkit/49-assistance-management-system.rules" ]; then
+    mkdir -p /etc/polkit-1/rules.d
+    cp "${INSTALL_DIR}/polkit/49-assistance-management-system.rules" \
+       /etc/polkit-1/rules.d/49-assistance-management-system.rules
+    chmod 644 /etc/polkit-1/rules.d/49-assistance-management-system.rules
+    # 重启 polkit 使规则生效
+    if command -v systemctl &>/dev/null && systemctl is-active polkit &>/dev/null; then
+        systemctl restart polkit 2>/dev/null || true
+    fi
+    echo "  polkit 免密规则已安装"
+else
+    echo "  警告: polkit 规则文件不存在，跳过"
+fi
+
+# ── 6. 添加当前桌面用户到服务组 ──
+echo "[6/8] 添加桌面用户到服务组..."
+# 获取当前登录的桌面用户（非 root）
+DESKTOP_USER=""
+# 方式1: 从 who 命令获取
+if command -v who &>/dev/null; then
+    DESKTOP_USER=$(who 2>/dev/null | grep -E '\(:[0-9]' | head -1 | awk '{print $1}')
+fi
+# 方式2: 从 loginctl 获取
+if [ -z "$DESKTOP_USER" ] && command -v loginctl &>/dev/null; then
+    DESKTOP_USER=$(loginctl list-sessions 2>/dev/null | head -2 | tail -1 | awk '{print $2}')
+fi
+# 方式3: 从 SUDO_USER 环境变量
+if [ -z "$DESKTOP_USER" ] && [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
+    DESKTOP_USER="$SUDO_USER"
+fi
+
+if [ -n "$DESKTOP_USER" ] && [ "$DESKTOP_USER" != "root" ]; then
+    if id "$DESKTOP_USER" &>/dev/null; then
+        usermod -aG ${APP_NAME} "$DESKTOP_USER" 2>/dev/null || true
+        echo "  已添加用户 '$DESKTOP_USER' 到 ${APP_NAME} 组"
+        echo "  该用户现在可以免密启动/停止服务"
+    fi
+else
+    echo "  未检测到桌面用户，请手动添加用户到 ${APP_NAME} 组:"
+    echo "    sudo usermod -aG ${APP_NAME} 你的用户名"
+fi
+
+# ── 7. 安装桌面快捷方式 ──
+echo "[7/8] 安装桌面快捷方式..."
 if [ -f "${INSTALL_DIR}/desktop/assistance-management-system.desktop" ]; then
     cp "${INSTALL_DIR}/desktop/assistance-management-system.desktop" \
        /usr/share/applications/${APP_NAME}.desktop
@@ -93,8 +137,8 @@ else
     echo "  警告: .desktop 文件不存在，跳过"
 fi
 
-# ── 6. 安装启动命令 ──
-echo "[6/6] 安装启动命令..."
+# ── 8. 安装启动命令 ──
+echo "[8/8] 安装启动命令..."
 if [ -f "${INSTALL_DIR}/scripts/start-kylin.sh" ]; then
     ln -sf "${INSTALL_DIR}/scripts/start-kylin.sh" /usr/bin/${APP_NAME}
     echo "  启动命令已安装: /usr/bin/${APP_NAME}"

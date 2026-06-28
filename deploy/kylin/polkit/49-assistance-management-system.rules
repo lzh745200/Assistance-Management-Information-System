@@ -1,0 +1,9 @@
+// 帮扶管理信息系统 - polkit 规则
+// 允许 assistance-management-system 组成员免密管理服务
+// 这样桌面用户点击菜单即可启动/停止服务，无需 sudo 密码
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        subject.isInGroup("assistance-management-system")) {
+        return polkit.Result.YES;
+    }
+});

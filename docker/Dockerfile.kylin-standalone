@@ -34,14 +34,22 @@ RUN test -f frontend/dist/index.html || (echo "ERROR: 前端构建失败，index
 
 
 # ── Stage 2: 构建后端 (PyInstaller ARM64) ──
-FROM --platform=linux/arm64 python:3.11-slim-bookworm AS backend-builder
+# 关键：使用 buster (Debian 10, GLIBC 2.28) 而非 bookworm (GLIBC 2.36)
+# 麒麟 V10 Server GLIBC=2.28, Desktop GLIBC=2.31
+# PyInstaller 不打包 libc，二进制动态链接构建系统的 GLIBC
+# 必须在最低 GLIBC 上构建以保证向前兼容（PyInstaller 官方文档要求）
+FROM --platform=linux/arm64 python:3.11-slim-buster AS backend-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
 
+# Buster 已 EOL，apt 源需重定向到 archive.debian.org
+RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list
+
 # 安装编译依赖（ARM64 原生编译需要）
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
     libffi-dev \
@@ -49,10 +57,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg-dev \
     zlib1g-dev \
     libmagic1 \
+    libsqlite3-0 \
+    libgomp1 \
     file \
     patchelf \
     binutils \
     && rm -rf /var/lib/apt/lists/*
+
+# 验证 GLIBC 版本（必须 <= 2.28 以兼容麒麟 V10）
+RUN ldd --version | head -1 && \
+    GLIBC_VER=$(ldd --version | head -1 | grep -oP '\d+\.\d+' | tail -1) && \
+    echo "构建环境 GLIBC 版本: $GLIBC_VER" && \
+    if [ "$(echo "$GLIBC_VER > 2.28" | bc)" = "1" ]; then \
+        echo "ERROR: GLIBC 版本 $GLIBC_VER > 2.28，不兼容麒麟 V10！请检查 Docker 基础镜像。" && exit 1; \
+    fi && \
+    echo "OK: GLIBC 版本兼容麒麟 V10"
 
 WORKDIR /build
 
@@ -100,13 +119,31 @@ RUN test -d dist/assistance-management-backend || (echo "ERROR: PyInstaller 打�
     (test -f dist/assistance-management-backend/alembic.ini && echo "OK: alembic.ini 已打包" || echo "WARN: alembic.ini 未找到") && \
     echo "后端打包成功"
 
+# 关键验证：检查 PyInstaller 打包的 libpython3.11.so 不依赖高于 2.28 的 GLIBC
+# 这是之前在麒麟 V10 上崩溃的根本原因
+RUN echo "=== GLIBC 兼容性验证 ===" && \
+    LIBPYTHON=$(find dist/assistance-management-backend -name "libpython3.*.so*" | head -1) && \
+    if [ -z "$LIBPYTHON" ]; then echo "WARN: 未找到 libpython 共享库"; exit 0; fi && \
+    echo "检查: $LIBPYTHON" && \
+    MAX_GLIBC=$(objdump -T "$LIBPYTHON" 2>/dev/null | grep -oP 'GLIBC_\K\d+\.\d+' | sort -V | tail -1) && \
+    echo "libpython 最高 GLIBC 要求: $MAX_GLIBC" && \
+    if [ "$(echo "$MAX_GLIBC > 2.28" | bc)" = "1" ]; then \
+        echo "ERROR: libpython 要求 GLIBC_$MAX_GLIBC > 2.28，不兼容麒麟 V10！" && exit 1; \
+    fi && \
+    echo "OK: libpython GLIBC 要求 <= 2.28，兼容麒麟 V10" && \
+    echo "=== GLIBC 验证通过 ==="
+
 
 # ── Stage 3: 组装 DEB 包 ──
-FROM --platform=linux/arm64 debian:bookworm-slim AS deb-package
+FROM --platform=linux/arm64 debian:buster-slim AS deb-package
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Buster 已 EOL，apt 源需重定向到 archive.debian.org
+RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list
+
+RUN apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y --no-install-recommends \
     dpkg-dev \
     fakeroot \
     && rm -rf /var/lib/apt/lists/*
@@ -122,6 +159,7 @@ RUN mkdir -p \
     opt/assistance-management-system/scripts \
     opt/assistance-management-system/systemd \
     opt/assistance-management-system/desktop \
+    opt/assistance-management-system/polkit \
     var/lib/assistance-management-system/database \
     var/lib/assistance-management-system/uploads \
     var/lib/assistance-management-system/exports \
@@ -139,6 +177,7 @@ COPY deploy/kylin/config/kylin.env ./opt/assistance-management-system/config/
 COPY deploy/kylin/scripts/start-kylin.sh ./opt/assistance-management-system/scripts/
 COPY deploy/kylin/systemd/assistance-management-system.service ./opt/assistance-management-system/systemd/
 COPY deploy/kylin/desktop/assistance-management-system.desktop ./opt/assistance-management-system/desktop/
+COPY deploy/kylin/polkit/49-assistance-management-system.rules ./opt/assistance-management-system/polkit/
 
 # 复制 DEBIAN 控制脚本
 COPY deploy/kylin/DEBIAN/postinst ./DEBIAN/
@@ -173,7 +212,7 @@ RUN mkdir -p /output && \
     echo "=== 验证 DEB 包结构 ===" && \
     dpkg-deb -I /output/assistance-management-system_${VERSION}_arm64.deb && \
     echo "=== 验证关键文件存在 ===" && \
-    dpkg-deb -c /output/assistance-management-system_${VERSION}_arm64.deb | grep -E "assistance-management-backend$|start-kylin.sh|\.desktop|\.service|kylin.env" | head -10 && \
+    dpkg-deb -c /output/assistance-management-system_${VERSION}_arm64.deb | grep -E "assistance-management-backend$|start-kylin.sh|\.desktop|\.service|kylin.env|polkit" | head -10 && \
     echo "=== DEB 包验证通过 ==="
 
 
