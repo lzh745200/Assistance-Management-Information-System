@@ -68,7 +68,7 @@ function getIconPath() {
   if (app.isPackaged) {
     return path.join(process.resourcesPath, 'icon.png');
   }
-  return path.join(__dirname, '..', 'resources', 'icon.png');
+  return path.join(__dirname, '..', 'resources', 'icons', 'icon.png');
 }
 
 // ─── 密钥持久化 ───
@@ -122,9 +122,9 @@ function getDatabasePath() {
     dbDir = path.join(getUserDataPath(), 'database');
   }
   if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
-  const dbPath = path.join(dbDir, 'bumofu.db');
+  const dbPath = path.join(dbDir, 'rural_revitalization.db');
   if (!fs.existsSync(dbPath)) {
-    const sourceDb = getResourcePath('database', 'bumofu.db');
+    const sourceDb = getResourcePath('database', 'rural_revitalization.db');
     if (fs.existsSync(sourceDb)) fs.copyFileSync(sourceDb, dbPath);
   }
   return dbPath;

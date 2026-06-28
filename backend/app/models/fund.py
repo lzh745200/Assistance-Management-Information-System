@@ -3,7 +3,6 @@
 """
 
 import enum
-from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
@@ -163,22 +162,39 @@ class Fund(BaseModel):
 # 🚀 自动化填充聚合字段 (对业务代码零侵入)
 # ---------------------------------------------------------------------------
 
+def _parse_date_value(val):
+    """将日期值统一转换为 date 对象，支持 datetime、date、str 类型。"""
+    from datetime import date, datetime as dt
+    if val is None:
+        return None
+    if isinstance(val, dt):
+        return val.date()
+    if isinstance(val, date):
+        return val
+    if isinstance(val, str):
+        val = val.strip()
+        if not val:
+            return None
+        try:
+            return dt.fromisoformat(val).date()
+        except ValueError:
+            try:
+                return dt.strptime(val[:10], "%Y-%m-%d").date()
+            except ValueError:
+                return None
+    return None
+
+
 def _enrich_fund_time_fields(mapper, connection, target: Fund):
     """
     在 Fund 插入或更新前，自动计算并填充 year, year_month, year_quarter。
     优先使用 date 字段，如果为空则回退到 application_date。
     """
-    target_date = target.date
-    if not target_date and target.application_date:
-        if isinstance(target.application_date, datetime):
-            target_date = target.application_date.date()
-        else:
-            target_date = target.application_date
+    target_date = _parse_date_value(target.date)
+    if not target_date:
+        target_date = _parse_date_value(target.application_date)
 
     if target_date:
-        if isinstance(target_date, datetime):
-            target_date = target_date.date()
-
         target.year = target_date.year
         target.year_month = target_date.strftime("%Y-%m")
 

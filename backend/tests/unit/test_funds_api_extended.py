@@ -1239,29 +1239,18 @@ class TestAuditFund:
 
 
 class TestFundHistoryStatus:
-    @pytest.fixture(autouse=True)
-    def _patch_fund_status_history(self):
-        """Monkey-patch FundStatusHistory to expose changed_at/changed_by
-        (which the API code references but the model names operation_time/operator_name)."""
-        from app.models.fund_history import FundStatusHistory
-        FundStatusHistory.changed_at = FundStatusHistory.operation_time
-        FundStatusHistory.changed_by = FundStatusHistory.operator_name
-        yield
-        # No teardown needed — leaving the aliases is harmless
-        # (SQLAlchemy mapped classes don't allow attribute deletion anyway)
-
     def test_status_history_with_items(self, client, mock_db):
         """Get fund status change history."""
         fund = FundMock(1)
         mock_db.execute.return_value = _exec_with_scalar_one_or_none(fund)
 
         hist1 = SimpleObj(id=1, fund_id=1, from_status="pending", to_status="approved",
-                           changed_by="管理员",
-                           changed_at=datetime(2025, 6, 16, tzinfo=timezone.utc),
+                           operator_id=1, operator_name="管理员",
+                           operation_time=datetime(2025, 6, 16, tzinfo=timezone.utc),
                            remark="审批通过")
         hist2 = SimpleObj(id=2, fund_id=1, from_status="approved", to_status="allocated",
-                           changed_by="管理员",
-                           changed_at=datetime(2025, 6, 17, tzinfo=timezone.utc),
+                           operator_id=1, operator_name="管理员",
+                           operation_time=datetime(2025, 6, 17, tzinfo=timezone.utc),
                            remark="已拨付")
 
         chain = MagicMock()

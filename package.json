@@ -53,6 +53,11 @@
         "filter": ["**/*"]
       },
       {
+        "from": "resources/database",
+        "to": "database",
+        "filter": ["rural_revitalization.db"]
+      },
+      {
         "from": "resources/vcredist",
         "to": "vcredist",
         "filter": ["**/*.exe"]

@@ -712,12 +712,13 @@ def fund_history_status(fund_id: int, current_user: User = Depends(get_current_u
     rows = (
         db.query(FundStatusHistory)
         .filter(FundStatusHistory.fund_id == fund_id)
-        .order_by(FundStatusHistory.changed_at.desc())
+        .order_by(FundStatusHistory.operation_time.desc())
         .limit(100).all()
     )
     return {"data": [{
         "id": r.id, "from_status": r.from_status, "to_status": r.to_status,
-        "changed_by": r.changed_by, "changed_at": r.changed_at.isoformat() if r.changed_at else None,
+        "operator_id": r.operator_id, "operator_name": r.operator_name,
+        "operation_time": r.operation_time.isoformat() if r.operation_time else None,
         "remark": r.remark,
     } for r in rows]}
 

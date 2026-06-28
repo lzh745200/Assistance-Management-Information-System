@@ -1244,15 +1244,13 @@ async function submitVillageData() {
   // 提交每年的人口数据和收入数据
   for (const pop of formData.populationData) {
     if (pop.totalPopulation > 0 || pop.households > 0) {
-      await request.post(`/supported-villages/${villageId}/population`, {
-        year: pop.year,
+      await request.post(`/supported-villages/${villageId}/yearly/${pop.year}/population`, {
         total_population: pop.totalPopulation,
         total_households: pop.households,
       })
     }
     if (pop.perCapitaIncome > 0 || pop.collectiveEconomyIncome > 0) {
-      await request.post(`/supported-villages/${villageId}/income`, {
-        year: pop.year,
+      await request.post(`/supported-villages/${villageId}/yearly/${pop.year}/income`, {
         per_capita_income: pop.perCapitaIncome,
         collective_income: pop.collectiveEconomyIncome,
       })
@@ -1262,8 +1260,7 @@ async function submitVillageData() {
   // 提交每年的力量投入数据
   for (const inv of formData.investmentData) {
     if (inv.leaderVisits > 0 || inv.soldierVisits > 0) {
-      await request.post(`/supported-villages/${villageId}/force-investment`, {
-        year: inv.year,
+      await request.post(`/supported-villages/${villageId}/yearly/${inv.year}/force-investment`, {
         senior_leader_visits: inv.leaderVisits,
         unit_soldier_visits: inv.soldierVisits,
       })
