@@ -12,9 +12,64 @@ import logging
 import os
 import re
 import sys
+import time
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from pathlib import Path
 from typing import Optional
+
+
+class SafeTimedRotatingFileHandler(TimedRotatingFileHandler):
+    """Windows-safe TimedRotatingFileHandler.
+
+    On Windows, doRollover() calls os.rename() which fails with
+    WinError 32 if any other handle holds the file open (antivirus,
+    search indexer, orphaned handler, concurrent read).
+    This subclass catches PermissionError and retries with delays.
+    """
+
+    def doRollover(self):
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+        # 尝试轮转，最多重试 5 次（共 ~1.5s）
+        for attempt in range(5):
+            try:
+                super().doRollover()
+                return
+            except PermissionError:
+                if attempt < 4:
+                    time.sleep(0.3 * (attempt + 1))
+                else:
+                    # 最后一次仍失败：放弃轮转，直接重新打开文件继续写入
+                    # 避免抛出异常导致后续日志全部丢失
+                    import traceback
+                    sys.stderr.write(
+                        "[SafeTimedRotatingFileHandler] 轮转失败(WinError 32)，"
+                        "跳过本次轮转，继续使用原文件:\n"
+                        + traceback.format_exc()
+                    )
+        # 无论轮转是否成功，都要重新打开流以继续写入
+        if not self.stream:
+            self.stream = self._open()
+
+
+class SafeRotatingFileHandler(RotatingFileHandler):
+    """Windows-safe RotatingFileHandler with the same retry logic."""
+
+    def rotate(self, source, dest):
+        for attempt in range(5):
+            try:
+                super().rotate(source, dest)
+                return
+            except PermissionError:
+                if attempt < 4:
+                    time.sleep(0.3 * (attempt + 1))
+                else:
+                    import traceback
+                    sys.stderr.write(
+                        "[SafeRotatingFileHandler] 轮转失败(WinError 32)，"
+                        "跳过本次轮转:\n" + traceback.format_exc()
+                    )
 
 
 class SensitiveDataFilter(logging.Filter):
@@ -122,8 +177,13 @@ def configure_logging(
     # 敏感信息脱敏过滤器（注册到 root，所有 handler 继承）
     sensitive_filter = SensitiveDataFilter()
 
+    # 关闭并移除旧 handler（必须 close 否则文件句柄泄漏，导致 WinError 32）
     for h in list(root_logger.handlers):
         root_logger.removeHandler(h)
+        try:
+            h.close()
+        except Exception:
+            pass
 
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
@@ -149,8 +209,8 @@ def configure_logging(
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
         if log_rotation:
-            # 按天轮转（接通 config.LOG_ROTATION）
-            file_handler = TimedRotatingFileHandler(
+            # 按天轮转（Windows-safe，捕获 WinError 32）
+            file_handler = SafeTimedRotatingFileHandler(
                 str(log_path),
                 when="midnight",
                 backupCount=backup_count,
@@ -158,7 +218,7 @@ def configure_logging(
                 utc=False,
             )
         else:
-            file_handler = RotatingFileHandler(
+            file_handler = SafeRotatingFileHandler(
                 str(log_path),
                 maxBytes=max_bytes,
                 backupCount=backup_count,
