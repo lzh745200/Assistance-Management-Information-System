@@ -28,12 +28,7 @@
         </el-form-item>
 
         <!-- 新密码 -->
-        <el-form-item
-          label="新密码"
-          prop="newPassword"
-          :error="newPasswordError"
-          :validate-event="false"
-        >
+        <el-form-item label="新密码" prop="newPassword" :error="newPasswordError">
           <el-input
             v-model="passwordForm.newPassword"
             type="password"
@@ -103,7 +98,7 @@
           <el-button
             type="primary"
             :loading="loading"
-            :disabled="loading || !isPasswordValid"
+            :disabled="loading"
             size="large"
             class="submit-button"
             @click="handleChangePassword"
@@ -195,12 +190,11 @@ const passwordStrengthData = reactive({
 const passwordRules: Record<string, any[]> = reactive({
   oldPassword: [
     { required: true, message: '请输入当前密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度应在6-20个字符之间', trigger: 'blur' },
+    { min: 6, message: '密码长度至少6个字符', trigger: 'blur' },
   ],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
     {
-      message: '密码验证失败',
       validator: (_rule: any, value: string, callback: (error?: Error) => void) => {
         if (!value) {
           callback(new Error('请输入新密码'))
@@ -218,7 +212,6 @@ const passwordRules: Record<string, any[]> = reactive({
   confirmPassword: [
     { required: true, message: '请再次输入新密码', trigger: 'blur' },
     {
-      message: '密码确认失败',
       validator: (_rule: any, value: string, callback: (error?: Error) => void) => {
         if (!value) {
           callback(new Error('请再次输入新密码'))
@@ -231,16 +224,6 @@ const passwordRules: Record<string, any[]> = reactive({
       trigger: 'blur',
     },
   ],
-})
-
-// 计算密码是否有效
-const isPasswordValid = computed((): boolean => {
-  return (
-    passwordStrengthData.validCount >= 5 &&
-    passwordStrengthData.length >= 12 &&
-    passwordForm.newPassword !== '' &&
-    passwordForm.newPassword === passwordForm.confirmPassword
-  )
 })
 
 // 验证密码强度
