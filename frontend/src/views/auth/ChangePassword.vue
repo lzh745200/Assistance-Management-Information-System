@@ -573,7 +573,7 @@ watch(
 .tips-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: #ffffff;
 }
 
 .security-tips {
