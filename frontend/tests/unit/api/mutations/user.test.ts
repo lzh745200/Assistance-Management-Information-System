@@ -33,10 +33,10 @@ describe('api/mutations/user', () => {
     expect(r).toEqual({ success: true })
   })
 
-  it('resetPassword posts to /users/:id/reset-password', async () => {
+  it('resetPassword posts to /users/:id/admin-reset-password', async () => {
     mockPost.mockResolvedValue({ data: { success: true } })
     const r = await resetPassword('2')
-    expect(mockPost).toHaveBeenCalledWith('/users/2/reset-password')
+    expect(mockPost).toHaveBeenCalledWith('/users/2/admin-reset-password', { new_password: undefined })
     expect(r).toEqual({ success: true })
   })
 

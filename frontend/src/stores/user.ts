@@ -17,11 +17,6 @@ export interface User {
   [key: string]: any
 }
 
-interface UserListData {
-  items: User[]
-  total: number
-}
-
 export const useUserStore = defineStore('user', () => {
   const userList = ref<User[]>([])
   // 初始化时从 AuthStorage 恢复 currentUser（防止页面刷新后丢失）
@@ -35,11 +30,21 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     error.value = null
     try {
-      const res = await get<ApiResponse<UserListData>>('/users', params)
-      if (res.code === 200 && res.data) {
-        userList.value = res.data.items ?? []
-        total.value = res.data.total ?? 0
-      }
+      const res = await get<any>('/users', params)
+      // 后端 GET /users 返回裸格式 {total, page, page_size, items}（无 envelope）
+      const items = Array.isArray(res?.items)
+        ? res.items
+        : Array.isArray(res?.data?.items)
+          ? res.data.items
+          : []
+      const totalCount =
+        typeof res?.total === 'number'
+          ? res.total
+          : typeof res?.data?.total === 'number'
+            ? res.data.total
+            : items.length
+      userList.value = items
+      total.value = totalCount
     } catch (e: any) {
       error.value = e?.response?.data?.message || e?.message || '获取用户列表失败'
     } finally {
@@ -51,10 +56,12 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     error.value = null
     try {
-      const res = await get<ApiResponse<User>>(`/users/${id}`)
-      if (res.code === 200 && res.data) {
-        currentUser.value = res.data
-        return res.data
+      const res = await get<any>(`/users/${id}`)
+      // 后端 GET /users/{id} 返回裸用户对象（无 envelope），也兼容 envelope 格式
+      const userData = res?.data ?? res
+      if (userData && typeof userData === 'object') {
+        currentUser.value = userData
+        return userData
       }
     } catch (e: any) {
       error.value = e?.response?.data?.message || e?.message || '获取用户详情失败'
@@ -64,20 +71,24 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function createUser(data: Partial<User>) {
-    const res = await post<ApiResponse<User>>('/users', data)
-    if (res.code === 200 && res.data) {
-      userList.value.unshift(res.data)
+    const res = await post<any>('/users', data)
+    // 后端 POST /users 返回裸格式 {id, username, role, ..., message}（无 envelope）
+    const userData = res?.data ?? res
+    if (userData && (userData.id || userData.username)) {
+      userList.value.unshift(userData)
       total.value++
     }
     return res
   }
 
   async function updateUser(id: number, data: Partial<User>) {
-    const res = await put<ApiResponse<User>>(`/users/${id}`, data)
-    if (res.code === 200 && res.data) {
+    const res = await put<any>(`/users/${id}`, data)
+    // 后端 PUT /users/{id} 返回 {code: 200, message: "更新成功"}（无 data 字段）
+    if (res?.code === 200) {
       const idx = userList.value.findIndex((u) => u.id === id)
-      if (idx !== -1) userList.value[idx] = res.data!
-      if (currentUser.value?.id === id) currentUser.value = res.data
+      if (idx !== -1) userList.value[idx] = { ...userList.value[idx], ...data } as User
+      if (currentUser.value?.id === id)
+        currentUser.value = { ...currentUser.value, ...data } as User
     }
     return res
   }
@@ -114,10 +125,11 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  async function assignRole(userId: number, roleId: number) {
-    return post<ApiResponse<null>>(`/user-management/${userId}/assign-role`, {
-      role_id: roleId,
-    })
+  async function assignRole(userId: number, roleCode: string) {
+    // 后端期望 role_code 作为 query 参数（string），不是 JSON body 中的 role_id
+    return post<ApiResponse<null>>(
+      `/user-management/${userId}/assign-role?role_code=${encodeURIComponent(roleCode)}`
+    )
   }
 
   // Profile / Auth 兼容方法

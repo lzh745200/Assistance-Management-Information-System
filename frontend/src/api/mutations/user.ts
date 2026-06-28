@@ -18,7 +18,9 @@ export async function deleteUser(id: string) {
   return response.data
 }
 
-export async function resetPassword(id: string) {
-  const response = await request.post(`/users/${id}/reset-password`)
+export async function resetPassword(id: string, newPassword?: string) {
+  const response = await request.post(`/users/${id}/admin-reset-password`, {
+    new_password: newPassword,
+  })
   return response.data
 }

@@ -186,11 +186,11 @@ describe('stores/user', () => {
       expect(post).toHaveBeenCalledWith('/users/7/admin-reset-password', { new_password: 'newPass' })
     })
 
-    it('assignRole POST 正确路径 + body', async () => {
+    it('assignRole POST 正确路径 + role_code query param', async () => {
       ;(post as any).mockResolvedValue({ code: 200 })
       const s = useUserStore()
-      await s.assignRole(7, 3)
-      expect(post).toHaveBeenCalledWith('/user-management/7/assign-role', { role_id: 3 })
+      await s.assignRole(7, 'admin')
+      expect(post).toHaveBeenCalledWith('/user-management/7/assign-role?role_code=admin')
     })
 
     it('logout 清 AuthStorage', async () => {
