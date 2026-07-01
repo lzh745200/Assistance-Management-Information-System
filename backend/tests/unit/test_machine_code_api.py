@@ -95,9 +95,11 @@ def mock_machine_code():
     return mc
 
 
-def _make_mock_record(id_=1, machine_code="MC001", pass_code="1234",
-                       status="pending", user=None, description="desc",
-                       created_at_field=None, activated_at_field=None):
+def _make_mock_record(
+    id_=1, machine_code="MC001", pass_code="1234",
+    status="pending", user=None, description="desc",
+    created_at_field=None, activated_at_field=None,
+):
     r = MagicMock()
     r.id = id_
     r.machine_code = machine_code
@@ -748,26 +750,31 @@ class TestExportOrgPassCodes:
 # ---------------------------------------------------------------------------
 
 class TestMachineCodePermissions:
-    def test_get_permissions_type_error(self, client_admin, mock_db):
+    def test_get_permissions_success(self, client_admin, mock_db):
+        """获取机器码权限列表 — 管理员调用应成功返回 200"""
         resp = client_admin.get("/api/v1/machine-code/1/permissions")
-        assert resp.status_code == 500
+        assert resp.status_code == 200
 
-    def test_grant_permissions_type_error(self, client_admin, mock_db):
+    def test_grant_permissions_success(self, client_admin, mock_db):
+        """批量授予机器码权限 — 管理员调用应成功返回 200"""
         resp = client_admin.post("/api/v1/machine-code/1/permissions", json={
             "permissions": ["village:read"],
         })
-        assert resp.status_code == 500
+        assert resp.status_code == 200
 
-    def test_revoke_permissions_type_error(self, client_admin, mock_db):
+    def test_revoke_permissions_success(self, client_admin, mock_db):
+        """批量撤销机器码权限 — 管理员调用应成功返回 200"""
         resp = client_admin.request("DELETE", "/api/v1/machine-code/1/permissions", json={
             "permissions": ["village:read"],
         })
-        assert resp.status_code == 500
+        assert resp.status_code == 200
 
-    def test_revoke_single_permission_type_error(self, client_admin, mock_db):
+    def test_revoke_single_permission_not_found(self, client_admin, mock_db):
+        """撤销单个权限 — mock DB 中不存在记录时应返回 404"""
         resp = client_admin.delete("/api/v1/machine-code/1/permissions/village:read")
-        assert resp.status_code == 500
+        assert resp.status_code == 404
 
-    def test_user_effective_permissions_type_error(self, client_admin, mock_db):
+    def test_user_effective_permissions_success(self, client_admin, mock_db):
+        """获取用户实际生效权限 — 管理员调用应成功返回 200"""
         resp = client_admin.get("/api/v1/machine-code/user/1/effective-permissions")
-        assert resp.status_code == 500
+        assert resp.status_code == 200

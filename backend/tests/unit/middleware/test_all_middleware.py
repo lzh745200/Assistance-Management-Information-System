@@ -65,7 +65,8 @@ class TestAuditContext:
 
 class TestAPIVersionMiddleware:
     @patch("app.middleware.api_version.anyio")
-    def test_dispatch_sets_version(self, mock_anyio):
+    @pytest.mark.asyncio
+    async def test_dispatch_sets_version(self, mock_anyio):
         from app.middleware.api_version import APIVersionMiddleware
 
         mock_app = AsyncMock()
@@ -77,10 +78,10 @@ class TestAPIVersionMiddleware:
         mock_call_next = AsyncMock(return_value=mock_response)
 
         mw = APIVersionMiddleware(mock_app)
-        result = mw.dispatch(mock_request, mock_call_next)
+        result = await mw.dispatch(mock_request, mock_call_next)
 
-        # FastAPI's BaseHTTPMiddleware wraps dispatch in async
-        # So dispatch returns a coroutine
+        # dispatch 成功返回 response
+        assert result is mock_response
 
     def test_init_defaults(self):
         from app.middleware.api_version import APIVersionMiddleware
@@ -207,6 +208,7 @@ class TestCSRFMiddleware:
         mw = CSRFMiddleware(mock_app)
         # CSRF_ENABLED defaults to False in test, so it should pass through
         result = await mw.dispatch(mock_request, mock_call_next)
+        assert result is mock_response
 
     def test_is_path_exempt(self):
         from app.middleware.csrf_middleware import _is_path_exempt

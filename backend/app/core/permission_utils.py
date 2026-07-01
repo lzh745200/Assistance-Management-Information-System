@@ -135,31 +135,81 @@ def get_user_org_id(user) -> Optional[int]:
     return None
 
 
-def get_org_with_fallback(user):
-    """获取用户的组织对象，支持多种回退策略
+def get_org_with_fallback(
+    user=None,
+    *,
+    current_user=None,
+    requested_org_id=None,
+    get_first_org_callback=None,
+):
+    """获取用户的组织ID，支持多种回退策略
 
-    优先级:
-    1. user.organization 直接关系
-    2. 通过 organization_id 查询
-    3. 返回 None
+    新式调用（关键字参数，返回 org_id:int）：
+        org_id = get_org_with_fallback(
+            current_user=current_user,
+            requested_org_id=data.org_id,
+            get_first_org_callback=lambda: _get_first_active_org(db),
+        )
+
+    旧式调用（位置参数，返回组织对象，向后兼容）：
+        org = get_org_with_fallback(user)
+
+    优先级（新式调用）：
+    1. requested_org_id（如果提供）
+    2. current_user 的 organization_id 或 org_id
+    3. get_first_org_callback() 回调
+    4. 返回 None
 
     Args:
-        user: 用户对象
+        user: 用户对象（旧式位置参数）
+        current_user: 用户对象（新式关键字参数）
+        requested_org_id: 请求的组织ID（可选）
+        get_first_org_callback: 获取第一个活跃组织的回调函数
 
     Returns:
-        组织对象或 None
+        新式调用返回 org_id (int|None)；旧式调用返回组织对象或 None
     """
-    if user is None:
+    # 统一 user 参数：新式调用的 current_user 优先
+    effective_user = current_user if current_user is not None else user
+
+    # 判断是否为新式调用
+    is_new_style = (
+        current_user is not None
+        or requested_org_id is not None
+        or get_first_org_callback is not None
+    )
+
+    if is_new_style:
+        # ── 新式调用：返回 org_id (int|None) ──
+        # 1. 优先使用请求的 org_id
+        if requested_org_id is not None:
+            return requested_org_id
+
+        # 2. 从用户对象获取 org_id
+        if effective_user is not None:
+            if hasattr(effective_user, "organization_id") and effective_user.organization_id is not None:
+                return effective_user.organization_id
+            if hasattr(effective_user, "org_id") and effective_user.org_id is not None:
+                return effective_user.org_id
+
+        # 3. 回调获取第一个活跃组织
+        if get_first_org_callback is not None:
+            return get_first_org_callback()
+
+        return None
+
+    # ── 旧式调用：返回组织对象（向后兼容） ──
+    if effective_user is None:
         return None
 
     # 直接关系
-    if hasattr(user, "organization") and user.organization is not None:
-        return user.organization
+    if hasattr(effective_user, "organization") and effective_user.organization is not None:
+        return effective_user.organization
 
     # 通过 ID 查询（需要数据库会话，这里不直接查询，由调用方处理）
-    if hasattr(user, "organization_id") and user.organization_id is not None:
+    if hasattr(effective_user, "organization_id") and effective_user.organization_id is not None:
         # 返回 ID，让调用方查询
-        logger.debug("User has organization_id=%s but no direct relationship", user.organization_id)
+        logger.debug("User has organization_id=%s but no direct relationship", effective_user.organization_id)
         return None
 
     return None

@@ -42,6 +42,7 @@ class DataPackageResponse(BaseModel):
     file_name: Optional[str] = None
     file_size: int = 0
     record_count: int = 0
+    is_encrypted: bool = False
     created_at: Optional[datetime] = None
     error_message: Optional[str] = None
 

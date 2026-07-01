@@ -353,11 +353,11 @@ async def import_data_package(
     """导入数据包"""
     # 验证文件
     if not file.filename:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="未选择文件")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="未选择文件")
 
     if not file.filename.endswith('.zip'):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="文件格式错误，仅支持 .zip 格式的数据包"
         )
 
@@ -383,7 +383,7 @@ async def import_data_package(
         # 检查文件大小
         if len(content) == 0:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="文件为空，请选择有效的数据包文件"
             )
 

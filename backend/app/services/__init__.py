@@ -31,16 +31,15 @@ from .cache_service import (
 from .rbac_service import Permission, RBACService  # noqa: F401
 from .template_service import TemplateService  # noqa: F401
 
-# 加密服务和资源限制器（为测试兼容性提供别名）
+# 加密服务（为测试兼容性提供别名）
 try:
     from .encryption_service import DataPackageEncryption as EncryptionService  # noqa: F401
 except ImportError:
-    EncryptionService = None
+    EncryptionService = None  # type: ignore[assignment]
 
-try:
-    from .resource_limiter import RATE_LIMITS  # noqa: F401
-except ImportError:
-    RATE_LIMITS = {}
+# RATE_LIMITS 已移至 app.core.security 模块的 check_rate_limit() 函数管理
+# 保留空 dict 以防外部依赖
+RATE_LIMITS: dict = {}
 
 __all__ = [
     # cache_service

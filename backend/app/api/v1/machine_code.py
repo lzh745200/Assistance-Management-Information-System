@@ -723,7 +723,7 @@ async def get_machine_code_permissions(
 
     需要权限：管理员或超级管理员
     """
-    require_admin(current_user, "仅管理员可查看机器码权限")
+    require_admin(current_user, error_message="仅管理员可查看机器码权限")
 
     try:
         service = MachineCodePermissionService(db)
@@ -758,7 +758,7 @@ async def grant_machine_code_permissions(
 
     需要权限：管理员或超级管理员
     """
-    require_admin(current_user, "仅管理员可管理机器码权限")
+    require_admin(current_user, error_message="仅管理员可管理机器码权限")
 
     try:
         service = MachineCodePermissionService(db)
@@ -790,7 +790,7 @@ async def revoke_machine_code_permissions(
 
     需要权限：管理员或超级管理员
     """
-    require_admin(current_user, "仅管理员可管理机器码权限")
+    require_admin(current_user, error_message="仅管理员可管理机器码权限")
 
     try:
         service = MachineCodePermissionService(db)
@@ -820,7 +820,7 @@ async def revoke_single_machine_code_permission(
 
     需要权限：管理员或超级管理员
     """
-    require_admin(current_user, "仅管理员可管理机器码权限")
+    require_admin(current_user, error_message="仅管理员可管理机器码权限")
 
     try:
         service = MachineCodePermissionService(db)
@@ -847,7 +847,7 @@ async def get_user_effective_permissions(
 
     需要权限：管理员或超级管理员
     """
-    require_admin(current_user, "仅管理员可查看用户实际权限")
+    require_admin(current_user, error_message="仅管理员可查看用户实际权限")
 
     try:
         permissions, restricted = await rbac_service.get_user_permissions_with_restrictions(str(user_id), db)
