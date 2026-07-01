@@ -84,10 +84,14 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install root dependencies
+      - name: Install root dependencies (ARM64 cross-compile)
         run: |
           npm config set registry https://registry.npmmirror.com
           npm install --legacy-peer-deps --no-fund --no-audit
+        env:
+          npm_config_arch: arm64
+          npm_config_target_arch: arm64
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
       - name: Install DEB packaging tools
         run: |
