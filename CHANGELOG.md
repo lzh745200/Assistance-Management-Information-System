@@ -5,6 +5,61 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布] - 2026-07-01
+
+### 安全修复（CVE 批量升级）
+
+- 🔒 **bleach 6.3.0→6.4.0** — 3 个 ReDoS 漏洞 (GHSA-g75f-g53v-794x / GHSA-gj48-438w-jh9v / GHSA-8rfp-98v4-mmr6)
+- 🔒 **Mako 1.3.10→1.3.12** — CVE-2026-44307
+- 🔒 **Pygments 2.19.2→2.20.0** — CVE-2026-4539
+- 🔒 **pytest 9.0.2→9.0.3** — CVE-2025-71176
+
+### 测试质量
+
+- 🔧 **消除 1 个 skipped 测试** — test_map.py 移除 pytest.skip，改为符合实际鉴权行为的断言
+- 🔧 **消除 11 个测试警告** — SAWarning (transaction already deassociated) + StarletteDeprecationWarning
+- 🔧 **conftest.py** — db_session fixture teardown 加 rollback 守卫
+
+### 文档
+
+- 📝 README.md 更新测试数据（8890+ passed, 0 skipped, 0 warnings）
+- 📝 README.md 更新构建命令（electron-builder 替代旧 NSIS 脚本）
+- 📝 AGENTS.md 更新测试数量 + 构建流程 + 审计日志说明
+- 📝 AGENTS.md 新增 PyInstaller spec / NSIS hook 文件引用
+
+## [1.2.0-build] - 2026-06-28
+
+### 构建系统改造
+
+- ✨ **PyInstaller + electron-builder 离线安装包方案** — 目标机器零依赖
+  - 新建 `backend/assistance-backend.spec` 统一打包配置
+  - 新建 `build-scripts/electron-builder-nsis-hook.nsh`（VC++ 静默安装 + 进程终止 + 卸载清理）
+  - 重写 `.github/workflows/build-windows.yml`（matrix x64 + electron-builder 流水线）
+  - 删除 3 旧 spec + 7 旧 .nsi + 3 旧 .bat
+- 🐛 **预置初始数据库打包** — `resources/database/rural_revitalization.db` 加入 extraResources
+- 🐛 **electron/main.js 数据库文件名统一** — bumofu.db → rural_revitalization.db
+- 🐛 **electron/main.js 图标路径修复** — resources/icon.png → resources/icons/icon.png
+
+## [1.2.0-security] - 2026-06-23
+
+### P0 安全修复
+
+- 🔒 **密码明文打印移除** — machine_code.py / main.py，改为写入临时文件
+- 🔒 **.env 明文密钥清空** — runtime_secrets.py 自动生成
+- 🔒 **根 .env 配置混乱修复** — 版本号/端口/密钥
+- 🔒 **审计日志落库修复（涉军合规）** — AuditLogger._persist_to_db()，端到端验证通过
+- 🔒 **后端 CVE 包升级** — starlette/python-multipart/urllib3/requests/GitPython/Twisted/pydantic-settings
+- 🔒 **前端 dompurify 升级** — CVE 修复
+
+### P1 安全配置
+
+- 🔒 **.env.example 安全配置** — CSRF_ENABLED=True, token 480 分钟
+- 🔒 **前端 .env.production CSRF 开启**
+- 🔒 **关键路径 except Exception 加 as e**（13 处：auth/audit/security/token）
+- 🔒 **动态 SQL 标识符白名单** — metrics.py _SAFE_TABLE_NAMES
+- 🔒 **database_health_service 路径解析修复**
+- 🔒 **encryption.py MD5 弃用处理** — usedforsecurity=False + nosec
+
 ## [1.2.0] - 2026-06-20
 
 ### 修复（生产崩溃）

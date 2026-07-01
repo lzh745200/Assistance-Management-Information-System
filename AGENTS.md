@@ -14,9 +14,9 @@ FastAPI + Vue 3 + Electron + SQLite. Windows primary, Linux ARM64 (Kylin V10) se
 ```bash
 cd backend
 .venv\Scripts\python start.py                          # Start server (http://localhost:8000)
-python -m pytest tests/ -v --tb=short -q --timeout=60  # Run all tests (~2300)
+python -m pytest tests/ -v --tb=short -q --timeout=60  # Run all tests (~8890)
 python -m pytest tests/unit/test_xxx.py -v              # Run single test file
-python -m flake8 app/ --max-line-length=120             # Lint (CI gate)
+python -m flake8 app/ --max-line-length=120             # Lint (CI gate, 0 errors)
 python -m mypy app/ --config-file=mypy.ini --ignore-missing-imports  # Type check (non-blocking)
 python -m bandit -r app/ -ll                            # Security scan
 ```
@@ -111,9 +111,18 @@ python scripts/audit_static_assets.py --verbose  # Verify static assets
 ### Electron Packaging
 
 ```bash
-npm run electron:build           # Build for current platform
-npm run electron:build:win       # Windows NSIS installer
+# PyInstaller 打包后端（内含 Python 解释器 + 全部 pip 依赖 + SQLite）
+cd backend && python -m PyInstaller assistance-backend.spec --clean --noconfirm
+
+# electron-builder 打包 NSIS 安装包
+npx electron-builder --win --x64    # Windows x64
+
+# 或通过 Makefile
+make build-win-x64                  # 一键构建 Windows x64
+make build-kylin                    # Linux ARM64 DEB
 ```
+
+安装包结构：Electron 运行时 + `assistance-backend.exe`（PyInstaller）+ Vue3 前端 + VC++ Redistributable（NSIS 钩子静默安装）。目标机器零依赖。
 
 ### DEB Packages (Docker cross-compile)
 
@@ -148,6 +157,14 @@ After `npm run build`, run `scripts/build/sync-frontend-dist.sh` to sync. Browse
 ### Pre-commit Hooks: Dockerfile Check
 
 `.pre-commit-config.yaml` includes a `check-dockerfile-tail` hook that rejects Dockerfile RUN commands ending in `2>&1` without `| tail`. This prevents accidental removal of output truncation in ARM64 builds.
+
+### Audit Log Persistence (Military Compliance)
+
+AuditLogger.log() writes to both Python logging (app.log) AND database (audit_logs + login_attempts tables). The DB persistence was added 2026-06-23 after discovering audit events were only going to file logs. End-to-end verified: login failure → login_attempts table count increments.
+
+### Database Path (Packaged Mode)
+
+In packaged (Electron) mode, the SQLite database is stored at `%LOCALAPPDATA%\bumofu-assistance\data\rural_revitalization.db` — NOT the install directory (Program Files requires admin write). Electron main.js injects `DATABASE_URL` env var to backend.exe.
 
 ## Rate Limiting
 
@@ -189,5 +206,7 @@ Every new feature must verify:
 | Design tokens | `frontend/src/styles/tokens.scss` |
 |贵州 region data | `frontend/src/data/guizhouRegion.ts` |
 | Electron main | `electron/main.js` |
-| CI pipeline | `.github/workflows/ci-cd.yml` |
+| PyInstaller spec | `backend/assistance-backend.spec` |
+| NSIS hook | `build-scripts/electron-builder-nsis-hook.nsh` |
+| CI pipeline | `.github/workflows/build-windows.yml` |
 | ARM64 build | `.github/workflows/build-arm64.yml` + `docker/Dockerfile.kylin-standalone` |

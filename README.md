@@ -10,11 +10,12 @@
 
 | 指标 | 结果 |
 |------|------|
-| 后端测试 | 7592+ passed |
-| 前端测试 | 1696+ passed |
-| Flake8 | 0 |
-| TypeScript | 0 |
-| Lint | 0 errors |
+| 后端测试 | 8890+ passed, 0 skipped |
+| 前端测试 | 1676+ passed |
+| Flake8 | 0 错误 |
+| ESLint | 0 warnings |
+| vue-tsc | 0 errors |
+| 测试警告 | 0 |
 
 ## 快速开始
 
@@ -65,7 +66,7 @@ cd frontend && npm install && npm run dev
 - **认证**: JWT + bcrypt + 机器码绑定 + 2FA
 - **缓存**: diskcache + 内存 LRU
 - **任务**: APScheduler（KPI预计算/异常检测/待办提醒/周报）
-- **打包**: PyInstaller（x64/x86/ARM64）
+- **打包**: PyInstaller（x64 + ARM64）+ electron-builder（NSIS 安装包）
 
 ### 前端
 - **框架**: Vue 3 + TypeScript + Vite
@@ -113,11 +114,11 @@ cd frontend && npm install && npm run dev
 ├── electron/                # Electron 桌面壳
 ├── resources/               # 图标、前端构建产物、瓦片
 ├── scripts/                 # 运维脚本 + dev-setup
-├── build-scripts/           # NSIS 安装脚本
+├── build-scripts/           # electron-builder NSIS 钩子 + 构建配置
 ├── deploy/                  # 麒麟 V10 部署配置
-├── docker/                  # Docker 多架构构建
-├── .github/workflows/       # CI/CD (PR checks + builds)
-└── docs/                    # 项目文档（4 大类 30+ 篇）
+├── docker/                  # Docker 多架构构建（ARM64 麒麟单机版）
+├── .github/workflows/       # CI/CD（pr-checks + build-windows + build-arm64）
+└── docs/                    # 项目文档（含系统设计 + 类图 + 时序图）
 ```
 
 ## 构建安装包
@@ -126,16 +127,23 @@ cd frontend && npm install && npm run dev
 # 前端构建
 cd frontend && npm run build
 
-# Windows 安装包 (x64 + x86)
-build-scripts\build_windows_complete.bat
+# Windows x64 安装包（PyInstaller + electron-builder）
+make build-win-x64
 
-# Linux ARM64
-bash build-scripts/build-linux-arm64.sh
+# Windows x86 安装包（已放弃：上游科学计算包不再提供 win32 cp311 wheels）
+# make build-win-x86
+
+# Linux ARM64（Docker 交叉编译）
+make build-kylin
 ```
 
-产物：
-- `dist/windows/帮扶管理信息系统_1.2.0_win_x64.exe` (224 MB)
-- `dist/windows/帮扶管理信息系统_1.2.0_win_x86.exe` (95 MB)
+产物（由 GitHub Actions 自动构建）：
+- `dist/electron/帮扶管理系统 Setup 1.2.0-x64.exe` (~280 MB)
+- `dist/deb/kylin/*.deb`（ARM64 麒麟 V10 单机版）
+
+### 打包方案
+
+PyInstaller 将 FastAPI 后端打包为 `assistance-backend.exe`（内含 Python 解释器 + 全部 pip 依赖 + SQLite），electron-builder 将其与 Electron 运行时 + Vue3 前端 + VC++ Redistributable 一起打包为 NSIS 安装包。目标机器零依赖。
 
 ## 测试
 
@@ -153,10 +161,11 @@ cd frontend && npm run lint && npm run type-check
 
 ## 关键设计
 
-- 项目完全离线运行，安装包内置所有运行时
+- 项目完全离线运行，安装包内置所有运行时（Python 解释器 + 全部依赖 + SQLite + VC++ 运行库）
+- 审计日志落库（audit_logs + login_attempts 表），涉军合规
 - Schema 权威来源: `backend/app/models/` 和 Alembic 迁移
-- 版本号: `backend/app/core/config.py` → `PROJECT_VERSION`
-- 数据库: `backend/data/rural_revitalization.db`
+- 版本号: `backend/app/core/config.py` → `PROJECT_VERSION` = `1.4.1`
+- 数据库: 用户目录 `%LOCALAPPDATA%/bumofu-assistance/data/rural_revitalization.db`（非安装目录）
 - **菜单权限**: 后端 MENU_DEFINITIONS → `/menus/accessible` → Pinia store → 侧边栏 v-if + QuickActions v-if
 - **自动备份已禁用**: 防止生成大文件占用磁盘
 
@@ -175,4 +184,4 @@ cd frontend && npm run lint && npm run type-check
 
 ---
 
-**版本**: v1.2.0 | **更新**: 2026-06-22
+**版本**: v1.2.0 | **更新**: 2026-07-01

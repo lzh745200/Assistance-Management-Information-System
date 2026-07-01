@@ -37,16 +37,19 @@ cd ../backend && python -m PyInstaller assistance-backend.spec --clean --noconfi
 
 # 3. Electron 打包
 cd ..
-npx electron-builder --win --x64    # 64 位安装包
-npx electron-builder --win --ia32   # 32 位安装包
+npx electron-builder --win --x64    # 64 位安装包（主力）
+# npx electron-builder --win --ia32   # 32 位（已放弃：上游科学计算包不再提供 win32 cp311 wheels）
 ```
 
-也可使用 Makefile 快捷命令：`make build-win-x64` / `make build-win-x86` / `make build-win-all`
+也可使用 Makefile 快捷命令：`make build-win-x64`
+
+> **x86 说明**：x86/32-bit 构建已放弃（上游科学计算包 numpy/scipy/scikit-learn 不再提供 win32 cp311 wheels）。CI 仅构建 x64。
 
 ### 产物位置
 
-- 安装包：`dist/electron/帮扶管理系统-Setup-<version>.exe`
-- 后端 exe：`backend/dist/assistance-backend.exe`
+- 安装包：`dist/electron/帮扶管理系统 Setup <version>-x64.exe`（~280MB）
+- 后端 exe：`backend/dist/assistance-backend.exe`（~85MB）
+- 预置数据库：`resources/database/rural_revitalization.db`（打包进安装包，首次运行复制到用户目录）
 
 ### VC++ 运行库策略（双保险）
 

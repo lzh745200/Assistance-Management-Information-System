@@ -11,9 +11,12 @@
 - **[开发指南](03-开发文档/02-开发指南/)** — 前后端开发规范
 - **[部署文档](04-部署文档/)** — Windows/Linux/Docker 部署
 - **[ER 图](ER-DIAGRAM.md)** — 数据库关系图
+- **[系统设计（打包方案）](system_design.md)** — Windows 离线安装包打包方案 + 类图 + 时序图
 
 ## 文档约定
 
 - 所有文档以项目根目录 `README.md` 为准
 - 版本号统一使用 `backend/app/core/config.py` 中的 `PROJECT_VERSION`
 - Schema 以 `backend/app/models/` 和 Alembic 迁移为准
+- 构建配置以 `package.json` build 段 + `backend/assistance-backend.spec` 为准
+- 审计日志必须同时写入文件日志和数据库（audit_logs + login_attempts 表）
