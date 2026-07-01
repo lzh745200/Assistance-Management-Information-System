@@ -123,10 +123,14 @@ class TestInvalidateMapCache:
 # ── API endpoint tests ───────────────────────────────────────────────
 
 class TestGetMapConfig:
-    def test_success_without_auth(self, client):
+    def test_requires_auth(self, client):
+        """地图配置接口需要认证"""
         resp = client.get(f"{BASE}/config")
-        if resp.status_code == 401:
-            pytest.skip("endpoint requires auth despite expectations")
+        assert resp.status_code == 401
+
+    def test_success_with_auth(self, client_with_mocked_auth):
+        """认证后可获取地图配置"""
+        resp = client_with_mocked_auth.get(f"{BASE}/config")
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
@@ -203,13 +207,12 @@ class TestGetCountyCoordinates:
 
 
 class TestGetRegions:
-    def test_requires_auth_error(self, client):
-        """This endpoint actually doesn't use get_current_user, so it should work"""
+    def test_success_without_auth(self, client):
+        """行政区划接口无需认证，直接返回数据"""
         resp = client.get(f"{BASE}/regions")
-        # It may work without auth since it only uses get_db
-        if resp.status_code == 401:
-            pytest.skip("region endpoint requires auth")
-        assert resp.status_code in (200, 401)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "success" in data or "items" in data or isinstance(data, list)
 
 
 class TestUpdateMarkerCoordinates:

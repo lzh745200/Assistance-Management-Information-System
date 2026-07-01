@@ -695,6 +695,7 @@ async def validate_yearly_data(
 async def get_section_attachments(
     village_id: int,
     section: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """获取帮扶村某区块的附件列表"""
@@ -730,6 +731,7 @@ async def upload_section_attachment(
     village_id: int,
     section: str,
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """上传帮扶村某区块的附件"""
@@ -763,6 +765,7 @@ async def delete_section_attachment(
     village_id: int,
     section: str,
     attachment_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """删除帮扶村某区块的附件"""
@@ -787,6 +790,7 @@ async def delete_section_attachment(
 async def save_committee_data(
     village_id: int,
     data: dict,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """保存帮扶村委数据"""
@@ -814,6 +818,7 @@ async def save_committee_data(
 async def import_section_data(
     village_id: int,
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """导入帮扶村单个区块数据（Excel）"""
@@ -832,6 +837,7 @@ async def import_section_data(
 async def import_all_sections_data(
     village_id: int,
     file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """导入帮扶村所有区块数据（Excel）"""
@@ -911,7 +917,9 @@ async def save_transition_funding(
 
 
 @router.get("/templates/all")
-async def download_all_templates():
+async def download_all_templates(
+    current_user: User = Depends(get_current_user),
+):
     """下载所有区块模板（Excel 多工作表）"""
     import openpyxl
     wb = openpyxl.Workbook()

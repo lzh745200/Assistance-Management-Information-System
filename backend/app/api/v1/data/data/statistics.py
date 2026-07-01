@@ -233,16 +233,25 @@ async def _get_overview_impl(db: Session):
     except Exception:
         logger.debug("查询今日操作数失败")
 
-    # 近7天数据趋势
+    # 近7天数据趋势（单次 GROUP BY 查询替代 7 次循环查询）
     trend = []
+    try:
+        week_start = (datetime.now() - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
+        daily_results = (
+            db.query(func.date(AuditLog.created_at).label("day"), func.count(AuditLog.id).label("cnt"))
+            .filter(AuditLog.created_at >= week_start)
+            .group_by(func.date(AuditLog.created_at))
+            .all()
+        )
+        day_counts = {r.day: r.cnt for r in daily_results}
+    except Exception:
+        logger.debug("查询近7天趋势失败")
+        day_counts = {}
+
     for i in range(6, -1, -1):
         day = (datetime.now() - timedelta(days=i)).strftime("%m-%d")
-        day_start = (datetime.now() - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
-        day_end = day_start + timedelta(days=1)
-        try:
-            cnt = db.query(AuditLog).filter(AuditLog.created_at >= day_start, AuditLog.created_at < day_end).count()
-        except Exception:
-            cnt = 0
+        day_key = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
+        cnt = day_counts.get(day_key, 0)
         trend.append({"date": day, "operations": cnt})
 
     # 最近操作记录
@@ -452,21 +461,20 @@ async def _get_analysis_data_impl(db: Session):
     has_funding_data = db.query(SupportFunding).count() > 0
 
     if has_villages and has_funding_data:
+        # 单次 GROUP BY 查询替代 5 次循环 × 2 次聚合 = 10 次查询
+        yearly_data = (
+            db.query(
+                SupportFunding.year.label("yr"),
+                func.coalesce(func.sum(SupportFunding.military_investment), 0).label("mil"),
+                func.coalesce(func.sum(SupportFunding.local_investment), 0).label("loc"),
+            )
+            .filter(SupportFunding.year.in_(years))
+            .group_by(SupportFunding.year)
+            .all()
+        )
+        year_map = {r.yr: (float(r.mil or 0), float(r.loc or 0)) for r in yearly_data}
         for yr in years:
-            mil = (
-                db.query(func.coalesce(func.sum(SupportFunding.military_investment), 0))
-                .filter(SupportFunding.year == yr)
-                .scalar()
-                or 0
-            )
-            loc = (
-                db.query(func.coalesce(func.sum(SupportFunding.local_investment), 0))
-                .filter(SupportFunding.year == yr)
-                .scalar()
-                or 0
-            )
-            mil_f = float(mil)
-            loc_f = float(loc)
+            mil_f, loc_f = year_map.get(yr, (0.0, 0.0))
             yr_total = mil_f + loc_f
             growth = round((yr_total - prev_total) / max(prev_total, 1) * 100, 1) if prev_total > 0 else 0
             investment_trend.append(
@@ -486,24 +494,37 @@ async def _get_analysis_data_impl(db: Session):
     ]
     total_cat_inv = 0
     for cat_name, model, inv_field in cat_models:
-        cnt = db.query(model).count()
-        inv = float(db.query(func.coalesce(func.sum(getattr(model, inv_field)), 0)).scalar() or 0)
+        # 合并 count + sum 为单次查询（减少 50% 查询数）
+        result = db.query(
+            func.count(model.id).label("cnt"),
+            func.coalesce(func.sum(getattr(model, inv_field)), 0).label("inv"),
+        ).first()
+        cnt = result.cnt or 0
+        inv = float(result.inv or 0)
         total_cat_inv += inv
         cat_stats.append(
             {"category": cat_name, "count": cnt, "investment": round(inv, 2), "beneficiaries": 0, "ratio": 0}
         )
 
-    # 消费帮扶
-    cons_cnt = db.query(ConsumptionSupport).count()
-    cons_inv = float(db.query(func.coalesce(func.sum(ConsumptionSupport.village_products_purchase), 0)).scalar() or 0)
+    # 消费帮扶（合并 count + sum）
+    cons_result = db.query(
+        func.count(ConsumptionSupport.id).label("cnt"),
+        func.coalesce(func.sum(ConsumptionSupport.village_products_purchase), 0).label("inv"),
+    ).first()
+    cons_cnt = cons_result.cnt or 0
+    cons_inv = float(cons_result.inv or 0)
     total_cat_inv += cons_inv
     cat_stats.append(
         {"category": "消费帮扶", "count": cons_cnt, "investment": round(cons_inv, 2), "beneficiaries": 0, "ratio": 0}
     )
 
-    # 就业帮扶
-    emp_cnt = db.query(EmploymentSupport).count()
-    emp_ben = db.query(func.coalesce(func.sum(EmploymentSupport.trained_population), 0)).scalar() or 0
+    # 就业帮扶（合并 count + sum）
+    emp_result = db.query(
+        func.count(EmploymentSupport.id).label("cnt"),
+        func.coalesce(func.sum(EmploymentSupport.trained_population), 0).label("ben"),
+    ).first()
+    emp_cnt = emp_result.cnt or 0
+    emp_ben = emp_result.ben or 0
     cat_stats.append({"category": "就业帮扶", "count": emp_cnt, "investment": 0, "beneficiaries": int(emp_ben), "ratio": 0})
 
     # 计算占比

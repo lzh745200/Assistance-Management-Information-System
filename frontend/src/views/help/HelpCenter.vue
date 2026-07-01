@@ -152,7 +152,7 @@
                 {{ tag }}
               </el-tag>
             </div>
-            <div class="article-content" v-html="articleDetail.content || '(无内容)'" />
+            <div class="article-content" v-html="sanitizedContent" />
           </div>
           <el-empty v-else description="文档加载失败" />
         </el-card>
@@ -196,6 +196,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, ArrowLeft } from '@element-plus/icons-vue'
 import { helpApi } from '@/api/help'
+import { sanitizeHtml } from '@/utils/sanitize'
 import type {
   HelpCategory,
   HelpArticleSummary,
@@ -229,6 +230,11 @@ const systemInfo = ref<SystemInfo | null>(null)
 const activeCategoryName = computed(() => {
   const cat = categories.value.find((c) => c.key === activeCategory.value)
   return cat?.name || ''
+})
+
+const sanitizedContent = computed(() => {
+  if (!articleDetail.value?.content) return '(无内容)'
+  return sanitizeHtml(articleDetail.value.content)
 })
 
 async function loadCategories() {
@@ -311,11 +317,15 @@ function clearSearch() {
 }
 
 function highlightKeyword(snippet: string): string {
-  if (!searchQuery.value) return snippet
+  if (!searchQuery.value) return sanitizeHtml(snippet || '')
+  // 先清理输入，防止 XSS
+  const safe = sanitizeHtml(snippet || '')
   const escaped = searchQuery.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return snippet.replace(
-    new RegExp(`(${escaped})`, 'gi'),
-    '<span style="background:#fff3cd;padding:0 2px;border-radius:2px">$1</span>'
+  return sanitizeHtml(
+    safe.replace(
+      new RegExp(`(${escaped})`, 'gi'),
+      '<span style="background:#fff3cd;padding:0 2px;border-radius:2px">$1</span>'
+    )
   )
 }
 

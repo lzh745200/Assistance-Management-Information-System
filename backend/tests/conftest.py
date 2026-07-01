@@ -537,6 +537,10 @@ def real_db_session():
     try:
         yield db
     finally:
+        try:
+            db.rollback()
+        except Exception:
+            pass
         db.close()
         engine.dispose()  # 释放连接池，防止内存泄漏
 
@@ -574,6 +578,10 @@ def client_with_db():
     yield TestClient(app, raise_server_exceptions=False), db
 
     app.dependency_overrides = original_overrides
+    try:
+        db.rollback()
+    except Exception:
+        pass
     db.close()
     engine.dispose()
 

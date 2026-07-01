@@ -39,7 +39,8 @@ def db_session(engine):
     session = Session(bind=conn)
     yield session
     session.close()
-    trans.rollback()
+    if trans.is_active:
+        trans.rollback()
     conn.close()
 
 

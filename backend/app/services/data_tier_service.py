@@ -370,7 +370,11 @@ class DataTierService:
         }
 
         # 获取实际存储大小
-        stats = self.get_archive_stats(SessionLocal())
+        _session = SessionLocal()
+        try:
+            stats = self.get_archive_stats(_session)
+        finally:
+            _session.close()
         summary["storage_sizes"] = stats["storage"]
 
         # 生成建议
