@@ -105,12 +105,7 @@
         "Name": "帮扶管理系统",
         "Comment": "军民融合乡村振兴综合管理平台",
         "Categories": ["Office", "Utility"],
-        "StartupNotify": true,
-        "Keywords": ["military;rural;management;军队;乡村振兴;管理"]
-      },
-      "deb": {
-        "afterInstall": "scripts/linux-postinst.sh",
-        "depends": ["libgtk-3-0", "libnotify4", "libnss3", "libxss1", "libxtst6", "libatspi2.0-0", "libuuid1"]
+        "StartupNotify": true
       }
     }
   }

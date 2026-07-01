@@ -134,6 +134,65 @@ jobs:
           ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
           ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
 
+      - name: Inject postinst script into DEB
+        run: |
+          DEB_FILE=$(ls dist/electron/*.deb | head -1)
+          echo "Processing: $DEB_FILE"
+          
+          # Create temp directory for extraction
+          mkdir -p deb_work
+          cd deb_work
+          
+          # Extract .deb
+          ar x "../$DEB_FILE"
+          
+          # Extract control archive
+          mkdir -p DEBIAN
+          tar xf control.tar.* -C DEBIAN/ 2>/dev/null || tar xf control.tar.gz -C DEBIAN/
+          
+          # Write postinst script
+          cat > DEBIAN/postinst << 'POSTINST'
+          #!/bin/bash
+          set -e
+          
+          # Find install directory
+          for dir in /opt/assistance-management-system /opt/帮扶管理系统; do
+            if [ -d "$dir" ]; then
+              # Ensure backend binary is executable
+              if [ -f "$dir/resources/backend/assistance-backend.exe" ]; then
+                chmod +x "$dir/resources/backend/assistance-backend.exe"
+              fi
+              # Ensure main binary is executable
+              if [ -f "$dir/assistance-management-system" ]; then
+                chmod +x "$dir/assistance-management-system"
+              fi
+            fi
+          done
+          
+          # Update desktop database
+          if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database /usr/share/applications/ 2>/dev/null || true
+          fi
+          
+          # Update icon cache
+          if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache /usr/share/icons/ 2>/dev/null || true
+          fi
+          
+          exit 0
+          POSTINST
+          chmod 755 DEBIAN/postinst
+          
+          # Repack control archive
+          tar czf control.tar.gz -C DEBIAN .
+          
+          # Repack .deb
+          ar rcs "../$DEB_FILE" debian-binary control.tar.gz data.tar.*
+          cd ..
+          rm -rf deb_work
+          
+          echo "postinst injected successfully"
+
       - name: Verify DEB package
         run: |
           ls -lh dist/electron/*.deb
