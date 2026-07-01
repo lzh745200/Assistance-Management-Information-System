@@ -89,6 +89,13 @@ jobs:
           npm config set registry https://registry.npmmirror.com
           npm install --legacy-peer-deps --no-fund --no-audit
 
+      - name: Install DEB packaging tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fakeroot dpkg-dev file
+          echo "fakeroot: $(which fakeroot)"
+          echo "dpkg-deb: $(which dpkg-deb)"
+
       - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
@@ -127,7 +134,16 @@ jobs:
 
       - name: Build with electron-builder
         run: |
-          npx electron-builder --linux deb --arm64 --publish never
+          echo "=== Pre-build debug ==="
+          echo "Node: $(node -v)"
+          echo "npm: $(npm -v)"
+          echo "electron-builder: $(npx electron-builder --version)"
+          echo "=== Files check ==="
+          ls -lh backend/dist/assistance-backend.exe
+          ls -lh frontend/dist/index.html
+          ls -lh resources/icons/app-circle-256.png
+          echo "=== Building DEB ==="
+          DEBUG=electron-builder npx electron-builder --linux deb --arm64 --publish never
         env:
           ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
           ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
