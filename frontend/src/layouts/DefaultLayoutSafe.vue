@@ -494,6 +494,9 @@ function handleCommand(command: string) {
   width: 34px;
   height: 34px;
   flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #132818;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
