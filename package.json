@@ -39,7 +39,7 @@
       "electron/**/*",
       "frontend/dist/**/*",
       "node_modules/**/*",
-      "resources/icons/icon.png"
+      "resources/icons/app-circle-256.png"
     ],
     "extraResources": [
       {
@@ -63,7 +63,7 @@
         "filter": ["**/*.exe"]
       },
       {
-        "from": "resources/icons/icon.png",
+        "from": "resources/icons/app-circle-256.png",
         "to": "icon.png"
       }
     ],
@@ -95,15 +95,22 @@
           "arch": ["arm64"]
         }
       ],
-      "icon": "resources/icons/icon.png",
+      "icon": "resources/icons/app-circle-256.png",
+      "executableName": "assistance-management-system",
       "category": "Office",
       "maintainer": "开发团队 <dev@bumofu.com>",
       "synopsis": "帮扶管理系统",
-      "description": "帮扶管理系统 - 贵州省版 Standalone桌面应用",
+      "description": "帮扶管理系统 - 贵州省版 军民融合乡村振兴",
       "desktop": {
         "Name": "帮扶管理系统",
-        "Comment": "帮扶管理系统 - 贵州省版",
-        "Categories": ["Office", "Utility"]
+        "Comment": "军民融合乡村振兴综合管理平台",
+        "Categories": ["Office", "Utility"],
+        "StartupNotify": true,
+        "Keywords": ["military;rural;management;军队;乡村振兴;管理"]
+      },
+      "deb": {
+        "afterInstall": "scripts/linux-postinst.sh",
+        "depends": ["libgtk-3-0", "libnotify4", "libnss3", "libxss1", "libxtst6", "libatspi2.0-0", "libuuid1"]
       }
     }
   }

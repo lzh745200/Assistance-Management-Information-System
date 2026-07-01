@@ -1,0 +1,92 @@
+# ============================================================
+# 帮扶管理信息系统 - ARM64 后端二进制构建
+# 使用 Debian Buster (GLIBC 2.28) 确保兼容麒麟 V10
+# ============================================================
+# 构建方式:
+#   docker buildx build --platform linux/arm64 \
+#     --target builder \
+#     -f docker/Dockerfile.backend-arm64 \
+#     --output type=local,dest=backend/dist \
+#     .
+# ============================================================
+
+FROM --platform=linux/arm64 python:3.11-slim-buster AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+
+# Buster 已 EOL，apt 源重定向到 archive.debian.org
+RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list
+
+# 安装编译依赖
+RUN apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-dev \
+    libffi-dev \
+    libssl-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    libmagic1 \
+    libsqlite3-0 \
+    libgomp1 \
+    file \
+    patchelf \
+    binutils \
+    bc \
+    && rm -rf /var/lib/apt/lists/*
+
+# 验证 GLIBC 版本（必须 <= 2.28 以兼容麒麟 V10）
+RUN ldd --version | head -1 && \
+    GLIBC_VER=$(ldd --version | head -1 | grep -oP '\d+\.\d+' | tail -1) && \
+    echo "构建环境 GLIBC 版本: $GLIBC_VER" && \
+    if [ "$(echo "$GLIBC_VER > 2.28" | bc)" = "1" ]; then \
+        echo "ERROR: GLIBC $GLIBC_VER > 2.28 不兼容麒麟 V10" && exit 1; \
+    fi && \
+    echo "OK: GLIBC <= 2.28 兼容麒麟 V10"
+
+WORKDIR /build
+
+# 生成 ARM64 专用 requirements（排除无 ARM64 wheel 的包）
+COPY backend/requirements.txt .
+RUN grep -v -E '^(prophet|cmdstanpy|stanio|scikit-learn|scipy|Scrapy|Twisted|matplotlib|redis|hiredis|selenium|python-magic-bin|pywin32-ctypes|Automat|constantly|hyperlink|incremental|itemadapter|itemloaders|parsel|Protego|PyDispatcher|queuelib|service-identity|sgmllib3k|tldextract|w3lib|zope|cssselect)' \
+    requirements.txt > requirements-arm64.txt && \
+    echo "python-magic==0.4.27" >> requirements-arm64.txt
+
+# 安装 Python 依赖 + PyInstaller
+RUN pip install --retries 3 --timeout 120 \
+    -r requirements-arm64.txt pyinstaller > /tmp/pip-install.log 2>&1; \
+    code=$?; tail -20 /tmp/pip-install.log; \
+    if [ $code -ne 0 ]; then echo "ERROR: pip install 失败 (exit $code)"; exit 1; fi
+
+# 复制后端源码
+COPY backend/ .
+
+# 验证关键文件
+RUN test -f alembic.ini && test -f start.py && test -d app && test -d alembic && \
+    echo "关键文件检查通过"
+
+# PyInstaller 打包（使用统一 spec，onefile 模式）
+RUN pyinstaller --clean --noconfirm assistance-backend.spec > /tmp/pyinstaller.log 2>&1; \
+    code=$?; tail -30 /tmp/pyinstaller.log; \
+    if [ $code -ne 0 ]; then echo "ERROR: PyInstaller 失败 (exit $code)"; exit 1; fi
+
+# 验证产物
+RUN test -f dist/assistance-backend && \
+    echo "=== 后端二进制 ===" && \
+    ls -lh dist/assistance-backend && \
+    file dist/assistance-backend
+
+# GLIBC 兼容性验证
+RUN echo "=== GLIBC 兼容性验证 ===" && \
+    MAX_GLIBC=$(objdump -T dist/assistance-backend 2>/dev/null | grep -oP 'GLIBC_\K\d+\.\d+' | sort -V | tail -1) && \
+    echo "最高 GLIBC 要求: $MAX_GLIBC" && \
+    if [ "$(echo "$MAX_GLIBC > 2.28" | bc)" = "1" ]; then \
+        echo "ERROR: GLIBC_$MAX_GLIBC > 2.28 不兼容麒麟 V10" && exit 1; \
+    fi && \
+    echo "OK: GLIBC <= 2.28 兼容麒麟 V10"
+
+# 输出阶段：只保留二进制文件
+FROM scratch AS output
+COPY --from=builder /build/dist/assistance-backend /assistance-backend

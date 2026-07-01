@@ -54,7 +54,14 @@ function getBackendExePath() {
   const isWin = process.platform === 'win32';
   const exeName = isWin ? 'assistance-backend.exe' : 'assistance-backend';
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'backend', exeName);
+    const backendDir = path.join(process.resourcesPath, 'backend');
+    const primaryPath = path.join(backendDir, exeName);
+    // On Linux, the binary may be packaged as .exe due to cross-platform extraResources
+    if (!isWin && !fs.existsSync(primaryPath)) {
+      const fallbackPath = path.join(backendDir, 'assistance-backend.exe');
+      if (fs.existsSync(fallbackPath)) return fallbackPath;
+    }
+    return primaryPath;
   }
   return path.join(__dirname, '..', 'backend', 'dist', exeName);
 }
@@ -68,7 +75,7 @@ function getIconPath() {
   if (app.isPackaged) {
     return path.join(process.resourcesPath, 'icon.png');
   }
-  return path.join(__dirname, '..', 'resources', 'icons', 'icon.png');
+  return path.join(__dirname, '..', 'resources', 'icons', 'app-circle-256.png');
 }
 
 // ─── 密钥持久化 ───
