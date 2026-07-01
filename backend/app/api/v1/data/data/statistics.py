@@ -496,11 +496,11 @@ async def _get_analysis_data_impl(db: Session):
     for cat_name, model, inv_field in cat_models:
         # 合并 count + sum 为单次查询（减少 50% 查询数）
         result = db.query(
-            func.count(model.id).label("cnt"),
+            func.count(1).label("cnt"),
             func.coalesce(func.sum(getattr(model, inv_field)), 0).label("inv"),
         ).first()
-        cnt = result.cnt or 0
-        inv = float(result.inv or 0)
+        cnt = (result.cnt if result else 0) or 0
+        inv = float(result.inv if result else 0) or 0.0
         total_cat_inv += inv
         cat_stats.append(
             {"category": cat_name, "count": cnt, "investment": round(inv, 2), "beneficiaries": 0, "ratio": 0}
@@ -508,11 +508,11 @@ async def _get_analysis_data_impl(db: Session):
 
     # 消费帮扶（合并 count + sum）
     cons_result = db.query(
-        func.count(ConsumptionSupport.id).label("cnt"),
+        func.count(1).label("cnt"),
         func.coalesce(func.sum(ConsumptionSupport.village_products_purchase), 0).label("inv"),
     ).first()
-    cons_cnt = cons_result.cnt or 0
-    cons_inv = float(cons_result.inv or 0)
+    cons_cnt = (cons_result.cnt if cons_result else 0) or 0
+    cons_inv = float(cons_result.inv if cons_result else 0) or 0.0
     total_cat_inv += cons_inv
     cat_stats.append(
         {"category": "消费帮扶", "count": cons_cnt, "investment": round(cons_inv, 2), "beneficiaries": 0, "ratio": 0}
@@ -520,11 +520,11 @@ async def _get_analysis_data_impl(db: Session):
 
     # 就业帮扶（合并 count + sum）
     emp_result = db.query(
-        func.count(EmploymentSupport.id).label("cnt"),
+        func.count(1).label("cnt"),
         func.coalesce(func.sum(EmploymentSupport.trained_population), 0).label("ben"),
     ).first()
-    emp_cnt = emp_result.cnt or 0
-    emp_ben = emp_result.ben or 0
+    emp_cnt = (emp_result.cnt if emp_result else 0) or 0
+    emp_ben = (emp_result.ben if emp_result else 0) or 0
     cat_stats.append({"category": "就业帮扶", "count": emp_cnt, "investment": 0, "beneficiaries": int(emp_ben), "ratio": 0})
 
     # 计算占比
