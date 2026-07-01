@@ -28,9 +28,7 @@ jobs:
           mkdir -p backend/dist
           docker buildx build \
             --platform linux/arm64 \
-            --build-arg BUILDKIT_INLINE_CACHE=1 \
-            -t assistance-backend-builder:latest \
-            --target builder \
+            --target output \
             -f docker/Dockerfile.backend-arm64 \
             --output type=local,dest=backend/dist \
             .
