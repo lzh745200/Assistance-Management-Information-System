@@ -18,7 +18,7 @@
               {{ userInfo.name ? userInfo.name.charAt(0) : userInfo.username?.charAt(0) }}
             </el-avatar>
             <div v-else class="avatar-loading">
-              <el-icon :size="40" class="el-icon-loading"><i /></el-icon>
+              <el-icon :size="40"><Loading /></el-icon>
             </div>
             <div class="avatar-uploader">
               <el-upload
@@ -284,6 +284,7 @@
 // @ts-nocheck
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElForm } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 
 import { useUserStore } from '@/stores/user'

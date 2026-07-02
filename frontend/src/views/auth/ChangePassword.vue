@@ -21,7 +21,7 @@
             v-model="passwordForm.oldPassword"
             type="password"
             placeholder="请输入当前密码"
-            prefix-icon="el-icon-lock"
+            :prefix-icon="Lock"
             show-password
             :disabled="loading"
           />
@@ -33,7 +33,7 @@
             v-model="passwordForm.newPassword"
             type="password"
             placeholder="请输入新密码"
-            prefix-icon="el-icon-lock"
+            :prefix-icon="Lock"
             show-password
             :disabled="loading"
             @input="validatePassword"
@@ -87,7 +87,7 @@
             v-model="passwordForm.confirmPassword"
             type="password"
             placeholder="请再次输入新密码"
-            prefix-icon="el-icon-lock"
+            :prefix-icon="Lock"
             show-password
             :disabled="loading"
           />
@@ -147,7 +147,7 @@
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox, ElForm } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { WarningFilled } from '@element-plus/icons-vue'
+import { WarningFilled, Lock } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import { freezeRequests, cancelAllRequests } from '@/api/request'

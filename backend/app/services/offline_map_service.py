@@ -10,9 +10,11 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List, Tuple
 import logging
 
+from app.utils.paths import get_data_path
+
 logger = logging.getLogger(__name__)
 
-TILE_CACHE_DIR = Path("data/offline_tiles")
+TILE_CACHE_DIR = get_data_path("offline_tiles")
 
 
 class OfflineMapService:

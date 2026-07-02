@@ -313,7 +313,7 @@
                 list-type="picture-card"
                 multiple
               >
-                <i class="el-icon-plus"></i>
+                <el-icon><Plus /></el-icon>
                 <div class="el-upload__text">上传附件</div>
               </el-upload>
             </el-form-item>
@@ -473,7 +473,7 @@
                 list-type="picture-card"
                 multiple
               >
-                <i class="el-icon-plus"></i>
+                <el-icon><Plus /></el-icon>
                 <div class="el-upload__text">上传附件</div>
               </el-upload>
             </el-form-item>
@@ -515,7 +515,7 @@
                   size="small"
                   type="info"
                 >
-                  <i class="el-icon-document"></i> {{ file.name }}
+                  <el-icon><Document /></el-icon> {{ file.name }}
                 </el-tag>
               </div>
             </div>
@@ -602,7 +602,7 @@
 // @ts-nocheck
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Plus, Upload, Download, ArrowDown } from '@element-plus/icons-vue'
+import { Search, Plus, Upload, Download, ArrowDown, Document } from '@element-plus/icons-vue'
 import { getRuralWorks, createRuralWork, updateRuralWork, deleteRuralWork } from '@/api/ruralWork'
 // 为 FormRules 定义类型
 type FormRules = Record<string, any[]>

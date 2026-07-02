@@ -48,10 +48,10 @@
         </el-select>
         <div class="right-controls">
           <el-button class="refresh-button" @click="refreshData">
-            <i class="el-icon-refresh"></i> 刷新数据
+            <el-icon><Refresh /></el-icon> 刷新数据
           </el-button>
           <el-button class="export-button" @click="exportAnalysis">
-            <i class="el-icon-download"></i> 导出分析报告
+            <el-icon><Download /></el-icon> 导出分析报告
           </el-button>
         </div>
       </div>
@@ -63,7 +63,7 @@
         <div class="indicator-header">
           <span class="indicator-title">总工作量</span>
           <span class="indicator-icon" style="background-color: #409eff">
-            <i class="el-icon-document"></i>
+            <el-icon><Document /></el-icon>
           </span>
         </div>
         <div class="indicator-content">
@@ -84,7 +84,7 @@
         <div class="indicator-header">
           <span class="indicator-title">平均完成率</span>
           <span class="indicator-icon" style="background-color: #67c23a">
-            <i class="el-icon-finished"></i>
+            <el-icon><Select /></el-icon>
           </span>
         </div>
         <div class="indicator-content">
@@ -105,7 +105,7 @@
         <div class="indicator-header">
           <span class="indicator-title">平均延期率</span>
           <span class="indicator-icon" style="background-color: #f56c6c">
-            <i class="el-icon-warning"></i>
+            <el-icon><Warning /></el-icon>
           </span>
         </div>
         <div class="indicator-content">
@@ -126,7 +126,7 @@
         <div class="indicator-header">
           <span class="indicator-title">总投入资金</span>
           <span class="indicator-icon" style="background-color: #e6a23c">
-            <i class="el-icon-money"></i>
+            <el-icon><Money /></el-icon>
           </span>
         </div>
         <div class="indicator-content">
@@ -152,7 +152,7 @@
           <h3 class="chart-title">工作类型分布</h3>
           <el-dropdown @command="handleTypeChartView">
             <span class="chart-view-trigger">
-              视图 <i class="el-icon-arrow-down el-icon--right"></i>
+              视图 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
             </span>
             <el-dropdown-menu>
               <el-dropdown-item command="pie">饼图</el-dropdown-item>
@@ -174,7 +174,7 @@
           <h3 class="chart-title">工作状态分布</h3>
           <el-dropdown @command="handleStatusChartView">
             <span class="chart-view-trigger">
-              视图 <i class="el-icon-arrow-down el-icon--right"></i>
+              视图 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
             </span>
             <el-dropdown-menu>
               <el-dropdown-item command="doughnut">环形图</el-dropdown-item>
@@ -288,6 +288,15 @@ import { logger } from '@/utils/logger'
 
 import { ref, onMounted, nextTick, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import {
+  Refresh,
+  Download,
+  Document,
+  Select,
+  Warning,
+  Money,
+  ArrowDown,
+} from '@element-plus/icons-vue'
 // 导入Chart.js组件 - Chart.js 4.x使用auto版本自动注册所有组件
 import { Chart } from 'chart.js/auto'
 import { getRuralWorks } from '@/api/ruralWork'
