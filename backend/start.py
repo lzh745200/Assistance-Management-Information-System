@@ -124,7 +124,7 @@ def _check_vcruntime():
 
 
 def _check_port_available(host: str, port: int) -> bool:
-    """检查端口是否可用，不可用时打印占用进程信息"""
+    """检查端口是否可用，不可用时尝试终止旧后端进程并等待释放"""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.bind((host, port))
@@ -132,34 +132,64 @@ def _check_port_available(host: str, port: int) -> bool:
         return True
     except OSError:
         sock.close()
-        print(f"[WARN] 端口 {port} 已被占用")
-        # 尝试打印占用进程信息
-        if sys.platform == 'win32':
-            try:
-                import subprocess
-                result = subprocess.run(
-                    ['netstat', '-aon'],
-                    capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5
-                )
-                for line in result.stdout.splitlines():
-                    if f':{port}' in line and 'LISTENING' in line:
-                        parts = line.split()
-                        pid = parts[-1] if parts else '未知'
-                        print(f"  占用进程 PID: {pid}")
-                        # 尝试获取进程名
-                        try:
-                            name_result = subprocess.run(
-                                ['tasklist', '/fi', f'PID eq {pid}', '/fo', 'csv', '/nh'],
-                                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5
-                            )
-                            if name_result.stdout.strip():
-                                print(f"  占用进程: {name_result.stdout.strip()}")
-                        except Exception:
-                            pass
-                        break
-            except Exception:
-                pass
+
+    print(f"[WARN] 端口 {port} 已被占用，尝试终止占用进程...")
+    if sys.platform != 'win32':
+        print(f"  请手动释放端口 {port} 后重试")
         return False
+
+    # 查找占用端口的进程
+    import subprocess
+    import time as _time
+    old_pids = []
+    try:
+        result = subprocess.run(
+            ['netstat', '-aon'],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5
+        )
+        for line in result.stdout.splitlines():
+            if f':{port}' in line and 'LISTENING' in line:
+                parts = line.split()
+                pid = parts[-1] if parts else None
+                if pid and pid.isdigit():
+                    old_pids.append(int(pid))
+                break
+    except Exception:
+        pass
+
+    if not old_pids:
+        print(f"  无法确定占用进程，请手动释放端口 {port}")
+        return False
+
+    for pid in old_pids:
+        try:
+            name_result = subprocess.run(
+                ['tasklist', '/fi', f'PID eq {pid}', '/fo', 'csv', '/nh'],
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5
+            )
+            proc_info = name_result.stdout.strip() if name_result.stdout.strip() else f"PID {pid}"
+            print(f"  终止进程: {proc_info}")
+            subprocess.run(
+                ['taskkill', '/PID', str(pid), '/F'],
+                capture_output=True, timeout=10
+            )
+        except Exception as e:
+            print(f"  终止进程 {pid} 失败: {e}")
+
+    # 等待端口释放（最多 5 秒）
+    for _ in range(10):
+        _time.sleep(0.5)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.bind((host, port))
+            sock.close()
+            print(f"[OK] 端口 {port} 已释放")
+            return True
+        except OSError:
+            sock.close()
+
+    print(f"[ERROR] 端口 {port} 仍被占用，请手动终止后重试")
+    return False
 
 
 def _ensure_dirs():
