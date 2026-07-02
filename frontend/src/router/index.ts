@@ -357,6 +357,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => retryImport(() => import('@/views/organization/Edit.vue')),
         meta: { title: '编辑机构' },
       },
+      {
+        path: '/organization/pass-code',
+        name: 'OrganizationPassCode',
+        component: () => retryImport(() => import('@/views/organization/PassCodeManagement.vue')),
+        meta: { title: '通行证码管理', roles: ['admin', 'super_admin'] },
+      },
       // ── 数据同步 ──
       {
         path: '/data-sync',

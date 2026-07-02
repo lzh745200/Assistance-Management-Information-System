@@ -26,7 +26,11 @@ class OfflineMapService:
 
     def __init__(self, cache_dir: Optional[Path] = None):
         self.cache_dir = cache_dir or TILE_CACHE_DIR
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"创建离线地图缓存目录失败: {e}")
         self._map_data = {}
         self._downloaded_regions = []
         self._coverage_cache: Optional[Dict[str, Any]] = None

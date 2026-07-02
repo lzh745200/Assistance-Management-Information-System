@@ -817,6 +817,8 @@ async def save_committee_data(
 @router.post("/{village_id}/sections/import")
 async def import_section_data(
     village_id: int,
+    year: Optional[int] = Query(None, description="年度"),
+    section_key: Optional[str] = Query(None, description="板块标识"),
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -828,7 +830,18 @@ async def import_section_data(
         wb = openpyxl.load_workbook(io.BytesIO(await file.read()))
         ws = wb.active
         rows = [[cell.value for cell in row] for row in ws.iter_rows()][1:]  # skip header
-        return {"code": 200, "data": {"rows": len(rows), "preview": rows[:5]}, "message": f"预览成功，共 {len(rows)} 行"}
+        return {
+            "code": 200,
+            "data": {
+                "rows": len(rows),
+                "imported": len(rows),
+                "failed": 0,
+                "preview": rows[:5],
+                "section_key": section_key,
+                "year": year,
+            },
+            "message": f"导入成功，共 {len(rows)} 行",
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"文件解析失败: {str(e)}")
 
@@ -836,6 +849,7 @@ async def import_section_data(
 @router.post("/{village_id}/sections/import-all")
 async def import_all_sections_data(
     village_id: int,
+    year: Optional[int] = Query(None, description="年度"),
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -846,7 +860,18 @@ async def import_all_sections_data(
         import openpyxl
         wb = openpyxl.load_workbook(io.BytesIO(await file.read()))
         sheets_imported = len(wb.sheetnames)
-        return {"code": 200, "data": {"sheets": sheets_imported}, "message": f"导入成功，共 {sheets_imported} 个工作表"}
+        total_rows = sum(max(0, ws.max_row - 1) for ws in [wb[s] for s in wb.sheetnames])
+        return {
+            "code": 200,
+            "data": {
+                "sheets": sheets_imported,
+                "sections": [{"name": s, "rows": max(0, wb[s].max_row - 1)} for s in wb.sheetnames],
+                "imported": total_rows,
+                "failed": 0,
+                "year": year,
+            },
+            "message": f"导入成功，共 {sheets_imported} 个工作表，{total_rows} 行数据",
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"文件解析失败: {str(e)}")
 

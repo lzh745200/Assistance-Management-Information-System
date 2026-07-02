@@ -188,7 +188,7 @@ class MonitoringService:
             db: 数据库会话
         """
         # 获取所有启用的告警规则
-        rules = db.query(AlertRule).filter(AlertRule.enabled is True).all()
+        rules = db.query(AlertRule).filter(AlertRule.enabled.is_(True)).all()
 
         for rule in rules:
             try:

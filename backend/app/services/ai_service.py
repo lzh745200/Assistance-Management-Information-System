@@ -180,9 +180,9 @@ class AIServiceManager:
             {
                 "id": p.id,
                 "name": p.name,
-                "budget": float(p.budget),
-                "actual_cost": float(p.actual_cost),
-                "overspend_ratio": round(float(p.actual_cost - p.budget) / float(p.budget), 4),
+                "budget": float(p.budget or 0),
+                "actual_cost": float(p.actual_cost or 0),
+                "overspend_ratio": round(float((p.actual_cost or 0) - (p.budget or 0)) / float(p.budget or 0), 4),
             }
             for p in over_budget
         ]
@@ -229,9 +229,9 @@ class AIServiceManager:
 
         village_efficiency = []
         for vid, total, allocated, used in village_rows:
-            total_f = float(total)
-            alloc_f = float(allocated)
-            used_f = float(used)
+            total_f = float(total or 0)
+            alloc_f = float(allocated or 0)
+            used_f = float(used or 0)
             village_efficiency.append(
                 {
                     "village_id": vid,
@@ -254,9 +254,9 @@ class AIServiceManager:
             user,
             db=db,
         ).first()
-        g_total = float(global_row[0])
-        g_alloc = float(global_row[1])
-        g_used = float(global_row[2])
+        g_total = float(global_row[0] or 0)
+        g_alloc = float(global_row[1] or 0)
+        g_used = float(global_row[2] or 0)
 
         return {
             "type": "fund_efficiency",
@@ -516,9 +516,9 @@ class AIServiceManager:
             )
             .first()
         )
-        total = float(row[0])
-        allocated = float(row[1])
-        used = float(row[2])
+        total = float(row[0] or 0)
+        allocated = float(row[1] or 0)
+        used = float(row[2] or 0)
 
         current_usage_rate = used / allocated if allocated > 0 else 0.0
         # 线性外推：假设使用进度与时间进度正比

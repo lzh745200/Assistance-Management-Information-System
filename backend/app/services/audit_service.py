@@ -390,7 +390,7 @@ class SecurityEventService:
                 LoginAttempt.username == username,
                 LoginAttempt.ip_address == ip_address,
                 LoginAttempt.attempt_time >= datetime.now() - timedelta(hours=1),
-                LoginAttempt.success is False,
+                LoginAttempt.success.is_(False),
             )
             .count()
         )
@@ -467,7 +467,7 @@ class SecurityEventService:
 
         unresolved_by_severity = dict(
             self.db.query(SecurityEvent.severity, func.count(SecurityEvent.id))
-            .filter(SecurityEvent.resolved is False)
+            .filter(SecurityEvent.resolved.is_(False))
             .group_by(SecurityEvent.severity)
             .all()
         )
@@ -476,7 +476,7 @@ class SecurityEventService:
 
         return {
             "total_events": self.db.query(SecurityEvent).count(),
-            "unresolved_count": self.db.query(SecurityEvent).filter(SecurityEvent.resolved is False).count(),
+            "unresolved_count": self.db.query(SecurityEvent).filter(SecurityEvent.resolved.is_(False)).count(),
             "by_severity": severity_counts,
             "unresolved_by_severity": unresolved_by_severity,
             "recent_events": [e.to_dict() for e in recent_events],

@@ -343,8 +343,8 @@ async function handleDownloadTemplate(sectionKey: string) {
 async function handleImportSection(sectionKey: string, file: any) {
   const rawFile = file.raw || file
   try {
-    const result = await importSectionData(sectionKey, selectedYear.value, rawFile)
-    ElMessage.success(`导入成功 ${result.imported} 条`)
+    const result = await importSectionData(villageId.value, selectedYear.value, sectionKey, rawFile)
+    ElMessage.success(`导入成功 ${result.imported || result.rows || 0} 条`)
     if (result.failed > 0) {
       ElMessage.warning(`${result.failed} 条导入失败`)
     }
@@ -370,9 +370,11 @@ async function handleImportAll(file: any) {
   const rawFile = file.raw || file
   importingAll.value = true
   try {
-    const result = await importAllSectionsData(selectedYear.value, rawFile)
-    const secCount = result.sections?.length || 0
-    ElMessage.success(`全部导入完成：成功 ${result.imported} 条（${secCount} 个板块）`)
+    const result = await importAllSectionsData(villageId.value, selectedYear.value, rawFile)
+    const secCount = result.sections?.length || result.sheets || 0
+    ElMessage.success(
+      `全部导入完成：成功 ${result.imported || result.rows || 0} 条（${secCount} 个板块）`
+    )
     if (result.failed > 0) {
       ElMessage.warning(`${result.failed} 条数据导入失败`)
     }

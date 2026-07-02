@@ -1,4 +1,4 @@
-from app.core.permission_utils import is_superuser, require_admin
+from app.core.permission_utils import is_superuser, is_admin, require_admin
 
 # -*- coding: utf-8 -*-
 """
@@ -439,7 +439,7 @@ async def get_organization_verification_code(
         org_id: 组织ID
     """
     # 权限检查
-    if not is_superuser(current_user):
+    if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     try:
@@ -484,7 +484,7 @@ async def create_organization_pass_code(
         request: 创建请求
     """
     # 权限检查
-    if not is_superuser(current_user):
+    if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     try:
@@ -551,7 +551,7 @@ async def list_organization_pass_codes(
         page_size: 每页数量
     """
     # 权限检查
-    if not is_superuser(current_user):
+    if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     try:
@@ -624,7 +624,7 @@ async def export_organization_pass_codes(
         status: 状态筛选（pending/active/revoked）
     """
     # 权限检查
-    if not is_superuser(current_user):
+    if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     try:

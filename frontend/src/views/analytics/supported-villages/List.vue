@@ -524,16 +524,7 @@ function handleImport() {
 // 下载模板
 async function handleDownloadTemplate() {
   try {
-    const res = await downloadImportTemplate()
-    const blob = res.data || res
-
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '帮扶村导入模板.xlsx'
-    link.click()
-    window.URL.revokeObjectURL(url)
-
+    await downloadImportTemplate()
     // 模板下载成功 — 浏览器已确认
   } catch (error: any) {
     logger.error('下载模板失败:', error)

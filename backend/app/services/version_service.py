@@ -21,7 +21,10 @@ class VersionService:
         self.base_dir = Path(__file__).parent.parent.parent
         self.version_file = self.base_dir / "version.json"
         self.history_file = self.base_dir / "data" / "version_history.json"
-        self.history_file.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self.history_file.parent.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            print(f"Warning: 创建版本历史目录失败: {e}")
 
         # 当前版本信息
         self.current_version = self._load_current_version()

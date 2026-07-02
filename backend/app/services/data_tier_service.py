@@ -71,7 +71,10 @@ class DataTierService:
         self.config = DataTierConfig()
 
         # 确保归档目录存在
-        Path(self.config.COLD_ARCHIVE_PATH).mkdir(parents=True, exist_ok=True)
+        try:
+            Path(self.config.COLD_ARCHIVE_PATH).mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.warning(f"创建归档目录失败: {e}")
 
     def determine_tier(self, record_date: datetime) -> DataTier:
         """

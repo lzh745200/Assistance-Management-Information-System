@@ -222,10 +222,20 @@ request.interceptors.response.use(
           window.location.href = '/login'
         }
       } else if (status === 403) {
-        // CSRF 校验失败时重置 token 缓存，下次不安全请求重新获取
+        // CSRF 校验失败时重置 token 缓存，自动获取新 token 并重试一次
         const msg: string = data?.detail || data?.message || ''
         if (msg.includes('CSRF') || msg.includes('csrf')) {
           _csrfToken = null
+          // 自动重试：获取新 CSRF token 后重发原请求（仅重试一次，防无限循环）
+          if (error.config && !error.config._csrfRetried) {
+            error.config._csrfRetried = true
+            return _ensureCsrfToken().then((newToken) => {
+              if (newToken) {
+                error.config.headers[_CSRF_HEADER_NAME] = newToken
+              }
+              return request.request(error.config)
+            })
+          }
           ElMessage.error('安全校验已过期，请重试（CSRF）')
         } else {
           ElMessage.error(msg || '权限不足，无法执行此操作')

@@ -4,7 +4,7 @@ import logging
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
@@ -142,102 +142,106 @@ async def detect_anomalies(
     db: Session = Depends(get_db),
 ):
     """检测数据异常（首页预警卡片用）"""
-    anomalies = []
+    try:
+        anomalies = []
 
-    current_year = date.today().year
+        current_year = date.today().year
 
-    # 获取当前用户有权访问的村庄ID列表
-    allowed_villages = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user).all()
-    allowed_village_ids = {v.id for v in allowed_villages}
+        # 获取当前用户有权访问的村庄ID列表
+        allowed_villages = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user).all()
+        allowed_village_ids = {v.id for v in allowed_villages}
 
-    # 1. 收入突降检测: 与上一年度相比降幅 > 30%
-    incomes_current = (
-        db.query(VillageIncome)
-        .filter(
-            VillageIncome.year == current_year,
-            VillageIncome.supported_village_id.in_(allowed_village_ids),
-        )
-        .all()
-    )
-
-    # 批量查询上一年度数据和村庄信息，避免N+1查询
-    prev_incomes = {
-        inc.supported_village_id: inc
-        for inc in (
+        # 1. 收入突降检测: 与上一年度相比降幅 > 30%
+        incomes_current = (
             db.query(VillageIncome)
             .filter(
-                VillageIncome.year == current_year - 1,
+                VillageIncome.year == current_year,
                 VillageIncome.supported_village_id.in_(allowed_village_ids),
             )
             .all()
         )
-    }
 
-    village_ids = [inc.supported_village_id for inc in incomes_current]
-    villages_dict = {v.id: v for v in allowed_villages if v.id in village_ids}
+        # 批量查询上一年度数据和村庄信息，避免N+1查询
+        prev_incomes = {
+            inc.supported_village_id: inc
+            for inc in (
+                db.query(VillageIncome)
+                .filter(
+                    VillageIncome.year == current_year - 1,
+                    VillageIncome.supported_village_id.in_(allowed_village_ids),
+                )
+                .all()
+            )
+        }
 
-    for inc in incomes_current:
-        prev = prev_incomes.get(inc.supported_village_id)
-        if prev and prev.per_capita_income and float(prev.per_capita_income) > 0:
-            cur_val = float(inc.per_capita_income or 0)
-            prev_val = float(prev.per_capita_income)
-            change_rate = (cur_val - prev_val) / prev_val
-            if change_rate < -0.3:
-                village = villages_dict.get(inc.supported_village_id)
+        village_ids = [inc.supported_village_id for inc in incomes_current]
+        villages_dict = {v.id: v for v in allowed_villages if v.id in village_ids}
+
+        for inc in incomes_current:
+            prev = prev_incomes.get(inc.supported_village_id)
+            if prev and prev.per_capita_income and float(prev.per_capita_income or 0) > 0:
+                cur_val = float(inc.per_capita_income or 0)
+                prev_val = float(prev.per_capita_income or 0)
+                change_rate = (cur_val - prev_val) / prev_val
+                if change_rate < -0.3:
+                    village = villages_dict.get(inc.supported_village_id)
+                    anomalies.append(
+                        {
+                            "type": "income_drop",
+                            "level": "danger",
+                            "village_id": inc.supported_village_id,
+                            "village_name": (village.village_name if village else f"ID={inc.supported_village_id}"),
+                            "message": f"人均收入同比下降 {abs(round(change_rate * 100, 1))}%",
+                            "detail": f"上年: {prev_val}元 → 本年: {cur_val}元",
+                        }
+                    )
+
+        # 2. 逾期项目检测
+        overdue_projects = (
+            filter_by_data_scope(db.query(Project), Project, current_user)
+            .filter(
+                Project.end_date < date.today(),
+                Project.status.notin_(["completed", "cancelled"]),
+            )
+            .all()
+        )
+        for p in overdue_projects:
+            overdue_days = (date.today() - p.end_date).days if p.end_date else 0
+            if overdue_days > 30:
                 anomalies.append(
                     {
-                        "type": "income_drop",
-                        "level": "danger",
-                        "village_id": inc.supported_village_id,
-                        "village_name": (village.village_name if village else f"ID={inc.supported_village_id}"),
-                        "message": f"人均收入同比下降 {abs(round(change_rate * 100, 1))}%",
-                        "detail": f"上年: {prev_val}元 → 本年: {cur_val}元",
+                        "type": "project_overdue",
+                        "level": "warning",
+                        "project_id": p.id,
+                        "project_name": p.name,
+                        "message": f"项目已逾期 {overdue_days} 天",
+                        "detail": f"计划结束日期: {p.end_date.isoformat() if p.end_date else '未设置'}",
                     }
                 )
 
-    # 2. 逾期项目检测
-    overdue_projects = (
-        filter_by_data_scope(db.query(Project), Project, current_user)
-        .filter(
-            Project.end_date < date.today(),
-            Project.status.notin_(["completed", "cancelled"]),
+        # 3. 预算超支检测
+        over_budget = (
+            filter_by_data_scope(db.query(Project), Project, current_user)
+            .filter(Project.budget > 0, Project.actual_cost > Project.budget)
+            .all()
         )
-        .all()
-    )
-    for p in overdue_projects:
-        overdue_days = (date.today() - p.end_date).days if p.end_date else 0
-        if overdue_days > 30:
+        for p in over_budget:
+            ratio = round((float(p.actual_cost or 0) - float(p.budget or 0)) / float(p.budget or 0) * 100, 1)
             anomalies.append(
                 {
-                    "type": "project_overdue",
+                    "type": "budget_overrun",
                     "level": "warning",
                     "project_id": p.id,
                     "project_name": p.name,
-                    "message": f"项目已逾期 {overdue_days} 天",
-                    "detail": f"计划结束日期: {p.end_date.isoformat() if p.end_date else '未设置'}",
+                    "message": f"实际花费超预算 {ratio}%",
+                    "detail": f"预算: {float(p.budget or 0)}万 → 实际: {float(p.actual_cost or 0)}万",
                 }
             )
 
-    # 3. 预算超支检测
-    over_budget = (
-        filter_by_data_scope(db.query(Project), Project, current_user)
-        .filter(Project.budget > 0, Project.actual_cost > Project.budget)
-        .all()
-    )
-    for p in over_budget:
-        ratio = round((float(p.actual_cost) - float(p.budget)) / float(p.budget) * 100, 1)
-        anomalies.append(
-            {
-                "type": "budget_overrun",
-                "level": "warning",
-                "project_id": p.id,
-                "project_name": p.name,
-                "message": f"实际花费超预算 {ratio}%",
-                "detail": f"预算: {float(p.budget)}万 → 实际: {float(p.actual_cost)}万",
-            }
-        )
-
-    return {"items": anomalies, "total": len(anomalies)}
+        return {"items": anomalies, "total": len(anomalies)}
+    except Exception:
+        logger.exception("Failed to detect anomalies")
+        raise HTTPException(status_code=500, detail="异常检测失败")
 
 
 # ==================== 趋势预测（简单线性回归） ====================
@@ -252,51 +256,55 @@ async def get_trend_prediction(
     """基于历史数据的简单线性回归趋势预测"""
     col = VillageIncome.per_capita_income if metric == "per_capita_income" else VillageIncome.collective_income
 
-    # 仅统计用户有权访问的村庄
-    allowed_villages = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user).all()
-    allowed_village_ids = {v.id for v in allowed_villages}
-    rows = (
-        db.query(VillageIncome.year, func.avg(col))
-        .filter(VillageIncome.supported_village_id.in_(allowed_village_ids))
-        .group_by(VillageIncome.year)
-        .order_by(VillageIncome.year)
-        .all()
-    )
+    try:
+        # 仅统计用户有权访问的村庄
+        allowed_villages = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user).all()
+        allowed_village_ids = {v.id for v in allowed_villages}
+        rows = (
+            db.query(VillageIncome.year, func.avg(col))
+            .filter(VillageIncome.supported_village_id.in_(allowed_village_ids))
+            .group_by(VillageIncome.year)
+            .order_by(VillageIncome.year)
+            .all()
+        )
 
-    if len(rows) < 2:
+        if len(rows) < 2:
+            return {
+                "message": "数据不足，至少需要两年数据",
+                "historical": [],
+                "predicted": [],
+            }
+
+        # 线性回归 y = a + b*x
+        xs = [r[0] for r in rows]
+        ys = [float(r[1] or 0) for r in rows]
+        n = len(xs)
+        mean_x = sum(xs) / n
+        mean_y = sum(ys) / n
+        ss_xy = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys))
+        ss_xx = sum((x - mean_x) ** 2 for x in xs)
+
+        b = ss_xy / ss_xx if ss_xx != 0 else 0
+        a = mean_y - b * mean_x
+
+        # 预测未来2年
+        last_year = xs[-1]
+        predictions = []
+        for offset in range(1, 3):
+            pred_year = last_year + offset
+            pred_value = max(0, round(a + b * pred_year, 2))
+            predictions.append({"year": pred_year, "value": pred_value})
+
         return {
-            "message": "数据不足，至少需要两年数据",
-            "historical": [],
-            "predicted": [],
+            "metric": metric,
+            "historical": [{"year": x, "value": round(y, 2)} for x, y in zip(xs, ys)],
+            "predicted": predictions,
+            "slope": round(b, 4),
+            "intercept": round(a, 4),
         }
-
-    # 线性回归 y = a + b*x
-    xs = [r[0] for r in rows]
-    ys = [float(r[1] or 0) for r in rows]
-    n = len(xs)
-    mean_x = sum(xs) / n
-    mean_y = sum(ys) / n
-    ss_xy = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys))
-    ss_xx = sum((x - mean_x) ** 2 for x in xs)
-
-    b = ss_xy / ss_xx if ss_xx != 0 else 0
-    a = mean_y - b * mean_x
-
-    # 预测未来2年
-    last_year = xs[-1]
-    predictions = []
-    for offset in range(1, 3):
-        pred_year = last_year + offset
-        pred_value = max(0, round(a + b * pred_year, 2))
-        predictions.append({"year": pred_year, "value": pred_value})
-
-    return {
-        "metric": metric,
-        "historical": [{"year": x, "value": round(y, 2)} for x, y in zip(xs, ys)],
-        "predicted": predictions,
-        "slope": round(b, 4),
-        "intercept": round(a, 4),
-    }
+    except Exception:
+        logger.exception("Failed to get trend prediction")
+        raise HTTPException(status_code=500, detail="趋势预测失败")
 
 
 # ==================== 多维度对比 ====================

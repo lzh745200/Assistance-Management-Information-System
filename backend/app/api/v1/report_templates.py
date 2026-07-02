@@ -12,6 +12,7 @@ from datetime import datetime, date as date_type
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
+from app.utils.helpers import safe_json_loads
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook, load_workbook
@@ -442,7 +443,7 @@ async def download_template(
     if not t:
         raise HTTPException(status_code=404, detail="模板不存在")
 
-    fields = json.loads(t.fields) if t.fields else []
+    fields = safe_json_loads(t.fields, default=[])
     wb = Workbook()
     ws = wb.active
     ws.title = t.name[:31]  # Excel sheet name max 31 chars
@@ -1160,7 +1161,7 @@ async def upload_filled_template(
     if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
         raise HTTPException(status_code=400, detail="仅支持 .xlsx / .xls 文件")
 
-    fields = json.loads(t.fields) if t.fields else []
+    fields = safe_json_loads(t.fields, default=[])
     if not fields:
         raise HTTPException(status_code=400, detail="模板未配置字段映射")
 

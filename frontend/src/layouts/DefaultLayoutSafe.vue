@@ -376,7 +376,9 @@
       <el-main id="main-content" class="layout-content" role="main" aria-label="主内容区">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" />
+            <CommonErrorBoundary>
+              <component :is="Component" />
+            </CommonErrorBoundary>
           </transition>
         </router-view>
       </el-main>

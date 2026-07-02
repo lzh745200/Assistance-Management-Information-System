@@ -29,6 +29,7 @@ import App from './App.vue'
 import router from './router'
 import './router/guards'
 import { AuthStorage } from '@/utils/authStorage'
+import { setupGlobalErrorHandler } from '@/utils/errorHandler'
 
 // 全局样式（Element Plus 覆盖 + 通知居中 + 组件美化）
 import '@/styles/index.scss'
@@ -46,6 +47,9 @@ const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
+
+// 安装全局错误处理（window.onerror + unhandledrejection）
+setupGlobalErrorHandler()
 
 // ── 全局：ElMessage 默认显示关闭按钮 + 5s 持续时间 ──
 //    Element Plus 2.x 通过 messageDefaults 对象配置全局默认值（非 ElMessage.defaults）。

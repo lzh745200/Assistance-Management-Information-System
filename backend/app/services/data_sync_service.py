@@ -62,9 +62,12 @@ class DataSyncService:
     def __init__(self):
         from app.utils.paths import get_app_data_dir
 
-        self.sync_dir = get_app_data_dir() / "data_sync"
-        self.sync_dir.mkdir(exist_ok=True)
         self.logger = app_logger
+        self.sync_dir = get_app_data_dir() / "data_sync"
+        try:
+            self.sync_dir.mkdir(exist_ok=True)
+        except Exception as e:
+            self.logger.warning(f"创建同步目录失败: {e}")
 
         # 支持同步的表
         self.syncable_tables = {

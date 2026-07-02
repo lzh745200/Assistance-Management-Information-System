@@ -484,8 +484,8 @@ async def budget_aggregation(
     grand_total_planned = 0
     grand_total_used = 0
     for row in rows:
-        tp = float(row.total_planned)
-        tu = float(row.total_used)
+        tp = float(row.total_planned or 0)
+        tu = float(row.total_used or 0)
         grand_total_planned += tp
         grand_total_used += tu
         execution_rate = round(tu / tp * 100, 2) if tp > 0 else 0
@@ -494,8 +494,8 @@ async def budget_aggregation(
                 "group_key": (str(row.group_key) if row.group_key is not None else "未知"),
                 "count": row.count,
                 "total_planned": tp,
-                "total_approved": float(row.total_approved),
-                "total_allocated": float(row.total_allocated),
+                "total_approved": float(row.total_approved or 0),
+                "total_allocated": float(row.total_allocated or 0),
                 "total_used": tu,
                 "execution_rate": execution_rate,
             }
@@ -603,7 +603,7 @@ async def allocation_plan(
                 "planned_amount": float(f.planned_amount or 0),
                 "approved_amount": float(f.approved_amount or 0),
                 "allocated_amount": float(f.allocated_amount or 0),
-                "baseline_amount": (float(baseline.baseline_amount) if baseline else None),
+                "baseline_amount": (float(baseline.baseline_amount or 0) if baseline else None),
                 "budget_locked": f.budget_locked,
                 "status": f.status,
             }
@@ -860,10 +860,10 @@ async def transfer_ledger(
     )
 
     mil_to_local = sum(
-        float(v.amount) for v in vouchers if v.direction == "military_to_local" and v.status == "confirmed"
+        float(v.amount or 0) for v in vouchers if v.direction == "military_to_local" and v.status == "confirmed"
     )
     local_to_mil = sum(
-        float(v.amount) for v in vouchers if v.direction == "local_to_military" and v.status == "confirmed"
+        float(v.amount or 0) for v in vouchers if v.direction == "local_to_military" and v.status == "confirmed"
     )
 
     return {
@@ -1093,7 +1093,7 @@ async def create_contract_payment(
     if initial_status == "approved":
         c.paid_amount = float(c.paid_amount or 0) + data.amount
         contract_amt = float(c.contract_amount or 0)
-        c.payment_progress = round(float(c.paid_amount) / contract_amt * 100, 2) if contract_amt > 0 else 0
+        c.payment_progress = round(float(c.paid_amount or 0) / contract_amt * 100, 2) if contract_amt > 0 else 0
 
     db.commit()
     db.refresh(payment)
@@ -1258,7 +1258,7 @@ async def fund_flow(
                 "transactions": [
                     {
                         "id": t.id,
-                        "amount": float(t.amount),
+                        "amount": float(t.amount or 0),
                         "purpose": t.purpose,
                         "date": (t.transaction_date.isoformat() if t.transaction_date else None),
                         "receipt_number": t.receipt_number,
@@ -2013,12 +2013,12 @@ async def fund_flow_tree(
             order_nodes.append(
                 {
                     "order_no": o.order_no,
-                    "amount": float(o.total_amount),
+                    "amount": float(o.total_amount or 0),
                     "status": o.status,
                     "children": [
                         {
                             "organization": it.organization_name,
-                            "amount": float(it.amount),
+                            "amount": float(it.amount or 0),
                             "status": it.status,
                         }
                         for it in items
@@ -2041,7 +2041,7 @@ async def fund_flow_tree(
                 "transactions": [
                     {
                         "id": t.id,
-                        "amount": float(t.amount),
+                        "amount": float(t.amount or 0),
                         "purpose": t.purpose,
                         "date": (t.transaction_date.isoformat() if t.transaction_date else None),
                         "handler": t.handler,
@@ -2092,7 +2092,7 @@ def _voucher_to_dict(v: FundTransferVoucher) -> dict:
         "voucher_no": v.voucher_no,
         "direction": v.direction,
         "direction_label": direction_labels.get(v.direction, v.direction),
-        "amount": float(v.amount),
+        "amount": float(v.amount or 0),
         "payer_account": v.payer_account,
         "payee_account": v.payee_account,
         "transfer_date": v.transfer_date.isoformat() if v.transfer_date else None,
@@ -2139,7 +2139,7 @@ def _payment_to_dict(p: FundContractPayment) -> dict:
         "id": p.id,
         "contract_id": p.contract_id,
         "payment_no": p.payment_no,
-        "amount": float(p.amount),
+        "amount": float(p.amount or 0),
         "payment_date": p.payment_date.isoformat() if p.payment_date else None,
         "purpose": p.purpose,
         "voucher_no": p.voucher_no,

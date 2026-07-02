@@ -4,7 +4,6 @@
 """
 
 import hashlib
-import json
 import logging
 import math
 import os
@@ -12,6 +11,8 @@ import random
 import sys
 from pathlib import Path
 from typing import Optional
+
+from app.utils.helpers import safe_json_loads
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
@@ -283,7 +284,7 @@ async def get_regions(
                 "parentCode": r.parent_code,
                 "centerLng": r.center_lng,
                 "centerLat": r.center_lat,
-                "geometry": json.loads(r.geometry_text) if r.geometry_text else None,
+                "geometry": safe_json_loads(r.geometry_text, default=None),
             }
             for r in regions
         ],

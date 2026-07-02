@@ -21,7 +21,10 @@ class LogExportService:
         self.base_dir = Path(__file__).parent.parent.parent
         self.logs_dir = self.base_dir / "logs"
         self.export_dir = self.base_dir / "exports" / "error_reports"
-        self.export_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.export_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            print(f"Warning: 创建导出目录失败: {e}")
 
         # 脱敏规则
         self.sensitive_patterns = {

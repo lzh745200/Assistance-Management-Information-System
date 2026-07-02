@@ -7,7 +7,7 @@ import logging
 from datetime import timezone, datetime
 from typing import List, Optional
 
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import BusinessError
@@ -94,6 +94,18 @@ class OrganizationService:
         prefix = data.code_prefix or "ORG"
         code = self.code_service.generate_code(parent_code=parent_code, prefix=prefix)
 
+        # 排序值自动递增：新增组织默认排到同级末尾
+        max_order = (
+            self.db.query(func.max(Organization.sort_order))
+            .filter(
+                Organization.parent_id == data.parent_id
+                if data.parent_id
+                else Organization.parent_id.is_(None)
+            )
+            .scalar()
+        )
+        sort_order = (max_order or 0) + 1
+
         # 创建组织
         org = Organization(
             code=code,
@@ -102,6 +114,7 @@ class OrganizationService:
             level=level,
             path=path,  # 临时路径，创建后更新
             is_active=data.is_active,
+            sort_order=sort_order,
             description=data.description,
             contact_person=data.contact_person,
             contact_phone=data.contact_phone,

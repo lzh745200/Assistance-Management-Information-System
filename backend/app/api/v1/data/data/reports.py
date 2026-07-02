@@ -11,6 +11,8 @@ from datetime import datetime
 from typing import List, Optional
 from urllib.parse import quote
 
+from app.utils.helpers import safe_json_loads
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -591,16 +593,8 @@ def _subscription_to_response(subscription: ReportSubscription) -> dict:
         "report_type": subscription.report_type,
         "format": subscription.format,
         "year": subscription.year,
-        "village_ids": (
-            json.loads(subscription.village_ids)  # type: ignore[arg-type]
-            if subscription.village_ids
-            else None
-        ),
-        "include_sections": (
-            json.loads(subscription.include_sections)  # type: ignore[arg-type]
-            if subscription.include_sections
-            else None
-        ),
+        "village_ids": safe_json_loads(subscription.village_ids, default=None),
+        "include_sections": safe_json_loads(subscription.include_sections, default=None),
         "frequency": subscription.frequency,
         "send_day": subscription.send_day,
         "send_time": subscription.send_time,

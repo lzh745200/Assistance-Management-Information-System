@@ -44,10 +44,16 @@ export const exportSupportedVillages = (params?: any) =>
     triggerDownload(r.data, m?.[1] || 'supported_villages_export.xlsx')
   })
 export const downloadImportTemplate = () =>
-  api.get('/import/template', {
-    params: { entity_type: 'supported_village' },
-    responseType: 'blob',
-  })
+  api
+    .get('/import/template', {
+      params: { entity_type: 'supported_village' },
+      responseType: 'blob',
+    })
+    .then((r) => {
+      const disp = r.headers?.['content-disposition'] || ''
+      const m = disp.match(/filename[^;=\n]*=["']?([^"';\n]*)["']?/)
+      triggerDownload(r.data, m?.[1] || '帮扶村导入模板.xlsx')
+    })
 export const downloadTemplate = downloadImportTemplate
 
 // ── Filter options ──
@@ -92,8 +98,10 @@ export const savePopulationData = (v: number, y: number, d: any) =>
   saveYearlySectionData(v, y, 'population', d)
 
 // ── Sections ──
-export const getSectionAttachments = (villageId: number, section: string) =>
-  get(`/supported-villages/${villageId}/sections/${section}/attachments`)
+export const getSectionAttachments = async (villageId: number, section: string) => {
+  const res: any = await get(`/supported-villages/${villageId}/sections/${section}/attachments`)
+  return res.items || res.data || []
+}
 export const saveSectionData = (villageId: number, year: number, section: string, data: any) =>
   post(`/supported-villages/${villageId}/yearly/${year}/${section}`, data)
 export const saveCommitteeData = (villageId: number, data: any) =>
@@ -118,26 +126,35 @@ export const saveTransitionFunding = (villageId: number, data: any) =>
   post(`/supported-villages/${villageId}/transition-funding`, data)
 
 // ── Import (yearly overview) ──
-export const importSectionData = (villageId: number, file: File) => {
+export const importSectionData = (
+  villageId: number,
+  year: number,
+  sectionKey: string,
+  file: File
+) => {
   const fd = new FormData()
   fd.append('file', file)
   return apiRequest({
     method: 'POST',
     url: `/supported-villages/${villageId}/sections/import`,
+    params: { year, section_key: sectionKey },
     data: fd,
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
-export const downloadAllTemplates = () =>
-  api.get('/supported-villages/templates/all', { responseType: 'blob' }).then((r) => {
-    triggerDownload(r.data, '全部板块模板.xlsx')
-  })
-export const importAllSectionsData = (villageId: number, file: File) => {
+export const downloadAllTemplates = (year?: number) =>
+  api
+    .get('/supported-villages/templates/all', { params: { year }, responseType: 'blob' })
+    .then((r) => {
+      triggerDownload(r.data, '全部板块模板.xlsx')
+    })
+export const importAllSectionsData = (villageId: number, year: number, file: File) => {
   const fd = new FormData()
   fd.append('file', file)
   return apiRequest({
     method: 'POST',
     url: `/supported-villages/${villageId}/sections/import-all`,
+    params: { year },
     data: fd,
     headers: { 'Content-Type': 'multipart/form-data' },
   })

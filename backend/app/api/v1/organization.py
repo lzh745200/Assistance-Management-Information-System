@@ -9,6 +9,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ...core.cache import cache_manager
@@ -382,6 +383,20 @@ async def create_organization(
     # 确保 is_active 有值
     if "is_active" not in org_data:
         org_data["is_active"] = True
+
+    # 排序值自动递增：新增组织默认排到同级末尾
+    # （sort_order 未显式指定或为 0 时，取当前最大值 +1）
+    if not org_data.get("sort_order"):
+        max_order = (
+            db.query(func.max(Organization.sort_order))
+            .filter(
+                Organization.parent_id == org_data.get("parent_id")
+                if org_data.get("parent_id")
+                else Organization.parent_id.is_(None)
+            )
+            .scalar()
+        )
+        org_data["sort_order"] = (max_order or 0) + 1
 
     org = Organization(**org_data)
     db.add(org)
