@@ -57,8 +57,10 @@ engine = create_engine(
     poolclass=QueuePool if IS_SQLITE else None,
     pool_size=getattr(settings, "DB_POOL_SIZE", 10),
     max_overflow=getattr(settings, "DB_MAX_OVERFLOW", 20),
-    pool_pre_ping=True,  # 连接池健康检查，剔除断开的连接
-    pool_recycle=3600,   # 每小时回收连接，防止长时间运行导致的连接僵死
+    pool_pre_ping=getattr(settings, "DB_POOL_PRE_PING", True),  # 连接池健康检查
+    pool_recycle=getattr(settings, "DB_POOL_RECYCLE", 3600),    # 每小时回收连接
+    pool_timeout=getattr(settings, "DB_POOL_TIMEOUT", 30),      # 获取连接超时
+    echo=getattr(settings, "DB_ECHO", False),                   # SQL 日志（调试用）
     connect_args=connect_args,
 )
 
@@ -121,10 +123,16 @@ def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
 
 
 def get_db() -> Generator[Session, None, None]:
-    """FastAPI 依赖注入：提供数据库 Session，并在请求结束后自动关闭。"""
+    """FastAPI 依赖注入：提供数据库 Session，并在请求结束后自动关闭。
+
+    异常时显式 rollback，避免连接池复用时携带脏事务状态。
+    """
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

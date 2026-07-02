@@ -77,7 +77,8 @@ async def export_excel(
             headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
+        logger.error("导出Excel失败: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="导出失败，请稍后重试或联系管理员")
 
 
 @router.post("/export/pdf")
@@ -110,7 +111,8 @@ async def export_pdf(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
+        logger.error("导出PDF失败: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="导出失败，请稍后重试或联系管理员")
 
 
 @router.get("/export/comprehensive/{year}")
@@ -145,7 +147,8 @@ async def export_comprehensive_report(
             headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
+        logger.error("导出Excel失败: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="导出失败，请稍后重试或联系管理员")
 
 
 # ==================== 数据分析接口 ====================
@@ -160,7 +163,7 @@ async def get_filter_options(
         return service.get_filter_options()
     except Exception as e:
         logger.error("获取筛选选项失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"获取筛选选项失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="获取筛选选项失败，请稍后重试或联系管理员")
 
 
 @router.post("/analytics/filter")
@@ -210,7 +213,7 @@ async def filter_villages(
         }
     except Exception as e:
         logger.error("帮扶村筛选查询失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"查询失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="查询失败，请稍后重试或联系管理员")
 
 
 @router.post("/analytics/drill-down")
@@ -233,7 +236,7 @@ async def drill_down(
         return service.drill_down(query.model_dump())
     except Exception as e:
         logger.error("数据钻取查询失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"查询失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="查询失败，请稍后重试或联系管理员")
 
 
 @router.post("/analytics/compare-villages")
@@ -259,7 +262,7 @@ async def compare_villages(
         return service.compare_villages(village_ids, year, metrics)
     except Exception as e:
         logger.error("帮扶村对比查询失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"查询失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="查询失败，请稍后重试或联系管理员")
 
 
 @router.get("/analytics/compare-years/{village_id}")
@@ -292,7 +295,7 @@ async def compare_years(
         raise HTTPException(status_code=400, detail=f"参数格式错误：{str(e)}")
     except Exception as e:
         logger.error("年份对比查询失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"查询失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="查询失败，请稍后重试或联系管理员")
 
 
 @router.get("/analytics/summary")
@@ -329,7 +332,7 @@ async def get_summary_statistics(
         return service.get_summary_statistics(filters, year)
     except Exception as e:
         logger.error("汇总统计查询失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"查询失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="查询失败，请稍后重试或联系管理员")
 
 
 # ==================== 报表订阅接口 ====================
@@ -376,7 +379,7 @@ async def create_subscription(
     except Exception as e:
         logger.error("创建报表订阅失败: %s", e, exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"创建订阅失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="创建订阅失败，请稍后重试或联系管理员")
 
 
 @router.get("/subscriptions")
@@ -420,7 +423,7 @@ async def list_subscriptions(
         }
     except Exception as e:
         logger.error("获取订阅列表失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"获取订阅列表失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="获取订阅列表失败，请稍后重试或联系管理员")
 
 
 @router.get("/subscriptions/{subscription_id}", response_model=ReportSubscriptionResponse)
@@ -449,7 +452,7 @@ async def get_subscription(subscription_id: int, current_user=Depends(get_curren
         raise
     except Exception as e:
         logger.error("获取订阅详情失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"获取订阅失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="获取订阅失败，请稍后重试或联系管理员")
 
 
 @router.put("/subscriptions/{subscription_id}", response_model=ReportSubscriptionResponse)
@@ -502,7 +505,7 @@ async def update_subscription(
     except Exception as e:
         logger.error("更新订阅配置失败: %s", e, exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"更新订阅失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="更新订阅失败，请稍后重试或联系管理员")
 
 
 @router.delete("/subscriptions/{subscription_id}")
@@ -537,7 +540,7 @@ async def delete_subscription(
     except Exception as e:
         logger.error("删除订阅失败: %s", e, exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"删除订阅失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="删除订阅失败，请稍后重试或联系管理员")
 
 
 @router.post("/subscriptions/{subscription_id}/toggle")
@@ -576,7 +579,7 @@ async def toggle_subscription(
     except Exception as e:
         logger.error("切换订阅状态失败: %s", e, exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"切换订阅状态失败：{str(e)}")
+        raise HTTPException(status_code=500, detail="切换订阅状态失败，请稍后重试或联系管理员")
 
 
 def _subscription_to_response(subscription: ReportSubscription) -> dict:
@@ -679,7 +682,7 @@ async def generate_report(
 
     except Exception as e:
         logger.error("报表生成失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"报表生成失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="报表生成失败，请稍后重试或联系管理员")
 
 
 @router.get("/{report_id}/download")
@@ -749,4 +752,4 @@ async def download_generated_report(
 
     except Exception as e:
         logger.error("报表下载失败: %s", e, exc_info=True)
-        raise HTTPException(status_code=500, detail=f"报表下载失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="报表下载失败，请稍后重试或联系管理员")

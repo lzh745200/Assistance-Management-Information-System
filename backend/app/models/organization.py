@@ -39,6 +39,7 @@ class Organization(BaseModel):
         Index("ix_organizations_org_type", "org_type"),
         Index("ix_organizations_is_active", "is_active"),
         Index("ix_organizations_level", "level"),
+        Index("ix_organizations_created_by", "created_by"),
     )
 
     name = Column(String(200), nullable=False, comment="单位名称")

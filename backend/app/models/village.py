@@ -45,7 +45,12 @@ class Village(Base, TimestampMixin):
     region_code = Column(String(20), nullable=True, comment="行政区划编码（关联 regions.code，用于数据权限前缀匹配）")
 
     # 组织关联
-    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, comment="所属组织ID")
+    organization_id = Column(
+        Integer,
+        ForeignKey("organizations.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="所属组织ID",
+    )
 
     # 经济概况
     total_population = Column(Integer, nullable=True, comment="总人口")

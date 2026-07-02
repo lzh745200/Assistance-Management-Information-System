@@ -14,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.database import IS_SQLITE
 from app.core.exceptions import DatabaseError
 
 # 合法的事务隔离级别白名单
@@ -231,6 +232,10 @@ def with_transaction(isolation_level: Optional[str] = None, readonly: bool = Fal
                 db = kwargs.get("db")
 
             def _apply_tx_settings(sess: Session):
+                # SQLite 不支持 SET TRANSACTION 语法，隔离级别通过 PRAGMA 控制；
+                # 在 SQLite 下直接短路，避免 OperationalError。
+                if IS_SQLITE:
+                    return
                 if _safe_isolation:
                     sess.execute(text(f"SET TRANSACTION ISOLATION LEVEL {_safe_isolation}"))
                 if readonly:

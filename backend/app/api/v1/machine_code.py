@@ -153,7 +153,7 @@ async def get_machine_code():
         }
     except Exception as e:
         logger.error(f"获取机器码失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"获取机器码失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="获取机器码失败，请稍后重试或联系管理员")
 
 
 @router.post("/admin/create", response_model=dict)
@@ -196,7 +196,7 @@ async def admin_create_machine_code(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"录入机器码失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"录入机器码失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="录入机器码失败，请稍后重试或联系管理员")
 
 
 @router.get("/admin/list")
@@ -247,7 +247,7 @@ async def admin_list_machine_codes(
         }
     except Exception as e:
         logger.error(f"查询机器码列表失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"查询失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="查询失败，请稍后重试或联系管理员")
 
 
 @router.post("/admin/revoke/{machine_code_id}")
@@ -276,7 +276,7 @@ async def admin_revoke_machine_code(
         raise
     except Exception as e:
         logger.error(f"撤销机器码失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"撤销失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="撤销失败，请稍后重试或联系管理员")
 
 
 @router.post("/verify-machine-code")
@@ -339,7 +339,7 @@ async def generate_initial_password(
     except Exception as e:
         db.rollback()
         logger.error(f"生成密码失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"生成密码失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="生成密码失败，请稍后重试或联系管理员")
 
 
 @router.post("/reset-password-with-machine-code")
@@ -406,7 +406,7 @@ async def reset_password_with_machine_code(
     except Exception as e:
         db.rollback()
         logger.error(f"重置密码失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"重置密码失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="重置密码失败，请稍后重试或联系管理员")
 
 
 @router.get("/machine-info")
@@ -419,7 +419,7 @@ async def get_machine_info(current_user=Depends(get_current_user)):
         return {"code": 200, "data": machine_info, "message": "获取成功"}
     except Exception as e:
         logger.error(f"获取机器信息失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"获取机器信息失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="获取机器信息失败，请稍后重试或联系管理员")
 
 
 # ==================== 组织通行证码 API ====================
@@ -467,7 +467,7 @@ async def get_organization_verification_code(
         raise
     except Exception as e:
         logger.error(f"获取组织校验码失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"获取组织校验码失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="获取组织校验码失败，请稍后重试或联系管理员")
 
 
 @router.post("/organization/create")
@@ -528,7 +528,7 @@ async def create_organization_pass_code(
     except Exception as e:
         db.rollback()
         logger.error(f"创建组织通行证码失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"创建组织通行证码失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="创建组织通行证码失败，请稍后重试或联系管理员")
 
 
 @router.get("/organization/list")
@@ -605,7 +605,7 @@ async def list_organization_pass_codes(
         raise
     except Exception as e:
         logger.error(f"查询组织通行证码列表失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"查询组织通行证码列表失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="查询组织通行证码列表失败，请稍后重试或联系管理员")
 
 
 @router.get("/organization/export")
@@ -680,7 +680,7 @@ async def export_organization_pass_codes(
         raise
     except Exception as e:
         logger.error(f"导出组织通行证码列表失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"导出组织通行证码列表失败: {str(e)}")
+        raise HTTPException(status_code=500, detail="导出组织通行证码列表失败，请稍后重试或联系管理员")
 
 
 # 机器码权限管理 API

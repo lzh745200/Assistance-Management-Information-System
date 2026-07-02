@@ -11,13 +11,15 @@ def mock_settings():
     os.environ["ENVIRONMENT"] = "testing"
     os.environ["DEBUG"] = "true"
     os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+    os.environ["CSRF_ENABLED"] = "false"
     from app.core.config import settings
     settings.SECRET_KEY = "test-secret-key-32-chars-long!!!!!"
     settings.ENVIRONMENT = "testing"
     settings.DEBUG = True
     settings.DATABASE_URL = "sqlite:///./test.db"
+    settings.CSRF_ENABLED = False
     yield
-    for k in ["SECRET_KEY", "ENVIRONMENT", "DEBUG", "DATABASE_URL"]:
+    for k in ["SECRET_KEY", "ENVIRONMENT", "DEBUG", "DATABASE_URL", "CSRF_ENABLED"]:
         os.environ.pop(k, None)
 
 

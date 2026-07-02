@@ -19,6 +19,7 @@ from app.core.transaction import (
     transactional,
     with_transaction,
 )
+from app.core.database import IS_SQLITE
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -242,7 +243,12 @@ class TestWithTransaction:
         result = my_func()
         assert result == "ok"
         mock_db.commit.assert_called_once()
-        assert mock_db.execute.call_count >= 1
+        # SQLite 下 SET TRANSACTION 被短路，不调用 execute；
+        # 非 SQLite 下才调用。当前测试环境为 SQLite，故 execute 不应被调用。
+        if IS_SQLITE:
+            mock_db.execute.assert_not_called()
+        else:
+            assert mock_db.execute.call_count >= 1
 
     @patch("app.core.transaction.get_db")
     def test_auto_create_failure(self, mock_get_db):
@@ -294,7 +300,11 @@ class TestWithTransaction:
         result = my_func(mock_db)
         assert result == "readonly_ok"
         mock_db.commit.assert_called_once()
-        mock_db.execute.assert_called_with("SET TRANSACTION READ ONLY")
+        # SQLite 下 SET TRANSACTION READ ONLY 被短路，不调用 execute
+        if IS_SQLITE:
+            mock_db.execute.assert_not_called()
+        else:
+            mock_db.execute.assert_called_with("SET TRANSACTION READ ONLY")
 
     @patch("app.core.transaction.text", side_effect=lambda x: x)
     def test_both_isolation_and_readonly(self, mock_text):
@@ -344,9 +354,17 @@ class TestWithTransaction:
         def my_func(session):
             return "never reached"
 
-        with pytest.raises(DatabaseError):
-            my_func()
-        mock_db.rollback.assert_called_once()
+        # SQLite 下 _apply_tx_settings 被短路，execute 不会被调用，
+        # 因此不会触发 RuntimeError，函数正常返回。
+        if IS_SQLITE:
+            result = my_func()
+            assert result == "never reached"
+            mock_db.commit.assert_called_once()
+            mock_db.rollback.assert_not_called()
+        else:
+            with pytest.raises(DatabaseError):
+                my_func()
+            mock_db.rollback.assert_called_once()
 
 
 # ===================================================================

@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
@@ -12,6 +13,8 @@ from app.core.cache import cache_result
 from app.models.machine_code import MachineCode
 from app.models.user import User
 from app.services.user_service import VALID_ROLES
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/users", tags=["用户管理"])
 
@@ -764,8 +767,9 @@ async def change_password(
             entity_name=user.username,
             username=current_user.username,
         )
-    except Exception:
-        pass
+    except Exception as audit_err:
+        # 审计日志写入失败不应阻断密码修改主流程，但必须记录日志便于排查
+        logger.warning("密码修改审计日志写入失败: %s", audit_err, exc_info=True)
 
     return {"code": 200, "message": "密码修改成功"}
 
