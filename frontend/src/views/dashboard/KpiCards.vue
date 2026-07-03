@@ -34,6 +34,8 @@ import { get } from '@/api/request'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { unwrapData } from '@/utils/unwrapData'
 
+const { pushSafe } = useRouterSafe()
+
 export interface DashboardStats {
   total_villages: number
   total_projects: number
@@ -149,12 +151,7 @@ const cards = computed(() => [
 
 function navigateTo(route?: string) {
   if (!route) return
-  try {
-    const { pushSafe } = useRouterSafe()
-    pushSafe(route)
-  } catch {
-    window.location.hash = '#' + route
-  }
+  pushSafe(route)
 }
 
 const SPARK_COLORS = ['#1e4d8c', '#2d6a4f', '#f59e0b', '#ef4444', '#6366f1']
@@ -212,9 +209,7 @@ function initSparklines() {
 
 async function loadStats() {
   try {
-    const res = await get('/dashboard/stats', {
-      params: { refresh: true },
-    } as any)
+    const res = await get('/dashboard/stats', { refresh: true } as any)
     const d = unwrapData<Record<string, number>>(res, {} as Record<string, number>)
     if (d) {
       stats.value = {

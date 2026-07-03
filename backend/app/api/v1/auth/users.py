@@ -10,6 +10,7 @@ from app.core.exceptions import AuthenticationException, NotFoundException
 from app.core.permission_utils import is_superuser, require_admin
 from app.core.security import get_current_user, get_password_hash
 from app.core.cache import cache_result
+from app.core.config import settings
 from app.models.machine_code import MachineCode
 from app.models.user import User
 from app.services.user_service import VALID_ROLES
@@ -765,6 +766,7 @@ async def change_password(
             action="change_password",
             entity_id=user.id,
             entity_name=user.username,
+            user_id=current_user.id,
             username=current_user.username,
         )
     except Exception as audit_err:
@@ -808,9 +810,8 @@ async def upload_avatar(
     if len(content) > max_size:
         raise HTTPException(status_code=400, detail="头像文件不能超过 2MB")
 
-    # 保存文件到 backend/uploads/avatars/（绝对路径，避免 CWD 漂移）
-    backend_dir = _Path(__file__).resolve().parent.parent.parent.parent  # backend/
-    upload_dir = backend_dir / "uploads" / "avatars"
+    # 保存文件到 uploads/avatars/（使用 settings.UPLOAD_DIR，兼容打包模式）
+    upload_dir = _Path(settings.UPLOAD_DIR) / "avatars"
     upload_dir.mkdir(parents=True, exist_ok=True)
     ext = (_os.path.splitext(avatar.filename or "avatar.png")[1] or ".png").lower()
     if ext not in (".jpg", ".jpeg", ".png", ".gif", ".webp"):

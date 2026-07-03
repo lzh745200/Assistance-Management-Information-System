@@ -65,7 +65,7 @@
         <QuickActions
           :is-manager="isManager"
           :is-admin="isAdmin"
-          :backing-up="false"
+          :backing-up="backingUp"
           @backup="handleBackup"
           @restore="handleRestore"
         />
@@ -93,6 +93,11 @@ import QuickActions from './components/QuickActions.vue'
 import ChartRow from './ChartRow.vue'
 import InfoRow from './InfoRow.vue'
 import { useUserStore } from '@/stores/user'
+import { createBackup } from '@/api/backup'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const backingUp = ref(false)
 
 const showLayoutEditor = ref(false)
 const userStore = useUserStore()
@@ -203,11 +208,19 @@ function applyPreset(val: string) {
   setTimeout(() => (layoutSaved.value = false), 2000)
 }
 
-function handleBackup() {
-  ElMessage.info('请前往 系统管理 → 备份管理 手动创建备份')
+async function handleBackup() {
+  backingUp.value = true
+  try {
+    await createBackup('manual')
+    ElMessage.success('备份创建成功')
+  } catch (e: any) {
+    ElMessage.error(e?.message || '备份失败，请前往系统管理→备份管理重试')
+  } finally {
+    backingUp.value = false
+  }
 }
 function handleRestore() {
-  ElMessage.info('请前往 系统管理 → 备份管理 执行恢复')
+  router.push('/system/backup')
 }
 </script>
 

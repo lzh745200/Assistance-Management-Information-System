@@ -233,9 +233,11 @@ interface SnapshotData {
 
 interface ApiStat {
   endpoint: string
-  method: string
-  count: number
-  avg_time_ms: number
+  method?: string
+  count?: number
+  total_requests?: number
+  avg_time_ms?: number
+  avg_response_time_ms?: number
   error_rate: number
 }
 
@@ -290,9 +292,9 @@ const filteredLogs = computed(() => {
 const dbInfo = computed(() => {
   const h = healthData.value
   return {
-    size: h ? `${h.db_size_mb.toFixed(1)} MB` : '--',
+    size: h ? `${(h.db_size_mb ?? 0).toFixed(1)} MB` : '--',
     tableCount: h ? String(h.table_count) : '--',
-    walSize: h ? `${h.wal_size_kb.toFixed(1)} KB` : '--',
+    walSize: h ? `${(h.wal_size_kb ?? 0).toFixed(1)} KB` : '--',
     integrityOk: h?.db_integrity_ok ?? false,
     uptime: h?.uptime_seconds
       ? `${Math.floor(h.uptime_seconds / 3600)}h ${Math.floor((h.uptime_seconds % 3600) / 60)}m`
@@ -326,17 +328,17 @@ const performanceChecks = computed<CheckItem[]>(() => {
     {
       name: 'CPU 使用率',
       passed: (s?.cpu_usage ?? 100) < 90,
-      detail: s ? `${s.cpu_usage.toFixed(1)}%` : '--',
+      detail: s ? `${(s.cpu_usage ?? 0).toFixed(1)}%` : '--',
     },
     {
       name: '内存使用率',
       passed: (s?.memory_usage ?? 100) < 90,
-      detail: s ? `${s.memory_usage.toFixed(1)}%` : '--',
+      detail: s ? `${(s.memory_usage ?? 0).toFixed(1)}%` : '--',
     },
     {
       name: '磁盘使用率',
       passed: (s?.disk_usage ?? 100) < 90,
-      detail: s ? `${s.disk_usage.toFixed(1)}%` : '--',
+      detail: s ? `${(s.disk_usage ?? 0).toFixed(1)}%` : '--',
     },
     { name: '响应时间', passed: true, detail: '< 100ms' },
     {
@@ -434,10 +436,10 @@ const primaryCards = computed<MetricCard[]>(() => {
     makePrimaryCard(
       'cpu',
       '🖥️',
-      hasData ? s!.cpu_usage.toFixed(1) : '--',
+      hasData ? (s!.cpu_usage ?? 0).toFixed(1) : '--',
       '%',
       'CPU 使用率',
-      hasData ? `${s!.cpu_count} 核 · ${s!.process_threads} 线程` : '',
+      hasData ? `${s!.cpu_count ?? 0} 核 · ${s!.process_threads ?? 0} 线程` : '',
       hasData ? s!.cpu_usage : 0,
       hist.map((h) => h.cpu / 100),
       statusInfo(s?.cpu_usage ?? 0),
@@ -446,10 +448,12 @@ const primaryCards = computed<MetricCard[]>(() => {
     makePrimaryCard(
       'memory',
       '💾',
-      hasData ? s!.memory_usage.toFixed(1) : '--',
+      hasData ? (s!.memory_usage ?? 0).toFixed(1) : '--',
       '%',
       '内存使用率',
-      hasData ? `${s!.memory_used_mb.toFixed(0)} / ${s!.memory_total_mb.toFixed(0)} MB` : '',
+      hasData
+        ? `${(s!.memory_used_mb ?? 0).toFixed(0)} / ${(s!.memory_total_mb ?? 0).toFixed(0)} MB`
+        : '',
       hasData ? s!.memory_usage : 0,
       hist.map((h) => h.mem / 100),
       statusInfo(s?.memory_usage ?? 0),
@@ -458,10 +462,12 @@ const primaryCards = computed<MetricCard[]>(() => {
     makePrimaryCard(
       'disk',
       '📀',
-      hasData ? s!.disk_usage.toFixed(1) : '--',
+      hasData ? (s!.disk_usage ?? 0).toFixed(1) : '--',
       '%',
       '磁盘使用率',
-      hasData ? `${s!.disk_used_gb.toFixed(1)} / ${s!.disk_total_gb.toFixed(1)} GB` : '',
+      hasData
+        ? `${(s!.disk_used_gb ?? 0).toFixed(1)} / ${(s!.disk_total_gb ?? 0).toFixed(1)} GB`
+        : '',
       hasData ? s!.disk_usage : 0,
       hist.map((h) => h.disk / 100),
       statusInfo(s?.disk_usage ?? 0),
@@ -486,7 +492,7 @@ const secondaryCards = computed<MetricCard[]>(() => {
     {
       key: 'net_recv',
       icon: '📥',
-      value: hasData ? s!.network_recv_mb.toFixed(1) : '--',
+      value: hasData ? (s!.network_recv_mb ?? 0).toFixed(1) : '--',
       unit: 'MB',
       ...netRecvSi,
       label: '网络接收',
@@ -498,7 +504,7 @@ const secondaryCards = computed<MetricCard[]>(() => {
     {
       key: 'net_sent',
       icon: '📤',
-      value: hasData ? s!.network_sent_mb.toFixed(1) : '--',
+      value: hasData ? (s!.network_sent_mb ?? 0).toFixed(1) : '--',
       unit: 'MB',
       ...netSentSi,
       label: '网络发送',
@@ -636,9 +642,9 @@ function buildChart() {
   chartInstance = echarts.init(chartRef.value, isDark ? 'dark' : undefined)
 
   const endpoints = apiStats.value.slice(0, 10)
-  const names = endpoints.map((e) => `${e.method} ${e.endpoint}`)
-  const counts = endpoints.map((e) => e.count)
-  const avgTimes = endpoints.map((e) => (e.avg_time_ms ?? 0).toFixed(1))
+  const names = endpoints.map((e) => `${e.method ?? ''} ${e.endpoint}`)
+  const counts = endpoints.map((e) => e.count ?? e.total_requests ?? 0)
+  const avgTimes = endpoints.map((e) => (e.avg_response_time_ms ?? e.avg_time_ms ?? 0).toFixed(1))
   const errorRates = endpoints.map((e) => (e.error_rate ?? 0).toFixed(1))
 
   chartInstance.setOption({

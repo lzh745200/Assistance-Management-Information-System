@@ -1013,7 +1013,7 @@ async function handleDeleteAttachment(att: SectionAttachment) {
     return
   }
   try {
-    await deleteSectionAttachment(props.villageId, att.id)
+    await deleteSectionAttachment(props.villageId, props.sectionKey, att.id)
     attachments.value = attachments.value.filter((a) => a.id !== att.id)
     ElMessage.success('删除成功')
   } catch (error: any) {

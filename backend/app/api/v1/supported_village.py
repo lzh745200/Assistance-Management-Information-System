@@ -6,14 +6,15 @@ from typing import Any, Dict, List, Optional
 
 import openpyxl
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.utils.common import dict_keys_to_camel
+from app.utils.common import dict_keys_to_camel, StringHelper
 from app.models.supported_village import (
     SupportedVillage,
     VillagePopulation,
@@ -163,9 +164,14 @@ def _save_section_data(db: Session, model: Any, village_id: int, year: int, data
         db.add(row)
     # 处理村委会成员子表
     members_data = data.pop("members", None)
+    # 将 camelCase 键转为 snake_case 以匹配模型属性名
+    snake_data = {}
     for key, value in data.items():
         if key in _SKIP_COLUMNS:
             continue
+        snake_key = StringHelper.to_snake_case(key) if hasattr(key, 'upper') else key
+        snake_data[snake_key] = value
+    for key, value in snake_data.items():
         if hasattr(row, key):
             setattr(row, key, value)
     if members_data is not None and model is VillageCommitteeInfo:
@@ -715,11 +721,11 @@ async def get_section_attachments(
         "data": [
             {
                 "id": a.id,
-                "filename": a.file_name,
-                "original_name": a.file_name,
-                "file_size": a.file_size,
-                "content_type": a.mime_type,
-                "created_at": a.created_at.isoformat() if a.created_at else None,
+                "fileName": a.file_name,
+                "fileSize": a.file_size,
+                "fileType": a.mime_type,
+                "fileUrl": f"/api/v1/supported-villages/{village_id}/sections/{section}/attachments/{a.id}",
+                "createdAt": a.created_at.isoformat() if a.created_at else None,
             }
             for a in attachments
         ],
@@ -740,9 +746,9 @@ async def upload_section_attachment(
     import os as _os
 
     content = await file.read()
-    upload_dir = "uploads/sections"
+    upload_dir = _os.path.join(settings.UPLOAD_DIR, "sections")
     _os.makedirs(upload_dir, exist_ok=True)
-    file_path = f"{upload_dir}/{village_id}_{section}_{file.filename}"
+    file_path = _os.path.join(upload_dir, f"{village_id}_{section}_{file.filename}")
     with open(file_path, "wb") as f:
         f.write(content)
 
@@ -758,6 +764,34 @@ async def upload_section_attachment(
     db.commit()
     db.refresh(attachment)
     return {"code": 200, "data": {"id": attachment.id, "filename": attachment.file_name}, "message": "上传成功"}
+
+
+@router.get("/{village_id}/sections/{section}/attachments/{attachment_id}")
+async def download_section_attachment(
+    village_id: int,
+    section: str,
+    attachment_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """下载帮扶村某区块的附件"""
+    _get_village_or_404(db, village_id)
+    from app.models.supported_village import VillageAttachment
+    import os as _os
+    attachment = (
+        db.query(VillageAttachment)
+        .filter(VillageAttachment.id == attachment_id, VillageAttachment.supported_village_id == village_id)
+        .first()
+    )
+    if not attachment:
+        raise HTTPException(status_code=404, detail="附件不存在")
+    if not _os.path.exists(attachment.file_path):
+        raise HTTPException(status_code=404, detail="文件不存在")
+    return FileResponse(
+        attachment.file_path,
+        filename=attachment.file_name,
+        media_type=attachment.mime_type or "application/octet-stream",
+    )
 
 
 @router.delete("/{village_id}/sections/{section}/attachments/{attachment_id}")

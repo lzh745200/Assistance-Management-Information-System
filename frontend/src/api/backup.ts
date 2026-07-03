@@ -33,9 +33,7 @@ export async function createBackup(type?: string) {
 }
 
 export async function restoreBackup(filename: string) {
-  const res = await request.post(`${BASE}/restore`, null, {
-    params: { filename },
-  })
+  const res = await request.post(`${BASE}/backup/restore`, { filename })
   return res.data
 }
 
