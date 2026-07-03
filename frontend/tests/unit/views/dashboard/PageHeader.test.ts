@@ -22,7 +22,7 @@ vi.mock("@/stores/auth", () => ({
 // Mock router
 const mockPush = vi.fn();
 vi.mock("vue-router", () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, resolve: vi.fn(() => ({ name: 'TestRoute', matched: [{ path: '/test' }] })) }),
 }));
 
 describe("PageHeader.vue", () => {

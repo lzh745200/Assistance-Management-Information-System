@@ -295,16 +295,21 @@ async function loadData() {
   try {
     const response = await getSupportedVillages({
       page: pagination.page,
-      pageSize: pagination.pageSize,
-      filters: {
-        keyword: filters.keyword || undefined,
-        department: filters.department || undefined,
-        county: filters.county || undefined,
-        isRevitalizationTier: filters.isRevitalizationTier || undefined,
-        isThreeRegions: filters.isThreeRegions,
-        isEthnicArea: filters.isEthnicArea,
-        isKeyCounty: filters.isKeyCounty,
-      },
+      page_size: pagination.pageSize,
+      sort_by: sortParams.prop || undefined,
+      sort_order:
+        sortParams.order === 'ascending'
+          ? 'asc'
+          : sortParams.order === 'descending'
+            ? 'desc'
+            : undefined,
+      keyword: filters.keyword || undefined,
+      department: filters.department || undefined,
+      county: filters.county || undefined,
+      is_revitalization_tier: filters.isRevitalizationTier || undefined,
+      is_three_regions: filters.isThreeRegions || undefined,
+      is_ethnic_area: filters.isEthnicArea || undefined,
+      is_key_county: filters.isKeyCounty || undefined,
     })
     tableData.value = (response as any)?.data?.items || (response as any)?.items
     pagination.total =
@@ -456,6 +461,7 @@ async function handleFormSubmit(data: SupportedVillageCreate) {
       ElMessage.success('更新成功')
     }
     dialogVisible.value = false
+    pagination.page = 1
     loadData()
   } catch (error: any) {
     logger.error('保存失败:', error)

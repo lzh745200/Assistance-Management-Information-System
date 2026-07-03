@@ -94,6 +94,12 @@ vi.mock("@element-plus/icons-vue", () => ({
   Download: { name: "Download", template: "<span>Download</span>" },
   CircleCheckFilled: { name: "CircleCheckFilled", template: "<span>CircleCheckFilled</span>" },
   CircleCloseFilled: { name: "CircleCloseFilled", template: "<span>CircleCloseFilled</span>" },
+  Monitor: { name: "Monitor", template: "<span>Monitor</span>" },
+  Files: { name: "Files", template: "<span>Files</span>" },
+  Coin: { name: "Coin", template: "<span>Coin</span>" },
+  Upload: { name: "Upload", template: "<span>Upload</span>" },
+  Setting: { name: "Setting", template: "<span>Setting</span>" },
+  FirstAidKit: { name: "FirstAidKit", template: "<span>FirstAidKit</span>" },
 }));
 
 // ── Mock ElMessage ──

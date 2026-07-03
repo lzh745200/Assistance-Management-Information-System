@@ -11,7 +11,7 @@ import { mount } from "@vue/test-utils";
 import InfoRow from "@/views/dashboard/InfoRow.vue";
 
 const mockPush = vi.fn();
-vi.mock("vue-router", () => ({ useRouter: () => ({ push: mockPush }) }));
+vi.mock("vue-router", () => ({ useRouter: () => ({ push: mockPush, resolve: vi.fn(() => ({ name: 'TestRoute', matched: [{ path: '/test' }] })) }) }));
 
 vi.mock("@/api/request", () => ({
   default: {

@@ -262,6 +262,7 @@ async function handleSubmit() {
     }
 
     dialogVisible.value = false
+    currentPage.value = 1
     fetchDataWithSort()
   } catch (err: any) {
     ElMessage.error(err.message || '操作失败')

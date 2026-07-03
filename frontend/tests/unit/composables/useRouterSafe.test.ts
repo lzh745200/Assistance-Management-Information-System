@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 const mockPush = vi.fn()
+const mockResolve = vi.fn(() => ({ name: 'TestRoute', matched: [{ path: '/test' }] }))
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, resolve: mockResolve }),
 }))
 
 import { useRouterSafe } from '@/composables/useRouterSafe'
@@ -55,7 +56,9 @@ describe('useRouterSafe', () => {
   })
 
   it('pushSafe 同步异常时也 fallback 到 window.location.href', () => {
-    mockPush.mockImplementationOnce(() => { throw new Error('sync') })
+    mockPush.mockImplementationOnce(() => {
+      throw new Error('sync')
+    })
     const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { pushSafe } = useRouterSafe()
     pushSafe('/safe')

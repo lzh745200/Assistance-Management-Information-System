@@ -17,7 +17,7 @@ export const useVillageStore = defineStore('village', () => {
   async function fetchVillages(params?: any) {
     loading.value = true
     try {
-      const res = await get<any>('/supported-villages', { params })
+      const res = await get<any>('/supported-villages', params)
       const { items, total: t } = unwrapList(res)
       villages.value = items
       total.value = t

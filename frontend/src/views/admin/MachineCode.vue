@@ -170,7 +170,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import request from '@/api/request'
+import { get, post } from '@/api/request'
 import { copyToClipboard } from '@/utils/clipboard'
 
 const userStore = useUserStore()
@@ -202,11 +202,9 @@ const isAdmin = computed(() => {
 const getMachineCode = async () => {
   loading.value = true
   try {
-    const response = await request.get('/machine-code/get-machine-code')
-    if (response.success) {
-      machineData.value = response
-      ElMessage.success('机器码获取成功')
-    }
+    const response = await get('/machine-code/get-machine-code')
+    machineData.value = response
+    ElMessage.success('机器码获取成功')
   } catch (error: any) {
     ElMessage.error(error.message || '获取机器码失败')
   } finally {
@@ -232,14 +230,9 @@ const generatePassword = async () => {
   generatedPassword.value = null
 
   try {
-    const response = await request.post(
-      '/machine-code/generate-initial-password',
-      passwordForm.value
-    )
-    if (response.success) {
-      generatedPassword.value = response
-      ElMessage.success('初始密码已生成')
-    }
+    const response = await post('/machine-code/generate-initial-password', passwordForm.value)
+    generatedPassword.value = response
+    ElMessage.success('初始密码已生成')
   } catch (error: any) {
     ElMessage.error(error.message || '生成密码失败')
   } finally {
@@ -265,13 +258,9 @@ const resetPassword = async () => {
   resetResult.value = null
 
   try {
-    const response = await request.post('/machine-code/reset-password-with-machine-code', null, {
-      params: resetForm.value,
-    })
-    if (response.success) {
-      resetResult.value = response
-      ElMessage.success('密码已重置')
-    }
+    const response = await post('/machine-code/reset-password-with-machine-code', resetForm.value)
+    resetResult.value = response
+    ElMessage.success('密码已重置')
   } catch (error: any) {
     ElMessage.error(error.message || '重置密码失败')
   } finally {

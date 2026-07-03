@@ -454,6 +454,7 @@ async function handleSubmitDialog() {
         ElMessage.success('经费记录已新增')
       }
       dialogVisible.value = false
+      currentPage.value = 1
       fetchData()
     } catch (e: any) {
       ElMessage.error(e?.response?.data?.detail || e?.message || '操作失败')

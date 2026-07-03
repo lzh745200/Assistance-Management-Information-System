@@ -10,7 +10,8 @@ import { ref, computed } from 'vue'
 // Mock vue-router
 vi.mock('vue-router', () => ({
   useRouter: () => ({
-    push: vi.fn()
+    push: vi.fn(),
+    resolve: vi.fn(() => ({ name: 'TestRoute', matched: [{ path: '/test' }] })),
   }),
   useRoute: () => ({
     path: '/dashboard',

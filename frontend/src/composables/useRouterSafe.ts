@@ -37,6 +37,17 @@ export function useRouterSafe() {
   const pushSafe = (path: string | RouteLocationRaw, debugLabel?: string) => {
     const pathString = getPathString(path)
 
+    // 防御性检查：目标路由是否在路由表中注册
+    if (pathString) {
+      const resolved = router.resolve(pathString)
+      if (resolved.name === 'NotFound' || resolved.matched.length === 0) {
+        console.error(`[pushSafe] 路由不存在: ${pathString}${debugLabel ? ` (${debugLabel})` : ''}`)
+        // 仍尝试原生跳转作为兜底（可能是外部链接或尚未注册的路由）
+        window.location.href = pathString
+        return
+      }
+    }
+
     try {
       if (debugLabel && import.meta.env.DEV) {
         console.log(`尝试跳转到${debugLabel}页面`)

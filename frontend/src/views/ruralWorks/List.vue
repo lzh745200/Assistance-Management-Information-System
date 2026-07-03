@@ -488,6 +488,7 @@ async function handleSave() {
       ElMessage.success('保存成功')
     }
     dialogVisible.value = false
+    currentPage.value = 1
     await fetchData()
   } catch (error: any) {
     console.error('保存失败:', error)

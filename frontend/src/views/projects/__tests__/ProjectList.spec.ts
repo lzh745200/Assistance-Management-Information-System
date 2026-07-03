@@ -19,8 +19,9 @@ import { createPinia, setActivePinia } from 'pinia'
 
 // Mock vue-router
 const mockPush = vi.fn()
+const mockResolve = vi.fn(() => ({ name: 'TestRoute', matched: [{ path: '/test' }] }))
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, resolve: mockResolve }),
   useRoute: () => ({ params: {}, query: {} }),
 }))
 
