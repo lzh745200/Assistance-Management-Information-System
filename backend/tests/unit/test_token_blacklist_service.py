@@ -21,6 +21,7 @@ class TestTokenBlacklistServiceInit:
     def test_init_stores_db(self):
         from app.services.token_blacklist_service import TokenBlacklistService
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()
         svc = TokenBlacklistService(db=mock_db)
         assert svc.db is mock_db
 
@@ -28,7 +29,9 @@ class TestTokenBlacklistServiceInit:
 class TestTokenBlacklistServiceAsync:
     @pytest.fixture
     def mock_db(self):
-        return AsyncMock()
+        db = AsyncMock()
+        db.add = MagicMock()
+        return db
 
     @pytest.fixture
     def svc(self, mock_db):

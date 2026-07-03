@@ -1203,7 +1203,7 @@ class TestResolveAnomaly:
         db_session.flush()
         resp = client.post("/api/v1/fund-lifecycle/anomalies/1/resolve", json={"resolution": "已处理"})
         assert resp.status_code == 200
-        assert db_session.query(FundAnomaly).get(1).resolved is True
+        assert db_session.get(FundAnomaly, 1).resolved is True
 
     def test_not_found(self, client):
         resp = client.post("/api/v1/fund-lifecycle/anomalies/999/resolve", json={"resolution": "x"})

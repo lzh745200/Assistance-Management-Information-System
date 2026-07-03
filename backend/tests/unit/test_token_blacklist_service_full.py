@@ -168,6 +168,7 @@ class TestIsBlacklisted:
     async def test_exception_returns_false(self, monkeypatch):
         """DB execute 抛异常 → except → False。"""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()
         mock_db.execute = AsyncMock(side_effect=RuntimeError("db down"))
         svc = TokenBlacklistService(mock_db)
         result = await svc.is_blacklisted("jti-err")
@@ -241,6 +242,7 @@ class TestCleanupExpired:
     async def test_cleanup_exception_returns_zero(self, monkeypatch):
         """execute 抛异常 → except → rollback → 0。"""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()
         mock_db.execute = AsyncMock(side_effect=RuntimeError("db error"))
         mock_db.rollback = AsyncMock()
         svc = TokenBlacklistService(mock_db)
@@ -280,6 +282,7 @@ class TestGetBlacklistCount:
     async def test_count_exception_returns_zero(self, monkeypatch):
         """execute 抛异常 → except → 0。"""
         mock_db = AsyncMock()
+        mock_db.add = MagicMock()
         mock_db.execute = AsyncMock(side_effect=RuntimeError("db error"))
         svc = TokenBlacklistService(mock_db)
         assert await svc.get_blacklist_count() == 0

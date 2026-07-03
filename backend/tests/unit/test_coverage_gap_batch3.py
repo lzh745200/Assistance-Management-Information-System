@@ -5,6 +5,16 @@ from unittest.mock import MagicMock, patch, AsyncMock
 import pytest
 
 
+def _run_async(coro):
+    """同步运行 async 协程（兼容 Python 3.11+，避免 get_event_loop 弃用警告）。"""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(coro)
+
+
 class TestMachineCodeServiceStatic:
     def test_get_machine_code_cached(self):
         from app.services.machine_code_service import MachineCodeService
@@ -355,7 +365,7 @@ class TestRBACService:
     def test_check_permission_admin(self, svc, mock_db):
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()), \
              patch.object(svc, "_has_admin_role", return_value=True):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = _run_async(
                 svc.check_permission("1", "user:read", db=mock_db)
             )
             assert result is True
@@ -364,7 +374,7 @@ class TestRBACService:
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()), \
              patch.object(svc, "_has_admin_role", return_value=False), \
              patch.object(svc, "_has_direct_permission", return_value=True):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = _run_async(
                 svc.check_permission("1", "user:read", db=mock_db)
             )
             assert result is True
@@ -375,7 +385,7 @@ class TestRBACService:
              patch.object(svc, "_has_direct_permission", return_value=False), \
              patch.object(svc, "_has_role_permission", return_value=False), \
              patch.object(svc, "_has_resource_access", return_value=False):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = _run_async(
                 svc.check_permission("1", "user:read", db=mock_db)
             )
             assert result is False
@@ -386,7 +396,7 @@ class TestRBACService:
              patch.object(svc, "_has_direct_permission", return_value=False), \
              patch.object(svc, "_has_role_permission", return_value=False), \
              patch.object(svc, "_has_resource_access", return_value=True):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = _run_async(
                 svc.check_permission("1", "user:read", resource_type="org", resource_id="1", db=mock_db)
             )
             assert result is True
@@ -396,7 +406,7 @@ class TestRBACService:
             mock_db.query.return_value.filter.return_value.all.return_value = [("user:read",)]
             mock_db.query.return_value.join.return_value.filter.return_value.filter.return_value.distinct.return_value.all.return_value = []
             mock_db.query.return_value.filter.return_value.first.return_value = None
-            result = asyncio.get_event_loop().run_until_complete(
+            result = _run_async(
                 svc.get_user_permissions("1", mock_db)
             )
             assert "user:read" in result
@@ -405,7 +415,7 @@ class TestRBACService:
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()):
             mock_db.query.return_value.filter.return_value.all.return_value = [("admin:all",)]
             mock_db.query.return_value.join.return_value.filter.return_value.filter.return_value.distinct.return_value.all.return_value = []
-            result = asyncio.get_event_loop().run_until_complete(
+            result = _run_async(
                 svc.get_user_permissions("1", mock_db)
             )
             assert "user:read" in result
@@ -415,7 +425,7 @@ class TestRBACService:
         with patch.object(svc, "_get_cached_restricted_permissions", return_value=set()):
             mock_db.query.return_value.filter.return_value.all.return_value = [("user:read",), ("admin:all",)]
             mock_db.query.return_value.join.return_value.filter.return_value.filter.return_value.distinct.return_value.all.return_value = []
-            result = asyncio.get_event_loop().run_until_complete(
+            result = _run_async(
                 svc.get_user_permissions_with_restrictions("1", mock_db)
             )
             assert isinstance(result, tuple)
@@ -424,13 +434,13 @@ class TestRBACService:
     def test_assign_role_not_found(self, svc, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
         with pytest.raises(Exception):
-            asyncio.get_event_loop().run_until_complete(
+            _run_async(
                 svc.assign_role("1", "999", "1", db=mock_db)
             )
 
     def test_assign_role_already_exists(self, svc, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = MagicMock()
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.assign_role("1", "1", "1", db=mock_db)
         )
         assert result == {"success": True, "newly_granted": False}
@@ -453,42 +463,42 @@ class TestRBACService:
         q2.filter.return_value = existing_user_role_query
 
         mock_db.query.side_effect = [q1, q2]
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.assign_role("1", "r1", "1", expires_at="2030-01-01T00:00:00", db=mock_db)
         )
         assert result == {"success": True, "newly_granted": True}
 
     def test_revoke_role(self, svc, mock_db):
         mock_db.query.return_value.filter.return_value.delete.return_value = 1
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.revoke_role("1", "1", mock_db)
         )
         assert result is True
 
     def test_revoke_role_none_deleted(self, svc, mock_db):
         mock_db.query.return_value.filter.return_value.delete.return_value = 0
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.revoke_role("1", "1", mock_db)
         )
         assert result is False
 
     def test_grant_permission_new(self, svc, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.grant_permission("1", "user:read", "1", db=mock_db)
         )
         assert result is True
 
     def test_grant_permission_existing(self, svc, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = MagicMock()
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.grant_permission("1", "user:read", "1", db=mock_db)
         )
         assert result is True
 
     def test_grant_permission_with_expiry(self, svc, mock_db):
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.grant_permission("1", "user:read", "1", expires_at="2030-01-01T00:00:00", db=mock_db)
         )
         assert result is True
@@ -498,7 +508,7 @@ class TestRBACService:
         mock_role.id = "new_role_id"
         mock_db.add.return_value = None
         mock_db.flush.return_value = None
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.create_role("test_role", "desc", ["user:read"], db=mock_db)
         )
         assert mock_db.add.called
@@ -512,7 +522,7 @@ class TestRBACService:
         mock_row.granted_by = 1
         mock_row.expires_at = None
         mock_db.query.return_value.join.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_row]
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.get_user_roles("1", mock_db)
         )
         assert len(result) == 1
@@ -527,7 +537,7 @@ class TestRBACService:
         mock_row.granted_by = 1
         mock_row.expires_at = datetime(2030, 1, 1, tzinfo=timezone.utc)
         mock_db.query.return_value.join.return_value.filter.return_value.order_by.return_value.all.return_value = [mock_row]
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.get_user_roles("1", mock_db)
         )
         assert result[0]["expires_at"] is not None
@@ -562,7 +572,7 @@ class TestOrganizationService:
         data.contact_person = None
         data.contact_phone = None
         data.address = None
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.create_organization(data, created_by=1)
         )
         assert db.add.called
@@ -588,7 +598,7 @@ class TestOrganizationService:
         data.contact_person = None
         data.contact_phone = None
         data.address = None
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.create_organization(data, created_by=1)
         )
         assert db.add.called
@@ -601,7 +611,7 @@ class TestOrganizationService:
         data.parent_id = 999
         from app.services.organization_service import OrganizationNotFoundError
         with pytest.raises(OrganizationNotFoundError):
-            asyncio.get_event_loop().run_until_complete(
+            _run_async(
                 svc.create_organization(data, created_by=1)
             )
 
@@ -759,7 +769,7 @@ class TestOrganizationService:
         data = MagicMock()
         from app.services.organization_service import OrganizationNotFoundError
         with pytest.raises(OrganizationNotFoundError):
-            asyncio.get_event_loop().run_until_complete(
+            _run_async(
                 svc.update_organization(999, data, 1)
             )
 
@@ -771,7 +781,7 @@ class TestOrganizationService:
         db.query.return_value.filter.return_value.first.return_value = org
         data = MagicMock()
         data.model_dump.return_value = {"name": "New Name"}
-        result = asyncio.get_event_loop().run_until_complete(
+        result = _run_async(
             svc.update_organization(1, data, 1)
         )
         assert db.commit.called
@@ -782,7 +792,7 @@ class TestOrganizationService:
         db.query.return_value.filter.return_value.first.return_value = None
         from app.services.organization_service import OrganizationNotFoundError
         with pytest.raises(OrganizationNotFoundError):
-            asyncio.get_event_loop().run_until_complete(svc.delete_organization(999))
+            _run_async(svc.delete_organization(999))
 
     def test_delete_org_has_subordinates(self):
         db = MagicMock()
@@ -792,7 +802,7 @@ class TestOrganizationService:
         db.query.return_value.filter.return_value.count.return_value = 2
         from app.services.organization_service import OrganizationHasSubordinatesError
         with pytest.raises(OrganizationHasSubordinatesError):
-            asyncio.get_event_loop().run_until_complete(svc.delete_organization(1))
+            _run_async(svc.delete_organization(1))
 
     def test_delete_org_success(self):
         db = MagicMock()
@@ -800,7 +810,7 @@ class TestOrganizationService:
         org = MagicMock()
         db.query.return_value.filter.return_value.first.return_value = org
         db.query.return_value.filter.return_value.count.return_value = 0
-        result = asyncio.get_event_loop().run_until_complete(svc.delete_organization(1))
+        result = _run_async(svc.delete_organization(1))
         assert result is True
 
     def test_get_statistics_no_root(self):
@@ -1455,6 +1465,7 @@ class TestSupportedVillageService:
     async def test_get_villages_basic(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
         mock_count = MagicMock()
@@ -1470,6 +1481,7 @@ class TestSupportedVillageService:
     async def test_get_villages_with_filters(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
         mock_count = MagicMock()
@@ -1483,6 +1495,7 @@ class TestSupportedVillageService:
     async def test_get_village_found(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_village = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_village
@@ -1495,6 +1508,7 @@ class TestSupportedVillageService:
     async def test_get_village_not_found(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         db.execute = AsyncMock(return_value=mock_result)
@@ -1519,6 +1533,7 @@ class TestSupportedVillageService:
     async def test_update_village_found(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_village = MagicMock()
         mock_village.village_name = "Old"
         mock_result = MagicMock()
@@ -1535,6 +1550,7 @@ class TestSupportedVillageService:
     async def test_update_village_not_found(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         db.execute = AsyncMock(return_value=mock_result)
@@ -1546,6 +1562,7 @@ class TestSupportedVillageService:
     async def test_update_village_skip_none_values(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_village = MagicMock(spec=["village_name", "province"])
         mock_village.village_name = "Old"
         mock_result = MagicMock()
@@ -1561,6 +1578,7 @@ class TestSupportedVillageService:
     async def test_delete_village_found(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_village = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_village
@@ -1577,6 +1595,7 @@ class TestSupportedVillageService:
     async def test_delete_village_not_found(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
         db.execute = AsyncMock(return_value=mock_result)
@@ -1588,6 +1607,7 @@ class TestSupportedVillageService:
     async def test_get_compat_alias(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_village = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_village
@@ -1600,6 +1620,7 @@ class TestSupportedVillageService:
     async def test_get_population_compat(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_village = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_village
@@ -1612,6 +1633,7 @@ class TestSupportedVillageService:
     async def test_get_income_compat(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_village = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = mock_village
@@ -1624,6 +1646,7 @@ class TestSupportedVillageService:
     async def test_get_departments(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_result = MagicMock()
         mock_result.all.return_value = [("Dept A",), ("Dept B",), (None,)]
         db.execute = AsyncMock(return_value=mock_result)
@@ -1637,6 +1660,7 @@ class TestSupportedVillageService:
     async def test_get_departments_empty(self):
         from app.services.supported_village_service import SupportedVillageService
         db = AsyncMock()
+        db.add = MagicMock()
         mock_result = MagicMock()
         mock_result.all.return_value = []
         db.execute = AsyncMock(return_value=mock_result)

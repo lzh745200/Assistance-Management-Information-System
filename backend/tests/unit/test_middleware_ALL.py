@@ -613,7 +613,8 @@ class TestCSRFMiddleware:
         from app.core.config import settings
         with patch.object(settings, "CSRF_ENABLED", True):
             client = TestClient(_make_csrf_app())
-            resp = client.post("/api/data", cookies={"csrftoken": "tok"})
+            client.cookies.set("csrftoken", "tok")
+            resp = client.post("/api/data")
             assert resp.status_code == 403
 
     def test_missing_cookie_only_returns_403(self):
@@ -627,9 +628,9 @@ class TestCSRFMiddleware:
         from app.core.config import settings
         with patch.object(settings, "CSRF_ENABLED", True):
             client = TestClient(_make_csrf_app())
+            client.cookies.set("csrftoken", "tok1")
             resp = client.post(
                 "/api/data",
-                cookies={"csrftoken": "tok1"},
                 headers={"X-CSRF-Token": "tok2"},
             )
             assert resp.status_code == 403
@@ -640,9 +641,9 @@ class TestCSRFMiddleware:
         from app.core.config import settings
         with patch.object(settings, "CSRF_ENABLED", True):
             client = TestClient(_make_csrf_app())
+            client.cookies.set("csrftoken", "same-token")
             resp = client.post(
                 "/api/data",
-                cookies={"csrftoken": "same-token"},
                 headers={"X-CSRF-Token": "same-token"},
             )
             assert resp.status_code == 200

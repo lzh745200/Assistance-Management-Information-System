@@ -7,7 +7,9 @@ from app.services.import_export_history_service import ImportExportHistoryServic
 
 @pytest.fixture
 def db():
-    return AsyncMock()
+    db = AsyncMock()
+    db.add = MagicMock()  # add() is synchronous in SQLAlchemy
+    return db
 
 
 @pytest.fixture

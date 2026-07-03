@@ -1193,6 +1193,7 @@ class TestBaseRepository:
 
     def _make(self):
         db = AsyncMock()
+        db.add = MagicMock()
         return BaseRepository(db), db
 
     @pytest.mark.asyncio
@@ -1316,6 +1317,7 @@ class TestFundRepository:
 
     def _make(self):
         db = AsyncMock()
+        db.add = MagicMock()
         return FundRepository(db), db
 
     @pytest.mark.asyncio

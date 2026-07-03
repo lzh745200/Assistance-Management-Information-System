@@ -9,7 +9,9 @@ class TestPhaseInitService:
 
     @pytest.fixture
     def mock_db(self):
-        return AsyncMock(name="AsyncSession")
+        db = AsyncMock(name="AsyncSession")
+        db.add = MagicMock()  # add() is synchronous in SQLAlchemy
+        return db
 
     @pytest.fixture
     def service(self, mock_db):
