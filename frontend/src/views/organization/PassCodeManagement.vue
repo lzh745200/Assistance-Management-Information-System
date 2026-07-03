@@ -200,6 +200,7 @@ import {
   type OrganizationPassCodeResponse,
 } from '@/api/organizationPassCode'
 import { getOrganizationTree } from '@/api/organization'
+import { copyToClipboard } from '@/utils/clipboard'
 import type { OrganizationTreeNode } from '@/types/organization'
 
 // 表单引用
@@ -328,13 +329,7 @@ const handleCopyPassCode = () => {
 
 // 复制到剪贴板
 const handleCopy = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text)
-    ElMessage.success('复制成功')
-  } catch (error) {
-    console.error('复制失败:', error)
-    ElMessage.error('复制失败')
-  }
+  await copyToClipboard(text, '通行证码')
 }
 
 // 查询列表
@@ -369,23 +364,11 @@ const handleResetQuery = () => {
 const handleExport = async () => {
   try {
     exporting.value = true
-    const response = await exportOrganizationPassCodes({
+    await exportOrganizationPassCodes({
       organization_id: queryForm.organization_id,
       status: queryForm.status,
     })
-
-    // 创建下载链接
-    const blob = new Blob([response], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `组织通行证码列表_${new Date().getTime()}.xlsx`
-    link.click()
-    window.URL.revokeObjectURL(url)
-
-    // 导出成功 — 浏览器已确认
+    // 导出成功 — API 函数内部已处理文件下载
   } catch (error) {
     console.error('导出失败:', error)
     ElMessage.error('导出失败')

@@ -2,7 +2,7 @@
  * 机器码管理 API
  */
 
-import request from '@/api/request'
+import { apiRequest } from '@/api/request'
 
 export interface MachineCodeInfo {
   machine_code: string
@@ -40,7 +40,7 @@ export interface MachineCodeListResponse {
  * 获取当前机器的机器码
  */
 export function getMachineCode() {
-  return request<{ data: MachineCodeInfo }>({
+  return apiRequest<{ data: MachineCodeInfo }>({
     url: '/machine-code/get-machine-code',
     method: 'get',
   })
@@ -48,13 +48,14 @@ export function getMachineCode() {
 
 /**
  * 管理员录入机器码并生成通行码
+ * 返回已解包数据：{ code, data: {...}, message, pass_code, ... }
  */
 export function createMachineCode(data: {
   machine_code: string
   description?: string
   pass_code?: string
 }) {
-  return request({
+  return apiRequest<{ code: number; pass_code: string; id: number }>({
     url: '/machine-code/admin/create',
     method: 'post',
     data,
@@ -63,13 +64,14 @@ export function createMachineCode(data: {
 
 /**
  * 管理员查询机器码列表
+ * 返回已解包数据：{ code, data: { total, items }, message, total, items }
  */
 export function listMachineCodes(params?: {
   status_filter?: string
   skip?: number
   limit?: number
 }) {
-  return request<{ data: MachineCodeListResponse }>({
+  return apiRequest<{ data: MachineCodeListResponse; total: number; items: MachineCodeRecord[] }>({
     url: '/machine-code/admin/list',
     method: 'get',
     params,
@@ -80,7 +82,7 @@ export function listMachineCodes(params?: {
  * 管理员撤销机器码
  */
 export function revokeMachineCode(machineCodeId: number) {
-  return request({
+  return apiRequest({
     url: `/machine-code/admin/revoke/${machineCodeId}`,
     method: 'post',
   })
@@ -90,7 +92,7 @@ export function revokeMachineCode(machineCodeId: number) {
  * 验证机器码和校验码
  */
 export function verifyMachineCode(data: { machine_code: string; verification_code: string }) {
-  return request<{ data: { is_valid: boolean } }>({
+  return apiRequest<{ data: { is_valid: boolean } }>({
     url: '/machine-code/verify-machine-code',
     method: 'post',
     data,
@@ -101,7 +103,7 @@ export function verifyMachineCode(data: { machine_code: string; verification_cod
  * 生成初始密码
  */
 export function generateInitialPassword(data: { username: string; verification_code: string }) {
-  return request({
+  return apiRequest({
     url: '/machine-code/generate-initial-password',
     method: 'post',
     data,
@@ -116,7 +118,7 @@ export function resetPasswordWithMachineCode(data: {
   machine_code: string
   verification_code: string
 }) {
-  return request({
+  return apiRequest({
     url: '/machine-code/reset-password-with-machine-code',
     method: 'post',
     params: data,
@@ -127,7 +129,7 @@ export function resetPasswordWithMachineCode(data: {
  * 获取机器信息
  */
 export function getMachineInfo() {
-  return request({
+  return apiRequest({
     url: '/machine-code/machine-info',
     method: 'get',
   })
@@ -137,7 +139,7 @@ export function getMachineInfo() {
  * 获取组织验证码
  */
 export function getOrganizationVerificationCode(orgId: number) {
-  return request({
+  return apiRequest({
     url: `/machine-code/organization/${orgId}/verification-code`,
     method: 'get',
   })
@@ -147,7 +149,7 @@ export function getOrganizationVerificationCode(orgId: number) {
  * 创建组织通行码
  */
 export function createOrganizationPassCode(data: Record<string, any>) {
-  return request({
+  return apiRequest({
     url: '/machine-code/organization/create',
     method: 'post',
     data,
@@ -157,8 +159,8 @@ export function createOrganizationPassCode(data: Record<string, any>) {
 /**
  * 获取组织通行码列表
  */
-export function listOrganizationPassCodes(params?: { skip?: number; limit?: number }) {
-  return request({
+export function listOrganizationPassCodes(params?: { page?: number; page_size?: number }) {
+  return apiRequest({
     url: '/machine-code/organization/list',
     method: 'get',
     params,
@@ -169,7 +171,7 @@ export function listOrganizationPassCodes(params?: { skip?: number; limit?: numb
  * 导出组织通行码
  */
 export function exportOrganizationPassCodes() {
-  return request({
+  return apiRequest({
     url: '/machine-code/organization/export',
     method: 'get',
     responseType: 'blob',
