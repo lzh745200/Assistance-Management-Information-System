@@ -277,7 +277,7 @@ function renderMap() {
                 fontSize: 12,
                 fontWeight: 'bold' as const,
                 color: '#F56C6C',
-                formatter: '📍 出发点',
+                formatter: '出发点',
               },
             },
           ]

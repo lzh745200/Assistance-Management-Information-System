@@ -9,7 +9,9 @@
           <span class="layout-title">
             <el-icon><Setting /></el-icon> 自定义布局
           </span>
-          <span v-if="layoutSaved" class="layout-saved">✅ 已保存</span>
+          <span v-if="layoutSaved" class="layout-saved"
+            ><el-icon><Select /></el-icon> 已保存</span
+          >
           <el-select v-model="layoutPreset" size="small" style="width: 110px" @change="applyPreset">
             <el-option label="默认布局" value="default" />
             <el-option label="紧凑模式" value="compact" />
@@ -86,7 +88,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Setting, Rank, TrendCharts, Grid, Clock } from '@element-plus/icons-vue'
+import { Setting, Rank, TrendCharts, Grid, Clock, Select } from '@element-plus/icons-vue'
 import PageHeader from './PageHeader.vue'
 import KpiCards from './KpiCards.vue'
 import QuickActions from './components/QuickActions.vue'
@@ -320,6 +322,12 @@ function handleRestore() {
   font-size: 12px;
   color: #67c23a;
   margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.layout-saved .el-icon {
+  margin-right: 4px;
 }
 .layout-hint {
   font-size: 12px;

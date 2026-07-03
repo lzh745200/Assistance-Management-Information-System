@@ -16,21 +16,26 @@
           <template v-else>
             <span class="tl-text">{{ item.action || item.description || '--' }}</span>
             <span v-if="item.target" class="tl-target">— {{ item.target }}</span>
-            <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">✎</button>
-            <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">✕</button>
+            <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">
+              <el-icon><EditPen /></el-icon>
+            </button>
+            <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">
+              <el-icon><Close /></el-icon>
+            </button>
           </template>
         </div>
         <div v-if="activities.length === 0" class="tl-empty">暂无动态</div>
       </div>
     </div>
 
-    <!-- 快捷入口已整合至上方"⚡ 快捷入口"卡片中 -->
+    <!-- 快捷入口已整合至上方"快捷入口"卡片中 -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { EditPen, Close } from '@element-plus/icons-vue'
 import request from '@/api/request'
 
 const activities = ref<any[]>([])
@@ -177,6 +182,8 @@ onMounted(() => {
   transition: opacity 0.15s;
   color: #94a3b8;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
 }
 .timeline-item:hover .tl-edit-btn,
 .timeline-item:hover .tl-delete-btn {

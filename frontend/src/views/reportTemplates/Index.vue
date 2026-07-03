@@ -47,7 +47,7 @@
             description="暂无导入模板，点击右上角创建"
           />
           <div v-for="t in displayTemplates" :key="t.id" class="template-item">
-            <div class="t-icon">{{ moduleIcon(t.module) }}</div>
+            <el-icon class="t-icon"><component :is="moduleIcon(t.module)" /></el-icon>
             <div class="t-info">
               <div class="t-name-row">
                 <h4>{{ t.name }}</h4>
@@ -77,7 +77,7 @@
             description="暂无导出模板，点击右上角创建"
           />
           <div v-for="t in displayTemplates" :key="t.id" class="template-item">
-            <div class="t-icon">{{ moduleIcon(t.module) }}</div>
+            <el-icon class="t-icon"><component :is="moduleIcon(t.module)" /></el-icon>
             <div class="t-info">
               <div class="t-name-row">
                 <h4>{{ t.name }}</h4>
@@ -195,10 +195,10 @@
             previewTemplate.type === 'import' ? '导入模板' : '导出模板'
           }}</el-descriptions-item>
           <el-descriptions-item label="关联模块">
-            <span
-              >{{ moduleIcon(previewTemplate.module) }}
-              {{ moduleLabel(previewTemplate.module) }}</span
-            >
+            <span style="display: inline-flex; align-items: center; gap: 4px">
+              <el-icon><component :is="moduleIcon(previewTemplate.module)" /></el-icon>
+              {{ moduleLabel(previewTemplate.module) }}
+            </span>
           </el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="previewTemplate.is_active ? 'success' : 'info'" size="small">{{
@@ -407,7 +407,17 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Upload } from '@element-plus/icons-vue'
+import {
+  Search,
+  Upload,
+  House,
+  School,
+  Money,
+  Folder,
+  Crop,
+  DataAnalysis,
+  Document,
+} from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import request from '@/api/request'
 
@@ -469,14 +479,16 @@ const editRules: FormRules = {
 }
 
 const moduleIcon = (m: string) =>
-  ({
-    village: '🈁️',
-    school: '🏣',
-    fund: '💰',
-    project: '📁',
-    rural_work: '🌾',
-    comprehensive: '📊',
-  })[m] || '📄'
+  (
+    ({
+      village: House,
+      school: School,
+      fund: Money,
+      project: Folder,
+      rural_work: Crop,
+      comprehensive: DataAnalysis,
+    }) as Record<string, any>
+  )[m] || Document
 const moduleLabel = (m: string) =>
   ({
     village: '帮扶村',
@@ -804,6 +816,8 @@ onMounted(loadTemplates)
 }
 .t-icon {
   font-size: 32px;
+  color: #2d6a4f;
+  flex-shrink: 0;
 }
 .t-info {
   flex: 1;

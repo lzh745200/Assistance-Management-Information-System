@@ -50,7 +50,7 @@
             style="margin-left: 8px"
             @click="handleCalcRoutes"
           >
-            🚗 计算到全部帮扶点的路线
+            <el-icon><Van /></el-icon> 计算到全部帮扶点的路线
           </el-button>
 
           <el-button
@@ -118,6 +118,7 @@ import { getMapMarkers, getRegions } from '@/api/map'
 import { parseCoordinate, calculateRoute, type LatLng, type RouteResult } from '@/utils/geo'
 import OfflineMap from '@/components/map/OfflineMap.vue'
 import MapVisualization from './MapVisualization.vue'
+import { Van } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const loading = ref(true)

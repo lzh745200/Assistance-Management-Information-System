@@ -1,7 +1,9 @@
 <template>
   <div v-show="visible" class="section-card">
     <div class="section-header">
-      <h3>🕐 近期动态</h3>
+      <h3>
+        <el-icon><Clock /></el-icon> 近期动态
+      </h3>
       <button class="text-btn" @click="showForm = !showForm">
         {{ showForm ? '取消' : '+ 添加动态' }}
       </button>
@@ -38,7 +40,7 @@
       <div v-else class="activity-list">
         <div v-for="activity in activities" :key="activity.id" class="activity-item">
           <div class="activity-icon" :class="'icon-' + activity.type">
-            {{ getTypeIcon(activity.type) }}
+            <el-icon><component :is="getTypeIcon(activity.type)" /></el-icon>
           </div>
           <div class="activity-content">
             <p class="activity-text">{{ activity.content }}</p>
@@ -53,6 +55,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Document, Money, House, Setting, Location, Clock } from '@element-plus/icons-vue'
 
 interface Activity {
   id: number | string
@@ -82,14 +85,14 @@ const newActivity = reactive({
   content: '',
 })
 
-function getTypeIcon(type: string): string {
-  const icons: Record<string, string> = {
-    project: '📋',
-    fund: '💰',
-    village: '🏘️',
-    system: '⚙️',
+function getTypeIcon(type: string): any {
+  const icons: Record<string, any> = {
+    project: Document,
+    fund: Money,
+    village: House,
+    system: Setting,
   }
-  return icons[type] || '📌'
+  return icons[type] || Location
 }
 
 function addActivity() {
@@ -172,6 +175,13 @@ function resetForm() {
 .activity-icon {
   font-size: 20px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.section-header h3 .el-icon {
+  vertical-align: middle;
+  margin-right: 4px;
 }
 .activity-content {
   flex: 1;

@@ -5,14 +5,14 @@
     <div class="content-container">
       <!-- 返回登录按钮 -->
       <div class="back-button">
-        <el-button icon="ArrowLeft" @click="pushSafe('/login')"> 返回登录 </el-button>
+        <el-button :icon="ArrowLeft" @click="pushSafe('/login')"> 返回登录 </el-button>
       </div>
 
       <!-- 主卡片 -->
       <div class="main-card">
         <div class="card-header">
           <div class="icon-wrapper">
-            <span class="icon">🔑</span>
+            <el-icon class="icon"><Key /></el-icon>
           </div>
           <h2>获取机器码</h2>
           <p>用于密码重置和系统认证</p>
@@ -153,7 +153,7 @@
 import { ref } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage } from 'element-plus'
-import { CopyDocument } from '@element-plus/icons-vue'
+import { CopyDocument, ArrowLeft, Key } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { copyToClipboard } from '@/utils/clipboard'
 

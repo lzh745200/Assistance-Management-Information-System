@@ -1,7 +1,9 @@
 <template>
   <div v-show="visible" class="section-card">
     <div class="section-header">
-      <h3>📊 项目进度</h3>
+      <h3>
+        <el-icon><DataAnalysis /></el-icon> 项目进度
+      </h3>
       <button class="text-btn" @click="$emit('viewAll')">查看全部</button>
     </div>
     <div class="section-body">
@@ -33,6 +35,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { DataAnalysis } from '@element-plus/icons-vue'
 
 interface ProjectItem {
   id: number | string
@@ -80,6 +83,11 @@ const displayProjects = computed(() => props.projects.slice(0, props.maxDisplay)
 .section-header h3 {
   margin: 0;
   font-size: 16px;
+}
+
+.section-header h3 .el-icon {
+  vertical-align: middle;
+  margin-right: 4px;
 }
 .text-btn {
   background: none;

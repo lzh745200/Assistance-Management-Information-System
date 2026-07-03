@@ -4,7 +4,9 @@
     <div class="page-header">
       <h2 class="page-title">系统监控面板</h2>
       <div class="header-right">
-        <span v-if="lastUpdated" class="last-updated">🕐 更新于 {{ lastUpdated }}</span>
+        <span v-if="lastUpdated" class="last-updated">
+          <el-icon><Clock /></el-icon> 更新于 {{ lastUpdated }}
+        </span>
         <div class="health-badge" :class="scoreBadgeClass">
           <span class="health-score-num">{{ healthScore }}</span>
           <span class="health-score-label">分</span>
@@ -33,7 +35,9 @@
         @mouseleave="activePopover = null"
       >
         <div class="primary-card-header">
-          <span class="primary-card-icon">{{ card.icon }}</span>
+          <span class="primary-card-icon"
+            ><el-icon><component :is="card.icon" /></el-icon
+          ></span>
           <span class="primary-card-label">{{ card.label }}</span>
           <el-tag :type="card.tagType" size="small" effect="dark">
             {{ card.statusText }}
@@ -75,7 +79,9 @@
         class="secondary-card"
         :class="{ 'card-error': card.error }"
       >
-        <span class="secondary-icon">{{ card.icon }}</span>
+        <span class="secondary-icon"
+          ><el-icon><component :is="card.icon" /></el-icon
+        ></span>
         <div class="secondary-body">
           <span class="secondary-value">
             <span v-if="card.error">--</span>
@@ -94,7 +100,9 @@
     <div class="middle-row">
       <div class="chart-panel">
         <div class="panel-header">
-          <span>📊 API 请求统计（近24小时）</span>
+          <span
+            ><el-icon><DataAnalysis /></el-icon> API 请求统计（近24小时）</span
+          >
           <el-tag v-if="apiStats.length === 0" type="warning" size="small">无数据</el-tag>
         </div>
         <div ref="chartRef" class="chart-container" />
@@ -107,7 +115,9 @@
       </div>
       <div class="log-panel">
         <div class="panel-header">
-          <span>📝 系统日志</span>
+          <span
+            ><el-icon><EditPen /></el-icon> 系统日志</span
+          >
           <div class="log-filter">
             <el-radio-group v-model="logLevelFilter" size="small">
               <el-radio-button value="all">全部</el-radio-button>
@@ -136,7 +146,9 @@
     <div class="health-section">
       <div class="health-header" @click="healthExpanded = !healthExpanded">
         <span class="toggle-icon">{{ healthExpanded ? '▼' : '▶' }}</span>
-        <span>🩺 系统健康检查</span>
+        <span
+          ><el-icon><FirstAidKit /></el-icon> 系统健康检查</span
+        >
         <el-tag
           :type="healthScore >= 80 ? 'success' : healthScore >= 60 ? 'warning' : 'danger'"
           size="small"
@@ -210,8 +222,23 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import type { Component } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Refresh, Download, CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue'
+import {
+  Refresh,
+  Download,
+  CircleCheckFilled,
+  CircleCloseFilled,
+  Clock,
+  DataAnalysis,
+  EditPen,
+  Monitor,
+  Files,
+  Coin,
+  Upload,
+  Setting,
+  FirstAidKit,
+} from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import request from '@/api/request'
 import { useConfigStore } from '@/stores/config'
@@ -373,7 +400,7 @@ const scoreBadgeClass = computed(() => {
 // ── Metric card helpers ──
 interface MetricCard {
   key: string
-  icon: string
+  icon: Component
   value: string
   unit: string
   status: string
@@ -402,7 +429,7 @@ function statusInfo(
 
 function makePrimaryCard(
   key: string,
-  icon: string,
+  icon: Component,
   value: string,
   unit: string,
   label: string,
@@ -435,7 +462,7 @@ const primaryCards = computed<MetricCard[]>(() => {
   return [
     makePrimaryCard(
       'cpu',
-      '🖥️',
+      Monitor,
       hasData ? (s!.cpu_usage ?? 0).toFixed(1) : '--',
       '%',
       'CPU 使用率',
@@ -447,7 +474,7 @@ const primaryCards = computed<MetricCard[]>(() => {
     ),
     makePrimaryCard(
       'memory',
-      '💾',
+      Files,
       hasData ? (s!.memory_usage ?? 0).toFixed(1) : '--',
       '%',
       '内存使用率',
@@ -461,7 +488,7 @@ const primaryCards = computed<MetricCard[]>(() => {
     ),
     makePrimaryCard(
       'disk',
-      '📀',
+      Coin,
       hasData ? (s!.disk_usage ?? 0).toFixed(1) : '--',
       '%',
       '磁盘使用率',
@@ -491,7 +518,7 @@ const secondaryCards = computed<MetricCard[]>(() => {
   return [
     {
       key: 'net_recv',
-      icon: '📥',
+      icon: Download,
       value: hasData ? (s!.network_recv_mb ?? 0).toFixed(1) : '--',
       unit: 'MB',
       ...netRecvSi,
@@ -503,7 +530,7 @@ const secondaryCards = computed<MetricCard[]>(() => {
     },
     {
       key: 'net_sent',
-      icon: '📤',
+      icon: Upload,
       value: hasData ? (s!.network_sent_mb ?? 0).toFixed(1) : '--',
       unit: 'MB',
       ...netSentSi,
@@ -515,7 +542,7 @@ const secondaryCards = computed<MetricCard[]>(() => {
     },
     {
       key: 'threads',
-      icon: '⚙️',
+      icon: Setting,
       value: hasData ? String(s!.process_threads) : '--',
       unit: '',
       ...thrSi,
@@ -774,6 +801,9 @@ watch(healthExpanded, (val) => {
   font-size: 0.8rem;
   color: var(--color-text-secondary, #909399);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Health score badge */
@@ -867,6 +897,8 @@ watch(healthExpanded, (val) => {
 .primary-card-icon {
   font-size: 24px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 .primary-card-label {
   font-size: 0.9rem;
@@ -977,6 +1009,8 @@ watch(healthExpanded, (val) => {
 .secondary-icon {
   font-size: 22px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
 }
 .secondary-body {
   flex: 1;
@@ -1027,6 +1061,12 @@ watch(healthExpanded, (val) => {
   font-weight: 600;
   color: var(--color-text-primary);
   padding: 14px 18px 0;
+}
+.panel-header > span,
+.health-header > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .chart-panel {
   position: relative;

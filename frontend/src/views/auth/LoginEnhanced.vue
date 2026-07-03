@@ -27,7 +27,7 @@
           <div class="form-group">
             <label>账号</label>
             <div class="input-wrapper">
-              <span class="input-icon">👤</span>
+              <el-icon class="input-icon"><User /></el-icon>
               <input
                 v-model="username"
                 type="text"
@@ -41,7 +41,7 @@
           <div class="form-group">
             <label>密码</label>
             <div class="input-wrapper">
-              <span class="input-icon">🔒</span>
+              <el-icon class="input-icon"><Lock /></el-icon>
               <input
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
@@ -50,7 +50,8 @@
                 autocomplete="current-password"
               />
               <span class="toggle-password" @click="showPassword = !showPassword">
-                {{ showPassword ? '👁️' : '🙈' }}
+                <el-icon v-if="showPassword"><View /></el-icon>
+                <el-icon v-else><Hide /></el-icon>
               </span>
             </div>
           </div>
@@ -59,7 +60,7 @@
           <div v-if="showMachineCodeInput" class="form-group">
             <label>机器码验证</label>
             <div class="input-wrapper">
-              <span class="input-icon">🔑</span>
+              <el-icon class="input-icon"><Key /></el-icon>
               <input
                 v-model="verificationCode"
                 type="text"
@@ -102,6 +103,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { SYSTEM_VERSION, COPYRIGHT_OWNER } from '@/config/constants'
+import { User, Lock, Key, View, Hide } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -414,6 +416,8 @@ const goToMachineCode = () => {
   font-size: 18px;
   color: rgba(255, 255, 255, 0.6);
   z-index: 1;
+  display: flex;
+  align-items: center;
 }
 
 .custom-input {
@@ -450,6 +454,8 @@ const goToMachineCode = () => {
   user-select: none;
   transition: transform 0.2s;
   filter: brightness(1.2);
+  display: flex;
+  align-items: center;
 }
 
 .toggle-password:hover {

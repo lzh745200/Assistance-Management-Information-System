@@ -7,12 +7,18 @@
         <p class="welcome-subtitle">{{ currentDate }}</p>
       </div>
       <div class="admin-actions">
-        <button class="action-btn gold" @click="pushSafe('/system/users-orgs')">👥 用户管理</button>
-        <button class="action-btn gold" @click="pushSafe('/data-management/backup')">
-          💾 数据备份
+        <button class="action-btn gold" @click="pushSafe('/system/users-orgs')">
+          <el-icon><UserFilled /></el-icon> 用户管理
         </button>
-        <button class="action-btn gold" @click="pushSafe('/system/audit')">📋 操作审计</button>
-        <button class="action-btn gold" @click="pushSafe('/system/config')">⚙️ 系统配置</button>
+        <button class="action-btn gold" @click="pushSafe('/data-management/backup')">
+          <el-icon><Files /></el-icon> 数据备份
+        </button>
+        <button class="action-btn gold" @click="pushSafe('/system/audit')">
+          <el-icon><Document /></el-icon> 操作审计
+        </button>
+        <button class="action-btn gold" @click="pushSafe('/system/config')">
+          <el-icon><Setting /></el-icon> 系统配置
+        </button>
       </div>
     </div>
 
@@ -20,7 +26,9 @@
     <div class="admin-stats-grid">
       <div v-for="stat in adminStats" :key="stat.label" class="admin-stat-card">
         <div class="stat-header">
-          <span class="stat-icon">{{ stat.icon }}</span>
+          <span class="stat-icon"
+            ><el-icon><component :is="stat.icon" /></el-icon
+          ></span>
           <span class="stat-label">{{ stat.label }}</span>
         </div>
         <div class="stat-value">{{ stat.value }}</div>
@@ -37,7 +45,9 @@
         <!-- 系统状态 -->
         <div class="admin-card">
           <div class="card-header">
-            <h3>🖥️ 系统状态</h3>
+            <h3>
+              <el-icon><Monitor /></el-icon> 系统状态
+            </h3>
           </div>
           <div class="system-status">
             <div v-if="systemStatus.length === 0" class="empty-tip">加载中...</div>
@@ -54,7 +64,9 @@
         <!-- 最近登录用户 -->
         <div class="admin-card">
           <div class="card-header">
-            <h3>🔐 最近登录</h3>
+            <h3>
+              <el-icon><Lock /></el-icon> 最近登录
+            </h3>
           </div>
           <div class="login-list">
             <div v-if="recentLogins.length === 0" class="empty-tip">暂无登录记录</div>
@@ -74,7 +86,9 @@
         <!-- 审计日志 -->
         <div class="admin-card">
           <div class="card-header">
-            <h3>📝 审计日志</h3>
+            <h3>
+              <el-icon><EditPen /></el-icon> 审计日志
+            </h3>
             <button class="text-btn" @click="pushSafe('/system/audit')">查看全部</button>
           </div>
           <div class="audit-list">
@@ -94,7 +108,9 @@
         <!-- 快捷操作 -->
         <div class="admin-card">
           <div class="card-header">
-            <h3>⚡ 快捷操作</h3>
+            <h3>
+              <el-icon><Cpu /></el-icon> 快捷操作
+            </h3>
           </div>
           <div class="quick-actions-grid">
             <div
@@ -103,7 +119,9 @@
               class="quick-action"
               @click="pushSafe(action.path)"
             >
-              <span class="action-icon">{{ action.icon }}</span>
+              <span class="action-icon"
+                ><el-icon><component :is="action.icon" /></el-icon
+              ></span>
               <span class="action-label">{{ action.label }}</span>
             </div>
           </div>
@@ -112,7 +130,9 @@
         <!-- 待处理事项 -->
         <div class="admin-card">
           <div class="card-header">
-            <h3>🔔 待处理事项</h3>
+            <h3>
+              <el-icon><Bell /></el-icon> 待处理事项
+            </h3>
             <span class="pending-count">{{ pendingItems.length }}</span>
           </div>
           <div class="pending-list">
@@ -133,7 +153,9 @@
         <!-- 存储使用 -->
         <div class="admin-card">
           <div class="card-header">
-            <h3>💾 存储使用</h3>
+            <h3>
+              <el-icon><Files /></el-icon> 存储使用
+            </h3>
           </div>
           <div class="storage-info">
             <div class="storage-bar">
@@ -170,6 +192,20 @@ import { logger } from '@/utils/logger'
 import { ref, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import request from '@/api/request'
+import {
+  UserFilled,
+  Files,
+  Document,
+  Setting,
+  Monitor,
+  Lock,
+  EditPen,
+  Cpu,
+  Bell,
+  CircleCheck,
+  DataAnalysis,
+  Key,
+} from '@element-plus/icons-vue'
 
 const { pushSafe } = useRouterSafe()
 
@@ -181,13 +217,13 @@ const currentDate = new Date().toLocaleDateString('zh-CN', {
 })
 
 const adminStats = ref([
-  { label: '用户总数', value: 0, icon: '👥', trend: '', trendClass: 'stable' },
-  { label: '今日活跃', value: 0, icon: '🟢', trend: '', trendClass: 'stable' },
-  { label: '数据记录', value: 0, icon: '📊', trend: '', trendClass: 'stable' },
+  { label: '用户总数', value: 0, icon: UserFilled, trend: '', trendClass: 'stable' },
+  { label: '今日活跃', value: 0, icon: CircleCheck, trend: '', trendClass: 'stable' },
+  { label: '数据记录', value: 0, icon: DataAnalysis, trend: '', trendClass: 'stable' },
   {
     label: '系统运行',
     value: '--',
-    icon: '⚡',
+    icon: Cpu,
     trend: '',
     trendClass: 'stable',
   },
@@ -200,12 +236,12 @@ const recentLogins = ref<any[]>([])
 const auditLogs = ref<any[]>([])
 
 const quickActions = [
-  { icon: '👥', label: '用户管理', path: '/system/users-orgs' },
-  { icon: '🔑', label: '角色权限', path: '/system/roles' },
-  { icon: '💾', label: '数据备份', path: '/data-management/backup' },
-  { icon: '📋', label: '操作审计', path: '/system/audit' },
-  { icon: '⚙️', label: '系统配置', path: '/system/config' },
-  { icon: '📊', label: '数据总览', path: '/data-management/overview' },
+  { icon: UserFilled, label: '用户管理', path: '/system/users-orgs' },
+  { icon: Key, label: '角色权限', path: '/system/roles' },
+  { icon: Files, label: '数据备份', path: '/data-management/backup' },
+  { icon: Document, label: '操作审计', path: '/system/audit' },
+  { icon: Setting, label: '系统配置', path: '/system/config' },
+  { icon: DataAnalysis, label: '数据总览', path: '/data-management/overview' },
 ]
 
 const pendingItems = ref<any[]>([])
@@ -312,6 +348,9 @@ onMounted(() => {
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   transition:
     transform 0.2s,
     box-shadow 0.2s;
@@ -344,6 +383,8 @@ onMounted(() => {
 
 .stat-icon {
   font-size: 20px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .stat-label {
@@ -406,6 +447,9 @@ onMounted(() => {
   margin: 0;
   font-size: 15px;
   color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .text-btn {
@@ -576,6 +620,9 @@ onMounted(() => {
 .action-icon {
   font-size: 24px;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-label {

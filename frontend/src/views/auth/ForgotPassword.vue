@@ -6,7 +6,7 @@
       <div class="forgot-card">
         <div class="card-header">
           <div class="icon-wrapper">
-            <span class="icon">🔑</span>
+            <el-icon class="icon"><Key /></el-icon>
           </div>
           <h2>忘记密码</h2>
           <p>使用机器码重置您的密码</p>
@@ -104,7 +104,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { CircleCheckFilled } from '@element-plus/icons-vue'
+import { CircleCheckFilled, Key } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
 

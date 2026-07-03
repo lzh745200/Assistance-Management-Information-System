@@ -12,7 +12,7 @@
           size="large"
           @click="handleOneClickReport"
         >
-          ⚡ 一键上报
+          <el-icon><Cpu /></el-icon> 一键上报
         </el-button>
       </div>
     </div>
@@ -136,6 +136,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, reactive, computed, onErrorCaptured } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Cpu } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { DATA_TYPES, DATA_TYPE_LABELS } from '@/constants/dataTypes'
 

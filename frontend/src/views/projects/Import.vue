@@ -220,7 +220,9 @@
             <el-empty image="empty-success">
               <template #description>
                 <div class="success-message">
-                  <h3>🎉 数据导入完成！</h3>
+                  <h3>
+                    <el-icon style="vertical-align: middle"><Bell /></el-icon> 数据导入完成！
+                  </h3>
                   <div class="success-stats">
                     <div class="stat-item">
                       <span class="stat-value">{{ importResult.successCount }}</span
@@ -282,7 +284,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Download, Upload, Loading } from '@element-plus/icons-vue'
+import { Download, Upload, Loading, Bell } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import request from '@/api/request'

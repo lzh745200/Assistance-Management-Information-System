@@ -189,7 +189,9 @@
         <div class="card-body">
           <div v-if="attachments.length" class="attachment-grid">
             <div v-for="att in attachments" :key="att.id" class="attachment-card">
-              <div class="att-file-icon">{{ getFileIcon(att.file_name) }}</div>
+              <div class="att-file-icon">
+                <el-icon><component :is="getFileIcon(att.file_name)" /></el-icon>
+              </div>
               <div class="att-file-info">
                 <div class="att-file-name" :title="att.file_name">
                   {{ att.file_name }}
@@ -224,7 +226,18 @@ import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Edit, Delete, Loading } from '@element-plus/icons-vue'
+import {
+  ArrowLeft,
+  Edit,
+  Delete,
+  Loading,
+  Document,
+  EditPen,
+  DataAnalysis,
+  Picture,
+  Box,
+  Folder,
+} from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { schoolApi } from '@/api/schools'
 
@@ -352,13 +365,13 @@ function downloadAttachment(att: any) {
 
 function getFileIcon(name: string) {
   const ext = (name || '').split('.').pop()?.toLowerCase() || ''
-  if (['pdf'].includes(ext)) return '📄'
-  if (['doc', 'docx'].includes(ext)) return '📝'
-  if (['xls', 'xlsx'].includes(ext)) return '📊'
-  if (['ppt', 'pptx'].includes(ext)) return '📊'
-  if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return '🖼️'
-  if (['zip', 'rar'].includes(ext)) return '📦'
-  return '📁'
+  if (['pdf'].includes(ext)) return Document
+  if (['doc', 'docx'].includes(ext)) return EditPen
+  if (['xls', 'xlsx'].includes(ext)) return DataAnalysis
+  if (['ppt', 'pptx'].includes(ext)) return DataAnalysis
+  if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return Picture
+  if (['zip', 'rar'].includes(ext)) return Box
+  return Folder
 }
 
 function formatFileSize(bytes: number) {
@@ -612,6 +625,8 @@ onMounted(() => {
 .att-file-icon {
   font-size: 28px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .att-file-info {

@@ -7,7 +7,9 @@
             <h2>接收下级数据包</h2>
             <p class="description">接收并处理下级单位上报的数据包</p>
           </div>
-          <el-button type="primary" @click="showLocalImport = true">📁 从本地文件导入</el-button>
+          <el-button type="primary" @click="showLocalImport = true">
+            <el-icon><Folder /></el-icon> 从本地文件导入
+          </el-button>
         </div>
       </div>
     </el-card>
@@ -269,7 +271,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, reactive, computed, onMounted, onErrorCaptured } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UploadFilled } from '@element-plus/icons-vue'
+import { UploadFilled, Folder } from '@element-plus/icons-vue'
 import { useDataReportStore } from '@/stores/dataReport'
 import { useOrganizationStore } from '@/stores/organization'
 import type { DataReport, DataPackagePreviewData } from '@/types/organization'

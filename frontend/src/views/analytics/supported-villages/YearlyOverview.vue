@@ -38,7 +38,7 @@
     <div class="section-grid">
       <div v-for="section in sections" :key="section.key" class="section-card">
         <div class="section-card-header">
-          <span class="section-icon">{{ section.icon }}</span>
+          <el-icon class="section-icon"><component :is="section.icon" /></el-icon>
           <h3>{{ section.title }}</h3>
         </div>
         <div class="section-summary">
@@ -92,10 +92,26 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, markRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
-import { ArrowLeft, Edit, Download, Upload } from '@element-plus/icons-vue'
+import {
+  ArrowLeft,
+  Edit,
+  Download,
+  Upload,
+  User,
+  Money,
+  Medal,
+  OfficeBuilding,
+  Tools,
+  Stamp,
+  FirstAidKit,
+  ShoppingCart,
+  Briefcase,
+  Reading,
+  House,
+} from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import {
   getSupportedVillage,
@@ -140,7 +156,7 @@ const sections = computed(() => {
     {
       key: 'population',
       title: '人口数据',
-      icon: '👥',
+      icon: markRaw(User),
       stats: d?.population
         ? [
             { label: '总人口', value: d.population.totalPopulation ?? 0 },
@@ -152,7 +168,7 @@ const sections = computed(() => {
     {
       key: 'income',
       title: '收入数据',
-      icon: '💰',
+      icon: markRaw(Money),
       stats: d?.income
         ? [
             {
@@ -169,7 +185,7 @@ const sections = computed(() => {
     {
       key: 'force_investment',
       title: '力量投入',
-      icon: '🎖️',
+      icon: markRaw(Medal),
       stats: d?.['force-investment']
         ? [
             {
@@ -186,7 +202,7 @@ const sections = computed(() => {
     {
       key: 'industry',
       title: '产业帮扶',
-      icon: '🏭',
+      icon: markRaw(OfficeBuilding),
       stats: d?.industry
         ? [
             {
@@ -199,7 +215,7 @@ const sections = computed(() => {
     {
       key: 'infrastructure',
       title: '基础设施',
-      icon: '🏗️',
+      icon: markRaw(Tools),
       stats: d?.infrastructure
         ? [
             {
@@ -212,7 +228,7 @@ const sections = computed(() => {
     {
       key: 'party_building',
       title: '党建帮扶',
-      icon: '🏛️',
+      icon: markRaw(Stamp),
       stats: d?.['party-building']
         ? [
             {
@@ -229,7 +245,7 @@ const sections = computed(() => {
     {
       key: 'medical',
       title: '医疗帮扶',
-      icon: '🏥',
+      icon: markRaw(FirstAidKit),
       stats: d?.medical
         ? [
             {
@@ -246,7 +262,7 @@ const sections = computed(() => {
     {
       key: 'consumption',
       title: '消费帮扶',
-      icon: '🛒',
+      icon: markRaw(ShoppingCart),
       stats: d?.consumption
         ? [
             {
@@ -259,7 +275,7 @@ const sections = computed(() => {
     {
       key: 'employment',
       title: '就业帮扶',
-      icon: '💼',
+      icon: markRaw(Briefcase),
       stats: d?.employment
         ? [
             {
@@ -276,7 +292,7 @@ const sections = computed(() => {
     {
       key: 'education',
       title: '教育帮扶',
-      icon: '📚',
+      icon: markRaw(Reading),
       stats: d?.education
         ? [
             {
@@ -293,7 +309,7 @@ const sections = computed(() => {
     {
       key: 'committee',
       title: '村委会情况',
-      icon: '🏢',
+      icon: markRaw(House),
       stats: (d as any)?.committee
         ? [
             {
@@ -466,6 +482,7 @@ onMounted(() => {
 
 .section-icon {
   font-size: 20px;
+  color: #2d6a4f;
 }
 
 .section-summary {

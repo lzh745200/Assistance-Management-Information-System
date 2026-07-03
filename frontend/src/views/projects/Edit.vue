@@ -139,7 +139,7 @@
               :max="100"
               :step="1"
               placeholder="请输入预计完成率"
-              suffix-icon="Percentage"
+              :suffix-icon="Percentage"
             />
             <span class="input-suffix">%</span>
           </el-form-item>
@@ -153,7 +153,7 @@
               :max="100"
               :step="1"
               placeholder="请输入实际完成率"
-              suffix-icon="Percentage"
+              :suffix-icon="Percentage"
             />
             <span class="input-suffix">%</span>
           </el-form-item>
@@ -181,7 +181,7 @@
               :min="0"
               :step="0.01"
               placeholder="请输入资金投入"
-              prefix-icon="Wallet"
+              :prefix-icon="Wallet"
             />
           </el-form-item>
           <el-form-item label="资金来源" prop="fundSource">
@@ -200,7 +200,7 @@
               :min="0"
               :step="0.01"
               placeholder="请输入已拨付资金"
-              prefix-icon="Wallet"
+              :prefix-icon="Wallet"
             />
           </el-form-item>
         </div>
@@ -213,7 +213,7 @@
               :max="100"
               :step="1"
               placeholder="请输入资金使用进度"
-              suffix-icon="Percentage"
+              :suffix-icon="Percentage"
             />
             <span class="input-suffix">%</span>
           </el-form-item>
@@ -587,7 +587,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, ElMessageBox, ElForm } from 'element-plus'
-import { Upload, ArrowLeft, Check } from '@element-plus/icons-vue'
+import { Upload, ArrowLeft, Check, Percentage, Wallet } from '@element-plus/icons-vue'
 
 import { projectApi } from '@/api/projects'
 import request from '@/api/request'

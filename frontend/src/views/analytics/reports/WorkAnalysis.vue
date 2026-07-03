@@ -30,7 +30,7 @@
     <div class="stats-grid">
       <div v-for="stat in statsCards" :key="stat.label" class="stat-card">
         <div class="stat-icon" :style="{ background: stat.bgColor }">
-          <span class="stat-icon-text">{{ stat.icon }}</span>
+          <el-icon class="stat-icon-text"><component :is="stat.icon" /></el-icon>
         </div>
         <div class="stat-info">
           <div class="stat-value" :style="{ color: stat.color }">
@@ -170,10 +170,17 @@
 <script setup lang="ts">
 import { logger } from '@/utils/logger'
 
-import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, nextTick, onBeforeUnmount, markRaw } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useDesensitize } from '@/composables/useDesensitize'
-import { Search, Refresh, Download } from '@element-plus/icons-vue'
+import {
+  Search,
+  Refresh,
+  Download,
+  DataAnalysis,
+  Select,
+  TrendCharts,
+} from '@element-plus/icons-vue'
 import { Chart } from 'chart.js/auto'
 import { getRuralWorks } from '@/api/ruralWork'
 
@@ -229,7 +236,7 @@ const statsCards = computed(() => {
     {
       label: '工作总数',
       value: total,
-      icon: '📊',
+      icon: markRaw(DataAnalysis),
       color: '#409eff',
       bgColor: 'rgba(64,158,255,0.1)',
       trend: '较上月 +12%',
@@ -238,7 +245,7 @@ const statsCards = computed(() => {
     {
       label: '进行中',
       value: inProgress,
-      icon: '🔄',
+      icon: markRaw(Refresh),
       color: '#e6a23c',
       bgColor: 'rgba(230,162,60,0.1)',
       trend: `占比 ${total > 0 ? Math.round((inProgress / total) * 100) : 0}%`,
@@ -247,7 +254,7 @@ const statsCards = computed(() => {
     {
       label: '已完成',
       value: completed,
-      icon: '✅',
+      icon: markRaw(Select),
       color: '#67c23a',
       bgColor: 'rgba(103,194,58,0.1)',
       trend: `完成率 ${total > 0 ? Math.round((completed / total) * 100) : 0}%`,
@@ -256,7 +263,7 @@ const statsCards = computed(() => {
     {
       label: '平均进度',
       value: `${avgProgress}%`,
-      icon: '📈',
+      icon: markRaw(TrendCharts),
       color: '#1b4332',
       bgColor: 'rgba(27,67,50,0.1)',
       trend: delayed > 0 ? `${delayed}项延期` : '无延期',
@@ -642,6 +649,7 @@ onBeforeUnmount(() => {
 
 .stat-icon-text {
   font-size: 24px;
+  color: #fff;
 }
 
 .stat-info {

@@ -165,7 +165,9 @@
             <div v-if="attachments.length" class="attachment-list">
               <div v-for="att in attachments" :key="att.id" class="attachment-item">
                 <div class="att-info">
-                  <span class="att-icon">{{ getFileIcon(att.file_name) }}</span>
+                  <span class="att-icon">
+                    <el-icon><component :is="getFileIcon(att.file_name)" /></el-icon>
+                  </span>
                   <span class="att-name">{{ att.file_name }}</span>
                   <span class="att-size">{{ formatFileSize(att.file_size) }}</span>
                 </div>
@@ -202,7 +204,15 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Upload } from '@element-plus/icons-vue'
+import {
+  Upload,
+  Document,
+  EditPen,
+  DataAnalysis,
+  Picture,
+  Box,
+  Folder,
+} from '@element-plus/icons-vue'
 import request from '@/api/request'
 import MapPicker from '@/components/MapPicker.vue'
 
@@ -360,13 +370,13 @@ function downloadAttachment(att: any) {
 
 function getFileIcon(name: string) {
   const ext = (name || '').split('.').pop()?.toLowerCase() || ''
-  if (['pdf'].includes(ext)) return '📄'
-  if (['doc', 'docx'].includes(ext)) return '📝'
-  if (['xls', 'xlsx'].includes(ext)) return '📊'
-  if (['ppt', 'pptx'].includes(ext)) return '📊'
-  if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return '🖼️'
-  if (['zip', 'rar'].includes(ext)) return '📦'
-  return '📁'
+  if (['pdf'].includes(ext)) return Document
+  if (['doc', 'docx'].includes(ext)) return EditPen
+  if (['xls', 'xlsx'].includes(ext)) return DataAnalysis
+  if (['ppt', 'pptx'].includes(ext)) return DataAnalysis
+  if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return Picture
+  if (['zip', 'rar'].includes(ext)) return Box
+  return Folder
 }
 
 function formatFileSize(bytes: number) {
@@ -481,6 +491,8 @@ onMounted(() => {
 .att-icon {
   font-size: 18px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .att-name {

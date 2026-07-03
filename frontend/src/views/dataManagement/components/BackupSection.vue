@@ -84,8 +84,18 @@
           >
         </el-form-item>
       </el-form>
-      <div v-if="scheduleRunning" style="font-size: 13px; color: #67c23a; margin-top: 4px">
-        ✓ 定时备份已启动运行中
+      <div
+        v-if="scheduleRunning"
+        style="
+          font-size: 13px;
+          color: #67c23a;
+          margin-top: 4px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        "
+      >
+        <el-icon><Check /></el-icon> 定时备份已启动运行中
       </div>
     </el-card>
 
@@ -234,7 +244,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh } from '@element-plus/icons-vue'
+import { Plus, Refresh, Check } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import {
   getBackupList,

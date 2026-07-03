@@ -26,8 +26,12 @@
     <!-- 布局编辑器面板 -->
     <div v-if="showLayoutEditor" class="layout-editor-panel">
       <div class="layout-editor-header">
-        <span>⚙️ 自定义工作台布局</span>
-        <button class="layout-close-btn" @click="showLayoutEditor = false">✕</button>
+        <span
+          ><el-icon><Setting /></el-icon> 自定义工作台布局</span
+        >
+        <button class="layout-close-btn" @click="showLayoutEditor = false">
+          <el-icon><Close /></el-icon>
+        </button>
       </div>
       <!-- 预设布局 -->
       <div class="layout-presets">
@@ -55,7 +59,9 @@
           @dragend="onDragEnd"
           @drop.prevent="onDrop($event, index)"
         >
-          <span class="drag-handle">⠿</span>
+          <span class="drag-handle"
+            ><el-icon><Rank /></el-icon
+          ></span>
           <span class="item-order">{{ index + 1 }}</span>
           <el-switch
             :model-value="cardVisibility[card.key]"
@@ -84,8 +90,12 @@
     <div v-if="showRestoreDialog" class="modal-overlay" @click.self="showRestoreDialog = false">
       <div class="modal-dialog">
         <div class="modal-header">
-          <h3>🔄 恢复数据</h3>
-          <button class="modal-close" @click="showRestoreDialog = false">&times;</button>
+          <h3>
+            <el-icon><Refresh /></el-icon> 恢复数据
+          </h3>
+          <button class="modal-close" @click="showRestoreDialog = false">
+            <el-icon><Close /></el-icon>
+          </button>
         </div>
         <div class="modal-body">
           <div class="restore-section">
@@ -125,7 +135,7 @@
                 :disabled="restoring"
                 @click="($refs.restoreFileInput as HTMLInputElement)?.click()"
               >
-                📁 选择备份文件上传并恢复
+                <el-icon><Folder /></el-icon> 选择备份文件上传并恢复
               </button>
               <p class="upload-hint">支持 .db / .bak / .db.gz 格式</p>
             </div>
@@ -156,11 +166,13 @@
           </div>
         </div>
         <div class="stat-refresh" title="刷新统计数据" @click="refreshDashboard">
-          <span :class="{ refreshing: dashRefreshing }">🔄</span>
+          <el-icon :class="{ refreshing: dashRefreshing }"><Refresh /></el-icon>
         </div>
       </div>
       <div v-else-if="!dashLoading && coreStats.length === 0" class="empty-state">
-        <div class="empty-icon">📊</div>
+        <div class="empty-icon">
+          <el-icon><DataAnalysis /></el-icon>
+        </div>
         <div class="empty-text">暂无统计数据</div>
         <div class="empty-hint">请先添加帮扶项目、村庄或学校数据</div>
         <button class="action-btn primary" @click="pushSafe('/projects')">
@@ -181,11 +193,13 @@
     <!-- 快捷导航 -->
     <div v-show="cardVisibility.quickNav" class="section-card">
       <div class="section-header">
-        <h3>⚡ 快捷导航</h3>
+        <h3>
+          <el-icon><Lightning /></el-icon> 快捷导航
+        </h3>
       </div>
       <div class="nav-grid">
         <div v-for="nav in quickNavItems" :key="nav.path" class="nav-item" @click="navigateTo(nav)">
-          <span class="nav-icon">{{ nav.icon }}</span>
+          <el-icon class="nav-icon"><component :is="nav.icon" /></el-icon>
           <span class="nav-label">{{ nav.label }}</span>
         </div>
       </div>
@@ -198,7 +212,9 @@
         <!-- 项目进度 -->
         <div v-show="cardVisibility.projects" class="section-card">
           <div class="section-header">
-            <h3>📌 项目进度</h3>
+            <h3>
+              <el-icon><Document /></el-icon> 项目进度
+            </h3>
             <button class="text-btn" @click="pushSafe('/projects')">查看全部 ›</button>
           </div>
           <div class="section-body">
@@ -256,7 +272,9 @@
         <!-- 经费概况 -->
         <div v-show="cardVisibility.funds" class="section-card">
           <div class="section-header">
-            <h3>💰 经费概况</h3>
+            <h3>
+              <el-icon><Money /></el-icon> 经费概况
+            </h3>
             <button class="text-btn" @click="pushSafe('/funds')">查看全部 ›</button>
           </div>
           <div class="section-body">
@@ -306,7 +324,9 @@
         <!-- 近期动态 -->
         <div v-show="cardVisibility.activities" class="section-card">
           <div class="section-header">
-            <h3>🕐 近期动态</h3>
+            <h3>
+              <el-icon><Clock /></el-icon> 近期动态
+            </h3>
             <button class="text-btn" @click="showActivityForm = !showActivityForm">
               {{ showActivityForm ? '取消' : '+ 添加动态' }}
             </button>
@@ -388,14 +408,14 @@
                   </div>
                   <div class="activity-actions">
                     <button class="activity-edit-btn" title="编辑" @click="startEditActivity(act)">
-                      ✎
+                      <el-icon><EditPen /></el-icon>
                     </button>
                     <button
                       class="activity-delete-btn"
                       title="删除"
                       @click="deleteActivity(act.id)"
                     >
-                      ✕
+                      <el-icon><Close /></el-icon>
                     </button>
                   </div>
                 </template>
@@ -411,7 +431,9 @@
         <!-- 待办事项 -->
         <div v-show="cardVisibility.todos" class="section-card">
           <div class="section-header">
-            <h3>📝 待办事项</h3>
+            <h3>
+              <el-icon><Memo /></el-icon> 待办事项
+            </h3>
             <span v-if="pendingTodos > 0" class="badge-count">{{ pendingTodos }}</span>
           </div>
           <div class="section-body">
@@ -441,7 +463,7 @@
                 <div class="task-actions">
                   <span class="priority-tag" :class="task.priority">{{ task.priorityText }}</span>
                   <button class="task-delete-btn" title="删除" @click="removeTask(task.id)">
-                    ✕
+                    <el-icon><Close /></el-icon>
                   </button>
                 </div>
               </div>
@@ -453,7 +475,9 @@
         <!-- 帮扶数据概览 -->
         <div v-show="cardVisibility.dataOverview" class="section-card">
           <div class="section-header">
-            <h3>📊 数据概览</h3>
+            <h3>
+              <el-icon><DataAnalysis /></el-icon> 数据概览
+            </h3>
           </div>
           <div class="section-body">
             <div class="data-overview-list">
@@ -508,7 +532,7 @@
 <script setup lang="ts">
 import { logger } from '@/utils/logger'
 
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, type Component } from 'vue'
 import QuickActions from '@/views/dashboard/components/QuickActions.vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useAuthStore } from '@/stores/auth'
@@ -516,6 +540,33 @@ import request from '@/api/request'
 import { useOnboarding } from '@/composables/useOnboarding'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { enhancedStorage, STORAGE_KEYS } from '@/utils/enhancedStorage'
+import {
+  Setting,
+  Close,
+  Refresh,
+  Folder,
+  DataAnalysis,
+  Lightning,
+  Document,
+  Money,
+  Clock,
+  EditPen,
+  Memo,
+  House,
+  School,
+  Sunny,
+  MapLocation,
+  Aim,
+  Calendar,
+  TrendCharts,
+  Files,
+  Download,
+  Upload,
+  Message,
+  Link,
+  Tools,
+  Rank,
+} from '@element-plus/icons-vue'
 
 // 新手引导（首次访问时自动展示）
 const { startTour: _startTour } = useOnboarding()
@@ -882,7 +933,7 @@ const userRoleName = computed(() => {
 
 // ─── 快捷导航类型定义 ───
 interface NavItem {
-  icon: string
+  icon: Component
   label: string
   path: string
   /** 需要的角色，空数组表示所有人可见 */
@@ -893,75 +944,75 @@ interface NavItem {
 
 // 公共快捷导航项（所有人可见）
 const commonNavItems: NavItem[] = [
-  { icon: '📁', label: '帮扶项目', path: '/projects', roles: [] },
-  { icon: '🏨️', label: '帮扶村', path: '/villages', roles: [] },
-  { icon: '🏫', label: '学校管理', path: '/schools', roles: [] },
-  { icon: '📜', label: '政策法规', path: '/policies', roles: [] },
-  { icon: '🌾', label: '乡村工作', path: '/rural-works', roles: [] },
-  { icon: '📊', label: '统计分析', path: '/data-analysis', roles: [] },
-  { icon: '🗺️', label: '地图可视化', path: '/data-analysis/map', roles: [] },
+  { icon: Folder, label: '帮扶项目', path: '/projects', roles: [] },
+  { icon: House, label: '帮扶村', path: '/villages', roles: [] },
+  { icon: School, label: '学校管理', path: '/schools', roles: [] },
+  { icon: Document, label: '政策法规', path: '/policies', roles: [] },
+  { icon: Sunny, label: '乡村工作', path: '/rural-works', roles: [] },
+  { icon: DataAnalysis, label: '统计分析', path: '/data-analysis', roles: [] },
+  { icon: MapLocation, label: '地图可视化', path: '/data-analysis/map', roles: [] },
   {
-    icon: '🎯',
+    icon: Aim,
     label: '考核评估',
     path: '/data-analysis/assessment',
     roles: [],
   },
-  { icon: '📅', label: '工作日历', path: '/work-calendar', roles: [] },
+  { icon: Calendar, label: '工作日历', path: '/work-calendar', roles: [] },
 ]
 
 // 管理员专属导航项
 const adminNavItems: NavItem[] = [
   {
-    icon: '💰',
+    icon: Money,
     label: '经费管理',
     path: '/funds',
     roles: ['admin', 'super_admin', 'manager'],
   },
   {
-    icon: '📋',
+    icon: Document,
     label: '审批管理',
     path: '/approval/pending',
     roles: ['admin', 'super_admin', 'approval_leader', 'manager'],
   },
   {
-    icon: '📈',
+    icon: TrendCharts,
     label: '数据录入',
     path: '/data-entry/comprehensive',
     roles: [],
   },
   {
-    icon: '💾',
+    icon: Files,
     label: '数据备份',
     path: '/data-management/backup',
     roles: ['admin', 'super_admin'],
     requiresAdmin: true,
   },
   {
-    icon: '📄',
+    icon: Document,
     label: '报表导出',
     path: '/report-export',
     roles: ['admin', 'super_admin', 'manager'],
   },
   {
-    icon: '📥',
+    icon: Download,
     label: '数据导入',
     path: '/data-import/batch',
     roles: ['admin', 'super_admin', 'manager'],
   },
   {
-    icon: '📩',
+    icon: Message,
     label: '接收数据包',
     path: '/data-package/receive',
     roles: ['admin', 'super_admin', 'manager'],
   },
   {
-    icon: '🔗',
+    icon: Link,
     label: '配置包管理',
     path: '/system/config-package',
     roles: ['admin', 'super_admin'],
   },
   {
-    icon: '🔧',
+    icon: Tools,
     label: '系统监控',
     path: '/system/monitoring',
     roles: ['admin', 'super_admin'],
@@ -971,17 +1022,17 @@ const adminNavItems: NavItem[] = [
 
 // 普通用户专属导航项
 const userNavItems: NavItem[] = [
-  { icon: '💰', label: '经费申请', path: '/funds/user', roles: [] },
-  { icon: '📝', label: '经费申请', path: '/funds/apply', roles: [] },
+  { icon: Money, label: '经费申请', path: '/funds/user', roles: [] },
+  { icon: EditPen, label: '经费申请', path: '/funds/apply', roles: [] },
   {
-    icon: '📈',
+    icon: TrendCharts,
     label: '数据录入',
     path: '/data-entry/comprehensive',
     roles: [],
   },
-  { icon: '📤', label: '数据上报', path: '/data-package/report', roles: [] },
+  { icon: Upload, label: '数据上报', path: '/data-package/report', roles: [] },
   {
-    icon: '📝',
+    icon: EditPen,
     label: '我的申请',
     path: '/approval/my-applications',
     roles: [],
@@ -1454,6 +1505,9 @@ onUnmounted(() => {
   font-size: 24px;
   cursor: pointer;
   color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .modal-body {
   padding: 24px;
@@ -1624,6 +1678,7 @@ onUnmounted(() => {
 .nav-icon {
   font-size: 24px;
   margin-bottom: 6px;
+  color: #40916c;
 }
 .nav-label {
   font-size: 12px;
@@ -1662,6 +1717,14 @@ onUnmounted(() => {
   margin: 0;
   font-size: 15px;
   color: #1e293b;
+}
+.section-header h3 .el-icon,
+.modal-header h3 .el-icon,
+.layout-editor-header .el-icon {
+  font-size: 18px;
+  vertical-align: middle;
+  margin-right: 6px;
+  color: #40916c;
 }
 .section-body {
   padding: 16px 20px;
@@ -2388,6 +2451,9 @@ onUnmounted(() => {
   grid-column: 1 / -1;
   padding: 4px 0;
 }
+.stat-refresh .el-icon {
+  color: #64748b;
+}
 .stat-refresh:hover {
   opacity: 1;
 }
@@ -2446,6 +2512,9 @@ onUnmounted(() => {
   margin-bottom: 16px;
   opacity: 0.5;
 }
+.empty-icon .el-icon {
+  color: #64748b;
+}
 .empty-text {
   font-size: 18px;
   font-weight: 500;
@@ -2501,6 +2570,9 @@ onUnmounted(() => {
   padding: 2px 6px;
   line-height: 1;
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .layout-close-btn:hover {
   color: #ef4444;

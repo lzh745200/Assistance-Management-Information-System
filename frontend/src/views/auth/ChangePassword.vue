@@ -42,23 +42,33 @@
             <!-- 密码规则提示 -->
             <ul class="hint-list">
               <li :class="{ valid: passwordStrengthData.length >= 12 }">
-                <span v-if="passwordStrengthData.length >= 12">✓ </span>
+                <el-icon v-if="passwordStrengthData.length >= 12" class="hint-check"
+                  ><Check
+                /></el-icon>
                 密码长度至少12个字符
               </li>
               <li :class="{ valid: passwordStrengthData.hasUppercase }">
-                <span v-if="passwordStrengthData.hasUppercase">✓ </span>
+                <el-icon v-if="passwordStrengthData.hasUppercase" class="hint-check"
+                  ><Check
+                /></el-icon>
                 包含至少一个大写字母
               </li>
               <li :class="{ valid: passwordStrengthData.hasLowercase }">
-                <span v-if="passwordStrengthData.hasLowercase">✓ </span>
+                <el-icon v-if="passwordStrengthData.hasLowercase" class="hint-check"
+                  ><Check
+                /></el-icon>
                 包含至少一个小写字母
               </li>
               <li :class="{ valid: passwordStrengthData.hasNumber }">
-                <span v-if="passwordStrengthData.hasNumber">✓ </span>
+                <el-icon v-if="passwordStrengthData.hasNumber" class="hint-check"
+                  ><Check
+                /></el-icon>
                 包含至少一个数字
               </li>
               <li :class="{ valid: passwordStrengthData.hasSpecial }">
-                <span v-if="passwordStrengthData.hasSpecial">✓ </span>
+                <el-icon v-if="passwordStrengthData.hasSpecial" class="hint-check"
+                  ><Check
+                /></el-icon>
                 包含至少一个特殊字符(!@#$%^&*)
               </li>
             </ul>
@@ -116,7 +126,7 @@
             取消
           </el-button>
           <span v-if="isForceChange" class="force-change-hint">
-            ⚠️ 首次登录或密码已过期，必须修改密码后才能使用系统
+            <el-icon><Warning /></el-icon> 首次登录或密码已过期，必须修改密码后才能使用系统
           </span>
         </el-form-item>
       </el-form>
@@ -147,7 +157,7 @@
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox, ElForm } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { WarningFilled, Lock } from '@element-plus/icons-vue'
+import { WarningFilled, Lock, Check, Warning } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
 import { freezeRequests, cancelAllRequests } from '@/api/request'
@@ -402,6 +412,11 @@ watch(
   line-height: 40px;
 }
 
+.force-change-hint .el-icon {
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
 .password-card,
 .security-tips-card {
   background: #fff;
@@ -454,9 +469,14 @@ watch(
   color: #67c23a;
 }
 
-.hint-list li.valid span {
+.hint-list li.valid .hint-check {
   color: #67c23a;
   font-weight: bold;
+}
+
+.hint-list .hint-check {
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 .strength-indicator {

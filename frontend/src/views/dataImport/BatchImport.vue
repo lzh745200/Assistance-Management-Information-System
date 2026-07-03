@@ -73,7 +73,7 @@
             <el-table-column prop="name" label="模板名称" width="180">
               <template #default="{ row }">
                 <span class="tmpl-name">
-                  <span class="tmpl-icon-inline">{{ row.icon }}</span>
+                  <el-icon class="tmpl-icon-inline"><component :is="row.icon" /></el-icon>
                   {{ row.name }}
                 </span>
               </template>
@@ -287,7 +287,16 @@
 <script setup lang="ts">
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ref, computed } from 'vue'
-import { UploadFilled, Loading, Download, Back } from '@element-plus/icons-vue'
+import {
+  UploadFilled,
+  Loading,
+  Download,
+  Back,
+  House,
+  Document,
+  Money,
+  School,
+} from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
 import { triggerDownload } from '@/api/export'
@@ -410,7 +419,7 @@ const templates = [
   {
     type: 'supported_village',
     name: '帮扶村数据',
-    icon: '🏘️',
+    icon: House,
     description: '导入帮扶村基础信息、属性标识、振兴发展梯队等数据',
     sections: ['基础信息', '属性标识'],
     fieldCount: 18,
@@ -419,7 +428,7 @@ const templates = [
   {
     type: 'project',
     name: '帮扶项目',
-    icon: '📋',
+    icon: Document,
     description: '导入项目基础信息、预算金额、负责人、组织编码等',
     sections: ['基本信息', '组织与资金'],
     fieldCount: 13,
@@ -428,7 +437,7 @@ const templates = [
   {
     type: 'fund',
     name: '资金台账',
-    icon: '💰',
+    icon: Money,
     description: '导入资金名称、金额、类型、来源、关联项目等',
     sections: ['基本信息', '关联信息'],
     fieldCount: 12,
@@ -437,7 +446,7 @@ const templates = [
   {
     type: 'school',
     name: '学校信息',
-    icon: '🏫',
+    icon: School,
     description: '导入学校基础信息、地理位置、师生规模、帮扶状态等',
     sections: ['基本信息', '联系与规模'],
     fieldCount: 14,
@@ -650,6 +659,8 @@ const handleReset = () => {
 }
 .tmpl-icon-inline {
   font-size: 18px;
+  display: flex;
+  align-items: center;
 }
 .section-tags {
   display: flex;

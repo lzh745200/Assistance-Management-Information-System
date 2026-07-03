@@ -37,7 +37,7 @@
       </div>
       <!-- 空状态 -->
       <div v-if="!data || data.length === 0" class="empty-state">
-        <span class="empty-icon">📋</span>
+        <el-icon class="empty-icon"><Document /></el-icon>
         <span>{{ emptyText || '暂无数据' }}</span>
       </div>
     </div>
@@ -60,6 +60,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { Document } from '@element-plus/icons-vue'
 
 interface CardField {
   key: string
