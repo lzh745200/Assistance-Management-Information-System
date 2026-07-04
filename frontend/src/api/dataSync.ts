@@ -57,7 +57,7 @@ export const exportEncryptedData = (params: ExportEncryptedParams) =>
   api.post('/data-sync/export-encrypted', params)
 
 export const downloadExportPackage = (packageId: string) =>
-  api.get('/data-sync/export/download/' + packageId, { responseType: 'blob' })
+  api.get(`/data-sync/export/download/${packageId}`, { responseType: 'blob' })
 
 export const getSyncLogs = (params?: any) => api.get('/data-sync/logs', { params })
 

@@ -30,6 +30,15 @@
         <h3>项目进度记录</h3>
       </el-divider>
 
+      <el-alert
+        title="图片上传功能开发中"
+        description="进度图片上传接口（/files/upload）尚未实现，当前仅支持查看已有进度记录。"
+        type="info"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 16px"
+      />
+
       <ProgressAlbum
         title="项目进度相册"
         :data="progressData"

@@ -1,5 +1,13 @@
 <template>
   <div class="incremental-update">
+    <el-alert
+      title="该功能正在开发中"
+      description="增量更新功能的后端接口尚未实现，当前页面操作暂不可用。如有紧急需求请联系开发团队。"
+      type="warning"
+      :closable="false"
+      show-icon
+      style="margin-bottom: 16px"
+    />
     <el-card>
       <template #header>
         <div class="card-header">

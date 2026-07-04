@@ -10,6 +10,7 @@ export const reportApi = {
   toggle: (id: number) => api.post('/reports/subscriptions/' + id + '/toggle'),
 
   // ── 报表生成与下载 ──
-  generate: (d: any) => api.post('/reports', d),
+  // 后端 /reports 路由: POST /reports/generate, GET /reports/{id}/download
+  generate: (d: any) => api.post('/reports/generate', d),
   download: (id: number) => api.get('/reports/' + id + '/download', { responseType: 'blob' }),
 }

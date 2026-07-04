@@ -77,10 +77,10 @@ describe('api/report', () => {
   })
 
   describe('generate & download', () => {
-    it('generate 调用 POST /reports', async () => {
+    it('generate 调用 POST /reports/generate', async () => {
       mockPost.mockResolvedValue({ data: { url: '/download/1' } })
       await reportApi.generate({ type: 'monthly', year: 2025 })
-      expect(mockPost).toHaveBeenCalledWith('/reports', { type: 'monthly', year: 2025 })
+      expect(mockPost).toHaveBeenCalledWith('/reports/generate', { type: 'monthly', year: 2025 })
     })
 
     it('download 调用 GET /reports/{id}/download', async () => {

@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -335,3 +335,90 @@ async def restore_backup(
     except Exception as e:
         logger.error("恢复备份失败: %s", e)
         raise HTTPException(status_code=500, detail=f"恢复备份失败: {str(e)}")
+
+
+@router.post("/upload-restore", summary="上传备份文件并恢复系统")
+async def upload_and_restore(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """上传备份 ZIP 文件并立即用于恢复系统数据
+
+    适用于跨机器迁移场景：用户在其他机器导出备份后，通过此接口上传并恢复。
+    上传的文件会临时保存到备份目录，恢复完成后自动删除。
+    需要管理员权限。
+    """
+    require_admin(current_user, error_message="仅超级管理员可上传恢复备份")
+
+    # 安全校验：文件名不得包含路径分隔符，防止路径遍历
+    original_name = file.filename or "uploaded_backup.zip"
+    if "/" in original_name or "\\" in original_name or ".." in original_name:
+        raise HTTPException(status_code=400, detail="非法的文件名")
+
+    # 仅允许 ZIP 文件
+    if not original_name.lower().endswith(".zip"):
+        raise HTTPException(status_code=400, detail="仅支持 ZIP 格式的备份文件")
+
+    file_path = None  # 预初始化，便于异常时清理
+    try:
+        from app.utils.paths import get_backup_path
+
+        backup_dir = str(get_backup_path())
+        os.makedirs(backup_dir, exist_ok=True)
+
+        # 使用时间戳前缀避免覆盖已有备份
+        import time
+        safe_name = f"upload_{int(time.time())}_{original_name}"
+        file_path = os.path.join(backup_dir, safe_name)
+
+        # 确保最终路径仍在备份目录内
+        real_path = os.path.realpath(file_path)
+        real_backup_dir = os.path.realpath(backup_dir)
+        if not real_path.startswith(real_backup_dir):
+            raise HTTPException(status_code=403, detail="禁止写入备份目录外的路径")
+
+        # 保存上传文件
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        logger.info(
+            "备份文件已上传: %s (%d bytes)，操作人: %s",
+            safe_name, len(content), getattr(current_user, "username", "unknown"),
+        )
+
+        # 调用恢复逻辑
+        svc = get_backup_service(db)
+        result = svc.restore_backup(file_path, password=None)
+
+        logger.warning(
+            "系统已从上传的备份恢复: %s，操作人: %s",
+            safe_name, getattr(current_user, "username", "unknown"),
+        )
+
+        # 恢复完成后删除上传的临时文件（释放磁盘空间）
+        try:
+            os.remove(file_path)
+        except OSError:
+            logger.warning("临时备份文件删除失败: %s", file_path)
+
+        return {
+            "success": True,
+            "message": "上传恢复成功（建议重启应用以确保数据库连接正确）",
+            "data": result,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("上传恢复备份失败: %s", e)
+        # 清理已保存的临时文件（若存在）
+        if file_path:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except OSError:
+                pass
+        raise HTTPException(status_code=500, detail=f"上传恢复备份失败: {str(e)}")

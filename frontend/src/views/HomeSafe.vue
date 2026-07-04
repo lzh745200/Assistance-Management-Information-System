@@ -1241,7 +1241,7 @@ async function restoreFromBackup(filename: string) {
   }
   restoring.value = true
   try {
-    await request.post(`/system/backup/restore/${filename}`)
+    await request.post('/system/backup/restore', { filename })
     ElMessage.success('数据恢复成功！请刷新页面。')
     showRestoreDialog.value = false
   } catch {

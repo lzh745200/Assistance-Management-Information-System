@@ -356,7 +356,9 @@ const previewing = ref<string | number | null | undefined>(null)
 async function handlePreview(row: BackupItem) {
   previewing.value = row.id
   try {
-    const res = await request.get(`/system/backup/preview/${row.filename || row.id}`)
+    const res = await request.get(`/system/backup/download/${row.filename || row.id}`, {
+      responseType: 'blob',
+    })
     previewData.value = res.data
     showPreviewDialog.value = true
   } catch {
