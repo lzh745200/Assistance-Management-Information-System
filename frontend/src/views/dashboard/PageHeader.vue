@@ -17,11 +17,7 @@
       >
         新建项目
       </el-button>
-      <el-button
-        data-test="btn-analysis"
-        :icon="TrendCharts"
-        @click="pushSafe('/data-analysis')"
-      >
+      <el-button data-test="btn-analysis" :icon="TrendCharts" @click="pushSafe('/data-analysis')">
         数据分析
       </el-button>
       <el-button

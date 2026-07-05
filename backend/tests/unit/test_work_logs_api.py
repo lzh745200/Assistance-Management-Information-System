@@ -126,10 +126,10 @@ class TestGetWorkLogs:
         resp = client.get("/api/v1/work-logs")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total"] == 0
-        assert data["items"] == []
-        assert data["page"] == 1
-        assert data["page_size"] == 20
+        assert data["data"]["total"] == 0
+        assert data["data"]["items"] == []
+        assert data["data"]["page"] == 1
+        assert data["data"]["page_size"] == 20
 
     def test_list_with_items(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
@@ -139,9 +139,9 @@ class TestGetWorkLogs:
         resp = client.get("/api/v1/work-logs")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total"] == 1
-        assert len(data["items"]) == 1
-        item = data["items"][0]
+        assert data["data"]["total"] == 1
+        assert len(data["data"]["items"]) == 1
+        item = data["data"]["items"][0]
         assert item["is_auto"] is False
         assert "title" in item
 
@@ -153,16 +153,16 @@ class TestGetWorkLogs:
         resp = client.get("/api/v1/work-logs")
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data["items"]) == 1
-        assert data["items"][0]["is_auto"] is True
+        assert len(data["data"]["items"]) == 1
+        assert data["data"]["items"][0]["is_auto"] is True
 
     def test_list_default_pagination(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
         mock_db.query.return_value = _build_query_chain(all_return=[], count_value=0)
         resp = client.get("/api/v1/work-logs")
         data = resp.json()
-        assert data["page"] == 1
-        assert data["page_size"] == 20
+        assert data["data"]["page"] == 1
+        assert data["data"]["page_size"] == 20
 
     def test_list_custom_pagination(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -170,8 +170,8 @@ class TestGetWorkLogs:
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs?page=3&page_size=10")
         data = resp.json()
-        assert data["page"] == 3
-        assert data["page_size"] == 10
+        assert data["data"]["page"] == 3
+        assert data["data"]["page_size"] == 10
 
     def test_list_min_page_size(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -312,7 +312,7 @@ class TestGetWorkLogs:
             all_return=[sample_work_log], count_value=1
         )
         resp = client.get("/api/v1/work-logs")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert "title" in item
         assert "is_auto" in item
         assert item["is_auto"] is False
@@ -326,7 +326,7 @@ class TestGetWorkLogs:
         )
         mock_db.query.return_value = _build_query_chain(all_return=[log], count_value=1)
         resp = client.get("/api/v1/work-logs")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert len(item["title"]) == 100
         assert item["title"] == ("A" * 200)[:100]
 
@@ -338,7 +338,7 @@ class TestGetWorkLogs:
         )
         mock_db.query.return_value = _build_query_chain(all_return=[log], count_value=1)
         resp = client.get("/api/v1/work-logs")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["title"] == ""
 
     def test_list_none_content_title(self, client, mock_db, admin_user):
@@ -349,7 +349,7 @@ class TestGetWorkLogs:
         )
         mock_db.query.return_value = _build_query_chain(all_return=[log], count_value=1)
         resp = client.get("/api/v1/work-logs")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["title"] == ""
 
     def test_list_none_category_defaults_log_type(self, client, mock_db, admin_user):
@@ -360,7 +360,7 @@ class TestGetWorkLogs:
         )
         mock_db.query.return_value = _build_query_chain(all_return=[log], count_value=1)
         resp = client.get("/api/v1/work-logs")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert isinstance(item["is_auto"], bool)
 
 
@@ -1175,7 +1175,7 @@ class TestWorkLogWorkflow:
         mock_db.query.return_value = q
         resp2 = client.get("/api/v1/work-logs")
         assert resp2.status_code == 200
-        assert resp2.json()["total"] == 1
+        assert resp2.json()["data"]["total"] == 1
 
     def test_workflow_create_then_update(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)
@@ -1215,7 +1215,7 @@ class TestWorkLogWorkflow:
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
     def test_workflow_calendar_after_create(self, client, mock_db, admin_user, sample_work_log):
         _setup_client(client, mock_db, admin_user)

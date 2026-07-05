@@ -18,7 +18,6 @@ from app.interfaces.schemas.responses import ResponseModel
 from app.models.user import User
 from app.schemas.rural_work import (
     RuralWorkCreate,
-    RuralWorkListResponse,
     RuralWorkUpdate,
 )
 from app.services.rural_work_service import RuralWorkService
