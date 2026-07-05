@@ -268,7 +268,7 @@ async function loadData() {
   loading.value = true
   try {
     const params: Record<string, any> = {}
-    if (filters.status) params.status = filters.status
+    if (filters.status) params.entity_type = filters.status
     allTasks.value = await getAllTasks(params)
   } catch {
     allTasks.value = []

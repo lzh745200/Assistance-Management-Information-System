@@ -83,13 +83,14 @@ const qualityStats = ref({
 // 加载统计数据
 async function loadStats() {
   try {
-    const res = await request.get('/statistics/summary')
-    const data = res.data || {}
+    // Use /dashboard/stats for real aggregate statistics
+    const res = await request.get('/dashboard/stats')
+    const data = res?.data ?? res ?? {}
     stats.value = {
-      villageCount: data.total_villages || 0,
-      monthlyImports: data.total_funds || 0,
-      monthlyExports: data.total_projects || 0,
-      backupCount: data.total_schools || 0,
+      villageCount: data.total_villages ?? data.villageCount ?? 0,
+      monthlyImports: data.monthly_imports ?? data.monthlyImports ?? 0,
+      monthlyExports: data.monthly_exports ?? data.monthlyExports ?? 0,
+      backupCount: data.backup_count ?? data.backupCount ?? 0,
     }
     // 加载帮扶村数据用于质量统计
     const villageRes = await request.get('/supported-villages', {

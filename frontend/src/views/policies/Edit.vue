@@ -223,10 +223,26 @@ const fileList = ref<UploadFile[]>([])
 const uploadAction = ref(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/files/upload`)
 
 // 层级选项（根据分类动态变化）
-const levelOptions = computed(() => {
-  if (!formData.category) return []
-  return getLevelOptions(formData.category as PolicyCategory)
-})
+// Level options (loaded async on category change)
+const levelOptions = ref<{ value: string; label: string }[]>([])
+const levelOptionsLoading = ref(false)
+
+async function loadLevelOptions() {
+  if (!formData.category) {
+    levelOptions.value = []
+    return
+  }
+  levelOptionsLoading.value = true
+  try {
+    const res = await getLevelOptions(formData.category as PolicyCategory)
+    const data = res?.data?.data ?? res?.data ?? res
+    levelOptions.value = Array.isArray(data) ? data : []
+  } catch {
+    levelOptions.value = []
+  } finally {
+    levelOptionsLoading.value = false
+  }
+}
 
 // 表单验证规则
 const rules: FormRules = {
@@ -250,9 +266,10 @@ const rules: FormRules = {
 
 const formRef = ref<FormInstance>()
 
-// 分类变化时清空层级选择
+// 分类变化时清空层级选择并重新加载选项
 const handleCategoryChange = () => {
   formData.organization_level = ''
+  loadLevelOptions()
 }
 
 // 加载政策数据（编辑模式）
@@ -394,6 +411,7 @@ onMounted(async () => {
   if (isEdit.value) {
     await loadData()
   }
+  loadLevelOptions()
 })
 </script>
 

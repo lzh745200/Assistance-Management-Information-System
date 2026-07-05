@@ -702,7 +702,7 @@ const projects = ref<Project[]>([])
 async function loadProjectsFromApi() {
   try {
     const { default: request } = await import('@/api/request')
-    const response = await request.get('/projects', { params: { limit: 100 } })
+    const response = await request.get('/projects', { params: { page_size: 100 } })
     const items = response?.items || response?.data || response || []
     if (Array.isArray(items) && items.length > 0) {
       projects.value = items.map((p: any) => ({
