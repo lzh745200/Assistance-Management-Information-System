@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.data_permission import filter_by_data_scope
+from app.core.data_permission import filter_by_data_scope, require_data_permission
 from app.core.errors import AppError
 from app.core.exceptions import NotFoundException
 from app.core.response import ok_list, success_response
@@ -410,6 +410,7 @@ def _project_to_dict(p: Project) -> dict:
         "created_by": p.created_by,
         "created_at": p.created_at.isoformat() if p.created_at else None,
         "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+        "is_deleted": p.status == "cancelled",
     }
 
 
@@ -684,6 +685,15 @@ async def get_project(
 ):
     """获取项目详情，含关联经费/任务数量。"""
     project = _get_project_or_404(db, project_id)
+
+    # 跨组织访问权限校验（管理员自动通过，非管理员仅可访问本组织/本人创建的项目）
+    require_data_permission(
+        current_user,
+        organization_id=project.organization_id,
+        created_by=project.created_by,
+        db=db,
+        error_message="无权访问该项目数据",
+    )
 
     funds_total = db.query(func.count(Fund.id)).filter(Fund.project_id == project_id).scalar() or 0
     tasks_total = db.query(func.count(ProjectTask.id)).filter(ProjectTask.project_id == project_id).scalar() or 0

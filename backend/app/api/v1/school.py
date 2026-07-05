@@ -20,7 +20,7 @@ from sqlalchemy import func as sa_func
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from ...core.config import settings
 from ...core.database import get_db
 from ...core.security import get_current_user
@@ -619,7 +619,7 @@ async def get_school(
         db,
         error_message="无权访问该学校数据",
     )
-    return school.to_dict()
+    return success_response(data=school.to_dict(), message="成功")
 
 
 @router.post("")
