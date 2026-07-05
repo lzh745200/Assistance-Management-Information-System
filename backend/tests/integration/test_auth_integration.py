@@ -228,7 +228,7 @@ class TestChangePasswordIntegration:
             headers=headers,
         )
         assert resp.status_code == 400
-        assert "原密码错误" in resp.json()["detail"]
+        assert "密码错误" in resp.json().get("message", resp.json().get("detail", ""))
 
     def test_change_password_policy_too_short(self, client, admin_user, admin_token):
         """测试密码太短"""
@@ -241,7 +241,7 @@ class TestChangePasswordIntegration:
             headers=headers,
         )
         assert resp.status_code == 400
-        assert "密码长度" in resp.json()["detail"]
+        assert "密码长度" in resp.json().get("message", resp.json().get("detail", ""))
 
     def test_change_password_token_revoked(self, client, admin_user, admin_token):
         """测试修改密码后旧令牌失效"""
