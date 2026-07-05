@@ -177,6 +177,7 @@ async function submitLog() {
     ElMessage.success('更新日志已添加')
     showAddDialog.value = false
     newLog.value = { version: '', description: '' }
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await refreshData()
   } catch (e: any) {
     ElMessage.error(e?.message || '添加失败')
@@ -192,6 +193,7 @@ async function handleDelete(log: UpdateLog) {
     })
     await updateLogsApi.deleteLog(log.id)
     ElMessage.success('已删除')
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await refreshData()
   } catch (e: any) {
     if (e !== 'cancel') {

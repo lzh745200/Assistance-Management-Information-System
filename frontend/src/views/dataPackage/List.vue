@@ -249,6 +249,7 @@ async function handleConfirmImport(pkg: DataPackage) {
     })
     await packageStore.confirmImport(pkg.id)
     ElMessage.success('导入成功')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadPackages()
   } catch (error) {
     if (error !== 'cancel') {
@@ -272,6 +273,7 @@ async function handleDelete(pkg: DataPackage) {
     })
     await packageStore.deletePackage(pkg.id)
     ElMessage.success('删除成功')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadPackages()
   } catch (error) {
     if (error !== 'cancel') {
@@ -281,11 +283,13 @@ async function handleDelete(pkg: DataPackage) {
 }
 
 function handleExportSuccess() {
+  pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
   loadPackages()
 }
 
 function handleImportSuccess() {
   showImportDialog.value = false
+  pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
   loadPackages()
 }
 

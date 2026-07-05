@@ -415,6 +415,7 @@ async function handleDelete(row: any) {
     // 立即从前端列表中移除，确保界面及时更新
     tableData.value = tableData.value.filter((item: any) => item.id !== row.id)
     total.value = Math.max(0, total.value - 1)
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     fetchData()
     loadStats()
   } catch (e: any) {
@@ -455,6 +456,7 @@ async function quickApprove(row: any) {
   try {
     await fundApi.approve(row.id, {})
     ElMessage.success('审批成功')
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     fetchData()
     loadStats()
   } catch (e: any) {
@@ -469,6 +471,7 @@ async function quickAllocate(row: any) {
   try {
     await fundApi.allocate(row.id, {})
     ElMessage.success('拨付成功')
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     fetchData()
     loadStats()
   } catch (e: any) {
@@ -552,6 +555,7 @@ async function handleBatchDelete() {
     if (deleted > 0) ElMessage.success(`成功删除 ${deleted} 条记录`)
     if (failed > 0) ElMessage.warning(`${failed} 条记录删除失败`)
     clearSelection()
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     fetchData()
     loadStats()
   } finally {

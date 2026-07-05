@@ -383,6 +383,7 @@ async function handleDelete(row: any) {
   try {
     await request.delete(`/schools/${row.id}`)
     ElMessage.success('删除成功')
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     fetchData()
   } catch (error) {
     logger.error('Failed to delete school:', error)
@@ -419,6 +420,7 @@ function onImportSuccess(response: any) {
     ElMessage.warning(`${response.errors.length} 条数据导入失败`)
   }
   showImportDialog.value = false
+  currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
   fetchData()
 }
 

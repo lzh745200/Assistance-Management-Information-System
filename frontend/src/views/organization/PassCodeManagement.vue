@@ -306,6 +306,7 @@ const handleGenerate = async () => {
       ElMessage.success('通行证码生成成功')
 
       // 刷新列表
+      pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
       await handleQuery()
     } catch (error: any) {
       console.error('生成通行证码失败:', error)

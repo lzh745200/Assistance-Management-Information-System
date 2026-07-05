@@ -689,6 +689,7 @@ const handleSubmit = async () => {
         }
       }
       dialogVisible.value = false
+      pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
       await Promise.all([loadData(), loadPendingCount()])
     } catch (error: any) {
       const msg = error?.response?.data?.detail || '操作失败'
@@ -740,6 +741,7 @@ const handleRolePermission = (row: any) => {
 }
 
 const handlePermSaved = async () => {
+  pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
   await Promise.all([loadData(), loadPendingCount()])
 }
 
@@ -820,6 +822,7 @@ const handleImportPermissionPackage = () => {
           { overwrite_existing: true }
         )
         ElMessage.success(cRes.data?.data?.message || cRes.data?.message || '导入完成')
+        pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
         loadData()
       } else {
         ElMessage.error(result.message || '导入失败')
@@ -842,6 +845,7 @@ const handleDelete = async (row: any) => {
     })
     await request.delete(`/users/${row.id}`)
     ElMessage.success('删除成功')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await Promise.all([loadData(), loadPendingCount()])
     pendingDialogVisible.value = false
   } catch (error: any) {

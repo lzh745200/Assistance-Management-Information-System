@@ -319,6 +319,7 @@ const handleDelete = async (row: any) => {
   try {
     await projectApi.delete(row.id)
     ElMessage.success('删除成功')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadProjects()
   } catch {
     ElMessage.error('删除失败')
@@ -347,6 +348,7 @@ const handleSubmit = async () => {
       }
 
       dialogVisible.value = false
+      pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
       await loadProjects()
     } catch (error) {
       ElMessage.error(dialogMode.value === 'create' ? '创建失败' : '更新失败')
@@ -405,6 +407,7 @@ const handleFileChange = async (event: Event) => {
       logger.info(`上传进度: ${progress}%`)
     })
     ElMessage.success('导入成功')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadProjects()
   } catch (error) {
     ElMessage.error('导入失败')

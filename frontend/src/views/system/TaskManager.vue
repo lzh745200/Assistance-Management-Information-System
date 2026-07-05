@@ -460,6 +460,7 @@ async function handleCancel(row: TaskInfo) {
     const res = await tasksApi.cancelTask(row.task_id)
     if (res.success) {
       ElMessage.success('已取消')
+      page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
       await refreshAll()
     } else {
       ElMessage.error(res.message || '取消失败')
@@ -485,6 +486,7 @@ async function handleDelete(row: TaskInfo) {
     const res = await tasksApi.deleteTask(row.task_id)
     if (res.success) {
       ElMessage.success('已删除')
+      page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
       await refreshAll()
     } else {
       ElMessage.error(res.message || '删除失败')
@@ -520,6 +522,7 @@ async function handleCreateTask() {
     if (res.success) {
       ElMessage.success(res.message || '任务创建成功')
       showCreateDialog.value = false
+      page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
       await refreshAll()
     } else {
       ElMessage.error(res.message || '创建失败')

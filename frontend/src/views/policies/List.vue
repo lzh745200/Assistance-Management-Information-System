@@ -396,6 +396,7 @@ const handleImport = () => {
       } else {
         ElMessage.success(`导入成功：${result.imported}条政策`)
       }
+      currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
       loadData()
     } catch (error: any) {
       ElMessage.error(error.message || '导入失败')

@@ -382,6 +382,7 @@ const handleDelete = async (row: any) => {
   try {
     await projectApi.delete(id)
     ElMessage.success('删除成功')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
     loadStats()
   } catch {
@@ -460,6 +461,7 @@ const handleBatchDelete = async () => {
   }
   ElMessage.success(`成功删除 ${deleted} 个项目`)
   clearSelection()
+  pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
   await loadData()
   loadStats()
 }

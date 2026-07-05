@@ -1035,6 +1035,7 @@ const saveTask = async () => {
     }
 
     taskDialogVisible.value = false
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadData()
   } catch (error) {
     // 表单验证失败
@@ -1069,6 +1070,7 @@ const confirmAssign = async () => {
 
     ElMessage.success('任务分配成功')
     assignDialogVisible.value = false
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadData()
   } catch (error) {
     // 表单验证失败
@@ -1110,6 +1112,7 @@ const confirmBatchAssign = async () => {
     ElMessage.success(`成功分配 ${selectedTasks.value.length} 个任务`)
     selectedTasks.value = []
     batchAssignDialogVisible.value = false
+    currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadData()
   } catch (error) {
     // 表单验证失败
@@ -1199,6 +1202,7 @@ const deleteTask = (taskId: string) => {
         }
         ElMessage.success('任务删除成功（本地）')
       }
+      currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
       loadData()
     })
     .catch(() => {

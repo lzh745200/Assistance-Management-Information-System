@@ -429,6 +429,7 @@ async function handleReceive(report: DataReport) {
     })
     await reportStore.receiveReport(report.id)
     ElMessage.success('接收成功')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadReports()
   } catch (error: any) {
     if (error !== 'cancel' && error?.toString?.() !== 'cancel') {
@@ -454,6 +455,7 @@ async function confirmReject() {
     await reportStore.rejectReport(currentReport.value!.id, rejectForm.reason)
     ElMessage.success('已拒绝该数据包')
     showRejectDialog.value = false
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadReports()
   } catch (error) {
     ElMessage.error((error as Error).message || '操作失败')
@@ -509,6 +511,7 @@ async function confirmLocalImport() {
     })
     localImportStep.value = 2
     ElMessage.success('数据包导入成功')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     loadReports()
   } catch {
     ElMessage.error('导入确认失败')

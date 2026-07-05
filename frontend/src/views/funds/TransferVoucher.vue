@@ -177,6 +177,7 @@ async function handleCreate() {
     await fundLifecycleApi.createTransferVoucher(form)
     ElMessage.success('创建成功')
     showCreateDialog.value = false
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.detail || '创建失败')
@@ -190,6 +191,7 @@ async function handleConfirm(id: number) {
     await ElMessageBox.confirm('确认该凭证？', '确认')
     await fundLifecycleApi.confirmTransferVoucher(id)
     ElMessage.success('已确认')
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: any) {
     if (e !== 'cancel') ElMessage.error(e?.response?.data?.detail || '确认失败')
@@ -201,6 +203,7 @@ async function handleDelete(id: number) {
     await ElMessageBox.confirm('确认删除？', '确认')
     await fundLifecycleApi.deleteTransferVoucher(id)
     ElMessage.success('已删除')
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: any) {
     if (e !== 'cancel') ElMessage.error(e?.response?.data?.detail || '删除失败')

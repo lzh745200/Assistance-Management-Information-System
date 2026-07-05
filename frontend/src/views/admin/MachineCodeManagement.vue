@@ -298,6 +298,7 @@ const handleCreate = async () => {
       passCodeDialogVisible.value = true
 
       // 刷新列表
+      pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
       fetchMachineCodeList()
 
       // 仅在成功时关闭对话框
@@ -326,6 +327,7 @@ const handleRevoke = async (row: MachineCodeRecord) => {
 
     await revokeMachineCode(row.id)
     ElMessage.success('机器码已撤销')
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     fetchMachineCodeList()
   } catch (error: any) {
     if (error !== 'cancel') {

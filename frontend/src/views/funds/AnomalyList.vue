@@ -178,6 +178,7 @@ async function handleResolve() {
     await fundLifecycleApi.resolveAnomaly(currentAnomaly.value.id, resolution.value)
     ElMessage.success('已标记为已处理')
     resolveDialogVisible.value = false
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.detail || '处理失败')

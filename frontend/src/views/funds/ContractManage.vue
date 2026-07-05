@@ -200,6 +200,7 @@ async function handleCreateContract() {
     await fundLifecycleApi.createContract(contractForm)
     ElMessage.success('创建成功')
     showCreateDialog.value = false
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.detail || '创建失败')
@@ -227,6 +228,7 @@ async function handleCreatePayment() {
     await fundLifecycleApi.createContractPayment(currentContractId.value, paymentForm)
     ElMessage.success('付款登记成功')
     paymentDialogVisible.value = false
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.detail || '登记失败')
@@ -240,6 +242,7 @@ async function handleDeleteContract(id: number) {
     await ElMessageBox.confirm('确认删除此合同？', '确认')
     await fundLifecycleApi.deleteContract(id)
     ElMessage.success('已删除')
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: any) {
     if (e !== 'cancel') ElMessage.error(e?.response?.data?.detail || '删除失败')
