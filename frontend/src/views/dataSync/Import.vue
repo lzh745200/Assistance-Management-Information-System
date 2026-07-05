@@ -156,13 +156,13 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage } from 'element-plus'
 import { importData, importEncryptedData, getSyncLogs } from '@/api/dataSync'
 import type { ImportDataResponse, SyncLog } from '@/api/dataSync'
 import type { UploadFile } from 'element-plus'
 
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 
 const importForm = ref({
   strategy: 'merge' as 'skip' | 'overwrite' | 'merge',
@@ -248,7 +248,7 @@ const handleImport = async () => {
 const showConflicts = () => {
   if (importResult.value && importResult.value.conflicts.length > 0) {
     // 跳转到冲突解决页面
-    router.push({
+    pushSafe({
       name: 'DataSyncConflicts',
       query: { syncLogId: importResult.value.sync_log_id.toString() },
     })

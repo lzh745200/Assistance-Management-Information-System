@@ -103,12 +103,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { CircleCheckFilled, Key } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
 
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 
 const currentStep = ref(0)
 const resetting = ref(false)
@@ -206,11 +206,11 @@ const copyPassword = () => {
 }
 
 const goBack = () => {
-  router.push('/login')
+  pushSafe('/login')
 }
 
 const goToLogin = () => {
-  router.push('/login')
+  pushSafe('/login')
 }
 </script>
 

@@ -13,7 +13,7 @@
     <div v-else-if="stats.totalVillages === 0 && stats.totalSchools === 0" class="map-empty">
       <el-result icon="info" title="暂无帮扶点数据" sub-title="请先录入帮扶村或学校信息">
         <template #extra>
-          <el-button type="primary" @click="$router.push('/supported-villages')"
+          <el-button type="primary" @click="pushSafe('/supported-villages')"
             >前往录入帮扶村</el-button
           >
         </template>
@@ -113,14 +113,14 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { ref, computed, shallowRef, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { getMapMarkers, getRegions } from '@/api/map'
 import { parseCoordinate, calculateRoute, type LatLng, type RouteResult } from '@/utils/geo'
 import OfflineMap from '@/components/map/OfflineMap.vue'
 import MapVisualization from './MapVisualization.vue'
 import { Van } from '@element-plus/icons-vue'
 
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const loading = ref(true)
 const error = ref('')
 const viewMode = ref<'geographic' | 'statistical'>('geographic')
@@ -257,7 +257,7 @@ async function loadData() {
 
 function handleMarkerClick(marker: any) {
   if (marker.type === 'village') {
-    router.push(`/supported-villages/${marker.id}`)
+    pushSafe(`/supported-villages/${marker.id}`)
   }
 }
 

@@ -3,7 +3,7 @@
     <div class="page-header">
       <h1>经费管理</h1>
       <div class="header-actions">
-        <el-button type="primary" @click="$router.push('/funds/create')">
+        <el-button type="primary" @click="pushSafe('/funds/create')">
           <el-icon><Plus /></el-icon>
           经费登记
         </el-button>
@@ -139,7 +139,7 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Printer, Download } from '@element-plus/icons-vue'
 import { useFundsStore } from '@/stores/funds'
@@ -148,7 +148,7 @@ import PrintTable from '@/components/common/PrintTable.vue'
 import { exportToExcel } from '@/utils/export'
 import { SearchForm } from '@/types/index'
 
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const fundStore = useFundsStore()
 
 // 定义SearchForm扩展接口以包含dateRange
@@ -308,7 +308,7 @@ const getPaymentMethodText = (method: string): string => {
 }
 
 const viewDetail = (fund: FundItem) => {
-  router.push({
+  pushSafe({
     path: `/funds/${fund.id}`,
   })
 }

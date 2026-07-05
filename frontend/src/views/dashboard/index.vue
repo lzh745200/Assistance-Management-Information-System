@@ -96,9 +96,9 @@ import ChartRow from './ChartRow.vue'
 import InfoRow from './InfoRow.vue'
 import { useUserStore } from '@/stores/user'
 import { createBackup } from '@/api/backup'
-import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const backingUp = ref(false)
 
 const showLayoutEditor = ref(false)
@@ -224,7 +224,7 @@ async function handleBackup() {
   }
 }
 function handleRestore() {
-  router.push('/system/backup')
+  pushSafe('/system/backup')
 }
 </script>
 

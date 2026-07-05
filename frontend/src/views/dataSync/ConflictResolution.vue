@@ -68,7 +68,8 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getConflicts,
@@ -82,7 +83,7 @@ interface Conflict extends ConflictDetail {
 }
 
 const route = useRoute()
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const conflicts = ref<Conflict[]>([])
 const activeNames = ref<number[]>([])
 const loading = ref(false)
@@ -175,7 +176,7 @@ const resolveAll = async () => {
 
     ElMessage.success('所有冲突已解决')
     conflicts.value = []
-    router.push({ name: 'DataSyncImport' })
+    pushSafe({ name: 'DataSyncImport' })
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(error.message || '批量解决失败')

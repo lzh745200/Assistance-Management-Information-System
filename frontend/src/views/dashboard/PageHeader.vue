@@ -13,14 +13,14 @@
         data-test="btn-new-project"
         type="primary"
         :icon="Plus"
-        @click="router.push('/projects')"
+        @click="pushSafe('/projects')"
       >
         新建项目
       </el-button>
       <el-button
         data-test="btn-analysis"
         :icon="TrendCharts"
-        @click="router.push('/data-analysis')"
+        @click="pushSafe('/data-analysis')"
       >
         数据分析
       </el-button>
@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useAuthStore } from '@/stores/auth'
 import { Plus, TrendCharts, Upload, MoreFilled, Grid } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -62,7 +62,7 @@ const emit = defineEmits<{
   (e: 'backup-complete'): void
 }>()
 
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const authStore = useAuthStore()
 const backingUp = ref(false)
 

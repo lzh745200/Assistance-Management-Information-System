@@ -30,10 +30,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { getSupportedVillages } from '@/api/supportedVillage'
 
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const villages = ref<any[]>([])
 const loading = ref(false)
 
@@ -55,7 +55,7 @@ async function loadVillages() {
 }
 
 function goYearly(row: any) {
-  router.push(`/supported-villages/${row.id}/yearly`)
+  pushSafe(`/supported-villages/${row.id}/yearly`)
 }
 
 onMounted(loadVillages)

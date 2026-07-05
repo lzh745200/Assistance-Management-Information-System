@@ -101,11 +101,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useAuthStore } from '@/stores/auth'
 import { SYSTEM_VERSION, COPYRIGHT_OWNER } from '@/config/constants'
 import { User, Lock, Key, View, Hide } from '@element-plus/icons-vue'
 
 const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const authStore = useAuthStore()
 
 const username = ref('')
@@ -194,17 +196,17 @@ const handleLogin = async () => {
           typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
             ? `/change-password?redirect=${encodeURIComponent(redirect)}`
             : '/change-password'
-        router.push(target)
+        pushSafe(target)
         return
       }
 
       // 安全校验：仅允许站内相对路径跳转
       if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
-        router.push(redirect)
+        pushSafe(redirect)
         return
       }
 
-      router.push('/dashboard')
+      pushSafe('/dashboard')
       return
     }
 
@@ -217,11 +219,11 @@ const handleLogin = async () => {
 }
 
 const goToForgotPassword = () => {
-  router.push('/forgot-password')
+  pushSafe('/forgot-password')
 }
 
 const goToRegister = () => {
-  router.push('/register')
+  pushSafe('/register')
 }
 
 const goToMachineCode = () => {
