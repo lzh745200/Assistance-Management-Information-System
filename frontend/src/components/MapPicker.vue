@@ -64,15 +64,19 @@ import OfflineMap from '@/components/map/OfflineMap.vue'
 
 const props = defineProps<{
   modelValue?: { lng: number; lat: number }
+  latitude?: number | null
+  longitude?: number | null
   disabled?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: { lng: number; lat: number }): void
+  (e: 'update:latitude', val: number | null): void
+  (e: 'update:longitude', val: number | null): void
 }>()
 
-const innerLng = ref(props.modelValue?.lng ?? 107.52)
-const innerLat = ref(props.modelValue?.lat ?? 26.26)
+const innerLng = ref(props.modelValue?.lng ?? props.longitude ?? 107.52)
+const innerLat = ref(props.modelValue?.lat ?? props.latitude ?? 26.26)
 const dialogVisible = ref(false)
 const pickedLng = ref<number | null>(null)
 const pickedLat = ref<number | null>(null)
@@ -85,6 +89,18 @@ watch(
       innerLng.value = val.lng
       innerLat.value = val.lat
     }
+  }
+)
+watch(
+  () => props.latitude,
+  (val) => {
+    if (val !== undefined && val !== null) innerLat.value = val
+  }
+)
+watch(
+  () => props.longitude,
+  (val) => {
+    if (val !== undefined && val !== null) innerLng.value = val
   }
 )
 
@@ -105,6 +121,8 @@ const mapMarkers = computed(() => {
 
 function onInputChange() {
   emit('update:modelValue', { lng: innerLng.value, lat: innerLat.value })
+  emit('update:latitude', innerLat.value)
+  emit('update:longitude', innerLng.value)
 }
 
 function pickFromMap() {

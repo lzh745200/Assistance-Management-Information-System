@@ -62,40 +62,31 @@
             <span>核心业务</span>
           </div>
 
-          <el-sub-menu
-            v-if="menuStore.canAccessMenu('villages')"
-            index="village-group"
-            popper-class="aside-popper"
-          >
+          <!-- 帮扶村管理：单入口，年度概览/数据录入选为页内tab -->
+          <el-menu-item v-if="menuStore.canAccessMenu('villages')" index="/supported-villages">
+            <el-icon><Location /></el-icon>
             <template #title>
-              <el-icon><Location /></el-icon>
               <span class="menu-title-text">帮扶村管理</span>
             </template>
-            <el-menu-item index="/supported-villages">
-              <span>帮扶村</span>
-            </el-menu-item>
-            <el-menu-item index="/supported-villages/yearly">
-              <span>年度概览</span>
-            </el-menu-item>
-            <el-menu-item index="/data-entry">
-              <span>数据录入</span>
-            </el-menu-item>
-          </el-sub-menu>
+          </el-menu-item>
 
-          <el-sub-menu
-            v-if="menuStore.canAccessMenu('projects')"
-            index="project-group"
-            popper-class="aside-popper"
-          >
+          <!-- 帮扶项目：单入口，项目管控/导入为页内tab -->
+          <el-menu-item v-if="menuStore.canAccessMenu('projects')" index="/projects">
+            <el-icon><Folder /></el-icon>
             <template #title>
-              <el-icon><Folder /></el-icon>
               <span class="menu-title-text">帮扶项目</span>
             </template>
-            <el-menu-item index="/projects"><span>项目列表</span></el-menu-item>
-            <el-menu-item index="/projects/management"><span>项目管控</span></el-menu-item>
-            <el-menu-item index="/projects/import"><span>项目导入</span></el-menu-item>
-          </el-sub-menu>
+          </el-menu-item>
 
+          <!-- 帮扶学校：单入口，学校分析为页内tab -->
+          <el-menu-item v-if="menuStore.canAccessMenu('schools')" index="/schools">
+            <el-icon><School /></el-icon>
+            <template #title>
+              <span class="menu-title-text">帮扶学校</span>
+            </template>
+          </el-menu-item>
+
+          <!-- 经费管理：多子项保留el-sub-menu，位置移到帮扶学校之后 -->
           <el-sub-menu
             v-if="menuStore.canAccessMenu('funds-admin') || menuStore.canAccessMenu('funds-user')"
             index="fund-group"
@@ -114,19 +105,6 @@
             <el-menu-item index="/funds/apply"><span>经费申请</span></el-menu-item>
             <el-menu-item index="/funds/report"><span>经费报表</span></el-menu-item>
             <el-menu-item index="/funds/settlement"><span>经费结算</span></el-menu-item>
-          </el-sub-menu>
-
-          <el-sub-menu
-            v-if="menuStore.canAccessMenu('schools')"
-            index="school-group"
-            popper-class="aside-popper"
-          >
-            <template #title>
-              <el-icon><School /></el-icon>
-              <span class="menu-title-text">帮扶学校</span>
-            </template>
-            <el-menu-item index="/schools"><span>学校列表</span></el-menu-item>
-            <el-menu-item index="/schools/analysis"><span>学校分析</span></el-menu-item>
           </el-sub-menu>
 
           <el-menu-item v-if="menuStore.canAccessMenu('policies')" index="/policies">
