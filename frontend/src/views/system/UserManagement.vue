@@ -467,14 +467,30 @@ const permissionGroups = [
   },
 ]
 
-const roleOptions = [
+const roleOptions = ref<{ value: string; label: string }[]>([
   { value: 'super_admin', label: '超级管理员' },
   { value: 'admin', label: '系统管理员' },
   { value: 'approval_leader', label: '审批领导' },
   { value: 'manager', label: '管理人员' },
   { value: 'operator', label: '操作员' },
   { value: 'viewer', label: '查看者' },
-]
+])
+
+async function fetchRoles() {
+  try {
+    const res = await request.get('/rbac/roles', { params: { limit: 100 } })
+    const data = res?.data ?? res
+    const items = data?.items || (Array.isArray(data) ? data : [])
+    if (items.length > 0) {
+      roleOptions.value = items.map((r: any) => ({
+        value: r.id ?? r.name ?? r.role_id,
+        label: r.name ?? r.label ?? r.role_name ?? String(r.id),
+      }))
+    }
+  } catch {
+    // 保持硬编码默认值
+  }
+}
 
 const dataScopeOptions = [
   { value: 'all', label: '全部数据' },
@@ -860,6 +876,7 @@ onMounted(() => {
   loadData()
   loadOrgTree()
   loadPendingCount()
+  fetchRoles()
 })
 </script>
 
