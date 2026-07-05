@@ -623,6 +623,7 @@ class PasswordPolicy:
     REQUIRE_UPPER = True
     REQUIRE_LOWER = True
     REQUIRE_DIGIT = True
+    REQUIRE_SPECIAL = True
     # 白名单：与前端正则 /[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/ 一致
     SPECIAL_WHITELIST = set("!@#$%^&*()-_=+[]{}|;:,.<>?")
     # 弱密码黑名单

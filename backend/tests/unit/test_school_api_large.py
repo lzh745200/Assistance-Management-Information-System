@@ -340,8 +340,8 @@ class TestListSchools:
         resp = auth_setup.get(P("/schools"))
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total"] >= 1
-        assert len(data["items"]) >= 1
+        assert data["data"]["total"] >= 1
+        assert len(data["data"]["items"]) >= 1
 
     def test_list_pagination(self, auth_setup, school):
         resp = auth_setup.get(P("/schools?page=1&page_size=10"))
@@ -350,12 +350,12 @@ class TestListSchools:
     def test_list_filter_keyword(self, auth_setup, school):
         resp = auth_setup.get(P("/schools?keyword=希望"))
         assert resp.status_code == 200
-        assert resp.json()["total"] >= 1
+        assert resp.json()["data"]["total"] >= 1
 
     def test_list_filter_name(self, auth_setup, school):
         resp = auth_setup.get(P("/schools?name=希望"))
         assert resp.status_code == 200
-        assert resp.json()["total"] >= 1
+        assert resp.json()["data"]["total"] >= 1
 
     def test_list_filter_type(self, auth_setup, school):
         resp = auth_setup.get(P("/schools?type=primary"))
@@ -384,7 +384,7 @@ class TestListSchools:
     def test_list_keyword_not_found(self, auth_setup, school):
         resp = auth_setup.get(P("/schools?keyword=不存在"))
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
 
 class TestGetSchool:
