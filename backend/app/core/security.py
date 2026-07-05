@@ -623,12 +623,21 @@ class PasswordPolicy:
     REQUIRE_UPPER = True
     REQUIRE_LOWER = True
     REQUIRE_DIGIT = True
-    REQUIRE_SPECIAL = True
+    # 白名单：与前端正则 /[!@#$%^&*()\-_=+\[\]{}|;:,.<>?/ 一致
+    SPECIAL_WHITELIST = set("!@#$%^&*()-_=+[]{}|;:,.<>?")
+    # 弱密码黑名单
+    WEAK_PASSWORD_PREFIXES = ("admin", "root", "123", "password", "qwerty")
+    # 密码不能包含用户名
+    FORBIDDEN_USERNAME_PARTS = []
 
     @staticmethod
-    def validate(password: str) -> tuple:
+    def validate(password: str, username: str = "") -> tuple:
         """
         验证密码是否符合策略。
+
+        Args:
+            password: 密码字符串
+            username: 用户名（可选），用于弱密码验证
 
         Returns:
             (is_valid: bool, error_message: str)
@@ -636,13 +645,21 @@ class PasswordPolicy:
         if not password or len(password) < PasswordPolicy.MIN_LENGTH:
             return False, f"密码长度至少 {PasswordPolicy.MIN_LENGTH} 位"
         if PasswordPolicy.REQUIRE_UPPER and not any(c.isupper() for c in password):
-            return False, "密码必须包含大写字母"
+            return False, "密码必须包含大写字母(A-Z)"
         if PasswordPolicy.REQUIRE_LOWER and not any(c.islower() for c in password):
-            return False, "密码必须包含小写字母"
+            return False, "密码必须包含小写字母(a-z)"
         if PasswordPolicy.REQUIRE_DIGIT and not any(c.isdigit() for c in password):
-            return False, "密码必须包含数字"
-        if PasswordPolicy.REQUIRE_SPECIAL and not any(c in string.punctuation for c in password):
-            return False, "密码必须包含特殊字符（如 !@#$%^&*）"
+            return False, "密码必须包含数字(0-9)"
+        if PasswordPolicy.REQUIRE_SPECIAL and not any(c in PasswordPolicy.SPECIAL_WHITELIST for c in password):
+            return False, f"密码必须包含特殊字符({', '.join(sorted(PasswordPolicy.SPECIAL_WHITELIST))})"
+        if len(password) > 20:
+            return False, "密码长度不能超过20位"
+        # 弱密码检查
+        if any(password.lower().startswith(pf) for pf in PasswordPolicy.WEAK_PASSWORD_PREFIXES):
+            return False, "密码太弱，不能以admin/root/123/password/qwerty等开头"
+        # 密码不能包含用户名（如果有）
+        if username and any(part in password.lower() for part in username.lower().split()):
+            return False, "密码不能包含用户名"
         return True, ""
 
     @staticmethod

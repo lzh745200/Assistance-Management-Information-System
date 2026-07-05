@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
@@ -715,9 +716,12 @@ async def admin_reset_password(
 
     from app.core.security import PasswordPolicy
 
-    is_valid, msg = PasswordPolicy.validate(data.new_password)
+    is_valid, msg = PasswordPolicy.validate(data.new_password, username=user.username)
     if not is_valid:
-        raise HTTPException(status_code=400, detail=msg)
+        return JSONResponse(
+            status_code=400,
+            content={"code": 400, "message": msg, "field": "new_password"},
+        )
 
     user.hashed_password = get_password_hash(data.new_password)
     user.revoke_all_tokens()
@@ -743,13 +747,22 @@ async def change_password(
 
     from app.core.security import PasswordPolicy, verify_password
 
+    # 校验旧密码
     if not verify_password(data.old_password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="原密码错误")
+        # 返回 envelope 带 field 字段，前端据此高亮 oldPassword 输入框
+        return JSONResponse(
+            status_code=400,
+            content={"code": 400, "message": "当前密码错误", "field": "old_password"},
+        )
 
-    # 密码策略校验
-    is_valid, msg = PasswordPolicy.validate(data.new_password)
+    # 密码策略校验（传入用户名做弱密码检查）
+    is_valid, msg = PasswordPolicy.validate(data.new_password, username=user.username)
     if not is_valid:
-        raise HTTPException(status_code=400, detail=msg)
+        # 返回 envelope 带 field 字段，前端据此高亮 newPassword 输入框
+        return JSONResponse(
+            status_code=400,
+            content={"code": 400, "message": msg, "field": "new_password"},
+        )
 
     user.hashed_password = get_password_hash(data.new_password)
     user.revoke_all_tokens()

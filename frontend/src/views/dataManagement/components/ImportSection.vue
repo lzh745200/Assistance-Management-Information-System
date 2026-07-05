@@ -136,7 +136,7 @@ import { ElMessage } from 'element-plus'
 import { Download, UploadFilled, Refresh } from '@element-plus/icons-vue'
 import type { UploadInstance, UploadFile, UploadRawFile } from 'element-plus'
 import {
-  downloadImportTemplate,
+  downloadImportTemplateAndSave,
   importVillages,
   getImportHistory,
   formatImportStatus,
@@ -172,21 +172,12 @@ async function loadHistory() {
   }
 }
 
-// 下载模板
+// 下载模板（自动解析后端 Content-Disposition 文件名）
 async function handleDownloadTemplate() {
   try {
-    const blob = await downloadImportTemplate('supported_village')
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '帮扶村导入模板.xlsx'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    // 模板下载成功 — 浏览器已确认
-  } catch (error) {
-    ElMessage.error('模板下载失败')
+    await downloadImportTemplateAndSave('supported_village', '帮扶村')
+  } catch {
+    ElMessage.error('模板下载失败，请重试')
   }
 }
 

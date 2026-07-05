@@ -190,7 +190,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Upload, Document, Clock, View } from '@element-plus/icons-vue'
 import {
-  downloadImportTemplate,
+  downloadImportTemplateAndSave,
   importEntities,
   previewImportData,
   getImportHistory,
@@ -217,17 +217,11 @@ const downloadingType = ref('')
 async function handleDownloadTemplate(type: string) {
   downloadingType.value = type
   try {
-    const blob = await downloadImportTemplate(type)
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    const tpl = templates.find((t) => t.type === type)
-    link.download = `${tpl?.label || type}导入模板.xlsx`
-    link.click()
-    window.URL.revokeObjectURL(url)
-    // 模板下载成功 — 浏览器已确认
+    // 下载模板并解析 Content-Disposition 文件名
+    await downloadImportTemplateAndSave(type, '模板')
   } catch (e: any) {
-    ElMessage.error(e?.message || '模板下载失败')
+    const msg = e?.message || e?.response?.data?.detail || '模板下载失败，请重试'
+    ElMessage.error(typeof msg === 'string' ? msg : '模板下载失败')
   } finally {
     downloadingType.value = ''
   }

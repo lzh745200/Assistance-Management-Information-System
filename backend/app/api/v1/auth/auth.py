@@ -607,8 +607,8 @@ async def register_user(
     if not is_valid:
         raise BizValidationError(message=msg, field="username")
 
-    # 密码验证
-    is_valid, msg = PasswordPolicy.validate(password)
+    # 密码验证（传入用户名做弱密码检查）
+    is_valid, msg = PasswordPolicy.validate(password, username=username)
     if not is_valid:
         raise BizValidationError(message=msg, field="password")
 

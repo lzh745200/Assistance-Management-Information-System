@@ -287,7 +287,7 @@ import { ref, computed } from 'vue'
 import { Download, Upload, Loading, Bell } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useRouterSafe } from '@/composables/useRouterSafe'
-import request from '@/api/request'
+import request, { downloadBlob, parseContentDisposition } from '@/api/request'
 
 interface ProjectData {
   rowIndex: number
@@ -348,19 +348,16 @@ function clearFileList() {
 const downloadTemplate = async () => {
   downloading.value = true
   try {
-    const resp = await request.get('/import/template', {
+    const resp: any = await request.get('/import/template', {
       params: { entity_type: 'project' },
       responseType: 'blob',
       timeout: 15000,
-    } as any)
-    const url = window.URL.createObjectURL(new Blob([resp.data || resp]))
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '项目导入模板.xlsx'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
+    })
+    const filename = parseContentDisposition(
+      resp.headers as Record<string, string>,
+      '项目导入模板.xlsx'
+    )
+    downloadBlob(new Blob([resp.data || resp]), filename)
     // 模板下载成功 — 浏览器已确认
   } catch {
     ElMessage.error('模板下载失败，请重试')

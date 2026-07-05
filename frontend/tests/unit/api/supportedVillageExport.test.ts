@@ -28,6 +28,24 @@ vi.mock('@/api/request', () => ({
   put: (...args: any[]) => mockPut(...args),
   del: (...args: any[]) => mockDel(...args),
   apiRequest: (...args: any[]) => mockApiRequest(...args),
+  // 提供真实的 parseContentDisposition 实现，供下载函数解析文件名
+  parseContentDisposition: (headers: Record<string, string> | undefined, fallback = 'download.xlsx') => {
+    if (!headers) return fallback
+    const cd = headers['content-disposition'] || headers['Content-Disposition'] || ''
+    if (!cd) return fallback
+    const starMatch = cd.match(/filename\*=([^;]+)/i)
+    if (starMatch) {
+      const raw = starMatch[1].trim()
+      const idx = raw.indexOf("''")
+      if (idx >= 0) {
+        try { return decodeURIComponent(raw.slice(idx + 2)) } catch { /* fallthrough */ }
+      }
+    }
+    const quotedMatch = cd.match(/filename="?([^";]+)"?/i)
+    if (quotedMatch) return quotedMatch[1].trim()
+    return fallback
+  },
+  downloadBlob: () => {},
 }))
 
 import {

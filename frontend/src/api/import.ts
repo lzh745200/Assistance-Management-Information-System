@@ -7,7 +7,7 @@
  * - 查询导入历史
  */
 
-import request from '@/api/request'
+import request, { parseContentDisposition, downloadBlob } from '@/api/request'
 
 // ==================== 类型定义 ====================
 
@@ -54,8 +54,12 @@ interface ImportHistoryResponse {
 
 /**
  * 下载导入模板
- * @param type 模板类型
- * @returns Blob文件数据
+ *
+ * 后端返回 RFC 5987 格式的 Content-Disposition（filename*=UTF-8''xxx），
+ * 浏览器会把 `UTF-8` 当文件名，因此前端必须显式解析。
+ *
+ * @param type 模板类型（supported_village/project/fund/school/policy）
+ * @returns Blob 文件数据
  */
 export async function downloadImportTemplate(type: string): Promise<Blob> {
   const response = await request.get(`/import/template`, {
@@ -63,6 +67,27 @@ export async function downloadImportTemplate(type: string): Promise<Blob> {
     responseType: 'blob',
   })
   return response.data
+}
+
+/**
+ * 下载导入模板并触发浏览器保存（自动解析正确文件名）。
+ *
+ * @param type 模板类型
+ * @param fallbackName 解析失败时的兜底文件名（不含扩展名）
+ */
+export async function downloadImportTemplateAndSave(
+  type: string,
+  fallbackName = '导入模板'
+): Promise<void> {
+  const response = await request.get(`/import/template`, {
+    params: { entity_type: type },
+    responseType: 'blob',
+  })
+  const filename = parseContentDisposition(
+    response.headers as Record<string, string>,
+    `${fallbackName}.xlsx`
+  )
+  downloadBlob(response.data, filename)
 }
 
 /**

@@ -223,7 +223,7 @@ import { ElMessage } from 'element-plus'
 import { Plus, Download, Upload, Search } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { schoolApi } from '@/api/schools'
-import { downloadImportTemplate } from '@/api/import'
+import { downloadImportTemplateAndSave } from '@/api/import'
 
 const { pushSafe } = useRouterSafe()
 const { ds } = useDesensitize()
@@ -388,21 +388,13 @@ async function handleDelete(row: any) {
     logger.error('Failed to delete school:', error)
   }
 }
-// 下载模板
+// 下载模板（自动解析后端 Content-Disposition 文件名，避免浏览器误用 "UTF-8"）
 async function handleDownloadTemplate() {
   try {
-    const blob = await downloadImportTemplate('school')
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '学校导入模板.xlsx'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
+    await downloadImportTemplateAndSave('school', '学校')
     // 模板下载成功 — 浏览器已确认
   } catch {
-    ElMessage.error('模板下载失败')
+    ElMessage.error('模板下载失败，请重试')
   }
 }
 

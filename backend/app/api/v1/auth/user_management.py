@@ -373,7 +373,7 @@ async def reset_password(
     if reset_data.new_password:
         from app.core.security import PasswordPolicy
 
-        is_valid, msg = PasswordPolicy.validate(new_password)
+        is_valid, msg = PasswordPolicy.validate(new_password, username=user.username)
         if not is_valid:
             raise HTTPException(status_code=400, detail=msg)
 

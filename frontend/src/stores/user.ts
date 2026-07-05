@@ -115,10 +115,12 @@ export const useUserStore = defineStore('user', () => {
       try {
         await getUserProfile()
       } catch {
-        /* 预加载失败不影响后续流程 */
+        // /me 调用失败时仍继续，但停止改密流程（避免 userId 为空打到错误 URL）
       }
     }
-    if (!currentUser.value?.id) throw new Error('无法获取用户信息，请重新登录')
+    if (!currentUser.value?.id) {
+      throw new Error('无法获取用户信息，请重新登录')
+    }
     return put(`/users/${currentUser.value.id}/password`, {
       old_password: oldPassword,
       new_password: newPassword,

@@ -269,7 +269,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Search, Tickets } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { fundApi } from '@/api/funds'
-import { downloadImportTemplate } from '@/api/import'
+import { downloadImportTemplateAndSave } from '@/api/import'
 
 const phaseLabels: Record<number, string> = {
   1: '论证立项',
@@ -426,16 +426,9 @@ async function handleDelete(row: any) {
 }
 async function handleDownloadTemplate() {
   try {
-    const blob = await downloadImportTemplate('fund')
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '经费导入模板.xlsx'
-    link.click()
-    window.URL.revokeObjectURL(url)
-    // 模板下载成功 — 浏览器已确认
+    await downloadImportTemplateAndSave('fund', '经费')
   } catch {
-    ElMessage.error('模板下载失败')
+    ElMessage.error('模板下载失败，请重试')
   }
 }
 

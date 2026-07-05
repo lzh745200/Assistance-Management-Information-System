@@ -103,9 +103,10 @@ const backingUp = ref(false)
 
 const showLayoutEditor = ref(false)
 const userStore = useUserStore()
-const isAdmin = computed(() =>
-  ['admin', 'super_admin'].includes(userStore.currentUser?.role || '') ||
-  !!userStore.currentUser?.is_superuser
+const isAdmin = computed(
+  () =>
+    ['admin', 'super_admin'].includes(userStore.currentUser?.role || '') ||
+    !!userStore.currentUser?.is_superuser
 )
 const isManager = computed(() => isAdmin.value || userStore.currentUser?.role === 'manager')
 

@@ -189,11 +189,11 @@ import {
   importPolicies,
   exportPoliciesPDF,
   exportPoliciesWPS,
-  downloadImportTemplate,
   type PolicyCategory,
   type PolicyStatus,
   type OrganizationLevel,
 } from '@/api/policy'
+import { downloadImportTemplateAndSave } from '@/api/import'
 
 const { pushSafe } = useRouterSafe()
 const route = useRoute()
@@ -404,20 +404,12 @@ const handleImport = () => {
   input.click()
 }
 
-// 下载导入模板
+// 下载导入模板（自动解析后端 Content-Disposition 文件名）
 const handleDownloadTemplate = async () => {
   try {
-    const res = await downloadImportTemplate()
-    const blob = res.data || res
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '政策法规导入模板.xlsx'
-    link.click()
-    window.URL.revokeObjectURL(url)
-    // 模板下载成功 — 浏览器已确认
-  } catch (error: any) {
-    ElMessage.error('下载模板失败')
+    await downloadImportTemplateAndSave('policy', '政策法规')
+  } catch {
+    ElMessage.error('下载模板失败，请重试')
   }
 }
 

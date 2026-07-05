@@ -236,7 +236,7 @@ const passwordRules: Record<string, any[]> = reactive({
   ],
 })
 
-// 验证密码强度
+// 验证密码强度（与后端 PasswordPolicy.SPECIAL_WHITELIST 一致）
 const validatePassword = (value: string) => {
   showPasswordHint.value = !!value
 
@@ -245,7 +245,8 @@ const validatePassword = (value: string) => {
   passwordStrengthData.hasUppercase = /[A-Z]/.test(value)
   passwordStrengthData.hasLowercase = /[a-z]/.test(value)
   passwordStrengthData.hasNumber = /\d/.test(value)
-  passwordStrengthData.hasSpecial = /[!@#$%^&*]/.test(value)
+  // 与后端白名单一致：!@#$%^&*()-_=+[]{}|;:,.<>?
+  passwordStrengthData.hasSpecial = /[!@#$%^&*()\-_=+[\]{}|;:,.<>?]/.test(value)
 
   // 计算符合规则的数量（与后端 PasswordPolicy 一致：长度≥12）
   const validCount = [
@@ -332,12 +333,28 @@ const handleChangePassword = async () => {
     }, 100)
   } catch (error: any) {
     if (error?.name === 'Cancel') return
-    const serverMsg =
-      error?.response?.data?.detail || error?.response?.data?.message || error?.message
-    if (serverMsg) {
-      ElMessage.error(typeof serverMsg === 'string' ? serverMsg : '密码修改失败')
-    } else {
+    // 后端返回 envelope: {code, message, field}
+    const field = error?.response?.data?.field
+    const serverMsg = error?.response?.data?.message
+    const rawDetail = error?.response?.data?.detail
+    const detailMsg = rawDetail || serverMsg || error?.message
+
+    if (!detailMsg) {
       ElMessage.error('密码修改失败，请检查网络连接或联系管理员')
+    } else if (field === 'old_password') {
+      // 当前密码错误：高亮 oldPassword，清除新密码错误
+      newPasswordError.value = ''
+      if (passwordFormRef.value) {
+        passwordFormRef.value.clearValidate(['newPassword', 'confirmPassword'])
+      }
+      ElMessage.error('当前密码错误，请重新输入', { duration: 5000 })
+    } else if (field === 'new_password') {
+      // 新密码策略错误：高亮 newPassword 并显示后端具体消息
+      newPasswordError.value = String(detailMsg)
+      ElMessage.error(String(detailMsg), { duration: 5000 })
+    } else {
+      // 其它错误（如 403/500）
+      ElMessage.error(typeof detailMsg === 'string' ? detailMsg : '密码修改失败')
     }
   } finally {
     loading.value = false

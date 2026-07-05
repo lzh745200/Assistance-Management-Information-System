@@ -1,4 +1,4 @@
-import { get, post, put, del, apiRequest } from './request'
+import { get, post, put, del, apiRequest, parseContentDisposition } from './request'
 import api from './request' // keep for blob-only calls
 
 /** 将 Blob 响应触发为浏览器文件下载 */
@@ -36,12 +36,14 @@ export const importSupportedVillages = (file: File) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
-// blob 响应：触发浏览器下载
+// blob 响应：触发浏览器下载（统一用 parseContentDisposition 解析 RFC 5987 文件名）
 export const exportSupportedVillages = (params?: any) =>
   api.get('/supported-villages/export', { params, responseType: 'blob' }).then((r) => {
-    const disp = r.headers?.['content-disposition'] || ''
-    const m = disp.match(/filename[^;=\n]*=["']?([^"';\n]*)["']?/)
-    triggerDownload(r.data, m?.[1] || 'supported_villages_export.xlsx')
+    const filename = parseContentDisposition(
+      r.headers as Record<string, string>,
+      '帮扶村数据导出.xlsx'
+    )
+    triggerDownload(r.data, filename)
   })
 export const downloadImportTemplate = () =>
   api
@@ -50,9 +52,11 @@ export const downloadImportTemplate = () =>
       responseType: 'blob',
     })
     .then((r) => {
-      const disp = r.headers?.['content-disposition'] || ''
-      const m = disp.match(/filename[^;=\n]*=["']?([^"';\n]*)["']?/)
-      triggerDownload(r.data, m?.[1] || '帮扶村导入模板.xlsx')
+      const filename = parseContentDisposition(
+        r.headers as Record<string, string>,
+        '帮扶村导入模板.xlsx'
+      )
+      triggerDownload(r.data, filename)
     })
 export const downloadTemplate = downloadImportTemplate
 

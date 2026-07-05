@@ -7,6 +7,8 @@
       <p class="current-date">{{ formattedDate }}</p>
     </div>
     <div class="header-actions">
+      <!-- 全局搜索 -->
+      <GlobalSearch class="header-search" />
       <el-button
         data-test="btn-new-project"
         type="primary"
@@ -53,6 +55,7 @@ import { useAuthStore } from '@/stores/auth'
 import { Plus, TrendCharts, Upload, MoreFilled, Grid } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import request from '@/api/request'
+import GlobalSearch from './components/GlobalSearch.vue'
 
 const emit = defineEmits<{
   (e: 'toggle-layout'): void
@@ -133,5 +136,16 @@ function handleMoreCommand(cmd: string) {
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+.header-search {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .header-search {
+    display: none;
+  }
 }
 </style>

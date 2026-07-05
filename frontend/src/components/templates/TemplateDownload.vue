@@ -27,7 +27,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Document } from '@element-plus/icons-vue'
-import { downloadImportTemplate } from '@/api/import'
+import { parseContentDisposition, downloadBlob } from '@/api/request'
 
 export interface TemplateOption {
   type: string
@@ -79,20 +79,24 @@ const displayTemplates = computed(() => {
 
 const downloading = ref('')
 
-/** 触发模板下载（Blob → 浏览器下载） */
+/** 触发模板下载（解析后端 Content-Disposition 文件名，避免浏览器误用 "UTF-8"） */
 async function handleDownload(type: string) {
   downloading.value = type
   try {
-    const blob = await downloadImportTemplate(type)
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
+    // 直接走带保存逻辑的封装：内部解析 filename*=UTF-8''xxx 并 decodeURIComponent
     const tpl = ALL_TEMPLATES.find((t) => t.type === type)
-    link.download = `${tpl?.label || type}_导入模板.xlsx`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    setTimeout(() => window.URL.revokeObjectURL(url), 1000)
+    // 用 axios 直接拿响应头；downloadImportTemplate 只返回 Blob 丢失了 headers
+    const response = await import('@/api/request').then((m) =>
+      m.default.get(`/import/template`, {
+        params: { entity_type: type },
+        responseType: 'blob',
+      })
+    )
+    const filename = parseContentDisposition(
+      response.headers as Record<string, string>,
+      `${tpl?.label || type}_导入模板.xlsx`
+    )
+    downloadBlob(response.data, filename)
     // 下载成功无提示 — 浏览器下载栏已确认
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.detail || e?.message || '模板下载失败，请重试')

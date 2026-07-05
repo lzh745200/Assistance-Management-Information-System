@@ -426,4 +426,73 @@ export function isSuccess(status: number): boolean {
   return status >= 200 && status < 300
 }
 
+/**
+ * 从响应头 Content-Disposition 解析文件名。
+ *
+ * 后端使用 RFC 5987 格式：`attachment; filename*=UTF-8''%E5%B8%AE%E6%89%B6%E6%9D%91.xlsx`
+ * 浏览器/某些场景会把 `UTF-8` 当作文件名（用户反馈"所有模板下载文件名都是 UTF-8"），
+ * 因此前端必须显式解析并 decodeURIComponent。
+ *
+ * 支持两种格式：
+ *   1. filename*=UTF-8''<percent-encoded>   （优先，RFC 5987）
+ *   2. filename="<quoted>"                  （回退，ASCII）
+ *
+ * @param headers axios 响应头对象
+ * @param fallback 解析失败时的兜底文件名
+ */
+export function parseContentDisposition(
+  headers: Record<string, string> | undefined,
+  fallback = 'download.xlsx'
+): string {
+  if (!headers) return fallback
+  // axios 响应头大小写不固定，统一小写查找
+  const cd =
+    headers['content-disposition'] ||
+    headers['Content-Disposition'] ||
+    headers['CONTENT-DISPOSITION']
+  if (!cd) return fallback
+
+  // 1. 优先 filename*=UTF-8''xxx
+  const starMatch = cd.match(/filename\*=([^;]+)/i)
+  if (starMatch) {
+    // 形如 UTF-8''%E5%B8%AE...  → 取 '' 之后的 percent-encoded 段
+    const raw = starMatch[1].trim()
+    const idx = raw.indexOf("''")
+    if (idx >= 0) {
+      const encoded = raw.slice(idx + 2)
+      try {
+        const decoded = decodeURIComponent(encoded)
+        if (decoded) return decoded
+      } catch {
+        // 解码失败时 fallthrough 到下一策略
+      }
+    }
+  }
+
+  // 2. 回退 filename="xxx"
+  const quotedMatch = cd.match(/filename="?([^";]+)"?/i)
+  if (quotedMatch) {
+    const name = quotedMatch[1].trim()
+    if (name) return name
+  }
+
+  return fallback
+}
+
+/** 触发浏览器下载 Blob（封装 saveAs 逻辑，避免重复依赖 file-saver） */
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  // 释放对象 URL，避免内存泄漏
+  setTimeout(() => {
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  }, 100)
+}
+
 export default request
