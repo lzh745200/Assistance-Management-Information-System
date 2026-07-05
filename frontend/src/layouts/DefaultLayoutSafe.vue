@@ -299,6 +299,9 @@
             <el-menu-item v-if="authStore.isAdmin" index="/admin/machine-code"
               ><span>机器码管理</span></el-menu-item
             >
+            <el-menu-item v-if="authStore.isAdmin" index="/organization/pass-code"
+              ><span>通行证码管理</span></el-menu-item
+            >
             <el-menu-item v-if="menuStore.canAccessMenu('users-orgs')" index="/system/users"
               ><span>用户与角色</span></el-menu-item
             >

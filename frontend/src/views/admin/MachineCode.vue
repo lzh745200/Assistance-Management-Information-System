@@ -170,7 +170,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { get, post } from '@/api/request'
+import {
+  getMachineCode as fetchMachineCode,
+  generateInitialPassword,
+  resetPasswordWithMachineCode,
+} from '@/api/machineCode'
 import { copyToClipboard } from '@/utils/clipboard'
 
 const userStore = useUserStore()
@@ -202,7 +206,7 @@ const isAdmin = computed(() => {
 const getMachineCode = async () => {
   loading.value = true
   try {
-    const response = await get('/machine-code/get-machine-code')
+    const response = await fetchMachineCode()
     machineData.value = response
     ElMessage.success('机器码获取成功')
   } catch (error: any) {
@@ -230,7 +234,7 @@ const generatePassword = async () => {
   generatedPassword.value = null
 
   try {
-    const response = await post('/machine-code/generate-initial-password', passwordForm.value)
+    const response = await generateInitialPassword(passwordForm.value)
     generatedPassword.value = response
     ElMessage.success('初始密码已生成')
   } catch (error: any) {
@@ -258,7 +262,7 @@ const resetPassword = async () => {
   resetResult.value = null
 
   try {
-    const response = await post('/machine-code/reset-password-with-machine-code', resetForm.value)
+    const response = await resetPasswordWithMachineCode(resetForm.value)
     resetResult.value = response
     ElMessage.success('密码已重置')
   } catch (error: any) {

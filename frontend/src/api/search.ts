@@ -5,7 +5,7 @@
  * 响应格式: Bare（{ total, items }，非 envelope）
  * 对应后端: backend/app/api/v1/search.py → SearchResponse
  */
-import request from './request'
+import { get } from './request'
 
 /** 搜索结果项（与后端 SearchItem 模型 1:1 对齐） */
 export interface SearchItem {
@@ -29,10 +29,7 @@ export interface SearchResponse {
  * @param limit 最大返回条数（默认 20，最大 50）
  */
 export async function globalSearch(q: string, limit = 20): Promise<SearchResponse> {
-  const response = await request.get<SearchResponse>('/search', {
-    params: { q, limit },
-  })
-  return response.data
+  return get<SearchResponse>('/search', { q, limit })
 }
 
 /** 类型 → 中文标签映射（与后端 _get_entity_type 映射对齐） */
