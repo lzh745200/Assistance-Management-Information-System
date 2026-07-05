@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.permission_utils import is_superuser
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.user import User
 from app.services.data_validator_service import DataValidatorService
@@ -546,7 +547,7 @@ async def preview_import_data(
     )
 
 
-@router.get("/history", response_model=ImportHistoryListResponse)
+@router.get("/history")
 async def get_import_history(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -564,12 +565,8 @@ async def get_import_history(
     importer = ExcelImporterService(db)
     histories, total = importer.get_import_history(user_id=current_user.id, page=page, page_size=page_size)
 
-    return ImportHistoryListResponse(
-        items=[ImportHistoryResponse.model_validate(h) for h in histories],
-        total=total,
-        page=page,
-        page_size=page_size,
-    )
+    items_list = [ImportHistoryResponse.model_validate(h).model_dump(mode="json") for h in histories]
+    return ok_list(items=items_list, total=total, page=page, page_size=page_size)
 
 
 @router.get("/history/{history_id}", response_model=ImportHistoryResponse)

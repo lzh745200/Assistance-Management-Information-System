@@ -86,22 +86,58 @@ export const MENU_CONFIG: MenuItem[] = [
   },
   {
     key: 'system-security',
-    label: '系统安全',
-    icon: 'Lock',
-    order: 9,
+    label: '系统管理',
+    icon: 'Setting',
+    order: 15,
     roles: ['admin', 'super_admin'],
     children: [
       {
-        key: 'zero-trust',
-        label: '零信任安全',
-        path: '/system/zero-trust',
-        icon: 'Lock',
+        key: 'admin-dashboard',
+        label: '管理面板',
+        path: '/admin/dashboard',
+        icon: 'Monitor',
       },
       {
         key: 'user-permissions',
         label: '用户权限管理',
         path: '/system/user-permissions',
         icon: 'User',
+      },
+      {
+        key: 'machine-code',
+        label: '机器码管理',
+        path: '/admin/machine-code',
+        icon: 'Cpu',
+      },
+      {
+        key: 'pass-code',
+        label: '通行码管理',
+        path: '/organization/pass-code',
+        icon: 'Key',
+      },
+      {
+        key: 'audit',
+        label: '审计日志',
+        path: '/system/audit',
+        icon: 'Document',
+      },
+      {
+        key: 'backup',
+        label: '数据备份',
+        path: '/data-management/backup',
+        icon: 'FolderOpened',
+      },
+      {
+        key: 'map-tiles',
+        label: '地图瓦片管理',
+        path: '/system/map-tiles',
+        icon: 'MapLocation',
+      },
+      {
+        key: 'zero-trust',
+        label: '零信任安全',
+        path: '/system/zero-trust',
+        icon: 'Lock',
       },
       {
         key: 'secrets',
@@ -260,7 +296,7 @@ export const MENU_CONFIG: MenuItem[] = [
     icon: 'Upload',
     order: 14,
     children: [
-      { key: 'data-package-report', label: '数据上报', path: '/data-package' },
+      { key: 'data-package-report', label: '数据上报', path: '/data-package/report' },
       {
         key: 'data-package-receive',
         label: '接收数据包',
@@ -268,6 +304,7 @@ export const MENU_CONFIG: MenuItem[] = [
         roles: ['admin', 'super_admin', 'manager'],
       },
       { key: 'data-package-list', label: '数据包列表', path: '/data-package' },
+      { key: 'data-package-version', label: '版本管理', path: '/data-package/version' },
     ],
   },
 ]

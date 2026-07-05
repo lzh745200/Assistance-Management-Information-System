@@ -1020,7 +1020,7 @@ async def list_scholarship_students(
     if year:
         q = q.filter(ScholarshipStudent.year == year)
     items = q.order_by(ScholarshipStudent.created_at.desc()).all()
-    return {"items": [s.to_dict() for s in items], "total": len(items)}
+    return ok_list(items=[s.to_dict() for s in items], total=len(items))
 
 
 @router.post("/{school_id}/scholarship-students")

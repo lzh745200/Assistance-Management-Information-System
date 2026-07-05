@@ -1,4 +1,4 @@
-import api from './request'
+import api, { parseContentDisposition, downloadBlob } from './request'
 
 // ── Types ──
 export type PolicyCategory = string
@@ -99,16 +99,42 @@ export const importPolicies = (file: File) => {
   })
 }
 export const exportPolicies = (params?: any) =>
-  api.get('/policies/export/excel', { params, responseType: 'blob' })
-export const exportPoliciesPDF = (params?: any) =>
-  api.get('/policies/export/pdf', { params, responseType: 'blob' })
-export const exportPoliciesWPS = (params?: any) =>
-  api.get('/policies/export/wps', { params, responseType: 'blob' })
-export const downloadImportTemplate = () =>
-  api.get('/import/template', {
-    params: { entity_type: 'policy' },
-    responseType: 'blob',
+  api.get('/policies/export/excel', { params, responseType: 'blob' }).then((r) => {
+    const filename = parseContentDisposition(
+      r.headers as Record<string, string>,
+      '政策法规导出.xlsx'
+    )
+    downloadBlob(r.data, filename)
   })
+export const exportPoliciesPDF = (params?: any) =>
+  api.get('/policies/export/pdf', { params, responseType: 'blob' }).then((r) => {
+    const filename = parseContentDisposition(
+      r.headers as Record<string, string>,
+      `政策法规_${new Date().getTime()}.pdf`
+    )
+    downloadBlob(r.data, filename)
+  })
+export const exportPoliciesWPS = (params?: any) =>
+  api.get('/policies/export/wps', { params, responseType: 'blob' }).then((r) => {
+    const filename = parseContentDisposition(
+      r.headers as Record<string, string>,
+      `政策法规_${new Date().getTime()}.wps`
+    )
+    downloadBlob(r.data, filename)
+  })
+export const downloadImportTemplate = () =>
+  api
+    .get('/import/template', {
+      params: { entity_type: 'policy' },
+      responseType: 'blob',
+    })
+    .then((r) => {
+      const filename = parseContentDisposition(
+        r.headers as Record<string, string>,
+        '政策法规导入模板.xlsx'
+      )
+      downloadBlob(r.data, filename)
+    })
 
 // ── Display helpers (used by views for status/label formatting) ──
 const CATEGORY_LABELS: Record<string, string> = {}

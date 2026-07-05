@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.exceptions import NotFoundException
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.interfaces.schemas.responses import ResponseModel
 from app.models.user import User
@@ -39,7 +40,7 @@ def _parse_query_date(val: Optional[str]) -> Optional[datetime]:
     return None
 
 
-@router.get("", response_model=RuralWorkListResponse)
+@router.get("")
 async def list_rural_works(
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(10, ge=1, le=500, description="每页记录数"),
@@ -71,12 +72,8 @@ async def list_rural_works(
         order_desc=order_desc,
         current_user=current_user,
     )
-    return RuralWorkListResponse(
-        total=total,
-        items=works,
-        skip=skip,
-        limit=limit,
-    )
+    page = (skip // limit + 1) if limit > 0 else 1
+    return ok_list(items=works, total=total, page=page, page_size=limit)
 
 
 @router.get("/statistics/summary", response_model=ResponseModel)

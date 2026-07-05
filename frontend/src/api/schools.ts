@@ -1,4 +1,5 @@
 import api from './request'
+import { parseContentDisposition, downloadBlob } from './request'
 
 export const schoolsApi = {
   // ========== 基础 CRUD ==========
@@ -21,12 +22,27 @@ export const schoolsApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
-  exportExcel: (params?: any) => api.get('/schools/export/excel', { params, responseType: 'blob' }),
-  downloadImportTemplate: () =>
-    api.get('/import/template', {
-      params: { entity_type: 'school' },
-      responseType: 'blob',
+  exportExcel: (params?: any) =>
+    api.get('/schools/export/excel', { params, responseType: 'blob' }).then((r) => {
+      const filename = parseContentDisposition(
+        r.headers as Record<string, string>,
+        '学校数据导出.xlsx'
+      )
+      downloadBlob(r.data, filename)
     }),
+  downloadImportTemplate: () =>
+    api
+      .get('/import/template', {
+        params: { entity_type: 'school' },
+        responseType: 'blob',
+      })
+      .then((r) => {
+        const filename = parseContentDisposition(
+          r.headers as Record<string, string>,
+          '学校导入模板.xlsx'
+        )
+        downloadBlob(r.data, filename)
+      }),
 
   // ========== 学校帮扶项目 ==========
   listProjects: (schoolId: number | string) => api.get(`/schools/${schoolId}/projects`),

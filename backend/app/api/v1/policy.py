@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from ...core.cache import cache_manager
 from ...core.database import get_db
+from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.policy import Policy, PolicyCategory, PolicyFavorite
 
@@ -881,12 +882,8 @@ async def get_policies(
 
     items = query.offset(offset).limit(lim).all()
 
-    result = {
-        "items": [_policy_to_frontend(p) for p in items],
-        "total": total,
-        "page": (offset // lim) + 1 if lim else 1,
-        "page_size": lim,
-    }
+    items_list = [_policy_to_frontend(p) for p in items]
+    result = ok_list(items=items_list, total=total, page=(offset // lim) + 1 if lim else 1, page_size=lim)
     if _no_filter and _is_default_page:
         await cache_manager.set(_cache_key, result, ttl=300)
     return result

@@ -22,6 +22,8 @@ vi.mock('@/api/request', () => ({
     put: (...args: any[]) => mockPut(...args),
     delete: (...args: any[]) => mockDelete(...args),
   },
+  parseContentDisposition: (_headers: any, fallback: string) => fallback,
+  downloadBlob: vi.fn(),
 }))
 
 import {

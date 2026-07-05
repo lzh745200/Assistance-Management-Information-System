@@ -16,6 +16,7 @@ from ...core.cache import cache_manager
 from ...core.database import get_db
 from ...core.logging import logger
 from ...core.permission_utils import is_superuser
+from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.organization import Organization, OrganizationLevel, OrganizationType
 from ...services.organization_service import OrganizationService
@@ -107,7 +108,7 @@ class OrganizationListResponse(BaseModel):
 # ==================== API端点 ====================
 
 
-@router.get("", response_model=OrganizationListResponse)
+@router.get("")
 async def get_organizations(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=200, description="每页数量"),
@@ -158,7 +159,8 @@ async def get_organizations(
             .limit(page_size)
             .all()
         )
-        result = {"items": items, "total": total, "page": page, "page_size": page_size}
+        items_list = [OrganizationResponse.model_validate(item).model_dump(mode="json") for item in items]
+        result = ok_list(items=items_list, total=total, page=page, page_size=page_size)
         # 仅对默认无过滤请求写缓存
         if not any([org_type, parent_id, is_active, keyword, search]) and page == 1 and page_size == 20:
             await cache_manager.set(_cache_key, result, ttl=300)

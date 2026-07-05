@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.core.exceptions import NotFoundException, BusinessError
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.core.upload_security import sanitize_filename
 from app.models.user import User
@@ -299,26 +300,23 @@ async def get_sync_logs(
 
             logs = query.order_by(DataSyncLog.created_at.desc()).limit(limit).all()
 
-            return {
-                "success": True,
-                "data": [
-                    {
-                        "id": log.id,
-                        "sync_type": log.sync_type,
-                        "status": log.status,
-                        "package_name": log.package_name,
-                        "total_records": log.total_records,
-                        "success_records": log.success_records,
-                        "failed_records": log.failed_records,
-                        "conflicts_count": log.conflicts_count,
-                        "created_at": log.created_at.isoformat(),
-                        "completed_at": (log.completed_at.isoformat() if log.completed_at else None),
-                        "user_name": log.user_name,
-                    }
-                    for log in logs
-                ],
-                "count": len(logs),
-            }
+            items_list = [
+                {
+                    "id": log.id,
+                    "sync_type": log.sync_type,
+                    "status": log.status,
+                    "package_name": log.package_name,
+                    "total_records": log.total_records,
+                    "success_records": log.success_records,
+                    "failed_records": log.failed_records,
+                    "conflicts_count": log.conflicts_count,
+                    "created_at": log.created_at.isoformat(),
+                    "completed_at": (log.completed_at.isoformat() if log.completed_at else None),
+                    "user_name": log.user_name,
+                }
+                for log in logs
+            ]
+            return ok_list(items=items_list, total=len(items_list), page=1, page_size=limit)
         finally:
             db.close()
 

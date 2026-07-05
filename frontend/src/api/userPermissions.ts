@@ -3,7 +3,7 @@
  * 提供用户-组织关联、角色分配、权限管理等功能
  */
 
-import { get, post, del } from './request'
+import { get, post, del, apiRequest } from './request'
 
 // ==================== 类型定义 ====================
 
@@ -75,13 +75,21 @@ export async function getOrganizationUsers(
 
 // ==================== 角色管理 ====================
 
+/** 获取所有角色列表 */
+export async function listRoles(params?: {
+  skip?: number
+  limit?: number
+}): Promise<{ success: boolean; data: any[]; total: number }> {
+  return get('/rbac/roles', params)
+}
+
 /** 为用户分配角色 */
 export async function assignRoleToUser(data: {
   user_id: number
   role_id: string
   expires_at?: string
 }): Promise<{ success: boolean; message: string; data: UserRole }> {
-  return post('/user-permissions/assign-role', data)
+  return post('/rbac/assign/role', data)
 }
 
 /** 移除用户的角色 */
@@ -89,14 +97,18 @@ export async function removeRoleFromUser(
   userId: number,
   roleId: string
 ): Promise<{ success: boolean; message: string }> {
-  return del(`/user-permissions/remove-role?user_id=${userId}&role_id=${roleId}`)
+  return apiRequest({
+    method: 'DELETE',
+    url: '/rbac/revoke/role',
+    data: { user_id: userId, role_id: roleId },
+  })
 }
 
 /** 获取用户的所有角色 */
 export async function getUserRoles(
   userId: number
 ): Promise<{ success: boolean; data: any[]; count: number }> {
-  return get(`/user-permissions/user-roles/${userId}`)
+  return get(`/rbac/user/${userId}/roles`)
 }
 
 // ==================== 权限管理 ====================
@@ -162,6 +174,7 @@ export const userPermissionsApi = {
   getUserOrganizations,
   getOrganizationUsers,
   // 角色
+  listRoles,
   assignRole: assignRoleToUser,
   removeRole: removeRoleFromUser,
   getUserRoles,

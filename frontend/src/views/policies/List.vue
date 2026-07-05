@@ -417,21 +417,12 @@ const handleDownloadTemplate = async () => {
 // 导出PDF
 const handleExportPDF = async () => {
   try {
-    const resPdf = await exportPoliciesPDF({
+    await exportPoliciesPDF({
       category: searchForm.category || undefined,
       organization_level: searchForm.organization_level || undefined,
       status: searchForm.status || undefined,
       search: searchForm.title || undefined,
     })
-
-    const blobPdf = resPdf.data || resPdf
-    const url = window.URL.createObjectURL(blobPdf)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `政策法规_${new Date().getTime()}.pdf`
-    link.click()
-    window.URL.revokeObjectURL(url)
-
     ElMessage.success('导出PDF成功')
   } catch (error: any) {
     logger.error('导出PDF失败:', error)
@@ -442,21 +433,12 @@ const handleExportPDF = async () => {
 // 导出WPS
 const handleExportWPS = async () => {
   try {
-    const resWps = await exportPoliciesWPS({
+    await exportPoliciesWPS({
       category: searchForm.category || undefined,
       organization_level: searchForm.organization_level || undefined,
       status: searchForm.status || undefined,
       search: searchForm.title || undefined,
     })
-    const blobWps = resWps.data || resWps
-
-    const url = window.URL.createObjectURL(blobWps)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `政策法规_${new Date().getTime()}.wps`
-    link.click()
-    window.URL.revokeObjectURL(url)
-
     ElMessage.success('导出WPS成功')
   } catch (error: any) {
     logger.error('导出WPS失败:', error)

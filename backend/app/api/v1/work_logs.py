@@ -10,6 +10,7 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.work_log import WorkLog
 
@@ -155,12 +156,7 @@ async def get_work_logs(
         # 添加 is_auto 字段供前端区分
         result_items.append({**item.__dict__, "is_auto": log.category == "system_auto"})
 
-    return {
-        "items": result_items,
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
+    return ok_list(items=result_items, total=total, page=page, page_size=page_size)
 
 
 @router.post("", response_model=WorkLogResponse)

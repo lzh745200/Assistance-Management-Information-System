@@ -396,6 +396,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '数据包管理' },
       },
       {
+        path: '/data-package/report',
+        name: 'DataPackageReport',
+        component: () => retryImport(() => import('@/views/dataPackage/ReportPackage.vue')),
+        meta: { title: '数据上报' },
+      },
+      {
         path: '/data-package/version',
         name: 'DataPackageVersion',
         component: () => retryImport(() => import('@/views/dataPackage/PackageVersion.vue')),
@@ -465,7 +471,12 @@ export const routes: RouteRecordRaw[] = [
       { path: '/data-entry/comprehensive', redirect: '/data-entry' },
       { path: '/report-export', redirect: '/export/report' },
       { path: '/data-import/batch', redirect: '/import/data' },
-      { path: '/data-package/receive', redirect: '/data-package' },
+      {
+        path: '/data-package/receive',
+        name: 'DataPackageReceive',
+        component: () => retryImport(() => import('@/views/dataPackage/ReceivePackage.vue')),
+        meta: { title: '接收数据包', roles: ['admin', 'super_admin', 'manager'] },
+      },
       { path: '/system/config-package', redirect: '/system/config' },
       // ── 数据录入 ──
       {
@@ -568,6 +579,12 @@ export const routes: RouteRecordRaw[] = [
         name: 'SystemEnvironment',
         component: () => retryImport(() => import('@/views/system/EnvCheck.vue')),
         meta: { title: '运行环境', roles: ['admin', 'super_admin'] },
+      },
+      {
+        path: '/system/map-tiles',
+        name: 'SystemMapTiles',
+        component: () => retryImport(() => import('@/views/system/MapTileManager.vue')),
+        meta: { title: '地图瓦片管理', roles: ['admin', 'super_admin'] },
       },
       // ── 管理面板 ──
       {
