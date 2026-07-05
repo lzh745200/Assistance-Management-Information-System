@@ -51,16 +51,37 @@ The API uses **two response formats** - this causes most integration bugs:
 
 | Format | Shape | Used by |
 |--------|-------|---------|
-| Bare | `{total, page, page_size, items}` | `/supported-villages`, `/funds`, `/work-logs` |
-| Envelope | `{code:200, data:{...}, message:"成功"}` | `/auth/login`, `/users`, `/rbac` |
+| Bare | `{total, page, page_size, items}` | 18 endpoints (see "Remaining bare-format endpoints" below) |
+| Envelope | `{code:200, data:{...}, message:"成功"}` | `/auth/login`, `/users`, `/rbac`, `/supported-villages`, `/funds`, `/projects`, `/schools` |
 
-Frontend stores use `_unwrapList()` / `_unwrapSingle()` to normalize both. When adding new endpoints, pick one format consistently.
+**Unification progress (2026-07-05)**: 4 main list endpoints (`supported-villages`, `funds`, `projects`, `schools`) converted from bare → envelope via `ok_list()` helper in `backend/app/core/response.py`:
+```python
+def ok_list(items, total, page=1, page_size=20, message="成功", **kwargs):
+    return success_response(data={"items": items, "total": total, ...}, message=message, **kwargs)
+```
+When adding new list endpoints, **use `ok_list()`** (envelope) — not bare dict.
+
+Frontend stores use `_unwrapList()` / `_unwrapSingle()` to normalize both. The Axios response interceptor auto-expands `data.data` fields to top level of `response.data`, making envelope format transparent to frontend stores.
+
+**Remaining bare-format endpoints** (18 — frontend handles both transparently, future unification TBD):
+`/work-logs`, `/scholarship-students`, `/rural-works`, `/policies`, `/organizations`, `/machine-codes`, `/pass-codes`, `/data-sync/*`, `/import-export/*`, `/map/*`, `/audit-logs`, `/operation-logs`, `/system/backup`, `/system/update-logs`, `/reports/templates`, `/funds/contracts`, `/funds/transfers`, `/funds/anomalies`
 
 ### Data Isolation
 
 - `organization_id` field is **mandatory** on all queries
 - Use `filter_by_data_scope(query, model, user, db=db)` from `app/core/data_permission.py`
 - Missing this = security vulnerability (military audit will fail)
+
+### Soft Delete Pattern
+
+Models use `is_active` column (Boolean, default=True, nullable=False) for soft deletes:
+- `is_active=False` = deleted (hidden from default queries)
+- `include_deleted=true` query param shows all records (admin only)
+- `to_dict()` exposes `isDeleted` (camelCase) and `is_deleted` (snake_case) fields
+- Currently applied to: `SupportedVillage`, `School`
+- Migration: `alembic/versions/village_softdel_001_add_is_active.py`
+- List endpoints filter `is_active=True` by default; detail endpoints show soft-deleted records (for audit)
+- Cross-org access returns **403** (not 404) to distinguish "exists but not yours" from "doesn't exist"
 
 ### Route Registration
 
@@ -142,6 +163,10 @@ Auto-fixed by `app/utils/win_proactor_fix.py`. Loaded by `start.py` and `main.py
 
 Passlib + bcrypt 5.x incompatibility fixed in `app/core/security.py`. Verify `verify_password()` takes ~200ms, not 30s.
 
+### PasswordPolicy REQUIRE_SPECIAL
+
+`PasswordPolicy` class in `app/core/security.py` has `REQUIRE_SPECIAL = True` attribute (added 2026-07-05 — was missing, caused `AttributeError` when `validate()` referenced it). Also defines `SPECIAL_WHITELIST = set("!@#$%^&*()-_=+[]{}|;:,.<>?")`. When adding new password rules, ensure the class attribute exists BEFORE `validate()` references it.
+
 ### Frontend 404 on Static Files
 
 After `npm run build`, run `scripts/build/sync-frontend-dist.sh` to sync. Browser cache may need clearing.
@@ -165,6 +190,56 @@ AuditLogger.log() writes to both Python logging (app.log) AND database (audit_lo
 ### Database Path (Packaged Mode)
 
 In packaged (Electron) mode, the SQLite database is stored at `%LOCALAPPDATA%\bumofu-assistance\data\rural_revitalization.db` — NOT the install directory (Program Files requires admin write). Electron main.js injects `DATABASE_URL` env var to backend.exe.
+
+## Common Frontend Bug Patterns (Fixed 2026-07-05)
+
+Three bug patterns were found across the codebase and batch-fixed. **When adding new views/API calls, verify these patterns are followed.**
+
+### 1. `response.success` on raw AxiosResponse
+
+**Bug**: Files using `import request/api from './request'` (raw axios) checked `response.success` — but `AxiosResponse` has no `.success` property (only the envelope body does). Silent `undefined` → no error thrown → code path skipped.
+
+**Fix**: Use `response.data.success` (access the envelope body first). Affected files (6 fixed): `PackageVersion.vue`, `ConflictResolution.vue`, `Export.vue`, `Import.vue`, `MapTileManager.vue`.
+
+**Rule**: 
+- `import { get, post, apiRequest } from '@/api/request'` → returns auto-unwrapped `res.data` → use `response.success`
+- `import request/api from './request'` → returns raw `AxiosResponse` → use `response.data.success`
+
+### 2. `get()` params double-wrapping
+
+**Bug**: `get(url, { params: { marker_type } })` is WRONG for the auto-unwrapped wrapper from `@/api/request`. The wrapper passes the 2nd arg directly as `params` to axios — nesting it under `params` again means the marker_type never reaches the backend.
+
+**Fix**: Use `get(url, { marker_type })` (flat params as 2nd arg). Only raw `request.get()` uses `{ params: {...} }`.
+
+**Rule**: ALL api files MUST use `{ get, post, apiRequest } from '@/api/request'`. NEVER `import api/request from './request'` (returns raw AxiosResponse). Blob downloads: API funcs must chain `.then(r => triggerDownload(r.data, name))` internally; callers just `await`, don't access `res.data`.
+
+### 3. Pagination reset missing in list views
+
+**Bug**: Create/edit/delete/import handlers called `loadData()`/`fetchData()` without first resetting pagination to page 1. If user was on page 2+, the new item was invisible (page 2 of a shorter result set = empty).
+
+**Fix**: ALL list view create/edit/delete/import handlers MUST reset pagination to page 1 BEFORE calling `loadData`/`fetchData`:
+```typescript
+// ✅ Correct
+const handleCreate = async () => {
+  await createApi(payload)
+  currentPage.value = 1   // ← reset BEFORE loadData
+  await loadData()
+}
+// ❌ Wrong (omitted reset)
+const handleCreate = async () => {
+  await createApi(payload)
+  await loadData()         // ← user stays on page 2, sees nothing
+}
+```
+Fixed in 16 files (43 handler instances): `funds/{ContractManage,TransferVoucher,EnhancedList,AnomalyList}.vue`, `projects/{List,ProjectManagement}.vue`, `schools/List.vue`, `policies/List.vue`, `system/{UserManagement,TaskManager,UpdateLogs}.vue`, `dataPackage/{List,ReceivePackage}.vue`, `ruralWorks/Task.vue`, `organization/PassCodeManagement.vue`, `admin/MachineCodeManagement.vue`.
+
+### 4. `router.push()` without error handling
+
+**Bug**: Raw `router.push()` returns a Promise; if navigation is aborted (e.g., duplicate route) it throws `NavigationFailureType.aborted` — an unhandled rejection.
+
+**Fix**: Use `pushSafe()` from `@/composables/useRouterSafe` (wraps `router.push` with try/catch + optional fallback to `window.location.href`). Fixed in 9 files: `analytics/map/index.vue`, `analytics/supported-villages/YearlyIndex.vue`, `auth/{ForgotPassword,LoginEnhanced}.vue`, `dashboard/{index,PageHeader}.vue`, `dataSync/{ConflictResolution,Import}.vue`, `funds/index.vue`.
+
+**Rule**: `useRouterSafe()` MUST be called at Vue `<script setup>` top level (NOT inside event handlers — `inject()` only works during setup).
 
 ## Rate Limiting
 
@@ -202,7 +277,11 @@ Every new feature must verify:
 | Version number | `backend/app/core/config.py` → `Settings.PROJECT_VERSION` |
 | DB schema source | `backend/app/models/` + `backend/alembic/versions/` |
 | API router registry | `backend/app/api/v1/__init__.py` → `_BUSINESS_MODULES` |
+| Envelope list helper | `backend/app/core/response.py` → `ok_list()` |
+| Soft delete migration | `backend/alembic/versions/village_softdel_001_add_is_active.py` |
+| Password policy | `backend/app/core/security.py` → `PasswordPolicy` class |
 | Frontend HTTP client | `frontend/src/api/request.ts` |
+| Safe router composable | `frontend/src/composables/useRouterSafe.ts` |
 | Design tokens | `frontend/src/styles/tokens.scss` |
 |贵州 region data | `frontend/src/data/guizhouRegion.ts` |
 | Electron main | `electron/main.js` |
