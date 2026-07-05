@@ -115,8 +115,9 @@ const loadConflicts = async () => {
     }
 
     const response = await getConflicts(parseInt(syncLogId))
-    if (response.success) {
-      conflicts.value = response.map((c: ConflictDetail) => ({
+    if (response.data.success) {
+      const conflictList = response.data.data || response.data.items || []
+      conflicts.value = conflictList.map((c: ConflictDetail) => ({
         ...c,
         remote_data: c.import_data,
         resolution: 'keep_local' as const,

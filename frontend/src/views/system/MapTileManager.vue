@@ -172,8 +172,8 @@ const zoomLevelData = computed(() => {
 const loadStatus = async () => {
   try {
     const response = await getMapStatus()
-    if (response.success) {
-      coverage.value = response
+    if (response.data.success) {
+      coverage.value = response.data.data || response.data
     }
   } catch (error: any) {
     ElMessage.error(error.message || '加载状态失败')
@@ -191,8 +191,10 @@ const handleDownload = async () => {
     downloading.value = true
     const response = await downloadTiles(downloadForm.value)
 
-    if (response.success) {
-      ElMessage.success(`下载完成! 成功 ${response.downloaded} 个, 失败 ${response.failed} 个`)
+    if (response.data.success) {
+      ElMessage.success(
+        `下载完成! 成功 ${response.data.downloaded} 个, 失败 ${response.data.failed} 个`
+      )
       await loadStatus()
     }
   } catch (error: any) {
@@ -213,8 +215,8 @@ const handleClearLevel = async (level: number) => {
     })
 
     const response = await clearTiles(level)
-    if (response.success) {
-      ElMessage.success(`已清理 ${response.deleted_count} 个瓦片`)
+    if (response.data.success) {
+      ElMessage.success(`已清理 ${response.data.deleted_count} 个瓦片`)
       await loadStatus()
     }
   } catch (error: any) {
@@ -233,8 +235,8 @@ const handleClearAll = async () => {
     })
 
     const response = await clearTiles()
-    if (response.success) {
-      ElMessage.success(`已清理 ${response.deleted_count} 个瓦片`)
+    if (response.data.success) {
+      ElMessage.success(`已清理 ${response.data.deleted_count} 个瓦片`)
       await loadStatus()
     }
   } catch (error: any) {

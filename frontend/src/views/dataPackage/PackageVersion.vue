@@ -270,8 +270,8 @@ const compareResult = ref<CompareResult | null>(null)
 const fetchVersionList = async () => {
   try {
     const response = await request.get(`/data-packages/${packageId.value}/versions`)
-    if (response.success) {
-      versionList.value = response.versions
+    if (response.data.success) {
+      versionList.value = response.data.versions
     }
   } catch {
     ElMessage.error('获取版本列表失败')
@@ -297,7 +297,7 @@ const confirmCreate = async () => {
       versionForm.value
     )
 
-    if (response.success) {
+    if (response.data.success) {
       ElMessage.success('版本创建成功')
       createDialogVisible.value = false
       fetchVersionList()
@@ -314,8 +314,8 @@ const handleViewDetail = async (version: VersionItem) => {
   try {
     const response = await request.get(`/data-packages/${packageId.value}/versions/${version.id}`)
 
-    if (response.success) {
-      currentVersion.value = response
+    if (response.data.success) {
+      currentVersion.value = response.data
       if (Object.keys(currentVersion.value.changes).length > 0) {
         activeTab.value = Object.keys(currentVersion.value.changes)[0]
       }
@@ -348,8 +348,8 @@ const doCompare = async () => {
       },
     })
 
-    if (response.success) {
-      compareResult.value = response.comparison
+    if (response.data.success) {
+      compareResult.value = response.data.comparison
     }
   } catch (error: unknown) {
     handleApiError(error, '对比失败')
@@ -367,7 +367,7 @@ const handleDelete = async (versionId: number | string) => {
 
     const response = await request.delete(`/data-packages/${packageId.value}/versions/${versionId}`)
 
-    if (response.success) {
+    if (response.data.success) {
       ElMessage.success('删除成功')
       fetchVersionList()
     }

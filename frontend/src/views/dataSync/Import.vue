@@ -215,18 +215,21 @@ const handleImport = async () => {
       response = await importData(selectedFile.value, importForm.value.strategy)
     }
 
-    importResult.value = response
+    importResult.value = response.data
 
-    if (response.success) {
-      const stats = [`成功 ${response.success_records} 条`, `失败 ${response.failed_records} 条`]
-      if (response.inserted_count !== undefined) {
-        stats.push(`新增 ${response.inserted_count} 条`)
+    if (response.data.success) {
+      const stats = [
+        `成功 ${response.data.success_records} 条`,
+        `失败 ${response.data.failed_records} 条`,
+      ]
+      if (response.data.inserted_count !== undefined) {
+        stats.push(`新增 ${response.data.inserted_count} 条`)
       }
-      if (response.updated_count !== undefined) {
-        stats.push(`更新 ${response.updated_count} 条`)
+      if (response.data.updated_count !== undefined) {
+        stats.push(`更新 ${response.data.updated_count} 条`)
       }
-      if (response.skipped_count !== undefined) {
-        stats.push(`跳过 ${response.skipped_count} 条`)
+      if (response.data.skipped_count !== undefined) {
+        stats.push(`跳过 ${response.data.skipped_count} 条`)
       }
 
       ElMessage.success(`导入成功! ${stats.join(', ')}`)
@@ -257,8 +260,8 @@ const showConflicts = () => {
 const loadImportHistory = async () => {
   try {
     const response = await getSyncLogs('import', 20)
-    if (response.success) {
-      importHistory.value = response
+    if (response.data.success) {
+      importHistory.value = response.data
     }
   } catch (error) {
     console.error('加载导入历史失败:', error)

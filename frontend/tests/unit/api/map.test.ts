@@ -26,19 +26,19 @@ describe('api/map', () => {
   it('getMapMarkers 默认 all', async () => {
     mockGet.mockResolvedValueOnce({ villages: [], schools: [] })
     await getMapMarkers()
-    expect(mockGet).toHaveBeenCalledWith('/map/markers', { params: { marker_type: 'all' } })
+    expect(mockGet).toHaveBeenCalledWith('/map/markers', { marker_type: 'all' })
   })
 
   it('getMapMarkers 指定 villages', async () => {
     mockGet.mockResolvedValueOnce({ villages: [] })
     await getMapMarkers('villages')
-    expect(mockGet).toHaveBeenCalledWith('/map/markers', { params: { marker_type: 'villages' } })
+    expect(mockGet).toHaveBeenCalledWith('/map/markers', { marker_type: 'villages' })
   })
 
   it('getMapMarkers 指定 schools', async () => {
     mockGet.mockResolvedValueOnce({ schools: [] })
     await getMapMarkers('schools')
-    expect(mockGet).toHaveBeenCalledWith('/map/markers', { params: { marker_type: 'schools' } })
+    expect(mockGet).toHaveBeenCalledWith('/map/markers', { marker_type: 'schools' })
   })
 
   it('getCountyCoords GET /map/county-coords', async () => {

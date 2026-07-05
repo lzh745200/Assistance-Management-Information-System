@@ -56,7 +56,7 @@ export interface CountyCoordsResponse {
 export async function getMapMarkers(
   markerType: 'all' | 'villages' | 'schools' = 'all'
 ): Promise<MapMarkers> {
-  return get(BASE_URL + '/markers', { params: { marker_type: markerType } })
+  return get(BASE_URL + '/markers', { marker_type: markerType })
 }
 
 export async function getCountyCoords(): Promise<CountyCoordsResponse> {
