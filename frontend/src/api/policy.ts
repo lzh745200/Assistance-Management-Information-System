@@ -122,20 +122,6 @@ export const exportPoliciesWPS = (params?: any) =>
     )
     downloadBlob(r.data, filename)
   })
-export const downloadImportTemplate = () =>
-  api
-    .get('/import/template', {
-      params: { entity_type: 'policy' },
-      responseType: 'blob',
-    })
-    .then((r) => {
-      const filename = parseContentDisposition(
-        r.headers as Record<string, string>,
-        '政策法规导入模板.xlsx'
-      )
-      downloadBlob(r.data, filename)
-    })
-
 // ── Display helpers (used by views for status/label formatting) ──
 const CATEGORY_LABELS: Record<string, string> = {}
 const LEVEL_LABELS: Record<string, string> = {}

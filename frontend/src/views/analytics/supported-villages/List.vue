@@ -408,6 +408,7 @@ async function handleDelete(row: SupportedVillage) {
   try {
     await deleteSupportedVillage(row.id)
     ElMessage.success('删除成功')
+    pagination.page = 1
     loadData()
   } catch (error) {
     ElMessage.error('删除失败')
@@ -429,6 +430,7 @@ async function handleBatchDelete() {
     ElMessage.success(result.message)
     selectedRows.value = []
     if (tableRef.value) tableRef.value.clearSelection()
+    pagination.page = 1
     loadData()
   } catch (error) {
     ElMessage.error('批量删除失败')

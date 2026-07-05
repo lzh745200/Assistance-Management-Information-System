@@ -30,19 +30,7 @@ export const schoolsApi = {
       )
       downloadBlob(r.data, filename)
     }),
-  downloadImportTemplate: () =>
-    api
-      .get('/import/template', {
-        params: { entity_type: 'school' },
-        responseType: 'blob',
-      })
-      .then((r) => {
-        const filename = parseContentDisposition(
-          r.headers as Record<string, string>,
-          '学校导入模板.xlsx'
-        )
-        downloadBlob(r.data, filename)
-      }),
+  // downloadImportTemplate removed — use downloadImportTemplateAndSave from @/api/import
 
   // ========== 学校帮扶项目 ==========
   listProjects: (schoolId: number | string) => api.get(`/schools/${schoolId}/projects`),

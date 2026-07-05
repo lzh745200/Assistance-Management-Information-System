@@ -41,7 +41,6 @@ import {
   exportPolicies,
   exportPoliciesPDF,
   exportPoliciesWPS,
-  downloadImportTemplate,
   getCategoryLabel,
   getLevelLabel,
   getStatusLabel,
@@ -136,10 +135,7 @@ describe('api/policy', () => {
       await exportPoliciesWPS()
       expect(mockGet).toHaveBeenCalledWith('/policies/export/wps', { params: undefined, responseType: 'blob' })
     })
-    it('downloadImportTemplate', async () => {
-      await downloadImportTemplate()
-      expect(mockGet).toHaveBeenCalledWith('/import/template', { params: { entity_type: 'policy' }, responseType: 'blob' })
-    })
+    // downloadImportTemplate removed — consolidated to downloadImportTemplateAndSave in @/api/import
   })
 
   describe('label helpers', () => {
