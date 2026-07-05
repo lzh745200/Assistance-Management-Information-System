@@ -470,7 +470,10 @@ export const routes: RouteRecordRaw[] = [
       { path: '/analytics/assessment', redirect: '/data-analysis/assessment' },
       { path: '/data-entry/comprehensive', redirect: '/data-entry' },
       { path: '/report-export', redirect: '/export/report' },
-      { path: '/data-import/batch', redirect: '/import/data' },
+      // 模块整合重定向：旧路径统一收口到新入口
+      { path: '/data-management/backup', redirect: '/system/backup' },
+      { path: '/data-management/logs', redirect: '/system/audit' },
+      { path: '/data-import/batch', redirect: '/data-package' },
       {
         path: '/data-package/receive',
         name: 'DataPackageReceive',

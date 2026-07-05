@@ -236,14 +236,11 @@
               <span class="menu-title-text">数据管理</span>
             </template>
             <el-menu-item index="/data-management"><span>数据概览</span></el-menu-item>
-            <el-menu-item index="/data-management/backup"><span>数据备份</span></el-menu-item>
-            <el-menu-item index="/data-management/logs"><span>操作日志</span></el-menu-item>
+            <!-- 数据备份/操作日志入口已统一收归至系统管理 → 审计管理/备份管理 -->
             <el-menu-item index="/data-sync/export"><span>数据导出</span></el-menu-item>
             <el-menu-item index="/data-sync/import"><span>数据导入</span></el-menu-item>
-            <el-menu-item index="/data-package"><span>数据包管理</span></el-menu-item>
-            <el-menu-item v-if="menuStore.canAccessMenu('batch-import')" index="/data-import/batch"
-              ><span>批量导入</span></el-menu-item
-            >
+            <el-menu-item index="/data-package"><span>数据包与批量导入</span></el-menu-item>
+            <!-- 批量导入已整合至数据包管理 -->
             <el-menu-item v-if="menuStore.canAccessMenu('data-verify')" index="/data-verify"
               ><span>数据校验</span></el-menu-item
             >
