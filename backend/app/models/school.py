@@ -153,6 +153,7 @@ class School(Base):
             "support_end_date": _end,
             "contact_phone": self.contact_phone,
             "is_active": self.is_active,
+            "is_deleted": self.is_active is False,
             "created_at": _created,
             "updated_at": _updated,
             # camelCase (兼容)

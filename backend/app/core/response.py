@@ -60,6 +60,32 @@ def paginated_response(
     return resp
 
 
+def ok_list(
+    items: List[Any],
+    total: int,
+    page: int = 1,
+    page_size: int = 20,
+    message: str = "成功",
+    **kwargs,
+) -> Dict:
+    """
+    生成统一列表 envelope：{code:200, data:{items,total,page,page_size}, message}。
+
+    前端 _unwrapList 据此取 data.items / data.total。
+    所有业务列表接口应使用本函数，避免 bare {total,page,page_size,items} 与 envelope 混用。
+    """
+    return success_response(
+        data={
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        },
+        message=message,
+        **kwargs,
+    )
+
+
 def error_response(
     code: int = 400,
     message: str = "error",

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.user import User
 from app.utils.common import dict_keys_to_camel, StringHelper
@@ -240,6 +241,7 @@ async def list_villages(
     county: Optional[str] = None,
     isRevitalizationTier: Optional[bool] = None,
     isThreeRegions: Optional[int] = None,
+    include_deleted: bool = Query(False, description="是否包含已软删的记录"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -255,7 +257,7 @@ async def list_villages(
         _cache = await get_cache_service()
         try:
             _key_data = json.dumps(
-                [keyword, department, county, isRevitalizationTier, isThreeRegions],
+                [keyword, department, county, isRevitalizationTier, isThreeRegions, include_deleted],
                 default=str,
             ).encode()
             _ckey = f"villages:list:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
@@ -267,6 +269,10 @@ async def list_villages(
 
     query = db.query(SupportedVillage)
     query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
+
+    # 默认过滤软删记录（is_active=False），include_deleted=True 时显示全部
+    if not include_deleted:
+        query = query.filter(SupportedVillage.is_active.is_(True))
 
     if keyword:
         like = f"%{keyword}%"
@@ -294,18 +300,19 @@ async def list_villages(
         .all()
     )
 
-    _result = {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "items": [
+    # 返回统一 envelope：{code:200, data:{items,total,page,page_size}, message}
+    result = ok_list(
+        items=[
             v.to_dict() if hasattr(v, "to_dict") else {"id": v.id, "village_name": v.village_name}
             for v in items
         ],
-    }
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
     if _ckey is not None:
-        await _cache.set(_ckey, _result, ttl=120)
-    return _result
+        await _cache.set(_ckey, result, ttl=120)
+    return result
 
 
 @router.get("/filter-options")
@@ -441,12 +448,12 @@ async def batch_delete_villages(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """批量删除帮扶村"""
+    """批量软删帮扶村"""
     if not data.ids:
         raise HTTPException(status_code=400, detail="请提供要删除的ID列表")
     db.query(SupportedVillage).filter(
         SupportedVillage.id.in_(data.ids)
-    ).delete(synchronize_session=False)
+    ).update({"is_active": False}, synchronize_session=False)
     db.commit()
     return {"message": f"已删除 {len(data.ids)} 条记录"}
 
@@ -526,25 +533,10 @@ async def delete_village(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除帮扶村及其全部关联数据"""
+    """软删帮扶村（置 is_active=False，保留关联数据以便恢复/审计）"""
     village = _get_village_or_404(db, village_id)
 
-    # 显式清理所有子表数据（SQLite 不强制外键，避免 orphan 记录）
-    child_models = [
-        VillagePopulation, VillageIncome, ForceInvestment,
-        IndustrySupport, InfrastructureImprovement,
-        PartyBuildingSupport, MedicalSupport, ConsumptionSupport,
-        EmploymentSupport, EducationSupport, VillageCommitteeInfo,
-    ]
-    for model in child_models:
-        db.query(model).filter(model.supported_village_id == village_id).delete()
-
-    # 清理村委成员（有 supported_village_id）
-    db.query(VillageCommitteeMember).filter(
-        VillageCommitteeMember.supported_village_id == village_id
-    ).delete()
-
-    db.delete(village)
+    village.is_active = False
     db.commit()
     return {"message": "删除成功"}
 

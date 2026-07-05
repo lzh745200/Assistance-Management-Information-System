@@ -28,8 +28,10 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.core.data_permission import filter_by_data_scope
 from app.core.errors import AppError
 from app.core.exceptions import NotFoundException
+from app.core.response import ok_list, success_response
 from app.core.security import AuditLogService, check_rate_limit, get_client_ip, get_current_user
 from app.models.project import Fund, Project, ProjectFile, ProjectStatus, ProjectTask
 from app.services.audit_enhancement_service import AuditEnhancementService
@@ -626,9 +628,6 @@ async def list_projects(
     if not include_cancelled:
         query = query.filter(Project.status != ProjectStatus.CANCELLED.value)
 
-    # 数据权限过滤：根据用户 data_scope 精确控制可见数据范围
-    from app.core.data_permission import filter_by_data_scope
-
     query = filter_by_data_scope(query, Project, current_user, db=db)
 
     if keyword:
@@ -669,12 +668,12 @@ async def list_projects(
         )
         items.append(d)
 
-    return {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "items": items,
-    }
+    return ok_list(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/{project_id}", summary="获取项目详情")
@@ -692,7 +691,8 @@ async def get_project(
     data = _project_to_dict(project)
     data["funds_count"] = funds_total
     data["tasks_count"] = tasks_total
-    return data
+    # 统一 envelope：{code:200, data:{...}, message:"成功"}
+    return success_response(data=data, message="成功")
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, summary="创建项目")

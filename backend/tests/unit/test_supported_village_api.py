@@ -138,7 +138,7 @@ class TestListVillages:
         resp = client.get("/api/v1/supported-villages")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total"] == 1
+        assert data["data"]["total"] == 1
 
     def test_with_keyword(self, client, mock_db):
         q = mock_db.query.return_value
@@ -164,7 +164,7 @@ class TestListVillages:
         q.all.return_value = [v]
         resp = client.get("/api/v1/supported-villages")
         assert resp.status_code == 200
-        assert resp.json()["items"][0]["villageName"] == "测试村"
+        assert resp.json()["data"]["items"][0]["villageName"] == "测试村"
 
     def test_empty_items(self, client, mock_db):
         q = mock_db.query.return_value
@@ -172,7 +172,7 @@ class TestListVillages:
         q.all.return_value = []
         resp = client.get("/api/v1/supported-villages")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
 
 # ---------------------------------------------------------------------------

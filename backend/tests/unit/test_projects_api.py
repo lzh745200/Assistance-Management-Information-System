@@ -242,7 +242,7 @@ class TestProjectsAPI:
             mock_db.query.return_value = q
             resp = client.get("/api/v1/projects")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 2
+        assert resp.json()["data"]["total"] == 2
 
     def test_list_projects_with_filters(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -257,7 +257,7 @@ class TestProjectsAPI:
             mock_db.query.return_value = q
             resp = client.get("/api/v1/projects?keyword=test&project_type=infra&status=draft&village_id=1&sort_by=name&sort_order=asc&include_cancelled=true")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
     def test_get_project_detail(self, client, mock_db, admin_user, sample_project):
         _setup_client(client, mock_db, admin_user)
@@ -265,7 +265,7 @@ class TestProjectsAPI:
         mock_db.query.return_value.filter.return_value.scalar.return_value = 2
         resp = client.get("/api/v1/projects/1")
         assert resp.status_code == 200
-        assert resp.json()["id"] == 1
+        assert resp.json()["data"]["id"] == 1
 
     def test_get_project_detail_404(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)

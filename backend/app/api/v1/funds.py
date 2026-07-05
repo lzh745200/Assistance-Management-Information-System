@@ -28,6 +28,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.api.v1.deps import require_manager_role
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.utils.pagination import keyset_paginate
 from app.core.data_permission import apply_data_scope
@@ -203,12 +204,16 @@ def list_funds(
         result = keyset_paginate(
             stmt, order_column=Fund.id, page_size=page_size, cursor=cursor, desc=True, db=db
         )
-        return {
-            "total": result["total"], "page_size": result["page_size"],
-            "items": [_fund_to_dict(f) for f in result["items"]],
-            "next_cursor": result["next_cursor"], "has_more": result["has_more"],
-            "pagination": "keyset",
-        }
+        # 统一 envelope：{code:200, data:{items,total,page_size,page,next_cursor,has_more}, message}
+        return ok_list(
+            items=[_fund_to_dict(f) for f in result["items"]],
+            total=result["total"],
+            page=page,
+            page_size=result["page_size"],
+            next_cursor=result["next_cursor"],
+            has_more=result["has_more"],
+            pagination="keyset",
+        )
 
     # 传统 OFFSET 分页 (手动构建以完美兼容 apply_data_scope 和 joinedload)
     count_stmt = select(func.count()).select_from(stmt.subquery())
@@ -217,10 +222,13 @@ def list_funds(
     items_stmt = stmt.order_by(Fund.id.desc()).offset((page - 1) * page_size).limit(page_size)
     items = db.execute(items_stmt).scalars().unique().all()
 
-    return {
-        "total": total, "page": page, "page_size": page_size,
-        "items": [_fund_to_dict(f) for f in items], "pagination": "offset",
-    }
+    return ok_list(
+        items=[_fund_to_dict(f) for f in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+        pagination="offset",
+    )
 
 
 @router.get("/export")
@@ -245,7 +253,15 @@ def get_fund(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """查询经费详情"""
+    """查询经费详情。
+
+    跨组织访问时返回明确 403，避免用户误以为记录不存在。
+    """
+    # 先不带数据权限查一次，区分"不存在"和"无权访问"
+    exists = db.execute(select(Fund.id).where(Fund.id == fund_id)).scalar_one_or_none()
+    if not exists:
+        raise HTTPException(status_code=404, detail="经费记录不存在")
+
     stmt = (
         select(Fund)
         .where(Fund.id == fund_id)
@@ -255,7 +271,8 @@ def get_fund(
     fund = db.execute(stmt).scalar_one_or_none()
 
     if not fund:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="经费记录不存在或无权访问")
+        # 记录存在但数据权限过滤后为空 → 跨组织访问
+        raise HTTPException(status_code=403, detail="无权访问该组织数据")
     return {"data": _fund_to_dict(fund)}
 
 

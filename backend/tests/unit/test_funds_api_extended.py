@@ -264,9 +264,9 @@ class TestListFunds:
         resp = client.get("/api/v1/funds")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total"] == 0
+        assert data["data"]["total"] == 0
         assert data["pagination"] == "offset"
-        assert data["items"] == []
+        assert data["data"]["items"] == []
 
     def test_list_funds_offset_pagination_with_items(self, client, mock_db):
         """List with offset pagination returns fund items."""
@@ -283,10 +283,10 @@ class TestListFunds:
         resp = client.get("/api/v1/funds")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total"] == 1
-        assert data["page"] == 1
-        assert len(data["items"]) == 1
-        assert data["items"][0]["name"] == "项目经费A"
+        assert data["data"]["total"] == 1
+        assert data["data"]["page"] == 1
+        assert len(data["data"]["items"]) == 1
+        assert data["data"]["items"][0]["name"] == "项目经费A"
 
     def test_list_funds_keyset_pagination(self, client, mock_db):
         """List with keyset pagination."""
@@ -316,7 +316,7 @@ class TestListFunds:
 
         resp = client.get("/api/v1/funds?status=approved")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_list_funds_with_keyword_filter(self, client, mock_db):
         """List with keyword search."""
@@ -1692,7 +1692,7 @@ class TestKeysetPagination:
 
         resp = client.get("/api/v1/funds?page=3&page_size=20")
         assert resp.status_code == 200
-        assert resp.json()["page"] == 3
+        assert resp.json()["data"]["page"] == 3
 
 
 # ============================================================================

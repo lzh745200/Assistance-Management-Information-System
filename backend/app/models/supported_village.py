@@ -99,6 +99,9 @@ class SupportedVillage(Base, TimestampMixin):
 
     honors = Column(String(2000), nullable=True, comment="获得表彰情况")
 
+    # 软删标记（与 School/Project 一致，is_active=False 表示已删除）
+    is_active = Column(Boolean, default=True, nullable=False, comment="是否启用(软删标记)")
+
     # 外键
     organization_id = Column(
         Integer,
@@ -235,6 +238,8 @@ class SupportedVillage(Base, TimestampMixin):
             "transition_fund_military_total": self.transition_fund_military_total or 0,
             "transitionFundLocalTotal": self.transition_fund_local_total or 0,
             "transition_fund_local_total": self.transition_fund_local_total or 0,
+            "isDeleted": self.is_active is False,
+            "is_deleted": self.is_active is False,
             "organizationId": self.organization_id,
             "organization_id": self.organization_id,
             "createdBy": self.created_by,

@@ -20,6 +20,7 @@ from sqlalchemy import func as sa_func
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError
+from app.core.response import ok_list
 from ...core.config import settings
 from ...core.database import get_db
 from ...core.security import get_current_user
@@ -534,6 +535,7 @@ async def list_schools(
     type: Optional[str] = None,
     support_status: Optional[str] = None,
     supportStatus: Optional[str] = None,
+    include_deleted: bool = Query(False, description="是否包含已软删的记录"),
     current_user=Depends(get_current_user),
     data_scope: DataScope = Depends(get_data_scope),
     db: Session = Depends(get_db),
@@ -552,7 +554,7 @@ async def list_schools(
         _cache = await get_cache_service()
         try:
             _key_data = json.dumps(
-                [keyword, name, type, status_filter], default=str
+                [keyword, name, type, status_filter, include_deleted], default=str
             ).encode()
             _ckey = f"schools:list:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
             _cached = await _cache.get(_ckey)
@@ -561,7 +563,10 @@ async def list_schools(
         except (TypeError, ValueError):
             _ckey = None
 
-    query = db.query(School).filter(School.is_active == True)  # noqa: E712
+    query = db.query(School)
+    # 默认过滤软删记录（is_active=False），include_deleted=True 时显示全部
+    if not include_deleted:
+        query = query.filter(School.is_active == True)  # noqa: E712
 
     # 数据范围过滤：非管理员只能看到自己组织及下级组织的帮扶学校
     query = data_scope.filter_by_org_ids(query, School.organization_id, created_by_column=School.created_by)
@@ -584,15 +589,16 @@ async def list_schools(
     total = query.count()
     items = query.order_by(School.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    _result = {
-        "items": [s.to_dict() for s in items],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
+    # 返回统一 envelope：{code:200, data:{items,total,page,page_size}, message}
+    result = ok_list(
+        items=[s.to_dict() for s in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
     if _ckey is not None:
-        await _cache.set(_ckey, _result, ttl=120)
-    return _result
+        await _cache.set(_ckey, result, ttl=120)
+    return result
 
 
 @router.get("/{school_id}")
@@ -601,8 +607,9 @@ async def get_school(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取学校详情"""
-    school = db.query(School).filter(School.id == school_id, School.is_active == True).first()  # noqa: E712
+    """获取学校详情（含已软删记录，前端按 is_deleted 标记展示）"""
+    # 详情不强制 is_active=True，软删记录可见
+    school = db.query(School).filter(School.id == school_id).first()
     if not school:
         raise AppError.not_found("学校")
     require_data_permission(
