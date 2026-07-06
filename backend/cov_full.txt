@@ -20,3 +20,2809 @@ sts/ -q --tb=no --ti ...
 : 鎴愬姛 42/42 涓?
 2026-07-06 18:40:34,410 - app.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚
 : 鎴愬姛 42/42 涓?
+============================= test session starts =============================
+platform win32 -- Python 3.11.0, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\military-Rural Revitalization-system\backend
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: anyio-4.13.0, asyncio-1.3.0, cov-7.0.0, timeout-2.4.0, xdist-3.8.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+timeout: 120.0s
+timeout method: thread
+timeout func_only: False
+created: 6/6 workers
+6 workers [8891 items]
+
+........................................................................ [  0%]
+........................................................................ [  1%]
+2026-07-06 18:43:18,023 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=None actions=['cre
+ate'] action=None before_date=None
+2026-07-06 18:43:18,033 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 0 鏉?
+2026-07-06 18:43:20,566 - app.api.v1.system.backup - IN
+FO - 澶囦唤宸插垱寤? backup_2024.zip锛屾搷浣滀汉: admin
+2026-07-06 18:43:20,835 - app.api.v1.import_export.asyn
+c_export - ERROR - 鎶ヨ〃瀵煎嚭澶辫触: Export failed
+2026-07-06 18:43:23,716 - app.api.v1.system.backup - IN
+FO - 澶囦唤宸插垱寤? encrypted.zip锛屾搷浣滀汉: admin
+2026-07-06 18:43:25,076 - app.api.v1.system.backup - ER
+ROR - 鍒涘缓澶囦唤澶辫触: disk full
+2026-07-06 18:43:26,557 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=None actions=['cre
+ate', 'update', 'delete', 'import', 'export', 'backup',
+ 'restore'] action=None before_date=None
+2026-07-06 18:43:26,561 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 3 鏉?
+........................................................................ [  2%]
+2026-07-06 18:43:33,775 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=None actions=['bac
+kup'] action=None before_date=None
+2026-07-06 18:43:33,778 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 1 鏉?
+2026-07-06 18:43:34,329 - app.api.v1.system.backup - ER
+ROR - 鑾峰彇澶囦唤鍒楄〃澶辫触: fail
+2026-07-06 18:43:39,008 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=None actions=[] ac
+tion=None before_date=None
+2026-07-06 18:43:39,009 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎: 鏃犳湁鏁堣繃婊ゆ潯浠讹紝璺宠繃鍒犻櫎
+2026-07-06 18:43:39,710 - app.api.v1.system.backup - ER
+ROR - 鑾峰彇澶囦唤缁熻澶辫触: fail
+2026-07-06 18:43:43,664 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=[1, 2] actions=Non
+e action=None before_date=None
+2026-07-06 18:43:43,669 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 2 鏉?
+2026-07-06 18:43:47,668 - app.api.v1.system.backup - IN
+FO - 澶囦唤宸插垹闄? test.zip锛屾搷浣滀汉: admin
+........................................................................ [  3%]
+2026-07-06 18:43:49,917 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=[1] actions=None a
+ction=None before_date=None
+2026-07-06 18:43:49,921 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 1 鏉?
+2026-07-06 18:43:51,745 - app.api.v1.system.backup - ER
+ROR - 鍒犻櫎澶囦唤澶辫触: fail
+2026-07-06 18:43:55,594 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=[999999, 888888] a
+ctions=None action=None before_date=None
+2026-07-06 18:43:55,598 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 0 鏉?
+2026-07-06 18:43:58,659 - app.api.v1.system.backup - IN
+FO - 澶囦唤鏂囦欢涓嬭浇: test_backup.zip锛屾搷浣滀汉: admin
+........................................................................ [  4%]
+2026-07-06 18:44:01,370 - app.api.v1.system.audit - ERR
+OR - BatchDeleteRequest: ids 涓寘鍚潪鏁存暟鍊?'batch'
+2026-07-06 18:44:02,005 - app.api.v1.system.backup - WA
+RNING - 绯荤粺宸蹭粠澶囦唤鎭㈠: good.zip锛屾搷浣滀汉: admin
+2026-07-06 18:44:02,006 - app.api.v1.system.backup - WA
+RNING - 绯荤粺宸蹭粠澶囦唤鎭㈠锛屽缓璁珛鍗抽噸鍚簲鐢ㄤ互鍥炴敹鏁版嵁搴撹繛鎺ユ睜銆傛仮澶嶆枃浠?
+ good.zip锛屾搷浣滀汉: admin
+2026-07-06 18:44:02,879 - app.api.v1.system.backup - ER
+ROR - 鎭㈠澶囦唤澶辫触: fail
+2026-07-06 18:44:04,418 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=[1] actions=['crea
+te', 'delete'] action=None before_date=None
+2026-07-06 18:44:04,422 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 1 鏉?
+........................................................................ [  4%]
+2026-07-06 18:44:07,561 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=None actions=None 
+action=restore before_date=None
+2026-07-06 18:44:07,565 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 1 鏉?
+2026-07-06 18:44:12,309 - app.api.v1.system.audit - INF
+O - 鍒犻櫎瀹¤鏃ュ織 id=1, user=testadmin
+2026-07-06 18:44:12,323 - app.api.v1.system.audit - INF
+O - 鍒犻櫎瀹¤鏃ュ織鎴愬姛 id=1
+........................................................................ [  5%]
+2026-07-06 18:44:16,461 - app.api.v1.system.audit - INF
+O - 鍒犻櫎瀹¤鏃ュ織 id=999999, user=testadmin
+2026-07-06 18:44:16,461 - app.api.v1.system.audit - WAR
+NING - 鍒犻櫎瀹¤鏃ュ織澶辫触: id=999999 涓嶅瓨鍦?
+........................................................................ [  6%]
+2026-07-06 18:44:25,325 - app.api.v1.system.audit - INF
+O - 鍒犻櫎瀹¤鏃ュ織 id=0, user=testadmin
+2026-07-06 18:44:25,328 - app.api.v1.system.audit - WAR
+NING - 鍒犻櫎瀹¤鏃ュ織澶辫触: id=0 涓嶅瓨鍦?
+........................................................................ [  7%]
+2026-07-06 18:44:31,981 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=None actions=['cre
+ate'] action=None before_date=None
+2026-07-06 18:44:31,985 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 0 鏉?
+........................................................................ [  8%]
+2026-07-06 18:44:34,487 - app.api.v1.system.audit - ERR
+OR - BatchDeleteRequest: ids 涓寘鍚潪鏁存暟鍊?'batch'
+2026-07-06 18:44:34,536 - app.api.v1.system.audit - ERR
+OR - BatchDeleteRequest: ids 涓寘鍚潪鏁存暟鍊?None
+2026-07-06 18:44:34,585 - app.api.v1.system.audit - ERR
+OR - BatchDeleteRequest: ids 涓寘鍚潪鏁存暟鍊?'1.5'
+2026-07-06 18:44:36,564 - app.api.v1.system.audit - INF
+O - 鍒犻櫎瀹¤鏃ュ織 id=1, user=testadmin
+2026-07-06 18:44:36,567 - app.api.v1.system.audit - WAR
+NING - 鍒犻櫎瀹¤鏃ュ織澶辫触: id=1 涓嶅瓨鍦?
+2026-07-06 18:44:38,690 - app.api.v1.auth.auth - WARNIN
+G - 鐧诲綍閫熺巼闄愬埗瑙﹀彂: IP=127.0.0.1
+2026-07-06 18:44:42,111 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=testadmin ids=None actions=['cre
+ate'] action=None before_date=None
+2026-07-06 18:44:42,115 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 0 鏉?
+........................................................................ [  8%]
+2026-07-06 18:44:44,143 - app.api.v1.auth.auth - WARNIN
+G - 鏈縺娲荤敤鎴峰皾璇曠櫥褰? username=testuser
+2026-07-06 18:44:48,553 - app.api.v1.projects - INFO - 
+椤圭洰鍒涘缓鎴愬姛: id=1, name=甯壎鏉戦亾璺敼閫犻」鐩?
+2026-07-06 18:44:51,733 - app.api.v1.auth.auth - INFO -
+ 鐧诲綍澶辫触: user=testuser, failed_count=0/5
+........................................................................ [  9%]
+2026-07-06 18:44:52,823 - app.api.v1.auth.auth - INFO -
+ 鐧诲綍澶辫触: user=testuser, failed_count=0/5
+2026-07-06 18:44:54,886 - app.api.v1.auth.auth - ERROR 
+- 鏇存柊澶辫触璁℃暟鏃跺嚭閿? DB write fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\auth\auth.py", line 171, in login
+    result = db.execute(stmt)
+             ^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: DB write fail
+2026-07-06 18:44:57,735 - app.api.v1.projects - INFO - 
+椤圭洰鍒涘缓鎴愬姛: id=1, name=甯壎鏉戦亾璺敼閫犻」鐩?
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+2026-07-06 18:45:11,136 - app.api.v1.data.data.dashboar
+d - WARNING - 浠〃鐩樼紦瀛樿鍙栧け璐?
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 64, in _get_c
+ached
+    return _cache.get(key)
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: x
+2026-07-06 18:45:11,799 - app.api.v1.data.data.dashboar
+d - ERROR - 浠〃鐩樼粺璁℃煡璇㈠け璐? '>' not supported between in
+stances of 'MagicMock' and 'int'
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 287, in get_d
+ashboard_stats
+    village_stats = _query_village_stats(db, data_scope
+)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 108, in _quer
+y_village_stats
+    if latest_year_sub and total_villages > 0:
+                           ^^^^^^^^^^^^^^^^^^
+TypeError: '>' not supported between instances of 'Magi
+cMock' and 'int'
+2026-07-06 18:45:12,242 - app.api.v1.data.data.dashboar
+d - ERROR - 浠〃鐩樼粺璁℃煡璇㈠け璐? '>' not supported between in
+stances of 'MagicMock' and 'int'
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 287, in get_d
+ashboard_stats
+    village_stats = _query_village_stats(db, data_scope
+)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 108, in _quer
+y_village_stats
+    if latest_year_sub and total_villages > 0:
+                           ^^^^^^^^^^^^^^^^^^
+TypeError: '>' not supported between instances of 'Magi
+cMock' and 'int'
+2026-07-06 18:45:12,442 - app.api.v1.data.data.dashboar
+d - ERROR - 浠〃鐩樼粺璁℃煡璇㈠け璐? x
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 287, in get_d
+ashboard_stats
+    village_stats = _query_village_stats(db, data_scope
+)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: x
+2026-07-06 18:45:12,654 - app.api.v1.data.data.dashboar
+d - ERROR - 浠〃鐩樻眹鎬荤粺璁″け璐? '>' not supported between in
+stances of 'MagicMock' and 'int'
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 332, in get_d
+ashboard_summary
+    village_stats = _query_village_stats(db, data_scope
+)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 108, in _quer
+y_village_stats
+    if latest_year_sub and total_villages > 0:
+                           ^^^^^^^^^^^^^^^^^^
+TypeError: '>' not supported between instances of 'Magi
+cMock' and 'int'
+2026-07-06 18:45:12,681 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇闅愯棌鍔ㄦ€佸垪琛ㄥけ璐? (sqlite3.OperationalErro
+r) no such table: hidden_dashboard_activities
+[SQL: SELECT hidden_dashboard_activities.activity_id AS
+ hidden_dashboard_activities_activity_id 
+FROM hidden_dashboard_activities]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:12,690 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇鑷畾涔夊姩鎬佸け璐? (sqlite3.OperationalError)
+ no such table: dashboard_activities
+[SQL: SELECT dashboard_activities.id AS dashboard_activ
+ities_id, dashboard_activities.type AS dashboard_activi
+ties_type, dashboard_activities.action AS dashboard_act
+ivities_action, dashboard_activities.target AS dashboar
+d_activities_target, dashboard_activities.user AS dashb
+oard_activities_user, dashboard_activities.created_at A
+S dashboard_activities_created_at 
+FROM dashboard_activities ORDER BY dashboard_activities
+.created_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:12,719 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇椤圭洰鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: projects
+[SQL: SELECT projects.id AS projects_id, projects.name 
+AS projects_name, projects.code AS projects_code, proje
+cts.type AS projects_type, projects.status AS projects_
+status, projects.description AS projects_description, p
+rojects.objectives AS projects_objectives, projects.vil
+lage_id AS projects_village_id, projects.organization_i
+d AS projects_organization_id, projects.budget AS proje
+cts_budget, projects.actual_cost AS projects_actual_cos
+t, projects.invested_amount AS projects_invested_amount
+, projects.start_date AS projects_start_date, projects.
+end_date AS projects_end_date, projects.actual_start_da
+te AS projects_actual_start_date, projects.actual_end_d
+ate AS projects_actual_end_date, projects.progress AS p
+rojects_progress, projects.priority AS projects_priorit
+y, projects.leader AS projects_leader, projects.contact
+ AS projects_contact, projects.responsible_unit AS proj
+ects_responsible_unit, projects.responsible_person AS p
+rojects_responsible_person, projects.contact_phone AS p
+rojects_contact_phone, projects.fund_source AS projects
+_fund_source, projects.payer_account_name AS projects_p
+ayer_account_name, projects.payer_account_number AS pro
+jects_payer_account_number, projects.payer_bank AS proj
+ects_payer_bank, projects.payer_handler AS projects_pay
+er_handler, projects.payer_contact AS projects_payer_co
+ntact, projects.payee_account_name AS projects_payee_ac
+count_name, projects.payee_account_number AS projects_p
+ayee_account_number, projects.payee_bank AS projects_pa
+yee_bank, projects.payee_handler AS projects_payee_hand
+ler, projects.payee_contact AS projects_payee_contact, 
+projects.urgency_level AS projects_urgency_level, proje
+cts.contract_number AS projects_contract_number, projec
+ts.fund_manager AS projects_fund_manager, projects.fund
+_usage_plan AS projects_fund_usage_plan, projects.is_de
+layed AS projects_is_delayed, projects.delay_reason AS 
+projects_delay_reason, projects.expected_benefits AS pr
+ojects_expected_benefits, projects.achievements AS proj
+ects_achievements, projects.tags AS projects_tags, proj
+ects.remarks AS projects_remarks, projects.total_budget
+_estimate AS projects_total_budget_estimate, projects.f
+und_source_category AS projects_fund_source_category, p
+rojects.expected_economic_benefit AS projects_expected_
+economic_benefit, projects.expected_military_benefit AS
+ projects_expected_military_benefit, projects.created_b
+y AS projects_created_by, projects.created_at AS projec
+ts_created_at, projects.updated_at AS projects_updated_
+at 
+FROM projects ORDER BY projects.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:12,776 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇瀹℃壒鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: approval_tasks
+[SQL: SELECT approval_tasks.id AS approval_tasks_id, ap
+proval_tasks.workflow_id AS approval_tasks_workflow_id,
+ approval_tasks.entity_type AS approval_tasks_entity_ty
+pe, approval_tasks.entity_id AS approval_tasks_entity_i
+d, approval_tasks.submitter_id AS approval_tasks_submit
+ter_id, approval_tasks.current_level AS approval_tasks_
+current_level, approval_tasks.current_approver_id AS ap
+proval_tasks_current_approver_id, approval_tasks.status
+ AS approval_tasks_status, approval_tasks.change_data A
+S approval_tasks_change_data, approval_tasks.original_d
+ata AS approval_tasks_original_data, approval_tasks.pri
+ority AS approval_tasks_priority, approval_tasks.title 
+AS approval_tasks_title, approval_tasks.description AS 
+approval_tasks_description, approval_tasks.created_at A
+S approval_tasks_created_at, approval_tasks.updated_at 
+AS approval_tasks_updated_at, approval_tasks.completed_
+at AS approval_tasks_completed_at, users_1.id AS users_
+1_id, users_1.username AS users_1_username, users_1.ema
+il AS users_1_email, users_1.hashed_password AS users_1
+_hashed_password, users_1.full_name AS users_1_full_nam
+e, users_1.role AS users_1_role, users_1.is_active AS u
+sers_1_is_active, users_1.is_superuser AS users_1_is_su
+peruser, users_1.phone AS users_1_phone, users_1.depart
+ment AS users_1_department, users_1.position AS users_1
+_position, users_1.avatar AS users_1_avatar, users_1.ge
+nder AS users_1_gender, users_1.birthday AS users_1_bir
+thday, users_1.address AS users_1_address, users_1.rema
+rk AS users_1_remark, users_1.organization_id AS users_
+1_organization_id, users_1.data_scope AS users_1_data_s
+cope, users_1.permissions AS users_1_permissions, users
+_1.machine_binding_required AS users_1_machine_binding_
+required, users_1.allowed_permissions AS users_1_allowe
+d_permissions, users_1.allowed_menus AS users_1_allowed
+_menus, users_1.token_version AS users_1_token_version,
+ users_1.must_change_password AS users_1_must_change_pa
+ssword, users_1.failed_login_count AS users_1_failed_lo
+gin_count, users_1.locked_until AS users_1_locked_until
+, users_1.password_changed_at AS users_1_password_chang
+ed_at, users_1.last_login AS users_1_last_login, users_
+1.created_at AS users_1_created_at, users_1.updated_at 
+AS users_1_updated_at 
+FROM approval_tasks LEFT OUTER JOIN users AS users_1 ON
+ users_1.id = approval_tasks.submitter_id ORDER BY appr
+oval_tasks.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:12,786 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇缁忚垂鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: funds
+[SQL: SELECT funds.date AS funds_date, funds.type AS fu
+nds_type, funds.fund_type AS funds_fund_type, funds.fun
+d_source AS funds_fund_source, funds.amount AS funds_am
+ount, funds.planned_amount AS funds_planned_amount, fun
+ds.approved_amount AS funds_approved_amount, funds.allo
+cated_amount AS funds_allocated_amount, funds.used_amou
+nt AS funds_used_amount, funds.remaining_amount AS fund
+s_remaining_amount, funds.code AS funds_code, funds.nam
+e AS funds_name, funds.project_id AS funds_project_id, 
+funds.project_name AS funds_project_name, funds.village
+_id AS funds_village_id, funds.school_id AS funds_schoo
+l_id, funds.purpose AS funds_purpose, funds.source AS f
+unds_source, funds.operator AS funds_operator, funds.st
+atus AS funds_status, funds.applicant AS funds_applican
+t, funds.application_date AS funds_application_date, fu
+nds.approved_by AS funds_approved_by, funds.approval_da
+te AS funds_approval_date, funds.allocation_date AS fun
+ds_allocation_date, funds.allocation_method AS funds_al
+location_method, funds.receiver AS funds_receiver, fund
+s.usage_description AS funds_usage_description, funds.s
+tart_date AS funds_start_date, funds.end_date AS funds_
+end_date, funds.audit_date AS funds_audit_date, funds.a
+udit_result AS funds_audit_result, funds.audit_opinion 
+AS funds_audit_opinion, funds.remarks AS funds_remarks,
+ funds.lifecycle_phase AS funds_lifecycle_phase, funds.
+budget_locked AS funds_budget_locked, funds.deviation_r
+ate AS funds_deviation_rate, funds.health_score AS fund
+s_health_score, funds.has_anomaly AS funds_has_anomaly,
+ funds.settlement_status AS funds_settlement_status, fu
+nds.budget_version AS funds_budget_version, funds.budge
+t_status AS funds_budget_status, funds.organization_id 
+AS funds_organization_id, funds.created_by AS funds_cre
+ated_by, funds.year AS funds_year, funds.year_month AS 
+funds_year_month, funds.year_quarter AS funds_year_quar
+ter, funds.id AS funds_id, funds.created_at AS funds_cr
+eated_at, funds.updated_at AS funds_updated_at, funds.s
+ync_version AS funds_sync_version 
+FROM funds ORDER BY funds.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,203 - app.api.v1.data.data.dashboar
+d - ERROR - 浠〃鐩樻眹鎬荤粺璁″け璐? x
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 332, in get_d
+ashboard_summary
+    village_stats = _query_village_stats(db, data_scope
+)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: x
+2026-07-06 18:45:13,371 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇闅愯棌鍔ㄦ€佸垪琛ㄥけ璐? (sqlite3.OperationalErro
+r) no such table: hidden_dashboard_activities
+[SQL: SELECT hidden_dashboard_activities.activity_id AS
+ hidden_dashboard_activities_activity_id 
+FROM hidden_dashboard_activities]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,377 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇鑷畾涔夊姩鎬佸け璐? (sqlite3.OperationalError)
+ no such table: dashboard_activities
+[SQL: SELECT dashboard_activities.id AS dashboard_activ
+ities_id, dashboard_activities.type AS dashboard_activi
+ties_type, dashboard_activities.action AS dashboard_act
+ivities_action, dashboard_activities.target AS dashboar
+d_activities_target, dashboard_activities.user AS dashb
+oard_activities_user, dashboard_activities.created_at A
+S dashboard_activities_created_at 
+FROM dashboard_activities ORDER BY dashboard_activities
+.created_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,444 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇缁忚垂鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: funds
+[SQL: SELECT funds.date AS funds_date, funds.type AS fu
+nds_type, funds.fund_type AS funds_fund_type, funds.fun
+d_source AS funds_fund_source, funds.amount AS funds_am
+ount, funds.planned_amount AS funds_planned_amount, fun
+ds.approved_amount AS funds_approved_amount, funds.allo
+cated_amount AS funds_allocated_amount, funds.used_amou
+nt AS funds_used_amount, funds.remaining_amount AS fund
+s_remaining_amount, funds.code AS funds_code, funds.nam
+e AS funds_name, funds.project_id AS funds_project_id, 
+funds.project_name AS funds_project_name, funds.village
+_id AS funds_village_id, funds.school_id AS funds_schoo
+l_id, funds.purpose AS funds_purpose, funds.source AS f
+unds_source, funds.operator AS funds_operator, funds.st
+atus AS funds_status, funds.applicant AS funds_applican
+t, funds.application_date AS funds_application_date, fu
+nds.approved_by AS funds_approved_by, funds.approval_da
+te AS funds_approval_date, funds.allocation_date AS fun
+ds_allocation_date, funds.allocation_method AS funds_al
+location_method, funds.receiver AS funds_receiver, fund
+s.usage_description AS funds_usage_description, funds.s
+tart_date AS funds_start_date, funds.end_date AS funds_
+end_date, funds.audit_date AS funds_audit_date, funds.a
+udit_result AS funds_audit_result, funds.audit_opinion 
+AS funds_audit_opinion, funds.remarks AS funds_remarks,
+ funds.lifecycle_phase AS funds_lifecycle_phase, funds.
+budget_locked AS funds_budget_locked, funds.deviation_r
+ate AS funds_deviation_rate, funds.health_score AS fund
+s_health_score, funds.has_anomaly AS funds_has_anomaly,
+ funds.settlement_status AS funds_settlement_status, fu
+nds.budget_version AS funds_budget_version, funds.budge
+t_status AS funds_budget_status, funds.organization_id 
+AS funds_organization_id, funds.created_by AS funds_cre
+ated_by, funds.year AS funds_year, funds.year_month AS 
+funds_year_month, funds.year_quarter AS funds_year_quar
+ter, funds.id AS funds_id, funds.created_at AS funds_cr
+eated_at, funds.updated_at AS funds_updated_at, funds.s
+ync_version AS funds_sync_version 
+FROM funds ORDER BY funds.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,450 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇瀹℃壒鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: approval_tasks
+[SQL: SELECT approval_tasks.id AS approval_tasks_id, ap
+proval_tasks.workflow_id AS approval_tasks_workflow_id,
+ approval_tasks.entity_type AS approval_tasks_entity_ty
+pe, approval_tasks.entity_id AS approval_tasks_entity_i
+d, approval_tasks.submitter_id AS approval_tasks_submit
+ter_id, approval_tasks.current_level AS approval_tasks_
+current_level, approval_tasks.current_approver_id AS ap
+proval_tasks_current_approver_id, approval_tasks.status
+ AS approval_tasks_status, approval_tasks.change_data A
+S approval_tasks_change_data, approval_tasks.original_d
+ata AS approval_tasks_original_data, approval_tasks.pri
+ority AS approval_tasks_priority, approval_tasks.title 
+AS approval_tasks_title, approval_tasks.description AS 
+approval_tasks_description, approval_tasks.created_at A
+S approval_tasks_created_at, approval_tasks.updated_at 
+AS approval_tasks_updated_at, approval_tasks.completed_
+at AS approval_tasks_completed_at, users_1.id AS users_
+1_id, users_1.username AS users_1_username, users_1.ema
+il AS users_1_email, users_1.hashed_password AS users_1
+_hashed_password, users_1.full_name AS users_1_full_nam
+e, users_1.role AS users_1_role, users_1.is_active AS u
+sers_1_is_active, users_1.is_superuser AS users_1_is_su
+peruser, users_1.phone AS users_1_phone, users_1.depart
+ment AS users_1_department, users_1.position AS users_1
+_position, users_1.avatar AS users_1_avatar, users_1.ge
+nder AS users_1_gender, users_1.birthday AS users_1_bir
+thday, users_1.address AS users_1_address, users_1.rema
+rk AS users_1_remark, users_1.organization_id AS users_
+1_organization_id, users_1.data_scope AS users_1_data_s
+cope, users_1.permissions AS users_1_permissions, users
+_1.machine_binding_required AS users_1_machine_binding_
+required, users_1.allowed_permissions AS users_1_allowe
+d_permissions, users_1.allowed_menus AS users_1_allowed
+_menus, users_1.token_version AS users_1_token_version,
+ users_1.must_change_password AS users_1_must_change_pa
+ssword, users_1.failed_login_count AS users_1_failed_lo
+gin_count, users_1.locked_until AS users_1_locked_until
+, users_1.password_changed_at AS users_1_password_chang
+ed_at, users_1.last_login AS users_1_last_login, users_
+1.created_at AS users_1_created_at, users_1.updated_at 
+AS users_1_updated_at 
+FROM approval_tasks LEFT OUTER JOIN users AS users_1 ON
+ users_1.id = approval_tasks.submitter_id ORDER BY appr
+oval_tasks.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,452 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇椤圭洰鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: projects
+[SQL: SELECT projects.id AS projects_id, projects.name 
+AS projects_name, projects.code AS projects_code, proje
+cts.type AS projects_type, projects.status AS projects_
+status, projects.description AS projects_description, p
+rojects.objectives AS projects_objectives, projects.vil
+lage_id AS projects_village_id, projects.organization_i
+d AS projects_organization_id, projects.budget AS proje
+cts_budget, projects.actual_cost AS projects_actual_cos
+t, projects.invested_amount AS projects_invested_amount
+, projects.start_date AS projects_start_date, projects.
+end_date AS projects_end_date, projects.actual_start_da
+te AS projects_actual_start_date, projects.actual_end_d
+ate AS projects_actual_end_date, projects.progress AS p
+rojects_progress, projects.priority AS projects_priorit
+y, projects.leader AS projects_leader, projects.contact
+ AS projects_contact, projects.responsible_unit AS proj
+ects_responsible_unit, projects.responsible_person AS p
+rojects_responsible_person, projects.contact_phone AS p
+rojects_contact_phone, projects.fund_source AS projects
+_fund_source, projects.payer_account_name AS projects_p
+ayer_account_name, projects.payer_account_number AS pro
+jects_payer_account_number, projects.payer_bank AS proj
+ects_payer_bank, projects.payer_handler AS projects_pay
+er_handler, projects.payer_contact AS projects_payer_co
+ntact, projects.payee_account_name AS projects_payee_ac
+count_name, projects.payee_account_number AS projects_p
+ayee_account_number, projects.payee_bank AS projects_pa
+yee_bank, projects.payee_handler AS projects_payee_hand
+ler, projects.payee_contact AS projects_payee_contact, 
+projects.urgency_level AS projects_urgency_level, proje
+cts.contract_number AS projects_contract_number, projec
+ts.fund_manager AS projects_fund_manager, projects.fund
+_usage_plan AS projects_fund_usage_plan, projects.is_de
+layed AS projects_is_delayed, projects.delay_reason AS 
+projects_delay_reason, projects.expected_benefits AS pr
+ojects_expected_benefits, projects.achievements AS proj
+ects_achievements, projects.tags AS projects_tags, proj
+ects.remarks AS projects_remarks, projects.total_budget
+_estimate AS projects_total_budget_estimate, projects.f
+und_source_category AS projects_fund_source_category, p
+rojects.expected_economic_benefit AS projects_expected_
+economic_benefit, projects.expected_military_benefit AS
+ projects_expected_military_benefit, projects.created_b
+y AS projects_created_by, projects.created_at AS projec
+ts_created_at, projects.updated_at AS projects_updated_
+at 
+FROM projects ORDER BY projects.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+........................................................................ [ 12%]
+2026-07-06 18:45:13,867 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇闅愯棌鍔ㄦ€佸垪琛ㄥけ璐? (sqlite3.OperationalErro
+r) no such table: hidden_dashboard_activities
+[SQL: SELECT hidden_dashboard_activities.activity_id AS
+ hidden_dashboard_activities_activity_id 
+FROM hidden_dashboard_activities]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,871 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇鑷畾涔夊姩鎬佸け璐? (sqlite3.OperationalError)
+ no such table: dashboard_activities
+[SQL: SELECT dashboard_activities.id AS dashboard_activ
+ities_id, dashboard_activities.type AS dashboard_activi
+ties_type, dashboard_activities.action AS dashboard_act
+ivities_action, dashboard_activities.target AS dashboar
+d_activities_target, dashboard_activities.user AS dashb
+oard_activities_user, dashboard_activities.created_at A
+S dashboard_activities_created_at 
+FROM dashboard_activities ORDER BY dashboard_activities
+.created_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,875 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇椤圭洰鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: projects
+[SQL: SELECT projects.id AS projects_id, projects.name 
+AS projects_name, projects.code AS projects_code, proje
+cts.type AS projects_type, projects.status AS projects_
+status, projects.description AS projects_description, p
+rojects.objectives AS projects_objectives, projects.vil
+lage_id AS projects_village_id, projects.organization_i
+d AS projects_organization_id, projects.budget AS proje
+cts_budget, projects.actual_cost AS projects_actual_cos
+t, projects.invested_amount AS projects_invested_amount
+, projects.start_date AS projects_start_date, projects.
+end_date AS projects_end_date, projects.actual_start_da
+te AS projects_actual_start_date, projects.actual_end_d
+ate AS projects_actual_end_date, projects.progress AS p
+rojects_progress, projects.priority AS projects_priorit
+y, projects.leader AS projects_leader, projects.contact
+ AS projects_contact, projects.responsible_unit AS proj
+ects_responsible_unit, projects.responsible_person AS p
+rojects_responsible_person, projects.contact_phone AS p
+rojects_contact_phone, projects.fund_source AS projects
+_fund_source, projects.payer_account_name AS projects_p
+ayer_account_name, projects.payer_account_number AS pro
+jects_payer_account_number, projects.payer_bank AS proj
+ects_payer_bank, projects.payer_handler AS projects_pay
+er_handler, projects.payer_contact AS projects_payer_co
+ntact, projects.payee_account_name AS projects_payee_ac
+count_name, projects.payee_account_number AS projects_p
+ayee_account_number, projects.payee_bank AS projects_pa
+yee_bank, projects.payee_handler AS projects_payee_hand
+ler, projects.payee_contact AS projects_payee_contact, 
+projects.urgency_level AS projects_urgency_level, proje
+cts.contract_number AS projects_contract_number, projec
+ts.fund_manager AS projects_fund_manager, projects.fund
+_usage_plan AS projects_fund_usage_plan, projects.is_de
+layed AS projects_is_delayed, projects.delay_reason AS 
+projects_delay_reason, projects.expected_benefits AS pr
+ojects_expected_benefits, projects.achievements AS proj
+ects_achievements, projects.tags AS projects_tags, proj
+ects.remarks AS projects_remarks, projects.total_budget
+_estimate AS projects_total_budget_estimate, projects.f
+und_source_category AS projects_fund_source_category, p
+rojects.expected_economic_benefit AS projects_expected_
+economic_benefit, projects.expected_military_benefit AS
+ projects_expected_military_benefit, projects.created_b
+y AS projects_created_by, projects.created_at AS projec
+ts_created_at, projects.updated_at AS projects_updated_
+at 
+FROM projects ORDER BY projects.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,875 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇缁忚垂鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: funds
+[SQL: SELECT funds.date AS funds_date, funds.type AS fu
+nds_type, funds.fund_type AS funds_fund_type, funds.fun
+d_source AS funds_fund_source, funds.amount AS funds_am
+ount, funds.planned_amount AS funds_planned_amount, fun
+ds.approved_amount AS funds_approved_amount, funds.allo
+cated_amount AS funds_allocated_amount, funds.used_amou
+nt AS funds_used_amount, funds.remaining_amount AS fund
+s_remaining_amount, funds.code AS funds_code, funds.nam
+e AS funds_name, funds.project_id AS funds_project_id, 
+funds.project_name AS funds_project_name, funds.village
+_id AS funds_village_id, funds.school_id AS funds_schoo
+l_id, funds.purpose AS funds_purpose, funds.source AS f
+unds_source, funds.operator AS funds_operator, funds.st
+atus AS funds_status, funds.applicant AS funds_applican
+t, funds.application_date AS funds_application_date, fu
+nds.approved_by AS funds_approved_by, funds.approval_da
+te AS funds_approval_date, funds.allocation_date AS fun
+ds_allocation_date, funds.allocation_method AS funds_al
+location_method, funds.receiver AS funds_receiver, fund
+s.usage_description AS funds_usage_description, funds.s
+tart_date AS funds_start_date, funds.end_date AS funds_
+end_date, funds.audit_date AS funds_audit_date, funds.a
+udit_result AS funds_audit_result, funds.audit_opinion 
+AS funds_audit_opinion, funds.remarks AS funds_remarks,
+ funds.lifecycle_phase AS funds_lifecycle_phase, funds.
+budget_locked AS funds_budget_locked, funds.deviation_r
+ate AS funds_deviation_rate, funds.health_score AS fund
+s_health_score, funds.has_anomaly AS funds_has_anomaly,
+ funds.settlement_status AS funds_settlement_status, fu
+nds.budget_version AS funds_budget_version, funds.budge
+t_status AS funds_budget_status, funds.organization_id 
+AS funds_organization_id, funds.created_by AS funds_cre
+ated_by, funds.year AS funds_year, funds.year_month AS 
+funds_year_month, funds.year_quarter AS funds_year_quar
+ter, funds.id AS funds_id, funds.created_at AS funds_cr
+eated_at, funds.updated_at AS funds_updated_at, funds.s
+ync_version AS funds_sync_version 
+FROM funds ORDER BY funds.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:13,913 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇瀹℃壒鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: approval_tasks
+[SQL: SELECT approval_tasks.id AS approval_tasks_id, ap
+proval_tasks.workflow_id AS approval_tasks_workflow_id,
+ approval_tasks.entity_type AS approval_tasks_entity_ty
+pe, approval_tasks.entity_id AS approval_tasks_entity_i
+d, approval_tasks.submitter_id AS approval_tasks_submit
+ter_id, approval_tasks.current_level AS approval_tasks_
+current_level, approval_tasks.current_approver_id AS ap
+proval_tasks_current_approver_id, approval_tasks.status
+ AS approval_tasks_status, approval_tasks.change_data A
+S approval_tasks_change_data, approval_tasks.original_d
+ata AS approval_tasks_original_data, approval_tasks.pri
+ority AS approval_tasks_priority, approval_tasks.title 
+AS approval_tasks_title, approval_tasks.description AS 
+approval_tasks_description, approval_tasks.created_at A
+S approval_tasks_created_at, approval_tasks.updated_at 
+AS approval_tasks_updated_at, approval_tasks.completed_
+at AS approval_tasks_completed_at, users_1.id AS users_
+1_id, users_1.username AS users_1_username, users_1.ema
+il AS users_1_email, users_1.hashed_password AS users_1
+_hashed_password, users_1.full_name AS users_1_full_nam
+e, users_1.role AS users_1_role, users_1.is_active AS u
+sers_1_is_active, users_1.is_superuser AS users_1_is_su
+peruser, users_1.phone AS users_1_phone, users_1.depart
+ment AS users_1_department, users_1.position AS users_1
+_position, users_1.avatar AS users_1_avatar, users_1.ge
+nder AS users_1_gender, users_1.birthday AS users_1_bir
+thday, users_1.address AS users_1_address, users_1.rema
+rk AS users_1_remark, users_1.organization_id AS users_
+1_organization_id, users_1.data_scope AS users_1_data_s
+cope, users_1.permissions AS users_1_permissions, users
+_1.machine_binding_required AS users_1_machine_binding_
+required, users_1.allowed_permissions AS users_1_allowe
+d_permissions, users_1.allowed_menus AS users_1_allowed
+_menus, users_1.token_version AS users_1_token_version,
+ users_1.must_change_password AS users_1_must_change_pa
+ssword, users_1.failed_login_count AS users_1_failed_lo
+gin_count, users_1.locked_until AS users_1_locked_until
+, users_1.password_changed_at AS users_1_password_chang
+ed_at, users_1.last_login AS users_1_last_login, users_
+1.created_at AS users_1_created_at, users_1.updated_at 
+AS users_1_updated_at 
+FROM approval_tasks LEFT OUTER JOIN users AS users_1 ON
+ users_1.id = approval_tasks.submitter_id ORDER BY appr
+oval_tasks.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:14,339 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇闅愯棌鍔ㄦ€佸垪琛ㄥけ璐? (sqlite3.OperationalErro
+r) no such table: hidden_dashboard_activities
+[SQL: SELECT hidden_dashboard_activities.activity_id AS
+ hidden_dashboard_activities_activity_id 
+FROM hidden_dashboard_activities]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:14,343 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇鑷畾涔夊姩鎬佸け璐? (sqlite3.OperationalError)
+ no such table: dashboard_activities
+[SQL: SELECT dashboard_activities.id AS dashboard_activ
+ities_id, dashboard_activities.type AS dashboard_activi
+ties_type, dashboard_activities.action AS dashboard_act
+ivities_action, dashboard_activities.target AS dashboar
+d_activities_target, dashboard_activities.user AS dashb
+oard_activities_user, dashboard_activities.created_at A
+S dashboard_activities_created_at 
+FROM dashboard_activities ORDER BY dashboard_activities
+.created_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:14,487 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇椤圭洰鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: projects
+[SQL: SELECT projects.id AS projects_id, projects.name 
+AS projects_name, projects.code AS projects_code, proje
+cts.type AS projects_type, projects.status AS projects_
+status, projects.description AS projects_description, p
+rojects.objectives AS projects_objectives, projects.vil
+lage_id AS projects_village_id, projects.organization_i
+d AS projects_organization_id, projects.budget AS proje
+cts_budget, projects.actual_cost AS projects_actual_cos
+t, projects.invested_amount AS projects_invested_amount
+, projects.start_date AS projects_start_date, projects.
+end_date AS projects_end_date, projects.actual_start_da
+te AS projects_actual_start_date, projects.actual_end_d
+ate AS projects_actual_end_date, projects.progress AS p
+rojects_progress, projects.priority AS projects_priorit
+y, projects.leader AS projects_leader, projects.contact
+ AS projects_contact, projects.responsible_unit AS proj
+ects_responsible_unit, projects.responsible_person AS p
+rojects_responsible_person, projects.contact_phone AS p
+rojects_contact_phone, projects.fund_source AS projects
+_fund_source, projects.payer_account_name AS projects_p
+ayer_account_name, projects.payer_account_number AS pro
+jects_payer_account_number, projects.payer_bank AS proj
+ects_payer_bank, projects.payer_handler AS projects_pay
+er_handler, projects.payer_contact AS projects_payer_co
+ntact, projects.payee_account_name AS projects_payee_ac
+count_name, projects.payee_account_number AS projects_p
+ayee_account_number, projects.payee_bank AS projects_pa
+yee_bank, projects.payee_handler AS projects_payee_hand
+ler, projects.payee_contact AS projects_payee_contact, 
+projects.urgency_level AS projects_urgency_level, proje
+cts.contract_number AS projects_contract_number, projec
+ts.fund_manager AS projects_fund_manager, projects.fund
+_usage_plan AS projects_fund_usage_plan, projects.is_de
+layed AS projects_is_delayed, projects.delay_reason AS 
+projects_delay_reason, projects.expected_benefits AS pr
+ojects_expected_benefits, projects.achievements AS proj
+ects_achievements, projects.tags AS projects_tags, proj
+ects.remarks AS projects_remarks, projects.total_budget
+_estimate AS projects_total_budget_estimate, projects.f
+und_source_category AS projects_fund_source_category, p
+rojects.expected_economic_benefit AS projects_expected_
+economic_benefit, projects.expected_military_benefit AS
+ projects_expected_military_benefit, projects.created_b
+y AS projects_created_by, projects.created_at AS projec
+ts_created_at, projects.updated_at AS projects_updated_
+at 
+FROM projects ORDER BY projects.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:14,490 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇缁忚垂鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: funds
+[SQL: SELECT funds.date AS funds_date, funds.type AS fu
+nds_type, funds.fund_type AS funds_fund_type, funds.fun
+d_source AS funds_fund_source, funds.amount AS funds_am
+ount, funds.planned_amount AS funds_planned_amount, fun
+ds.approved_amount AS funds_approved_amount, funds.allo
+cated_amount AS funds_allocated_amount, funds.used_amou
+nt AS funds_used_amount, funds.remaining_amount AS fund
+s_remaining_amount, funds.code AS funds_code, funds.nam
+e AS funds_name, funds.project_id AS funds_project_id, 
+funds.project_name AS funds_project_name, funds.village
+_id AS funds_village_id, funds.school_id AS funds_schoo
+l_id, funds.purpose AS funds_purpose, funds.source AS f
+unds_source, funds.operator AS funds_operator, funds.st
+atus AS funds_status, funds.applicant AS funds_applican
+t, funds.application_date AS funds_application_date, fu
+nds.approved_by AS funds_approved_by, funds.approval_da
+te AS funds_approval_date, funds.allocation_date AS fun
+ds_allocation_date, funds.allocation_method AS funds_al
+location_method, funds.receiver AS funds_receiver, fund
+s.usage_description AS funds_usage_description, funds.s
+tart_date AS funds_start_date, funds.end_date AS funds_
+end_date, funds.audit_date AS funds_audit_date, funds.a
+udit_result AS funds_audit_result, funds.audit_opinion 
+AS funds_audit_opinion, funds.remarks AS funds_remarks,
+ funds.lifecycle_phase AS funds_lifecycle_phase, funds.
+budget_locked AS funds_budget_locked, funds.deviation_r
+ate AS funds_deviation_rate, funds.health_score AS fund
+s_health_score, funds.has_anomaly AS funds_has_anomaly,
+ funds.settlement_status AS funds_settlement_status, fu
+nds.budget_version AS funds_budget_version, funds.budge
+t_status AS funds_budget_status, funds.organization_id 
+AS funds_organization_id, funds.created_by AS funds_cre
+ated_by, funds.year AS funds_year, funds.year_month AS 
+funds_year_month, funds.year_quarter AS funds_year_quar
+ter, funds.id AS funds_id, funds.created_at AS funds_cr
+eated_at, funds.updated_at AS funds_updated_at, funds.s
+ync_version AS funds_sync_version 
+FROM funds ORDER BY funds.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:14,498 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇瀹℃壒鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: approval_tasks
+[SQL: SELECT approval_tasks.id AS approval_tasks_id, ap
+proval_tasks.workflow_id AS approval_tasks_workflow_id,
+ approval_tasks.entity_type AS approval_tasks_entity_ty
+pe, approval_tasks.entity_id AS approval_tasks_entity_i
+d, approval_tasks.submitter_id AS approval_tasks_submit
+ter_id, approval_tasks.current_level AS approval_tasks_
+current_level, approval_tasks.current_approver_id AS ap
+proval_tasks_current_approver_id, approval_tasks.status
+ AS approval_tasks_status, approval_tasks.change_data A
+S approval_tasks_change_data, approval_tasks.original_d
+ata AS approval_tasks_original_data, approval_tasks.pri
+ority AS approval_tasks_priority, approval_tasks.title 
+AS approval_tasks_title, approval_tasks.description AS 
+approval_tasks_description, approval_tasks.created_at A
+S approval_tasks_created_at, approval_tasks.updated_at 
+AS approval_tasks_updated_at, approval_tasks.completed_
+at AS approval_tasks_completed_at, users_1.id AS users_
+1_id, users_1.username AS users_1_username, users_1.ema
+il AS users_1_email, users_1.hashed_password AS users_1
+_hashed_password, users_1.full_name AS users_1_full_nam
+e, users_1.role AS users_1_role, users_1.is_active AS u
+sers_1_is_active, users_1.is_superuser AS users_1_is_su
+peruser, users_1.phone AS users_1_phone, users_1.depart
+ment AS users_1_department, users_1.position AS users_1
+_position, users_1.avatar AS users_1_avatar, users_1.ge
+nder AS users_1_gender, users_1.birthday AS users_1_bir
+thday, users_1.address AS users_1_address, users_1.rema
+rk AS users_1_remark, users_1.organization_id AS users_
+1_organization_id, users_1.data_scope AS users_1_data_s
+cope, users_1.permissions AS users_1_permissions, users
+_1.machine_binding_required AS users_1_machine_binding_
+required, users_1.allowed_permissions AS users_1_allowe
+d_permissions, users_1.allowed_menus AS users_1_allowed
+_menus, users_1.token_version AS users_1_token_version,
+ users_1.must_change_password AS users_1_must_change_pa
+ssword, users_1.failed_login_count AS users_1_failed_lo
+gin_count, users_1.locked_until AS users_1_locked_until
+, users_1.password_changed_at AS users_1_password_chang
+ed_at, users_1.last_login AS users_1_last_login, users_
+1.created_at AS users_1_created_at, users_1.updated_at 
+AS users_1_updated_at 
+FROM approval_tasks LEFT OUTER JOIN users AS users_1 ON
+ users_1.id = approval_tasks.submitter_id ORDER BY appr
+oval_tasks.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:14,944 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇闅愯棌鍔ㄦ€佸垪琛ㄥけ璐? (sqlite3.OperationalErro
+r) no such table: hidden_dashboard_activities
+[SQL: SELECT hidden_dashboard_activities.activity_id AS
+ hidden_dashboard_activities_activity_id 
+FROM hidden_dashboard_activities]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:14,948 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇鑷畾涔夊姩鎬佸け璐? (sqlite3.OperationalError)
+ no such table: dashboard_activities
+[SQL: SELECT dashboard_activities.id AS dashboard_activ
+ities_id, dashboard_activities.type AS dashboard_activi
+ties_type, dashboard_activities.action AS dashboard_act
+ivities_action, dashboard_activities.target AS dashboar
+d_activities_target, dashboard_activities.user AS dashb
+oard_activities_user, dashboard_activities.created_at A
+S dashboard_activities_created_at 
+FROM dashboard_activities ORDER BY dashboard_activities
+.created_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,038 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇椤圭洰鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: projects
+[SQL: SELECT projects.id AS projects_id, projects.name 
+AS projects_name, projects.code AS projects_code, proje
+cts.type AS projects_type, projects.status AS projects_
+status, projects.description AS projects_description, p
+rojects.objectives AS projects_objectives, projects.vil
+lage_id AS projects_village_id, projects.organization_i
+d AS projects_organization_id, projects.budget AS proje
+cts_budget, projects.actual_cost AS projects_actual_cos
+t, projects.invested_amount AS projects_invested_amount
+, projects.start_date AS projects_start_date, projects.
+end_date AS projects_end_date, projects.actual_start_da
+te AS projects_actual_start_date, projects.actual_end_d
+ate AS projects_actual_end_date, projects.progress AS p
+rojects_progress, projects.priority AS projects_priorit
+y, projects.leader AS projects_leader, projects.contact
+ AS projects_contact, projects.responsible_unit AS proj
+ects_responsible_unit, projects.responsible_person AS p
+rojects_responsible_person, projects.contact_phone AS p
+rojects_contact_phone, projects.fund_source AS projects
+_fund_source, projects.payer_account_name AS projects_p
+ayer_account_name, projects.payer_account_number AS pro
+jects_payer_account_number, projects.payer_bank AS proj
+ects_payer_bank, projects.payer_handler AS projects_pay
+er_handler, projects.payer_contact AS projects_payer_co
+ntact, projects.payee_account_name AS projects_payee_ac
+count_name, projects.payee_account_number AS projects_p
+ayee_account_number, projects.payee_bank AS projects_pa
+yee_bank, projects.payee_handler AS projects_payee_hand
+ler, projects.payee_contact AS projects_payee_contact, 
+projects.urgency_level AS projects_urgency_level, proje
+cts.contract_number AS projects_contract_number, projec
+ts.fund_manager AS projects_fund_manager, projects.fund
+_usage_plan AS projects_fund_usage_plan, projects.is_de
+layed AS projects_is_delayed, projects.delay_reason AS 
+projects_delay_reason, projects.expected_benefits AS pr
+ojects_expected_benefits, projects.achievements AS proj
+ects_achievements, projects.tags AS projects_tags, proj
+ects.remarks AS projects_remarks, projects.total_budget
+_estimate AS projects_total_budget_estimate, projects.f
+und_source_category AS projects_fund_source_category, p
+rojects.expected_economic_benefit AS projects_expected_
+economic_benefit, projects.expected_military_benefit AS
+ projects_expected_military_benefit, projects.created_b
+y AS projects_created_by, projects.created_at AS projec
+ts_created_at, projects.updated_at AS projects_updated_
+at 
+FROM projects ORDER BY projects.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,038 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇缁忚垂鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: funds
+[SQL: SELECT funds.date AS funds_date, funds.type AS fu
+nds_type, funds.fund_type AS funds_fund_type, funds.fun
+d_source AS funds_fund_source, funds.amount AS funds_am
+ount, funds.planned_amount AS funds_planned_amount, fun
+ds.approved_amount AS funds_approved_amount, funds.allo
+cated_amount AS funds_allocated_amount, funds.used_amou
+nt AS funds_used_amount, funds.remaining_amount AS fund
+s_remaining_amount, funds.code AS funds_code, funds.nam
+e AS funds_name, funds.project_id AS funds_project_id, 
+funds.project_name AS funds_project_name, funds.village
+_id AS funds_village_id, funds.school_id AS funds_schoo
+l_id, funds.purpose AS funds_purpose, funds.source AS f
+unds_source, funds.operator AS funds_operator, funds.st
+atus AS funds_status, funds.applicant AS funds_applican
+t, funds.application_date AS funds_application_date, fu
+nds.approved_by AS funds_approved_by, funds.approval_da
+te AS funds_approval_date, funds.allocation_date AS fun
+ds_allocation_date, funds.allocation_method AS funds_al
+location_method, funds.receiver AS funds_receiver, fund
+s.usage_description AS funds_usage_description, funds.s
+tart_date AS funds_start_date, funds.end_date AS funds_
+end_date, funds.audit_date AS funds_audit_date, funds.a
+udit_result AS funds_audit_result, funds.audit_opinion 
+AS funds_audit_opinion, funds.remarks AS funds_remarks,
+ funds.lifecycle_phase AS funds_lifecycle_phase, funds.
+budget_locked AS funds_budget_locked, funds.deviation_r
+ate AS funds_deviation_rate, funds.health_score AS fund
+s_health_score, funds.has_anomaly AS funds_has_anomaly,
+ funds.settlement_status AS funds_settlement_status, fu
+nds.budget_version AS funds_budget_version, funds.budge
+t_status AS funds_budget_status, funds.organization_id 
+AS funds_organization_id, funds.created_by AS funds_cre
+ated_by, funds.year AS funds_year, funds.year_month AS 
+funds_year_month, funds.year_quarter AS funds_year_quar
+ter, funds.id AS funds_id, funds.created_at AS funds_cr
+eated_at, funds.updated_at AS funds_updated_at, funds.s
+ync_version AS funds_sync_version 
+FROM funds ORDER BY funds.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,048 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇瀹℃壒鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: approval_tasks
+[SQL: SELECT approval_tasks.id AS approval_tasks_id, ap
+proval_tasks.workflow_id AS approval_tasks_workflow_id,
+ approval_tasks.entity_type AS approval_tasks_entity_ty
+pe, approval_tasks.entity_id AS approval_tasks_entity_i
+d, approval_tasks.submitter_id AS approval_tasks_submit
+ter_id, approval_tasks.current_level AS approval_tasks_
+current_level, approval_tasks.current_approver_id AS ap
+proval_tasks_current_approver_id, approval_tasks.status
+ AS approval_tasks_status, approval_tasks.change_data A
+S approval_tasks_change_data, approval_tasks.original_d
+ata AS approval_tasks_original_data, approval_tasks.pri
+ority AS approval_tasks_priority, approval_tasks.title 
+AS approval_tasks_title, approval_tasks.description AS 
+approval_tasks_description, approval_tasks.created_at A
+S approval_tasks_created_at, approval_tasks.updated_at 
+AS approval_tasks_updated_at, approval_tasks.completed_
+at AS approval_tasks_completed_at, users_1.id AS users_
+1_id, users_1.username AS users_1_username, users_1.ema
+il AS users_1_email, users_1.hashed_password AS users_1
+_hashed_password, users_1.full_name AS users_1_full_nam
+e, users_1.role AS users_1_role, users_1.is_active AS u
+sers_1_is_active, users_1.is_superuser AS users_1_is_su
+peruser, users_1.phone AS users_1_phone, users_1.depart
+ment AS users_1_department, users_1.position AS users_1
+_position, users_1.avatar AS users_1_avatar, users_1.ge
+nder AS users_1_gender, users_1.birthday AS users_1_bir
+thday, users_1.address AS users_1_address, users_1.rema
+rk AS users_1_remark, users_1.organization_id AS users_
+1_organization_id, users_1.data_scope AS users_1_data_s
+cope, users_1.permissions AS users_1_permissions, users
+_1.machine_binding_required AS users_1_machine_binding_
+required, users_1.allowed_permissions AS users_1_allowe
+d_permissions, users_1.allowed_menus AS users_1_allowed
+_menus, users_1.token_version AS users_1_token_version,
+ users_1.must_change_password AS users_1_must_change_pa
+ssword, users_1.failed_login_count AS users_1_failed_lo
+gin_count, users_1.locked_until AS users_1_locked_until
+, users_1.password_changed_at AS users_1_password_chang
+ed_at, users_1.last_login AS users_1_last_login, users_
+1.created_at AS users_1_created_at, users_1.updated_at 
+AS users_1_updated_at 
+FROM approval_tasks LEFT OUTER JOIN users AS users_1 ON
+ users_1.id = approval_tasks.submitter_id ORDER BY appr
+oval_tasks.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,267 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇闅愯棌鍔ㄦ€佸垪琛ㄥけ璐? (sqlite3.OperationalErro
+r) no such table: hidden_dashboard_activities
+[SQL: SELECT hidden_dashboard_activities.activity_id AS
+ hidden_dashboard_activities_activity_id 
+FROM hidden_dashboard_activities]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,283 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇鑷畾涔夊姩鎬佸け璐? (sqlite3.OperationalError)
+ no such table: dashboard_activities
+[SQL: SELECT dashboard_activities.id AS dashboard_activ
+ities_id, dashboard_activities.type AS dashboard_activi
+ties_type, dashboard_activities.action AS dashboard_act
+ivities_action, dashboard_activities.target AS dashboar
+d_activities_target, dashboard_activities.user AS dashb
+oard_activities_user, dashboard_activities.created_at A
+S dashboard_activities_created_at 
+FROM dashboard_activities ORDER BY dashboard_activities
+.created_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (10, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,304 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇椤圭洰鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: projects
+[SQL: SELECT projects.id AS projects_id, projects.name 
+AS projects_name, projects.code AS projects_code, proje
+cts.type AS projects_type, projects.status AS projects_
+status, projects.description AS projects_description, p
+rojects.objectives AS projects_objectives, projects.vil
+lage_id AS projects_village_id, projects.organization_i
+d AS projects_organization_id, projects.budget AS proje
+cts_budget, projects.actual_cost AS projects_actual_cos
+t, projects.invested_amount AS projects_invested_amount
+, projects.start_date AS projects_start_date, projects.
+end_date AS projects_end_date, projects.actual_start_da
+te AS projects_actual_start_date, projects.actual_end_d
+ate AS projects_actual_end_date, projects.progress AS p
+rojects_progress, projects.priority AS projects_priorit
+y, projects.leader AS projects_leader, projects.contact
+ AS projects_contact, projects.responsible_unit AS proj
+ects_responsible_unit, projects.responsible_person AS p
+rojects_responsible_person, projects.contact_phone AS p
+rojects_contact_phone, projects.fund_source AS projects
+_fund_source, projects.payer_account_name AS projects_p
+ayer_account_name, projects.payer_account_number AS pro
+jects_payer_account_number, projects.payer_bank AS proj
+ects_payer_bank, projects.payer_handler AS projects_pay
+er_handler, projects.payer_contact AS projects_payer_co
+ntact, projects.payee_account_name AS projects_payee_ac
+count_name, projects.payee_account_number AS projects_p
+ayee_account_number, projects.payee_bank AS projects_pa
+yee_bank, projects.payee_handler AS projects_payee_hand
+ler, projects.payee_contact AS projects_payee_contact, 
+projects.urgency_level AS projects_urgency_level, proje
+cts.contract_number AS projects_contract_number, projec
+ts.fund_manager AS projects_fund_manager, projects.fund
+_usage_plan AS projects_fund_usage_plan, projects.is_de
+layed AS projects_is_delayed, projects.delay_reason AS 
+projects_delay_reason, projects.expected_benefits AS pr
+ojects_expected_benefits, projects.achievements AS proj
+ects_achievements, projects.tags AS projects_tags, proj
+ects.remarks AS projects_remarks, projects.total_budget
+_estimate AS projects_total_budget_estimate, projects.f
+und_source_category AS projects_fund_source_category, p
+rojects.expected_economic_benefit AS projects_expected_
+economic_benefit, projects.expected_military_benefit AS
+ projects_expected_military_benefit, projects.created_b
+y AS projects_created_by, projects.created_at AS projec
+ts_created_at, projects.updated_at AS projects_updated_
+at 
+FROM projects ORDER BY projects.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,304 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇缁忚垂鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: funds
+[SQL: SELECT funds.date AS funds_date, funds.type AS fu
+nds_type, funds.fund_type AS funds_fund_type, funds.fun
+d_source AS funds_fund_source, funds.amount AS funds_am
+ount, funds.planned_amount AS funds_planned_amount, fun
+ds.approved_amount AS funds_approved_amount, funds.allo
+cated_amount AS funds_allocated_amount, funds.used_amou
+nt AS funds_used_amount, funds.remaining_amount AS fund
+s_remaining_amount, funds.code AS funds_code, funds.nam
+e AS funds_name, funds.project_id AS funds_project_id, 
+funds.project_name AS funds_project_name, funds.village
+_id AS funds_village_id, funds.school_id AS funds_schoo
+l_id, funds.purpose AS funds_purpose, funds.source AS f
+unds_source, funds.operator AS funds_operator, funds.st
+atus AS funds_status, funds.applicant AS funds_applican
+t, funds.application_date AS funds_application_date, fu
+nds.approved_by AS funds_approved_by, funds.approval_da
+te AS funds_approval_date, funds.allocation_date AS fun
+ds_allocation_date, funds.allocation_method AS funds_al
+location_method, funds.receiver AS funds_receiver, fund
+s.usage_description AS funds_usage_description, funds.s
+tart_date AS funds_start_date, funds.end_date AS funds_
+end_date, funds.audit_date AS funds_audit_date, funds.a
+udit_result AS funds_audit_result, funds.audit_opinion 
+AS funds_audit_opinion, funds.remarks AS funds_remarks,
+ funds.lifecycle_phase AS funds_lifecycle_phase, funds.
+budget_locked AS funds_budget_locked, funds.deviation_r
+ate AS funds_deviation_rate, funds.health_score AS fund
+s_health_score, funds.has_anomaly AS funds_has_anomaly,
+ funds.settlement_status AS funds_settlement_status, fu
+nds.budget_version AS funds_budget_version, funds.budge
+t_status AS funds_budget_status, funds.organization_id 
+AS funds_organization_id, funds.created_by AS funds_cre
+ated_by, funds.year AS funds_year, funds.year_month AS 
+funds_year_month, funds.year_quarter AS funds_year_quar
+ter, funds.id AS funds_id, funds.created_at AS funds_cr
+eated_at, funds.updated_at AS funds_updated_at, funds.s
+ync_version AS funds_sync_version 
+FROM funds ORDER BY funds.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,319 - app.api.v1.data.data.dashboar
+d - WARNING - 鑾峰彇瀹℃壒鍔ㄦ€佸け璐? (sqlite3.OperationalError) 
+no such table: approval_tasks
+[SQL: SELECT approval_tasks.id AS approval_tasks_id, ap
+proval_tasks.workflow_id AS approval_tasks_workflow_id,
+ approval_tasks.entity_type AS approval_tasks_entity_ty
+pe, approval_tasks.entity_id AS approval_tasks_entity_i
+d, approval_tasks.submitter_id AS approval_tasks_submit
+ter_id, approval_tasks.current_level AS approval_tasks_
+current_level, approval_tasks.current_approver_id AS ap
+proval_tasks_current_approver_id, approval_tasks.status
+ AS approval_tasks_status, approval_tasks.change_data A
+S approval_tasks_change_data, approval_tasks.original_d
+ata AS approval_tasks_original_data, approval_tasks.pri
+ority AS approval_tasks_priority, approval_tasks.title 
+AS approval_tasks_title, approval_tasks.description AS 
+approval_tasks_description, approval_tasks.created_at A
+S approval_tasks_created_at, approval_tasks.updated_at 
+AS approval_tasks_updated_at, approval_tasks.completed_
+at AS approval_tasks_completed_at, users_1.id AS users_
+1_id, users_1.username AS users_1_username, users_1.ema
+il AS users_1_email, users_1.hashed_password AS users_1
+_hashed_password, users_1.full_name AS users_1_full_nam
+e, users_1.role AS users_1_role, users_1.is_active AS u
+sers_1_is_active, users_1.is_superuser AS users_1_is_su
+peruser, users_1.phone AS users_1_phone, users_1.depart
+ment AS users_1_department, users_1.position AS users_1
+_position, users_1.avatar AS users_1_avatar, users_1.ge
+nder AS users_1_gender, users_1.birthday AS users_1_bir
+thday, users_1.address AS users_1_address, users_1.rema
+rk AS users_1_remark, users_1.organization_id AS users_
+1_organization_id, users_1.data_scope AS users_1_data_s
+cope, users_1.permissions AS users_1_permissions, users
+_1.machine_binding_required AS users_1_machine_binding_
+required, users_1.allowed_permissions AS users_1_allowe
+d_permissions, users_1.allowed_menus AS users_1_allowed
+_menus, users_1.token_version AS users_1_token_version,
+ users_1.must_change_password AS users_1_must_change_pa
+ssword, users_1.failed_login_count AS users_1_failed_lo
+gin_count, users_1.locked_until AS users_1_locked_until
+, users_1.password_changed_at AS users_1_password_chang
+ed_at, users_1.last_login AS users_1_last_login, users_
+1.created_at AS users_1_created_at, users_1.updated_at 
+AS users_1_updated_at 
+FROM approval_tasks LEFT OUTER JOIN users AS users_1 ON
+ users_1.id = approval_tasks.submitter_id ORDER BY appr
+oval_tasks.updated_at DESC
+ LIMIT ? OFFSET ?]
+[parameters: (5, 0)]
+(Background on this error at: https://sqlalche.me/e/20/
+e3q8)
+2026-07-06 18:45:15,688 - app.api.v1.data.data.dashboar
+d - ERROR - 鍒涘缓鑷畾涔夊姩鎬佸け璐? fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 508, in creat
+e_activity
+    db.add(activity)
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: fail
+2026-07-06 18:45:16,581 - app.api.v1.data.data.dashboar
+d - ERROR - 鏇存柊鑷畾涔夊姩鎬佸け璐? fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 543, in updat
+e_activity
+    activity = db.query(DashboardActivity).filter(Dashb
+oardActivity.id == real_id).first()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: fail
+2026-07-06 18:45:17,735 - app.api.v1.data.data.dashboar
+d - ERROR - 鍒犻櫎鍔ㄦ€佸け璐? fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\dashboard.py", line 580, in delet
+e_activity
+    activity = db.query(DashboardActivity).filter(Dashb
+oardActivity.id == real_id).first()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: fail
+........................................................................ [ 12%]
+2026-07-06 18:45:20,637 - app.api.v1.auth.auth - WARNIN
+G - Token refresh failed due to invalid token format: b
+ad
+2026-07-06 18:45:21,684 - app.api.v1.auth.auth - ERROR 
+- Unexpected error during token refresh: unexpected
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\auth\auth.py", line 436, in refresh_token
+    payload = token_manager.decode_token(token, expecte
+d_type="refresh")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: unexpected
+2026-07-06 18:45:25,448 - app.api.v1.auth.auth - WARNIN
+G - 娉ㄥ唽閫熺巼闄愬埗瑙﹀彂: IP=127.0.0.1
+2026-07-06 18:45:29,115 - app.api.v1.batch_operations -
+ ERROR - 鎵归噺鏇存柊鏈鏈熼敊璇? unexpected
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\batch_operations.py", line 118, in batch_up
+date
+    result = await batch_service.batch_update(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: unexpected
+2026-07-06 18:45:37,783 - app.api.v1.auth.auth - ERROR 
+- 娉ㄥ唽鐢ㄦ埛澶辫触: failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\auth\auth.py", line 650, in register_user
+    user = user_service.create_user(user_create)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: failed
+........................................................................ [ 13%]
+2026-07-06 18:45:39,648 - app.api.v1.auth.auth - INFO -
+ 鐢ㄦ埛娉ㄥ唽鎴愬姛: username=newuser, machine_code=mcode123...
+2026-07-06 18:45:39,717 - app.api.v1.batch_operations -
+ ERROR - 鎵归噺鍒犻櫎鏈鏈熼敊璇? boom
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\batch_operations.py", line 141, in batch_de
+lete
+    result = await batch_service.batch_delete(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: boom
+2026-07-06 18:45:41,505 - app.api.v1.auth.auth - INFO -
+ 鐢ㄦ埛娉ㄥ唽鎴愬姛: username=newuser2, machine_code=mcode123...
+2026-07-06 18:45:42,011 - app.api.v1.auth.auth - WARNIN
+G - Token楠岃瘉澶辫触: decode failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\auth\auth.py", line 303, in verify_token
+    payload = token_manager.decode_token(token)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: decode failed
+........................................................................ [ 14%]
+2026-07-06 18:45:51,617 - app.api.v1.batch_operations -
+ ERROR - 鎵归噺瀵煎嚭鏈鏈熼敊璇? fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\batch_operations.py", line 163, in batch_ex
+port
+    result = await batch_service.batch_export(table_nam
+e=request.table_name, ids=request.ids, format=request.f
+ormat)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: fail
+2026-07-06 18:45:54,333 - app.api.v1.batch_operations -
+ ERROR - 楠岃瘉鎵归噺鎿嶄綔鏈鏈熼敊璇? fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\batch_operations.py", line 182, in validate
+_batch
+    result = await batch_service.validate_batch(table_n
+ame=table_name, ids=ids)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: fail
+........................................................................ [ 15%]
+........................................................................ [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+2026-07-06 18:46:15,915 - app.api.v1.auth.user_manageme
+nt - ERROR - 鍒犻櫎鐢ㄦ埛澶辫触: DB crash
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\auth\user_management.py", line 330, in dele
+te_user
+    result = cascade_service.delete_user_cascade(user_i
+d)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: DB crash
+........................................................................ [ 19%]
+........................................................................ [ 20%]
+........................................................................ [ 21%]
+........................................................................ [ 21%]
+2026-07-06 18:46:54,228 - app.api.v1.data.data.data_pac
+kages - ERROR - 涓€閿笂鎶ュけ璐? export failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\data_packages.py", line 127, in o
+ne_click_report
+    result = await service.export_package(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: export failed
+
+........................................................................ [ 22%]
+2026-07-06 18:47:07,188 - app.api.v1.auth.auth - INFO -
+ 鐧诲綍澶辫触: user=testadmin, failed_count=1/5
+........................................................................ [ 23%]
+........................................................................ [ 24%]
+2026-07-06 18:47:21,343 - app.api.v1.data.data.data_pac
+kages - ERROR - 瀵煎嚭鏁版嵁鍖呭け璐? unexpected
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\data_packages.py", line 305, in e
+xport_data_package
+    result = await service.export_package(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: unexpected
+
+........................................................................ [ 25%]
+........................................................................ [ 25%]
+2026-07-06 18:47:32,700 - app.api.v1.system.config_pack
+age - ERROR - 鑾峰彇閰嶇疆鍖呭垪琛ㄥけ璐? DB error
+........................................................................ [ 26%]
+2026-07-06 18:47:34,327 - app.api.v1.system.config_pack
+age - INFO - 閰嶇疆鍖呭凡瀵煎嚭: my-package锛屾搷浣滀汉: admin
+2026-07-06 18:47:35,118 - app.api.v1.system.config_pack
+age - INFO - 閰嶇疆鍖呭凡瀵煎嚭: config_package_20260706_184735锛
+屾搷浣滀汉: admin
+........................................................................ [ 27%]
+2026-07-06 18:47:36,041 - app.api.v1.system.config_pack
+age - ERROR - 瀵煎嚭閰嶇疆鍖呭け璐? Export failed
+2026-07-06 18:47:38,600 - app.api.v1.system.config_pack
+age - INFO - 閰嶇疆鍖呭凡瀵煎叆: test-pkg锛屽鍏?2 椤癸紝璺宠繃 0 椤癸紝鎿嶄綔浜
+? admin
+2026-07-06 18:47:39,482 - app.api.v1.system.config_pack
+age - INFO - 閰嶇疆鍖呭凡瀵煎叆: pkg锛屽鍏?1 椤癸紝璺宠繃 1 椤癸紝鎿嶄綔浜? adm
+in
+........................................................................ [ 28%]
+2026-07-06 18:47:39,893 - app.api.v1.approval - ERROR -
+ 鍒涘缓鎻愰啋娑堟伅澶辫触: db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\approval.py", line 717, in remind_task
+    db.add(msg)
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: db error
+2026-07-06 18:47:43,545 - app.api.v1.system.config_pack
+age - ERROR - 瀵煎叆閰嶇疆鍖呭け璐? Import failed
+........................................................................ [ 29%]
+........................................................................ [ 29%]
+2026-07-06 18:47:46,354 - app.api.v1.system.config_pack
+age - INFO - 閰嶇疆鍖呭凡鍒犻櫎: my-pkg锛屾搷浣滀汉: admin
+2026-07-06 18:47:48,498 - app.api.v1.system.config_pack
+age - ERROR - 鍒犻櫎閰嶇疆鍖呭け璐? Delete failed
+........................................................................ [ 30%]
+........................................................................ [ 31%]
+2026-07-06 18:48:01,467 - app.api.v1.data.data.data_pac
+kages - ERROR - 瀵煎嚭鍔犲瘑鏁版嵁鍖呭け璐? encryption failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\data_packages.py", line 718, in e
+xport_encrypted_package
+    result = await service.export_encrypted_package(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: encryption failed
+........................................................................ [ 32%]
+2026-07-06 18:48:13,164 - app.api.v1.data.data.analytic
+s - WARNING - 鍒嗘瀽缂撳瓨璇诲彇澶辫触
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\analytics.py", line 32, in _get_c
+ached
+    cache = await get_cache_service()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: cache down
+............................F............F.............................. [ 33%]
+2026-07-06 18:48:17,682 - app.api.v1.data.data.data_pac
+kages - ERROR - 瑙ｅ瘑棰勮澶辫触: decrypt failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\data_packages.py", line 859, in d
+ecrypt_and_preview_package
+    result = await service.decrypt_and_preview_package(
+package_id, password)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: decrypt failed
+........................................................................ [ 34%]
+........................................................................ [ 34%]
+2026-07-06 18:48:20,239 - app.api.v1.data.data.data_pac
+kages - ERROR - 纭瀵煎叆澶辫触: import failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\data_packages.py", line 892, in c
+onfirm_import_with_conflict_resolution
+    result = await service.confirm_import_with_conflict
+_resolution(package_id, body.conflict_strategy)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: import failed
+........................................................................ [ 35%]
+........................................................................ [ 36%]
+2026-07-06 18:48:24,854 - app.api.v1.data.data.data_qua
+lity - ERROR - 鏁版嵁璐ㄩ噺鎶ュ憡鐢熸垚澶辫触: db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\data_quality.py", line 37, in get
+_data_quality_report
+    null_rate = _calc_null_rates(db)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\data_quality.py", line 68, in _ca
+lc_null_rates
+    villages = db.query(
+               ^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: db error
+........................................................................ [ 37%]
+........................................................................ [ 38%]
+........................................................................ [ 38%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+2026-07-06 18:48:40,386 - app.api.v1.encryption - INFO 
+- 鏁版嵁搴撳姞瀵嗗凡鍒濆鍖?
+2026-07-06 18:48:40,942 - app.api.v1.encryption - INFO 
+- 鏁版嵁搴撳姞瀵嗗凡绂佺敤
+........................................................................ [ 41%]
+........................................................................ [ 42%]
+........................................................................ [ 42%]
+........................................................................ [ 43%]
+........................................................................ [ 44%]
+........................................................................ [ 45%]
+........................................................................ [ 46%]
+........................................................................ [ 46%]
+2026-07-06 18:49:20,112 - app.api.v1.funds - WARNING - 
+鍒犻櫎闄勪欢鏂囦欢澶辫触: /nonexistent/file.pdf, 鍘熷洜: Permission de
+nied
+........................................................................ [ 47%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 51%]
+........................................................................ [ 51%]
+........................................................................ [ 52%]
+........................................................................ [ 53%]
+2026-07-06 18:49:59,742 - app.api.v1.data.data.reports 
+- ERROR - 瀵煎嚭Excel澶辫触: excel error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 73, in export_e
+xcel
+    excel_bytes = await service.export_to_excel(query_p
+arams, user=current_user)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: excel error
+2026-07-06 18:50:03,085 - app.api.v1.data.data.reports 
+- ERROR - 瀵煎嚭PDF澶辫触: generic fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 103, in export_
+pdf
+    pdf_bytes = await service.export_to_pdf(query_param
+s, user=current_user)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: generic fail
+2026-07-06 18:50:05,934 - app.api.v1.data.data.reports 
+- ERROR - 瀵煎嚭Excel澶辫触: fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 143, in export_
+comprehensive_report
+    excel_bytes = await service.export_comprehensive_re
+port(year, ids, user=current_user)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 2195, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: fail
+2026-07-06 18:50:08,747 - app.api.v1.data.data.reports 
+- ERROR - 鑾峰彇绛涢€夐€夐」澶辫触: filter fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 165, in get_fil
+ter_options
+    return service.get_filter_options()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: filter fail
+........................................................................ [ 54%]
+2026-07-06 18:50:11,065 - app.api.v1.data.data.reports 
+- ERROR - 甯壎鏉戠瓫閫夋煡璇㈠け璐? filter fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 193, in filter_
+villages
+    villages, total = service.filter_villages(filters, 
+page, page_size, user=current_user)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: filter fail
+2026-07-06 18:50:14,855 - app.api.v1.data.data.reports 
+- ERROR - 鏁版嵁閽诲彇鏌ヨ澶辫触: drill fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 238, in drill_d
+own
+    return service.drill_down(query.model_dump())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: drill fail
+2026-07-06 18:50:18,777 - app.api.v1.data.data.reports 
+- ERROR - 甯壎鏉戝姣旀煡璇㈠け璐? compare fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 264, in compare
+_villages
+    return service.compare_villages(village_ids, year, 
+metrics)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: compare fail
+2026-07-06 18:50:24,325 - app.api.v1.data.data.reports 
+- ERROR - 骞翠唤瀵规瘮鏌ヨ澶辫触: years fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 295, in compare
+_years
+    return service.compare_years(village_id, year_list,
+ metric_list)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: years fail
+................F.......F............................................... [ 55%]
+2026-07-06 18:50:24,926 - app.api.v1.machine_code - ERR
+OR - 鑾峰彇鏈哄櫒鐮佸け璐? HW error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 137, in get_machine_
+code
+    machine_code = service.get_machine_code()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+ValueError: HW error
+2026-07-06 18:50:25,362 - app.api.v1.machine_code - ERR
+OR - 褰曞叆鏈哄櫒鐮佸け璐? DB error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 177, in admin_create
+_machine_code
+    record = service.create_machine_code_record(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: DB error
+2026-07-06 18:50:25,847 - app.api.v1.machine_code - ERR
+OR - 鏌ヨ鏈哄櫒鐮佸垪琛ㄥけ璐? List error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 220, in admin_list_m
+achine_codes
+    records, total = service.list_machine_codes(status=
+status_filter, skip=skip, limit=limit)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: List error
+2026-07-06 18:50:26,228 - app.api.v1.machine_code - ERR
+OR - 鎾ら攢鏈哄櫒鐮佸け璐? Revoke error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 269, in admin_revoke
+_machine_code
+    success = service.revoke_machine_code(machine_code_
+id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: Revoke error
+2026-07-06 18:50:26,458 - app.api.v1.data.data.reports 
+- ERROR - 姹囨€荤粺璁℃煡璇㈠け璐? summary fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 334, in get_sum
+mary_statistics
+    return service.get_summary_statistics(filters, year
+)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: summary fail
+2026-07-06 18:50:27,617 - app.api.v1.machine_code - ERR
+OR - 鐢熸垚瀵嗙爜澶辫触: Gen error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 321, in generate_ini
+tial_password
+    initial_password = service.generate_initial_passwor
+d(request.username, request.verification_code)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: Gen error
+........................................................................ [ 55%]
+2026-07-06 18:50:29,058 - app.api.v1.machine_code - INF
+O - 鐢ㄦ埛 testuser 瀵嗙爜宸查€氳繃鏈哄櫒鐮侀獙璇侀噸缃紝鏂板瘑鐮佸凡鍐欏叆涓存椂鏂囦欢: C
+:\Users\Administrator\AppData\Local\Temp\pwd_reset_wmcn
+c6dq.txt
+2026-07-06 18:50:29,150 - app.api.v1.data.data.reports 
+- ERROR - 鍒涘缓鎶ヨ〃璁㈤槄澶辫触: db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 375, in create_
+subscription
+    db.add(db_subscription)
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: db error
+2026-07-06 18:50:29,269 - app.api.v1.machine_code - ERR
+OR - 閲嶇疆瀵嗙爜澶辫触: Reset error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 365, in reset_passwo
+rd_with_machine_code
+    current_machine_code = service.get_machine_code()
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: Reset error
+2026-07-06 18:50:29,532 - app.api.v1.machine_code - ERR
+OR - 鑾峰彇鏈哄櫒淇℃伅澶辫触: Info error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 417, in get_machine_
+info
+    machine_info = service.get_machine_info()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: Info error
+2026-07-06 18:50:30,360 - app.api.v1.machine_code - ERR
+OR - 鑾峰彇缁勭粐鏍￠獙鐮佸け璐? Gen error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 455, in get_organiza
+tion_verification_code
+    verification_code = service.generate_organization_v
+erification_code(org.id, org.name)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: Gen error
+2026-07-06 18:50:31,087 - app.api.v1.machine_code - ERR
+OR - 鍒涘缓缁勭粐閫氳璇佺爜澶辫触: Create error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 505, in create_organ
+ization_pass_code
+    record = service.create_organization_pass_code(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: Create error
+2026-07-06 18:50:31,348 - app.api.v1.feedback - ERROR -
+ 淇濆瓨鍙嶉澶辫触: 鏃犳硶鍐欏叆
+2026-07-06 18:50:31,500 - app.api.v1.feedback - ERROR -
+ 淇濆瓨鍙嶉澶辫触: 鏃犳硶鎻愪氦
+2026-07-06 18:50:31,631 - app.api.v1.feedback - ERROR -
+ 淇濆瓨鍙嶉澶辫触: 鏃犳硶鍒锋柊
+2026-07-06 18:50:31,932 - app.api.v1.machine_code - ERR
+OR - 鏌ヨ缁勭粐閫氳璇佺爜鍒楄〃澶辫触: List error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 562, in list_organiz
+ation_pass_codes
+    records, total = service.get_organization_pass_code
+s(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: List error
+2026-07-06 18:50:32,436 - app.api.v1.data.data.reports 
+- ERROR - 鑾峰彇璁㈤槄鍒楄〃澶辫触: db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 407, in list_su
+bscriptions
+    query = db.query(ReportSubscription).filter(ReportS
+ubscription.user_id == current_user.id)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: db error
+2026-07-06 18:50:32,709 - app.api.v1.machine_code - ERR
+OR - 瀵煎嚭缁勭粐閫氳璇佺爜鍒楄〃澶辫触: Export error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\machine_code.py", line 637, in export_organ
+ization_pass_codes
+    records, _ = service.get_organization_pass_codes(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: Export error
+........................................................................ [ 56%]
+........................................................................ [ 57%]
+2026-07-06 18:50:34,774 - app.api.v1.data.data.reports 
+- ERROR - 鑾峰彇璁㈤槄璇︽儏澶辫触: db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 444, in get_sub
+scription
+    db.query(ReportSubscription)
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: db error
+........................................................................ [ 58%]
+2026-07-06 18:50:38,671 - app.api.v1.data.data.reports 
+- ERROR - 鏇存柊璁㈤槄閰嶇疆澶辫触: db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 481, in update_
+subscription
+    .first()
+     ^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: db error
+........................................................................ [ 59%]
+2026-07-06 18:50:45,285 - app.api.v1.data.data.reports 
+- ERROR - 鍒犻櫎璁㈤槄澶辫触: db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 530, in delete_
+subscription
+    .first()
+     ^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: db error
+........................................................................ [ 59%]
+........................................................................ [ 60%]
+2026-07-06 18:50:51,227 - app.api.v1.data.data.reports 
+- ERROR - 鍒囨崲璁㈤槄鐘舵€佸け璐? db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\data\data\reports.py", line 565, in toggle_
+subscription
+    .first()
+     ^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: db error
+........................................................................ [ 61%]
+2026-07-06 18:50:51,886 - app.api.v1.data_scope - WARNI
+NG - 缁勭粐鏍戞娴嬪埌鐜舰寮曠敤锛宱rg_id=1
+2026-07-06 18:50:51,911 - app.api.v1.data_scope - WARNI
+NG - 缁勭粐鏍戦€掑綊瓒呰繃鏈€澶ф繁搴?10锛屾埅鏂簬 org_id=1
+................................................F.F..F.................. [ 62%]
+........................................................................ [ 63%]
+2026-07-06 18:50:59,103 - app.api.v1.menus - INFO - 绠＄悊
+鍛?admin 璁剧疆鐢ㄦ埛 tgt 鑿滃崟鏉冮檺: custom
+2026-07-06 18:50:59,216 - app.api.v1.menus - INFO - 绠＄悊
+鍛?admin 璁剧疆鐢ㄦ埛 tgt 鑿滃崟鏉冮檺: role_default
+2026-07-06 18:50:59,459 - app.api.v1.menus - INFO - 绠＄悊
+鍛?admin 璁剧疆鐢ㄦ埛 tgt 鑿滃崟鏉冮檺: custom
+2026-07-06 18:50:59,592 - app.api.v1.menus - INFO - 绠＄悊
+鍛?admin 璁剧疆鐢ㄦ埛 tgt 鑿滃崟鏉冮檺: custom
+........................................................................ [ 63%]
+2026-07-06 18:51:01,570 - app.api.v1.menus - INFO - 绠＄悊
+鍛?admin 璁剧疆鐢ㄦ埛 flowuser 鑿滃崟鏉冮檺: custom
+2026-07-06 18:51:01,663 - app.api.v1.menus - INFO - 绠＄悊
+鍛?admin 璁剧疆鐢ㄦ埛 rst 鑿滃崟鏉冮檺: role_default
+........................................................................ [ 64%]
+........................................................................ [ 65%]
+........................................................................ [ 66%]
+........................................................................ [ 67%]
+........................................................................ [ 68%]
+2026-07-06 18:51:22,621 - app.api.v1.map - WARNING - 鏃犳
+硶鍖归厤鍘垮競鍧愭爣: county_or_district=鏈煡鍘?
+........................................................................ [ 68%]
+......F................................................................. [ 69%]
+........................................................................ [ 70%]
+........................................................................ [ 71%]
+........................................................................ [ 72%]
+........................................................................ [ 72%]
+2026-07-06 18:51:45,537 - app.api.v1.report_templates -
+ WARNING - 妯℃澘搴忓垪鍖栧け璐?(id=1): 'int' object has no attri
+bute 'isoformat'
+........................................................................ [ 73%]
+2026-07-06 18:51:47,058 - app.api.v1.projects - INFO - 
+椤圭洰鍒涘缓鎴愬姛: id=None, name=鏂板缓椤圭洰
+........................................................................ [ 74%]
+........................................................................ [ 75%]
+........................................................................ [ 76%]
+2026-07-06 18:51:53,389 - app.api.v1.projects - ERROR -
+ 缁忚垂闃舵鑱斿姩澶辫触锛岄」鐩洿鏂板凡鍥炴粴: fund error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\projects.py", line 957, in update_project
+    _handle_status_change_event(db, project_id, old_sta
+tus, project.status, current_user)
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\projects.py", line 867, in _handle_status_c
+hange_event
+    on_project_status_change(db, project_id, old_status
+, new_status, operator)
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: fund error
+........................................................................ [ 76%]
+...........F............................................................ [ 77%]
+...............................................................F........ [ 78%]
+...........................F............................................ [ 79%]
+2026-07-06 18:51:58,927 - app.api.v1.projects - ERROR -
+ 娣诲姞缁忚垂澶辫触: project_id=1, error=db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\projects.py", line 1112, in create_project_
+fund
+    db.commit()
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: db error
+........................................................................ [ 80%]
+2026-07-06 18:52:02,978 - app.api.v1.projects - ERROR -
+ 鍒涘缓浠诲姟澶辫触: project_id=1, error=fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\projects.py", line 1177, in create_project_
+task
+    db.commit()
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: fail
+2026-07-06 18:52:04,068 - app.api.v1.policy - ERROR - 鍒
+涘缓鏀跨瓥澶辫触: db error
+2026-07-06 18:52:12,305 - app.api.v1.projects - ERROR -
+ 鏇存柊浠诲姟澶辫触: task_id=1, error=fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\projects.py", line 1209, in update_project_
+task
+    db.commit()
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: fail
+........................................................................ [ 80%]
+2026-07-06 18:52:13,466 - app.api.v1.policy - ERROR - 鏇
+存柊鏀跨瓥澶辫触 (id=1): db error
+2026-07-06 18:52:16,352 - app.api.v1.projects - ERROR -
+ 鍒犻櫎浠诲姟澶辫触: task_id=1, error=fail
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\projects.py", line 1234, in delete_project_
+task
+    db.commit()
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+Exception: fail
+.F.F.................................................................... [ 81%]
+........................................................................ [ 82%]
+2026-07-06 18:52:19,350 - app.api.v1.report_templates -
+ ERROR - 鑾峰彇鎶ヨ〃妯℃澘鍒楄〃澶辫触: db error
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\report_templates.py", line 304, in list_tem
+plates
+    query = db.query(ReportTemplate)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\military-Rural Revitalization-system\backend
+\tests\unit\test_report_templates_api.py", line 122, in
+ <lambda>
+    db_session.query = lambda *a, **kw: (_ for _ in ())
+.throw(Exception("db error"))
+                                        ^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\military-Rural Revitalization-system\backend
+\tests\unit\test_report_templates_api.py", line 122, in
+ <genexpr>
+    db_session.query = lambda *a, **kw: (_ for _ in ())
+.throw(Exception("db error"))
+Exception: db error
+2026-07-06 18:52:20,923 - app.api.v1.report_templates -
+ ERROR - 鍒涘缓鎶ヨ〃妯℃澘澶辫触: add failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\report_templates.py", line 365, in create_t
+emplate
+    db.add(template)
+  File "C:\military-Rural Revitalization-system\backend
+\tests\unit\test_report_templates_api.py", line 187, in
+ broken_add
+    raise Exception("add failed")
+Exception: add failed
+2026-07-06 18:52:21,658 - app.api.v1.report_templates -
+ ERROR - 鏇存柊鎶ヨ〃妯℃澘澶辫触 (id=1): commit failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\report_templates.py", line 404, in update_t
+emplate
+    db.commit()
+  File "C:\military-Rural Revitalization-system\backend
+\tests\unit\test_report_templates_api.py", line 227, in
+ <lambda>
+    db_session.commit = lambda: (_ for _ in ()).throw(E
+xception("commit failed"))
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\military-Rural Revitalization-system\backend
+\tests\unit\test_report_templates_api.py", line 227, in
+ <genexpr>
+    db_session.commit = lambda: (_ for _ in ()).throw(E
+xception("commit failed"))
+Exception: commit failed
+2026-07-06 18:52:22,129 - app.api.v1.report_templates -
+ ERROR - 鍒犻櫎鎶ヨ〃妯℃澘澶辫触 (id=1): delete failed
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\report_templates.py", line 426, in delete_t
+emplate
+    db.delete(t)
+  File "C:\military-Rural Revitalization-system\backend
+\tests\unit\test_report_templates_api.py", line 247, in
+ <lambda>
+    db_session.delete = lambda obj: (_ for _ in ()).thr
+ow(Exception("delete failed"))
+                                    ^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\military-Rural Revitalization-system\backend
+\tests\unit\test_report_templates_api.py", line 247, in
+ <genexpr>
+    db_session.delete = lambda obj: (_ for _ in ()).thr
+ow(Exception("delete failed"))
+Exception: delete failed
+........................................................................ [ 83%]
+................F....................................................... [ 84%]
+........................................................................ [ 85%]
+2026-07-06 18:52:46,694 - app.api.v1.system_config - ER
+ROR - Failed to set system config key=fail_key: DB erro
+r
+2026-07-06 18:52:46,824 - app.api.v1.system_config - ER
+ROR - Failed to set system config key=fail_key: add fai
+led
+2026-07-06 18:52:46,874 - app.api.v1.system_config - ER
+ROR - Failed to set system config key=fail_key: query f
+ailed
+2026-07-06 18:52:46,988 - app.api.v1.system_config - ER
+ROR - Failed to set system config key=key: DB error
+........................................................................ [ 85%]
+2026-07-06 18:52:51,661 - app.api.v1.system.init - ERRO
+R - 妫€鏌ュ垵濮嬪寲鐘舵€佸け璐? DB error
+2026-07-06 18:52:52,707 - app.api.v1.system.init - INFO
+ - 绯荤粺鍒濆鍖栧畬鎴愶紝鍗曚綅: 娴嬭瘯鍗曚綅
+........................................................................ [ 86%]
+2026-07-06 18:52:56,198 - app.api.v1.system_health - WA
+RNING - 绱㈠紩鏁伴噺鏍￠獙澶辫触: tuple index out of range
+2026-07-06 18:52:56,318 - app.api.v1.system_health - WA
+RNING - 绱㈠紩鏁伴噺鏍￠獙澶辫触: tuple index out of range
+2026-07-06 18:52:56,523 - app.api.v1.system.init - WARN
+ING - 绯荤粺鍒濆鍖栫姸鎬佸凡琚噸缃紝鎿嶄綔浜? admin
+2026-07-06 18:52:58,164 - app.api.v1.system.admin - INF
+O - 绯荤粺閰嶇疆宸叉洿鏂帮紝鎿嶄綔浜? admin
+........................................................................ [ 87%]
+2026-07-06 18:52:58,642 - app.api.v1.system.admin - INF
+O - 绯荤粺閰嶇疆宸叉洿鏂帮紝鎿嶄綔浜? admin
+2026-07-06 18:53:01,215 - app.api.v1.system.admin - WAR
+NING - 娓呯悊 map 缂撳瓨澶辫触: map error
+........................................................................ [ 88%]
+........................................................................ [ 89%]
+........................................................................ [ 89%]
+2026-07-06 18:53:19,362 - app.api.v1.todos - ERROR - 鑾峰
+彇寰呭姙鍒楄〃澶辫触: DB crash
+2026-07-06 18:53:19,482 - app.api.v1.todos - ERROR - 鍒涘
+缓寰呭姙澶辫触: 1 validation error for TodoResponse
+id
+  Input should be a valid integer [type=int_type, input
+_value=None, input_type=NoneType]
+    For further information visit https://errors.pydant
+ic.dev/2.13/v/int_type
+2026-07-06 18:53:19,649 - app.api.v1.todos - ERROR - 鍒涘
+缓寰呭姙澶辫触: commit error
+2026-07-06 18:53:20,400 - app.api.v1.todos - ERROR - 鏇存
+柊寰呭姙澶辫触: commit error
+2026-07-06 18:53:21,165 - app.api.v1.todos - ERROR - 鍒犻
+櫎寰呭姙澶辫触: commit error
+2026-07-06 18:53:22,083 - app.api.v1.todos - ERROR - 鍒囨
+崲寰呭姙鐘舵€佸け璐? commit error
+........................................................................ [ 90%]
+2026-07-06 18:53:23,059 - app.api.v1.system.zero_trust 
+- WARNING - 瀹夊叏浜嬩欢 [high/unauthorized_admin_access]: 闈炵
+鐞嗗憳鐢ㄦ埛 regular_user 灏濊瘯鎵ц绠＄悊鎿嶄綔: /admin/config
+2026-07-06 18:53:28,792 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=[1, 3] actions=None ac
+tion=None before_date=None
+2026-07-06 18:53:28,797 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 2 鏉?
+2026-07-06 18:53:29,568 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=None actions=['create'
+] action=None before_date=None
+2026-07-06 18:53:29,572 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 2 鏉?
+........................................................................ [ 91%]
+2026-07-06 18:53:30,415 - app.api.v1.system.system - WA
+RNING - Failed to count users: DB error
+2026-07-06 18:53:30,416 - app.api.v1.system.system - WA
+RNING - Failed to count organizations: DB error
+2026-07-06 18:53:30,417 - app.api.v1.system.system - WA
+RNING - Failed to count villages: DB error
+2026-07-06 18:53:30,418 - app.api.v1.system.system - WA
+RNING - Failed to count projects: DB error
+2026-07-06 18:53:30,935 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=None actions=None acti
+on=delete before_date=None
+2026-07-06 18:53:30,939 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 1 鏉?
+2026-07-06 18:53:31,856 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=None actions=None acti
+on=None before_date=None
+2026-07-06 18:53:31,857 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎: 鏃犳湁鏁堣繃婊ゆ潯浠讹紝璺宠繃鍒犻櫎
+2026-07-06 18:53:33,495 - app.api.v1.system.zero_trust 
+- WARNING - 瀹夊叏浜嬩欢 [critical/intrusion]: Critical secur
+ity event
+2026-07-06 18:53:33,571 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=None actions=None acti
+on=create before_date=2099-01-01T00:00:00
+2026-07-06 18:53:33,576 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 1 鏉?
+2026-07-06 18:53:35,069 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=None actions=None acti
+on=create before_date=not-a-date
+2026-07-06 18:53:35,071 - app.api.v1.system.audit - WAR
+NING - 鎵归噺鍒犻櫎: before_date 鏍煎紡鏃犳晥 'not-a-date'锛屽凡蹇界暐鏃ユ湡
+杩囨护
+2026-07-06 18:53:35,075 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 1 鏉?
+2026-07-06 18:53:39,501 - app.api.v1.system.audit - ERR
+OR - BatchDeleteRequest: ids 涓寘鍚潪鏁存暟鍊?'abc'
+2026-07-06 18:53:41,516 - app.api.v1.system.zero_trust 
+- ERROR - 瀹夊叏浜嬩欢鎸佷箙鍖栧け璐? high/test
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend
+\app\api\v1\system\zero_trust.py", line 107, in _record
+_security_event
+    db.commit()
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1108, in __
+call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1112, in _m
+ock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\P
+ython\Python311\Lib\unittest\mock.py", line 1167, in _e
+xecute_mock_call
+    raise effect
+RuntimeError: commit failed
+2026-07-06 18:53:41,522 - app.api.v1.system.zero_trust 
+- WARNING - 瀹夊叏浜嬩欢 [high/test]: fail test
+2026-07-06 18:53:42,205 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=None actions=['create'
+] action=None before_date=None
+2026-07-06 18:53:42,210 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 1 鏉?
+2026-07-06 18:53:43,600 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=None actions=None acti
+on=None before_date=2020-01-01T00:00:00
+2026-07-06 18:53:43,606 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 0 鏉?
+........................................................................ [ 92%]
+2026-07-06 18:53:45,352 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=None actions=None acti
+on=create before_date=None
+2026-07-06 18:53:45,359 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 0 鏉?
+2026-07-06 18:53:46,212 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織: user=admin ids=[999] actions=None act
+ion=None before_date=2020-01-01T00:00:00
+2026-07-06 18:53:46,218 - app.api.v1.system.audit - INF
+O - 鎵归噺鍒犻櫎瀹¤鏃ュ織瀹屾垚: 鍒犻櫎 0 鏉?
+2026-07-06 18:53:47,703 - app.api.v1.system.audit - INF
+O - 鍒犻櫎瀹¤鏃ュ織 id=1, user=admin
+2026-07-06 18:53:47,717 - app.api.v1.system.audit - INF
+O - 鍒犻櫎瀹¤鏃ュ織鎴愬姛 id=1
+2026-07-06 18:53:48,550 - app.api.v1.system.audit - INF
+O - 鍒犻櫎瀹¤鏃ュ織 id=999, user=admin
+2026-07-06 18:53:48,562 - app.api.v1.system.audit - WAR
+NING - 鍒犻櫎瀹¤鏃ュ織澶辫触: id=999 涓嶅瓨鍦?
+........................................................................ [ 93%]
+2026-07-06 18:53:51,029 - app.api.v1.system.update_logs
+ - INFO - 鏇存柊鏃ュ織 1 (鐗堟湰 1.0.0) 宸茶鍒犻櫎锛屾搷浣滀汉: admin
+........................................................................ [ 93%]
+2026-07-06 18:53:53,538 - app.api.v1.system.audit - WAR
+NING - 瑙ｆ瀽瀹¤鏃ュ織鍏冩暟鎹け璐?(id=1): Expecting value: line 1
+ column 1 (char 0)
+........................................................................ [ 94%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 97%]
+........................................................................ [ 97%]
+........................................................................ [ 98%]
+........................................................................ [ 99%]

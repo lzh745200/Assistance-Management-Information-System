@@ -30,12 +30,7 @@
         clearable
         @update:model-value="onTownshipChange"
       >
-        <el-option
-          v-for="t in availableTownships"
-          :key="t"
-          :label="t"
-          :value="t"
-        />
+        <el-option v-for="t in availableTownships" :key="t" :label="t" :value="t" />
       </el-select>
     </el-form-item>
   </div>
@@ -43,7 +38,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { GUIZHOU_ALL_CITIES, getCountiesByCity, getTownshipsByCityCounty } from '@/data/guizhouRegion'
+import {
+  GUIZHOU_ALL_CITIES,
+  getCountiesByCity,
+  getTownshipsByCityCounty,
+} from '@/data/guizhouRegion'
 
 export interface RegionValue {
   city?: string
