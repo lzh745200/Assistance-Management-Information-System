@@ -239,6 +239,9 @@ class TwoFactorService:
             是否启用
         """
         two_factor = (
-            db.query(TwoFactorAuth).filter(TwoFactorAuth.user_id == user.id, TwoFactorAuth.enabled == True).first()  # noqa: E712
+            db.query(TwoFactorAuth).filter(
+                TwoFactorAuth.user_id == user.id,
+                TwoFactorAuth.enabled == True,  # noqa: E712
+            ).first()
         )
         return two_factor is not None
