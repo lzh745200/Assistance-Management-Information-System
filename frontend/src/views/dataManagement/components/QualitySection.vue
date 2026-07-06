@@ -234,7 +234,7 @@ async function handleCheck() {
     })
     const data = res?.data ?? res
     const issues = data?.issues ?? []
-    const valid = data?.valid ?? (issues.length === 0)
+    const valid = data?.valid ?? issues.length === 0
 
     checkItems.value = checkItems.value.map((item) => ({
       ...item,

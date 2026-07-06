@@ -555,7 +555,7 @@ class TestPolicyAPI:
                     AsyncMock()):
             resp = client.get("/api/v1/policies")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
     def test_get_policies_no_filter_cached(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -585,7 +585,7 @@ class TestPolicyAPI:
         mock_db.query.return_value = q
         resp = client.get("/api/v1/policies?page=1&page_size=10&keyword=test&level=national&status=draft")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 2
+        assert resp.json()["data"]["total"] == 2
 
     def test_get_policy_detail(self, client, mock_db, admin_user, sample_policy):
         _setup_client(client, mock_db, admin_user)
@@ -862,7 +862,7 @@ class TestPolicyAPI:
              patch("app.core.cache.cache_manager.set", AsyncMock()):
             resp = client.get("/api/v1/policies?skip=10&limit=3")
         assert resp.status_code == 200
-        assert resp.json()["page_size"] == 3
+        assert resp.json()["data"]["page_size"] == 3
 
     def test_get_policies_default_pagination(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)

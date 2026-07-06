@@ -103,7 +103,8 @@ async function loadReport() {
       ElMessage.info('暂无符合条件的报告数据')
     }
   } catch (e: any) {
-    const msg = e?.response?.data?.detail || e?.response?.data?.message || e?.message || '报告生成失败'
+    const msg =
+      e?.response?.data?.detail || e?.response?.data?.message || e?.message || '报告生成失败'
     ElMessage.error(typeof msg === 'string' ? msg : '报告生成失败，请稍后重试')
   } finally {
     loading.value = false

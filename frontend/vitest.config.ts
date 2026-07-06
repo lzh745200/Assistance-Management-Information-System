@@ -26,6 +26,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      include: [
+        'src/**/*.{ts,vue}',
+      ],
       exclude: [
         'node_modules/',
         'src/test/',
@@ -40,41 +43,17 @@ export default defineConfig({
         'src/App.vue',
         'src/App.test.vue',
         'src/main.ts',
+        'src/vite-env.d.ts',
+        'src/auto-imports.d.ts',
+        'src/components.d.ts',
+        'src/env.d.ts',
       ],
-      // 覆盖率阈值 — 设为可实现基线 (基于实际测试结果)
-      // 详细分析见 docs/测试覆盖率差距报告.md
       thresholds: {
-        global: {
-          statements: 40,
-          branches: 35,
-          functions: 25,
-          lines: 40
-        },
-        'src/utils/**/*.ts': {
-          statements: 44,
-          branches: 40,
-          functions: 45,
-          lines: 44
-        },
-        'src/stores/**/*.ts': {
-          statements: 44,
-          branches: 40,
-          functions: 15,
-          lines: 44
-        },
-        'src/composables/**/*.ts': {
-          statements: 35,
-          branches: 40,
-          functions: 35,
-          lines: 35
-        },
-        'src/api/**/*.ts': {
-          statements: 50,
-          branches: 40,
-          functions: 5,
-          lines: 50
-        }
-      }
+        'src/utils/**/*.ts': { statements: 65, branches: 60, functions: 55, lines: 65 },
+        'src/stores/**/*.ts': { statements: 55, branches: 50, functions: 35, lines: 55 },
+        'src/composables/**/*.ts': { statements: 50, branches: 40, functions: 40, lines: 50 },
+        'src/api/**/*.ts': { statements: 55, branches: 50, functions: 40, lines: 55 },
+      },
     },
     testTimeout: 60000,
   },

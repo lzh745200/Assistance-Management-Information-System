@@ -14,17 +14,6 @@ def _make_instance(**attrs):
 # ── _resolve_model ───────────────────────────────────────────────────────
 
 
-class EvilMeta(type):
-    """Metaclass whose __tablename__ property raises (not AttributeError)
-    so hasattr does NOT catch it → triggers except Exception in _resolve_model."""
-    @property
-    def __tablename__(cls):
-        raise RuntimeError("intentional test exception")
-
-
-class EvilClass(metaclass=EvilMeta):
-    pass
-
 class TestResolveModel:
     """Cover every branch of _resolve_model."""
 
@@ -61,36 +50,40 @@ class TestResolveModel:
             TABLE_MODEL_MAP.pop("projects", None)
 
     def test_cache_miss_not_found_raises_value_error(self):
-        """Dynamic import finds no match → ValueError."""
+        """Dynamic import fails to find model class → ValueError."""
         from app.services.batch_service import _resolve_model, TABLE_MODEL_MAP
-        from app.models.project import Project
+        import app.models
 
         TABLE_MODEL_MAP["projects"] = None
         try:
-            original = Project.__tablename__
-            Project.__tablename__ = "some_other_table"
+            # Temporarily remove Project from app.models to trigger AttributeError
+            project_cls = app.models.Project
+            del app.models.Project
             with pytest.raises(ValueError, match="Unknown table"):
                 _resolve_model("projects")
+            app.models.Project = project_cls
         finally:
-            Project.__tablename__ = original
             TABLE_MODEL_MAP.pop("projects", None)
 
     def test_exception_in_dynamic_import_loop_caught(self):
-        """Exception raised during model scan → caught by except Exception: pass
-        → falls through to raise ValueError."""
+        """Non-AttributeError exception during getattr → caught → ValueError."""
         from app.services.batch_service import _resolve_model, TABLE_MODEL_MAP
-        from app.models.project import Project
+        import builtins
 
         TABLE_MODEL_MAP["projects"] = None
-        original_tn = Project.__tablename__
-        Project.__tablename__ = "changed_for_test"
-
         try:
-            with patch("app.models.EvilClass", EvilClass, create=True):
+            original = builtins.getattr
+            def _failing_getattr(obj, name, *args):
+                if name == "Project":
+                    raise RuntimeError("simulated dynamic import failure")
+                return original(obj, name, *args)
+            builtins.getattr = _failing_getattr
+            try:
                 with pytest.raises(ValueError, match="Unknown table"):
                     _resolve_model("projects")
+            finally:
+                builtins.getattr = original
         finally:
-            Project.__tablename__ = original_tn
             TABLE_MODEL_MAP.pop("projects", None)
 
 

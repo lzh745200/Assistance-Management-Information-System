@@ -22,6 +22,21 @@ TABLE_MODEL_MAP: dict = {
 ALLOWED_TABLES = frozenset(TABLE_MODEL_MAP.keys())
 
 
+# 表名 → 模型属性名映射（用于 _resolve_model 快速查找）
+_TABLE_TO_MODEL_NAME = {
+    "supported_villages": "SupportedVillage",
+    "projects": "Project",
+    "funds": "Fund",
+    "schools": "School",
+    "policies": "Policy",
+    "users": "User",
+    "organizations": "Organization",
+    "villages": "Village",
+    "rural_works": "RuralWork",
+    "work_logs": "WorkLog",
+}
+
+
 def _resolve_model(table_name: str):
     """将字符串表名解析为 ORM 模型类。先从 TABLE_MODEL_MAP 缓存读取，缓存未命中时动态导入。"""
     if table_name not in ALLOWED_TABLES:
@@ -32,12 +47,15 @@ def _resolve_model(table_name: str):
     if cached is not None:
         return cached
 
+    model_name = _TABLE_TO_MODEL_NAME.get(table_name)
+    if model_name is None:
+        raise ValueError(f"Unknown table: {table_name}")
+
     try:
         import app.models
-        for name, cls in vars(app.models).items():
-            if hasattr(cls, '__tablename__') and cls.__tablename__ == table_name:
-                TABLE_MODEL_MAP[table_name] = cls
-                return cls
+        cls = getattr(app.models, model_name)
+        TABLE_MODEL_MAP[table_name] = cls
+        return cls
     except Exception:
         pass
     raise ValueError(f"Unknown table: {table_name}")

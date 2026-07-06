@@ -338,7 +338,7 @@ class TestExportAuditLogs:
         session.commit()
         resp = client.get(self.URL)
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total"] == 1
         assert data["items"][0]["action"] == "create"
 
@@ -350,7 +350,7 @@ class TestExportAuditLogs:
         session.commit()
         resp = client.get(self.URL, params={"action": "delete"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_start_date(self, db_client):
         client, session = db_client
@@ -359,7 +359,7 @@ class TestExportAuditLogs:
         session.commit()
         resp = client.get(self.URL, params={"start_date": "2020-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_end_date(self, db_client):
         client, session = db_client
@@ -368,7 +368,7 @@ class TestExportAuditLogs:
         session.commit()
         resp = client.get(self.URL, params={"end_date": "2099-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
 
 class TestGetAuditStats:
@@ -489,7 +489,7 @@ class TestGetLoginAttempts:
         session.commit()
         resp = client.get(self.URL)
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_username(self, db_client):
         client, session = db_client
@@ -499,7 +499,7 @@ class TestGetLoginAttempts:
         session.commit()
         resp = client.get(self.URL, params={"username": "admin"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_ip(self, db_client):
         client, session = db_client
@@ -509,7 +509,7 @@ class TestGetLoginAttempts:
         session.commit()
         resp = client.get(self.URL, params={"ip_address": "127.0.0.1"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_start_date(self, db_client):
         client, session = db_client
@@ -518,7 +518,7 @@ class TestGetLoginAttempts:
         session.commit()
         resp = client.get(self.URL, params={"start_date": "2020-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_end_date(self, db_client):
         client, session = db_client
@@ -527,7 +527,7 @@ class TestGetLoginAttempts:
         session.commit()
         resp = client.get(self.URL, params={"end_date": "2099-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
 
 class TestGetApiAccessLogs:
@@ -546,7 +546,7 @@ class TestGetApiAccessLogs:
         session.commit()
         resp = client.get(self.URL)
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_user_id(self, db_client):
         client, session = db_client
@@ -556,7 +556,7 @@ class TestGetApiAccessLogs:
         session.commit()
         resp = client.get(self.URL, params={"user_id": 1})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_endpoint(self, db_client):
         client, session = db_client
@@ -566,7 +566,7 @@ class TestGetApiAccessLogs:
         session.commit()
         resp = client.get(self.URL, params={"endpoint": "test"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_start_date(self, db_client):
         client, session = db_client
@@ -575,7 +575,7 @@ class TestGetApiAccessLogs:
         session.commit()
         resp = client.get(self.URL, params={"start_date": "2020-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_end_date(self, db_client):
         client, session = db_client
@@ -584,7 +584,7 @@ class TestGetApiAccessLogs:
         session.commit()
         resp = client.get(self.URL, params={"end_date": "2099-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
 
 class TestGetExportLogs:

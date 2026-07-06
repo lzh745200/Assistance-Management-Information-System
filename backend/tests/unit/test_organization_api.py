@@ -117,7 +117,7 @@ class TestGetOrganizations:
         with patch.object(cache_manager, "get", AsyncMock(return_value=None)):
             resp = client_admin.get("/api/v1/organizations")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total"] == 2
         assert len(data["items"]) == 2
 
@@ -129,7 +129,7 @@ class TestGetOrganizations:
             "/api/v1/organizations?org_type=department&is_active=true&keyword=测试&page=1&page_size=10"
         )
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_list_with_parent_id_filter(self, client_admin, mock_db):
         q = mock_db.query.return_value
@@ -137,7 +137,7 @@ class TestGetOrganizations:
         q.all.return_value = [_make_mock_org(2, parent_id=1)]
         resp = client_admin.get("/api/v1/organizations?parent_id=1")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_list_with_search(self, client_admin, mock_db):
         q = mock_db.query.return_value
@@ -147,11 +147,11 @@ class TestGetOrganizations:
         assert resp.status_code == 200
 
     def test_list_from_cache(self, client_admin, mock_db):
-        cached = {"items": [], "total": 0, "page": 1, "page_size": 20}
+        cached = {"code": 200, "success": True, "message": "成功", "data": {"items": [], "total": 0, "page": 1, "page_size": 20}}
         with patch.object(cache_manager, "get", AsyncMock(return_value=cached)) as m:
             resp = client_admin.get("/api/v1/organizations")
             assert resp.status_code == 200
-            assert resp.json()["total"] == 0
+            assert resp.json()["data"]["total"] == 0
             m.assert_awaited_once_with("orgs:list")
 
     def test_list_writes_cache(self, client_admin, mock_db):

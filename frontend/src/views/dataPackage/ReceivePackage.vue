@@ -58,7 +58,10 @@
 
       <template #footer>
         <el-button
-          @click="clearLocalImport(); showLocalImport = false"
+          @click="
+            clearLocalImport()
+            showLocalImport = false
+          "
         >
           {{ localImportStep === 2 ? '关闭' : '取消' }}
         </el-button>

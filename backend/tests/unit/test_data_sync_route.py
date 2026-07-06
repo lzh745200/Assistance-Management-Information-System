@@ -375,9 +375,10 @@ class TestGetSyncLogs:
             mock_get_db.return_value = iter([mock_db])
             resp = test_client.get(self.URL)
         assert resp.status_code == 200
-        assert resp.json()["success"] is True
-        assert resp.json()["count"] == 1
-        assert resp.json()["data"][0]["sync_type"] == "export"
+        body = resp.json()
+        assert body["success"] is True
+        assert body["data"]["total"] == 1
+        assert body["data"]["items"][0]["sync_type"] == "export"
 
     def test_success_with_filter(self, client):
         test_client, db = client
@@ -387,7 +388,7 @@ class TestGetSyncLogs:
             mock_get_db.return_value = iter([mock_db])
             resp = test_client.get(self.URL + "?sync_type=import")
         assert resp.status_code == 200
-        assert resp.json()["count"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_exception(self, client):
         test_client, db = client

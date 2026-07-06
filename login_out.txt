@@ -1,0 +1,23 @@
+﻿Status: 200
+{
+  "code": 200,
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImp0aSI6IjgzYzI5YzVmYjEzMDRlOGVhNzViNjU3MjQzNjhlM2YwIiwidHlwZSI6ImFjY2VzcyIsImlhdCI6MTc4MzM0NjExNSwiZXhwIjoxNzgzMzc0OTE1LCJ0b2tlbl92ZXJzaW9uIjowfQ.TINw1ej0DkBQBUm5jGnVGOjCmuf_GXfIfPoZtgAwLiY",
+    "token_type": "bearer",
+    "user": {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@example.com",
+      "full_name": "系统管理员",
+      "role": "super_admin",
+      "is_active": true,
+      "is_superuser": true,
+      "organization_id": null,
+      "organization_name": "",
+      "permissions": []
+    }
+  },
+  "message": "首次登录请修改密码",
+  "must_change_password": true,
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImp0aSI6ImUwY2Q3NThhZTJkMzRlODM5ZGRhODFmODJmMmQ5MmZmIiwidHlwZSI6InJlZnJlc2giLCJpYXQiOjE3ODMzNDYxMTUsImV4cCI6MTc4Mzk1MDkxNX0.w17gu_unbw8DEEzr3QhlWJwjhJHhSY7HciTgeox6d-c"
+}

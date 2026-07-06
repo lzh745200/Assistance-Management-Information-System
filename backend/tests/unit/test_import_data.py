@@ -430,7 +430,7 @@ class TestGetImportHistory:
                 mock_get_db.return_value = MagicMock()
                 resp = client_with_mocked_auth.get(f"{BASE}/history")
                 assert resp.status_code == 200
-                data = resp.json()
+                data = resp.json()["data"]
                 assert data["total"] == 1
                 assert len(data["items"]) == 1
                 assert data["items"][0]["id"] == 1
@@ -444,7 +444,7 @@ class TestGetImportHistory:
                 mock_get_db.return_value = MagicMock()
                 resp = client_with_mocked_auth.get(f"{BASE}/history")
                 assert resp.status_code == 200
-                assert resp.json()["total"] == 0
+                assert resp.json()["data"]["total"] == 0
 
     def test_pagination_params(self, client_with_mocked_auth):
         with patch("app.api.v1.import_export.import_data.ExcelImporterService") as mock_svc_cls:

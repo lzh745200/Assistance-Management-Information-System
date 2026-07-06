@@ -1,0 +1,4 @@
+﻿
+> assistance-management-information-frontend@1.2.0 lint
+> eslint src --ext .vue,.ts,.tsx --fix
+

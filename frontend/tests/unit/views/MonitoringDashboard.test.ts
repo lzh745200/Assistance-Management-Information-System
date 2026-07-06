@@ -332,7 +332,10 @@ describe("MonitoringDashboard", () => {
 
   // ── T10: Timer cleared on unmount ──
   it("clears polling interval on unmount", async () => {
-    const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+    // Use vi.fn() instead of spyOn to avoid conflicts with fake timers
+    const clearIntervalMock = vi.fn();
+    const origClearInterval = globalThis.clearInterval;
+    globalThis.clearInterval = clearIntervalMock;
 
     const wrapper = mountComponent();
     await advanceFakeTimersAndFlush();
@@ -340,8 +343,9 @@ describe("MonitoringDashboard", () => {
     wrapper.unmount();
 
     // clearInterval should have been called for the polling timer
-    expect(clearIntervalSpy).toHaveBeenCalled();
+    expect(clearIntervalMock).toHaveBeenCalled();
 
-    clearIntervalSpy.mockRestore();
+    // Restore original
+    globalThis.clearInterval = origClearInterval;
   });
 });

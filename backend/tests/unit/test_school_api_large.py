@@ -391,7 +391,7 @@ class TestGetSchool:
     def test_get_success(self, auth_setup, school):
         resp = auth_setup.get(P(f"/schools/{school.id}"))
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["name"] == "希望小学"
 
     def test_get_not_found(self, auth_setup):
@@ -840,12 +840,12 @@ class TestScholarshipStudents:
         db_session.commit()
         resp = auth_setup.get(P(f"/schools/{school.id}/scholarship-students?year=2024"))
         assert resp.status_code == 200
-        assert resp.json()["total"] >= 1
+        assert resp.json()["data"]["total"] >= 1
 
     def test_list_students_year_not_found(self, auth_setup, school):
         resp = auth_setup.get(P(f"/schools/{school.id}/scholarship-students?year=1999"))
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
     def test_create_student(self, auth_setup, school, db_session):
         resp = auth_setup.post(
