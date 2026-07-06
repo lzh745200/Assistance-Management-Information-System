@@ -1,0 +1,290 @@
+﻿==================================================
+甯壎绠＄悊淇℃伅绯荤粺 - 鍚庣鏈嶅姟鍚姩涓?
+==================================================
+[OK] Python 64-bit 鈥?optimal
+[OK] VC++ 杩愯鏃?DLL 妫€鏌ラ€氳繃
+[OK] Windows ProactorEventLoop ConnectionResetError 淇宸插簲鐢?
+  鍒濆鍖栧畨鍏ㄥ瘑閽?..
+  妫€鏌ユ暟鎹簱...
+[OK] 鏁版嵁搴撳畬鏁存€ф鏌ヨ烦杩囷紙涓婃妫€鏌? 0.5h 鍓嶏級
+
+姝ｅ湪鍚姩鍚庣鏈嶅姟: http://127.0.0.1:8000
+API 鏂囨。: http://127.0.0.1:8000/docs
+2026-07-06 20:47:45 [INFO] app.core.logging_config: 鏃ュ織绯荤粺宸插垵濮嬪寲 level=INFO
+2026-07-06 20:47:45 [INFO] app.services.audit_event_handler: 瀹¤浜嬩欢鐩戝惉宸插惎鐢ㄢ€斺€?6 涓ā鍨?
+  鍔犺浇璺敱妯″潡...
+.venv\Scripts\python.exe : 2026-07-06 20:47:46,554 - app.api.v1 - WARNING - 鍔犺浇
+ data 璺敱澶辫触: invalid non-printable character U+FEFF (organization_service.py, 
+line 1)
+所在位置 行:1 字符: 65
++ ... ation-system\backend"; .venv\Scripts\python.exe start.py 2>&1 | Out-F ...
++                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-07-0    6 20:4...ice.py, line
+ 1):String) [], RemoteExcepti    on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\__init__.py"
+, line 41, in <module>
+    from app.api.v1.data import router as data_router
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\data\__init_
+_.py", line 9, in <module>
+    from app.api.v1.data.data import router as data_router
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\data\data\__
+init__.py", line 9, in <module>
+    from .data_packages import router as data_packages_router
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\data\data\da
+ta_packages.py", line 32, in <module>
+    from app.services.data_package_service import DataPackageService
+  File "C:\military-Rural Revitalization-system\backend\app\services\data_packa
+ge_service.py", line 43, in <module>
+    from app.services.organization_service import OrganizationService
+  File "C:\military-Rural Revitalization-system\backend\app\services\organizati
+on_service.py", line 1
+    锘?""
+    ^
+SyntaxError: invalid non-printable character U+FEFF
+2026-07-06 20:47:46 [WARNING] app.api.v1: 鍔犺浇 data 璺敱澶辫触: invalid non-printable character U+FEFF (organization_service.py, line 1)
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\__init__.py", line 41, in <module>
+    from app.api.v1.data import router as data_router
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\data\__init__.py", line 9, in <module>
+    from app.api.v1.data.data import router as data_router
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\data\data\__init__.py", line 9, in <module>
+    from .data_packages import router as data_packages_router
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\data\data\data_packages.py", line 32, in <module>
+    from app.services.data_package_service import DataPackageService
+  File "C:\military-Rural Revitalization-system\backend\app\services\data_package_service.py", line 43, in <module>
+    from app.services.organization_service import OrganizationService
+  File "C:\military-Rural Revitalization-system\backend\app\services\organization_service.py", line 1
+    锘?""
+    ^
+SyntaxError: invalid non-printable character U+FEFF
+2026-07-06 20:47:48,315 - app.api.v1.system - WARNING - 鍔犺浇 system.audit 璺敱澶辫触
+: invalid non-printable character U+FEFF (audit_service.py, line 1)
+2026-07-06 20:47:48 [WARNING] app.api.v1.system: 鍔犺浇 system.audit 璺敱澶辫触: invalid non-printable character U+FEFF (audit_service.py, line 1)
+2026-07-06 20:47:49,137 - app.api.v1 - WARNING - 鍔犺浇 organization 璺敱澶辫触: inval
+id non-printable character U+FEFF (organization_service.py, line 1)
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\__init__.py"
+, line 130, in <module>
+    _mod = importlib.import_module(f'app.api.v1.{_route_name}')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python311\Lib\impo
+rtlib\__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1206, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1178, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1149, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\organization
+.py", line 22, in <module>
+    from ...services.organization_service import OrganizationService
+  File "C:\military-Rural Revitalization-system\backend\app\services\organizati
+on_service.py", line 1
+    锘?""
+    ^
+SyntaxError: invalid non-printable character U+FEFF
+2026-07-06 20:47:49 [WARNING] app.api.v1: 鍔犺浇 organization 璺敱澶辫触: invalid non-printable character U+FEFF (organization_service.py, line 1)
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\__init__.py", line 130, in <module>
+    _mod = importlib.import_module(f'app.api.v1.{_route_name}')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1206, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1178, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1149, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\organization.py", line 22, in <module>
+    from ...services.organization_service import OrganizationService
+  File "C:\military-Rural Revitalization-system\backend\app\services\organization_service.py", line 1
+    锘?""
+    ^
+SyntaxError: invalid non-printable character U+FEFF
+2026-07-06 20:47:49,156 - app.api.v1 - WARNING - 鍔犺浇 policy 璺敱澶辫触: invalid non
+-printable character U+FEFF (policy.py, line 1)
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\__init__.py"
+, line 130, in <module>
+    _mod = importlib.import_module(f'app.api.v1.{_route_name}')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python311\Lib\impo
+rtlib\__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1206, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1178, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1149, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\policy.py", 
+line 1
+    锘?""
+    ^
+SyntaxError: invalid non-printable character U+FEFF
+2026-07-06 20:47:49 [WARNING] app.api.v1: 鍔犺浇 policy 璺敱澶辫触: invalid non-printable character U+FEFF (policy.py, line 1)
+Traceback (most recent call last):
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\__init__.py", line 130, in <module>
+    _mod = importlib.import_module(f'app.api.v1.{_route_name}')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1206, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1178, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1149, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 936, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1074, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1004, in source_to_code
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\military-Rural Revitalization-system\backend\app\api\v1\policy.py", line 1
+    锘?""
+    ^
+SyntaxError: invalid non-printable character U+FEFF
+2026-07-06 20:47:58 [INFO] app.services.sentiment.crawler_service: 鐖櫕鏈嶅姟宸茬鐢紙绂荤嚎妯″紡锛夈€傝缃?ENABLE_CRAWLER=true 浠ュ惎鐢ㄣ€?
+2026-07-06 20:47:58,323 - app.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚: 鎴愬姛 40/42 涓?
+2026-07-06 20:47:58 [INFO] app.api.v1: 璺敱鍔犺浇瀹屾垚: 鎴愬姛 40/42 涓?
+2026-07-06 20:47:58,324 - app.api.v1 - WARNING - 浠ヤ笅璺敱妯″潡鍔犺浇澶辫触: organization,
+ policy
+2026-07-06 20:47:58 [WARNING] app.api.v1: 浠ヤ笅璺敱妯″潡鍔犺浇澶辫触: organization, policy
+  璺敱鍔犺浇瀹屾垚 (14.0s)
+============================================================
+闈欐€佽祫婧愭柇閾惧璁?
+============================================================
+鎵弿鐩綍: C:\military-Rural Revitalization-system\frontend\dist
+
+[1/3] 浠?index.html 鎻愬彇闈欐€佽祫婧愬紩鐢?..
+  鎻愬彇鍒?11 涓紩鐢?
+
+[2/3] 鍔ㄦ€?import 鎵弿宸茶烦杩囷紙蹇€熸ā寮忥級
+
+[3/3] 瀵规瘮寮曠敤涓庡疄闄呮枃浠?..
+  纾佺洏涓婂疄闄呭瓨鍦?473 涓枃浠?
+
+============================================================
+瀹¤鎶ュ憡
+============================================================
+  index.html 寮曠敤鏁?    11
+  鍔ㄦ€?import 寮曠敤鏁?   0
+  鍚堝苟寮曠敤鎬绘暟:         11
+  纾佺洏瀹為檯鏂囦欢鏁?       473
+  缂哄け鏂囦欢鏁?           0
+  鏈紩鐢ㄦ枃浠舵暟:         271
+
+鉁?鎵€鏈夊紩鐢ㄦ枃浠跺潎瀛樺湪锛岄潤鎬佽祫婧愬畬鏁存€ф鏌ラ€氳繃锛?
+[OK] 鍓嶇闈欐€佽祫婧愬畬鏁存€ф牎楠岄€氳繃
+INFO:     Started server process [36600]
+INFO:     Waiting for application startup.
+2026-07-06 20:48:00 [INFO] assistance_management: Schema auto-migration disabled (ENABLE_AUTO_MIGRATION=false)
+2026-07-06 20:48:00 [INFO] app.core.database_indexes: 绱㈠紩鍒涘缓瀹屾垚: 20 鎴愬姛, 0 璺宠繃, 0 澶辫触
+2026-07-06 20:48:00 [INFO] assistance_management: 鏁版嵁搴撹〃鍒濆鍖栧畬鎴?
+2026-07-06 20:48:00 [INFO] assistance_management: 褰撳墠鐗堟湰: 1.2.0
+2026-07-06 20:48:00 [INFO] assistance_management: 绠＄悊鍛樿处鎴峰凡瀛樺湪锛岃烦杩囧垱寤?
+2026-07-06 20:48:02 [INFO] assistance_management: 鎵€鏈夊叧閿緷璧栧寘宸插畨瑁呫€?
+2026-07-06 20:48:02 [INFO] assistance_management: 鍏抽敭鏂囦欢瀹屾暣鎬ф鏌ュ畬鎴?(4涓枃浠?
+2026-07-06 20:48:02 [INFO] assistance_management: 璧勬簮鐩戞帶宸插惎鍔?
+2026-07-06 20:48:02 [INFO] app.services.database_health_service: 寮€濮嬫暟鎹簱瀹屾暣鎬ф鏌?..
+2026-07-06 20:48:02 [INFO] app.services.database_health_service: 鏁版嵁搴撳仴搴风洃鎺у凡鍚姩
+2026-07-06 20:48:02 [INFO] assistance_management: 鏁版嵁搴撳仴搴风洃鎺у凡鍚姩
+2026-07-06 20:48:02 [INFO] app.services.reminder_service: 瀹℃壒鎻愰啋鏈嶅姟宸插惎鍔紝妫€鏌ラ棿闅? 30鍒嗛挓
+2026-07-06 20:48:02 [INFO] assistance_management: 瀹℃壒瓒呮椂鎻愰啋鏈嶅姟宸插惎鍔?
+2026-07-06 20:48:02 [INFO] app.services.db_maintenance: 姣忔棩 WAL checkpoint 璋冨害宸插惎鍔?(鍑屾櫒 3:00)
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2026-07-06 20:48:02 [INFO] app.services.database_health_service: 鏁版嵁搴撳畬鏁存€ф鏌ラ€氳繃
+2026-07-06 20:48:02 [INFO] app.services.database_health_service: 寮€濮嬫暟鎹簱VACUUM浼樺寲...
+2026-07-06 20:48:03 [INFO] app.services.database_health_service: 鏁版嵁搴揤ACUUM瀹屾垚锛岃妭鐪佺┖闂? 0.00MB
+2026-07-06 20:48:34 [INFO] app.core.audit_middleware: GET / -> 200 (16ms) [user: anonymous]
+2026-07-06 20:48:34 [INFO] app.request: GET / - 200 (0.030s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+INFO:     127.0.0.1:49624 - "GET / HTTP/1.1" 200 OK
+2026-07-06 20:48:34 [INFO] app.core.audit_middleware: GET /assets/js/index-l01qLV72.js -> 200 (16ms) [user: anonymous]
+INFO:     127.0.0.1:49624 - "GET /assets/js/index-l01qLV72.js HTTP/1.1" 200 OK
+2026-07-06 20:48:34 [INFO] app.request: GET /assets/js/index-l01qLV72.js - 200 (0.121s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:34 [INFO] app.core.audit_middleware: GET /assets/css/element-plus-CjoKuihK.css -> 200 (93ms) [user: anonymous]
+INFO:     127.0.0.1:49624 - "GET /assets/css/element-plus-CjoKuihK.css HTTP/1.1" 200 OK
+2026-07-06 20:48:34 [INFO] app.request: GET /assets/css/element-plus-CjoKuihK.css - 200 (0.107s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/css/index-HRIGq1kR.css -> 200 (15ms) [user: anonymous]
+INFO:     127.0.0.1:49624 - "GET /assets/css/index-HRIGq1kR.css HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/css/index-HRIGq1kR.css - 200 (0.017s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/vendor/pinia-B062n2Ek.js -> 200 (0ms) [user: anonymous]
+INFO:     127.0.0.1:49630 - "GET /assets/js/vendor/pinia-B062n2Ek.js HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/vendor/pinia-B062n2Ek.js - 200 (0.017s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/vendor/vendor-BXabeQ1R.js -> 200 (0ms) [user: anonymous]
+INFO:     127.0.0.1:49630 - "GET /assets/js/vendor/vendor-BXabeQ1R.js HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/vendor/vendor-BXabeQ1R.js - 200 (0.029s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/vendor/lodash-DfCbb37o.js -> 200 (0ms) [user: anonymous]
+INFO:     127.0.0.1:49630 - "GET /assets/js/vendor/lodash-DfCbb37o.js HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/vendor/lodash-DfCbb37o.js - 200 (0.016s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/vendor/vue-core-DDZpfAYV.js -> 200 (77ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/element-plus-icons-CfxyyN8Z.js -> 200 (16ms) [user: anonymous]
+INFO:     127.0.0.1:49624 - "GET /assets/js/vendor/vue-core-DDZpfAYV.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49630 - "GET /assets/js/element-plus-icons-CfxyyN8Z.js HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/element-plus-icons-CfxyyN8Z.js - 200 (0.025s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/vendor/vue-core-DDZpfAYV.js - 200 (0.102s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/element-plus-5ZL68wZf.js -> 200 (15ms) [user: anonymous]
+INFO:     127.0.0.1:49624 - "GET /assets/js/element-plus-5ZL68wZf.js HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/vendor/vue-router-DLVdCk0C.js -> 200 (15ms) [user: anonymous]
+INFO:     127.0.0.1:49630 - "GET /assets/js/vendor/vue-router-DLVdCk0C.js HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/vendor/vue-router-DLVdCk0C.js - 200 (0.065s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/vendor/axios-C4NBEVWH.js -> 200 (46ms) [user: anonymous]
+INFO:     127.0.0.1:49632 - "GET /assets/js/vendor/axios-C4NBEVWH.js HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/vendor/axios-C4NBEVWH.js - 200 (0.059s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/element-plus-5ZL68wZf.js - 200 (0.100s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /version.json -> 200 (250ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/LoginEnhanced-Crh_6I4y.js -> 200 (250ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/badge-DaCfZyEk.js -> 200 (250ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/useRouterSafe-DslzrNc-.js -> 200 (250ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/auth-DommKNO8.js -> 200 (250ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/js/_plugin-vue_export-helper-BCo6x5W8.js -> 200 (266ms) [user: anonymous]
+INFO:     127.0.0.1:49624 - "GET /version.json?t=1783342115533 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49632 - "GET /assets/js/LoginEnhanced-Crh_6I4y.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49630 - "GET /assets/js/badge-DaCfZyEk.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49633 - "GET /assets/js/useRouterSafe-DslzrNc-.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49634 - "GET /assets/js/auth-DommKNO8.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49635 - "GET /assets/js/_plugin-vue_export-helper-BCo6x5W8.js HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/useRouterSafe-DslzrNc-.js - 200 (0.287s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.request: GET /version.json?t=***33 - 200 (0.304s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/auth-DommKNO8.js - 200 (0.294s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/LoginEnhanced-Crh_6I4y.js - 200 (0.296s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/_plugin-vue_export-helper-BCo6x5W8.js - 200 (0.296s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/js/badge-DaCfZyEk.js - 200 (0.297s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /assets/css/LoginEnhanced-Bco7ukBf.css -> 200 (16ms) [user: anonymous]
+INFO:     127.0.0.1:49633 - "GET /assets/css/LoginEnhanced-Bco7ukBf.css HTTP/1.1" 200 OK
+2026-07-06 20:48:35 [INFO] app.request: GET /assets/css/LoginEnhanced-Bco7ukBf.css - 200 (0.017s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /images/login-bg/bg1.jpg -> 200 (32ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /images/badges/badge.png -> 200 (46ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /images/login-bg/bg5.jpg -> 200 (31ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.core.audit_middleware: GET /images/login-bg/bg2.jpg -> 200 (47ms) [user: anonymous]
+2026-07-06 20:48:35 [INFO] app.request: GET /images/login-bg/bg5.jpg - 200 (0.066s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg4.jpg -> 200 (78ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg3.jpg -> 200 (141ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.request: GET /images/badges/badge.png - 200 (0.171s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg6.jpg -> 200 (93ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg7.jpg -> 200 (125ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg1.jpg - 200 (0.230s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg3.jpg - 200 (0.226s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg2.jpg - 200 (0.253s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg4.jpg - 200 (0.280s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg8.jpg -> 200 (79ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg9.jpg -> 200 (62ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg6.jpg - 200 (0.252s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg7.jpg - 200 (0.252s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg10.jpg -> 200 (63ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg11.jpg -> 200 (47ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.core.audit_middleware: GET /images/login-bg/bg12.jpg -> 200 (30ms) [user: anonymous]
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg10.jpg - 200 (0.171s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg8.jpg - 200 (0.230s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg11.jpg - 200 (0.174s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg9.jpg - 200 (0.218s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36
+2026-07-06 20:48:36 [INFO] app.request: GET /images/login-bg/bg12.jpg - 200 (0.162s) ip=127.0.0.1 ua=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) CatPawAI/1.101.0 Chrome/134.0.6998.205 Electron/35.5.1 Safari/537.36

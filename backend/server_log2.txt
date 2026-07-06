@@ -1,0 +1,142 @@
+﻿==================================================
+甯壎绠＄悊淇℃伅绯荤粺 - 鍚庣鏈嶅姟鍚姩涓?
+==================================================
+[OK] Python 64-bit 鈥?optimal
+[OK] VC++ 杩愯鏃?DLL 妫€鏌ラ€氳繃
+[OK] Windows ProactorEventLoop ConnectionResetError 淇宸插簲鐢?
+  鍒濆鍖栧畨鍏ㄥ瘑閽?..
+  妫€鏌ユ暟鎹簱...
+[OK] 鏁版嵁搴撳畬鏁存€ф鏌ヨ烦杩囷紙涓婃妫€鏌? 0.6h 鍓嶏級
+[WARN] 绔彛 8000 宸茶鍗犵敤锛屽皾璇曠粓姝㈠崰鐢ㄨ繘绋?..
+  缁堟杩涚▼: "python.exe","36600","Console","1","211,668 K"
+[OK] 绔彛 8000 宸查噴鏀?
+
+姝ｅ湪鍚姩鍚庣鏈嶅姟: http://127.0.0.1:8000
+API 鏂囨。: http://127.0.0.1:8000/docs
+2026-07-06 20:53:11 [INFO] app.core.logging_config: 鏃ュ織绯荤粺宸插垵濮嬪寲 level=INFO
+2026-07-06 20:53:11 [INFO] app.services.audit_event_handler: 瀹¤浜嬩欢鐩戝惉宸插惎鐢ㄢ€斺€?6 涓ā鍨?
+  鍔犺浇璺敱妯″潡...
+2026-07-06 20:53:29 [INFO] app.services.sentiment.crawler_service: 鐖櫕鏈嶅姟宸茬鐢紙绂荤嚎妯″紡锛夈€傝缃?ENABLE_CRAWLER=true 浠ュ惎鐢ㄣ€?
+.venv\Scripts\python.exe : 2026-07-06 20:53:29,581 - ap
+p.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚: 鎴愬姛 42/42 涓?
+所在位置 行:1 字符: 65
++ ... ation-system\backend"; .venv\Scripts\python.exe s
+tart.py 2>&1 | Out-F ...
++                            ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-07-0 
+   6 20:5...垚: 鎴愬姛 42/42 涓?:String) [], RemoteExcepti  
+  on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-07-06 20:53:29 [INFO] app.api.v1: 璺敱鍔犺浇瀹屾垚: 鎴愬姛 42/42 涓?
+  璺敱鍔犺浇瀹屾垚 (19.4s)
+============================================================
+闈欐€佽祫婧愭柇閾惧璁?
+============================================================
+鎵弿鐩綍: C:\military-Rural Revitalization-system\frontend\dist
+
+[1/3] 浠?index.html 鎻愬彇闈欐€佽祫婧愬紩鐢?..
+  鎻愬彇鍒?11 涓紩鐢?
+
+[2/3] 鍔ㄦ€?import 鎵弿宸茶烦杩囷紙蹇€熸ā寮忥級
+
+[3/3] 瀵规瘮寮曠敤涓庡疄闄呮枃浠?..
+  纾佺洏涓婂疄闄呭瓨鍦?473 涓枃浠?
+
+============================================================
+瀹¤鎶ュ憡
+============================================================
+  index.html 寮曠敤鏁?    11
+  鍔ㄦ€?import 寮曠敤鏁?   0
+  鍚堝苟寮曠敤鎬绘暟:         11
+  纾佺洏瀹為檯鏂囦欢鏁?       473
+  缂哄け鏂囦欢鏁?           0
+  鏈紩鐢ㄦ枃浠舵暟:         271
+
+鉁?鎵€鏈夊紩鐢ㄦ枃浠跺潎瀛樺湪锛岄潤鎬佽祫婧愬畬鏁存€ф鏌ラ€氳繃锛?
+[OK] 鍓嶇闈欐€佽祫婧愬畬鏁存€ф牎楠岄€氳繃
+INFO:     Started server process [28412]
+INFO:     Waiting for application startup.
+2026-07-06 20:53:31 [INFO] assistance_management: Schema auto-migration disabled (ENABLE_AUTO_MIGRATION=false)
+2026-07-06 20:53:31 [INFO] app.core.database_indexes: 绱㈠紩鍒涘缓瀹屾垚: 20 鎴愬姛, 0 璺宠繃, 0 澶辫触
+2026-07-06 20:53:31 [INFO] assistance_management: 鏁版嵁搴撹〃鍒濆鍖栧畬鎴?
+2026-07-06 20:53:31 [INFO] assistance_management: 褰撳墠鐗堟湰: 1.2.0
+2026-07-06 20:53:31 [INFO] assistance_management: 绠＄悊鍛樿处鎴峰凡瀛樺湪锛岃烦杩囧垱寤?
+2026-07-06 20:53:31 [INFO] assistance_management: 鎵€鏈夊叧閿緷璧栧寘宸插畨瑁呫€?
+2026-07-06 20:53:31 [INFO] assistance_management: 鍏抽敭鏂囦欢瀹屾暣鎬ф鏌ュ畬鎴?(4涓枃浠?
+2026-07-06 20:53:31 [INFO] assistance_management: 璧勬簮鐩戞帶宸插惎鍔?
+2026-07-06 20:53:31 [INFO] app.services.database_health_service: 寮€濮嬫暟鎹簱瀹屾暣鎬ф鏌?..
+2026-07-06 20:53:31 [INFO] app.services.database_health_service: 鏁版嵁搴撳仴搴风洃鎺у凡鍚姩
+2026-07-06 20:53:31 [INFO] assistance_management: 鏁版嵁搴撳仴搴风洃鎺у凡鍚姩
+2026-07-06 20:53:31 [INFO] app.services.reminder_service: 瀹℃壒鎻愰啋鏈嶅姟宸插惎鍔紝妫€鏌ラ棿闅? 30鍒嗛挓
+2026-07-06 20:53:31 [INFO] assistance_management: 瀹℃壒瓒呮椂鎻愰啋鏈嶅姟宸插惎鍔?
+2026-07-06 20:53:31 [INFO] app.services.db_maintenance: 姣忔棩 WAL checkpoint 璋冨害宸插惎鍔?(鍑屾櫒 3:00)
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Pre
+ss CTRL+C to quit)
+2026-07-06 20:53:32 [INFO] app.services.database_health_service: 鏁版嵁搴撳畬鏁存€ф鏌ラ€氳繃
+2026-07-06 20:53:32 [INFO] app.services.database_health_service: 寮€濮嬫暟鎹簱VACUUM浼樺寲...
+2026-07-06 20:53:32 [INFO] app.services.database_health_service: 鏁版嵁搴揤ACUUM瀹屾垚锛岃妭鐪佺┖闂? 0.00MB
+2026-07-06 20:55:48,361 - app.api.v1.auth.auth - INFO -
+ 鐧诲綍澶辫触: user=admin, failed_count=1/5
+2026-07-06 20:55:48 [INFO] app.api.v1.auth.auth: 鐧诲綍澶辫触: user=admin, failed_count=1/5
+2026-07-06 20:55:48 [WARNING] app.utils.audit_logger: [AUDIT] {"timestamp": "2026-07-06T20:55:48.365301", "action": "login_failed", "user_id": 1, "username": "admin", "resource_type": null, "resource_id": null, "details": {"success": false, "failure_reason": "瀵嗙爜閿欒锛堝け璐?娆★級"}, "level": "warning", "ip_address": "127.0.0.1", "user_agent": "python-requests/2.34.2"}
+2026-07-06 20:55:48 [INFO] app.core.audit_middleware: POST /api/v1/auth/login -> 401 (484ms) [user: anonymous]
+2026-07-06 20:55:48 [INFO] app.request: POST /api/v1/auth/login - 401 (0.498s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49784 - "POST /api/v1/auth/login HTTP/1.1" 401 Unauthorized
+2026-07-06 20:56:33 [INFO] app.core.audit_middleware: GET /api/v1/auth/csrf-token -> 200 (15ms) [user: anonymous]
+2026-07-06 20:56:33 [INFO] app.request: GET /api/v1/auth/csrf-token - 200 (0.010s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49799 - "GET /api/v1/auth/csrf-token HTTP/1.1" 200 OK
+2026-07-06 20:56:33 [INFO] app.core.audit_middleware: GET /docs -> 404 (0ms) [user: anonymous]
+2026-07-06 20:56:33 [INFO] app.request: GET /docs - 404 (0.011s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49800 - "GET /docs HTTP/1.1" 404 Not Found
+2026-07-06 20:56:33 [INFO] app.core.audit_middleware: GET /api/v1/system/health -> 200 (15ms) [user: anonymous]
+2026-07-06 20:56:33 [INFO] app.request: GET /api/v1/system/health - 200 (0.025s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49801 - "GET /api/v1/system/health HTTP/1.1" 200 OK
+2026-07-06 20:57:25 [INFO] app.core.audit_middleware: GET /api/v1/auth/csrf-token -> 200 (0ms) [user: anonymous]
+2026-07-06 20:57:25 [INFO] app.request: GET /api/v1/auth/csrf-token - 200 (0.006s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49811 - "GET /api/v1/auth/csrf-token HTTP/1.1" 200 OK
+2026-07-06 20:57:25 [INFO] app.core.audit_middleware: GET /docs -> 404 (0ms) [user: anonymous]
+2026-07-06 20:57:25 [INFO] app.request: GET /docs - 404 (0.007s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49812 - "GET /docs HTTP/1.1" 404 Not Found
+2026-07-06 20:57:25 [INFO] app.core.audit_middleware: GET /openapi.json -> 404 (0ms) [user: anonymous]
+2026-07-06 20:57:25 [INFO] app.request: GET /openapi.json - 404 (0.007s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49813 - "GET /openapi.json HTTP/1.1" 404 Not Found
+2026-07-06 20:57:26,177 - app.api.v1.auth.auth - INFO -
+ 鐧诲綍澶辫触: user=admin, failed_count=2/5
+2026-07-06 20:57:26 [INFO] app.api.v1.auth.auth: 鐧诲綍澶辫触: user=admin, failed_count=2/5
+2026-07-06 20:57:26 [WARNING] app.utils.audit_logger: [AUDIT] {"timestamp": "2026-07-06T20:57:26.180127", "action": "login_failed", "user_id": 1, "username": "admin", "resource_type": null, "resource_id": null, "details": {"success": false, "failure_reason": "瀵嗙爜閿欒锛堝け璐?娆★級"}, "level": "warning", "ip_address": "127.0.0.1", "user_agent": "python-requests/2.34.2"}
+2026-07-06 20:57:26 [WARNING] performance.slow: 鎱PI 582.11ms POST /api/v1/auth/login 鈫?401
+2026-07-06 20:57:26 [INFO] app.core.audit_middleware: POST /api/v1/auth/login -> 401 (577ms) [user: anonymous]
+2026-07-06 20:57:26 [INFO] app.request: POST /api/v1/auth/login - 401 (0.590s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49814 - "POST /api/v1/auth/login HTTP/1.1" 401 Unauthorized
+2026-07-06 20:57:26,789 - app.api.v1.auth.auth - INFO -
+ 鐧诲綍澶辫触: user=admin, failed_count=3/5
+2026-07-06 20:57:26 [INFO] app.api.v1.auth.auth: 鐧诲綍澶辫触: user=admin, failed_count=3/5
+2026-07-06 20:57:26 [WARNING] app.utils.audit_logger: [AUDIT] {"timestamp": "2026-07-06T20:57:26.792614", "action": "login_failed", "user_id": 1, "username": "admin", "resource_type": null, "resource_id": null, "details": {"success": false, "failure_reason": "瀵嗙爜閿欒锛堝け璐?娆★級"}, "level": "warning", "ip_address": "127.0.0.1", "user_agent": "python-requests/2.34.2"}
+2026-07-06 20:57:26 [WARNING] performance.slow: 鎱PI 576.27ms POST /api/v1/auth/login 鈫?401
+2026-07-06 20:57:26 [INFO] app.core.audit_middleware: POST /api/v1/auth/login -> 401 (577ms) [user: anonymous]
+2026-07-06 20:57:26 [INFO] app.request: POST /api/v1/auth/login - 401 (0.581s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49815 - "POST /api/v1/auth/login HTTP/1.1" 401 Unauthorized
+2026-07-06 20:57:26 [INFO] app.core.audit_middleware: POST /api/v1/auth/login -> 422 (0ms) [user: anonymous]
+2026-07-06 20:57:26 [INFO] app.request: POST /api/v1/auth/login - 422 (0.007s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49820 - "POST /api/v1/auth/login HTTP/1.1" 422 Unprocessable Entity
+2026-07-06 20:58:51,494 - app.api.v1.auth.auth - INFO -
+ 鐧诲綍澶辫触: user=admin, failed_count=4/5
+2026-07-06 20:58:51 [INFO] app.api.v1.auth.auth: 鐧诲綍澶辫触: user=admin, failed_count=4/5
+2026-07-06 20:58:51 [WARNING] app.utils.audit_logger: [AUDIT] {"timestamp": "2026-07-06T20:58:51.496991", "action": "login_failed", "user_id": 1, "username": "admin", "resource_type": null, "resource_id": null, "details": {"success": false, "failure_reason": "瀵嗙爜閿欒锛堝け璐?娆★級"}, "level": "warning", "ip_address": "127.0.0.1", "user_agent": "python-requests/2.34.2"}
+2026-07-06 20:58:51 [INFO] app.core.audit_middleware: POST /api/v1/auth/login -> 401 (422ms) [user: anonymous]
+2026-07-06 20:58:51 [INFO] app.request: POST /api/v1/auth/login - 401 (0.413s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49845 - "POST /api/v1/auth/login HTTP/1.1" 401 Unauthorized
+2026-07-06 20:59:33,111 - app.api.v1.auth.auth - INFO -
+ 鐧诲綍澶辫触: user=admin, failed_count=5/5
+2026-07-06 20:59:33 [INFO] app.api.v1.auth.auth: 鐧诲綍澶辫触: user=admin, failed_count=5/5
+2026-07-06 20:59:33,112 - app.api.v1.auth.auth - WARNIN
+G - 璐︽埛宸查攣瀹? user=admin, 杩炵画澶辫触5娆? 閿佸畾鍒?026-07-06 13:29
+:32.781555+00:00
+2026-07-06 20:59:33 [WARNING] app.api.v1.auth.auth: 璐︽埛宸查攣瀹? user=admin, 杩炵画澶辫触5娆? 閿佸畾鍒?026-07-06 13:29:32.781555+00:00
+2026-07-06 20:59:33 [WARNING] app.utils.audit_logger: [AUDIT] {"timestamp": "2026-07-06T20:59:33.113179", "action": "login_failed", "user_id": 1, "username": "admin", "resource_type": null, "resource_id": null, "details": {"success": false, "failure_reason": "瀵嗙爜閿欒锛堝け璐?娆★級"}, "level": "warning", "ip_address": "127.0.0.1", "user_agent": "python-requests/2.34.2"}
+2026-07-06 20:59:33 [INFO] app.core.audit_middleware: POST /api/v1/auth/login -> 401 (343ms) [user: anonymous]
+2026-07-06 20:59:33 [INFO] app.request: POST /api/v1/auth/login - 401 (0.341s) ip=127.0.0.1 ua=python-requests/2.34.2
+INFO:     127.0.0.1:49858 - "POST /api/v1/auth/login HTTP/1.1" 401 Unauthorized

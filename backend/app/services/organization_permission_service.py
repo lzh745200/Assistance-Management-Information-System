@@ -1,4 +1,4 @@
-﻿"""
+"""
 Organization Permission Service
 组织级权限服务
 """

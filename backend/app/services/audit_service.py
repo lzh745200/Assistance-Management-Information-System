@@ -1,4 +1,4 @@
-﻿﻿import logging
+﻿import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -476,8 +476,8 @@ class SecurityEventService:
 
         return {
             "total_events": self.db.query(SecurityEvent).count(),
-            "unresolved_count": self.db.query(SecurityEvent)  # noqa: E712
-            .filter(SecurityEvent.resolved == False).count(),
+            "unresolved_count": self.db.query(SecurityEvent)
+            .filter(SecurityEvent.resolved == False).count(),  # noqa: E712
             "by_severity": severity_counts,
             "unresolved_by_severity": unresolved_by_severity,
             "recent_events": [e.to_dict() for e in recent_events],

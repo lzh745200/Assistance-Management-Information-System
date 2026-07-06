@@ -1,0 +1,2 @@
+﻿app/services\audit_service.py:480:44: E712 comparison to False should be 'if cond is False:' or 'if not cond:'
+1     E712 comparison to False should be 'if cond is False:' or 'if not cond:'

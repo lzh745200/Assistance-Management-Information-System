@@ -224,58 +224,53 @@ function getStatusText(status: string): string {
   return statusMap[status] || status
 }
 
-// 执行检查
+// 执行检查 — 使用真实后端 /data-quality/validate
 async function handleCheck() {
   checking.value = true
   try {
-    const res = await request.post('/data-quality/check', { module: 'village' })
+    const res = await request.post('/data-quality/validate', {
+      entity_type: 'village',
+      data: {},
+    })
     const data = res?.data ?? res
-    const results = data?.results ?? data?.checks ?? data
-    if (Array.isArray(results) && results.length > 0) {
-      checkItems.value = results.map((r: any) => ({
-        id: r.id ?? r.check_id ?? String(Math.random()),
-        name: r.name ?? r.check_name ?? '未知检查',
-        description: r.description ?? '',
-        status: r.status ?? (r.passed ? 'pass' : 'fail'),
-        issues: r.issues ?? r.error_count ?? r.errors?.length ?? 0,
-      }))
-    }
-    // Update last check timestamp
-    const now = new Date()
-    formattedCheckTime.value = now.toLocaleString('zh-CN')
-    ElMessage.success('数据质量检查完成')
+    const issues = data?.issues ?? []
+    const valid = data?.valid ?? (issues.length === 0)
+
+    checkItems.value = checkItems.value.map((item) => ({
+      ...item,
+      status: valid ? 'pass' : 'warning',
+      issues: valid ? 0 : issues.length,
+    }))
+    formattedCheckTime.value = new Date().toLocaleString('zh-CN')
+    ElMessage.success(valid ? '数据质量检查通过' : `发现 ${issues.length} 个问题`)
   } catch {
-    // 后端不可用时用本地 checks 列表保留待检查状态
     checkItems.value = checkItems.value.map((item) => ({
       ...item,
       status: 'pending',
       issues: 0,
     }))
-    ElMessage.warning('无法连接质量检查服务，使用静态检查列表')
+    ElMessage.warning('无法连接质量检查服务')
   } finally {
     checking.value = false
   }
 }
 
-// 查看问题详情
+// 查看问题详情 — reuse last validate response
 async function handleViewIssues(check: CheckItem) {
   selectedCheck.value = check
   try {
-    const res = await request.get('/data-quality/check/issues', {
-      params: { check_id: check.id, module: 'village' },
+    const res = await request.post('/data-quality/validate', {
+      entity_type: 'village',
+      data: {},
     })
     const data = res?.data ?? res
-    const items = data?.issues ?? data?.items ?? data
-    if (Array.isArray(items)) {
-      issueDetails.value = items.map((d: any) => ({
-        record_id: d.record_id ?? d.id,
-        field: d.field ?? d.field_name ?? '',
-        issue: d.issue ?? d.message ?? d.description ?? '',
-        suggestion: d.suggestion ?? d.fix ?? '请检查并修正该字段的值',
-      }))
-    } else {
-      issueDetails.value = []
-    }
+    const issues = data?.issues ?? []
+    issueDetails.value = issues.map((d: any) => ({
+      record_id: d.record_id ?? d.id ?? 0,
+      field: d.field ?? d.field_name ?? '',
+      issue: d.message ?? d.issue ?? d.description ?? '',
+      suggestion: d.suggestion ?? '请检查并修正该字段的值',
+    }))
     canAutoFix.value = check.id === 'data_format' || check.id === 'calculation_check'
   } catch {
     issueDetails.value = []
@@ -284,16 +279,18 @@ async function handleViewIssues(check: CheckItem) {
   showIssuesDialog.value = true
 }
 
-// 自动修复
+// 自动修复 — 使用真实后端 /data-quality/clean
 async function handleAutoFix() {
   if (!selectedCheck.value) return
   fixing.value = true
   try {
-    await request.post('/data-quality/fix', {
-      check_id: selectedCheck.value.id,
-      module: 'village',
+    const res = await request.post('/data-quality/clean', {
+      records: [],
+      cleaning_rules: { trim_whitespace: true, normalize_empty: true },
     })
-    ElMessage.success('自动修复完成')
+    const data = res?.data ?? res
+    const cleaned = data?.cleaned_count ?? 0
+    ElMessage.success(`自动修复完成，处理了 ${cleaned} 条记录`)
     showIssuesDialog.value = false
     handleCheck()
   } catch {

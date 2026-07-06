@@ -1,4 +1,4 @@
-﻿"""帮扶村管理 API 路由"""
+"""帮扶村管理 API 路由"""
 import io
 import json
 import logging

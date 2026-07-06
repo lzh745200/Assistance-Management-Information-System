@@ -1,4 +1,4 @@
-﻿"""数据同步服务"""
+"""数据同步服务"""
 
 import json
 import logging
