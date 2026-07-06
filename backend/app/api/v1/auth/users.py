@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
@@ -288,7 +288,7 @@ async def get_pending_users(
     """获取待审核（未激活）的用户列表，供管理员审核"""
     require_admin(current_user)
 
-    pending_users = db.query(User).filter(User.is_active.is_(False)).all()
+    pending_users = db.query(User).filter(User.is_active == False).all()  # noqa: E712
 
     return {
         "total": len(pending_users),
@@ -329,7 +329,7 @@ async def get_staff_list(
     """获取活跃用户列表，供任务分配等场景使用（任何登录用户均可访问）"""
     from app.core.data_permission import get_data_scope, DataScope
 
-    query = db.query(User).filter(User.is_active.is_(True))
+    query = db.query(User).filter(User.is_active == True)  # noqa: E712
     # User 模型无 created_by/department_id 列，仅按组织过滤
     scope = get_data_scope(current_user)
     if scope == DataScope.OWN:

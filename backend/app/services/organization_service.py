@@ -1,4 +1,4 @@
-"""
+﻿﻿"""
 Organization Service
 组织单位管理服务
 """
@@ -176,7 +176,7 @@ class OrganizationService:
         query = self.db.query(Organization)
 
         if not include_inactive:
-            query = query.filter(Organization.is_active.is_(True))
+            query = query.filter(Organization.is_active == True)  # noqa: E712
 
         if root_id:
             root = self.get_organization(root_id)
@@ -244,7 +244,7 @@ class OrganizationService:
         query = self.db.query(Organization)
 
         if not include_inactive:
-            query = query.filter(Organization.is_active.is_(True))
+            query = query.filter(Organization.is_active == True)  # noqa: E712
 
         # 使用路径前缀匹配
         query = query.filter(Organization.path.like(f"{org.path}%"))
@@ -350,7 +350,7 @@ class OrganizationService:
         # 检查是否有激活的下级单位（软删除的不阻止删除）
         subordinate_count = self.db.query(Organization).filter(
             Organization.parent_id == org_id,
-            Organization.is_active == True  # noqa: E712 — SQLAlchemy boolean filter
+            Organization.is_active == True  # noqa: E712 -- SQLAlchemy boolean filter
         ).count()
 
         if subordinate_count > 0:
@@ -415,7 +415,7 @@ class OrganizationService:
         query = self.db.query(Organization)
 
         if not include_inactive:
-            query = query.filter(Organization.is_active.is_(True))
+            query = query.filter(Organization.is_active == True)  # noqa: E712
 
         # 搜索名称和编码
         query = query.filter(

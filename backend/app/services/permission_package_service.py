@@ -1,4 +1,4 @@
-"""
+﻿"""
 权限配置包管理服务
 
 用于离线多机协作场景：管理员导出完整权限配置为 ZIP 包，
@@ -108,7 +108,7 @@ class PermissionPackageService:
             })
 
         # 4. 收集用户菜单覆盖
-        users = self.db.query(User).filter(User.is_active.is_(True)).all()
+        users = self.db.query(User).filter(User.is_active == True).all()  # noqa: E712
         user_menus_data = []
         user_legacy_data = []
         for user in users:

@@ -7,6 +7,7 @@ from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.audit import AuditAction, AuditLevel, AuditStatus
 from app.services.audit_service import AuditService, SecurityEventService
@@ -236,7 +237,7 @@ async def export_audit_logs(
                 "ip": log.user_ip or "",
             }
         )
-    return {"items": items, "total": len(items)}
+    return ok_list(items=items, total=len(items))
 
 
 @router.get("/logs")
@@ -408,12 +409,7 @@ async def get_login_attempts(
     total = query.count()
     attempts = query.order_by(LoginAttempt.attempt_time.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
-        "items": [att.to_dict() for att in attempts],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
+    return ok_list(items=[att.to_dict() for att in attempts], total=total, page=page, page_size=page_size)
 
 
 @router.get("/api-access")
@@ -446,12 +442,7 @@ async def get_api_access_logs(
     total = query.count()
     logs = query.order_by(APIAccessLog.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
-        "items": [log.to_dict() for log in logs],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
+    return ok_list(items=[log.to_dict() for log in logs], total=total, page=page, page_size=page_size)
 
 
 @router.get("/exports")

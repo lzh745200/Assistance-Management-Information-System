@@ -1,4 +1,4 @@
-"""
+﻿"""
 审批工作流服务
 
 完整的审批引擎实现，替代之前的空壳桩代码。
@@ -144,7 +144,7 @@ class ApprovalWorkflowService:
         """确保默认审批流程存在（单机版自动创建单节点流程）"""
         existing = (
             self.db.query(ApprovalWorkflow)
-            .filter(ApprovalWorkflow.entity_type == entity_type, ApprovalWorkflow.is_active.is_(True))
+            .filter(ApprovalWorkflow.entity_type == entity_type, ApprovalWorkflow.is_active == True)  # noqa: E712
             .first()
         )
         if existing:
@@ -181,7 +181,7 @@ class ApprovalWorkflowService:
             .options(joinedload(ApprovalWorkflow.nodes))
             .filter(
                 ApprovalWorkflow.entity_type == entity_type,
-                ApprovalWorkflow.is_active.is_(True),
+                ApprovalWorkflow.is_active == True,  # noqa: E712
             )
             .first()
         )

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 用户权限管理服务
 提供完整的用户权限管理功能，包括组织关联、角色分配、权限验证等
@@ -518,7 +518,7 @@ class UserPermissionService:
                     return []
 
         # 查询组织
-        query = self.db.query(Organization).filter(Organization.is_active.is_(True))
+        query = self.db.query(Organization).filter(Organization.is_active == True)  # noqa: E712
 
         if parent_id is None:
             query = query.filter(Organization.parent_id.is_(None))
@@ -566,12 +566,12 @@ class UserPermissionService:
 
         # 超级管理员可以访问所有组织
         if user.is_superuser or is_superuser(user):
-            all_orgs = self.db.query(Organization.id).filter(Organization.is_active.is_(True)).all()
+            all_orgs = self.db.query(Organization.id).filter(Organization.is_active == True).all()  # noqa: E712
             return [org.id for org in all_orgs]
 
         # 根据数据范围返回可访问的组织
         if user.data_scope == "all":
-            all_orgs = self.db.query(Organization.id).filter(Organization.is_active.is_(True)).all()
+            all_orgs = self.db.query(Organization.id).filter(Organization.is_active == True).all()  # noqa: E712
             return [org.id for org in all_orgs]
         elif user.data_scope == "org":
             return [user.organization_id] if user.organization_id else []

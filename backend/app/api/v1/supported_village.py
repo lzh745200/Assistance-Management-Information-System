@@ -1,4 +1,4 @@
-"""帮扶村管理 API 路由"""
+﻿"""帮扶村管理 API 路由"""
 import io
 import json
 import logging
@@ -272,7 +272,7 @@ async def list_villages(
 
     # 默认过滤软删记录（is_active=False），include_deleted=True 时显示全部
     if not include_deleted:
-        query = query.filter(SupportedVillage.is_active.is_(True))
+        query = query.filter(SupportedVillage.is_active == True)  # noqa: E712
 
     if keyword:
         like = f"%{keyword}%"

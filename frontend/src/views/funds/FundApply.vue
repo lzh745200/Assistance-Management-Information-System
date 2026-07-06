@@ -111,7 +111,10 @@ const form = reactive({
 const rules: FormRules = {
   name: [{ required: true, message: '请输入经费名称', trigger: 'blur' }],
   type: [{ required: true, message: '请选择经费类型', trigger: 'change' }],
-  amount: [{ required: true, message: '请输入申请金额', trigger: 'blur' }],
+  amount: [
+    { required: true, message: '请输入申请金额', trigger: 'blur' },
+    { type: 'number', min: 0.01, message: '申请金额必须大于0', trigger: 'blur' },
+  ],
   purpose: [{ required: true, message: '请填写用途说明', trigger: 'blur' }],
 }
 

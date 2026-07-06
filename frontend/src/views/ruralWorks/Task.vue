@@ -692,8 +692,8 @@ async function loadStaffFromApi() {
         avatar: u.avatar || '',
       }))
     }
-  } catch {
-    // API不可用，保持空列表
+  } catch (e: any) {
+    console.warn('[Task] 加载人员列表失败，保持空列表:', e?.message)
   }
 }
 
@@ -710,8 +710,8 @@ async function loadProjectsFromApi() {
         name: p.name || p.title || `项目${p.id}`,
       }))
     }
-  } catch {
-    // API不可用，保持空列表
+  } catch (e: any) {
+    console.warn('[Task] 加载项目列表失败，保持空列表:', e?.message)
   }
 }
 

@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ...core.database import get_db
+from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.school import School
 from ...models.supported_village import SupportedVillage
@@ -274,21 +275,19 @@ async def get_regions(
         query = query.filter(Region.parent_code == parent_code)
     regions = query.all()
 
-    return {
-        "total": len(regions),
-        "items": [
-            {
-                "code": r.code,
-                "name": r.name,
-                "level": r.level,
-                "parentCode": r.parent_code,
-                "centerLng": r.center_lng,
-                "centerLat": r.center_lat,
-                "geometry": safe_json_loads(r.geometry_text, default=None),
-            }
-            for r in regions
-        ],
-    }
+    items_list = [
+        {
+            "code": r.code,
+            "name": r.name,
+            "level": r.level,
+            "parentCode": r.parent_code,
+            "centerLng": r.center_lng,
+            "centerLat": r.center_lat,
+            "geometry": safe_json_loads(r.geometry_text, default=None),
+        }
+        for r in regions
+    ]
+    return ok_list(items=items_list, total=len(items_list))
 
 
 # --------------- 距离与车程计算 ---------------

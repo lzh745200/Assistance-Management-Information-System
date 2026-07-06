@@ -1,4 +1,4 @@
-"""
+﻿"""
 监控服务
 提供性能监控、错误统计、资源监控等功能
 """
@@ -188,7 +188,7 @@ class MonitoringService:
             db: 数据库会话
         """
         # 获取所有启用的告警规则
-        rules = db.query(AlertRule).filter(AlertRule.enabled.is_(True)).all()
+        rules = db.query(AlertRule).filter(AlertRule.enabled == True).all()  # noqa: E712
 
         for rule in rules:
             try:

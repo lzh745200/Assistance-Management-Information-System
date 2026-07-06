@@ -1,4 +1,4 @@
-"""
+﻿"""
 舆情监控API
 """
 
@@ -141,7 +141,7 @@ async def get_sentiment_statistics(
         # 统计各类情感的新闻数量
         stats = (
             db.query(SentimentNews.sentiment_label, func.count(SentimentNews.id).label("count"))
-            .filter(SentimentNews.published_at >= since, SentimentNews.processed.is_(True))
+            .filter(SentimentNews.published_at >= since, SentimentNews.processed == True)  # noqa: E712
             .group_by(SentimentNews.sentiment_label)
             .all()
         )
@@ -151,7 +151,7 @@ async def get_sentiment_statistics(
         # 统计预警数量
         alert_count = (
             db.query(func.count(SentimentNews.id))
-            .filter(SentimentNews.published_at >= since, SentimentNews.is_alert.is_(True))
+            .filter(SentimentNews.published_at >= since, SentimentNews.is_alert == True)  # noqa: E712
             .scalar()
         )
 
@@ -203,7 +203,7 @@ async def get_alerts(
     try:
         alerts = (
             db.query(SentimentNews)
-            .filter(SentimentNews.published_at >= since, SentimentNews.is_alert.is_(True))
+            .filter(SentimentNews.published_at >= since, SentimentNews.is_alert == True)  # noqa: E712
             .order_by(SentimentNews.published_at.desc())
             .limit(limit)
             .all()

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -119,9 +119,9 @@ async def get_summary(current_user=Depends(get_current_user), db: Session = Depe
             return cached
 
         # 缓存未命中，从数据库查询
-        users_count = db.query(User).filter(User.is_active.is_(True)).count()
+        users_count = db.query(User).filter(User.is_active == True).count()  # noqa: E712
         villages_count = db.query(Village).count()
-        schools_count = db.query(School).filter(School.is_active.is_(True)).count()
+        schools_count = db.query(School).filter(School.is_active == True).count()  # noqa: E712
         projects_count = db.query(Project).count()
         funds_count = db.query(Fund).count()
 
@@ -174,9 +174,9 @@ async def _get_overview_impl(db: Session):
 
     villages_count = db.query(Village).count()
     projects_count = db.query(Project).count()
-    schools_count = db.query(School).filter(School.is_active.is_(True)).count()
+    schools_count = db.query(School).filter(School.is_active == True).count()  # noqa: E712
     funds_count = db.query(Fund).count()
-    users_count = db.query(User).filter(User.is_active.is_(True)).count()
+    users_count = db.query(User).filter(User.is_active == True).count()  # noqa: E712
 
     funds_total = db.query(func.sum(Fund.amount)).filter(Fund.status == "approved").scalar() or 0
 

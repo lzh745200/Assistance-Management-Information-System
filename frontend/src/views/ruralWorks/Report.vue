@@ -99,8 +99,12 @@ async function loadReport() {
     const res: any = await get('/rural-works/report/generate', params)
     reportData.value = res?.data || res
     items.value = reportData.value?.items || reportData.value?.works || []
-  } catch {
-    ElMessage.error('报告生成失败')
+    if (!items.value.length) {
+      ElMessage.info('暂无符合条件的报告数据')
+    }
+  } catch (e: any) {
+    const msg = e?.response?.data?.detail || e?.response?.data?.message || e?.message || '报告生成失败'
+    ElMessage.error(typeof msg === 'string' ? msg : '报告生成失败，请稍后重试')
   } finally {
     loading.value = false
   }

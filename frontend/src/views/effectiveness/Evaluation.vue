@@ -198,8 +198,9 @@ async function loadVillages() {
       id: v.id,
       name: v.name || v.village_name || `ID:${v.id}`,
     }))
-  } catch {
-    // 静默处理
+  } catch (e: any) {
+    console.warn('[Evaluation] 加载村庄列表失败:', e?.message)
+    villageOptions.value = []
   }
 }
 

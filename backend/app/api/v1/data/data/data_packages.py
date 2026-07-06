@@ -1,4 +1,4 @@
-"""
+﻿"""
 Data Package API
 数据包管理接口 - 导入导出功能
 """
@@ -70,7 +70,7 @@ def _get_first_active_org(db: Session) -> Optional[int]:
     """获取第一个活跃组织的ID（内部辅助函数）"""
     from app.models.organization import Organization
 
-    first_org = db.query(Organization).filter(Organization.is_active.is_(True)).first()
+    first_org = db.query(Organization).filter(Organization.is_active == True).first()  # noqa: E712
     return first_org.id if first_org else None
 
 

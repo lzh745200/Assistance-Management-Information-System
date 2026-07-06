@@ -1,4 +1,4 @@
-import logging
+﻿﻿import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
@@ -390,7 +390,7 @@ class SecurityEventService:
                 LoginAttempt.username == username,
                 LoginAttempt.ip_address == ip_address,
                 LoginAttempt.attempt_time >= datetime.now() - timedelta(hours=1),
-                LoginAttempt.success.is_(False),
+                LoginAttempt.success == False,  # noqa: E712
             )
             .count()
         )
@@ -467,7 +467,7 @@ class SecurityEventService:
 
         unresolved_by_severity = dict(
             self.db.query(SecurityEvent.severity, func.count(SecurityEvent.id))
-            .filter(SecurityEvent.resolved.is_(False))
+            .filter(SecurityEvent.resolved == False)  # noqa: E712
             .group_by(SecurityEvent.severity)
             .all()
         )
@@ -476,7 +476,8 @@ class SecurityEventService:
 
         return {
             "total_events": self.db.query(SecurityEvent).count(),
-            "unresolved_count": self.db.query(SecurityEvent).filter(SecurityEvent.resolved.is_(False)).count(),
+            "unresolved_count": self.db.query(SecurityEvent)  # noqa: E712
+            .filter(SecurityEvent.resolved == False).count(),
             "by_severity": severity_counts,
             "unresolved_by_severity": unresolved_by_severity,
             "recent_events": [e.to_dict() for e in recent_events],

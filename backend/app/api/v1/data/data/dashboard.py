@@ -1,4 +1,4 @@
-"""
+﻿"""
 仪表盘API路由
 提供前端 HomeSafe.vue 首页所需的统计数据
 
@@ -129,7 +129,7 @@ def _query_village_stats(db: Session, data_scope: DataScope) -> dict:
         func.coalesce(func.sum(case((School.support_status == "active", 1), else_=0)), 0),
         func.coalesce(func.sum(School.student_count), 0),
         func.coalesce(func.sum(School.teacher_count), 0),
-    ).filter(School.is_active.is_(True))  # 修复: 使用 is_ 方法
+    ).filter(School.is_active == True)  # 修复: 使用 is_ 方法  # noqa: E712
     school_query = data_scope.filter_by_org_ids(
         school_query, School.organization_id, created_by_column=School.created_by
     )
@@ -245,7 +245,7 @@ def _query_project_approval_stats(db: Session, data_scope: DataScope) -> dict:
         logger.warning("查询审批待办失败: %s", e)
 
     # 用户总数（仅活跃用户）
-    total_users = db.query(func.count(User.id)).filter(User.is_active.is_(True)).scalar() or 0
+    total_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0  # noqa: E712
 
     # 数据完整性：帮扶村已填报年份数 / 应填报年份数
     current_year = datetime.now().year

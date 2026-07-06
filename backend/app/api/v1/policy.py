@@ -1,4 +1,4 @@
-"""
+﻿﻿"""
 政策法规API
 支持政策分类、文档管理、导入导出功能
 """
@@ -315,7 +315,7 @@ async def delete_category(
 
     children = db.query(PolicyCategory).filter(
         PolicyCategory.parent_id == category_id,
-        PolicyCategory.is_active == True  # noqa: E712 — SQLAlchemy boolean filter
+        PolicyCategory.is_active == True  # noqa: E712 -- SQLAlchemy boolean filter
     ).count()
     if children > 0:
         raise HTTPException(status_code=400, detail="该分类下有子分类，无法删除")
@@ -606,7 +606,7 @@ async def get_policy_types(db: Session = Depends(get_db)):
 
     # 尝试从数据库中获取已有的政策分类（如果 PolicyCategory 模型已启用）
     try:
-        categories = db.query(PolicyCategory).filter(PolicyCategory.is_active.is_(True)).all()
+        categories = db.query(PolicyCategory).filter(PolicyCategory.is_active == True).all()  # noqa: E712
         if categories:
             db_types = [{"value": c.code or c.name, "label": c.name} for c in categories]
             # 合并去重：数据库分类优先

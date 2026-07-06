@@ -1,4 +1,4 @@
-"""
+﻿"""
 配置包管理服务
 
 用于离线多机协作场景：管理员导出用户+组织信息为ZIP配置包，
@@ -53,7 +53,7 @@ class ConfigPackageService:
         """
         # 查询用户
         if export_all_users:
-            users = self.db.query(User).filter(User.is_active.is_(True)).all()
+            users = self.db.query(User).filter(User.is_active == True).all()  # noqa: E712
         elif user_ids:
             users = self.db.query(User).filter(User.id.in_(user_ids)).all()
         else:

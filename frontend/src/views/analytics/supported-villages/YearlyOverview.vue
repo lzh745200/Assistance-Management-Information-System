@@ -133,6 +133,7 @@ const villageName = ref('')
 const loading = ref(false)
 const downloadingAll = ref(false)
 const importingAll = ref(false)
+const sectionImporting = ref('')
 const selectedYear = ref(new Date().getFullYear())
 const yearlyData = ref<YearlyDataSummary | null>(null)
 
@@ -358,6 +359,18 @@ async function handleDownloadTemplate(sectionKey: string) {
 
 async function handleImportSection(sectionKey: string, file: any) {
   const rawFile = file.raw || file
+  // File validation
+  if (!rawFile) return
+  const isExcel = rawFile.name?.endsWith('.xlsx') || rawFile.name?.endsWith('.xls')
+  if (!isExcel) {
+    ElMessage.error('只能上传 Excel 文件(.xlsx/.xls)')
+    return
+  }
+  if (rawFile.size > 10 * 1024 * 1024) {
+    ElMessage.error('文件大小不能超过 10MB')
+    return
+  }
+  sectionImporting.value = sectionKey
   try {
     const result = await importSectionData(villageId.value, selectedYear.value, sectionKey, rawFile)
     ElMessage.success(`导入成功 ${result.imported || result.rows || 0} 条`)
@@ -366,7 +379,10 @@ async function handleImportSection(sectionKey: string, file: any) {
     }
     loadAllData()
   } catch (e: any) {
-    ElMessage.error(e?.message || '导入失败')
+    const msg = e?.response?.data?.detail || e?.message || '导入失败'
+    ElMessage.error(typeof msg === 'string' ? msg : '导入失败，请检查文件格式')
+  } finally {
+    sectionImporting.value = ''
   }
 }
 

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Organization Permission Service
 组织级权限服务
 """
@@ -118,7 +118,7 @@ class OrganizationPermissionService:
             # 超级管理员可以访问所有组织
             query = self.db.query(Organization.id)
             if not include_inactive:
-                query = query.filter(Organization.is_active.is_(True))
+                query = query.filter(Organization.is_active == True)  # noqa: E712
             return [org_id for (org_id,) in query.all()]
 
         # 获取本级及所有下级组织

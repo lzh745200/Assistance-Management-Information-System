@@ -1,4 +1,4 @@
-"""数据同步服务"""
+﻿"""数据同步服务"""
 
 import json
 import logging
@@ -476,7 +476,7 @@ class DataSyncService:
                 db.query(DataConflict)
                 .filter(
                     DataConflict.sync_log_id == sync_log_id,
-                    DataConflict.resolved.is_(False),
+                    DataConflict.resolved == False,  # noqa: E712
                 )
                 .all()
             )

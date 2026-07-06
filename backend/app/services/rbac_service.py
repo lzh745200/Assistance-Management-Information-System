@@ -1,4 +1,4 @@
-"""
+﻿"""
 RBAC权限管理服务
 
 所有 ORM 模型已迁移到 models/rbac.py，本文件只包含业务逻辑。
@@ -307,7 +307,7 @@ class RBACService:
             .join(RbacRole, UserRole.role_id == RbacRole.id)
             .filter(
                 UserRole.user_id == int(user_id),
-                RbacRole.is_active.is_(True),
+                RbacRole.is_active == True,  # noqa: E712
                 (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
             )
             .distinct()
@@ -358,7 +358,7 @@ class RBACService:
         newly_granted 为 True 表示新建分配，False 表示角色已存在。
         """
         # 检查角色是否存在且激活
-        role = db.query(RbacRole).filter(RbacRole.id == role_id, RbacRole.is_active.is_(True)).first()
+        role = db.query(RbacRole).filter(RbacRole.id == role_id, RbacRole.is_active == True).first()  # noqa: E712
         if not role:
             raise NotFoundError("角色", role_id)
 
@@ -645,7 +645,7 @@ class RBACService:
             .join(UserRole, RbacRole.id == UserRole.role_id)
             .filter(
                 UserRole.user_id == int(user_id),
-                RbacRole.is_active.is_(True),
+                RbacRole.is_active == True,  # noqa: E712
                 (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
             )
             .order_by(RbacRole.priority.asc())
@@ -677,7 +677,7 @@ class RBACService:
             .filter(
                 UserRole.user_id == int(user_id),
                 RbacRole.name == "admin",
-                RbacRole.is_active.is_(True),
+                RbacRole.is_active == True,  # noqa: E712
                 (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
             )
             .scalar()
@@ -708,7 +708,7 @@ class RBACService:
             .filter(
                 UserRole.user_id == int(user_id),
                 RolePermission.permission == permission,
-                RbacRole.is_active.is_(True),
+                RbacRole.is_active == True,  # noqa: E712
                 (UserRole.expires_at.is_(None) | (UserRole.expires_at > now)),
             )
             .scalar()
