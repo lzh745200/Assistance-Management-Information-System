@@ -1,0 +1,22 @@
+﻿.venv\Scripts\python.exe : 2026-07-06 18:40:34,323 - ap
+p.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚: 鎴愬姛 42/42 涓?
+所在位置 行:1 字符: 65
++ ... m\backend"; .venv\Scripts\python.exe -m pytest te
+sts/ -q --tb=no --ti ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-07-0 
+   6 18:4...垚: 鎴愬姛 42/42 涓?:String) [], RemoteExcepti  
+  on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-07-06 18:40:34,333 - app.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚
+: 鎴愬姛 42/42 涓?
+2026-07-06 18:40:34,338 - app.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚
+: 鎴愬姛 42/42 涓?
+2026-07-06 18:40:34,357 - app.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚
+: 鎴愬姛 42/42 涓?
+2026-07-06 18:40:34,409 - app.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚
+: 鎴愬姛 42/42 涓?
+2026-07-06 18:40:34,410 - app.api.v1 - INFO - 璺敱鍔犺浇瀹屾垚
+: 鎴愬姛 42/42 涓?

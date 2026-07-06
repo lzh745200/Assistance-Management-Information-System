@@ -1,0 +1,433 @@
+﻿
+14 |    _resolve(value: any) { return { result: value, error: null, onsuccess: 
+null as any, onerror: null as any, set onsuccess(cb: any) { setTimeout(() => cb
+({ target: this }), 0); (this as any)._cb = cb }, get onsuccess() { return (thi
+s as any)._cb } } as any }
+[90mstdout[2m | tests/unit/utils-extra.test.ts[2m > [22m[2mRequestDeduplic
+ator[2m > [22m[2mdedupe 澶辫触鏃舵墍鏈夎闃呰€呮敹鍒伴敊璇?[22m[39m[RequestDeduplicator] S
+uppressed promise rejection: Error: fail
+[22m[39m[RequestDeduplicator] Suppressed promise rejection on cancel: Error: 
+Request cancelled: k
+[22m[39m[RequestDeduplicator] Suppressed promise rejection on cancel: Error: 
+Request cancelled: a
+[RequestDeduplicator] Suppressed promise rejection on cancel: Error: Request ca
+ncelled: b
+[22m[39m璇诲彇鏁版嵁澶辫触: SyntaxError: Unexpected token 'o', "not-json" is not valid
+ JSON
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitalization-system\frontend\n
+ode_modules\jsdom\lib\jsdom\living\xhr\xhr-utils.js:63:19)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:575:5)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3) [90mundefined[3
+9m
+[22m[39m璺宠浆寮傚父: TypeError: Cannot read properties of undefined (reading 'catc
+h')
+    at startTests [90m(file:///C:/military-Rural%20Revitalization-system/front
+end/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+Error: Not implemented: navigation (except hash changes)
+[22m[39m璺宠浆寮傚父: TypeError: Cannot read properties of undefined (reading 'catc
+h')
+    at startTests [90m(file:///C:/military-Rural%20Revitalization-system/front
+end/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+Error: Not implemented: navigation (except hash changes)
+[22m[39m璺宠浆寮傚父: TypeError: Cannot read properties of undefined (reading 'catc
+h')
+    at startTests [90m(file:///C:/military-Rural%20Revitalization-system/front
+end/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+Error: Not implemented: navigation (except hash changes)
+[90mstderr[2m | tests/unit/errorHandler.test.ts[2m > [22m[2merrorHandler[
+2m > [22m[2mhandleError[2m > [22m[2m澶勭悊缃戠粶閿欒骞舵樉绀洪€氱煡
+[22m[39m[Error] {
+  message: [32m'Network Error'[39m,
+ [32m鉁?[39m tests/unit/errorHandler.test.ts [2m([22m[2m30 tests[22m[2m)[
+22m[90m 120[2mms[22m[39m
+[22m[39m[Projects] loadData failed: Error: 鏈嶅姟鍣ㄩ敊璇?    at [90mC:\military-Ru
+ral Revitalization-system\frontend\[39msrc\views\projects\__tests__\ProjectLis
+t.spec.ts:544:36
+    at startTests [90m(file:///C:/military-Rural%20Revitalization-system/front
+end/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+[22m[39m[JWT] 瑙ｇ爜澶辫触: DOMException [InvalidCharacterError]: Invalid character
+[22m[39m[JWT] 瑙ｇ爜澶辫触: SyntaxError: Unexpected token '#', "#notjson!" is not v
+alid JSON
+[22m[39m[JWT] 瑙ｇ爜澶辫触: DOMException [InvalidCharacterError]: The string to be 
+decoded is not correctly encoded.
+ [32m鉁?[39m src/api/__tests__/projects.spec.ts [2m([22m[2m21 tests[22m[2m
+)[22m[90m 171[2mms[22m[39m
+[90mstderr[2m | tests/unit/composables/useAutoSave.test.ts[2m > [22m[2muse
+AutoSave[2m > [22m[2mtriggerSave 澶辫触鏃朵笉鎶涘嚭浣?console.error 璁板綍
+[22m[39m鍓创鏉垮啓鍏ュけ璐? Error: denied
+    at startTests [90m(file:///C:/military-Rural%20Revitalization-system/front
+end/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+[22m[39m澶嶅埗澶辫触: Error: exec fail
+[90mstderr[2m | tests/unit/utils/LocalStorageManager.test.ts[2m > [22m[2mu
+tils/LocalStorageManager[2m > [22m[2msaveData[2m > [22m[2mserialize error
+ -> false
+[22m[39mFailed to save data for key a: TypeError: Converting circular structu
+re to JSON
+[22m[39mFailed to get data for key a: SyntaxError: Unexpected token 'o', "not
+-json" is not valid JSON
+[22m[39mLocalStorage is not available: Error: quota
+[22m[39mLocalStorage is not available: Error: quota
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mextracts
+ message from err.response.data.message
+[22m[39m[ErrorHandler] 淇濆瓨鏁版嵁 {
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mfalls ba
+ck to err.response.data.detail
+[22m[39m[ErrorHandler] unknown context {
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mfalls ba
+ck to err.message
+[22m[39m[ErrorHandler] unknown context {
+  details: Error: boom
+      at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\
+composables\useErrorHandler.test.ts:33:21
+      at startTests [90m(file:///C:/military-Rural%20Revitalization-system/fro
+ntend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mfalls ba
+ck to err as truthy
+[22m[39m[ErrorHandler] unknown context {
+  message: [32m'鎿嶄綔澶辫触: string error'[39m,
+  details: [32m'string error'[39m
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mfalls ba
+ck to 鏈煡閿欒
+[22m[39m[ErrorHandler] unknown context { message: [32m'鎿嶄綔澶辫触: 鏈煡閿欒'[39m,
+ code: [90mundefined[39m, details: [1mnull[22m }
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2muses err
+.code when no response.status
+[22m[39m[ErrorHandler] unknown context {
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mshowNoti
+fication=false 璺宠繃 ElMessage
+[22m[39m[ErrorHandler] ctx {
+  details: Error: x
+      at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\
+composables\useErrorHandler.test.ts:54:21
+      at startTests [90m(file:///C:/military-Rural%20Revitalization-system/fro
+ntend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mshowNoti
+fication=true 璋?ElMessage
+[22m[39m[ErrorHandler] unknown context {
+  details: Error: x
+      at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\
+composables\useErrorHandler.test.ts:59:21
+      at startTests [90m(file:///C:/military-Rural%20Revitalization-system/fro
+ntend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mreturns 
+errorState
+[22m[39m[ErrorHandler] unknown context {
+  details: Error: x
+      at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\
+composables\useErrorHandler.test.ts:73:31
+      at startTests [90m(file:///C:/military-Rural%20Revitalization-system/fro
+ntend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mhandleWarning[2m > [22m[2m璋?ElMe
+ssage warning
+[90mstderr[2m | tests/unit/composables/useErrorHandler.test.ts[2m > [22m[2
+mcomposables/useErrorHandler[2m > [22m[2mclearError[2m > [22m[2m娓呯┖ error
+State
+[22m[39m[ErrorHandler] unknown context {
+  details: Error: x
+      at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\
+composables\useErrorHandler.test.ts:104:21
+      at startTests [90m(file:///C:/military-Rural%20Revitalization-system/fro
+ntend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1271:3[90m)[39m
+ [32m鉁?[39m tests/unit/composables/useErrorHandler.test.ts [2m([22m[2m14 te
+sts[22m[2m)[22m[90m 196[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/errorLogger.test.ts [2m([22m[2m9 tests[22m[2
+m)[22m[90m 177[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useApiError.test.ts [2m([22m[2m7 tests[
+22m[2m)[22m[90m 69[2mms[22m[39m
+[22m[39m璺宠浆寮傚父: TypeError: Cannot read properties of undefined (reading 'catc
+h')
+    at callWithErrorHandling [90m(C:\military-Rural Revitalization-system\fron
+tend\[39mnode_modules\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js:200:
+19[90m)[39m
+    at Object.callWithAsyncErrorHandling [90m(C:\military-Rural Revitalization
+-system\frontend\[39mnode_modules\[4m@vue\runtime-core[24m\dist\runtime-core
+.cjs.js:207:17[90m)[39m
+Error: Not implemented: navigation (except hash changes)
+    at callWithErrorHandling (C:\military-Rural Revitalization-system\frontend\
+node_modules\@vue\runtime-core\dist\runtime-core.cjs.js:200:19) [90mundefined
+[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22merrorReport 
+妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m914[2mms[22m[39m
+[90mstderr[2m | tests/unit/composables/useChunkLoader.test.ts[2m > [22m[2m
+useChunkLoader/retryImport[2m > [22m[2mall failures 鈫?throws last error
+[90mstderr[2m | tests/unit/composables/useChunkLoader.test.ts[2m > [22m[2m
+useChunkLoader/retryImport[2m > [22m[2mall failures 鈫?throws last error
+[90mstderr[2m | tests/unit/composables/useChunkLoader.test.ts[2m > [22m[2m
+useChunkLoader/retryImport[2m > [22m[2mall failures 鈫?throws last error
+   [33m[2m鉁?[22m[39m useChunkLoader/retryImport[2m > [22mall failures 鈫?th
+rows last error [33m311[2mms[22m[39m
+[2m Test Files [22m [1m[32m137 passed[39m[22m[90m (137)[39m
+[2m      Tests [22m [1m[32m1681 passed[39m[22m[90m (1681)[39m
+[2m   Duration [22m 195.74s[2m (transform 272.70s, setup 144.01s, collect 42
+4.51s, tests 101.69s, environment 880.00s, prepare 158.52s)[22m
+All files          |   20.74 |    86.74 |   55.78 |   20.74 |                  
+ 
+ frontend/src/api  |   57.98 |    86.47 |    44.5 |   57.98 |                  
+ 
+  errorReport.ts   |    22.5 |      100 |       0 |    22.5 | 46-107           
+ 
+  useApiError.ts   |     100 |      100 |     100 |     100 |                  
+ 
+ ...end/src/stores |   85.13 |    84.79 |   82.29 |   85.13 |                  
+ 
+ ...tend/src/utils |   66.65 |    87.06 |   85.95 |   66.65 |                  
+ 
+  errorHandler.ts  |   86.49 |    92.85 |   56.25 |   86.49 | ...85-403,407-416
+ 
+  errorLogger.ts   |   98.64 |    91.66 |     100 |   98.64 | 42               
+ 
+ ...iews/errorPage |       0 |        0 |       0 |       0 |                  
+ 
+  ErrorReports.vue |       0 |        0 |       0 |       0 | 1-641            
+ 
+ frontend/tests    |       0 |        0 |       0 |       0 |                  
+ 
+  ...Error.test.ts |     100 |      100 |     100 |     100 |                  
+ 
+
+

@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   Search,
   HomeFilled,
@@ -74,6 +74,7 @@ import {
   QuestionFilled,
 } from '@element-plus/icons-vue'
 import { sanitizeHtml } from '@/utils/sanitize'
+import { getHelpArticles } from '@/api/help'
 
 /** XSS 防护：即使当前内容是静态硬编码，也统一过 sanitize 以防止后续改为动态加载时遗漏 */
 function safeSectionContent(html: string): string {
@@ -273,10 +274,37 @@ const sections: HelpSection[] = [
   },
 ]
 
+const sectionsRef = ref<HelpSection[]>(sections)
+const helpLoading = ref(false)
+
+async function fetchHelpArticles() {
+  helpLoading.value = true
+  try {
+    const res: any = await getHelpArticles()
+    const articles = res?.items ?? res?.data?.items ?? []
+    if (Array.isArray(articles) && articles.length > 0) {
+      const dynamicSections: HelpSection[] = articles.map((a: any) => ({
+        id: a.id ?? a.slug ?? String(Math.random()),
+        title: a.title ?? a.name ?? '',
+        icon: 'Document',
+        content: a.content ?? a.body ?? a.html ?? '',
+      }))
+      // Merge: dynamic articles first, then static as fallback for missing
+      const existingIds = new Set(dynamicSections.map((s) => s.id))
+      const fallback = sections.filter((s) => !existingIds.has(s.id))
+      sectionsRef.value = [...dynamicSections, ...fallback]
+    }
+  } catch {
+    // Keep static sections as fallback
+  } finally {
+    helpLoading.value = false
+  }
+}
+
 const filteredSections = computed(() => {
-  if (!searchKeyword.value.trim()) return sections
+  if (!searchKeyword.value.trim()) return sectionsRef.value
   const keyword = searchKeyword.value.toLowerCase()
-  return sections.filter(
+  return sectionsRef.value.filter(
     (s) => s.title.toLowerCase().includes(keyword) || s.content.toLowerCase().includes(keyword)
   )
 })
@@ -293,6 +321,10 @@ function scrollToSection(id: string) {
   const el = document.getElementById(id)
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
+
+onMounted(() => {
+  fetchHelpArticles()
+})
 </script>
 
 <style scoped>

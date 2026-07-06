@@ -22,18 +22,28 @@
       </el-select>
     </el-form-item>
     <el-form-item v-if="showTownship" label="乡镇">
-      <el-input
+      <el-select
         :model-value="modelValue?.township"
-        placeholder="输入乡镇名称"
+        placeholder="请选择乡镇"
+        :disabled="!availableTownships.length"
+        filterable
+        clearable
         @update:model-value="onTownshipChange"
-      />
+      >
+        <el-option
+          v-for="t in availableTownships"
+          :key="t"
+          :label="t"
+          :value="t"
+        />
+      </el-select>
     </el-form-item>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { GUIZHOU_ALL_CITIES, getCountiesByCity } from '@/data/guizhouRegion'
+import { GUIZHOU_ALL_CITIES, getCountiesByCity, getTownshipsByCityCounty } from '@/data/guizhouRegion'
 
 export interface RegionValue {
   city?: string
@@ -56,6 +66,11 @@ const emit = defineEmits<{
 const availableCounties = computed(() => {
   if (!props.modelValue?.city) return []
   return getCountiesByCity(props.modelValue.city)
+})
+
+const availableTownships = computed(() => {
+  if (!props.modelValue?.city || !props.modelValue?.county) return []
+  return getTownshipsByCityCounty(props.modelValue.city, props.modelValue.county)
 })
 
 function onCityChange(city: string) {

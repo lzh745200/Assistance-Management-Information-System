@@ -118,6 +118,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
+import request from '@/api/request'
 
 interface QualityStats {
   totalRecords: number
@@ -153,6 +154,7 @@ const showIssuesDialog = ref(false)
 const selectedCheck = ref<CheckItem | null>(null)
 const issueDetails = ref<IssueDetail[]>([])
 const canAutoFix = ref(false)
+const formattedCheckTime = ref(props.stats.lastCheckTime || '')
 
 // 检查项列表
 const checkItems = ref<CheckItem[]>([
@@ -226,50 +228,76 @@ function getStatusText(status: string): string {
 async function handleCheck() {
   checking.value = true
   try {
-    // 模拟检查过程
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    // 模拟检查结果
+    const res = await request.post('/data-quality/check', { module: 'village' })
+    const data = res?.data ?? res
+    const results = data?.results ?? data?.checks ?? data
+    if (Array.isArray(results) && results.length > 0) {
+      checkItems.value = results.map((r: any) => ({
+        id: r.id ?? r.check_id ?? String(Math.random()),
+        name: r.name ?? r.check_name ?? '未知检查',
+        description: r.description ?? '',
+        status: r.status ?? (r.passed ? 'pass' : 'fail'),
+        issues: r.issues ?? r.error_count ?? r.errors?.length ?? 0,
+      }))
+    }
+    // Update last check timestamp
+    const now = new Date()
+    formattedCheckTime.value = now.toLocaleString('zh-CN')
+    ElMessage.success('数据质量检查完成')
+  } catch {
+    // 后端不可用时用本地 checks 列表保留待检查状态
     checkItems.value = checkItems.value.map((item) => ({
       ...item,
-      status: Math.random() > 0.3 ? 'pass' : Math.random() > 0.5 ? 'warning' : 'fail',
-      issues: Math.random() > 0.3 ? 0 : Math.floor(Math.random() * 10),
+      status: 'pending',
+      issues: 0,
     }))
-
-    ElMessage.success('数据质量检查完成')
-  } catch (error) {
-    ElMessage.error('检查失败')
+    ElMessage.warning('无法连接质量检查服务，使用静态检查列表')
   } finally {
     checking.value = false
   }
 }
 
 // 查看问题详情
-function handleViewIssues(check: CheckItem) {
+async function handleViewIssues(check: CheckItem) {
   selectedCheck.value = check
-
-  // 模拟问题详情
-  issueDetails.value = Array.from({ length: check.issues }, (_, i) => ({
-    record_id: 1000 + i,
-    field: ['village_name', 'department', 'county', 'support_unit'][Math.floor(Math.random() * 4)],
-    issue: ['字段为空', '格式不正确', '值超出范围', '数据不一致'][Math.floor(Math.random() * 4)],
-    suggestion: '请检查并修正该字段的值',
-  }))
-
-  canAutoFix.value = check.id === 'data_format' || check.id === 'calculation_check'
+  try {
+    const res = await request.get('/data-quality/check/issues', {
+      params: { check_id: check.id, module: 'village' },
+    })
+    const data = res?.data ?? res
+    const items = data?.issues ?? data?.items ?? data
+    if (Array.isArray(items)) {
+      issueDetails.value = items.map((d: any) => ({
+        record_id: d.record_id ?? d.id,
+        field: d.field ?? d.field_name ?? '',
+        issue: d.issue ?? d.message ?? d.description ?? '',
+        suggestion: d.suggestion ?? d.fix ?? '请检查并修正该字段的值',
+      }))
+    } else {
+      issueDetails.value = []
+    }
+    canAutoFix.value = check.id === 'data_format' || check.id === 'calculation_check'
+  } catch {
+    issueDetails.value = []
+    canAutoFix.value = false
+  }
   showIssuesDialog.value = true
 }
 
 // 自动修复
 async function handleAutoFix() {
+  if (!selectedCheck.value) return
   fixing.value = true
   try {
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await request.post('/data-quality/fix', {
+      check_id: selectedCheck.value.id,
+      module: 'village',
+    })
     ElMessage.success('自动修复完成')
     showIssuesDialog.value = false
     handleCheck()
-  } catch (error) {
-    ElMessage.error('修复失败')
+  } catch {
+    ElMessage.warning('自动修复失败，请手动修正问题数据')
   } finally {
     fixing.value = false
   }

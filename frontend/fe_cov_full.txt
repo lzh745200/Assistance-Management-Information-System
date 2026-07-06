@@ -1,0 +1,2923 @@
+﻿
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/military-Rural Revitalization-system/frontend[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+node.exe : [2m18:39:25[22m [33m[1m[vite][22m[39m 
+[33mwarning: [33mDuplicate key "onsuccess" in object 
+literal[33m
+所在位置 行:1 字符: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program File
+s\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([2m18:39 
+   :25[2...ct literal[33m:String) [], RemoteExcepti  
+  on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+12 |  class FakeStore {
+13 |    data: Map<any, any> = new Map()
+14 |    _resolve(value: any) { return { result: value, 
+error: null, onsuccess: null as any, onerror: null as a
+ny, set onsuccess(cb: any) { setTimeout(() => cb({ targ
+et: this }), 0); (this as any)._cb = cb }, get onsucces
+s() { return (this as any)._cb } } as any }
+   |                                                   
+                                                       
+        ^
+15 |  }
+16 |  
+[39m
+  Plugin: [35mvite:esbuild[39m
+  File: [36mC:/military-Rural Revitalization-system/fr
+ontend/tests/unit/utils/LocalDatabase.test.ts[39m
+ [32m鉁?[39m tests/unit/components/Accessibility.property.test.ts [2m([22m[2m23 tests[22m[2m)[22m[90m 87[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/approval.test.ts [2m([22m[2m27 tests[22m[2m)[22m[90m 46[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/cacheManager.test.ts [2m([22m[2m31 tests[22m[2m)[22m[90m 63[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/fundLifecycle.test.ts [2m([22m[2m36 tests[22m[2m)[22m[90m 125[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/LocalDatabase.test.ts [2m([22m[2m31 tests[22m[2m)[22m[33m 1629[2mms[22m[39m
+[90mstdout[2m | tests/unit/utils-extra.test.ts[2m > [22m[2mRequestDeduplicator[2m > [22m[2mdedupe 澶辫触鏃舵墍鏈夎闃呰€呮敹鍒伴敊璇?[22m[39m[RequestDeduplicator] Suppressed promise rejection: Error: fail
+    at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\utils-extra.test.ts:46:17
+    at [90mfile:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1056:17[90m)[39m
+[90m    at runNextTicks (node:internal/process/task_queues:64:5)[39m
+[90m    at processTimers (node:internal/timers:538:9)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runFiles [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1262:5[90m)[39m
+
+[90mstdout[2m | tests/unit/utils-extra.test.ts[2m > [22m[2mRequestDeduplicator[2m > [22m[2mcancel 鍙栨秷璇锋眰
+[22m[39m[RequestDeduplicator] Suppressed promise rejection on cancel: Error: Request cancelled: k
+    at RequestDeduplicator.cancel [90m(C:\military-Rural Revitalization-system\frontend\[39msrc\utils\requestDeduplicator.ts:202:19[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\utils-extra.test.ts:91:15
+    at [90mfile:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1056:17[90m)[39m
+[90m    at runNextTicks (node:internal/process/task_queues:64:5)[39m
+[90m    at processTimers (node:internal/timers:538:9)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1205:15[90m)[39m
+
+[90mstdout[2m | tests/unit/utils-extra.test.ts[2m > [22m[2mRequestDeduplicator[2m > [22m[2mcancelAll
+[22m[39m[RequestDeduplicator] Suppressed promise rejection on cancel: Error: Request cancelled: a
+    at RequestDeduplicator.cancel [90m(C:\military-Rural Revitalization-system\frontend\[39msrc\utils\requestDeduplicator.ts:202:19[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\frontend\[39msrc\utils\requestDeduplicator.ts:214:32
+    at Array.forEach (<anonymous>)
+    at RequestDeduplicator.cancelAll [90m(C:\military-Rural Revitalization-system\frontend\[39msrc\utils\requestDeduplicator.ts:214:10[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\utils-extra.test.ts:101:8
+    at [90mfile:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1056:17[90m)[39m
+[90m    at runNextTicks (node:internal/process/task_queues:64:5)[39m
+[RequestDeduplicator] Suppressed promise rejection on cancel: Error: Request cancelled: b
+    at RequestDeduplicator.cancel [90m(C:\military-Rural Revitalization-system\frontend\[39msrc\utils\requestDeduplicator.ts:202:19[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\frontend\[39msrc\utils\requestDeduplicator.ts:214:32
+    at Array.forEach (<anonymous>)
+    at RequestDeduplicator.cancelAll [90m(C:\military-Rural Revitalization-system\frontend\[39msrc\utils\requestDeduplicator.ts:214:10[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\frontend\[39mtests\unit\utils-extra.test.ts:101:8
+    at [90mfile:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revitalization-system/frontend/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1056:17[90m)[39m
+[90m    at runNextTicks (node:internal/process/task_queues:64:5)[39m
+
+ [32m鉁?[39m tests/unit/formValidator.test.ts [2m([22m[2m52 tests[22m[2m)[22m[90m 189[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/supportedVillageExport.test.ts [2m([22m[2m29 tests[22m[2m)[22m[90m 299[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils-extra.test.ts [2m([22m[2m34 tests[22m[2m)[22m[33m 3396[2mms[22m[39m
+   [33m[2m鉁?[22m[39m RequestDeduplicator[2m > [22mdedupe 姝ｅ父鎵ц [33m1584[2mms[22m[39m
+   [33m[2m鉁?[22m[39m EnhancedStorage[2m > [22mset / get 鍩烘湰璇诲啓 [33m410[2mms[22m[39m
+   [33m[2m鉁?[22m[39m StateManager[2m > [22msetState / getState [33m795[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/permissionGuard.test.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 62[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/user.test.ts [2m([22m[2m23 tests[22m[2m)[22m[90m 100[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/CrudService.test.ts [2m([22m[2m27 tests[22m[2m)[22m[90m 52[2mms[22m[39m
+[90mstderr[2m | tests/unit/errorHandler.test.ts[2m >
+ [22m[2merrorHandler[2m > [22m[2mhandleError[2m >
+ [22m[2m澶勭悊缃戠粶閿欒骞舵樉绀洪€氱煡
+[22m[39m[Error] {
+  type: [32m'NETWORK'[39m,
+  message: [32m'Network Error'[39m,
+  code: [90mundefined[39m,
+  details: [90mundefined[39m,
+  retryable: [33mtrue[39m,
+  timestamp: [33m1783334388853[39m
+}
+
+ [32m鉁?[39m tests/unit/errorHandler.test.ts [2m([22m[2m30 tests[22m[2m)[22m[90m 205[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/funds.test.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 79[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/uniqueValidation.test.ts [2m([22m[2m23 tests[22m[2m)[22m[90m 110[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useAccessibility.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 394[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/policyRuralWork.test.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 108[2mms[22m[39m
+[90mstderr[2m | tests/unit/localStorage.test.ts[2m >
+ [22m[2mEnhancedStorage[2m > [22m[2mset and get[2
+m > [22m[2mshould return default for corrupted data
+[22m[39m璇诲彇鏁版嵁澶辫触: SyntaxError: Unexpected token 'o',
+ "not-json" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at EnhancedStorage.get [90m(C:\military-Rural Revi
+talization-system\frontend\[39msrc\utils\local-storage
+.ts:94:38[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\localStorage.test.ts:63:30
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+ [32m鉁?[39m tests/unit/localStorage.test.ts [2m([22m[2m27 tests[22m[2m)[22m[90m 195[2mms[22m[39m
+ [32m鉁?[39m tests/unit/validator.test.ts [2m([22m[2m26 tests[22m[2m)[22m[90m 75[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/chunkUpload.test.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 222[2mms[22m[39m
+ [32m鉁?[39m tests/unit/components/DefaultLayout.property.test.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 114[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/performance.test.ts [2m([22m[2m45 tests[22m[2m)[22m[33m 605[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/dataPackage.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 322[2mms[22m[39m
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mrenders all 6 metric cards with correct labels after
+ data fetch
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mrenders health score badge with score-good class whe
+n score >= 80
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mrenders chart container when API stats have data
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mrenders system logs section
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mresponds to dark theme from config store
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2muses CSS Grid for metric layout
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+ [32m鉁?[39m src/api/__tests__/projects.spec.ts [2m([22m[2m21 tests[22m[2m)[22m[90m 52[2mms[22m[39m
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mshows metric cards even when snapshot API fails
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mcaps history ring buffer at 10 entries
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mtoggles health section expand/collapse on header cli
+ck
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mclears polling interval on unmount
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+Error: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+[90mstderr[2m | tests/unit/views/MonitoringDashboard.
+test.ts[2m > [22m[2mMonitoringDashboard[2m > [22m
+[2mclears polling interval on unmount
+[22m[39mError: AggregateError
+    at Object.dispatchError (C:\military-Rural Revitali
+zation-system\frontend\node_modules\jsdom\lib\jsdom\liv
+ing\xhr\xhr-utils.js:63:19)
+    at Request.<anonymous> (C:\military-Rural Revitaliz
+ation-system\frontend\node_modules\jsdom\lib\jsdom\livi
+ng\xhr\XMLHttpRequest-impl.js:655:18)
+    at Request.emit (node:events:520:35)
+    at ClientRequest.<anonymous> (C:\military-Rural Rev
+italization-system\frontend\node_modules\jsdom\lib\jsdo
+m\living\helpers\http-request.js:127:14)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:108:11)
+    at Socket.socketErrorListener (node:_http_client:57
+5:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8
+)
+    at emitErrorCloseNT (node:internal/streams/destroy:
+129:3) [90mundefined[39m
+
+ [32m鉁?[39m tests/unit/views/MonitoringDashboard.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 10416[2mms[22m[39m
+   [33m[2m鉁?[22m[39m MonitoringDashboard[2m > [22mrenders all 6 metric cards with correct labels after data fetch [33m9219[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/desensitize.test.ts [2m([22m[2m41 tests[22m[2m)[22m[90m 125[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useOptimisticUpdate.test.ts [2m([22m[2m16 tests[22m[2m)[22m[90m 281[2mms[22m[39m
+[90mstderr[2m | tests/unit/utils/jwt.test.ts[2m > [
+22m[2mutils/jwt[2m > [22m[2mdecodeJwtPayload[2m > 
+[22m[2mreturns null on bad base64
+[22m[39m[JWT] 瑙ｇ爜澶辫触: DOMException [InvalidCharacterE
+rror]: Invalid character
+[90m    at atob (node:buffer:1304:13)[39m
+    at Module.decodeJwtPayload [90m(C:\military-Rural 
+Revitalization-system\frontend\[39msrc\utils\jwt.ts:12
+6:9[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\jwt.test.ts:61:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+[90mstderr[2m | tests/unit/utils/jwt.test.ts[2m > [
+22m[2mutils/jwt[2m > [22m[2mdecodeJwtPayload[2m > 
+[22m[2mreturns null when JSON.parse fails
+[22m[39m[JWT] 瑙ｇ爜澶辫触: SyntaxError: Unexpected token '
+#', "#notjson!" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Module.decodeJwtPayload [90m(C:\military-Rural 
+Revitalization-system\frontend\[39msrc\utils\jwt.ts:12
+4:25[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\jwt.test.ts:76:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+[90mstderr[2m | tests/unit/utils/jwt.test.ts[2m > [
+22m[2mutils/jwt[2m > [22m[2mdecodeJwtPayload[2m > 
+[22m[2mnon-standard 3-part token still attempts to pa
+rse
+[22m[39m[JWT] 瑙ｇ爜澶辫触: DOMException [InvalidCharacterE
+rror]: The string to be decoded is not correctly encode
+d.
+[90m    at atob (node:buffer:1306:13)[39m
+    at Module.decodeJwtPayload [90m(C:\military-Rural 
+Revitalization-system\frontend\[39msrc\utils\jwt.ts:12
+6:9[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\jwt.test.ts:94:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+ [32m鉁?[39m tests/unit/utils/jwt.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 388[2mms[22m[39m
+   [33m[2m鉁?[22m[39m utils/jwt[2m > [22mdecodeJwtPayload[2m > [22mreturns null on bad base64 [33m341[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/auth-store.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 292[2mms[22m[39m
+[90mstdout[2m | tests/unit/utils/permissionAudit.test.ts[2m > [22m[2mutils/permissionAudit[2m > [22m[2mrunPermissionAudit[2m > [22m[2mPROD -> noop
+[22m[39m馃攳 鏉冮檺瀹¤鎶ュ憡
+  鈩癸笍 鎻愮ず (5)
+    [-] 瑙掕壊 "super_admin" 鎷ユ湁鏉冮檺 "*"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?    [-] 瑙掕壊 "admin" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?    [-] 瑙掕壊 "admin" 鎷ユ湁鏉冮檺 "delete"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?    [-] 瑙掕壊 "manager" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?    [-] 瑙掕壊 "operator" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?
+[90mstdout[2m | tests/unit/utils/permissionAudit.test.ts[2m > [22m[2mutils/permissionAudit[2m > [22m[2mrunPermissionAudit[2m > [22m[2mDEV no issues -> success log
+[22m[39m馃攳 鏉冮檺瀹¤鎶ュ憡
+  鈩癸笍 鎻愮ず (5)
+    [-] 瑙掕壊 "super_admin" 鎷ユ湁鏉冮檺 "*"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?    [-] 瑙掕壊 "admin" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?    [-] 瑙掕壊 "admin" 鎷ユ湁鏉冮檺 "delete"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?    [-] 瑙掕壊 "manager" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?    [-] 瑙掕壊 "operator" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?
+[90mstdout[2m | tests/unit/utils/permissionAudit.test.ts[2m > [22m[2mutils/permissionAudit[2m > [22m[2mrunPermissionAudit[2m > [22m[2mDEV with issues -> grouped
+[22m[39m[-] 瑙掕壊 "super_admin" 鎷ユ湁鏉冮檺 "*"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?[-] 瑙掕壊 "admin" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?[-] 瑙掕壊 "admin" 鎷ユ湁鏉冮檺 "delete"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?[-] 瑙掕壊 "manager" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?[-] 瑙掕壊 "operator" 鎷ユ湁鏉冮檺 "write"锛屼絾娌℃湁璺敱浣跨敤璇ユ潈闄?
+ [32m鉁?[39m tests/unit/utils/permissionAudit.test.ts [2m([22m[2m13 tests[22m[2m)[22m[90m 140[2mms[22m[39m
+[90mstderr[2m | src/views/projects/__tests__/ProjectL
+ist.spec.ts[2m > [22m[2m瀵艰埅[2m > [22m[2mhandleCre
+ate 搴旇烦杞埌 /projects/create
+[22m[39m璺宠浆寮傚父: TypeError: Cannot read properties of 
+undefined (reading 'catch')
+    at pushSafe [90m(C:\military-Rural Revitalization-
+system\frontend\[39msrc\composables\useRouterSafe.ts:5
+6:23[90m)[39m
+    at Proxy.handleCreate [90m(C:\military-Rural Revit
+alization-system\frontend\[39msrc\views\projects\List.
+vue:355:3[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39msrc\views\projects\__tests__\ProjectList.spe
+c.ts:454:8
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:5
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:11[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runFiles [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1262:5[90m)[39m
+    at startTests [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1271:3[90m)[39m
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4mvitest[24m/dist/
+chunks/runBaseTests.3qpJUEJM.js:126:11
+Error: Not implemented: navigation (except hash changes
+)
+    at module.exports (C:\military-Rural Revitalization
+-system\frontend\node_modules\jsdom\lib\jsdom\browser\n
+ot-implemented.js:9:17)
+    at navigateFetch (C:\military-Rural Revitalization-
+system\frontend\node_modules\jsdom\lib\jsdom\living\win
+dow\navigation.js:77:3)
+    at exports.navigate (C:\military-Rural Revitalizati
+on-system\frontend\node_modules\jsdom\lib\jsdom\living\
+window\navigation.js:55:3)
+    at LocationImpl._locationObjectNavigate (C:\militar
+y-Rural Revitalization-system\frontend\node_modules\jsd
+om\lib\jsdom\living\window\Location-impl.js:31:5)
+    at LocationImpl._locationObjectSetterNavigate (C:\m
+ilitary-Rural Revitalization-system\frontend\node_modul
+es\jsdom\lib\jsdom\living\window\Location-impl.js:25:17
+)
+    at LocationImpl.set href [as href] (C:\military-Rur
+al Revitalization-system\frontend\node_modules\jsdom\li
+b\jsdom\living\window\Location-impl.js:47:10)
+    at Location.set href [as href] (C:\military-Rural R
+evitalization-system\frontend\node_modules\jsdom\lib\js
+dom\living\generated\Location.js:125:37)
+    at pushSafe (C:\military-Rural Revitalization-syste
+m\frontend\src\composables\useRouterSafe.ts:65:25)
+    at Proxy.handleCreate (C:\military-Rural Revitaliza
+tion-system\frontend\src\views\projects\List.vue:355:3)
+    at C:\military-Rural Revitalization-system\frontend
+\src\views\projects\__tests__\ProjectList.spec.ts:454:8
+ [90mundefined[39m
+
+[90mstderr[2m | src/views/projects/__tests__/ProjectL
+ist.spec.ts[2m > [22m[2m瀵艰埅[2m > [22m[2mhandleVie
+w 搴旇烦杞埌 /projects/:id
+[22m[39m璺宠浆寮傚父: TypeError: Cannot read properties of 
+undefined (reading 'catch')
+    at pushSafe [90m(C:\military-Rural Revitalization-
+system\frontend\[39msrc\composables\useRouterSafe.ts:5
+6:23[90m)[39m
+    at Proxy.handleView [90m(C:\military-Rural Revital
+ization-system\frontend\[39msrc\views\projects\List.vu
+e:364:3[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39msrc\views\projects\__tests__\ProjectList.spe
+c.ts:464:8
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:5
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:11[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runFiles [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1262:5[90m)[39m
+    at startTests [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1271:3[90m)[39m
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4mvitest[24m/dist/
+chunks/runBaseTests.3qpJUEJM.js:126:11
+Error: Not implemented: navigation (except hash changes
+)
+    at module.exports (C:\military-Rural Revitalization
+-system\frontend\node_modules\jsdom\lib\jsdom\browser\n
+ot-implemented.js:9:17)
+    at navigateFetch (C:\military-Rural Revitalization-
+system\frontend\node_modules\jsdom\lib\jsdom\living\win
+dow\navigation.js:77:3)
+    at exports.navigate (C:\military-Rural Revitalizati
+on-system\frontend\node_modules\jsdom\lib\jsdom\living\
+window\navigation.js:55:3)
+    at LocationImpl._locationObjectNavigate (C:\militar
+y-Rural Revitalization-system\frontend\node_modules\jsd
+om\lib\jsdom\living\window\Location-impl.js:31:5)
+    at LocationImpl._locationObjectSetterNavigate (C:\m
+ilitary-Rural Revitalization-system\frontend\node_modul
+es\jsdom\lib\jsdom\living\window\Location-impl.js:25:17
+)
+    at LocationImpl.set href [as href] (C:\military-Rur
+al Revitalization-system\frontend\node_modules\jsdom\li
+b\jsdom\living\window\Location-impl.js:47:10)
+    at Location.set href [as href] (C:\military-Rural R
+evitalization-system\frontend\node_modules\jsdom\lib\js
+dom\living\generated\Location.js:125:37)
+    at pushSafe (C:\military-Rural Revitalization-syste
+m\frontend\src\composables\useRouterSafe.ts:65:25)
+    at Proxy.handleView (C:\military-Rural Revitalizati
+on-system\frontend\src\views\projects\List.vue:364:3)
+    at C:\military-Rural Revitalization-system\frontend
+\src\views\projects\__tests__\ProjectList.spec.ts:464:8
+ [90mundefined[39m
+
+[90mstderr[2m | src/views/projects/__tests__/ProjectL
+ist.spec.ts[2m > [22m[2m瀵艰埅[2m > [22m[2mhandleEdi
+t 搴旇烦杞埌 /projects/:id/edit
+[22m[39m璺宠浆寮傚父: TypeError: Cannot read properties of 
+undefined (reading 'catch')
+    at pushSafe [90m(C:\military-Rural Revitalization-
+system\frontend\[39msrc\composables\useRouterSafe.ts:5
+6:23[90m)[39m
+    at Proxy.handleEdit [90m(C:\military-Rural Revital
+ization-system\frontend\[39msrc\views\projects\List.vu
+e:373:3[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39msrc\views\projects\__tests__\ProjectList.spe
+c.ts:474:8
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:5
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:11[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runFiles [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1262:5[90m)[39m
+    at startTests [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1271:3[90m)[39m
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4mvitest[24m/dist/
+chunks/runBaseTests.3qpJUEJM.js:126:11
+Error: Not implemented: navigation (except hash changes
+)
+    at module.exports (C:\military-Rural Revitalization
+-system\frontend\node_modules\jsdom\lib\jsdom\browser\n
+ot-implemented.js:9:17)
+    at navigateFetch (C:\military-Rural Revitalization-
+system\frontend\node_modules\jsdom\lib\jsdom\living\win
+dow\navigation.js:77:3)
+    at exports.navigate (C:\military-Rural Revitalizati
+on-system\frontend\node_modules\jsdom\lib\jsdom\living\
+window\navigation.js:55:3)
+    at LocationImpl._locationObjectNavigate (C:\militar
+y-Rural Revitalization-system\frontend\node_modules\jsd
+om\lib\jsdom\living\window\Location-impl.js:31:5)
+    at LocationImpl._locationObjectSetterNavigate (C:\m
+ilitary-Rural Revitalization-system\frontend\node_modul
+es\jsdom\lib\jsdom\living\window\Location-impl.js:25:17
+)
+    at LocationImpl.set href [as href] (C:\military-Rur
+al Revitalization-system\frontend\node_modules\jsdom\li
+b\jsdom\living\window\Location-impl.js:47:10)
+    at Location.set href [as href] (C:\military-Rural R
+evitalization-system\frontend\node_modules\jsdom\lib\js
+dom\living\generated\Location.js:125:37)
+    at pushSafe (C:\military-Rural Revitalization-syste
+m\frontend\src\composables\useRouterSafe.ts:65:25)
+    at Proxy.handleEdit (C:\military-Rural Revitalizati
+on-system\frontend\src\views\projects\List.vue:373:3)
+    at C:\military-Rural Revitalization-system\frontend
+\src\views\projects\__tests__\ProjectList.spec.ts:474:8
+ [90mundefined[39m
+
+[90mstderr[2m | src/views/projects/__tests__/ProjectL
+ist.spec.ts[2m > [22m[2m寮傚父澶勭悊[2m > [22m[2mloadDa
+ta 澶辫触搴旀樉绀洪敊璇秷鎭笖 loading 鎭㈠涓?false
+[22m[39m[Projects] loadData failed: Error: 鏈嶅姟鍣ㄩ敊璇?  
+  at [90mC:\military-Rural Revitalization-system\front
+end\[39msrc\views\projects\__tests__\ProjectList.spec.
+ts:544:36
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runFiles [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1262:5[90m)[39m
+    at startTests [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1271:3[90m)[39m
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4mvitest[24m/dist/
+chunks/runBaseTests.3qpJUEJM.js:126:11
+
+ [32m鉁?[39m src/views/projects/__tests__/ProjectList.spec.ts [2m([22m[2m31 tests[22m[2m)[22m[33m 7593[2mms[22m[39m
+   [33m[2m鉁?[22m[39m 鍒濆鍖栧姞杞?[2m > [22m鎸傝浇鍚庡簲璋冪敤 loadData 鍜?loadStats [33m1633[2mms[22m[39m
+   [33m[2m鉁?[22m[39m 鍒濆鍖栧姞杞?[2m > [22m鍔犺浇鏈熼棿 loading 搴斾负 true [33m447[2mms[22m[39m
+   [33m[2m鉁?[22m[39m 鎼滅储绛涢€?[2m > [22mhandleSearch 搴旈噸缃〉鐮佷负1骞惰皟鐢?loadData [33m428[2mms[22m[39m
+   [33m[2m鉁?[22m[39m 鎼滅储绛涢€?[2m > [22m鎸夌被鍨嬬瓫閫夊簲浼犻€?project_type 鍙傛暟 [33m416[2mms[22m[39m
+   [33m[2m鉁?[22m[39m 鎼滅储绛涢€?[2m > [22m绌虹瓫閫夊€间笉搴斾綔涓哄弬鏁颁紶閫掞紙杞负 undefined锛?[33m391[2mms[22m[39m
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2m鍒濆鐘舵€?
+ isDirty=false, isSaving=false, lastSaved=null
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mmarkDir
+ty 鍚?isDirty 鍙?true
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2m寤惰繜鍚庤嚜鍔
+ㄨЕ鍙?saveFn
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mtrigger
+Save 鎴愬姛鏃舵洿鏂?lastSaved 骞舵竻闄?isDirty
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mtrigger
+Save 澶辫触鏃朵笉鎶涘嚭浣?console.error 璁板綍
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2m鏈?markD
+irty 鏃?triggerSave 涓嶄細璋冪敤 saveFn
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mpause 鏆
+傚仠鍚?triggerSave 涓嶆墽琛?[22m[39m[Vue warn]: onUnmounted 
+is called when there is no active component instance to
+ be associated with. Lifecycle injection APIs can only 
+be used during execution of setup(). If you are using a
+sync setup(), make sure to register lifecycle hooks bef
+ore the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mresume 
+鎭㈠鍚?triggerSave 姝ｅ父
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2menabled
+=false 鏃?triggerSave 涓嶆墽琛?[22m[39m[Vue warn]: onUnmou
+nted is called when there is no active component instan
+ce to be associated with. Lifecycle injection APIs can 
+only be used during execution of setup(). If you are us
+ing async setup(), make sure to register lifecycle hook
+s before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mpersist
+Draft=true 鏃?markDirty 鍐欏叆 localStorage
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mrestore
+Draft 杩斿洖 null 褰撴棤 storageKey
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mrestore
+Draft 杩斿洖 null 褰撴棤鑽夌
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mrestore
+Draft 杩斿洖宸插瓨鑽夌
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+[90mstderr[2m | tests/unit/composables/useAutoSave.te
+st.ts[2m > [22m[2museAutoSave[2m > [22m[2mclearDr
+aft 娓呴櫎 localStorage 鍜?hasDraft
+[22m[39m[Vue warn]: onUnmounted is called when there 
+is no active component instance to be associated with. 
+Lifecycle injection APIs can only be used during execut
+ion of setup(). If you are using async setup(), make su
+re to register lifecycle hooks before the first await s
+tatement.
+
+ [32m鉁?[39m tests/unit/composables/useAutoSave.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 86[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/dataPackage.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 88[2mms[22m[39m
+ [32m鉁?[39m tests/unit/sanitize.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 325[2mms[22m[39m
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API 
+is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+ [32m鉁?[39m tests/unit/stores/auth.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 121[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/simple-stores.test.ts [2m([22m[2m16 tests[22m[2m)[22m[90m 82[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useResponsiveSidebar.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 191[2mms[22m[39m
+ [32m鉁?[39m tests/unit/views/dashboard/GlobalSearch.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 530[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/funds-store.test.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 52[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/request-interceptors.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 156[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/message.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 34[2mms[22m[39m
+[90mstderr[2m | tests/unit/utils/clipboard.test.ts[2
+m > [22m[2mutils/clipboard[2m > [22m[2mcopyToClipb
+oard[2m > [22m[2mnavigator.clipboard 鎶涢敊 -> 闄嶇骇鍒?exe
+cCommand
+[22m[39m鍓创鏉垮啓鍏ュけ璐? Error: denied
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\clipboard.test.ts:31:101
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runFiles [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1262:5[90m)[39m
+    at startTests [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1271:3[90m)[39m
+
+[90mstderr[2m | tests/unit/utils/clipboard.test.ts[2
+m > [22m[2mutils/clipboard[2m > [22m[2mcopyToClipb
+oard[2m > [22m[2mexecCommand 涔熷け璐? 閿欒娑堟伅
+[22m[39m澶嶅埗澶辫触: Error: exec fail
+    at Document.<anonymous> [90m(C:\military-Rural Rev
+italization-system\frontend\[39mtests\unit\utils\clipb
+oard.test.ts:54:50[90m)[39m
+    at Document.mockCall [90m(file:///C:/military-Rura
+l%20Revitalization-system/frontend/[39mnode_modules/[
+4m@vitest/spy[24m/dist/index.js:61:17[90m)[39m
+    at Document.spy [as execCommand] [90m(file:///C:/m
+ilitary-Rural%20Revitalization-system/frontend/[39mnod
+e_modules/[4mtinyspy[24m/dist/index.js:45:80[90m)[3
+9m
+    at Module.copyToClipboard [90m(C:\military-Rural R
+evitalization-system\frontend\[39msrc\utils\clipboard.
+ts:37:14[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\clipboard.test.ts:55:23
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+ [32m鉁?[39m tests/unit/api/projectsSchools.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 58[2mms[22m[39m
+[90mstderr[2m | tests/unit/utils/LocalStorageManager.
+test.ts[2m > [22m[2mutils/LocalStorageManager[2m > 
+[22m[2msaveData[2m > [22m[2mserialize error -> fal
+se
+[22m[39mFailed to save data for key a: TypeError: Con
+verting circular structure to JSON
+    --> starting at object with constructor 'Object'
+    --- property 'self' closes the circle
+    at JSON.stringify (<anonymous>)
+    at LocalStorageManager.saveData [90m(C:\military-R
+ural Revitalization-system\frontend\[39msrc\utils\Loca
+lStorageManager.ts:38:29[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\LocalStorageManager.test.ts
+:23:18
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+[90mstderr[2m | tests/unit/utils/LocalStorageManager.
+test.ts[2m > [22m[2mutils/LocalStorageManager[2m > 
+[22m[2mgetData[2m > [22m[2minvalid JSON -> null
+[22m[39mFailed to get data for key a: SyntaxError: Un
+expected token 'o', "not-json" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at LocalStorageManager.getData [90m(C:\military-Ru
+ral Revitalization-system\frontend\[39msrc\utils\Local
+StorageManager.ts:54:19[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\LocalStorageManager.test.ts
+:30:90
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+[90mstderr[2m | tests/unit/utils/LocalStorageManager.
+test.ts[2m > [22m[2mutils/LocalStorageManager[2m > 
+[22m[2mstorage unavailable[2m > [22m[2msaveData re
+turns false
+[22m[39mLocalStorage is not available: Error: quota
+    at Object.localStorage.setItem [90m(C:\military-Ru
+ral Revitalization-system\frontend\[39mtests\unit\util
+s\LocalStorageManager.test.ts:83:54[90m)[39m
+    at LocalStorageManager.isStorageAvailable [90m(C:\
+military-Rural Revitalization-system\frontend\[39msrc\
+utils\LocalStorageManager.ts:24:20[90m)[39m
+    at LocalStorageManager.saveData [90m(C:\military-R
+ural Revitalization-system\frontend\[39msrc\utils\Loca
+lStorageManager.ts:35:15[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\LocalStorageManager.test.ts
+:84:18
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+[90mstderr[2m | tests/unit/utils/LocalStorageManager.
+test.ts[2m > [22m[2mutils/LocalStorageManager[2m > 
+[22m[2mstorage unavailable[2m > [22m[2mgetData ret
+urns null
+[22m[39mLocalStorage is not available: Error: quota
+    at Object.localStorage.setItem [90m(C:\military-Ru
+ral Revitalization-system\frontend\[39mtests\unit\util
+s\LocalStorageManager.test.ts:89:54[90m)[39m
+    at LocalStorageManager.isStorageAvailable [90m(C:\
+military-Rural Revitalization-system\frontend\[39msrc\
+utils\LocalStorageManager.ts:24:20[90m)[39m
+    at LocalStorageManager.getData [90m(C:\military-Ru
+ral Revitalization-system\frontend\[39msrc\utils\Local
+StorageManager.ts:49:15[90m)[39m
+    at [90mC:\military-Rural Revitalization-system\fro
+ntend\[39mtests\unit\utils\LocalStorageManager.test.ts
+:90:18
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:146:14
+    at [90mfile:///C:/military-Rural%20Revitalization-
+system/frontend/[39mnode_modules/[4m@vitest/runner[2
+4m/dist/index.js:533:11
+    at runWithTimeout [90m(file:///C:/military-Rural%2
+0Revitalization-system/frontend/[39mnode_modules/[4m@
+vitest/runner[24m/dist/index.js:39:7[90m)[39m
+    at runTest [90m(file:///C:/military-Rural%20Revita
+lization-system/frontend/[39mnode_modules/[4m@vitest/
+runner[24m/dist/index.js:1056:17[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+    at runSuite [90m(file:///C:/military-Rural%20Revit
+alization-system/frontend/[39mnode_modules/[4m@vitest
+/runner[24m/dist/index.js:1205:15[90m)[39m
+
+ [32m鉁?[39m tests/unit/utils/clipboard.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 229[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/LocalStorageManager.test.ts [2m([22m[2m21 tests[22m[2m)[22m[90m 129[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/analytics.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 54[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/dataReport.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 83[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/logger.test.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 75[2mms[22m[39m
+ [32m鉁?[39m tests/unit/logger.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 62[2mms[22m[39m
+ [32m鉁?[39m tests/unit/offlineMock.test.ts [2m([22m[2m17 tests[22m[2m)[22m[90m 68[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/import.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 34[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/sanitize.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 223[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/stores-coverage.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 10180[2mms[22m[39m
+   [33m[2m鉁?[22m[39m Store Import Verification[2m > [22mshould import auth store [33m7966[2mms[22m[39m
+   [33m[2m鉁?[22m[39m Store Import Verification[2m > [22mshould import funds store [33m340[2mms[22m[39m
+   [33m[2m鉁?[22m[39m Store Import Verification[2m > [22mshould import village store [33m343[2mms[22m[39m
+   [33m[2m鉁?[22m[39m Store Import Verification[2m > [22mshould import organization store [33m531[2mms[22m[39m
+   [33m[2m鉁?[22m[39m Store Import Verification[2m > [22mshould import rbac store [33m531[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/rbac-store.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 83[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/geo.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 207[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/misc-stores.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 304[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils-core.test.ts [2m([22m[2m26 tests[22m[2m)[22m[33m 359[2mms[22m[39m
+   [33m[2m鉁?[22m[39m format[2m > [22mformatCurrency[2m > [22m鏍煎紡鍖栬揣甯佸€?[33m328[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 112[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/report.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 35[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/rbac.test.ts [2m([22m[2m13 tests[22m[2m)[22m[90m 267[2mms[22m[39m
+[90mstderr[2m | tests/unit/composables/useKeyboardSho
+rtcuts.test.ts[2m > [22m[2museKeyboardShortcuts[2m 
+> [22m[2mreturns registered shortcuts
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+[Vue warn]: onUnmounted is called when there is no acti
+ve component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of set
+up(). If you are using async setup(), make sure to regi
+ster lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useKeyboardSho
+rtcuts.test.ts[2m > [22m[2museKeyboardShortcuts[2m 
+> [22m[2mregister adds a new shortcut
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+[Vue warn]: onUnmounted is called when there is no acti
+ve component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of set
+up(). If you are using async setup(), make sure to regi
+ster lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useKeyboardSho
+rtcuts.test.ts[2m > [22m[2museKeyboardShortcuts[2m 
+> [22m[2munregister removes a shortcut
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+[Vue warn]: onUnmounted is called when there is no acti
+ve component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of set
+up(). If you are using async setup(), make sure to regi
+ster lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useKeyboardSho
+rtcuts.test.ts[2m > [22m[2museKeyboardShortcuts[2m 
+> [22m[2mconflicts detects duplicate combos
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+[Vue warn]: onUnmounted is called when there is no acti
+ve component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of set
+up(). If you are using async setup(), make sure to regi
+ster lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useKeyboardSho
+rtcuts.test.ts[2m > [22m[2museKeyboardShortcuts[2m 
+> [22m[2mgroupedShortcuts groups by group
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+[Vue warn]: onUnmounted is called when there is no acti
+ve component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of set
+up(). If you are using async setup(), make sure to regi
+ster lifecycle hooks before the first await statement.
+
+[90mstderr[2m | tests/unit/composables/useKeyboardSho
+rtcuts.test.ts[2m > [22m[2museKeyboardShortcuts[2m 
+> [22m[2mshowHelp defaults to false
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+[Vue warn]: onUnmounted is called when there is no acti
+ve component instance to be associated with. Lifecycle 
+injection APIs can only be used during execution of set
+up(). If you are using async setup(), make sure to regi
+ster lifecycle hooks before the first await statement.
+
+ [32m鉁?[39m tests/unit/composables/useKeyboardShortcuts.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 72[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useSaveStatus.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 38[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/errorLogger.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 210[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/usePrint.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 52[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useECharts.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 634[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/audit.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 24[2mms[22m[39m
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2mextracts messag
+e from err.response.data.message
+[22m[39m[ErrorHandler] 淇濆瓨鏁版嵁 {
+  message: [32m'淇濆瓨鏁版嵁澶辫触: invalid input'[39m,
+  code: [33m400[39m,
+  details: { message: [32m'invalid input'[39m }
+}
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2mfalls back to e
+rr.response.data.detail
+[22m[39m[ErrorHandler] unknown context {
+  message: [32m'鎿嶄綔澶辫触: detail msg'[39m,
+  code: [33m500[39m,
+  details: { detail: [32m'detail msg'[39m }
+}
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2mfalls back to e
+rr.message
+[22m[39m[ErrorHandler] unknown context {
+  message: [32m'鎿嶄綔澶辫触: boom'[39m,
+  code: [90mundefined[39m,
+  details: Error: boom
+      at [90mC:\military-Rural Revitalization-system\f
+rontend\[39mtests\unit\composables\useErrorHandler.tes
+t.ts:33:21
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:146:14
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:533:11
+      at runWithTimeout [90m(file:///C:/military-Rural
+%20Revitalization-system/frontend/[39mnode_modules/[4
+m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+      at runTest [90m(file:///C:/military-Rural%20Revi
+talization-system/frontend/[39mnode_modules/[4m@vites
+t/runner[24m/dist/index.js:1056:17[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runFiles [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1262:5[90m)[39m
+      at startTests [90m(file:///C:/military-Rural%20R
+evitalization-system/frontend/[39mnode_modules/[4m@vi
+test/runner[24m/dist/index.js:1271:3[90m)[39m
+}
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2mfalls back to e
+rr as truthy
+[22m[39m[ErrorHandler] unknown context {
+  message: [32m'鎿嶄綔澶辫触: string error'[39m,
+  code: [90mundefined[39m,
+  details: [32m'string error'[39m
+}
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2mfalls back to 鏈
+煡閿欒
+[22m[39m[ErrorHandler] unknown context { message: [3
+2m'鎿嶄綔澶辫触: 鏈煡閿欒'[39m, code: [90mundefined[39m, det
+ails: [1mnull[22m }
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2muses err.code w
+hen no response.status
+[22m[39m[ErrorHandler] unknown context {
+  message: [32m'鎿嶄綔澶辫触: [object Object]'[39m,
+  code: [32m'E001'[39m,
+  details: { code: [32m'E001'[39m }
+}
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2mshowNotificatio
+n=false 璺宠繃 ElMessage
+[22m[39m[ErrorHandler] ctx {
+  message: [32m'ctx澶辫触: x'[39m,
+  code: [90mundefined[39m,
+  details: Error: x
+      at [90mC:\military-Rural Revitalization-system\f
+rontend\[39mtests\unit\composables\useErrorHandler.tes
+t.ts:54:21
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:146:14
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:533:11
+      at runWithTimeout [90m(file:///C:/military-Rural
+%20Revitalization-system/frontend/[39mnode_modules/[4
+m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+      at runTest [90m(file:///C:/military-Rural%20Revi
+talization-system/frontend/[39mnode_modules/[4m@vites
+t/runner[24m/dist/index.js:1056:17[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runFiles [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1262:5[90m)[39m
+      at startTests [90m(file:///C:/military-Rural%20R
+evitalization-system/frontend/[39mnode_modules/[4m@vi
+test/runner[24m/dist/index.js:1271:3[90m)[39m
+}
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2mshowNotificatio
+n=true 璋?ElMessage
+[22m[39m[ErrorHandler] unknown context {
+  message: [32m'鎿嶄綔澶辫触: x'[39m,
+  code: [90mundefined[39m,
+  details: Error: x
+      at [90mC:\military-Rural Revitalization-system\f
+rontend\[39mtests\unit\composables\useErrorHandler.tes
+t.ts:59:21
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:146:14
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:533:11
+      at runWithTimeout [90m(file:///C:/military-Rural
+%20Revitalization-system/frontend/[39mnode_modules/[4
+m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+      at runTest [90m(file:///C:/military-Rural%20Revi
+talization-system/frontend/[39mnode_modules/[4m@vites
+t/runner[24m/dist/index.js:1056:17[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runFiles [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1262:5[90m)[39m
+      at startTests [90m(file:///C:/military-Rural%20R
+evitalization-system/frontend/[39mnode_modules/[4m@vi
+test/runner[24m/dist/index.js:1271:3[90m)[39m
+}
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleError[2m > [22m[2mreturns errorSt
+ate
+[22m[39m[ErrorHandler] unknown context {
+  message: [32m'鎿嶄綔澶辫触: x'[39m,
+  code: [90mundefined[39m,
+  details: Error: x
+      at [90mC:\military-Rural Revitalization-system\f
+rontend\[39mtests\unit\composables\useErrorHandler.tes
+t.ts:73:31
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:146:14
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:533:11
+      at runWithTimeout [90m(file:///C:/military-Rural
+%20Revitalization-system/frontend/[39mnode_modules/[4
+m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+      at runTest [90m(file:///C:/military-Rural%20Revi
+talization-system/frontend/[39mnode_modules/[4m@vites
+t/runner[24m/dist/index.js:1056:17[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runFiles [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1262:5[90m)[39m
+      at startTests [90m(file:///C:/military-Rural%20R
+evitalization-system/frontend/[39mnode_modules/[4m@vi
+test/runner[24m/dist/index.js:1271:3[90m)[39m
+}
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mhandleWarning[2m > [22m[2m璋?ElMessage w
+arning
+[22m[39m[WarningHandler] careful
+
+[90mstderr[2m | tests/unit/composables/useErrorHandle
+r.test.ts[2m > [22m[2mcomposables/useErrorHandler[2
+m > [22m[2mclearError[2m > [22m[2m娓呯┖ errorState
+[22m[39m[ErrorHandler] unknown context {
+  message: [32m'鎿嶄綔澶辫触: x'[39m,
+  code: [90mundefined[39m,
+  details: Error: x
+      at [90mC:\military-Rural Revitalization-system\f
+rontend\[39mtests\unit\composables\useErrorHandler.tes
+t.ts:104:21
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:146:14
+      at [90mfile:///C:/military-Rural%20Revitalizatio
+n-system/frontend/[39mnode_modules/[4m@vitest/runner
+[24m/dist/index.js:533:11
+      at runWithTimeout [90m(file:///C:/military-Rural
+%20Revitalization-system/frontend/[39mnode_modules/[4
+m@vitest/runner[24m/dist/index.js:39:7[90m)[39m
+      at runTest [90m(file:///C:/military-Rural%20Revi
+talization-system/frontend/[39mnode_modules/[4m@vites
+t/runner[24m/dist/index.js:1056:17[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runSuite [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1205:15[90m)[39m
+      at runFiles [90m(file:///C:/military-Rural%20Rev
+italization-system/frontend/[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.js:1262:5[90m)[39m
+      at startTests [90m(file:///C:/military-Rural%20R
+evitalization-system/frontend/[39mnode_modules/[4m@vi
+test/runner[24m/dist/index.js:1271:3[90m)[39m
+}
+
+ [32m鉁?[39m tests/unit/composables/useErrorHandler.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 4919[2mms[22m[39m
+   [33m[2m鉁?[22m[39m composables/useErrorHandler[2m > [22mhandleError[2m > [22mfalls back to err.message [33m609[2mms[22m[39m
+   [33m[2m鉁?[22m[39m composables/useErrorHandler[2m > [22mhandleError[2m > [22mshowNotification=false 璺宠繃 ElMessage [33m915[2mms[22m[39m
+   [33m[2m鉁?[22m[39m composables/useErrorHandler[2m > [22mhandleError[2m > [22mshowNotification=true 璋?ElMessage [33m2667[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useVirtualScroll.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 180[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/organizationPassCode.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 34[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/fundStatistics.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 138[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/organization.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 69[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/roleAccess.test.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 101[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/map.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 21[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/security.test.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 29[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/policy.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 39[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/machineCode.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 191[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/network-status.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 274[2mms[22m[39m
+[90mstdout[2m | tests/unit/composables/useRouterSafe.test.ts[2m > [22m[2museRouterSafe[2m > [22m[2mpushSafe 鎺ュ彈 debugLabel 鍙傛暟 (鏃犲壇浣滅敤)
+[22m[39m灏濊瘯璺宠浆鍒版祴璇曢〉闈㈤〉闈?
+ [32m鉁?[39m tests/unit/composables/useRouterSafe.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 39[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useEventBus.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API 
+is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+[90mstderr[2m | tests/unit/views/dashboard/PageHeader
+.test.ts[2m > [22m[2mPageHeader.vue[2m > [22m[2mn
+avigates to /data-analysis when clicking 鏁版嵁鍒嗘瀽
+[22m[39m璺宠浆寮傚父: TypeError: Cannot read properties of 
+undefined (reading 'catch')
+    at Proxy.pushSafe [90m(C:\military-Rural Revitaliz
+ation-system\frontend\[39msrc\composables\useRouterSaf
+e.ts:56:23[90m)[39m
+    at __vite_ssr_import_8__.createElementBlock.__vite_
+ssr_import_8__.createElementVNode.__vite_ssr_import_8__
+.createVNode.onClick._cache.<computed>._cache.<computed
+> [90m(C:\military-Rural Revitalization-system\fronten
+d\[39msrc\views\dashboard\PageHeader.vue:20:71[90m)[
+39m
+    at callWithErrorHandling [90m(C:\military-Rural Re
+vitalization-system\frontend\[39mnode_modules\[4m@vue
+\runtime-core[24m\dist\runtime-core.cjs.js:200:19[90m
+)[39m
+    at Object.callWithAsyncErrorHandling [90m(C:\milit
+ary-Rural Revitalization-system\frontend\[39mnode_modu
+les\[4m@vue\runtime-core[24m\dist\runtime-core.cjs.js
+:207:17[90m)[39m
+    at HTMLElement.invoker [90m(C:\military-Rural Revi
+talization-system\frontend\[39mnode_modules\[4m@vue\r
+untime-dom[24m\dist\runtime-dom.cjs.js:704:19[90m)[3
+9m
+    at HTMLElement.callTheUserObjectsOperation [90m(C:
+\military-Rural Revitalization-system\frontend\[39mnod
+e_modules\[4mjsdom[24m\lib\jsdom\living\generated\Eve
+ntListener.js:26:30[90m)[39m
+    at innerInvokeEventListeners [90m(C:\military-Rura
+l Revitalization-system\frontend\[39mnode_modules\[4m
+jsdom[24m\lib\jsdom\living\events\EventTarget-impl.js:
+350:25[90m)[39m
+    at invokeEventListeners [90m(C:\military-Rural Rev
+italization-system\frontend\[39mnode_modules\[4mjsdom
+[24m\lib\jsdom\living\events\EventTarget-impl.js:286:3
+[90m)[39m
+    at HTMLElementImpl._dispatch [90m(C:\military-Rura
+l Revitalization-system\frontend\[39mnode_modules\[4m
+jsdom[24m\lib\jsdom\living\events\EventTarget-impl.js:
+233:9[90m)[39m
+    at HTMLElementImpl.dispatchEvent [90m(C:\military-
+Rural Revitalization-system\frontend\[39mnode_modules\
+[4mjsdom[24m\lib\jsdom\living\events\EventTarget-impl
+.js:104:17[90m)[39m
+Error: Not implemented: navigation (except hash changes
+)
+    at module.exports (C:\military-Rural Revitalization
+-system\frontend\node_modules\jsdom\lib\jsdom\browser\n
+ot-implemented.js:9:17)
+    at navigateFetch (C:\military-Rural Revitalization-
+system\frontend\node_modules\jsdom\lib\jsdom\living\win
+dow\navigation.js:77:3)
+    at exports.navigate (C:\military-Rural Revitalizati
+on-system\frontend\node_modules\jsdom\lib\jsdom\living\
+window\navigation.js:55:3)
+    at LocationImpl._locationObjectNavigate (C:\militar
+y-Rural Revitalization-system\frontend\node_modules\jsd
+om\lib\jsdom\living\window\Location-impl.js:31:5)
+    at LocationImpl._locationObjectSetterNavigate (C:\m
+ilitary-Rural Revitalization-system\frontend\node_modul
+es\jsdom\lib\jsdom\living\window\Location-impl.js:25:17
+)
+    at LocationImpl.set href [as href] (C:\military-Rur
+al Revitalization-system\frontend\node_modules\jsdom\li
+b\jsdom\living\window\Location-impl.js:47:10)
+    at Location.set href [as href] (C:\military-Rural R
+evitalization-system\frontend\node_modules\jsdom\lib\js
+dom\living\generated\Location.js:125:37)
+    at Proxy.pushSafe (C:\military-Rural Revitalization
+-system\frontend\src\composables\useRouterSafe.ts:65:25
+)
+    at __vite_ssr_import_8__.createElementBlock.__vite_
+ssr_import_8__.createElementVNode.__vite_ssr_import_8__
+.createVNode.onClick._cache.<computed>._cache.<computed
+> (C:\military-Rural Revitalization-system\frontend\src
+\views\dashboard\PageHeader.vue:20:71)
+    at callWithErrorHandling (C:\military-Rural Revital
+ization-system\frontend\node_modules\@vue\runtime-core\
+dist\runtime-core.cjs.js:200:19) [90mundefined[39m
+
+ [32m鉁?[39m tests/unit/views/dashboard/PageHeader.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 261[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useBatchOperation.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 41[2mms[22m[39m
+[90mstderr[2m | tests/unit/composables/useOnboarding.
+test.ts[2m > [22m[2museOnboarding[2m > [22m[2m杩斿洖
+ startTour 鍑芥暟
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+
+[90mstderr[2m | tests/unit/composables/useOnboarding.
+test.ts[2m > [22m[2museOnboarding[2m > [22m[2msta
+rtTour 璋冪敤 driver() 鍜?drive()
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+
+[90mstderr[2m | tests/unit/composables/useOnboarding.
+test.ts[2m > [22m[2museOnboarding[2m > [22m[2msta
+rtTour 浼犲叆 dashboardSteps 浣滀负 steps 閰嶇疆
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+
+[90mstderr[2m | tests/unit/composables/useOnboarding.
+test.ts[2m > [22m[2museOnboarding[2m > [22m[2msta
+rtTour 閰嶇疆 showProgress=true
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+
+[90mstderr[2m | tests/unit/composables/useOnboarding.
+test.ts[2m > [22m[2museOnboarding[2m > [22m[2msta
+rtTour 閰嶇疆鍖呭惈涓枃鎸夐挳鏂囨湰
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+
+[90mstderr[2m | tests/unit/composables/useOnboarding.
+test.ts[2m > [22m[2museOnboarding[2m > [22m[2monD
+estroyed 鏃跺啓鍏?localStorage 鏍囪
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+
+[90mstderr[2m | tests/unit/composables/useOnboarding.
+test.ts[2m > [22m[2museOnboarding[2m > [22m[2mfor
+ce=true 鏃?useOnboarding 浠嶆甯歌繑鍥?startTour
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+
+[90mstderr[2m | tests/unit/composables/useOnboarding.
+test.ts[2m > [22m[2museOnboarding[2m > [22m[2mopt
+ions 涓虹┖鏃朵篃杩斿洖 startTour
+[22m[39m[Vue warn]: onMounted is called when there is
+ no active component instance to be associated with. Li
+fecycle injection APIs can only be used during executio
+n of setup(). If you are using async setup(), make sure
+ to register lifecycle hooks before the first await sta
+tement.
+
+ [32m鉁?[39m tests/unit/composables/useOnboarding.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 45[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useConfirm.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 51[2mms[22m[39m
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API 
+is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+ [32m鉁?[39m tests/unit/composables/useApiCache.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 37[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/request.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 44[2mms[22m[39m
+ [32m鉁?[39m tests/unit/views/dashboard/ChartRow.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1032[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useApiError.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 32[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/mini-stores.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 40[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/offline.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 28[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api-modules.test.ts [2m([22m[2m44 tests[22m[2m)[22m[33m 37386[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mfunds 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m8133[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22maudit 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m360[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mbackup 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m301[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mfundLifecycle 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m521[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mpolicy 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m415[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mruralWork 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m1016[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mtodos 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m999[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22morganization 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m651[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mofflineMap 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m1094[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22morganizationPassCode 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m315[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mmachineCode 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m3008[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mdataSync 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m811[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22menv 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m2409[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mi18n 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m1355[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mtwoFactor 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m539[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mdashboard 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m556[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mbatchOperations 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m569[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mchunkedUpload 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m772[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mdataQuality 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m517[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mdataTier 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m462[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22meffectiveness 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m836[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22merrorReport 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m1603[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mfundStatistics 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m712[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mhelp 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m985[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mimport 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m313[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mmessage 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m330[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22msecrets 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m1307[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22msystemMonitor 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m1490[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mtasks 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m505[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mupdateLogs 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m705[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22muserManagement 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m372[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22muserPermissions 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m713[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mvalidationRules 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m875[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mzeroTrust 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m414[2mms[22m[39m
+   [33m[2m鉁?[22m[39m API module structural integrity[2m > [22mai 妯″潡鍙鍏ヤ笖瀵煎嚭闈炵┖瀵硅薄 [33m493[2mms[22m[39m
+ [32m鉁?[39m tests/unit/components/DefaultLayoutSafe.menu.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+[90mstderr[2m | tests/unit/composables/useChunkLoader
+.test.ts[2m > [22m[2museChunkLoader/retryImport[2m 
+> [22m[2m1st fail, 2nd success 鈫?returns result
+[22m[39m[ChunkLoader] 妯″潡鍔犺浇澶辫触锛?0ms 鍚庨噸璇?(1/3) fail
+
+[90mstderr[2m | tests/unit/composables/useChunkLoader
+.test.ts[2m > [22m[2museChunkLoader/retryImport[2m 
+> [22m[2mall failures 鈫?throws last error
+[22m[39m[ChunkLoader] 妯″潡鍔犺浇澶辫触锛?0ms 鍚庨噸璇?(1/3) alway
+s-fail
+
+[90mstderr[2m | tests/unit/composables/useChunkLoader
+.test.ts[2m > [22m[2museChunkLoader/retryImport[2m 
+> [22m[2mall failures 鈫?throws last error
+[22m[39m[ChunkLoader] 妯″潡鍔犺浇澶辫触锛?0ms 鍚庨噸璇?(2/3) alway
+s-fail
+
+[90mstderr[2m | tests/unit/composables/useChunkLoader
+.test.ts[2m > [22m[2museChunkLoader/retryImport[2m 
+> [22m[2mall failures 鈫?throws last error
+[22m[39m[ChunkLoader] 妯″潡鍔犺浇澶辫触锛?0ms 鍚庨噸璇?(3/3) alway
+s-fail
+
+[90mstderr[2m | tests/unit/composables/useChunkLoader
+.test.ts[2m > [22m[2museChunkLoader/retryImport[2m 
+> [22m[2mexponential backoff delay is correct
+[22m[39m[ChunkLoader] 妯″潡鍔犺浇澶辫触锛?00ms 鍚庨噸璇?(1/3) fail
+
+[90mstderr[2m | tests/unit/composables/useChunkLoader
+.test.ts[2m > [22m[2museChunkLoader/retryImport[2m 
+> [22m[2mexponential backoff delay is correct
+[22m[39m[ChunkLoader] 妯″潡鍔犺浇澶辫触锛?00ms 鍚庨噸璇?(2/3) fail
+
+[90mstderr[2m | tests/unit/composables/useChunkLoader
+.test.ts[2m > [22m[2museChunkLoader/retryImport[2m 
+> [22m[2mexponential backoff delay is correct
+[22m[39m[ChunkLoader] 妯″潡鍔犺浇澶辫触锛?00ms 鍚庨噸璇?(3/3) fail
+
+ [32m鉁?[39m tests/unit/composables/useChunkLoader.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 144[2mms[22m[39m
+ [32m鉁?[39m tests/unit/router/permissions.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 23[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useMessageNotification.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 47[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useDebounce.test.ts [2m([22m[2m7 tests[22m[2m)[22m[90m 178[2mms[22m[39m
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API 
+is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+ [32m鉁?[39m tests/unit/exportUtil.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 53[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/app-config.test.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 33[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/mutations/user.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+[90mstderr[2m | tests/unit/views/dashboard/KpiCards.t
+est.ts[2m > [22m[2mKpiCards.vue[2m > [22m[2mrende
+rs 5 stat-card elements
+[22m[39m[Vue warn]: injection "Symbol(router)" not fo
+und. 
+  at <KpiCards ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | tests/unit/views/dashboard/KpiCards.t
+est.ts[2m > [22m[2mKpiCards.vue[2m > [22m[2mrende
+rs .data-number on each card
+[22m[39m[Vue warn]: injection "Symbol(router)" not fo
+und. 
+  at <KpiCards ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | tests/unit/views/dashboard/KpiCards.t
+est.ts[2m > [22m[2mKpiCards.vue[2m > [22m[2mshows
+ green tag for positive, red for negative trend
+[22m[39m[Vue warn]: injection "Symbol(router)" not fo
+und. 
+  at <KpiCards trends= { villages: [33m12[39m, projec
+ts: [33m-3[39m, schools: [33m0[39m, population: [3
+3m8[39m, funds: [33m15[39m } ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+[90mstderr[2m | tests/unit/views/dashboard/KpiCards.t
+est.ts[2m > [22m[2mKpiCards.vue[2m > [22m[2mspark
+line containers render
+[22m[39m[Vue warn]: injection "Symbol(router)" not fo
+und. 
+  at <KpiCards ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ [32m鉁?[39m tests/unit/views/dashboard/KpiCards.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1911[2mms[22m[39m
+   [33m[2m鉁?[22m[39m KpiCards.vue[2m > [22mrenders 5 stat-card elements [33m1319[2mms[22m[39m
+   [33m[2m鉁?[22m[39m KpiCards.vue[2m > [22mrenders .data-number on each card [33m429[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/standaloneTest.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 26[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/systemHealthOfflineMap.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/unwrapList.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/websocket.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 26[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/config.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 21[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useConfirmDialog.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+ [32m鉁?[39m tests/unit/crypto.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 660[2mms[22m[39m
+   [33m[2m鉁?[22m[39m crypto[2m > [22msha256[2m > [22m杩斿洖 64 浣嶅崄鍏繘鍒跺瓧绗︿覆 [33m602[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/menu.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 96[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useSafeData.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useResourcePreloader.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 321[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores-extra.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+ [32m鉁?[39m tests/unit/api/systemMonitor.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/taskQueue.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 29[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/data.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 26[2mms[22m[39m
+DEPRECATION WARNING [legacy-js-api]: The legacy JS API 
+is deprecated and will be removed in Dart Sass 2.0.0.
+
+More info: https://sass-lang.com/d/legacy-js-api
+
+ [32m鉁?[39m tests/unit/stores/project.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 26[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useLazyComponent.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m鉁?[39m tests/unit/views/dashboard/InfoRow.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 555[2mms[22m[39m
+   [33m[2m鉁?[22m[39m InfoRow.vue[2m > [22mrenders at most 10 timeline items [33m359[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useLoading.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 23[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/villager.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 25[2mms[22m[39m
+[90mstdout[2m | tests/unit/composables/useVersionCheck.test.ts[2m > [22m[2museVersionCheck/checkVersion[2m > [22m[2mfetch failure (404) 鈫?silent skip, no exception
+[22m[39m[VersionCheck] /version.json 鑾峰彇澶辫触锛岃烦杩囩増鏈鏌?
+ [32m鉁?[39m tests/unit/composables/useVersionCheck.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 407[2mms[22m[39m
+   [33m[2m鉁?[22m[39m useVersionCheck/checkVersion[2m > [22mversion mismatch 鈫?does not throw [33m389[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/app.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 21[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/village.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 47[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/funds.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 50[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/ruralWork.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 28[2mms[22m[39m
+ [32m鉁?[39m tests/unit/utils/export.test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useMenuPermission.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/core-stores.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 25[2mms[22m[39m
+ [32m鉁?[39m tests/unit/stores/industry.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 20[2mms[22m[39m
+ [32m鉁?[39m tests/unit/composables/useRoutePreload.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m鉁?[39m tests/unit/config/appConfig.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 45[2mms[22m[39m
+ [32m鉁?[39m tests/unit/integration/auth-router.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m鉁?[39m tests/unit/config/constants.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m鉁?[39m tests/unit/components/DataTable.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 364[2mms[22m[39m
+ [32m鉁?[39m tests/unit/components/BaseTable.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 27[2mms[22m[39m
+ [32m鉁?[39m tests/unit/components/ChartCard.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m鉁?[39m tests/unit/cacheManager.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m鉁?[39m src/components/business/__tests__/ProjectCard.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 26[2mms[22m[39m
+ [32m鉁?[39m tests/unit/directives/permission.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 17[2mms[22m[39m
+ [32m鉁?[39m tests/unit/components/EnhancedChart.property.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 30[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m137 passed[39m[22m[90m (137)[39m
+[2m      Tests [22m [1m[32m1681 passed[39m[22m[90m (1681)[39m
+[2m   Start at [22m 18:39:13
+[2m   Duration [22m 290.75s[2m (transform 476.38s, setup 199.92s, collect 786.71s, tests 93.66s, environment 1110.57s, prepare 204.81s)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   20.86 |    86.86 |   56.03 |   20.86 |                   
+ src/api           |   57.98 |    86.51 |    44.5 |   57.98 |                   
+  ai.ts            |   29.54 |      100 |       0 |   29.54 | ...76,82-84,88-91 
+  analytics.ts     |      70 |      100 |    37.5 |      70 | 149-208           
+  approval.ts      |    89.8 |    92.85 |    87.5 |    89.8 | 267-294           
+  audit.ts         |     100 |      100 |     100 |     100 |                   
+  backup.ts        |    9.09 |      100 |       0 |    9.09 | 25-48             
+  ...Operations.ts |   31.81 |      100 |       0 |   31.81 | ...35,39-42,46-47 
+  chunkedUpload.ts |   21.62 |      100 |       0 |   21.62 | 41-81             
+  dashboard.ts     |   30.76 |      100 |       0 |   30.76 | ...34,38-46,50-51 
+  dataPackage.ts   |      90 |      100 |   84.61 |      90 | 143-154           
+  dataQuality.ts   |   25.92 |      100 |       0 |   25.92 | ...36,40-41,45-46 
+  dataSync.ts      |   52.77 |      100 |       0 |   52.77 | ...46-52,57,60,70 
+  dataTier.ts      |   23.91 |      100 |       0 |   23.91 | 74-122            
+  effectiveness.ts |      30 |      100 |       0 |      30 | ...20,24-27,31-34 
+  env.ts           |   57.14 |      100 |       0 |   57.14 | 28-30             
+  errorReport.ts   |    22.5 |      100 |       0 |    22.5 | 46-107            
+  export.ts        |   65.68 |    86.66 |   66.66 |   65.68 | 100-138           
+  fundLifecycle.ts |   82.29 |       72 |   77.27 |   82.29 | ...49-351,355-357 
+  ...Statistics.ts |     100 |      100 |     100 |     100 |                   
+  funds.ts         |   79.05 |    71.87 |   73.33 |   79.05 | ...49-254,256-258 
+  help.ts          |    25.8 |      100 |       0 |    25.8 | 80-118            
+  i18n.ts          |   21.62 |      100 |       0 |   21.62 | 54-94             
+  import.ts        |      50 |      100 |    62.5 |      50 | ...22-135,158-177 
+  machineCode.ts   |   72.61 |      100 |   66.66 |   72.61 | ...63-168,174-179 
+  map.ts           |   76.92 |      100 |   57.14 |   76.92 | 98-108            
+  message.ts       |   81.08 |    94.11 |      75 |   81.08 | 104-133           
+  offlineMap.ts    |     100 |      100 |     100 |     100 |                   
+  organization.ts  |   88.88 |      100 |       0 |   88.88 | 22,27             
+  ...onPassCode.ts |     100 |      100 |     100 |     100 |                   
+  policy.ts        |      88 |      100 |   54.54 |      88 | 70-75,78,83,85    
+  projects.ts      |     100 |      100 |     100 |     100 |                   
+  report.ts        |     100 |      100 |     100 |     100 |                   
+  request.ts       |   44.04 |    66.66 |   54.54 |   44.04 | ...44-480,484-496 
+  ruralWork.ts     |     100 |      100 |   64.28 |     100 |                   
+  schools.ts       |   41.53 |      100 |   21.73 |   41.53 | ...66-71,73,75-77 
+  search.ts        |   83.33 |      100 |       0 |   83.33 | 31-33             
+  secrets.ts       |   19.56 |      100 |       0 |   19.56 | 37-89             
+  sentiment.ts     |   27.58 |      100 |       0 |   27.58 | ...38,42-45,49-52 
+  ...tedVillage.ts |   55.17 |      100 |   25.64 |   55.17 | ...50-154,156-165 
+  systemMonitor.ts |   54.16 |      100 |   33.33 |   54.16 | ...61,67-69,75-77 
+  tasks.ts         |   28.57 |      100 |       0 |   28.57 | 55-106            
+  todos.ts         |      32 |      100 |       0 |      32 | ...47,51-52,56-57 
+  twoFactor.ts     |   36.84 |      100 |       0 |   36.84 | 25-42             
+  updateLogs.ts    |   24.44 |      100 |       0 |   24.44 | 50-118            
+  ...Management.ts |   21.15 |      100 |       0 |   21.15 | 78-151            
+  ...ermissions.ts |    17.7 |      100 |       0 |    17.7 | 39-166            
+  ...ationRules.ts |   33.33 |      100 |       0 |   33.33 | ...44,48-49,53-54 
+  zeroTrust.ts     |      25 |      100 |       0 |      25 | 94-154            
+ src/api/__tests__ |     100 |      100 |     100 |     100 |                   
+  projects.spec.ts |     100 |      100 |     100 |     100 |                   
+ src/api/mutations |     100 |      100 |     100 |     100 |                   
+  user.ts          |     100 |      100 |     100 |     100 |                   
+ src/api/queries   |    7.69 |      100 |       0 |    7.69 |                   
+  user.ts          |    7.69 |      100 |       0 |    7.69 | 6-19              
+ src/components    |       0 |        0 |       0 |       0 |                   
+  ...irmDialog.vue |       0 |        0 |       0 |       0 | 1-96              
+  FilePreview.vue  |       0 |        0 |       0 |       0 | 1-4               
+  GlobalSearch.vue |       0 |        0 |       0 |       0 | 1-4               
+  MapPicker.vue    |       0 |        0 |       0 |       0 | 1-172             
+  PageHeader.vue   |       0 |        0 |       0 |       0 | 1-36              
+  SkeletonList.vue |       0 |        0 |       0 |       0 | 1-39              
+  StatusTag.vue    |       0 |        0 |       0 |       0 | 1-4               
+ ...ents/analytics |       0 |        0 |       0 |       0 |                   
+  ...ncedChart.vue |       0 |        0 |       0 |       0 | 1-14              
+  ...alization.vue |       0 |        0 |       0 |       0 | 1-4               
+ ...nents/business |       0 |        0 |       0 |       0 |                   
+  ...terSlider.vue |       0 |        0 |       0 |       0 | 1-6               
+  ...tatistics.vue |       0 |        0 |       0 |       0 | 1-34              
+  GalleryView.vue  |       0 |        0 |       0 |       0 | 1-11              
+  ...omparison.vue |       0 |        0 |       0 |       0 | 1-6               
+  IndustryCard.vue |       0 |        0 |       0 |       0 | 1-16              
+  ...onnelList.vue |       0 |        0 |       0 |       0 | 1-12              
+  ...ressAlbum.vue |       0 |        0 |       0 |       0 | 1-131             
+  ProjectCard.vue  |       0 |        0 |       0 |       0 | 1-17              
+  SystemStatus.vue |       0 |        0 |       0 |       0 | 1-418             
+  VillageCard.vue  |       0 |        0 |       0 |       0 | 1-18              
+ ...ness/ChartCard |       0 |        0 |       0 |       0 |                   
+  ChartCard.vue    |       0 |        0 |       0 |       0 | 1-11              
+  types.ts         |       0 |        0 |       0 |       0 | 1-58              
+ .../ConfirmDialog |       0 |        0 |       0 |       0 |                   
+  ...irmDialog.vue |       0 |        0 |       0 |       0 | 1-18              
+  index.ts         |       0 |        0 |       0 |       0 | 1-5               
+  types.ts         |       0 |        0 |       0 |       0 | 1-13              
+ ...ness/DataTable |       0 |        0 |       0 |       0 |                   
+  DataTable.vue    |       0 |        0 |       0 |       0 | 1-31              
+  index.ts         |       0 |        0 |       0 |       0 | 1-13              
+  types.ts         |       0 |        0 |       0 |       0 | 1-20              
+ ...ess/EmptyState |       0 |        0 |       0 |       0 |                   
+  EmptyState.vue   |       0 |        0 |       0 |       0 | 1-6               
+ ...ss/FormBuilder |       0 |        0 |       0 |       0 |                   
+  FormBuilder.vue  |       0 |        0 |       0 |       0 | 1-34              
+  types.ts         |       0 |        0 |       0 |       0 | 1-14              
+ ...ness/__tests__ |     100 |      100 |     100 |     100 |                   
+  ...tCard.spec.ts |     100 |      100 |     100 |     100 |                   
+ ...ponents/charts |       0 |        0 |       0 |       0 |                   
+  BarChart.vue     |       0 |        0 |       0 |       0 | 1-14              
+  LineChart.vue    |       0 |        0 |       0 |       0 | 1-14              
+  PieChart.vue     |       0 |        0 |       0 |       0 | 1-13              
+  ...sticsCard.vue |       0 |        0 |       0 |       0 | 1-13              
+ ...ponents/common |    0.45 |        0 |       0 |    0.45 |                   
+  A11yDialog.vue   |       0 |        0 |       0 |       0 | 1-15              
+  BaseButton.vue   |       0 |        0 |       0 |       0 | 1-17              
+  BaseChart.vue    |       0 |        0 |       0 |       0 | 1-88              
+  BaseForm.vue     |       0 |        0 |       0 |       0 | 1-10              
+  BaseInput.vue    |       0 |        0 |       0 |       0 | 1-11              
+  BaseModal.vue    |       0 |        0 |       0 |       0 | 1-13              
+  BaseTable.vue    |       0 |        0 |       0 |       0 | 1-6               
+  ...rationBar.vue |       0 |        0 |       0 |       0 | 1-8               
+  Breadcrumb.vue   |       0 |        0 |       0 |       0 | 1-10              
+  ...oryDialog.vue |       0 |        0 |       0 |       0 | 1-21              
+  ...irmDialog.vue |       0 |        0 |       0 |       0 | 1-17              
+  DataTable.vue    |     100 |      100 |     100 |     100 |                   
+  ...rBoundary.vue |       0 |        0 |       0 |       0 | 1-176             
+  ExportButton.vue |       0 |        0 |       0 |       0 | 1-7               
+  FormWizard.vue   |       0 |        0 |       0 |       0 | 1-154             
+  FundSummary.vue  |       0 |        0 |       0 |       0 | 1-58              
+  ...nSelector.vue |       0 |        0 |       0 |       0 | 1-98              
+  Header.vue       |       0 |        0 |       0 |       0 | 1-31              
+  ImportButton.vue |       0 |        0 |       0 |       0 | 1-7               
+  ...Indicator.vue |       0 |        0 |       0 |       0 | 1-24              
+  ...Container.vue |       0 |        0 |       0 |       0 | 1-99              
+  ...dStrength.vue |       0 |        0 |       0 |       0 | 1-71              
+  PrintDialog.vue  |       0 |        0 |       0 |       0 | 1-187             
+  PrintTable.vue   |       0 |        0 |       0 |       0 | 1-245             
+  ...ressChart.vue |       0 |        0 |       0 |       0 | 1-36              
+  ...essDialog.vue |       0 |        0 |       0 |       0 | 1-152             
+  ...nSelector.vue |       0 |        0 |       0 |       0 | 1-128             
+  ...DataTable.vue |       0 |        0 |       0 |       0 | 1-238             
+  Sidebar.vue      |       0 |        0 |       0 |       0 | 1-14              
+  SkipLink.vue     |       0 |        0 |       0 |       0 | 1-35              
+  StatsCard.vue    |       0 |        0 |       0 |       0 | 1-123             
+  VirtualList.vue  |       0 |        0 |       0 |       0 | 1-90              
+  VirtualTable.vue |       0 |        0 |       0 |       0 | 1-4               
+  guizhouRegion.ts |       0 |        0 |       0 |       0 | 1-135             
+  qiannanRegion.ts |       0 |        0 |       0 |       0 | 1-64              
+ ...mmon/LazyImage |       0 |        0 |       0 |       0 |                   
+  LazyImage.vue    |       0 |        0 |       0 |       0 | 1-4               
+  index.ts         |       0 |        0 |       0 |       0 | 1-10              
+ ...ommon/Skeleton |       0 |        0 |       0 |       0 |                   
+  Skeleton.vue     |       0 |        0 |       0 |       0 | 1-359             
+  index.ts         |       0 |        0 |       0 |       0 | 1-10              
+ ...ents/dashboard |       0 |        0 |       0 |       0 |                   
+  ActivityFeed.vue |       0 |        0 |       0 |       0 | 1-202             
+  ...toreModal.vue |       0 |        0 |       0 |       0 | 1-145             
+  DataOverview.vue |       0 |        0 |       0 |       0 | 1-4               
+  FundOverview.vue |       0 |        0 |       0 |       0 | 1-4               
+  LayoutEditor.vue |       0 |        0 |       0 |       0 | 1-4               
+  ...tProgress.vue |       0 |        0 |       0 |       0 | 1-147             
+  QuickNav.vue     |       0 |        0 |       0 |       0 | 1-4               
+  StatsSection.vue |       0 |        0 |       0 |       0 | 1-4               
+  TodoList.vue     |       0 |        0 |       0 |       0 | 1-4               
+ ...ts/dataPackage |       0 |        0 |       0 |       0 |                   
+  ExportDialog.vue |       0 |        0 |       0 |       0 | 1-4               
+  ...tedDialog.vue |       0 |        0 |       0 |       0 | 1-4               
+  ImportDialog.vue |       0 |        0 |       0 |       0 | 1-4               
+  ...tedDialog.vue |       0 |        0 |       0 |       0 | 1-4               
+ ...omponents/demo |       0 |        0 |       0 |       0 |                   
+  ...oToolDemo.vue |       0 |        0 |       0 |       0 | 1-4               
+ ...mponents/funds |       0 |        0 |       0 |       0 |                   
+  ...dFundForm.vue |       0 |        0 |       0 |       0 | 1-133             
+  ...isonChart.vue |       0 |        0 |       0 |       0 | 1-60              
+ ...ponents/layout |       0 |        0 |       0 |       0 |                   
+  AppFooter.vue    |       0 |        0 |       0 |       0 | 1-4               
+  AppHeader.vue    |       0 |        0 |       0 |       0 | 1-4               
+  AppSidebar.vue   |       0 |        0 |       0 |       0 | 1-4               
+  ...cedLayout.vue |       0 |        0 |       0 |       0 | 1-22              
+  MainLayout.vue   |       0 |        0 |       0 |       0 | 1-4               
+  ...BottomNav.vue |       0 |        0 |       0 |       0 | 1-107             
+ ...components/map |       0 |        0 |       0 |       0 |                   
+  OfflineMap.vue   |       0 |        0 |       0 |       0 | 1-333             
+ ...s/organization |       0 |        0 |       0 |       0 |                   
+  ...ationForm.vue |       0 |        0 |       0 |       0 | 1-4               
+  ...ationTree.vue |       0 |        0 |       0 |       0 | 1-11              
+ ...nts/permission |       0 |        0 |       0 |       0 |                   
+  ...lityPanel.vue |       0 |        0 |       0 |       0 | 1-188             
+  ...entDrawer.vue |       0 |        0 |       0 |       0 | 1-303             
+  ...TreePanel.vue |       0 |        0 |       0 |       0 | 1-132             
+  ...TagsPanel.vue |       0 |        0 |       0 |       0 | 1-139             
+ ...omponents/rbac |       0 |        0 |       0 |       0 |                   
+  ...onManager.vue |       0 |        0 |       0 |       0 | 1-17              
+ ...ponents/report |       0 |        0 |       0 |       0 |                   
+  ReviewDialog.vue |       0 |        0 |       0 |       0 | 1-22              
+ ...ents/templates |       0 |        0 |       0 |       0 |                   
+  ...eDownload.vue |       0 |        0 |       0 |       0 | 1-113             
+ src/components/ui |       0 |        0 |       0 |       0 |                   
+  ...taryBadge.vue |       0 |        0 |       0 |       0 | 1-4               
+  ...tyMonitor.vue |       0 |        0 |       0 |       0 | 1-123             
+  StatusTag.vue    |       0 |        0 |       0 |       0 | 1-117             
+ src/composables   |   80.55 |    89.66 |   91.12 |   80.55 |                   
+  ...essibility.ts |   84.55 |    95.83 |   93.33 |   84.55 | 24-43,57-58       
+  useApiCache.ts   |     100 |      100 |     100 |     100 |                   
+  useApiError.ts   |     100 |      100 |     100 |     100 |                   
+  useAutoSave.ts   |   70.79 |    81.25 |   88.88 |   70.79 | ...53-158,165-172 
+  ...hOperation.ts |     100 |      100 |     100 |     100 |                   
+  ...hunkLoader.ts |   92.59 |       80 |     100 |   92.59 | 53-54             
+  useConfirm.ts    |     100 |      100 |     100 |     100 |                   
+  ...firmDialog.ts |     100 |      100 |     100 |     100 |                   
+  useDebounce.ts   |   81.08 |     87.5 |   66.66 |   81.08 | 25-27,29-32       
+  ...esensitize.ts |     100 |       75 |     100 |     100 | 19                
+  useECharts.ts    |   78.26 |    53.33 |   83.33 |   78.26 | ...57-58,66,84-85 
+  ...rorHandler.ts |     100 |      100 |     100 |     100 |                   
+  useEventBus.ts   |     100 |      100 |     100 |     100 |                   
+  ...dShortcuts.ts |   68.81 |       85 |      80 |   68.81 | ...09-111,133,137 
+  ...yComponent.ts |     100 |      100 |     100 |     100 |                   
+  useLoading.ts    |     100 |      100 |     100 |     100 |                   
+  ...Permission.ts |     100 |      100 |     100 |     100 |                   
+  ...tification.ts |    4.83 |      100 |       0 |    4.83 | 11-88             
+  useNotify.ts     |       0 |        0 |       0 |       0 | 1-57              
+  useOnboarding.ts |   87.61 |      100 |      75 |   87.61 | 107-117,120-123   
+  ...sticUpdate.ts |     100 |    96.29 |     100 |     100 | 91                
+  usePrint.ts      |     100 |      100 |     100 |     100 |                   
+  ...ePreloader.ts |     100 |      100 |     100 |     100 |                   
+  ...iveSidebar.ts |     100 |      100 |     100 |     100 |                   
+  ...utePreload.ts |     100 |      100 |     100 |     100 |                   
+  useRouterSafe.ts |   76.19 |       90 |      75 |   76.19 | 16-21,44-48       
+  useSafeData.ts   |     100 |      100 |     100 |     100 |                   
+  useSaveStatus.ts |   93.84 |    73.91 |     100 |   93.84 | 24,26,53-54       
+  ...rsionCheck.ts |   86.11 |       80 |     100 |   86.11 | 34-35,41-42,61    
+  ...tualScroll.ts |      85 |     87.5 |      75 |      85 | ...20-124,128-130 
+ src/config        |    2.05 |        0 |       0 |    2.05 |                   
+  appConfig.ts     |     100 |      100 |     100 |     100 |                   
+  constants.ts     |     100 |      100 |     100 |     100 |                   
+  menu-config.ts   |       0 |        0 |       0 |       0 | 1-322             
+  ...Dictionary.ts |       0 |        0 |       0 |       0 | 1-106             
+ src/constants     |       0 |        0 |       0 |       0 |                   
+  dataTypes.ts     |       0 |        0 |       0 |       0 | 1-62              
+ src/data          |       0 |        0 |       0 |       0 |                   
+  guizhouRegion.ts |       0 |        0 |       0 |       0 | 1-135             
+ src/directives    |       0 |        0 |       0 |       0 |                   
+  permission.ts    |       0 |        0 |       0 |       0 | 1-140             
+  watermark.ts     |       0 |        0 |       0 |       0 | 1-66              
+ src/layouts       |       0 |        0 |       0 |       0 |                   
+  ...ayoutSafe.vue |       0 |        0 |       0 |       0 | 1-924             
+ src/micro-fe      |       0 |        0 |       0 |       0 |                   
+  config.ts        |       0 |        0 |       0 |       0 | 1-41              
+ src/router        |    2.14 |        0 |       0 |    2.14 |                   
+  guards.ts        |       0 |        0 |       0 |       0 | 1-56              
+  index.ts         |       0 |        0 |       0 |       0 | 1-795             
+  permissions.ts   |     100 |      100 |     100 |     100 |                   
+  ...es.example.ts |       0 |        0 |       0 |       0 | 1-16              
+ src/stores        |   85.13 |    84.79 |   82.29 |   85.13 |                   
+  app.ts           |     100 |      100 |     100 |     100 |                   
+  auth.ts          |   71.71 |      100 |     100 |   71.71 | 39-67             
+  config.ts        |     100 |      100 |     100 |     100 |                   
+  data.ts          |   96.77 |       75 |     100 |   96.77 | 18                
+  dataPackage.ts   |   84.76 |       75 |   92.85 |   84.76 | ...53-173,185-186 
+  dataReport.ts    |     100 |    86.66 |     100 |     100 | 31,53             
+  funds.ts         |     100 |       96 |     100 |     100 | 69                
+  industry.ts      |   94.11 |    66.66 |     100 |   94.11 | 15                
+  menu.ts          |   85.24 |    43.75 |   83.33 |   85.24 | 54-56,63-65,70-72 
+  organization.ts  |   80.85 |    85.71 |      75 |   80.85 | 43,75-81,84-94    
+  policy.ts        |     100 |     92.3 |     100 |     100 | 31                
+  project.ts       |     100 |      100 |     100 |     100 |                   
+  rbac.ts          |   80.35 |      100 |      60 |   80.35 | 63-71,75-76       
+  route.ts         |     100 |      100 |     100 |     100 |                   
+  ruralWork.ts     |   94.44 |    66.66 |     100 |   94.44 | 16                
+  taskQueue.ts     |     100 |      100 |     100 |     100 |                   
+  user.ts          |   81.92 |    76.78 |   84.61 |   81.92 | ...28,144-159,180 
+  village.ts       |   40.67 |      100 |       0 |   40.67 | ...48,51-56,59-62 
+  villager.ts      |   81.81 |      100 |      40 |   81.81 | 15-16,21-22,24-25 
+ src/types         |       0 |        0 |       0 |       0 |                   
+  analytics.ts     |       0 |        0 |       0 |       0 | 1-575             
+  api.ts           |       0 |        0 |       0 |       0 | 1-59              
+  components.ts    |       0 |        0 |       0 |       0 | 1-241             
+  entities.ts      |       0 |        0 |       0 |       0 | 1-110             
+  helpProject.ts   |       0 |        0 |       0 |       0 | 1-306             
+  index.ts         |       0 |        0 |       0 |       0 | 1-153             
+  models.ts        |       0 |        0 |       0 |       0 | 1-124             
+  organization.ts  |       0 |        0 |       0 |       0 | 1-281             
+  policy.ts        |       0 |        0 |       0 |       0 | 1-14              
+  rbac.ts          |       0 |        0 |       0 |       0 | 1-218             
+ src/utils         |   66.65 |    87.06 |   85.95 |   66.65 |                   
+  CrudService.ts   |   95.03 |       94 |     100 |   95.03 | ...97-199,212-214 
+  LocalDatabase.ts |   94.52 |     86.9 |   83.87 |   94.52 | ...11-212,262-263 
+  ...ageManager.ts |   89.71 |    79.41 |     100 |   89.71 | ...11-113,127-128 
+  ...iceManager.ts |       0 |        0 |       0 |       0 | 1-261             
+  authStorage.ts   |   38.67 |      100 |   14.28 |   38.67 | ...09-210,216-217 
+  cacheManager.ts  |   98.97 |    98.38 |     100 |   98.97 | 214-215           
+  chunkUpload.ts   |   94.81 |    95.34 |     100 |   94.81 | 173-174,180-187   
+  clipboard.ts     |     100 |      100 |     100 |     100 |                   
+  crypto.ts        |     100 |      100 |     100 |     100 |                   
+  ...nitializer.ts |       0 |        0 |       0 |       0 | 1-113             
+  ...ealthCheck.ts |       0 |        0 |       0 |       0 | 1-186             
+  desensitize.ts   |     100 |    94.59 |     100 |     100 | 71,129,139-140    
+  echarts-theme.ts |       0 |        0 |       0 |       0 | 1-471             
+  echarts.ts       |       0 |        0 |       0 |       0 | 1-33              
+  ...cedStorage.ts |   86.18 |       90 |     100 |   86.18 | ...11-113,164-165 
+  errorHandler.ts  |   86.49 |    92.85 |   56.25 |   86.49 | ...85-403,407-416 
+  errorLogger.ts   |   98.64 |    91.66 |     100 |   98.64 | 42                
+  export.ts        |     100 |      100 |     100 |     100 |                   
+  exportUtil.ts    |   39.43 |      100 |      40 |   39.43 | 36-84             
+  formValidator.ts |   88.41 |    91.04 |   94.11 |   88.41 | ...60-361,384-385 
+  geo.ts           |     100 |      100 |     100 |     100 |                   
+  index.ts         |      75 |    88.88 |   66.66 |      75 | 28-32,42-44       
+  jwt.ts           |   92.39 |    90.32 |     100 |   92.39 | ...1,71-72,98-100 
+  local-storage.ts |   81.69 |    67.39 |     100 |   81.69 | ...72-274,314-315 
+  logger.ts        |     100 |    85.71 |     100 |     100 | ...55-156,174-175 
+  ...ork-status.ts |    92.1 |    83.33 |     100 |    92.1 | 66-68             
+  notify.ts        |   36.58 |       50 |      20 |   36.58 | ...45,48-54,57-61 
+  offline.ts       |     100 |      100 |     100 |     100 |                   
+  offlineMock.ts   |    67.2 |    66.66 |     100 |    67.2 | ...99-929,932-936 
+  performance.ts   |   74.94 |    88.42 |      90 |   74.94 | ...17,523-525,528 
+  ...iagnostics.ts |       0 |        0 |       0 |       0 | 1-148             
+  ...ssionAudit.ts |   92.62 |    86.11 |     100 |   92.62 | 90-95,150-152     
+  ...ssionGuard.ts |     100 |    97.29 |     100 |     100 | 23                
+  ...duplicator.ts |   88.13 |    91.66 |   84.61 |   88.13 | ...21-228,242-243 
+  roleAccess.ts    |   85.24 |    68.75 |     100 |   85.24 | ...06-107,111-112 
+  sanitize.ts      |   98.13 |     92.3 |     100 |   98.13 | 71-72             
+  security.ts      |     100 |      100 |     100 |     100 |                   
+  ...daloneTest.ts |     100 |      100 |     100 |     100 |                   
+  stateManager.ts  |   75.66 |    77.77 |   88.23 |   75.66 | ...45-346,353-357 
+  ...Normalizer.ts |       0 |        0 |       0 |       0 | 1-45              
+  ...Validation.ts |    98.3 |    97.05 |     100 |    98.3 | 138-139           
+  unwrapData.ts    |   33.33 |      100 |       0 |   33.33 | 15-21             
+  unwrapList.ts    |     100 |      100 |     100 |     100 |                   
+  validator.ts     |   74.43 |    59.61 |   66.66 |   74.43 | ...77,182,196-202 
+  websocket.ts     |     100 |      100 |     100 |     100 |                   
+ src/views         |       0 |        0 |       0 |       0 |                   
+  HomeSafe.vue     |       0 |        0 |       0 |       0 | 1-2693            
+  NotFound.vue     |       0 |        0 |       0 |       0 | 1-55              
+ src/views/admin   |       0 |        0 |       0 |       0 |                   
+  ...Dashboard.vue |       0 |        0 |       0 |       0 | 1-758             
+  MachineCode.vue  |       0 |        0 |       0 |       0 | 1-314             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-424             
+ src/views/ai      |       0 |        0 |       0 |       0 |                   
+  ...iveResult.vue |       0 |        0 |       0 |       0 | 1-637             
+ ...iews/analytics |       0 |        0 |       0 |       0 |                   
+  Assessment.vue   |       0 |        0 |       0 |       0 | 1-223             
+ ...tics/dashboard |       0 |        0 |       0 |       0 |                   
+  Dashboard.vue    |       0 |        0 |       0 |       0 | 1-932             
+ .../analytics/map |       0 |        0 |       0 |       0 |                   
+  ...alization.vue |       0 |        0 |       0 |       0 | 1-188             
+  index.vue        |       0 |        0 |       0 |       0 | 1-351             
+ ...lytics/reports |       0 |        0 |       0 |       0 |                   
+  ...criptions.vue |       0 |        0 |       0 |       0 | 1-335             
+  WorkAnalysis.vue |       0 |        0 |       0 |       0 | 1-790             
+ ...orted-villages |       0 |        0 |       0 |       0 |                   
+  Detail.vue       |       0 |        0 |       0 |       0 | 1-483             
+  List.vue         |       0 |        0 |       0 |       0 | 1-596             
+  YearlyIndex.vue  |       0 |        0 |       0 |       0 | 1-84              
+  ...yOverview.vue |       0 |        0 |       0 |       0 | 1-530             
+ ...ges/components |       0 |        0 |       0 |       0 |                   
+  ExportDialog.vue |       0 |        0 |       0 |       0 | 1-126             
+  ...nDataForm.vue |       0 |        0 |       0 |       0 | 1-1192            
+  ...llageForm.vue |       0 |        0 |       0 |       0 | 1-634             
+  ...yDataForm.vue |       0 |        0 |       0 |       0 | 1-814             
+ ...views/approval |       0 |        0 |       0 |       0 |                   
+  History.vue      |       0 |        0 |       0 |       0 | 1-350             
+  ...lications.vue |       0 |        0 |       0 |       0 | 1-241             
+  Overview.vue     |       0 |        0 |       0 |       0 | 1-387             
+  PendingList.vue  |       0 |        0 |       0 |       0 | 1-531             
+ src/views/auth    |       0 |        0 |       0 |       0 |                   
+  ...ePassword.vue |       0 |        0 |       0 |       0 | 1-669             
+  ...tPassword.vue |       0 |        0 |       0 |       0 | 1-420             
+  ...chineCode.vue |       0 |        0 |       0 |       0 | 1-480             
+  ...nEnhanced.vue |       0 |        0 |       0 |       0 | 1-641             
+  Profile.vue      |       0 |        0 |       0 |       0 | 1-772             
+  Register.vue     |       0 |        0 |       0 |       0 | 1-280             
+  ...rSettings.vue |       0 |        0 |       0 |       0 | 1-336             
+ src/views/batch   |       0 |        0 |       0 |       0 |                   
+  Index.vue        |       0 |        0 |       0 |       0 | 1-536             
+ ...iews/dashboard |   49.42 |    60.71 |   54.54 |   49.42 |                   
+  ChartRow.vue     |   96.57 |    42.85 |   83.33 |   96.57 | 41-45             
+  InfoRow.vue      |   60.24 |    35.29 |   22.22 |   60.24 | 11-16,45-71,88-89 
+  KpiCards.vue     |   89.94 |    84.21 |   76.92 |   89.94 | ...28-230,240-242 
+  PageHeader.vue   |    72.5 |    57.14 |      25 |    72.5 | 19,22,77-97       
+  index.vue        |       0 |        0 |       0 |       0 | 1-358             
+ ...ard/components |      25 |    87.09 |   41.66 |      25 |                   
+  GlobalSearch.vue |   79.75 |       90 |   45.45 |   79.75 | ...96-208,212-213 
+  QuickActions.vue |       0 |        0 |       0 |       0 | 1-357             
+ ...s/dataAnalysis |       0 |        0 |       0 |       0 |                   
+  Index.vue        |       0 |        0 |       0 |       0 | 1-245             
+ ...iews/dataEntry |       0 |        0 |       0 |       0 |                   
+  ...siveEntry.vue |       0 |        0 |       0 |       0 | 1-1373            
+ ...ews/dataImport |       0 |        0 |       0 |       0 |                   
+  BatchImport.vue  |       0 |        0 |       0 |       0 | 1-756             
+ ...dataManagement |       0 |        0 |       0 |       0 |                   
+  Backup.vue       |       0 |        0 |       0 |       0 | 1-37              
+  Index.vue        |       0 |        0 |       0 |       0 | 1-167             
+  Logs.vue         |       0 |        0 |       0 |       0 | 1-355             
+  Overview.vue     |       0 |        0 |       0 |       0 | 1-617             
+  Quality.vue      |       0 |        0 |       0 |       0 | 1-591             
+  UserBackup.vue   |       0 |        0 |       0 |       0 | 1-159             
+ ...ent/components |       0 |        0 |       0 |       0 |                   
+  ...upSection.vue |       0 |        0 |       0 |       0 | 1-490             
+  ...rtSection.vue |       0 |        0 |       0 |       0 | 1-275             
+  ...rtSection.vue |       0 |        0 |       0 |       0 | 1-283             
+  ...tySection.vue |       0 |        0 |       0 |       0 | 1-351             
+ ...ws/dataPackage |       0 |        0 |       0 |       0 |                   
+  ...talUpdate.vue |       0 |        0 |       0 |       0 | 1-346             
+  List.vue         |       0 |        0 |       0 |       0 | 1-343             
+  ...geVersion.vue |       0 |        0 |       0 |       0 | 1-412             
+  ...vePackage.vue |       0 |        0 |       0 |       0 | 1-575             
+  ...rtPackage.vue |       0 |        0 |       0 |       0 | 1-400             
+  ...kageAdmin.vue |       0 |        0 |       0 |       0 | 1-405             
+ ...views/dataSync |       0 |        0 |       0 |       0 |                   
+  ...esolution.vue |       0 |        0 |       0 |       0 | 1-242             
+  Export.vue       |       0 |        0 |       0 |       0 | 1-322             
+  Import.vue       |       0 |        0 |       0 |       0 | 1-337             
+ ...ews/dataVerify |       0 |        0 |       0 |       0 |                   
+  Index.vue        |       0 |        0 |       0 |       0 | 1-385             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-483             
+ .../effectiveness |       0 |        0 |       0 |       0 |                   
+  Evaluation.vue   |       0 |        0 |       0 |       0 | 1-337             
+  Rankings.vue     |       0 |        0 |       0 |       0 | 1-314             
+ ...iews/errorPage |       0 |        0 |       0 |       0 |                   
+  403.vue          |       0 |        0 |       0 |       0 | 1-79              
+  404.vue          |       0 |        0 |       0 |       0 | 1-79              
+  500.vue          |       0 |        0 |       0 |       0 | 1-85              
+ src/views/export  |       0 |        0 |       0 |       0 |                   
+  ExportDialog.vue |       0 |        0 |       0 |       0 | 1-355             
+  ReportExport.vue |       0 |        0 |       0 |       0 | 1-673             
+ src/views/funds   |       0 |        0 |       0 |       0 |                   
+  Analysis.vue     |       0 |        0 |       0 |       0 | 1-375             
+  AnomalyList.vue  |       0 |        0 |       0 |       0 | 1-220             
+  Budget.vue       |       0 |        0 |       0 |       0 | 1-491             
+  ...actManage.vue |       0 |        0 |       0 |       0 | 1-274             
+  Detail.vue       |       0 |        0 |       0 |       0 | 1-1129            
+  EnhancedList.vue |       0 |        0 |       0 |       0 | 1-707             
+  FundApply.vue    |       0 |        0 |       0 |       0 | 1-169             
+  Lifecycle.vue    |       0 |        0 |       0 |       0 | 1-591             
+  Report.vue       |       0 |        0 |       0 |       0 | 1-423             
+  Settlement.vue   |       0 |        0 |       0 |       0 | 1-287             
+  ...erVoucher.vue |       0 |        0 |       0 |       0 | 1-239             
+  UserFundList.vue |       0 |        0 |       0 |       0 | 1-609             
+  index.vue        |       0 |        0 |       0 |       0 | 1-394             
+ src/views/help    |       0 |        0 |       0 |       0 |                   
+  HelpCenter.vue   |       0 |        0 |       0 |       0 | 1-518             
+ src/views/import  |       0 |        0 |       0 |       0 |                   
+  DataImport.vue   |       0 |        0 |       0 |       0 | 1-374             
+ src/views/message |       0 |        0 |       0 |       0 |                   
+  ...ageCenter.vue |       0 |        0 |       0 |       0 | 1-443             
+  ...nSettings.vue |       0 |        0 |       0 |       0 | 1-212             
+ ...s/organization |       0 |        0 |       0 |       0 |                   
+  Detail.vue       |       0 |        0 |       0 |       0 | 1-142             
+  Edit.vue         |       0 |        0 |       0 |       0 | 1-240             
+  List.vue         |       0 |        0 |       0 |       0 | 1-392             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-466             
+ ...views/policies |       0 |        0 |       0 |       0 |                   
+  Category.vue     |       0 |        0 |       0 |       0 | 1-310             
+  Detail.vue       |       0 |        0 |       0 |       0 | 1-33              
+  Edit.vue         |       0 |        0 |       0 |       0 | 1-486             
+  List.vue         |       0 |        0 |       0 |       0 | 1-571             
+  Search.vue       |       0 |        0 |       0 |       0 | 1-336             
+ ...views/projects |   10.77 |       80 |      40 |   10.77 |                   
+  Detail.vue       |       0 |        0 |       0 |       0 | 1-30              
+  Edit.vue         |       0 |        0 |       0 |       0 | 1-1363            
+  Import.vue       |       0 |        0 |       0 |       0 | 1-807             
+  List.vue         |    86.4 |     84.7 |   45.71 |    86.4 | ...42-467,470-489 
+  ...ssGallery.vue |       0 |        0 |       0 |       0 | 1-333             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-514             
+ ...ects/__tests__ |     100 |    96.15 |     100 |     100 |                   
+  ...tList.spec.ts |     100 |    96.15 |     100 |     100 | 71,597            
+ src/views/report  |       0 |        0 |       0 |       0 |                   
+  List.vue         |       0 |        0 |       0 |       0 | 1-241             
+ ...eportTemplates |       0 |        0 |       0 |       0 |                   
+  Index.vue        |       0 |        0 |       0 |       0 | 1-889             
+ ...ews/ruralWorks |       0 |        0 |       0 |       0 |                   
+  Analysis.vue     |       0 |        0 |       0 |       0 | 1-1527            
+  Index.vue        |       0 |        0 |       0 |       0 | 1-94              
+  List.vue         |       0 |        0 |       0 |       0 | 1-698             
+  Report.vue       |       0 |        0 |       0 |       0 | 1-178             
+  Task.vue         |       0 |        0 |       0 |       0 | 1-1779            
+ src/views/schools |       0 |        0 |       0 |       0 |                   
+  Analysis.vue     |       0 |        0 |       0 |       0 | 1-28              
+  Detail.vue       |       0 |        0 |       0 |       0 | 1-651             
+  Edit.vue         |       0 |        0 |       0 |       0 | 1-518             
+  Improvement.vue  |       0 |        0 |       0 |       0 | 1-407             
+  List.vue         |       0 |        0 |       0 |       0 | 1-595             
+  Projects.vue     |       0 |        0 |       0 |       0 | 1-292             
+  Scholarship.vue  |       0 |        0 |       0 |       0 | 1-298             
+  Support.vue      |       0 |        0 |       0 |       0 | 1-326             
+ ...iews/sentiment |       0 |        0 |       0 |       0 |                   
+  Index.vue        |       0 |        0 |       0 |       0 | 1-503             
+ src/views/system  |    4.82 |    30.76 |   26.31 |    4.82 |                   
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-478             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-318             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-147             
+  ...adManager.vue |       0 |        0 |       0 |       0 | 1-466             
+  ...igPackage.vue |       0 |        0 |       0 |       0 | 1-237             
+  DataTier.vue     |       0 |        0 |       0 |       0 | 1-677             
+  ...lSettings.vue |       0 |        0 |       0 |       0 | 1-74              
+  ...nSettings.vue |       0 |        0 |       0 |       0 | 1-382             
+  EnvCheck.vue     |       0 |        0 |       0 |       0 | 1-310             
+  ErrorReports.vue |       0 |        0 |       0 |       0 | 1-641             
+  Feedback.vue     |       0 |        0 |       0 |       0 | 1-160             
+  Help.vue         |       0 |        0 |       0 |       0 | 1-398             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-337             
+  ...leManager.vue |       0 |        0 |       0 |       0 | 1-329             
+  Menu.vue         |       0 |        0 |       0 |       0 | 1-99              
+  ...Dashboard.vue |   89.03 |    37.73 |   71.42 |   89.03 | ...25-744,750-751 
+  Role.vue         |       0 |        0 |       0 |       0 | 1-634             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-391             
+  SystemConfig.vue |       0 |        0 |       0 |       0 | 1-423             
+  SystemInit.vue   |       0 |        0 |       0 |       0 | 1-254             
+  TaskManager.vue  |       0 |        0 |       0 |       0 | 1-763             
+  UpdateLogs.vue   |       0 |        0 |       0 |       0 | 1-320             
+  ...anagement.vue |       0 |        0 |       0 |       0 | 1-961             
+  ...rmissions.vue |       0 |        0 |       0 |       0 | 1-1026            
+  ZeroTrust.vue    |       0 |        0 |       0 |       0 | 1-994             
+ src/views/todos   |       0 |        0 |       0 |       0 |                   
+  Index.vue        |       0 |        0 |       0 |       0 | 1-473             
+ .../work-calendar |       0 |        0 |       0 |       0 |                   
+  Index.vue        |       0 |        0 |       0 |       0 | 1-238             
+ tests             |       0 |        0 |       0 |       0 |                   
+  main.test.ts     |       0 |        0 |       0 |       0 | 1-167             
+ tests/property    |       0 |        0 |       0 |       0 |                   
+  ...perty.test.ts |       0 |        0 |       0 |       0 | 1-355             
+ tests/unit        |   99.89 |    99.77 |     100 |   99.89 |                   
+  ...dules.test.ts |     100 |      100 |     100 |     100 |                   
+  ...nager.test.ts |     100 |      100 |     100 |     100 |                   
+  crypto.test.ts   |     100 |      100 |     100 |     100 |                   
+  ...ndler.test.ts |     100 |      100 |     100 |     100 |                   
+  ...tUtil.test.ts |     100 |      100 |     100 |     100 |                   
+  ...dator.test.ts |     100 |      100 |     100 |     100 |                   
+  ...orage.test.ts |     100 |      100 |     100 |     100 |                   
+  logger.test.ts   |     100 |      100 |     100 |     100 |                   
+  ...eMock.test.ts |     100 |      100 |     100 |     100 |                   
+  sanitize.test.ts |     100 |      100 |     100 |     100 |                   
+  ...extra.test.ts |     100 |      100 |     100 |     100 |                   
+  stores.test.ts   |     100 |      100 |     100 |     100 |                   
+  ...-core.test.ts |     100 |      100 |     100 |     100 |                   
+  ...extra.test.ts |   99.33 |    98.46 |     100 |   99.33 | 351-352           
+  ...dator.test.ts |     100 |      100 |     100 |     100 |                   
+ tests/unit/api    |   99.72 |    98.63 |     100 |   99.72 |                   
+  ...ytics.test.ts |     100 |      100 |     100 |     100 |                   
+  approval.test.ts |     100 |      100 |     100 |     100 |                   
+  audit.test.ts    |     100 |      100 |     100 |     100 |                   
+  ...ckage.test.ts |     100 |      100 |     100 |     100 |                   
+  ...cycle.test.ts |     100 |      100 |     100 |     100 |                   
+  ...stics.test.ts |     100 |      100 |     100 |     100 |                   
+  funds.test.ts    |   99.37 |    97.14 |     100 |   99.37 | 196               
+  import.test.ts   |     100 |      100 |     100 |     100 |                   
+  ...eCode.test.ts |     100 |      100 |     100 |     100 |                   
+  map.test.ts      |     100 |      100 |     100 |     100 |                   
+  message.test.ts  |     100 |      100 |     100 |     100 |                   
+  ...sCode.test.ts |   98.36 |       90 |     100 |   98.36 | 70                
+  ...lWork.test.ts |   99.23 |    96.96 |     100 |   99.23 | 122               
+  ...hools.test.ts |     100 |      100 |     100 |     100 |                   
+  report.test.ts   |     100 |      100 |     100 |     100 |                   
+  ...ptors.test.ts |     100 |      100 |     100 |     100 |                   
+  request.test.ts  |     100 |      100 |     100 |     100 |                   
+  ...xport.test.ts |    98.8 |    95.12 |     100 |    98.8 | 126,253           
+  ...neMap.test.ts |     100 |      100 |     100 |     100 |                   
+  ...nitor.test.ts |     100 |      100 |     100 |     100 |                   
+ .../api/mutations |     100 |      100 |     100 |     100 |                   
+  user.test.ts     |     100 |      100 |     100 |     100 |                   
+ ...nit/components |      68 |    96.61 |   91.66 |      68 |                   
+  ...perty.test.ts |     100 |       98 |     100 |     100 | 45                
+  ...Table.test.ts |     100 |      100 |     100 |     100 |                   
+  ...tCard.test.ts |     100 |      100 |     100 |     100 |                   
+  ...Table.test.ts |     100 |      100 |     100 |     100 |                   
+  ...perty.test.ts |     100 |    96.07 |     100 |     100 | 119,131           
+  ....menu.test.ts |     100 |      100 |     100 |     100 |                   
+  ...perty.test.ts |     100 |      100 |     100 |     100 |                   
+  ...earch.spec.ts |       0 |        0 |       0 |       0 | 1-231             
+ ...it/composables |   87.77 |    99.72 |   77.77 |   87.77 |                   
+  ...ility.test.ts |     100 |      100 |     100 |     100 |                   
+  ...Cache.test.ts |     100 |      100 |     100 |     100 |                   
+  ...Error.test.ts |     100 |      100 |     100 |     100 |                   
+  ...oSave.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ation.test.ts |     100 |      100 |     100 |     100 |                   
+  ...oader.test.ts |     100 |      100 |     100 |     100 |                   
+  ...nfirm.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ialog.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ounce.test.ts |     100 |      100 |     100 |     100 |                   
+  ...harts.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ndler.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ntBus.test.ts |     100 |      100 |     100 |     100 |                   
+  ...tcuts.test.ts |     100 |      100 |   16.66 |     100 |                   
+  ...onent.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ading.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ssion.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ation.spec.ts |       0 |        0 |       0 |       0 | 1-247             
+  ...ation.test.ts |     100 |      100 |     100 |     100 |                   
+  ...rding.test.ts |     100 |      100 |     100 |     100 |                   
+  ...pdate.test.ts |     100 |      100 |     100 |     100 |                   
+  usePrint.test.ts |     100 |      100 |     100 |     100 |                   
+  ...oader.test.ts |     100 |      100 |     100 |     100 |                   
+  ...debar.test.ts |     100 |      100 |     100 |     100 |                   
+  ...eload.test.ts |     100 |      100 |     100 |     100 |                   
+  ...rSafe.test.ts |     100 |      100 |     100 |     100 |                   
+  ...eData.test.ts |     100 |      100 |     100 |     100 |                   
+  ...tatus.test.ts |     100 |      100 |     100 |     100 |                   
+  ...Check.test.ts |     100 |      100 |     100 |     100 |                   
+  ...croll.test.ts |     100 |      100 |     100 |     100 |                   
+ tests/unit/config |     100 |      100 |     100 |     100 |                   
+  ...onfig.test.ts |     100 |      100 |     100 |     100 |                   
+  ...tants.test.ts |     100 |      100 |     100 |     100 |                   
+ ...nit/directives |     100 |      100 |     100 |     100 |                   
+  ...ssion.test.ts |     100 |      100 |     100 |     100 |                   
+ ...it/integration |     100 |      100 |     100 |     100 |                   
+  ...outer.test.ts |     100 |      100 |     100 |     100 |                   
+ tests/unit/router |     100 |      100 |     100 |     100 |                   
+  ...sions.test.ts |     100 |      100 |     100 |     100 |                   
+ tests/unit/stores |   99.06 |    97.45 |     100 |   99.06 |                   
+  ...onfig.test.ts |     100 |      100 |     100 |     100 |                   
+  app.test.ts      |     100 |      100 |     100 |     100 |                   
+  ...store.test.ts |     100 |      100 |     100 |     100 |                   
+  auth.test.ts     |     100 |      100 |     100 |     100 |                   
+  config.test.ts   |     100 |      100 |     100 |     100 |                   
+  ...tores.test.ts |     100 |      100 |     100 |     100 |                   
+  data.test.ts     |     100 |      100 |     100 |     100 |                   
+  ...ckage.test.ts |     100 |      100 |     100 |     100 |                   
+  ...eport.test.ts |     100 |      100 |     100 |     100 |                   
+  ...store.test.ts |     100 |      100 |     100 |     100 |                   
+  funds.test.ts    |     100 |      100 |     100 |     100 |                   
+  industry.test.ts |     100 |      100 |     100 |     100 |                   
+  menu.test.ts     |     100 |      100 |     100 |     100 |                   
+  ...tores.test.ts |     100 |      100 |     100 |     100 |                   
+  ...tores.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ation.test.ts |     100 |      100 |     100 |     100 |                   
+  policy.test.ts   |     100 |      100 |     100 |     100 |                   
+  project.test.ts  |     100 |      100 |     100 |     100 |                   
+  ...store.test.ts |     100 |      100 |     100 |     100 |                   
+  rbac.test.ts     |     100 |      100 |     100 |     100 |                   
+  route.test.ts    |     100 |      100 |     100 |     100 |                   
+  ...lWork.test.ts |     100 |      100 |     100 |     100 |                   
+  ...tores.test.ts |     100 |      100 |     100 |     100 |                   
+  ...erage.test.ts |   86.15 |    68.96 |     100 |   86.15 | ...22-123,132-133 
+  ...Queue.test.ts |     100 |      100 |     100 |     100 |                   
+  user.test.ts     |     100 |      100 |     100 |     100 |                   
+  village.test.ts  |     100 |      100 |     100 |     100 |                   
+  villager.test.ts |     100 |      100 |     100 |     100 |                   
+ tests/unit/utils  |   99.89 |       99 |   86.27 |   99.89 |                   
+  ...rvice.test.ts |     100 |      100 |     100 |     100 |                   
+  ...abase.test.ts |     100 |    95.71 |   82.14 |     100 | 8-13,57           
+  ...nager.test.ts |     100 |      100 |     100 |     100 |                   
+  ...nager.test.ts |     100 |      100 |     100 |     100 |                   
+  ...pload.test.ts |     100 |       90 |     100 |     100 | 11-26             
+  ...board.test.ts |     100 |      100 |     100 |     100 |                   
+  ...itize.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ogger.test.ts |   98.76 |    93.33 |     100 |   98.76 | 90                
+  export.test.ts   |     100 |      100 |     100 |     100 |                   
+  geo.test.ts      |     100 |      100 |     100 |     100 |                   
+  jwt.test.ts      |     100 |      100 |     100 |     100 |                   
+  logger.test.ts   |     100 |      100 |     100 |     100 |                   
+  ...tatus.test.ts |     100 |      100 |     100 |     100 |                   
+  offline.test.ts  |     100 |      100 |     100 |     100 |                   
+  ...mance.test.ts |     100 |      100 |      90 |     100 |                   
+  ...Audit.test.ts |   98.16 |      100 |     100 |   98.16 | 59-60             
+  ...Guard.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ccess.test.ts |     100 |      100 |     100 |     100 |                   
+  sanitize.test.ts |     100 |      100 |     100 |     100 |                   
+  security.test.ts |     100 |      100 |     100 |     100 |                   
+  ...eTest.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ation.test.ts |     100 |      100 |       0 |     100 |                   
+  ...pList.test.ts |     100 |      100 |     100 |     100 |                   
+  ...ocket.test.ts |     100 |      100 |     100 |     100 |                   
+ tests/unit/views  |   90.29 |      100 |     100 |   90.29 |                   
+  ...board.test.ts |   90.29 |      100 |     100 |   90.29 | 121-130,268-277   
+ ...iews/dashboard |     100 |      100 |     100 |     100 |                   
+  ChartRow.test.ts |     100 |      100 |     100 |     100 |                   
+  ...earch.test.ts |     100 |      100 |     100 |     100 |                   
+  InfoRow.test.ts  |     100 |      100 |     100 |     100 |                   
+  KpiCards.test.ts |     100 |      100 |     100 |     100 |                   
+  ...eader.test.ts |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------

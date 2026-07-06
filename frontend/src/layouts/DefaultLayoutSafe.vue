@@ -375,7 +375,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
 import { freezeRequests, cancelAllRequests } from '@/api/request'
@@ -405,7 +406,7 @@ import {
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const authStore = useAuthStore()
 const menuStore = useMenuStore()
 
@@ -423,10 +424,10 @@ const currentRoute = computed(() => (route.meta?.title as string) || '')
 function handleCommand(command: string) {
   switch (command) {
     case 'profile':
-      router.push('/profile')
+      pushSafe('/profile')
       break
     case 'change-password':
-      router.push('/change-password')
+      pushSafe('/change-password')
       break
     case 'logout':
       // 冻结请求 + 取消 pending，防止 router.push 异步跳转期间组件发请求触发 401

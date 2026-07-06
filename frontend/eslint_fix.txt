@@ -1,0 +1,9 @@
+﻿
+C:\military-Rural Revitalization-system\frontend\src\components\layout\MobileBottomNav.vue
+  26:7  error  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\military-Rural Revitalization-system\frontend\src\layouts\DefaultLayoutSafe.vue
+  409:7  error  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+鉁?2 problems (2 errors, 0 warnings)
+

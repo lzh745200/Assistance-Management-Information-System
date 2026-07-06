@@ -18,11 +18,12 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { HomeFilled, Grid, Money, Message, User } from '@element-plus/icons-vue'
 
 const route = useRoute()
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 
 const windowWidth = ref(window.innerWidth)
 const isMobile = computed(() => windowWidth.value < 768)
@@ -40,7 +41,7 @@ function isActive(path: string) {
 }
 
 function navigate(path: string) {
-  router.push(path)
+  pushSafe(path)
 }
 
 function onResize() {
