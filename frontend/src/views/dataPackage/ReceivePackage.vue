@@ -58,12 +58,10 @@
 
       <template #footer>
         <el-button
-          @click="
-            clearLocalImport()
-            showLocalImport = false
-          "
-          >{{ localImportStep === 2 ? '关闭' : '取消' }}</el-button
+          @click="clearLocalImport(); showLocalImport = false"
         >
+          {{ localImportStep === 2 ? '关闭' : '取消' }}
+        </el-button>
         <el-button
           v-if="localImportStep === 1"
           type="primary"

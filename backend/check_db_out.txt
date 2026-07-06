@@ -1,0 +1,6 @@
+﻿DB: sqlite:///C:/military-Rural Revitalization-system/backend/data/rural_revitalization.db
+User found: True
+Verify admin123: True
+failed_login_count: 0
+locked_until: None
+Password reset to admin123, lockout cleared

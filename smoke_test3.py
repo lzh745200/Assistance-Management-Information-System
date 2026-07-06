@@ -1,14 +1,16 @@
 """API smoke test - login and test all critical endpoints."""
 import requests
+import json
 
 base = "http://127.0.0.1:8000"
 
 # Login with reset password
-r = requests.post(f"{base}/api/v1/auth/login", json={"username": "admin", "password": "admin123"}, timeout=10)
+r = requests.post(f"{base}/api/v1/auth/login", json={"username": "admin", "password": "admin123"}, timeout=15)
 print(f"Login: {r.status_code} - {r.json().get('message', '')}")
 
 if r.status_code != 200:
     print("Login failed!")
+    print(json.dumps(r.json(), indent=2, ensure_ascii=False))
     exit(1)
 
 token = r.json().get("data", {}).get("access_token", "")
@@ -24,6 +26,8 @@ endpoints = [
     "/api/v1/organizations",
     "/api/v1/policies",
     "/api/v1/dashboard/stats",
+    "/api/v1/rural-works",
+    "/api/v1/scholarship-students",
 ]
 
 all_ok = True
@@ -39,4 +43,4 @@ for ep in endpoints:
         print(f"  ERR  {ep}: {e}")
         all_ok = False
 
-print("\n✅ All endpoints OK!" if all_ok else "\n❌ Some endpoints failed!")
+print("\n=== All endpoints OK! ===" if all_ok else "\n=== Some endpoints failed! ===")
