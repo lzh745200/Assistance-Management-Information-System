@@ -59,18 +59,20 @@ def regular_user():
 
 @pytest.fixture
 def client_admin(mock_db, super_admin):
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[get_current_user] = lambda: super_admin
     yield TestClient(app, raise_server_exceptions=False)
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 @pytest.fixture
 def client_regular(mock_db, regular_user):
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[get_current_user] = lambda: regular_user
     yield TestClient(app, raise_server_exceptions=False)
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 @pytest.fixture

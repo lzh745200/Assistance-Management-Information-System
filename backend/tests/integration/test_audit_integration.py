@@ -74,10 +74,11 @@ def _client(_engine, _db):
     def override_db():
         yield _db
 
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = override_db
     with TestClient(app) as c:
         yield c
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 @pytest.fixture

@@ -62,12 +62,13 @@ def test_app(test_db):
     def override_get_db():
         yield test_db
 
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = override_get_db
 
     client = TestClient(app)
     yield client
 
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 # ══════════════════════════════════════════════════════════════

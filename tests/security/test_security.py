@@ -78,7 +78,7 @@ class TestConfigurationTampering:
             content = f.read()
 
         # 检查必需的配置项
-        required_keys = ['SECRET_KEY', 'DATABASE_PATH']
+        required_keys = ['SECRET_KEY', 'DATABASE_URL']
         for key in required_keys:
             assert key in content, f"配置文件应该包含 {key}"
 
@@ -89,7 +89,7 @@ class TestConfigurationTampering:
         # 检查配置是否有效
         assert settings.SECRET_KEY, "SECRET_KEY 不应为空"
         assert len(settings.SECRET_KEY) >= 32, "SECRET_KEY 长度应该至少 32 字符"
-        assert settings.DATABASE_PATH, "DATABASE_PATH 不应为空"
+        assert settings.DATABASE_URL, "DATABASE_URL 不应为空"
 
     def test_prevent_config_override_via_env(self):
         """测试：防止通过环境变量覆盖关键配置"""
@@ -264,20 +264,20 @@ class TestAuthenticationSecurity:
 
     def test_jwt_token_security(self):
         """测试：JWT Token 安全性"""
-        from app.core.security import create_access_token, decode_access_token
+        from app.core.security import create_access_token, decode_token
 
         # 创建 Token
         token = create_access_token(data={"sub": "test_user"})
         assert token, "应该成功创建 Token"
 
         # 解码 Token
-        payload = decode_access_token(token)
+        payload = decode_token(token)
         assert payload is not None, "应该成功解码 Token"
         assert payload.get("sub") == "test_user", "Token 数据应该正确"
 
     def test_token_expiration(self):
         """测试：Token 过期"""
-        from app.core.security import create_access_token, decode_access_token
+        from app.core.security import create_access_token, decode_token
         from datetime import timedelta
 
         # 创建一个已过期的 Token
@@ -287,7 +287,7 @@ class TestAuthenticationSecurity:
         )
 
         # 尝试解码过期的 Token
-        payload = decode_access_token(token)
+        payload = decode_token(token)
         # 应该返回 None 或抛出异常
         assert payload is None, "过期的 Token 应该无效"
 

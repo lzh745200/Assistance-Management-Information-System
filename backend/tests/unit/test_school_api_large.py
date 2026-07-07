@@ -84,11 +84,11 @@ def client(db_session):
             content={"code": exc.status_code, "message": exc.message, "success": False},
         )
 
-    # Clean all overrides first, then set only the one we need
-    app.dependency_overrides.clear()
+    # 保存原始覆盖，仅设置需要的覆盖
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = _override_get_db
     yield TestClient(app, raise_server_exceptions=False)
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 @pytest.fixture

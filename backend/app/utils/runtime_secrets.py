@@ -29,6 +29,21 @@ def ensure_runtime_secrets() -> None:
     secret_key = os.environ.get("SECRET_KEY", "").strip()
     csrf_secret_key = os.environ.get("CSRF_SECRET_KEY", "").strip()
 
+    # 验证已存在的密钥强度（至少 32 字符），弱密钥视为无效需重新生成
+    _min_key_length = 32
+    if secret_key and len(secret_key) < _min_key_length:
+        _logger.warning(
+            "环境变量 SECRET_KEY 长度不足（%d < %d），将被忽略并重新生成",
+            len(secret_key), _min_key_length,
+        )
+        secret_key = ""
+    if csrf_secret_key and len(csrf_secret_key) < _min_key_length:
+        _logger.warning(
+            "环境变量 CSRF_SECRET_KEY 长度不足（%d < %d），将被忽略并重新生成",
+            len(csrf_secret_key), _min_key_length,
+        )
+        csrf_secret_key = ""
+
     if secret_key and csrf_secret_key:
         return
 

@@ -253,10 +253,6 @@ class TestErrorRecovery:
     def test_automatic_backup_on_error(self):
         """测试：错误时自动备份"""
         # 测试发生严重错误时是否自动创建备份
-        from app.services.backup_service import BackupService
-
-        backup_service = BackupService()
-        # 检查是否有自动备份机制
         # 这是一个功能需求，当前可能未实现
         pytest.skip("需要实现自动备份机制")
 

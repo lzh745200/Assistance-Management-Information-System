@@ -1,6 +1,9 @@
 # Auto-detect text files and normalize line endings
 * text=auto
 
+# Prevent BOM (U+FEFF) in Python source files
+*.py working-tree-encoding=UTF-8
+
 # Explicit line ending rules
 *.bat text eol=crlf
 *.nsi text eol=crlf

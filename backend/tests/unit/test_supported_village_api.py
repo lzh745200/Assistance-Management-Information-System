@@ -60,10 +60,11 @@ def admin_user():
 
 @pytest.fixture
 def client(mock_db, admin_user):
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = lambda: mock_db
     app.dependency_overrides[get_current_user] = lambda: admin_user
     yield TestClient(app, raise_server_exceptions=False)
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 def _make_mock_village(id_=1, village_name="测试村", department=None,

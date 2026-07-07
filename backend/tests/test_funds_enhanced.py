@@ -34,7 +34,7 @@ def mock_auth(client):
 
     client.app.dependency_overrides[get_current_user] = lambda: user
     yield
-    client.app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 def _create_fund_in_db(db_session, **overrides):
@@ -181,7 +181,7 @@ class TestPermissions:
     def test_list_requires_auth(self, client):
         """未认证用户无法访问"""
         # 清除认证覆盖
-        client.app.dependency_overrides.clear()
+        _original_overrides = app.dependency_overrides.copy()
         try:
             resp = client.get("/api/v1/funds")
             assert resp.status_code in (200, 401, 403)

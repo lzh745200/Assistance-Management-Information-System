@@ -32,10 +32,11 @@ def client(admin_user):
     def mock_get_db():
         return MagicMock()
 
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_current_user] = mu
     app.dependency_overrides[get_db] = mock_get_db
     yield TestClient(app, raise_server_exceptions=False)
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 # ==================== Cache helper tests ====================

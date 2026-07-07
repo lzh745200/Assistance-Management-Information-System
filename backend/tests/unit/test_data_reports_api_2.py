@@ -38,15 +38,17 @@ def client():
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
 
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = lambda: db
 
     _mock_user = Mock(id=1, username="admin", role="admin", is_superuser=True, is_active=True,
                       permissions_list=["*"], organization_id=1, email="admin@test.com")
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_current_user] = lambda: _mock_user
 
     yield TestClient(app, raise_server_exceptions=False), db
 
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
     db.close()
     engine.dispose()
 

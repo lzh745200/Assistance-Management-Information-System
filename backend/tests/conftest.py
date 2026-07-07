@@ -623,6 +623,12 @@ def admin_headers(admin_token_headers):
 @pytest.fixture(autouse=True)
 def mock_settings():
     """自动使用的模拟设置（通过环境变量 + 强制覆盖 settings 对象）"""
+    # 清理全局缓存，防止跨测试缓存污染
+    try:
+        from app.core.cache import cache_manager
+        cache_manager._b.clear()
+    except Exception:
+        pass
     os.environ["SECRET_KEY"] = "test-secret-key-32-chars-long!!!!!"
     os.environ["ENVIRONMENT"] = "testing"
     os.environ["DEBUG"] = "true"
@@ -648,3 +654,9 @@ def mock_settings():
         setattr(settings, key, val)
     for key in ["SECRET_KEY", "ENVIRONMENT", "DEBUG", "DATABASE_URL", "CSRF_ENABLED"]:
         os.environ.pop(key, None)
+    # 测试结束后再次清理缓存
+    try:
+        from app.core.cache import cache_manager
+        cache_manager._b.clear()
+    except Exception:
+        pass

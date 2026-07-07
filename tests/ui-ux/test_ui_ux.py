@@ -43,11 +43,14 @@ class TestMultiResolutionUI:
 
         breakpoints_found = False
         for css_file in css_files:
-            with open(css_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-                if '@media' in content:
-                    breakpoints_found = True
-                    break
+            try:
+                with open(css_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    if '@media' in content:
+                        breakpoints_found = True
+                        break
+            except (UnicodeDecodeError, OSError):
+                continue
 
         assert breakpoints_found, "应该定义响应式断点"
 

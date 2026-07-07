@@ -114,6 +114,9 @@ def setup_database():
     except ImportError:
         pass
 
+    # 保存原始依赖覆盖
+    _original_overrides = fastapi_app.dependency_overrides.copy()
+
     # 设置数据库依赖覆盖（在每个测试前确保生效）
     from unittest.mock import Mock
     from app.core.security import get_current_user as _orig_get_current_user

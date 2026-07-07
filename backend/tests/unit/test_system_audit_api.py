@@ -42,6 +42,7 @@ def db_client():
     from app.core.security import get_current_user
     from app.models import Base
     from fastapi.testclient import TestClient
+    import app.core.database as _db_module
 
     # Ensure AuditLog is the real class, not a MagicMock from test pollution
     import app.models.audit as audit_mod
@@ -59,6 +60,13 @@ def db_client():
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = TestingSessionLocal()
 
+    # 同时覆盖模块级 engine/SessionLocal，确保审计中间件等绕过 get_db 的代码路径
+    # 也使用内存数据库，避免 "no such table: api_access_logs" 错误
+    _original_engine = _db_module.engine
+    _original_session_local = _db_module.SessionLocal
+    _db_module.engine = engine
+    _db_module.SessionLocal = TestingSessionLocal
+
     original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = lambda: session
     app.dependency_overrides[get_current_user] = lambda: mock.MagicMock(
@@ -69,6 +77,8 @@ def db_client():
         yield TestClient(app, raise_server_exceptions=False), session
     finally:
         app.dependency_overrides = original_overrides
+        _db_module.engine = _original_engine
+        _db_module.SessionLocal = _original_session_local
         session.close()
         engine.dispose()
 

@@ -208,6 +208,7 @@ def _build_client(user, mock_db):
     async def _get_current_user():
         return user
 
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = _get_db
     app.dependency_overrides[get_current_user] = _get_current_user
     client = TestClient(app, raise_server_exceptions=False)
@@ -221,7 +222,7 @@ def client(admin_user, mock_db):
                side_effect=lambda stmt, *a, **kw: stmt):
         c, app = _build_client(admin_user, mock_db)
         yield c
-        app.dependency_overrides.clear()
+        app.dependency_overrides = _original_overrides
 
 
 @pytest.fixture
@@ -231,7 +232,7 @@ def client_regular(regular_user, mock_db):
                side_effect=lambda stmt, *a, **kw: stmt):
         c, app = _build_client(regular_user, mock_db)
         yield c
-        app.dependency_overrides.clear()
+        app.dependency_overrides = _original_overrides
 
 
 @pytest.fixture
@@ -241,7 +242,7 @@ def client_manager(manager_user, mock_db):
                side_effect=lambda stmt, *a, **kw: stmt):
         c, app = _build_client(manager_user, mock_db)
         yield c
-        app.dependency_overrides.clear()
+        app.dependency_overrides = _original_overrides
 
 
 # ============================================================================

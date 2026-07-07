@@ -72,12 +72,13 @@ def client(db_session):
     async def _get_current_user():
         return admin
 
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = _get_db
     app.dependency_overrides[get_current_user] = _get_current_user
 
     yield TestClient(app, raise_server_exceptions=False)
 
-    app.dependency_overrides.clear()
+    app.dependency_overrides = _original_overrides
 
 
 @pytest.fixture
@@ -274,6 +275,7 @@ class TestAdvancePhase:
         from app.main import app
         u = _viewer_user()
         async def _auth(): return u
+        _original_overrides = app.dependency_overrides.copy()
         app.dependency_overrides[get_current_user] = _auth
         resp = client.post(f"/api/v1/fund-lifecycle/phases/{project.id}/advance")
         assert resp.status_code == 403
@@ -1578,6 +1580,7 @@ class TestQuotaAdjust:
         u.email = "m@t.com"
         u.full_name = "经理"
         async def _auth(): return u
+        _original_overrides = app.dependency_overrides.copy()
         app.dependency_overrides[get_current_user] = _auth
         resp = client.put(f"/api/v1/fund-lifecycle/quota-adjust/{fund.id}", json={
             "new_amount": 700.0, "reason": "紧急", "is_emergency": True,
@@ -1803,12 +1806,14 @@ class TestForbiddenForViewer:
         u = _viewer_user()
         async def _auth(): return u
         original = app.dependency_overrides.get(get_current_user)
+        _original_overrides = app.dependency_overrides.copy()
         app.dependency_overrides[get_current_user] = _auth
         try:
             resp = client.request(method, path, json=body)
             assert resp.status_code == 403, f"{method} {path} expected 403 got {resp.status_code}"
         finally:
             if original:
+                _original_overrides = app.dependency_overrides.copy()
                 app.dependency_overrides[get_current_user] = original
             else:
                 app.dependency_overrides.pop(get_current_user, None)
