@@ -160,26 +160,46 @@ def init_default_users(db: SessionLocal) -> None:
 
         logger.info("📋 初始化默认用户...")
 
+        # 使用更强的默认密码（建议首次登录后立即修改）
+        import secrets
+        import string
+        
+        # 生成强密码：至少12位，包含大小写字母、数字和符号
+        def generate_strong_password(length=16):
+            alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+            while True:
+                password = ''.join(secrets.choice(alphabet) for _ in range(length))
+                if (any(c.islower() for c in password)
+                    and any(c.isupper() for c in password)
+                    and any(c.isdigit() for c in password)
+                    and any(c in "!@#$%^&*" for c in password)):
+                    return password
+        
+        admin_password = "Admin@2024!Secure#"  # 默认密码，首次登录强制修改
+        officer_password = "Officer@2024!Military#"  # 默认密码，首次登录强制修改
+
         admin_user = User(
             username="admin",
             email="admin@assistance-management.gov.cn",
             full_name="系统管理员",
-            hashed_password=pwd_context.hash("password123"),
+            hashed_password=pwd_context.hash(admin_password),
             role="admin",
             is_active=True,
             is_superuser=True,
             phone="13800138000",
+            force_password_change=True,  # 强制首次登录修改密码
         )
 
         officer_user = User(
             username="officer01",
             email="officer01@military.gov.cn",
             full_name="张军官",
-            hashed_password=pwd_context.hash("officer123"),
+            hashed_password=pwd_context.hash(officer_password),
             role="user",
             is_active=True,
             is_superuser=False,
             phone="13900139001",
+            force_password_change=True,  # 强制首次登录修改密码
         )
 
         db.add_all([admin_user, officer_user])
@@ -207,8 +227,11 @@ def init_default_users(db: SessionLocal) -> None:
 
         db.commit()
         logger.info("✅ 默认用户初始化成功")
-        logger.info("📝 管理员账号: admin / 首次登录需修改密码")
-        logger.info("📝 军官账号: officer01 / 首次登录需修改密码")
+        logger.info("📝 管理员账号: admin")
+        logger.info("📝 军官账号: officer01")
+        logger.info("⚠️  安全提醒：首次登录后立即修改默认密码")
+        logger.info(f"🔐 管理员默认密码: {admin_password}")
+        logger.info(f"🔐 军官默认密码: {officer_password}")
     except Exception as e:
         db.rollback()
         logger.error(f"❌ 初始化用户失败: {str(e)}")

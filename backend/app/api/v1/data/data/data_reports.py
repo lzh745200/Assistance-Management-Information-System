@@ -111,12 +111,15 @@ async def get_pending_reports(
         current_user.org_id, status=ReportStatus.SUBMITTED.value, skip=(page - 1) * page_size, limit=page_size
     )
 
-    return {
-        "total": len(reports),
-        "page": page,
-        "page_size": page_size,
-        "items": [DataReportResponse.model_validate(r) for r in reports],
-    }
+    from app.core.response import ok_list
+    
+    return ok_list(
+        items=[DataReportResponse.model_validate(r) for r in reports],
+        total=len(reports),
+        page=page,
+        page_size=page_size,
+        message="成功获取待审批上报列表"
+    )
 
 
 @router.get("/{report_id}", response_model=DataReportResponse)
@@ -342,12 +345,15 @@ async def list_received_reports(
     total = query.count()
     reports = query.order_by(DataReport.submitted_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "items": [DataReportResponse.model_validate(r) for r in reports],
-    }
+    from app.core.response import ok_list
+    
+    return ok_list(
+        items=[DataReportResponse.model_validate(r) for r in reports],
+        total=total,
+        page=page,
+        page_size=page_size,
+        message="成功获取待审批上报列表"
+    )
 
 
 @router.get("/{report_id}/package")

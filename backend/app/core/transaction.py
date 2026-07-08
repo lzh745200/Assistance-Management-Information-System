@@ -197,7 +197,62 @@ nested_transaction = TransactionManager.nested_transaction
 savepoint = TransactionManager.savepoint
 
 
-# 事务装饰器（更详细的版本）
+def _apply_tx_settings(sess: Session, isolation: Optional[str], readonly: bool):
+    """Apply transaction isolation level and read-only settings."""
+    # SQLite 不支持 SET TRANSACTION 语法，直接短路
+    if IS_SQLITE:
+        return
+    if isolation:
+        sess.execute(text(f"SET TRANSACTION ISOLATION LEVEL {isolation}"))
+    if readonly:
+        sess.execute(text("SET TRANSACTION READ ONLY"))
+
+
+def _execute_in_transaction(db: Optional[Session], func: Callable, args, kwargs,
+                            isolation: Optional[str], readonly: bool):
+    """Execute function within a transaction, handling commit/rollback."""
+    if db is not None:
+        _execute_with_existing_session(db, func, args, kwargs, isolation, readonly)
+    else:
+        return _execute_with_new_session(func, args, kwargs, isolation, readonly)
+
+
+def _execute_with_existing_session(db: Session, func: Callable, args, kwargs,
+                                   isolation: Optional[str], readonly: bool):
+    """Execute using an existing database session."""
+    try:
+        _apply_tx_settings(db, isolation, readonly)
+        result = func(*args, **kwargs)
+        db.commit()
+        return result
+    except Exception as e:
+        db.rollback()
+        raise DatabaseError(f"事务执行失败: {str(e)}") from e
+
+
+def _execute_with_new_session(
+    func: Callable, args, kwargs, isolation: Optional[str], readonly: bool
+):
+    """Execute within a new database session context."""
+    with get_db_context() as session:
+        try:
+            _apply_tx_settings(session, isolation, readonly)
+            result = func(session, *args, **kwargs)
+            session.commit()
+            return result
+        except Exception as e:
+            session.rollback()
+            raise DatabaseError(f"事务执行失败: {str(e)}") from e
+
+
+def _find_db_session(args, kwargs) -> Optional[Session]:
+    """Find the database session from function arguments."""
+    for arg in args:
+        if isinstance(arg, Session):
+            return arg
+    return kwargs.get("db")
+
+
 def with_transaction(isolation_level: Optional[str] = None, readonly: bool = False):
     """
     高级事务装饰器
@@ -221,46 +276,8 @@ def with_transaction(isolation_level: Optional[str] = None, readonly: bool = Fal
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # 查找数据库会话参数
-            db = None
-            for arg in args:
-                if isinstance(arg, Session):
-                    db = arg
-                    break
-
-            if db is None:
-                db = kwargs.get("db")
-
-            def _apply_tx_settings(sess: Session):
-                # SQLite 不支持 SET TRANSACTION 语法，隔离级别通过 PRAGMA 控制；
-                # 在 SQLite 下直接短路，避免 OperationalError。
-                if IS_SQLITE:
-                    return
-                if _safe_isolation:
-                    sess.execute(text(f"SET TRANSACTION ISOLATION LEVEL {_safe_isolation}"))
-                if readonly:
-                    sess.execute(text("SET TRANSACTION READ ONLY"))
-
-            if db is None:
-                with get_db_context() as session:
-                    try:
-                        _apply_tx_settings(session)
-                        result = func(session, *args, **kwargs)
-                        session.commit()
-                        return result
-                    except Exception as e:
-                        session.rollback()
-                        raise DatabaseError(f"事务执行失败: {str(e)}") from e
-            else:
-                try:
-                    _apply_tx_settings(db)
-                    result = func(*args, **kwargs)
-                    db.commit()
-                    return result
-                except Exception as e:
-                    db.rollback()
-                    raise DatabaseError(f"事务执行失败: {str(e)}") from e
-
+            db = _find_db_session(args, kwargs)
+            return _execute_in_transaction(db, func, args, kwargs, _safe_isolation, readonly)
         return wrapper
 
     return decorator

@@ -1,0 +1,59 @@
+# ============================================================
+# E2E 测试 Docker 环境
+# 用法: docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml up
+# ============================================================
+version: '3.8'
+
+services:
+  # Playwright E2E 测试运行器
+  e2e-playwright:
+    image: mcr.microsoft.com/playwright:v1.45.0-jammy
+    container_name: assistance-e2e
+    profiles:
+      - e2e
+      - full
+    working_dir: /e2e
+    environment:
+      - API_BASE_URL=http://assistance-system:8000
+      - CI=true
+    volumes:
+      - ../tests/e2e:/e2e
+      - ../frontend:/frontend:ro
+    depends_on:
+      assistance-system:
+        condition: service_healthy
+    command: >
+      bash -c "
+        pip install pytest pytest-playwright httpx &&
+        python -m playwright install chromium &&
+        python -m pytest /e2e/test_e2e.py -v --tb=short
+      "
+    networks:
+      - assistance-network
+
+  # 性能测试（Locust）
+  e2e-locust:
+    image: locustio/locust:2.28
+    container_name: assistance-locust
+    profiles:
+      - performance
+      - full
+    environment:
+      - LOCUST_HOST=http://assistance-system:8000
+      - LOCUST_USERS=50
+      - LOCUST_SPAWN_RATE=5
+      - LOCUST_RUN_TIME=5m
+    volumes:
+      - ../tests/performance:/mnt/locust
+    depends_on:
+      assistance-system:
+        condition: service_healthy
+    command: -f /mnt/locust/locustfile.py --headless
+    networks:
+      - assistance-network
+    ports:
+      - "8089:8089"
+
+networks:
+  assistance-network:
+    external: true

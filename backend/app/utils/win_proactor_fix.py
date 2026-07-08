@@ -146,7 +146,8 @@ def _patch_event_loop_policy() -> None:
     # 安装自定义 Policy
     try:
         current_policy = asyncio.get_event_loop_policy()
-    except Exception:
+    except Exception as e:
+        logger.warning(f"获取事件循环策略失败: {e}")
         current_policy = None
 
     # 仅替换 Windows 上的默认策略

@@ -8,6 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 
 from app.api.v1.deps import get_current_active_user
+from app.core.response import ok_list
 from app.core.redis_adapter import redis_adapter
 from app.models.user import User
 from app.services.query_analyzer_service import query_analyzer
@@ -33,7 +34,13 @@ async def get_slow_queries(
 
     slow_queries = query_analyzer.get_slow_queries(limit=limit, min_duration_ms=min_duration_ms)
 
-    return {"total": len(slow_queries), "queries": slow_queries}
+    return ok_list(
+        items=slow_queries,
+        total=len(slow_queries),
+        page=1,
+        page_size=limit,
+        message="成功获取慢查询列表"
+    )
 
 
 @router.get("/query-stats")
@@ -50,7 +57,7 @@ async def get_query_stats(current_user: User = Depends(get_current_active_user))
 
     stats = query_analyzer.get_query_stats()
 
-    return stats
+    return {"code": 200, "message": "成功获取查询统计信息", "success": True, "data": stats}
 
 
 @router.delete("/slow-queries")
@@ -85,7 +92,7 @@ async def get_cache_stats(current_user: User = Depends(get_current_active_user))
     stats = redis_adapter.get_stats()
     health = redis_adapter.health_check()
 
-    return {"stats": stats, "health": health}
+    return {"code": 200, "message": "成功获取缓存统计信息", "success": True, "data": {"stats": stats, "health": health}}
 
 
 @router.post("/cache/clear")

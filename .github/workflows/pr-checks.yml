@@ -19,6 +19,13 @@ jobs:
       - run: pip install -r backend/requirements.txt pytest-xdist pytest-cov
       # 覆盖率门禁：基线 50%，跌破则 CI 红（与 pyproject.toml fail_under 一致）
       - run: cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-report=xml --cov-fail-under=50
+      # 上传覆盖率到 Codecov
+      - uses: codecov/codecov-action@v4
+        with:
+          directory: backend
+          flags: backend
+          fail_ci_if_error: false
+        continue-on-error: true
 
   frontend-check:
     runs-on: ubuntu-latest
@@ -33,6 +40,13 @@ jobs:
       - run: cd frontend && npm run lint
       # 前端测试带覆盖率报告（vitest run --coverage）
       - run: cd frontend && npx vitest run --coverage
+      # 上传覆盖率到 Codecov
+      - uses: codecov/codecov-action@v4
+        with:
+          directory: frontend
+          flags: frontend
+          fail_ci_if_error: false
+        continue-on-error: true
 
   lint:
     runs-on: ubuntu-latest
@@ -42,7 +56,7 @@ jobs:
         with: { python-version: '3.11' }
       - run: pip install flake8
       # flake8 零错误门禁：flake8 默认在有任何错误/警告时返回非零退出码
-      - run: cd backend && python -m flake8 app/ --max-line-length=120 --count
+      - run: cd backend && python -m flake8 app/ --max-line-length=120 --count --max-complexity=16
 
   security:
     runs-on: ubuntu-latest

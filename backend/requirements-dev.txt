@@ -54,3 +54,11 @@ altgraph==0.17.5
 GitPython==3.1.50
 gitdb==4.0.12
 smmap==5.0.3
+
+# ============================================================
+# 可选工具（需要系统 C++ 编译器）
+# Windows: 需安装 Visual Studio Build Tools
+# Linux: apt install gcc python3-dev
+# ============================================================
+# matplotlib>=3.8.0              # 图表生成（需要 C++ 编译器）
+# playwright>=1.45.0             # E2E 浏览器测试（需要 C++ 编译器）

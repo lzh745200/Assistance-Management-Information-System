@@ -210,6 +210,40 @@ frontend/vitest_result.txt
 check_lock.txt
 test_diff.txt
 
+# ===== 额外测试产物 =====
+.pytest_cache/**
+coverage*/**
+.coverage
+.coverage.*
+htmlcov/**
+.pytest_cache*/**
+.vitest/**
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+__tests__/**
+test-results/**
+junit.xml
+.nyc_output
+nyc_output/**
+coverage*.json
+coverage*.lcov
+vitest-report.html
+vitest-ui.html
+test-report.xml
+test-report.json
+report.xml
+junit-report/**
+cucumber-report.html
+playwright-report/**
+test-output/**
+test/**
+tests/**
+!backend/tests/**
+!frontend/src/**/*.test.*
+!frontend/src/**/*.spec.*
+
 # ===== requirements 备份与临时文件 =====
 **/requirements.txt.backup
 **/requirements.txt.tmp

@@ -1,5 +1,10 @@
 # Pre-commit hooks configuration
 # 安装: pip install pre-commit && pre-commit install
+#
+# 增强配置 (v1.2.0+):
+# - lint-staged: 仅检查变更文件，加速提交
+# - ruff: Python 快速 lint+fix (替代部分 flake8)
+# - flake8/bandit/vue-tsc: 全量质量门禁 (通过 scripts/pre_commit_hooks.py)
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -7,7 +12,9 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
+        exclude: ^logs/|\.log$
       - id: check-yaml
+        exclude: ^k8s/
       - id: check-json
       - id: check-added-large-files
         args: ['--maxkb=1024']
@@ -21,6 +28,7 @@ repos:
       - id: ruff
         args: [--fix, --line-length=120]
         files: ^backend/
+        exclude: ^backend/alembic/versions/
 
   - repo: local
     hooks:
@@ -30,21 +38,31 @@ repos:
         language: system
         files: ^docker/Dockerfile
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: flake8
         name: flake8
         entry: python scripts/pre_commit_hooks.py flake8
         language: system
         pass_filenames: false
+        stages: [pre-push]
 
       - id: bandit
         name: bandit (security)
         entry: python scripts/pre_commit_hooks.py bandit
         language: system
         pass_filenames: false
+        stages: [pre-push]
 
       - id: vue-tsc
         name: vue-tsc
         entry: python scripts/pre_commit_hooks.py vue_tsc
         language: system
         pass_filenames: false
+        stages: [pre-push]
+
+# CI workflows:
+# - pre-commit 阶段: ruff (快速)、trailing-whitespace、YAML/JSON 检查
+# - pre-push 阶段: flake8, bandit, vue-tsc (全量质量门禁)
+# - 推荐配合 lint-staged (见 frontend/package.json):
+#   npx lint-staged  # 仅检查 git 暂存文件

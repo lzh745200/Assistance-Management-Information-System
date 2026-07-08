@@ -32,14 +32,10 @@ def mock_auth(client):
     user.failed_login_count = 0
     user.locked_until = None
 
-    _original_overrides = None
-    try:
-        _original_overrides = client.app.dependency_overrides.copy()
-        client.app.dependency_overrides[get_current_user] = lambda: user
-        yield
-    finally:
-        if _original_overrides is not None:
-            client.app.dependency_overrides = _original_overrides
+    _original_overrides = client.app.dependency_overrides.copy()
+    client.app.dependency_overrides[get_current_user] = lambda: user
+    yield
+    client.app.dependency_overrides = _original_overrides
 
 
 def _create_fund_in_db(db_session, **overrides):

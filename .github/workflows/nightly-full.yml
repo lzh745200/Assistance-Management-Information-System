@@ -1,0 +1,91 @@
+name: Nightly Full Test Suite
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天凌晨 2:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+      - name: Full test suite with coverage
+        run: |
+          cd backend
+          python -m pytest tests/ -v --tb=long \
+            --cov=app --cov-report=html --cov-report=json --cov-fail-under=50 \
+            --durations=20 \
+            --junitxml=test-results.xml
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: backend/test-results.xml
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage-html
+          path: backend/htmlcov/
+      - uses: codecov/codecov-action@v4
+        with:
+          directory: backend
+          flags: backend-nightly
+        continue-on-error: true
+
+  frontend-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with: { node-version: '22' }
+      - run: cd frontend && npm install --legacy-peer-deps
+      - name: Full test + coverage
+        run: cd frontend && npx vitest run --coverage --reporter=junit --outputFile=test-results.xml
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-results
+          path: frontend/test-results.xml
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+      - uses: codecov/codecov-action@v4
+        with:
+          directory: frontend
+          flags: frontend-nightly
+        continue-on-error: true
+
+  quality-report:
+    runs-on: ubuntu-latest
+    needs: [backend-full, frontend-full]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate quality summary
+        run: |
+          echo "## 每日质量报告 ($(date +%Y-%m-%d))" > quality-report.md
+          echo "" >> quality-report.md
+          echo "| 检查项 | 状态 |" >> quality-report.md
+          echo "|--------|------|" >> quality-report.md
+          echo "| 后端测试 | ${{ needs.backend-full.result == 'success' && '✅' || '❌' }} |" >> quality-report.md
+          echo "| 前端测试 | ${{ needs.frontend-full.result == 'success' && '✅' || '❌' }} |" >> quality-report.md
+      - name: Upload quality report
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-report
+          path: quality-report.md
