@@ -82,12 +82,12 @@ class TestApplyScopeToQuery:
         query.filter.return_value = "dept_filtered"
 
         class SimpleModel:
-            department_id = "dept_col"
+            organization_id = "org_col"
 
         user = MagicMock(); user.is_superuser = False
         user.is_superuser = False
         user.role = "admin"
-        user.department_id = 42
+        user.organization_id = 42
         result = apply_scope_to_query(query, SimpleModel, user)
         query.filter.assert_called_once()
         assert result == "dept_filtered"
@@ -101,13 +101,11 @@ class TestApplyScopeToQuery:
         user = MagicMock(); user.is_superuser = False
         user.is_superuser = False
         user.role = "admin"
-        user.department_id = None
+        user.organization_id = None
         user.id = 5
         result = apply_scope_to_query(query, SimpleModel, user)
-        # OWN_DEPT scope without department_id → falls through logger.debug
-        # scope is still OWN_DEPT, OWN check is False → returns query unchanged
-        query.filter.assert_not_called()
-        assert result is query
+        # OWN_DEPT scope without organization_id → falls through to OWN scope
+        query.filter.assert_called_once()
 
     def test_own_scope_filters_by_owner(self):
         query = MagicMock()
@@ -156,18 +154,18 @@ class TestCheckRecordAccess:
         user = MagicMock(); user.is_superuser = False
         user.is_superuser = False
         user.role = "admin"
-        user.department_id = 5
+        user.organization_id = 5
         record = MagicMock()
-        record.department_id = 5
+        record.organization_id = 5
         assert check_record_access(record, user) is True
 
     def test_own_dept_mismatch(self):
         user = MagicMock(); user.is_superuser = False
         user.is_superuser = False
         user.role = "admin"
-        user.department_id = 5
+        user.organization_id = 5
         record = MagicMock()
-        record.department_id = 9
+        record.organization_id = 9
         assert check_record_access(record, user) is False
 
     def test_own_match(self):

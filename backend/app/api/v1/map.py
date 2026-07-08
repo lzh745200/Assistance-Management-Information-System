@@ -52,8 +52,8 @@ except Exception as e:
     _bad_dir = os.path.join(os.environ.get("CACHE_DIR", "./data/cache"), "map")
     try:
         shutil.rmtree(_bad_dir, ignore_errors=True)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("清理损坏的地图缓存目录失败: %s", e)
 
 _DISTANCES_TTL = 600  # 10 分钟
 
@@ -188,7 +188,9 @@ async def get_map_markers(
     result = {}
 
     if marker_type in ("all", "villages"):
-        v_query = db.query(SupportedVillage)
+        v_query = db.query(SupportedVillage).filter(
+            SupportedVillage.is_active == True  # noqa: E712 — 过滤软删除
+        )
         v_query = data_scope.filter_by_org_ids(
             v_query,
             SupportedVillage.organization_id,
@@ -410,7 +412,9 @@ async def get_distances(
     }
 
     # 批量查询帮扶村，避免 N+1
-    v_query = db.query(SupportedVillage)
+    v_query = db.query(SupportedVillage).filter(
+        SupportedVillage.is_active == True  # noqa: E712 — 过滤软删除
+    )
     v_query = data_scope.filter_by_org_ids(
         v_query,
         SupportedVillage.organization_id,
@@ -492,6 +496,77 @@ async def get_distances(
 
 
 # --------------- 离线瓦片服务 ---------------
+
+
+@router.get("/search")
+async def search_map_markers(
+    q: str = Query(..., min_length=1, max_length=100, description="搜索关键词（村名/学校名/区县）"),
+    marker_type: Optional[str] = Query(default="all", description="搜索类型: all, villages, schools"),
+    current_user=Depends(get_current_user),
+    data_scope: DataScope = Depends(get_data_scope),
+    db: Session = Depends(get_db),
+):
+    """
+    离线地图搜索：按关键词搜索帮扶村和学校
+
+    支持模糊搜索村名、学校名、区县等字段。
+    返回匹配的标注列表（含坐标），前端可直接在地图上定位。
+    """
+    keyword = f"%{q}%"
+    results: dict = {"villages": [], "schools": [], "total": 0}
+
+    # 搜索帮扶村
+    if marker_type in ("all", "villages"):
+        v_query = db.query(SupportedVillage).filter(
+            SupportedVillage.is_active == True,  # noqa: E712
+            SupportedVillage.village_name.ilike(keyword)
+            | SupportedVillage.county.ilike(keyword)
+            | SupportedVillage.department.ilike(keyword)
+            | SupportedVillage.support_unit.ilike(keyword),
+        )
+        v_query = data_scope.filter_by_org_ids(
+            v_query,
+            SupportedVillage.organization_id,
+            created_by_column=SupportedVillage.created_by,
+        )
+        villages = v_query.limit(50).all()
+        for v in villages:
+            coords = _get_coords(v.latitude, v.longitude, v.county, v.id, v.village_name)
+            results["villages"].append({
+                "id": v.id,
+                "name": v.village_name,
+                "lng": coords[0],
+                "lat": coords[1],
+                "type": "village",
+                "county": v.county,
+                "department": v.department,
+                "supportUnit": v.support_unit,
+            })
+
+    # 搜索学校
+    if marker_type in ("all", "schools"):
+        s_query = db.query(School).filter(
+            School.is_active == True,  # noqa: E712
+            School.name.ilike(keyword)
+            | School.district.ilike(keyword)
+            | School.support_unit.ilike(keyword),
+        )
+        s_query = data_scope.filter_by_org_ids(s_query, School.organization_id, created_by_column=School.created_by)
+        schools = s_query.limit(50).all()
+        for s in schools:
+            coords = _get_coords(s.latitude, s.longitude, s.district, s.id, s.name)
+            results["schools"].append({
+                "id": s.id,
+                "name": s.name,
+                "lng": coords[0],
+                "lat": coords[1],
+                "type": "school",
+                "district": s.district,
+                "supportUnit": s.support_unit,
+            })
+
+    results["total"] = len(results["villages"]) + len(results["schools"])
+    return results
 
 
 @router.get("/tile-info")

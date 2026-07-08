@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.core.permission_utils import require_admin
 from app.services.backup_service import get_backup_service
@@ -119,13 +120,7 @@ async def list_backups(
                 "backup_type": r.backup_type,
             })
 
-        return {
-            "success": True,
-            "data": {
-                "items": items,
-                "total": len(items),
-            },
-        }
+        return ok_list(items=items, total=len(items))
     except Exception as e:
         logger.error("获取备份列表失败: %s", e)
         raise HTTPException(status_code=500, detail=f"获取备份列表失败: {str(e)}")
@@ -282,6 +277,51 @@ async def download_backup(
         filename=filename,
         media_type="application/zip",
     )
+
+
+@router.post("/verify/{filename}", summary="验证备份文件完整性")
+async def verify_backup(
+    filename: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """验证指定备份文件的完整性
+
+    检查 ZIP 文件是否损坏、数据库文件是否可以正常打开、
+    以及备份内文件的哈希校验。
+    需要管理员权限。
+    """
+    require_admin(current_user, error_message="仅超级管理员可验证备份")
+
+    try:
+        from app.utils.paths import get_backup_path
+
+        backup_dir = str(get_backup_path())
+        file_path = os.path.join(backup_dir, filename)
+
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail=f"备份文件 '{filename}' 不存在")
+
+        # 安全检查：确保路径在备份目录内
+        real_path = os.path.realpath(file_path)
+        real_backup_dir = os.path.realpath(backup_dir)
+        if not real_path.startswith(real_backup_dir):
+            raise HTTPException(status_code=403, detail="禁止访问备份目录外的文件")
+
+        svc = get_backup_service(db)
+        result = svc.verify_backup(file_path)
+
+        logger.info(
+            "备份验证: %s，结果: %s，操作人: %s",
+            filename, result.get("status"), getattr(current_user, "username", "unknown"),
+        )
+
+        return {"success": True, "data": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("验证备份失败: %s", e)
+        raise HTTPException(status_code=500, detail=f"验证备份失败: {str(e)}")
 
 
 @router.post("/restore", summary="从备份恢复系统")

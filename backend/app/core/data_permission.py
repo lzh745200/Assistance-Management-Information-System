@@ -22,7 +22,7 @@ class DataScope(str, Enum):
     """See all records – super admin."""
 
     OWN_DEPT = "own_dept"
-    """See records belonging to the user's own department."""
+    """See records belonging to the user's own department/organization."""
 
     OWN = "own"
     """See only the user's own records."""
@@ -59,7 +59,7 @@ def apply_scope_to_query(
     user: Any,
     *,
     owner_field: str = "created_by",
-    dept_field: str = "department_id",
+    dept_field: str = "organization_id",
 ) -> Any:
     """Add filters to a SQLAlchemy query based on the user's data scope.
 
@@ -68,7 +68,7 @@ def apply_scope_to_query(
         model: The ORM model class.
         user: The current user instance.
         owner_field: Name of the column holding the owner's user ID.
-        dept_field: Name of the column holding the department ID.
+        dept_field: Name of the column holding the organization/department ID.
 
     Returns:
         The filtered query.
@@ -79,11 +79,14 @@ def apply_scope_to_query(
         return query
 
     if scope == DataScope.OWN_DEPT:
-        user_dept = getattr(user, "department_id", None)
+        # 使用 dept_field 参数（调用者传入，通常为 organization_id）
+        # 从 User 模型上读取同名属性（organization_id）
+        user_dept = getattr(user, dept_field, None)
         if user_dept is not None:
             return query.filter(getattr(model, dept_field) == user_dept)
-        # Fall through to OWN if department is not set
-        logger.debug("User has no department; falling back to OWN scope")
+        # 部门/组织未设置时回退到 OWN 范围
+        logger.debug("User has no organization; falling back to OWN scope")
+        scope = DataScope.OWN  # 显式回退
 
     if scope == DataScope.OWN:
         return query.filter(getattr(model, owner_field) == getattr(user, "id", None))
@@ -96,7 +99,7 @@ def check_record_access(
     user: Any,
     *,
     owner_field: str = "created_by",
-    dept_field: str = "department_id",
+    dept_field: str = "organization_id",
 ) -> bool:
     """Check whether *user* is allowed to access a single *record*.
 
@@ -104,7 +107,7 @@ def check_record_access(
         record: An ORM model instance.
         user: The current user.
         owner_field: Column name identifying the record owner.
-        dept_field: Column name identifying the department.
+        dept_field: Column name identifying the organization/department.
 
     Returns:
         *True* if access is permitted.
@@ -113,7 +116,7 @@ def check_record_access(
     if scope == DataScope.ALL:
         return True
     if scope == DataScope.OWN_DEPT:
-        return getattr(record, dept_field, None) == getattr(user, "department_id", None)
+        return getattr(record, dept_field, None) == getattr(user, dept_field, None)
     if scope == DataScope.OWN:
         return getattr(record, owner_field, None) == getattr(user, "id", None)
     return False

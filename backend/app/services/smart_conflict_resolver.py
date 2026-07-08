@@ -21,6 +21,7 @@ class ConflictStrategy:
     OVERWRITE = "OVERWRITE"  # 用导入数据覆盖本地数据
     KEEP_BOTH = "KEEP_BOTH"  # 保留两者，导入数据创建新记录
     MERGE = "MERGE"  # 智能合并（优先使用非空值）
+    AUTO = "AUTO"  # 自动选择最佳策略（根据冲突类型智能判断）
 
 
 class DataConflict:
@@ -245,6 +246,31 @@ class SmartConflictResolver:
                 self.db.flush()
                 id_mapping[data_type][old_id] = local_record.id
 
+            elif strategy == ConflictStrategy.AUTO:
+                # 自动选择最佳策略
+                auto_strategy = self._determine_auto_strategy(conflict)
+                if auto_strategy == ConflictStrategy.SKIP:
+                    id_mapping[data_type][old_id] = local_record.id
+                elif auto_strategy == ConflictStrategy.OVERWRITE:
+                    for key, value in import_record.items():
+                        if key not in {"id", "created_at", "created_by"}:
+                            setattr(local_record, key, value)
+                    self.db.flush()
+                    id_mapping[data_type][old_id] = local_record.id
+                elif auto_strategy == ConflictStrategy.MERGE:
+                    for key, import_value in import_record.items():
+                        if key not in {"id", "created_at", "created_by"}:
+                            local_value = getattr(local_record, key, None)
+                            if local_value is None and import_value is not None:
+                                setattr(local_record, key, import_value)
+                            elif import_value is not None:
+                                import_updated = import_record.get("updated_at")
+                                local_updated = getattr(local_record, "updated_at", None)
+                                if import_updated and local_updated and import_updated > local_updated:
+                                    setattr(local_record, key, import_value)
+                    self.db.flush()
+                    id_mapping[data_type][old_id] = local_record.id
+
         return id_mapping
 
     def _get_code_field(self, data_type: str) -> Optional[str]:
@@ -256,6 +282,60 @@ class SmartConflictResolver:
             "schools": "code",
         }
         return code_fields.get(data_type)
+
+    def _determine_auto_strategy(self, conflict: "DataConflict") -> str:
+        """
+        根据冲突特征自动选择最佳解决策略
+
+        决策规则：
+        1. 如果差异字段很少（≤2个），使用 MERGE（智能合并）
+        2. 如果本地记录更新时间更近，使用 SKIP（保留本地）
+        3. 如果导入记录更新时间更近，使用 OVERWRITE（使用导入）
+        4. 默认使用 MERGE（最安全的策略）
+
+        Args:
+            conflict: 冲突信息
+
+        Returns:
+            最佳策略名称
+        """
+        # 差异字段数量
+        diff_count = len(conflict.differences)
+
+        # 少量差异 → 合并
+        if diff_count <= 2:
+            return ConflictStrategy.MERGE
+
+        # 比较 updated_at 时间戳
+        import_record = conflict.import_record
+        local_record = conflict.local_record
+
+        import_updated = import_record.get("updated_at")
+        local_updated = getattr(local_record, "updated_at", None)
+
+        if import_updated and local_updated:
+            try:
+                from datetime import datetime
+
+                # 解析时间戳（兼容字符串和datetime对象）
+                if isinstance(import_updated, str):
+                    import_updated = datetime.fromisoformat(
+                        import_updated.replace("Z", "+00:00")
+                    )
+                if isinstance(local_updated, str):
+                    local_updated = datetime.fromisoformat(
+                        local_updated.replace("Z", "+00:00")
+                    )
+
+                if import_updated > local_updated:
+                    return ConflictStrategy.OVERWRITE
+                else:
+                    return ConflictStrategy.SKIP
+            except (ValueError, TypeError):
+                pass
+
+        # 默认：智能合并
+        return ConflictStrategy.MERGE
 
     def import_with_id_mapping(
         self,

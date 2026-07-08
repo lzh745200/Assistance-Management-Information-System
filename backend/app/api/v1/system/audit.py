@@ -205,10 +205,18 @@ async def export_audit_logs(
     action: Optional[str] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
+    format: str = Query("json", pattern="^(json|excel|csv)$"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """导出审计日志为JSON"""
+    """导出审计日志为 JSON / Excel / CSV 格式
+
+    支持三种导出格式：
+    - json: 返回 JSON 数据（默认）
+    - excel: 返回 .xlsx 文件下载
+    - csv: 返回 .csv 文件下载
+    需要管理员权限。
+    """
     if getattr(current_user, "role", None) not in ("admin", "super_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
 
@@ -237,7 +245,93 @@ async def export_audit_logs(
                 "ip": log.user_ip or "",
             }
         )
-    return ok_list(items=items, total=len(items))
+
+    # JSON 格式直接返回数据
+    if format == "json":
+        return ok_list(items=items, total=len(items))
+
+    # Excel / CSV 格式返回文件下载
+    import io
+    from fastapi.responses import StreamingResponse
+    from urllib.parse import quote
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    if format == "excel":
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment
+
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "审计日志"
+
+            # 表头样式
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="2B579A", end_color="2B579A", fill_type="solid")
+            headers = ["ID", "时间", "用户", "操作", "资源类型", "详情", "状态", "IP地址"]
+            ws.append(headers)
+            for col_idx in range(1, len(headers) + 1):
+                cell = ws.cell(row=1, column=col_idx)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = Alignment(horizontal="center")
+
+            for item in items:
+                ws.append([
+                    item["id"],
+                    item["time"],
+                    item["user"],
+                    item["action"],
+                    item["resource_type"],
+                    item["detail"],
+                    item["status"],
+                    item["ip"],
+                ])
+
+            # 自动列宽
+            for col in ws.columns:
+                max_length = 0
+                col_letter = col[0].column_letter
+                for cell in col:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except Exception as e:
+                        logger.debug("Excel 列宽计算跳过单元格: %s", e)
+                adjusted_width = min(max_length + 2, 50)
+                ws.column_dimensions[col_letter].width = adjusted_width
+
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
+
+            filename = f"audit_report_{timestamp}.xlsx"
+            return StreamingResponse(
+                output,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+            )
+        except ImportError:
+            logger.warning("openpyxl 未安装，回退到 CSV 格式")
+
+    # CSV 格式
+    import csv
+    output = io.StringIO()
+    output.write('\ufeff')  # BOM for Excel UTF-8 compatibility
+    field_names = ["id", "time", "user", "action",
+                   "resource_type", "detail", "status", "ip"]
+    writer = csv.DictWriter(output, fieldnames=field_names)
+    writer.writeheader()
+    writer.writerows(items)
+
+    csv_bytes = output.getvalue().encode("utf-8")
+    filename = f"audit_report_{timestamp}.csv"
+    return StreamingResponse(
+        io.BytesIO(csv_bytes),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+    )
 
 
 @router.get("/logs")

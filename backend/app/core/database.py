@@ -122,6 +122,20 @@ def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
                  abs(SQLITE_CACHE_SIZE), SQLITE_MMAP_SIZE // (1024 * 1024))
 
 
+@event.listens_for(engine, "close")
+def _on_connection_close(dbapi_connection: Any, connection_record: Any) -> None:
+    """连接关闭时执行 PRAGMA optimize，帮助 SQLite 优化查询计划。"""
+    if not IS_SQLITE:
+        return
+    try:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA optimize")
+        cursor.close()
+    except Exception:
+        # 连接关闭时的优化失败不应影响正常流程
+        pass
+
+
 def get_db() -> Generator[Session, None, None]:
     """FastAPI 依赖注入：提供数据库 Session，并在请求结束后自动关闭。
 
@@ -238,3 +252,44 @@ db_coordinator = SQLiteWriteCoordinator()
 # 向后兼容别名
 write_queue = db_coordinator
 SQLiteWriteQueue = SQLiteWriteCoordinator  # 旧类名别名
+
+
+def check_disk_space(min_mb: int = 100) -> dict:
+    """
+    检查数据库所在磁盘的剩余空间。
+
+    Args:
+        min_mb: 最小所需空间（MB），默认 100MB
+
+    Returns:
+        dict: {
+            "free_mb": 剩余空间(MB),
+            "total_mb": 总空间(MB),
+            "sufficient": 是否充足,
+            "path": 数据库目录路径
+        }
+    """
+    import shutil
+
+    db_path = Path(DATABASE_URL.replace("sqlite:///", ""))
+    db_dir = db_path.parent
+
+    try:
+        usage = shutil.disk_usage(str(db_dir))
+        free_mb = usage.free // (1024 * 1024)
+        total_mb = usage.total // (1024 * 1024)
+        return {
+            "free_mb": free_mb,
+            "total_mb": total_mb,
+            "sufficient": free_mb >= min_mb,
+            "path": str(db_dir),
+        }
+    except Exception as e:
+        logger.error("磁盘空间检查失败: %s", e)
+        return {
+            "free_mb": -1,
+            "total_mb": -1,
+            "sufficient": False,
+            "path": str(db_dir),
+            "error": str(e),
+        }
