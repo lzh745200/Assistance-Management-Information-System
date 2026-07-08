@@ -77,3 +77,14 @@ npx electron-builder --win --x64    # 64 位安装包（主力）
 
 GitHub Actions 工作流 `.github/workflows/build-windows.yml` 自动构建 x64 + x86
 双架构安装包，tag（`v*`）触发时自动发布 GitHub Release。
+
+## electron-builder 打包方案说明
+
+本项目采用 **electron-builder** 作为 Windows 离线安装包的打包方案，基于以下架构：
+
+1. **PyInstaller** 将 FastAPI 后端打包为独立 exe（`assistance-backend.exe`），内含 Python 3.11 + 全部依赖
+2. **electron-builder** 将 Electron 主进程、前端 dist、后端 exe 及 VC++ 运行库整合为单一 NSIS 安装包
+3. **extraResources** 机制将后端 exe 和前端静态文件嵌入 Electron 应用资源目录
+4. **NSIS 钩子**（`electron-builder-nsis-hook.nsh`）处理 VC++ 静默安装、进程终止和卸载数据清理
+
+通过 `Makefile` 快捷命令 `make build-win-x64` 可一键完成前端构建 → PyInstaller 打包 → electron-builder 打包全流程。

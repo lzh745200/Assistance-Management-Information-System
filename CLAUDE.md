@@ -5,9 +5,9 @@
 帮扶管理信息系统 - 完全离线的单机版桌面应用，支持多机协同数据同步。
 基于 Python FastAPI 后端 + Vue 3 TypeScript 前端 + Electron 桌面壳。
 
-> **平台说明**: 以下命令示例以 Windows 为主（`.venv\Scripts\`）。Linux/macOS 用户请将路径替换为 `.venv/bin/`、将 `\` 替换为 `/`。
+> **平台说明**: 以下命令示例以 Windows 为主（`.venv\\Scripts\\`）。Linux/macOS 用户请将路径替换为 `.venv/bin/`、将 `\\` 替换为 `/`。
 
-> **Python 环境**: 推荐使用 Python 3.11 64-bit（`C:\Users\Administrator\AppData\Local\Programs\Python\Python311\python.exe`）。
+> **Python 环境**: 推荐使用 Python 3.11 64-bit（`C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python311\\python.exe`）。
 
 ## 项目结构
 
@@ -19,7 +19,7 @@
 │   │   ├── import_export/    # 异步导入导出
 │   │   ├── system/           # 系统管理
 │   │   └── ...               # 地图、经费、项目、帮扶村、学校、政策等
-│   ├── core/                 # 核心：config, security, database, cache, data_permission
+│   ├── core/                 # 核心：config, security, database, cache, data_permission, transaction
 │   ├── models/               # SQLAlchemy 数据模型
 │   ├── schemas/              # Pydantic 数据校验
 │   ├── services/             # 业务逻辑层
@@ -44,6 +44,7 @@
 ├── electron/                 # Electron 桌面壳
 ├── scripts/                  # 运维脚本
 ├── build-scripts/            # 构建脚本（Windows .exe / Linux ARM64 .deb）
+├── docker/                   # Docker 配置（含 E2E 测试环境）
 ├── docs/                     # 项目文档（01-快速开始 ~ 04-部署文档 + ER图）
 └── resources/                # 图标、前端构建产物、瓦片地图
 ```
@@ -53,17 +54,24 @@
 ### 开发环境启动
 
 ```bash
-cd backend && python -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt && python start.py
+cd backend && python -m venv .venv && .venv\\Scripts\\activate && pip install -r requirements.txt && python start.py
 cd frontend && npm install && npm run dev
 ```
 
 ### 测试
 
 ```bash
-cd backend && python -m pytest tests/ -v          # 后端测试（~2300 passed）
-cd frontend && npm test -- --run                  # 前端测试（~1700 passed）
+cd backend && python -m pytest tests/ -v          # 后端测试（8890+ passed）
+cd frontend && npm test -- --run                  # 前端测试（1681 passed，137 个测试文件）
 cd backend && python -m flake8 app/ --max-line-length=120
 cd frontend && npm run lint && npm run typecheck
+
+# lint-staged：仅检查 git 暂存文件（加速提交）
+cd frontend && npx lint-staged
+
+# Docker E2E 测试（Playwright 浏览器自动化 + Locust 性能测试）
+docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml --profile e2e up
+docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml --profile performance up
 ```
 
 **已知预存测试错误**（非本次修复引入）：
@@ -77,7 +85,7 @@ cd frontend && npm run lint && npm run typecheck
 cd frontend && npm run build
 bash scripts/build/sync-frontend-dist.sh          # 同步 + 完整性校验
 python scripts/audit_static_assets.py --verbose   # 静态资源审计
-build-scripts\build_windows_complete.bat          # Windows 安装包
+build-scripts\\build_windows_complete.bat          # Windows 安装包
 bash build-scripts/build-linux-arm64.sh           # Linux ARM64 安装包
 ```
 
@@ -107,6 +115,68 @@ bash build-scripts/build-linux-arm64.sh           # Linux ARM64 安装包
 - **列表视图分页重置** (2026-07-05): 所有列表视图的 create/edit/delete/import 处理器必须在调用 `loadData`/`fetchData` 之前重置 `page.value=1`/`currentPage.value=1`/`pagination.page=1`。遗漏会导致用户在第2页+时看不到新建项。
 - **安全路由导航** (2026-07-05): 使用 `pushSafe()` from `@/composables/useRouterSafe` 替代 `router.push()`，避免 `NavigationFailureType.aborted` 未捕获拒绝。`useRouterSafe()` 必须在 `<script setup>` 顶层调用。
 
+## Pre-commit Hooks（分阶段策略）
+
+通过 `.pre-commit-config.yaml` 配置，分两个阶段执行：
+
+| 阶段 | Hooks | 说明 |
+|------|-------|------|
+| **pre-commit** | ruff（Python 快速 lint+fix）、trailing-whitespace、YAML/JSON 检查、Dockerfile tail 检查 | 仅检查变更文件，毫秒级完成 |
+| **pre-push** | flake8、bandit（安全扫描）、vue-tsc（前端类型检查） | 全量质量门禁，推送前执行 |
+
+安装: `pip install pre-commit && pre-commit install`
+
+前端 lint-staged 配合使用（`frontend/package.json` → `"lint-staged"` 配置）：
+```bash
+npx lint-staged   # 仅对 git 暂存的 *.vue/*.ts/*.tsx 文件执行 eslint --fix
+```
+
+## 事务管理（with_transaction 重构）
+
+`backend/app/core/transaction.py` 提供完整的事务管理工具链，共 6 个便捷函数：
+
+| 函数 | 类型 | 说明 |
+|------|------|------|
+| `transaction(db)` | 上下文管理器 | 基础事务，自动 commit/rollback |
+| `transactional` | 装饰器 | 自动查找 db 参数或创建新会话 |
+| `with_transaction(isolation_level, readonly)` | 高级装饰器 | 支持隔离级别（READ COMMITTED/REPEATABLE READ/SERIALIZABLE）和只读模式 |
+| `nested_transaction(db)` | 上下文管理器 | 嵌套事务（savepoint） |
+| `savepoint(db, name)` | 上下文管理器 | 命名保存点，可独立回滚 |
+| `retry_on_deadlock(max_retries)` | 装饰器 | 死锁自动重试（默认3次） |
+
+辅助工具: `BatchOperation` 类（`batch_insert` / `batch_update` / `batch_delete`），每批 1000 条。
+
+## CI/CD
+
+### PR Checks（`.github/workflows/pr-checks.yml`）
+
+每次 PR 触发：后端测试、前端测试、flake8 检查、覆盖率报告上传到 Codecov。
+
+### Nightly Full Test（`.github/workflows/nightly-full.yml`）
+
+每天凌晨 2:00 UTC 自动运行，也可手动触发（`workflow_dispatch`）：
+- 后端全量测试 + HTML/JSON 覆盖率报告 + JUnit XML 结果
+- 前端全量测试 + 覆盖率
+- Codecov 上传（backend-nightly / frontend-nightly flags）
+- 质量报告汇总（Artifact）
+
+### Codecov 集成
+
+PR Checks 和 Nightly 工作流均上传覆盖率到 [Codecov](https://codecov.io/)：
+- PR 中显示覆盖率变更 diff
+- Nightly 用独立 flags 追踪趋势
+- 使用 `codecov/codecov-action@v4`
+
+## 技术栈升级记录
+
+### Sass 1.101.0（modern-compiler API）
+
+前端 `frontend/package.json` → `devDependencies.sass: "^1.101.0"`，使用 modern-compiler API（`vite.config.ts` 中配置 `css.preprocessorOptions.scss.api: 'modern-compiler'`），编译速度显著提升。
+
+### 数据库迁移整合
+
+`backend/alembic/versions/012_consolidate_baseline.py` 将早期分散的迁移脚本整合为单一基线迁移，减少 Alembic 迁移链长度，便于新环境初始化。
+
 ## 故障排查
 
 ### 启动崩溃 - WinError 1392（文件或目录损坏）
@@ -135,6 +205,8 @@ python scripts/audit_static_assets.py --verbose
 ### WinError 10054 - 连接重置
 
 已在 `backend/app/utils/win_proactor_fix.py` 通过三层纵深防御修复（monkey-patch ProactorEventLoop），`start.py` 和 `main.py` 自动加载。
+
+> **v1.2.0 Logger 修复**: `win_proactor_fix.py` 中的 logger 从 `__name__` 方式获取，避免在模块导入早期阶段因日志系统未初始化而导致的 `KeyError` / `"No section: 'formatters'"` 错误。使用 `logging.getLogger(__name__)` 并确保 logger 实例在函数调用时才被引用。
 
 ### 登录超时（bcrypt 5.x 兼容性）
 

@@ -13,8 +13,8 @@ FastAPI + Vue 3 + Electron + SQLite. Windows primary, Linux ARM64 (Kylin V10) se
 
 ```bash
 cd backend
-.venv\Scripts\python start.py                          # Start server (http://localhost:8000)
-python -m pytest tests/ -v --tb=short -q --timeout=60  # Run all tests (~8890)
+.venv\\Scripts\\python start.py                          # Start server (http://localhost:8000)
+python -m pytest tests/ -v --tb=short -q --timeout=60   # Run all tests (8890+)
 python -m pytest tests/unit/test_xxx.py -v              # Run single test file
 python -m flake8 app/ --max-line-length=120             # Lint (CI gate, 0 errors)
 python -m mypy app/ --config-file=mypy.ini --ignore-missing-imports  # Type check (non-blocking)
@@ -26,11 +26,12 @@ python -m bandit -r app/ -ll                            # Security scan
 ```bash
 cd frontend
 npm run dev                                             # Dev server (http://localhost:5173)
-npm run test -- --run                                   # Run all tests (~1700)
+npm run test -- --run                                   # Run all tests (1681, 137 test files)
 npx vitest run src/views/xxx/xxx.test.ts               # Run single test file
 npm run lint                                            # ESLint (CI gate, --max-warnings=0)
 npx vue-tsc --noEmit                                    # Type check (CI gate)
 npm run build                                           # Production build
+npx lint-staged                                         # Lint only git-staged *.vue/*.ts/*.tsx files
 ```
 
 ### Combined
@@ -41,6 +42,19 @@ make test-backend   # Backend tests only
 make test-frontend  # Frontend tests only
 make deploy-check   # Full pre-deploy validation
 make clean          # Clean test artifacts
+```
+
+### Docker E2E Tests
+
+```bash
+# Playwright browser-based E2E (uses docker/docker-compose.e2e.yml)
+docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml --profile e2e up
+
+# Locust performance testing
+docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml --profile performance up
+
+# Full E2E + performance
+docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml --profile full up
 ```
 
 ## Architecture Gotchas
@@ -99,6 +113,7 @@ All routes use lazy loading: `component: () => import('@/views/xxx/List.vue')`
 
 - Minimum: 45% (CI gate via `--cov-fail-under=45`)
 - Local target: 50% (Makefile)
+- Nightly: 50% (`.github/workflows/nightly-full.yml`)
 - Test env vars: `ENVIRONMENT=test`, `SECRET_KEY=test-secret-key-for-ci`
 
 ### Frontend Coverage
@@ -106,13 +121,50 @@ All routes use lazy loading: `component: () => import('@/views/xxx/List.vue')`
 - Vitest with V8 coverage provider
 - Coverage thresholds in `vitest.config.ts`
 
-### Pre-commit Hooks
+### Codecov Integration
 
-Installed via `pre-commit install`:
-- black (Python formatter, line-length=120)
-- isort (import sorting)
-- flake8 (lint)
-- Standard hooks (trailing whitespace, YAML/JSON validation, large file check)
+Coverage is uploaded to Codecov via `codecov/codecov-action@v4` in two workflows:
+- **PR Checks** (`.github/workflows/pr-checks.yml`): Shows coverage diff on each pull request
+- **Nightly Full** (`.github/workflows/nightly-full.yml`): Uploads with `backend-nightly` / `frontend-nightly` flags for trend tracking
+
+### Pre-commit Hooks (Staged Strategy)
+
+Installed via `pre-commit install`. Uses a two-stage strategy defined in `.pre-commit-config.yaml`:
+
+| Stage | Hooks | Scope |
+|-------|-------|-------|
+| **pre-commit** | ruff (Python lint+fix, line-length=120), trailing-whitespace, YAML/JSON validation, Dockerfile tail check | Changed files only (fast) |
+| **pre-push** | flake8, bandit (security scan), vue-tsc (frontend type check) | Full project (quality gate) |
+
+All stage-2 hooks are orchestrated through `scripts/pre_commit_hooks.py`.
+
+**lint-staged** (`frontend/package.json` `"lint-staged"` config): Runs `eslint --fix` only on git-staged `*.vue`, `*.ts`, `*.tsx` files. Use `npx lint-staged` before committing frontend changes to catch issues early.
+
+### Docker E2E Testing
+
+`docker/docker-compose.e2e.yml` provides two optional service profiles:
+
+- **e2e**: Playwright-based browser automation (`mcr.microsoft.com/playwright:v1.45.0-jammy`), runs `tests/e2e/test_e2e.py`
+- **performance**: Locust load testing (`locustio/locust:2.28`), runs `tests/performance/locustfile.py`
+
+Both depend on `assistance-system` service with `condition: service_healthy`. Use `--profile e2e|performance|full` to select.
+
+## Transaction Management (with_transaction Refactoring)
+
+`backend/app/core/transaction.py` provides 6 convenience functions for transaction control:
+
+| Function | Type | Purpose |
+|----------|------|---------|
+| `transaction(db)` | Context manager | Basic transaction, auto commit/rollback |
+| `transactional` | Decorator | Auto-detect db param or create new session |
+| `with_transaction(isolation_level, readonly)` | Decorator | Isolation levels (READ COMMITTED/REPEATABLE READ/SERIALIZABLE) + read-only mode |
+| `nested_transaction(db)` | Context manager | Nested transaction via savepoints |
+| `savepoint(db, name)` | Context manager | Named savepoint, independently rollback-able |
+| `retry_on_deadlock(max_retries)` | Decorator | Deadlock auto-retry (default 3 attempts) |
+
+Isolation levels are validated at decorator definition time via a whitelist (`_VALID_ISOLATION_LEVELS`) to prevent SQL injection.
+
+Also includes `BatchOperation` class with `batch_insert` / `batch_update` / `batch_delete` (1000 records/batch).
 
 ## Build Pipeline
 
@@ -121,6 +173,8 @@ Installed via `pre-commit install`:
 ```bash
 cd frontend && npm run build  # Outputs to frontend/dist/
 ```
+
+**Sass**: v1.101.0 with modern-compiler API (`vite.config.ts` → `css.preprocessorOptions.scss.api: 'modern-compiler'`). Significantly faster compilation.
 
 ### Sync to Backend (for production)
 
@@ -153,11 +207,41 @@ make build-deb-arm64    # ARM64 (for Kylin V10)
 make build-kylin        # Kylin V10 standalone (no Electron, pure web)
 ```
 
+## CI Workflows
+
+### PR Checks (`.github/workflows/pr-checks.yml`)
+
+Triggered on every PR. Runs backend tests, frontend tests, flake8, and uploads coverage to Codecov.
+
+### Nightly Full (`.github/workflows/nightly-full.yml`)
+
+Scheduled daily at 2:00 UTC + manual trigger (`workflow_dispatch`). Three jobs:
+- `backend-full`: Full test suite with HTML/JSON coverage + JUnit XML + Codecov upload
+- `frontend-full`: Full test suite with coverage + Codecov upload
+- `quality-report`: Aggregated pass/fail summary artifact (depends on both)
+
+### CI Workflow Permissions
+
+| Workflow | Explicit permissions | Rationale |
+|----------|---------------------|-----------|
+| `pr-checks.yml` | `contents: read`, `pull-requests: read` | Read-only; no releases |
+| `build-arm64.yml` | `contents: write` | Needs write for `softprops/action-gh-release` |
+| `build-windows.yml` | `contents: write` | Needs write for `electron-builder` + gh-release |
+| `nightly-full.yml` | `contents: read` | Read-only; artifacts only |
+
+## Migration Management
+
+### Baseline Consolidation
+
+`backend/alembic/versions/012_consolidate_baseline.py` consolidates early scattered migration scripts into a single baseline migration, reducing the Alembic migration chain length for faster new-environment initialization.
+
 ## Known Issues & Fixes
 
 ### WinError 10054 (Connection Reset)
 
 Auto-fixed by `app/utils/win_proactor_fix.py`. Loaded by `start.py` and `main.py`. No action needed.
+
+> **v1.2.0 Logger Fix**: The logger in `win_proactor_fix.py` was refactored to use `logging.getLogger(__name__)` at module level with defensive instantiation, avoiding `KeyError` / `"No section: 'formatters'"` errors that occurred when the logging system wasn't yet initialized during early module import.
 
 ### bcrypt Login Timeout
 
@@ -189,7 +273,7 @@ AuditLogger.log() writes to both Python logging (app.log) AND database (audit_lo
 
 ### Database Path (Packaged Mode)
 
-In packaged (Electron) mode, the SQLite database is stored at `%LOCALAPPDATA%\bumofu-assistance\data\rural_revitalization.db` — NOT the install directory (Program Files requires admin write). Electron main.js injects `DATABASE_URL` env var to backend.exe.
+In packaged (Electron) mode, the SQLite database is stored at `%LOCALAPPDATA%\\bumofu-assistance\\data\\rural_revitalization.db` — NOT the install directory (Program Files requires admin write). Electron main.js injects `DATABASE_URL` env var to backend.exe.
 
 ## Common Frontend Bug Patterns (Fixed 2026-07-05)
 
@@ -253,14 +337,6 @@ Fixed in 16 files (43 handler instances): `funds/{ContractManage,TransferVoucher
 Implementation: `app/core/security.py` → `check_rate_limit()` (sliding window, in-memory).
 CSRF token rate limiting added in `app/api/v1/auth/auth.py` line ~509.
 
-## CI Workflow Permissions
-
-| Workflow | Explicit permissions | Rationale |
-|----------|---------------------|-----------|
-| `pr-checks.yml` | `contents: read`, `pull-requests: read` | Read-only; no releases |
-| `build-arm64.yml` | `contents: write` | Needs write for `softprops/action-gh-release` |
-| `build-windows.yml` | `contents: write` | Needs write for `electron-builder` + gh-release |
-
 ## Security Checklist (Military Audit Required)
 
 Every new feature must verify:
@@ -274,18 +350,26 @@ Every new feature must verify:
 
 | Purpose | Path |
 |---------|------|
-| Version number | `backend/app/core/config.py` → `Settings.PROJECT_VERSION` |
+| Version number | `backend/app/core/config.py` → `Settings.PROJECT_VERSION` (v1.2.0) |
 | DB schema source | `backend/app/models/` + `backend/alembic/versions/` |
+| Baseline migration | `backend/alembic/versions/012_consolidate_baseline.py` |
 | API router registry | `backend/app/api/v1/__init__.py` → `_BUSINESS_MODULES` |
 | Envelope list helper | `backend/app/core/response.py` → `ok_list()` |
+| Transaction utilities | `backend/app/core/transaction.py` (6 helper functions) |
 | Soft delete migration | `backend/alembic/versions/village_softdel_001_add_is_active.py` |
 | Password policy | `backend/app/core/security.py` → `PasswordPolicy` class |
 | Frontend HTTP client | `frontend/src/api/request.ts` |
 | Safe router composable | `frontend/src/composables/useRouterSafe.ts` |
 | Design tokens | `frontend/src/styles/tokens.scss` |
-|贵州 region data | `frontend/src/data/guizhouRegion.ts` |
+| lint-staged config | `frontend/package.json` → `"lint-staged"` |
+| Pre-commit config | `.pre-commit-config.yaml` (staged strategy: pre-commit + pre-push) |
+| E2E Docker compose | `docker/docker-compose.e2e.yml` |
+| Guizhou region data | `frontend/src/data/guizhouRegion.ts` |
 | Electron main | `electron/main.js` |
 | PyInstaller spec | `backend/assistance-backend.spec` |
 | NSIS hook | `build-scripts/electron-builder-nsis-hook.nsh` |
 | CI pipeline | `.github/workflows/build-windows.yml` |
 | ARM64 build | `.github/workflows/build-arm64.yml` + `docker/Dockerfile.kylin-standalone` |
+| PR checks | `.github/workflows/pr-checks.yml` |
+| Nightly CI | `.github/workflows/nightly-full.yml` |
+| WinError 10054 fix | `backend/app/utils/win_proactor_fix.py` |

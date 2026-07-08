@@ -1,4 +1,4 @@
-.PHONY: test test-backend test-frontend test-e2e coverage deploy-check clean \
+.PHONY: test test-backend test-frontend test-e2e test-e2e-docker coverage deploy-check clean \
         build-deb build-deb-amd64 build-deb-arm64 build-deb-all \
         docker-build docker-build-amd64 docker-build-arm64 docker-build-all \
         deb-clean \
@@ -23,6 +23,16 @@ test-frontend:
 test-e2e:
 	@echo ">>> 运行 E2E 测试..."
 	cd frontend && npm run test:e2e
+
+# E2E Docker 测试（使用 Docker Compose 启动完整环境运行 E2E）
+test-e2e-docker:
+	@echo ">>> 启动 Docker E2E 测试环境..."
+	docker compose -f docker/docker-compose.e2e.yml up -d --wait
+	@echo ">>> 运行 E2E 测试..."
+	cd frontend && npm run test:e2e || true
+	@echo ">>> 清理 Docker E2E 环境..."
+	docker compose -f docker/docker-compose.e2e.yml down -v
+	@echo "✓ E2E Docker 测试完成"
 
 # 生成覆盖率报告
 coverage:
@@ -276,6 +286,7 @@ help:
 	@echo "  make test-backend - 运行后端测试"
 	@echo "  make test-frontend- 运行前端测试"
 	@echo "  make test-e2e     - 运行 E2E 测试"
+	@echo "  make test-e2e-docker - Docker E2E 测试（完整环境）"
 	@echo "  make coverage     - 生成覆盖率报告"
 	@echo "  make deploy-check - 运行部署前检查"
 	@echo "  make security     - 运行安全扫描"

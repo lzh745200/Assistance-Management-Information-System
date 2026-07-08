@@ -8,6 +8,7 @@
 | **麒麟 V10** | ARM64 / x86_64 | `.deb` + AppImage | [麒麟V10离线部署方案](02-Linux部署/麒麟V10离线部署完整方案.md) |
 | **Windows 10/11** | x86_64 | `.exe` | [Windows 部署指南](01-Windows部署/部署指南.md) |
 | **Docker** | 任意 | 镜像 | [Docker 快速开始](03-Docker部署/DOCKER_QUICK_START.md) |
+| **Docker E2E** | 任意 | compose | `make test-e2e-docker` (E2E 测试专用配置) |
 
 ## 一键构建 .deb
 

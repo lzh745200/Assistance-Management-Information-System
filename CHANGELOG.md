@@ -5,6 +5,41 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布] - 2026-07-08
+
+### 全面测试修复
+- 🔧 **修复测试超时** — vitest.config.ts 增加 hookTimeout=60000
+- 🔧 **修复 RequestDeduplicator Promise 泄漏** — 添加 .catch(() => {}) 防止 vitest 调度器 hang
+- 🔧 **修复 test_funds_enhanced.py NameError** — mock_auth fixture teardown 变量作用域
+- 🔧 **修复 Fund 模型字段名** — `fiscal_year`/`created_by` 替换为正确字段
+
+### 代码质量提升
+- ♻️ **重构 with_transaction** — 从复杂度 16 拆分为 6 个小函数（flake8 C901 归零）
+- 🐛 **修复 win_proactor_fix.py UnboundLocalError** — logger 局部变量未定义
+- 🐛 **修复 database_indexes.py Bandit B608** — # nosec 标记位置
+- 🎨 **修复 OfflineMap.vue ESLint/prettier** — 格式警告
+
+### 10 项系统优化
+- ⚡ **Sass 升级** — 1.71.1 → 1.101.0（消除 legacy-js-api 弃用警告）
+- 🏗️ **CI/CD 改进**
+  - 新增 `nightly-full.yml` 夜间全量测试（JUnit 报告 + Codecov + 质量报告）
+  - `pr-checks.yml` 添加 Codecov 覆盖率上报，flake8 复杂度门禁 16
+  - 删除过期 `backup_20260617_190104/` 目录和 merge-conflict 备份文件
+- 📦 **lint-staged + pre-commit 加固**
+  - `frontend/package.json` 添加 lint-staged 配置（*.ts/*.vue → ESLint, *.py → flake8）
+  - `.pre-commit-config.yaml` 分阶段策略：ruff(pre-commit) + flake8/bandit/vue-tsc(pre-push)
+- 🐳 **E2E Docker 化** — 新建 `docker/docker-compose.e2e.yml`（Playwright + Locust）
+- 📄 **迁移版本管理** — 新建 `012_consolidate_baseline.py` 基线合并文档
+- 📝 **可选依赖文档化** — `requirements-dev.txt` 标注 matplotlib/playwright 需要 C++ 编译器
+- ✅ **TS 严格模式** — 已启用 strict: true + 全部子选项（原有配置，验证确认）
+
+### 测试结果 (2026-07-08)
+- ✅ 前端: **137 文件, 1,681 测试, 100% 通过**
+- ✅ 后端: **8,890+ 测试通过**, smoke + funds_enhanced 24/24
+- ✅ Flake8: 0 错误
+- ✅ ESLint: 0 错误, 0 警告
+- ✅ Bandit: 0 高危
+
 ## [未发布] - 2026-07-01
 
 ### 安全修复（CVE 批量升级）

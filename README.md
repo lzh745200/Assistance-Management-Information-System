@@ -1,21 +1,29 @@
 # 帮扶管理信息系统
 
-> 完全离线的单机版桌面应用 | 多机协同数据同步 | v1.2.0
+> 军民融合乡村振兴 — 完全离线的单机版桌面应用 | 多机协同数据同步 | v1.2.0
 
 ![Version](https://img.shields.io/badge/version-1.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20ARM64-orange)
+![Tests](https://img.shields.io/badge/tests-10%2C500%2B-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-88%25-yellowgreen)
 
 ## 项目状态
 
 | 指标 | 结果 |
 |------|------|
-| 后端测试 | 8890+ passed, 0 skipped |
-| 前端测试 | 1676+ passed |
-| Flake8 | 0 错误 |
-| ESLint | 0 warnings |
-| vue-tsc | 0 errors |
-| 测试警告 | 0 |
+| 后端测试 | **8,890+ passed**, 0 skipped, 0 errors |
+| 前端测试 | **1,681 passed**, 137 文件, 0 失败 |
+| Flake8 | 0 错误, 0 警告 |
+| ESLint | 0 错误, 0 警告 |
+| Bandit (安全) | 0 高危 |
+| vue-tsc | 0 错误 |
+| TypeScript | strict: true（全选项启用） |
+| Pre-commit | ruff（变更文件）+ flake8/bandit/vue-tsc（推送前） |
+| CI/CD | PR Checks + Nightly Full Suite + Codecov |
+| Sass | 1.101.0（modern-compiler API） |
+
+> **上次全量验证**: 2026-07-08 — 全部 10,500+ 测试通过，零 lint 错误，零安全告警
 
 ## 快速开始
 
@@ -73,115 +81,103 @@ cd frontend && npm install && npm run dev
 - **UI**: Element Plus + ECharts + Leaflet
 - **状态**: Pinia + 响应式菜单权限
 - **测试**: Vitest + Playwright
+- **代码质量**: ESLint + Prettier + lint-staged
 
 ### 桌面
-- **壳**: Electron + electron-builder
+- **壳**: Electron 33 + electron-builder
 - **安装**: NSIS (Windows) / dpkg-deb (Linux ARM64)
 
-## 核心功能
+## 测试体系
 
-| 模块 | 主要功能 |
-|------|---------|
-| 工作台 | 核心统计、快捷导航（权限控制）、自定义布局 |
-| 帮扶村管理 | CRUD、10板块年度数据、批量导入导出 |
-| 帮扶学校 | 学校档案、学生资助、数据分析 |
-| 帮扶项目 | 全生命周期、里程碑、经费关联、Excel导入 |
-| 经费管理 | 台账、预算、审批工作流、异常检测、生命周期 |
-| 乡村工作 | 任务管理、工作日志、工作日历 |
-| 数据同步 | 加密数据包、多机协同、冲突解决 |
-| 权限管理 | RBAC角色、动态菜单、按钮级权限、数据范围隔离 |
-| 系统管理 | 用户/角色/菜单、审计日志、配置、健康检查 |
-| 监控面板 | CPU/内存/磁盘/网络、API统计、日志筛选 |
+| 测试类型 | 工具 | 数量 | 覆盖范围 |
+|---------|------|------|---------|
+| 后端单元测试 | pytest | 8,890+ | API/Service/Core/Model/Utils 全覆盖 |
+| 后端集成测试 | pytest | 8 套 | Auth/Users/Policies/Search/Audit/API |
+| 后端安全测试 | pytest | 3 套 | Data Isolation/Audit/Retry |
+| 前端单元测试 | Vitest | 1,681 | API/Store/Component/Composable/Utils |
+| E2E 测试 | Playwright | 12 流程 | Login/Dashboard/Projects/Approval/Funds |
+| 性能测试 | Locust | 配置可用 | 负载测试 |
+| 属性测试 | fast-check | 多组 | 组件属性验证 |
+| 无障碍测试 | Vitest | 多组 | ARIA/键盘/颜色对比度 |
+| 安全扫描 | Bandit | 0 高危 | SQL注入/密码/加密 |
+| 代码检查 | Flake8/ESLint | 0 错误 | Python + Vue/TS |
+
+### 运行测试
+
+```bash
+# 后端
+cd backend && pytest tests/ -q --tb=short
+
+# 前端
+cd frontend && npm test
+
+# 全量（不含 E2E）
+make test
+
+# E2E (Docker)
+docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml --profile e2e up
+
+# 覆盖率
+cd backend && pytest --cov=app --cov-report=html
+cd frontend && npm run test:coverage
+```
+
+## 开发工具链
+
+```bash
+# 代码格式化与检查
+cd frontend && npm run lint            # ESLint 自动修复
+cd frontend && npm run type-check      # TypeScript 类型检查
+cd backend && flake8 app/ --max-line-length=120
+cd backend && bandit -r app/
+
+# Pre-commit hooks（推荐安装）
+pip install pre-commit && pre-commit install
+npx lint-staged                        # 仅检查暂存文件
+
+# 构建
+make build-win-x64                     # Windows x64 安装包
+make build-kylin                       # 麒麟 V10 ARM64 DEB
+```
+
+## CI/CD 流水线
+
+| 流水线 | 触发条件 | 内容 |
+|--------|---------|------|
+| **PR Checks** | Pull Request | 后端测试(50%覆盖门禁) + 前端测试 + flake8 + npm audit + SBOM |
+| **Nightly Full** | 每日凌晨2:00 UTC | 全量测试 + 覆盖率报告 + Codecov + JUnit 报告 |
+| **Build Windows** | Push main / tag v* | PyInstaller + electron-builder NSIS |
+| **Build ARM64** | Push main / tag v* | Docker Buildx QEMU + electron-builder DEB |
 
 ## 项目结构
 
 ```
-├── backend/                  # 后端（Python FastAPI）
-│   ├── app/api/v1/          # 47 个 API 路由模块
-│   ├── app/core/            # 核心基础设施（44 模块）
-│   ├── app/models/          # 60+ 数据模型（懒加载）
-│   ├── app/services/        # 90+ 业务服务
-│   ├── app/middleware/       # 14 个中间件
-│   ├── alembic/versions/    # 数据库迁移
-│   └── tests/               # 7600+ 用例
-├── frontend/src/            # 前端（Vue 3 + TS）
-│   ├── views/               # 32 个视图模块
-│   ├── components/          # 通用 + 业务组件
-│   ├── stores/              # Pinia（auth/menu/app/permission）
-│   ├── router/              # 路由 + 权限守卫
-│   ├── api/                 # 25+ API 模块
-│   └── utils/               # 工具 + treeNormalizer
-├── electron/                # Electron 桌面壳
-├── resources/               # 图标、前端构建产物、瓦片
-├── scripts/                 # 运维脚本 + dev-setup
-├── build-scripts/           # electron-builder NSIS 钩子 + 构建配置
-├── deploy/                  # 麒麟 V10 部署配置
-├── docker/                  # Docker 多架构构建（ARM64 麒麟单机版）
-├── .github/workflows/       # CI/CD（pr-checks + build-windows + build-arm64）
-└── docs/                    # 项目文档（含系统设计 + 类图 + 时序图）
+├── backend/app/              # 后端（FastAPI）
+│   ├── api/v1/               # API 路由（42 个路由模块）
+│   ├── core/                 # 核心：config, security, database, transaction, cache
+│   ├── models/               # SQLAlchemy 数据模型（~40 个）
+│   ├── services/             # 业务逻辑层（~60 个服务）
+│   └── middleware/            # CSRF, 审计, 请求日志, 零信任
+├── frontend/src/             # 前端（Vue 3 + TypeScript）
+│   ├── views/                # 页面视图（~90 个组件）
+│   ├── components/           # 通用 + 业务组件（~60 个）
+│   ├── stores/               # Pinia 状态（18 个 store）
+│   ├── composables/          # 组合式函数（~22 个）
+│   └── utils/                # 工具函数（~40 个模块）
+├── electron/                 # Electron 桌面壳
+├── docker/                   # 多架构 Dockerfile + E2E compose
+├── deploy/                   # 麒麟 V10 systemd + DEBIAN 配置
+├── k8s/                      # Kubernetes 部署清单
+├── nginx/                    # Nginx 反向代理配置
+├── scripts/                  # 管理/运维脚本
+├── build-scripts/            # electron-builder NSIS 钩子 + 构建配置
+├── docs/                     # 项目文档
+├── .github/workflows/        # CI/CD（PR Checks + Nightly + Build）
+└── resources/                # 图标、VC++ 运行库、预置数据库
 ```
-
-## 构建安装包
-
-```bash
-# 前端构建
-cd frontend && npm run build
-
-# Windows x64 安装包（PyInstaller + electron-builder）
-make build-win-x64
-
-# Windows x86 安装包（已放弃：上游科学计算包不再提供 win32 cp311 wheels）
-# make build-win-x86
-
-# Linux ARM64（Docker 交叉编译）
-make build-kylin
-```
-
-产物（由 GitHub Actions 自动构建）：
-- `dist/electron/帮扶管理系统 Setup 1.2.0-x64.exe` (~280 MB)
-- `dist/deb/kylin/*.deb`（ARM64 麒麟 V10 单机版）
-
-### 打包方案
-
-PyInstaller 将 FastAPI 后端打包为 `assistance-backend.exe`（内含 Python 解释器 + 全部 pip 依赖 + SQLite），electron-builder 将其与 Electron 运行时 + Vue3 前端 + VC++ Redistributable 一起打包为 NSIS 安装包。目标机器零依赖。
-
-## 测试
-
-```bash
-# 后端
-cd backend && python -m pytest tests/ -v
-
-# 前端
-cd frontend && npm test -- --run
-
-# 代码质量
-cd backend && python -m flake8 app/ --max-line-length=120
-cd frontend && npm run lint && npm run type-check
-```
-
-## 关键设计
-
-- 项目完全离线运行，安装包内置所有运行时（Python 解释器 + 全部依赖 + SQLite + VC++ 运行库）
-- 审计日志落库（audit_logs + login_attempts 表），涉军合规
-- Schema 权威来源: `backend/app/models/` 和 Alembic 迁移
-- 版本号: `backend/app/core/config.py` → `PROJECT_VERSION` = `1.4.1`
-- 数据库: 用户目录 `%LOCALAPPDATA%/bumofu-assistance/data/rural_revitalization.db`（非安装目录）
-- **菜单权限**: 后端 MENU_DEFINITIONS → `/menus/accessible` → Pinia store → 侧边栏 v-if + QuickActions v-if
-- **自动备份已禁用**: 防止生成大文件占用磁盘
-
-## 文档
-
-- [快速开始](docs/01-快速开始/)
-- [用户手册](docs/02-用户手册/)
-- [开发文档](docs/03-开发文档/)
-- [部署文档](docs/04-部署文档/)
-- [文件结构说明](项目文件结构说明.md)
-- [ER 图](docs/ER-DIAGRAM.md)
 
 ## 许可证
 
-[MIT License](LICENSE)
+MIT License - 详见 [LICENSE](LICENSE)
 
----
-
-**版本**: v1.2.0 | **更新**: 2026-07-01
+Copyright © 2025 贵州省军民融合乡村振兴项目组
