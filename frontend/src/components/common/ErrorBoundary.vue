@@ -50,11 +50,13 @@
 <script setup lang="ts">
 import { ref, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 
 /** 错误类型：chunk | network | unknown */
 type ErrorType = 'chunk' | 'network' | 'unknown'
 
 const router = useRouter()
+const { pushSafe } = useRouterSafe()
 
 const hasError = ref(false)
 const isRetrying = ref(false)
@@ -137,9 +139,7 @@ function handleReload() {
 /** 返回首页 */
 function handleGoHome() {
   hasError.value = false
-  router.push('/').catch(() => {
-    window.location.href = '/'
-  })
+  pushSafe('/')
 }
 </script>
 

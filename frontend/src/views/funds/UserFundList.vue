@@ -471,6 +471,7 @@ async function handleDelete(row: any) {
     })
     await request.delete(`/funds/${row.id}`)
     ElMessage.success('删除成功')
+    currentPage.value = 1
     fetchData()
     loadFundStats()
   } catch (error: any) {

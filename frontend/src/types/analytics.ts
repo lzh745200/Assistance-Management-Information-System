@@ -21,6 +21,7 @@ export interface SupportedVillage {
   province?: string // 默认"贵州省"
   city?: string // 市州
   county?: string // 县市区
+  township?: string // 乡镇
   regionScope?: string
   isThreeRegions: boolean
   isBorderArea: boolean
@@ -68,6 +69,7 @@ export interface SupportedVillageCreate {
   province?: string // 默认"贵州省"
   city?: string // 市州
   county?: string // 县市区
+  township?: string // 乡镇
   regionScope?: string
   isThreeRegions?: number | undefined
   isBorderArea?: number | undefined

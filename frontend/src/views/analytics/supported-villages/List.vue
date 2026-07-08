@@ -407,8 +407,11 @@ function handleYearlyData(row: SupportedVillage) {
 async function handleDelete(row: SupportedVillage) {
   try {
     await deleteSupportedVillage(row.id)
+    // 乐观更新：立即从表格数据中移除已删除行，避免等待列表重载
+    tableData.value = tableData.value.filter((item) => item.id !== row.id)
+    pagination.total = Math.max(0, pagination.total - 1)
     ElMessage.success('删除成功')
-    pagination.page = 1
+    // 后台静默刷新列表数据（不显示 loading）
     loadData()
   } catch (error) {
     ElMessage.error('删除失败')
@@ -427,10 +430,14 @@ async function handleBatchDelete() {
   try {
     const ids = selectedRows.value.map((row) => row.id)
     const result = await batchDeleteSupportedVillages(ids)
+    // 乐观更新：立即从表格数据中移除已删除行
+    const idSet = new Set(ids)
+    tableData.value = tableData.value.filter((item) => !idSet.has(item.id))
+    pagination.total = Math.max(0, pagination.total - ids.length)
     ElMessage.success(result.message)
     selectedRows.value = []
     if (tableRef.value) tableRef.value.clearSelection()
-    pagination.page = 1
+    // 后台静默刷新列表数据
     loadData()
   } catch (error) {
     ElMessage.error('批量删除失败')
@@ -520,6 +527,7 @@ function handleImport() {
         logger.error('导入错误:', result.errors)
         ElMessage.warning(`有${result.errors.length}条数据导入失败，请检查数据格式`)
       }
+      pagination.page = 1
       loadData()
     } catch (error: any) {
       logger.error('导入失败:', error)

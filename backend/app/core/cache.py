@@ -43,6 +43,14 @@ class SimpleCache:
         with self._lock:
             self._store.pop(key, None)
 
+    def delete_by_prefix(self, prefix: str) -> int:
+        """Delete all keys starting with *prefix*. Returns count deleted."""
+        with self._lock:
+            keys_to_delete = [k for k in self._store if k.startswith(prefix)]
+            for k in keys_to_delete:
+                del self._store[k]
+            return len(keys_to_delete)
+
     def clear(self) -> None:
         with self._lock:
             self._store.clear()
@@ -73,6 +81,10 @@ class CacheManager:
 
     async def delete(self, key: str) -> None:
         self._b.delete(key)
+
+    async def delete_by_prefix(self, prefix: str) -> int:
+        """Delete all keys starting with *prefix*. Returns count deleted."""
+        return self._b.delete_by_prefix(prefix)
 
     async def clear(self) -> None:
         self._b.clear()

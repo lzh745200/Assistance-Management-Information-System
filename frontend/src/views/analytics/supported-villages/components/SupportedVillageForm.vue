@@ -322,7 +322,7 @@ import type { SupportedVillage, SupportedVillageCreate } from '@/types/analytics
 import GuizhouRegionSelector from '@/components/common/GuizhouRegionSelector.vue'
 import type { RegionValue } from '@/components/common/GuizhouRegionSelector.vue'
 import MapPicker from '@/components/MapPicker.vue'
-import { DEFAULT_CITY, DEFAULT_PROVINCE } from '@/components/common/qiannanRegion'
+import { DEFAULT_PROVINCE } from '@/components/common/qiannanRegion'
 import { getTransitionFunding, saveTransitionFunding } from '@/api/supportedVillage'
 
 const props = defineProps<{
@@ -346,6 +346,7 @@ const formData = reactive<SupportedVillageCreate>({
   province: DEFAULT_PROVINCE,
   city: '',
   county: '',
+  township: '',
   regionScope: '',
   isThreeRegions: 0,
   isBorderArea: 0,
@@ -497,12 +498,12 @@ const regionValue = computed<RegionValue>({
   get: () => ({
     city: formData.city || undefined,
     county: formData.county || undefined,
-    township: (formData as any).township || undefined,
+    township: formData.township || undefined,
   }),
   set: (val: RegionValue) => {
     formData.city = val.city || ''
     formData.county = val.county || ''
-    ;(formData as any).township = val.township || ''
+    formData.township = val.township || ''
   },
 })
 
@@ -518,8 +519,9 @@ watch(
         villageName: village.villageName,
         // 地域属性
         province: village.province || DEFAULT_PROVINCE,
-        prefecture: village.city || DEFAULT_CITY,
+        city: village.city || '',
         county: village.county || '',
+        township: village.township || '',
         regionScope: village.regionScope || '',
         // 布尔字段强制转换，确保正确显示
         isThreeRegions: Boolean(village.isThreeRegions),

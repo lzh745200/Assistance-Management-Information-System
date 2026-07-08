@@ -277,6 +277,7 @@ async function handleAdd() {
     ElMessage.success('已添加')
     addForm.title = ''
     addForm.deadline = ''
+    currentPage.value = 1
     fetchTodos()
   } catch {
     ElMessage.error('添加失败')
@@ -322,6 +323,7 @@ async function handleSave() {
     })
     ElMessage.success('已保存')
     editDialogVisible.value = false
+    currentPage.value = 1
     fetchTodos()
   } catch {
     ElMessage.error('保存失败')
@@ -334,6 +336,7 @@ async function handleDelete(todo: any) {
   try {
     await deleteTodo(todo.id)
     ElMessage.success('已删除')
+    currentPage.value = 1
     fetchTodos()
   } catch {
     ElMessage.error('删除失败')

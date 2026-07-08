@@ -51,7 +51,7 @@ def client(db_session):
     async def _override_get_db():
         yield db_session
 
-    app.dependency_overrides = _original_overrides
+    _original_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = _override_get_db
     yield TestClient(app, raise_server_exceptions=False)
     app.dependency_overrides = _original_overrides

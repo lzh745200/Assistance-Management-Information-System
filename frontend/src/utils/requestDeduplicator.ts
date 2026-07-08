@@ -94,6 +94,9 @@ export class RequestDeduplicator {
       pendingResolve = resolve
       pendingReject = reject
     })
+    // Suppress unhandled rejection on the internal promise to prevent
+    // vitest/jsdom scheduler from tracking it as unsettled during teardown
+    promise.catch(() => {})
 
     const pendingRequest: PendingRequest<T> = {
       promise,

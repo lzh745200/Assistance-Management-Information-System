@@ -400,6 +400,7 @@ async function handleUpdateStatus() {
     if (res.success) {
       ElMessage.success(res.message || '状态更新成功')
       detailVisible.value = false
+      pagination.page = 1
       loadTableData()
       loadStats()
     } else {

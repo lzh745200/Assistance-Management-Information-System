@@ -57,7 +57,10 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'region-click', region: { name: string; code?: string }): void
+  (
+    e: 'region-click',
+    region: { name: string; lng?: number | null; lat?: number | null; code?: string }
+  ): void
   (e: 'marker-click', marker: Marker): void
 }>()
 
@@ -96,12 +99,17 @@ function initChart() {
       const marker = props.markers.find((m) => m.name === params.name)
       if (marker) emit('marker-click', marker)
     } else if (params.seriesType === 'map') {
+      // 优先从 GeoJSON cp 获取中心点；若无则从点击像素转换
       const cp = params.data?.cp || null
-      emit('region-click', {
-        name: params.name,
-        lng: cp?.[0] || null,
-        lat: cp?.[1] || null,
-      })
+      if (cp && cp[0] != null && cp[1] != null) {
+        emit('region-click', { name: params.name, lng: cp[0], lat: cp[1] })
+      } else if (chart && params.event) {
+        const px = [params.event.offsetX, params.event.offsetY]
+        const point = chart.convertFromPixel({ geoIndex: 0 }, px)
+        if (point && !isNaN(point[0]) && !isNaN(point[1])) {
+          emit('region-click', { name: params.name, lng: point[0], lat: point[1] })
+        }
+      }
     }
   })
   // Click on map background (not on markers/regions) — emit coordinates

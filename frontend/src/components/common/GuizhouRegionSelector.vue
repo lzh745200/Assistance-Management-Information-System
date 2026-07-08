@@ -77,7 +77,7 @@ function onCityChange(city: string) {
     ...props.modelValue,
     city: city || undefined,
     county: undefined, // 切换市州时清除县选择
-    township: props.modelValue?.township,
+    township: undefined, // 切换市州时清除乡镇选择（乡镇依赖市+县）
   })
 }
 
@@ -85,6 +85,7 @@ function onCountyChange(county: string) {
   emit('update:modelValue', {
     ...props.modelValue,
     county: county || undefined,
+    township: undefined, // 切换县市时清除乡镇选择（乡镇依赖市+县）
   })
 }
 

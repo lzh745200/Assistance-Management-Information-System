@@ -227,9 +227,7 @@ const goToRegister = () => {
 }
 
 const goToMachineCode = () => {
-  router.push('/get-machine-code').catch(() => {
-    window.location.href = '/get-machine-code'
-  })
+  pushSafe('/get-machine-code')
 }
 </script>
 

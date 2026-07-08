@@ -1813,7 +1813,6 @@ class TestForbiddenForViewer:
             assert resp.status_code == 403, f"{method} {path} expected 403 got {resp.status_code}"
         finally:
             if original:
-                _original_overrides = app.dependency_overrides.copy()
                 app.dependency_overrides[get_current_user] = original
             else:
                 app.dependency_overrides.pop(get_current_user, None)

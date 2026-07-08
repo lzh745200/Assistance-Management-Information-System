@@ -511,7 +511,8 @@ async function handleDelete(row: any) {
     const { deleteRuralWork } = await import('@/api/ruralWork')
     await deleteRuralWork(row.id)
     ElMessage.success('删除成功')
-    fetchData()
+    currentPage.value = 1
+    await fetchData()
   } catch (error: any) {
     // 用户取消删除
     if (error === 'cancel') {

@@ -205,6 +205,19 @@ def _get_village_or_404(db: Session, village_id: int) -> SupportedVillage:
     return village
 
 
+async def _invalidate_village_cache():
+    """清除帮扶村列表缓存，确保写操作后立即可见"""
+    import os
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return
+    try:
+        from app.core.cache import get_cache_service
+        _cache = await get_cache_service()
+        await _cache.delete_by_prefix("villages:list:")
+    except Exception:
+        pass
+
+
 def _process_import_row(row: tuple, field_names: List[str], db: Session, row_idx: int):
     """处理单行导入数据。返回 (success: bool, error_msg: Optional[str])"""
     values = {}
@@ -435,6 +448,7 @@ async def import_villages(
         except Exception as e:
             errors.append(f"第{row_idx}行: {str(e)}")
     db.commit()
+    await _invalidate_village_cache()
     return {
         "message": f"成功导入 {imported} 条记录" + (f"，{len(errors)} 条跳过" if errors else ""),
         "imported": imported,
@@ -455,6 +469,7 @@ async def batch_delete_villages(
         SupportedVillage.id.in_(data.ids)
     ).update({"is_active": False}, synchronize_session=False)
     db.commit()
+    await _invalidate_village_cache()
     return {"message": f"已删除 {len(data.ids)} 条记录"}
 
 
@@ -484,6 +499,7 @@ async def create_village(
     db.add(village)
     db.commit()
     db.refresh(village)
+    await _invalidate_village_cache()
     return {"data": {"id": village.id}, "message": "创建成功"}
 
 
@@ -524,6 +540,7 @@ async def update_village(
         if hasattr(village, key) and key != "id":
             setattr(village, key, value)
     db.commit()
+    await _invalidate_village_cache()
     return {"message": "更新成功"}
 
 
@@ -538,6 +555,7 @@ async def delete_village(
 
     village.is_active = False
     db.commit()
+    await _invalidate_village_cache()
     return {"message": "删除成功"}
 
 

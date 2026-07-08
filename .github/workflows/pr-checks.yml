@@ -41,8 +41,8 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: pip install flake8
-      # flake8 零警告门禁：--max-warnings=0 使任何警告均导致失败
-      - run: cd backend && python -m flake8 app/ --max-line-length=120 --max-warnings=0 --count
+      # flake8 零错误门禁：flake8 默认在有任何错误/警告时返回非零退出码
+      - run: cd backend && python -m flake8 app/ --max-line-length=120 --count
 
   security:
     runs-on: ubuntu-latest

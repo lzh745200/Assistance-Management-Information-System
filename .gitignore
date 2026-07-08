@@ -197,6 +197,18 @@ frontend/test_results.txt
 frontend/vitest.json
 backend/test_output.txt
 backend/bandit_tmp.json
+backend/flake8_result.txt
+backend/final_test_result.txt
+backend/test_sync_result.txt
+backend/audit_test_result.txt
+backend/cov_full.txt
+backend/cov_summary.txt
+backend/server_log*.txt
+frontend/eslint_result.txt
+frontend/tsc_result.txt
+frontend/vitest_result.txt
+check_lock.txt
+test_diff.txt
 
 # ===== requirements 备份与临时文件 =====
 **/requirements.txt.backup
