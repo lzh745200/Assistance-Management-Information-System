@@ -26,7 +26,7 @@
     "electron-log": "^4.4.8"
   },
   "devDependencies": {
-    "electron": "33.3.1",
+    "electron": "^33.3.1",
     "electron-builder": "^24.13.3"
   },
   "build": {
@@ -45,22 +45,30 @@
       {
         "from": "backend/dist/assistance-backend.exe",
         "to": "backend/assistance-backend.exe",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "frontend/dist",
         "to": "frontend",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "resources/database",
         "to": "database",
-        "filter": ["rural_revitalization.db"]
+        "filter": [
+          "rural_revitalization.db"
+        ]
       },
       {
         "from": "resources/vcredist",
         "to": "vcredist",
-        "filter": ["**/*.exe"]
+        "filter": [
+          "**/*.exe"
+        ]
       },
       {
         "from": "resources/icons/app-circle-256.png",
@@ -68,7 +76,9 @@
       }
     ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "resources/icons/app.ico"
     },
     "nsis": {
@@ -85,14 +95,18 @@
       "warningsAsErrors": false
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "icon": "resources/icons/icon.png"
     },
     "linux": {
       "target": [
         {
           "target": "deb",
-          "arch": ["arm64"]
+          "arch": [
+            "arm64"
+          ]
         }
       ],
       "icon": "resources/icons/app-circle-256.png",
@@ -104,7 +118,10 @@
       "desktop": {
         "Name": "帮扶管理系统",
         "Comment": "军民融合乡村振兴综合管理平台",
-        "Categories": ["Office", "Utility"],
+        "Categories": [
+          "Office",
+          "Utility"
+        ],
         "StartupNotify": true
       }
     }
