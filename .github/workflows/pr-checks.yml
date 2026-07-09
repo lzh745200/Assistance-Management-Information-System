@@ -75,7 +75,6 @@ jobs:
       - name: Frontend dependency audit
         run: |
           cd frontend
-          npm config set registry https://registry.npmmirror.com
           npm install --legacy-peer-deps
           npm audit --audit-level=high
         continue-on-error: true

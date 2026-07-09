@@ -326,7 +326,7 @@ async def import_scholarship_students(
 @router.get("/export/excel")
 async def export_schools_excel(
     current_user=Depends(get_current_user),
-    data_scope: DataScope = Depends(get_data_scope),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
     """导出学校到 Excel"""
@@ -402,7 +402,7 @@ async def export_schools_excel(
 @router.get("/statistics")
 async def get_school_statistics(
     current_user=Depends(get_current_user),
-    data_scope: DataScope = Depends(get_data_scope),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
     """学校统计数据（含助学兴教统计）"""
@@ -537,7 +537,7 @@ async def list_schools(
     supportStatus: Optional[str] = None,
     include_deleted: bool = Query(False, description="是否包含已软删的记录"),
     current_user=Depends(get_current_user),
-    data_scope: DataScope = Depends(get_data_scope),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
     """获取学校列表"""

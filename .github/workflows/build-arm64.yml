@@ -59,7 +59,6 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: |
-          npm config set registry https://registry.npmmirror.com
           npm install --legacy-peer-deps --no-fund --no-audit
 
       - name: Build frontend
@@ -86,12 +85,10 @@ jobs:
 
       - name: Install root dependencies (ARM64 cross-compile)
         run: |
-          npm config set registry https://registry.npmmirror.com
           npm install --legacy-peer-deps --no-fund --no-audit
         env:
           npm_config_arch: arm64
           npm_config_target_arch: arm64
-          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
       - name: Install DEB packaging tools
         run: |
@@ -149,8 +146,7 @@ jobs:
           echo "=== Building DEB ==="
           DEBUG=electron-builder npx electron-builder --linux deb --arm64 --publish never
         env:
-          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
-          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+          ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
 
       - name: Inject postinst script into DEB
         run: |

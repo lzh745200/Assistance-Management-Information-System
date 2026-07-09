@@ -207,7 +207,7 @@ def _query_fund_stats(db: Session, data_scope: DataScope) -> dict:
     }
 
 
-def _query_project_approval_stats(db: Session, data_scope: DataScope) -> dict:
+def _query_project_approval_stats(db: Session, data_scope: OrgScopeFilter) -> dict:
     """查询3：项目聚合 + 审批待办 + 用户数 + 数据完整性"""
     # 项目统计（按数据范围过滤）
     proj_query = db.query(
@@ -272,7 +272,7 @@ def _query_project_approval_stats(db: Session, data_scope: DataScope) -> dict:
 async def get_dashboard_stats(
     refresh: bool = False,
     current_user=Depends(get_current_user),
-    data_scope: DataScope = Depends(get_data_scope),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
     """获取仪表盘统计数据（带缓存，按用户组织范围过滤，refresh=true 跳过缓存）"""
@@ -318,7 +318,7 @@ from app.models.dashboard import (  # noqa: E402, F401
 @router.get("/summary")
 async def get_dashboard_summary(
     current_user=Depends(get_current_user),
-    data_scope: DataScope = Depends(get_data_scope),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
     """仪表盘汇总接口：一次请求返回统计 + 近期动态，减少 HTTP 往返"""

@@ -181,7 +181,7 @@ async def get_map_config(
 async def get_map_markers(
     marker_type: Optional[str] = Query(default="all", description="标注类型: all, villages, schools"),
     current_user=Depends(get_current_user),
-    data_scope: DataScope = Depends(get_data_scope),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
     """获取地图标注数据（根据用户权限过滤）"""
@@ -386,7 +386,7 @@ async def update_marker_coordinates(
 @router.get("/distances")
 async def get_distances(
     current_user=Depends(get_current_user),
-    data_scope: DataScope = Depends(get_data_scope),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
     """计算军分区到每个帮扶点的距离和预估车程
@@ -503,7 +503,7 @@ async def search_map_markers(
     q: str = Query(..., min_length=1, max_length=100, description="搜索关键词（村名/学校名/区县）"),
     marker_type: Optional[str] = Query(default="all", description="搜索类型: all, villages, schools"),
     current_user=Depends(get_current_user),
-    data_scope: DataScope = Depends(get_data_scope),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
     """

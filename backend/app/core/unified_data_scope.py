@@ -15,7 +15,7 @@ Both pathways now live here.  All callers should import from this module.
 
 import logging
 from enum import Enum
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from fastapi import Depends, HTTPException
 from sqlalchemy import or_
