@@ -28,12 +28,53 @@
 
         <!-- 坐标定位 -->
         <template v-if="viewMode === 'geographic'">
+          <!-- 名称搜索 -->
+          <el-input
+            v-model="searchKeyword"
+            placeholder="搜索村名/学校名/区县..."
+            size="small"
+            clearable
+            style="width: 240px; margin-left: 16px"
+            @keyup.enter="handleSearch"
+          >
+            <template #append>
+              <el-button size="small" :loading="searching" @click="handleSearch">
+                <el-icon><Search /></el-icon>
+              </el-button>
+            </template>
+          </el-input>
+
+          <!-- 搜索结果下拉 -->
+          <el-popover
+            v-if="searchResults.length > 0"
+            :visible="showSearchResults"
+            placement="bottom"
+            :width="300"
+            trigger="manual"
+          >
+            <div class="search-results">
+              <div
+                v-for="item in searchResults"
+                :key="`${item.type}-${item.id}`"
+                class="search-result-item"
+                @click="locateSearchResult(item)"
+              >
+                <el-tag size="small" :type="item.type === 'village' ? 'success' : 'primary'">
+                  {{ item.type === 'village' ? '村' : '校' }}
+                </el-tag>
+                <span class="result-name">{{ item.name }}</span>
+                <span class="result-area">{{ item.county || item.district || '' }}</span>
+              </div>
+            </div>
+          </el-popover>
+
+          <!-- 坐标定位 -->
           <el-input
             v-model="coordInput"
             placeholder="输入经纬度定位, 如: 26.5,107.5"
             size="small"
             clearable
-            style="width: 260px; margin-left: 16px"
+            style="width: 260px; margin-left: 8px"
             @keyup.enter="handleLocate"
           >
             <template #append>
@@ -118,7 +159,9 @@ import { getMapMarkers, getRegions } from '@/api/map'
 import { parseCoordinate, calculateRoute, type LatLng, type RouteResult } from '@/utils/geo'
 import OfflineMap from '@/components/map/OfflineMap.vue'
 import MapVisualization from './MapVisualization.vue'
-import { Van } from '@element-plus/icons-vue'
+import { Van, Search } from '@element-plus/icons-vue'
+import request from '@/api/request'
+import { logger } from '@/utils/logger'
 
 const { pushSafe } = useRouterSafe()
 const loading = ref(true)
@@ -134,6 +177,22 @@ const stats = ref({ totalVillages: 0, totalSchools: 0 })
 // Coordinate input & route state
 const coordInput = ref('')
 const locating = ref(false)
+
+// ── 名称搜索 ──
+const searchKeyword = ref('')
+const searching = ref(false)
+const searchResults = ref<
+  Array<{
+    id: number
+    name: string
+    lng: number
+    lat: number
+    type: string
+    county?: string
+    district?: string
+  }>
+>([])
+const showSearchResults = ref(false)
 const routeLoading = ref(false)
 const originCoord = ref<LatLng | null>(null)
 const routeResults = shallowRef<RouteResult[]>([])
@@ -262,7 +321,7 @@ function handleMarkerClick(marker: any) {
 }
 
 function handleRegionClick(region: any) {
-  console.log('Region clicked:', region)
+  logger.debug('Region clicked', region)
 }
 
 /** 输入经纬度定位 */
@@ -273,6 +332,37 @@ function handleLocate() {
     return
   }
   originCoord.value = coord
+  routeResults.value = []
+}
+
+// ── 名称搜索 ──
+async function handleSearch() {
+  if (!searchKeyword.value.trim()) return
+  searching.value = true
+  showSearchResults.value = false
+  try {
+    const res = await request.get('/map/search', { params: { q: searchKeyword.value.trim() } })
+    const data = res.data || res
+    const results: any[] = []
+    if (data.villages) {
+      results.push(...data.villages.map((v: any) => ({ ...v, type: 'village' })))
+    }
+    if (data.schools) {
+      results.push(...data.schools.map((s: any) => ({ ...s, type: 'school' })))
+    }
+    searchResults.value = results
+    showSearchResults.value = results.length > 0
+  } catch (e: any) {
+    error.value = '搜索失败: ' + (e.message || '未知错误')
+  } finally {
+    searching.value = false
+  }
+}
+
+function locateSearchResult(item: { lng: number; lat: number; name: string }) {
+  originCoord.value = { lng: item.lng, lat: item.lat }
+  showSearchResults.value = false
+  searchKeyword.value = item.name
   routeResults.value = []
 }
 
@@ -347,5 +437,32 @@ onMounted(loadData)
   border-bottom: 1px solid #f5dab1;
   font-size: 13px;
   color: #606266;
+}
+
+/* 搜索结果样式 */
+.search-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+.search-result-item:hover {
+  background: #f5f7fa;
+}
+.search-result-item .result-name {
+  flex: 1;
+  font-size: 13px;
+  color: #303133;
+}
+.search-result-item .result-area {
+  font-size: 12px;
+  color: #909399;
 }
 </style>

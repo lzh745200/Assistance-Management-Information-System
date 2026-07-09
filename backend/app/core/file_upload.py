@@ -4,6 +4,7 @@ Provides upload path generation, filename sanitisation, and MIME-type
 validation utilities used by upload endpoints.
 """
 
+import logging
 import mimetypes
 import os
 import re
@@ -71,7 +72,8 @@ def detect_mime_type(file_path: str) -> str:
         try:
             mime = magic.Magic(mime=True)
             return mime.from_file(file_path)
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).debug("python-magic 文件类型检测失败: %s", e)
             pass  # fall through to extension mapping
 
     # 3. final fallback: internal extension mapping
@@ -96,8 +98,8 @@ def detect_mime_type_from_bytes(content: bytes) -> str:
         try:
             mime = magic.Magic(mime=True)
             return mime.from_buffer(content)
-        except Exception:
-            pass
+        except Exception as e:
+            logging.getLogger(__name__).debug("python-magic 缓冲区类型检测失败: %s", e)
     return "application/octet-stream"
 
 

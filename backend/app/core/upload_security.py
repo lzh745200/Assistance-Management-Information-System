@@ -255,7 +255,8 @@ def validate_excel_upload(file):
         header = file.file.read(8)
         file.file.seek(0)
         return any(header.startswith(m) for m in EXCEL_MAGICS)
-    except Exception:
+    except Exception as e:
+        logger.debug("Excel 文件头检测失败: %s", e)
         return False
 
 

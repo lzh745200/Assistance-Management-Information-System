@@ -137,6 +137,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Upload, Download } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { logger } from '@/utils/logger'
 import ExportDialog from '@/components/dataPackage/ExportDialog.vue'
 import ImportDialog from '@/components/dataPackage/ImportDialog.vue'
 import { useDataPackageStore } from '@/stores/dataPackage'
@@ -297,7 +298,7 @@ function handleImportSuccess() {
 onMounted(() => {
   loadPackages()
   orgStore.fetchMyOrganization().catch((err) => {
-    console.error('[DataPackage/List] 加载组织失败:', err)
+    logger.error('[DataPackage/List] 加载组织失败', err)
   })
 })
 </script>

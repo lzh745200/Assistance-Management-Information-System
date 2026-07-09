@@ -119,6 +119,7 @@
 // @ts-nocheck
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { logger } from '@/utils/logger'
 import {
   exportData,
   exportEncryptedData,
@@ -257,7 +258,7 @@ const loadExportHistory = async () => {
       exportHistory.value = response.data
     }
   } catch (error) {
-    console.error('加载导出历史失败:', error)
+    logger.error('加载导出历史失败', error)
   }
 }
 

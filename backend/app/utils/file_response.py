@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 from io import BytesIO
@@ -47,8 +48,9 @@ def bytesio_response(
             filename=filename,
             background=None,  # Starlette handles cleanup
         )
-    except Exception:
+    except Exception as e:
         # 出错时主动清理临时文件
+        logging.getLogger(__name__).debug("bytesio_response 清理临时文件: %s", e)
         try:
             os.unlink(tmp.name)
         except OSError:
@@ -89,7 +91,8 @@ def file_response(
                 media_type=media_type,
                 filename=filename,
             )
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).debug("filepath_response 清理临时文件: %s", e)
             try:
                 os.unlink(tmp.name)
             except OSError:
@@ -98,5 +101,5 @@ def file_response(
     finally:
         try:
             fp.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logging.getLogger(__name__).debug("file_response 关闭文件句柄: %s", e)

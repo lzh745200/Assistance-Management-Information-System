@@ -167,6 +167,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, type FormInstance } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { ArrowLeft, Plus } from '@element-plus/icons-vue'
 import { fundApi } from '@/api/funds'
 
@@ -250,7 +251,7 @@ async function loadBudgets() {
       } as BudgetRow
     })
   } catch (error) {
-    console.error('加载预算数据失败:', error)
+    logger.error('加载预算数据失败', error)
     ElMessage.error('加载预算数据失败，请稍后重试')
   } finally {
     loading.value = false
@@ -318,7 +319,7 @@ async function handleDeleteBudget(row: BudgetRow) {
     ElMessage.success('删除成功')
     loadBudgets()
   } catch (error) {
-    console.error('删除预算失败:', error)
+    logger.error('删除预算失败', error)
     ElMessage.error('删除预算失败，请稍后重试')
   }
 }

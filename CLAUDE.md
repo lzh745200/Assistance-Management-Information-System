@@ -109,7 +109,7 @@ bash build-scripts/build-linux-arm64.sh           # Linux ARM64 安装包
 - **工作台自定义布局**: 支持预设布局 + 拖拽排序 + 可见性切换，状态持久化到 localStorage
 - **QuickActions**: 4 组 26 个快捷入口（核心业务/数据同步/审批协作/系统管理）
 - **软删除模式** (2026-07-05): 模型使用 `is_active` 列（Boolean, default=True）。`is_active=False`=已删除。列表端点默认过滤 `is_active=True`，`include_deleted=true` 显示全部（管理员）。`to_dict()` 暴露 `isDeleted`/`is_deleted`。已应用于 `SupportedVillage`、`School`。
-- **统一列表响应** (2026-07-05): 新增列表端点必须使用 `ok_list()` (envelope) 而非裸 dict。已有 4 个主列表端点（supported-villages/funds/projects/schools）从 bare → envelope。18 个端点仍为 bare 格式（前端 `_unwrapList()` 兼容两种）。
+- **统一列表响应** (2026-07-08): 所有列表端点已使用 `ok_list()` (envelope)。新增列表端点必须使用 `ok_list()` 而非裸 dict。前端 `_unwrapList()` 仍兼容两种格式以保证向后兼容。
 - **密码策略** (2026-07-05): `PasswordPolicy` 类必须包含 `REQUIRE_SPECIAL=True` 属性（此前缺失导致 AttributeError）。`SPECIAL_WHITELIST` 与前端正则一致。
 - **前端 API 调用规则** (2026-07-05): ① 所有 api 文件必须 `import { get, post, apiRequest } from '@/api/request'`（自动解包），禁止 `import request from './request'`（返回原始 AxiosResponse）。② `get()` 第二参数直接是 params：`get(url, { refresh:true })`，不是 `get(url, { params:{ refresh:true } })`。③ Blob 下载：API 函数内部链式 `.then(r=>triggerDownload(r.data,name))`，调用方只 `await`。
 - **列表视图分页重置** (2026-07-05): 所有列表视图的 create/edit/delete/import 处理器必须在调用 `loadData`/`fetchData` 之前重置 `page.value=1`/`currentPage.value=1`/`pagination.page=1`。遗漏会导致用户在第2页+时看不到新建项。

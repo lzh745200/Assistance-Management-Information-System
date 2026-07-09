@@ -574,7 +574,7 @@ async function handleSubmit() {
       try {
         await saveTransitionFunding(props.village.id, { items: fundingItems })
       } catch (err: any) {
-        console.error('[SupportedVillageForm] 保存过渡资金失败:', err)
+        logger.error('[SupportedVillageForm] 保存过渡资金失败', err)
         ElMessage.error(err?.response?.data?.detail || '过渡资金保存失败，请重试')
         return // 年度经费保存失败 → 阻止提交
       }

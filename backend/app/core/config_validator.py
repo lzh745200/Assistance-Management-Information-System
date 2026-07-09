@@ -27,7 +27,8 @@ def validate_config(
     if settings is None:
         try:
             from app.core.config import settings  # type: ignore[import-untyped]
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).error("无法加载配置模块: %s", e)
             return False, ["无法加载配置模块"]
 
     warnings: List[str] = []

@@ -12,6 +12,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { projectsApi } from '@/api/projects'
 import { safeRouteParam } from '@/composables/useRouterSafe'
 const route = useRoute()
@@ -21,7 +22,7 @@ onMounted(async () => {
   try {
     project.value = await projectsApi.get(safeRouteParam(route.params.id))
   } catch (e) {
-    console.error('加载项目详情失败:', e)
+    logger.error('加载项目详情失败', e)
     ElMessage.error('项目详情加载失败，请返回重试')
   } finally {
     loading.value = false

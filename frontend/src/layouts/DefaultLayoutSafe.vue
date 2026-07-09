@@ -377,6 +377,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useKeyboardShortcuts, type Shortcut } from '@/composables/useKeyboardShortcuts'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
 import { freezeRequests, cancelAllRequests } from '@/api/request'
@@ -420,6 +421,88 @@ onMounted(async () => {
 const isCollapsed = ref(false)
 const username = computed(() => authStore.user?.username || authStore.user?.full_name || '管理员')
 const currentRoute = computed(() => (route.meta?.title as string) || '')
+
+// ── 全局快捷键 ──
+const globalShortcuts: Shortcut[] = [
+  {
+    key: 'h',
+    ctrl: true,
+    handler: () => pushSafe('/'),
+    description: '返回首页/工作台',
+    group: '导航',
+  },
+  {
+    key: 'd',
+    ctrl: true,
+    handler: () => pushSafe('/data-analysis'),
+    description: '数据分析',
+    group: '导航',
+  },
+  {
+    key: 'v',
+    ctrl: true,
+    handler: () => pushSafe('/supported-villages'),
+    description: '帮扶村管理',
+    group: '导航',
+  },
+  {
+    key: 'f',
+    ctrl: true,
+    handler: () => pushSafe('/funds'),
+    description: '经费管理',
+    group: '导航',
+  },
+  {
+    key: 'p',
+    ctrl: true,
+    handler: () => pushSafe('/projects'),
+    description: '项目管理',
+    group: '导航',
+  },
+  {
+    key: 's',
+    ctrl: true,
+    handler: () => pushSafe('/schools'),
+    description: '学校管理',
+    group: '导航',
+  },
+  {
+    key: 'm',
+    ctrl: true,
+    handler: () => pushSafe('/map'),
+    description: '地图看板',
+    group: '导航',
+  },
+  {
+    key: 'b',
+    ctrl: true,
+    shift: true,
+    handler: () => pushSafe('/system/backup'),
+    description: '备份管理',
+    group: '系统',
+  },
+  {
+    key: 'u',
+    ctrl: true,
+    shift: true,
+    handler: () => pushSafe('/system/users'),
+    description: '用户管理',
+    group: '系统',
+  },
+  {
+    key: '?',
+    shift: true,
+    handler: () => {
+      showShortcutHelp.value = !showShortcutHelp.value
+    },
+    description: '显示/隐藏快捷键帮助',
+    group: '帮助',
+    disabledInInput: false,
+  },
+]
+
+const showShortcutHelp = ref(false)
+useKeyboardShortcuts(globalShortcuts)
 
 function handleCommand(command: string) {
   switch (command) {

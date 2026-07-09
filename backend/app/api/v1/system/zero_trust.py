@@ -114,8 +114,8 @@ def _record_security_event(
         logger.exception("安全事件持久化失败: %s/%s", severity, event_type)
         try:
             db.rollback()
-        except Exception:
-            pass
+        except Exception as rb_err:
+            logger.warning("安全事件回滚失败: %s", rb_err)
 
     if severity in ("high", "critical"):
         logger.warning("安全事件 [%s/%s]: %s", severity, event_type, message)

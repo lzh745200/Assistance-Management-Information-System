@@ -777,8 +777,8 @@ class AuditLogService:
             logger.warning(f"审计日志写入失败: {e}")
             try:
                 db.rollback()
-            except Exception:
-                pass
+            except Exception as rb_err:
+                logger.warning(f"审计日志回滚失败: {rb_err}")
 
 
 # ══════════════════════════════════════════════════════════════

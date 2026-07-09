@@ -53,7 +53,7 @@ export function useRouterSafe() {
         console.log(`尝试跳转到${debugLabel}页面`)
       }
 
-      router.push(path).catch((err) => {
+      router.push(path)?.catch((err) => {
         console.error('路由跳转失败:', err)
         if (pathString) {
           window.location.href = pathString

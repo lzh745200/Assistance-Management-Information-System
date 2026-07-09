@@ -190,6 +190,7 @@
 // @ts-nocheck
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { Search, Refresh, Download, CopyDocument } from '@element-plus/icons-vue'
 import {
   getOrganizationVerificationCode,
@@ -271,7 +272,7 @@ const loadOrganizations = async () => {
     }
     organizationList.value = flattenTree(treeData)
   } catch (error) {
-    console.error('加载组织列表失败:', error)
+    logger.error('加载组织列表失败', error)
     ElMessage.error('加载组织列表失败')
   }
 }
@@ -287,7 +288,7 @@ const handleOrganizationChange = async (orgId: number) => {
     const response = await getOrganizationVerificationCode(orgId)
     generateForm.verification_code = response.verification_code
   } catch (error) {
-    console.error('获取校验码失败:', error)
+    logger.error('获取校验码失败', error)
     ElMessage.error('获取校验码失败')
   }
 }
@@ -309,7 +310,7 @@ const handleGenerate = async () => {
       pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
       await handleQuery()
     } catch (error: any) {
-      console.error('生成通行证码失败:', error)
+      logger.error('生成通行证码失败', error)
       ElMessage.error(error.response?.data?.detail || '生成通行证码失败')
     } finally {
       generating.value = false
@@ -346,7 +347,7 @@ const handleQuery = async () => {
     tableData.value = response.items || []
     pagination.total = response.total || 0
   } catch (error) {
-    console.error('查询列表失败:', error)
+    logger.error('查询列表失败', error)
     ElMessage.error('查询列表失败')
   } finally {
     loading.value = false
@@ -371,7 +372,7 @@ const handleExport = async () => {
     })
     // 导出成功 — API 函数内部已处理文件下载
   } catch (error) {
-    console.error('导出失败:', error)
+    logger.error('导出失败', error)
     ElMessage.error('导出失败')
   } finally {
     exporting.value = false

@@ -158,6 +158,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { importData, importEncryptedData, getSyncLogs } from '@/api/dataSync'
 import type { ImportDataResponse, SyncLog } from '@/api/dataSync'
 import type { UploadFile } from 'element-plus'
@@ -264,7 +265,7 @@ const loadImportHistory = async () => {
       importHistory.value = response.data
     }
   } catch (error) {
-    console.error('加载导入历史失败:', error)
+    logger.error('加载导入历史失败', error)
   }
 }
 

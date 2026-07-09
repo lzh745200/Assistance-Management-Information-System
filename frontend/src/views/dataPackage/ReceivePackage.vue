@@ -532,7 +532,7 @@ function clearLocalImport() {
 onMounted(() => {
   loadReports()
   orgStore.fetchSubordinateOrganizations().catch((err) => {
-    console.error('[ReceivePackage] 加载组织失败:', err)
+    logger.error('[ReceivePackage] 加载组织失败', err)
   })
 })
 </script>

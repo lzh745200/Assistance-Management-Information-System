@@ -328,7 +328,7 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
         try {
           await saveTransitionFunding(villageId, { items: fundingItems })
         } catch (fundErr: any) {
-          console.error('[Detail] 保存过渡资金失败:', fundErr)
+          logger.error('[Detail] 保存过渡资金失败', fundErr)
           ElMessage.warning('村记录已创建，但过渡资金保存失败，请在编辑页面重新填写')
         }
       }

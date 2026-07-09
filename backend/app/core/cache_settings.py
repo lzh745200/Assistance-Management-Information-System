@@ -4,6 +4,7 @@ Bridges the application Settings with the cache layer, providing
 convenience defaults for TTLs, max sizes, and backend selection.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Optional
 
@@ -44,7 +45,8 @@ class CacheSettings:
                 redis_url=getattr(settings, "REDIS_URL", None),
                 max_entries=getattr(settings, "CACHE_MAX_SIZE", 10_000),
             )
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).debug("加载缓存配置失败，使用默认值: %s", e)
             return cls()
 
 

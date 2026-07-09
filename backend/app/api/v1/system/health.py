@@ -69,7 +69,8 @@ async def health_readiness():
     try:
         db.execute(text("SELECT 1"))
         return {"status": "ready"}
-    except Exception:
+    except Exception as e:
+        logger.warning("就绪检查失败: %s", e)
         return {"status": "not_ready"}
     finally:
         db.close()

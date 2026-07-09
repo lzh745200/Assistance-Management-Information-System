@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from ...core.database import get_db
+from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.report_template import ReportTemplate
 
@@ -310,7 +311,7 @@ async def list_templates(
             query = query.filter(ReportTemplate.is_active == is_active)
         templates = query.order_by(ReportTemplate.created_at.desc()).all()
         result = [_template_to_dict(t) for t in templates]
-        return {"data": result}
+        return ok_list(items=result, total=len(result))
     except Exception as e:
         logger.error("获取报表模板列表失败: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"获取模板列表失败: {str(e)}")
@@ -566,7 +567,8 @@ def _safe_decimal(val, default="0"):
         return Decimal(default)
     try:
         return Decimal(str(val))
-    except Exception:
+    except Exception as e:
+        logger.debug("Decimal 转换失败 (val=%r, default=%r): %s", val, default, e)
         return Decimal(default)
 
 

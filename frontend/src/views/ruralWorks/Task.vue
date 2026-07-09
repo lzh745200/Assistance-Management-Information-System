@@ -604,6 +604,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Upload, Download, ArrowDown, Document } from '@element-plus/icons-vue'
 import { getRuralWorks, createRuralWork, updateRuralWork, deleteRuralWork } from '@/api/ruralWork'
+import { logger } from '@/utils/logger'
 // 为 FormRules 定义类型
 type FormRules = Record<string, any[]>
 
@@ -693,7 +694,7 @@ async function loadStaffFromApi() {
       }))
     }
   } catch (e: any) {
-    console.warn('[Task] 加载人员列表失败，保持空列表:', e?.message)
+    logger.warn('[Task] 加载人员列表失败，保持空列表:', e?.message)
   }
 }
 
@@ -711,7 +712,7 @@ async function loadProjectsFromApi() {
       }))
     }
   } catch (e: any) {
-    console.warn('[Task] 加载项目列表失败，保持空列表:', e?.message)
+    logger.warn('[Task] 加载项目列表失败，保持空列表:', e?.message)
   }
 }
 

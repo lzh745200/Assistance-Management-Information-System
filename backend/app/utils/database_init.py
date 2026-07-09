@@ -163,7 +163,7 @@ def init_default_users(db: SessionLocal) -> None:
         # 使用更强的默认密码（建议首次登录后立即修改）
         import secrets
         import string
-        
+
         # 生成强密码：至少12位，包含大小写字母、数字和符号
         def generate_strong_password(length=16):
             alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
@@ -172,9 +172,9 @@ def init_default_users(db: SessionLocal) -> None:
                 if (any(c.islower() for c in password)
                     and any(c.isupper() for c in password)
                     and any(c.isdigit() for c in password)
-                    and any(c in "!@#$%^&*" for c in password)):
+                        and any(c in "!@#$%^&*" for c in password)):
                     return password
-        
+
         admin_password = "Admin@2024!Secure#"  # 默认密码，首次登录强制修改
         officer_password = "Officer@2024!Military#"  # 默认密码，首次登录强制修改
 

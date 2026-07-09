@@ -186,8 +186,8 @@ async def shutdown_system(
         try:
             from app.core.cache import cache_manager
             cache_manager.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("关闭缓存管理器失败: %s", e)
         os._exit(0)
 
     background_tasks.add_task(_shutdown)
@@ -223,8 +223,8 @@ async def restart_system(
         try:
             from app.core.cache import cache_manager
             cache_manager.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("关闭缓存管理器失败: %s", e)
         # 安全重启：使用 subprocess/subprocess.Popen 避免命令注入
         if sys.platform == "win32":
             import subprocess

@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.supported_village import ReportSubscription
 from app.schemas.supported_village import (
@@ -193,12 +194,8 @@ async def filter_villages(
         villages, total = service.filter_villages(filters, page, page_size, user=current_user)
         pages = (total + page_size - 1) // page_size
 
-        return {
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": pages,
-            "items": [
+        return ok_list(
+            items=[
                 {
                     "id": v.id,
                     "sequence_no": v.sequence_no,
@@ -212,7 +209,11 @@ async def filter_villages(
                 }
                 for v in villages
             ],
-        }
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=pages,
+        )
     except Exception as e:
         logger.error("帮扶村筛选查询失败: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="查询失败，请稍后重试或联系管理员")
@@ -416,13 +417,13 @@ async def list_subscriptions(
 
         pages = (total + page_size - 1) // page_size
 
-        return {
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-            "pages": pages,
-            "items": [_subscription_to_response(s) for s in subscriptions],
-        }
+        return ok_list(
+            items=[_subscription_to_response(s) for s in subscriptions],
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=pages,
+        )
     except Exception as e:
         logger.error("获取订阅列表失败: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="获取订阅列表失败，请稍后重试或联系管理员")

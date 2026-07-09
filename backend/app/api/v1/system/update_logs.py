@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.core.config import settings
 from app.services.update_log_service import UpdateLogService
@@ -73,15 +74,7 @@ async def get_update_logs(
         items = [r.to_dict() for r in records]
         total = svc.get_update_count()
 
-    return {
-        "success": True,
-        "data": {
-            "items": items,
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        },
-    }
+    return ok_list(items=items, total=total, page=page, page_size=page_size)
 
 
 @router.get("/latest", summary="获取最新更新日志")

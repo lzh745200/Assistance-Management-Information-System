@@ -340,7 +340,8 @@ class PermissionPackageService:
                 )
                 user_legacy_data = json.loads(zf.read("data/user_legacy.json").decode("utf-8"))
             return roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data
-        except Exception:
+        except Exception as e:
+            logger.error("解析权限配置包 JSON 数据失败: %s", e)
             return None
 
     def _init_import_stats(self) -> Dict[str, int]:

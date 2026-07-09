@@ -5,6 +5,7 @@
 """
 
 from dataclasses import dataclass
+import logging
 from typing import Optional, Any, Dict, List, Callable
 from sqlalchemy.orm import Session
 
@@ -104,5 +105,6 @@ def validate_required_fields(data: Dict[str, Any], fields: List[str]) -> bool:
     try:
         InputValidator.validate_required_fields(data, fields)
         return True
-    except Exception:
+    except Exception as e:
+        logging.getLogger(__name__).debug("validate_required_fields failed: %s", e)
         return False

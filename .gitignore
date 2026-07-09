@@ -255,3 +255,13 @@ tests/**
 # ===== OS 特定 =====
 ehthumbs.db
 *.lnk
+
+*.pyc
+*.zip
+cached_stat.txt
+full_status.txt
+map_diff.txt
+staged_*.txt
+unstaged_*.txt
+run_tests.bat
+add*.txt

@@ -106,6 +106,7 @@ import { ref, computed } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { CircleCheckFilled, Key } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { logger } from '@/utils/logger'
 import request from '@/api/request'
 
 const { pushSafe } = useRouterSafe()
@@ -144,7 +145,7 @@ const useCurrentMachineCode = async () => {
       ElMessage.error(resData?.message || '获取机器码失败，请重试')
     }
   } catch (error: any) {
-    console.error('[ForgotPassword] 获取机器码失败:', error)
+    logger.error('[ForgotPassword] 获取机器码失败', error)
     const msg =
       error?.response?.data?.detail ||
       error?.response?.data?.message ||
@@ -182,7 +183,7 @@ const handleResetPassword = async () => {
       ElMessage.error(errMsg)
     }
   } catch (error: any) {
-    console.error('[ForgotPassword] 重置密码失败:', error)
+    logger.error('[ForgotPassword] 重置密码失败', error)
     const msg =
       error?.response?.data?.detail ||
       error?.response?.data?.message ||

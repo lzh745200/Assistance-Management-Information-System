@@ -61,6 +61,7 @@ def get_db_url() -> str:
             from app.core.database import DATABASE_URL  # type: ignore[import-untyped]
 
             return DATABASE_URL
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).debug("获取 DATABASE_URL 失败: %s", e)
             return ""
     return _db_url

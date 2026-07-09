@@ -182,8 +182,9 @@ def configure_logging(
         root_logger.removeHandler(h)
         try:
             h.close()
-        except Exception:
-            pass
+        except Exception as close_err:
+            # logging_config 自身的日志可能尚未就绪，用 print 兜底
+            print(f"[logging_config] handler close failed: {close_err}", file=sys.stderr)
 
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)

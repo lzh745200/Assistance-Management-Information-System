@@ -48,8 +48,8 @@ class PackageVersionService:
             parts = v.split(".")
             if all(p.isdigit() for p in parts):
                 return tuple(int(p) for p in parts)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("版本号解析失败 '%s': %s", v, e)
         return v
 
 

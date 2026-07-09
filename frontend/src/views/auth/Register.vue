@@ -116,6 +116,7 @@
 import { ref, reactive } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import request from '@/api/request'
 
@@ -187,7 +188,7 @@ const handleRegister = async () => {
       pushSafe('/login')
     }, 1500)
   } catch (error: any) {
-    console.error('注册失败:', error)
+    logger.error('注册失败', error)
     const message = error.response?.data?.detail || error.message || '注册失败，请稍后重试'
     ElMessage.error(message)
   } finally {

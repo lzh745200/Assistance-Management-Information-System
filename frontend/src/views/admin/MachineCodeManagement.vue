@@ -175,6 +175,7 @@
 // @ts-nocheck
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { Plus, CopyDocument } from '@element-plus/icons-vue'
 import {
   listMachineCodes,
@@ -242,7 +243,7 @@ const fetchMachineCodeList = async () => {
       pagination.total = data.data.total
     }
   } catch (error: any) {
-    console.error('获取机器码列表失败:', error)
+    logger.error('获取机器码列表失败', error)
     ElMessage.error(error.response?.data?.detail || '获取机器码列表失败')
   } finally {
     loading.value = false
@@ -305,7 +306,7 @@ const handleCreate = async () => {
       createDialogVisible.value = false
     }
   } catch (error: any) {
-    console.error('录入机器码失败:', error)
+    logger.error('录入机器码失败', error)
     ElMessage.error(error.response?.data?.detail || '录入机器码失败')
   } finally {
     submitting.value = false
@@ -331,7 +332,7 @@ const handleRevoke = async (row: MachineCodeRecord) => {
     fetchMachineCodeList()
   } catch (error: any) {
     if (error !== 'cancel') {
-      console.error('撤销机器码失败:', error)
+      logger.error('撤销机器码失败', error)
       ElMessage.error(error.response?.data?.detail || '撤销机器码失败')
     }
   }

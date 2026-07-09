@@ -173,14 +173,14 @@ class AuditLogger:
             if db is not None:
                 try:
                     db.rollback()
-                except Exception:
-                    pass
+                except Exception as rb_err:
+                    logger.warning("审计日志回滚失败: %s", rb_err)
         finally:
             if db is not None:
                 try:
                     db.close()
-                except Exception:
-                    pass
+                except Exception as close_err:
+                    logger.warning("审计日志关闭数据库连接失败: %s", close_err)
 
     @staticmethod
     def log_login(

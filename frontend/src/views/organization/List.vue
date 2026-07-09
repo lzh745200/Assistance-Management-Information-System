@@ -341,7 +341,7 @@ function initSortable() {
           ElMessage.success('排序已保存')
           // 本地状态已更新，无需重新获取数据
         } catch (error: any) {
-          console.error('保存排序失败:', error)
+          logger.error('保存排序失败', error)
           ElMessage.error(error.response?.data?.detail || '保存排序失败')
 
           // 恢复原始顺序

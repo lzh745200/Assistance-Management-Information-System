@@ -358,7 +358,7 @@ function downloadAttachment(att: any) {
       document.body.removeChild(link)
     })
     .catch((err: any) => {
-      console.error('[Schools/Detail] 下载附件失败:', err)
+      logger.error('[Schools/Detail] 下载附件失败', err)
       ElMessage.error('下载失败，请重试')
     })
 }

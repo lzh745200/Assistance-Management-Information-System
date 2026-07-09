@@ -1081,12 +1081,7 @@ async def get_project_funds(
     total = query.count()
     funds = query.order_by(Fund.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "items": [f.to_dict() for f in funds],
-    }
+    return ok_list(items=[f.to_dict() for f in funds], total=total, page=page, page_size=page_size)
 
 
 @router.post("/{project_id}/funds", status_code=201, summary="添加项目经费")
@@ -1145,12 +1140,7 @@ async def get_project_tasks(
         .all()
     )
 
-    return {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "items": [_task_to_dict(t) for t in tasks],
-    }
+    return ok_list(items=[_task_to_dict(t) for t in tasks], total=total, page=page, page_size=page_size)
 
 
 @router.post("/{project_id}/tasks", status_code=201, summary="创建项目任务")

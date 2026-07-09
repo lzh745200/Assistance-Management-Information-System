@@ -15,6 +15,7 @@ from sqlalchemy import func as sa_func
 from sqlalchemy.orm import Session
 
 from ...core.database import get_db
+from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.fund import Fund
 from ...models.fund_budget import FundTransaction
@@ -661,15 +662,7 @@ async def list_transfer_vouchers(
     total = query.count()
     items = query.order_by(FundTransferVoucher.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
-        "success": True,
-        "data": {
-            "items": [_voucher_to_dict(v) for v in items],
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        },
-    }
+    return ok_list(items=[_voucher_to_dict(v) for v in items], total=total, page=page, page_size=page_size)
 
 
 @router.post("/transfer-vouchers")
@@ -928,15 +921,7 @@ async def list_contracts(
     total = query.count()
     items = query.order_by(FundContract.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
-        "success": True,
-        "data": {
-            "items": [_contract_to_dict(c) for c in items],
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        },
-    }
+    return ok_list(items=[_contract_to_dict(c) for c in items], total=total, page=page, page_size=page_size)
 
 
 @router.post("/contracts")
@@ -1309,15 +1294,7 @@ async def list_anomalies(
     total = query.count()
     items = query.order_by(FundAnomaly.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
-        "success": True,
-        "data": {
-            "items": [_anomaly_to_dict(a) for a in items],
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        },
-    }
+    return ok_list(items=[_anomaly_to_dict(a) for a in items], total=total, page=page, page_size=page_size)
 
 
 @router.post("/anomalies/detect/{project_id}")

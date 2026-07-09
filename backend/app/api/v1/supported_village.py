@@ -214,8 +214,8 @@ async def _invalidate_village_cache():
         from app.core.cache import get_cache_service
         _cache = await get_cache_service()
         await _cache.delete_by_prefix("villages:list:")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("清理帮扶村列表缓存失败: %s", e)
 
 
 def _process_import_row(row: tuple, field_names: List[str], db: Session, row_idx: int):

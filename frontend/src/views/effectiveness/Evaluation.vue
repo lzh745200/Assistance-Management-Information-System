@@ -113,6 +113,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { Loading, DataAnalysis } from '@element-plus/icons-vue'
 import { evaluateVillage, compareEvaluations } from '@/api/effectiveness'
 import request from '@/api/request'
@@ -199,7 +200,7 @@ async function loadVillages() {
       name: v.name || v.village_name || `ID:${v.id}`,
     }))
   } catch (e: any) {
-    console.warn('[Evaluation] 加载村庄列表失败:', e?.message)
+    logger.warn('[Evaluation] 加载村庄列表失败', e)
     villageOptions.value = []
   }
 }

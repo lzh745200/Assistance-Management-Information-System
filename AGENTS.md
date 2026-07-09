@@ -65,7 +65,7 @@ The API uses **two response formats** - this causes most integration bugs:
 
 | Format | Shape | Used by |
 |--------|-------|---------|
-| Bare | `{total, page, page_size, items}` | 18 endpoints (see "Remaining bare-format endpoints" below) |
+| Bare | `{total, page, page_size, items}` | 0 endpoints (all converted to envelope) |
 | Envelope | `{code:200, data:{...}, message:"成功"}` | `/auth/login`, `/users`, `/rbac`, `/supported-villages`, `/funds`, `/projects`, `/schools` |
 
 **Unification progress (2026-07-05)**: 4 main list endpoints (`supported-villages`, `funds`, `projects`, `schools`) converted from bare → envelope via `ok_list()` helper in `backend/app/core/response.py`:
@@ -77,8 +77,7 @@ When adding new list endpoints, **use `ok_list()`** (envelope) — not bare dict
 
 Frontend stores use `_unwrapList()` / `_unwrapSingle()` to normalize both. The Axios response interceptor auto-expands `data.data` fields to top level of `response.data`, making envelope format transparent to frontend stores.
 
-**Remaining bare-format endpoints** (18 — frontend handles both transparently, future unification TBD):
-`/work-logs`, `/scholarship-students`, `/rural-works`, `/policies`, `/organizations`, `/machine-codes`, `/pass-codes`, `/data-sync/*`, `/import-export/*`, `/map/*`, `/audit-logs`, `/operation-logs`, `/system/backup`, `/system/update-logs`, `/reports/templates`, `/funds/contracts`, `/funds/transfers`, `/funds/anomalies`
+**Unification progress (2026-07-08)**: All list endpoints now use `ok_list()` (envelope). Previously bare-format endpoints converted: `/machine-codes`, `/pass-codes`, `/system/backup`, `/system/update-logs`, `/reports/templates`, `/funds/contracts`, `/funds/transfers`, `/funds/anomalies`, `/users` (list + pending), `/projects/{id}/funds`, `/projects/{id}/tasks`, `/data/reports/villages`, `/data/reports/subscriptions`, `/data/data-reports/pending`, `/data/data-reports/received`. Earlier conversions (2026-07-05): `/work-logs`, `/scholarship-students`, `/rural-works`, `/policies`, `/organizations`, `/audit-logs`, `/operation-logs`, `/data-sync/*`, `/import-export/*`, `/map/*`.
 
 ### Data Isolation
 

@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import check_rate_limit, get_client_ip, get_current_user, get_password_hash
 from app.models.user import User
 from app.services.machine_code_service import MachineCodeService
@@ -240,11 +241,7 @@ async def admin_list_machine_codes(
                 }
             )
 
-        return {
-            "code": 200,
-            "data": {"total": total, "items": items},
-            "message": "查询成功",
-        }
+        return ok_list(items=items, total=total)
     except Exception as e:
         logger.error(f"查询机器码列表失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="查询失败，请稍后重试或联系管理员")
@@ -591,16 +588,7 @@ async def list_organization_pass_codes(
                 }
             )
 
-        return {
-            "code": 200,
-            "data": {
-                "total": total,
-                "items": items,
-                "page": page,
-                "page_size": page_size,
-            },
-            "message": "查询成功",
-        }
+        return ok_list(items=items, total=total, page=page, page_size=page_size)
     except HTTPException:
         raise
     except Exception as e:

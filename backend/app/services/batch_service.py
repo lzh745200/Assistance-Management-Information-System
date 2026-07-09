@@ -56,8 +56,8 @@ def _resolve_model(table_name: str):
         cls = getattr(app.models, model_name)
         TABLE_MODEL_MAP[table_name] = cls
         return cls
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to resolve model for table '%s': %s", table_name, e)
     raise ValueError(f"Unknown table: {table_name}")
 
 
@@ -109,12 +109,12 @@ class BatchService:
                 if db is not None:
                     try:
                         db.close()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("Failed to close db session: %s", e)
                 try:
                     gen.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("Failed to close generator: %s", e)
 
     # ── Core operations ──
     @staticmethod

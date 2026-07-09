@@ -153,6 +153,7 @@
 import { ref } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { CopyDocument, ArrowLeft, Key } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import { copyToClipboard } from '@/utils/clipboard'
@@ -190,7 +191,7 @@ const getMachineCode = async () => {
       ElMessage.error(resData?.message || '获取机器码失败，请重试')
     }
   } catch (error: any) {
-    console.error('[GetMachineCode] 获取机器码失败:', error)
+    logger.error('[GetMachineCode] 获取机器码失败', error)
     ElMessage.error(
       error?.response?.data?.detail ||
         error?.response?.data?.message ||

@@ -105,14 +105,15 @@ async def get_pending_reports(
 ):
     """获取待审批的上报"""
     if not hasattr(current_user, "org_id") or not current_user.org_id:
-        return {"total": 0, "items": []}
+        from app.core.response import ok_list
+        return ok_list(items=[], total=0)
 
     reports = service.get_subordinate_reports(
         current_user.org_id, status=ReportStatus.SUBMITTED.value, skip=(page - 1) * page_size, limit=page_size
     )
 
     from app.core.response import ok_list
-    
+
     return ok_list(
         items=[DataReportResponse.model_validate(r) for r in reports],
         total=len(reports),
@@ -335,7 +336,8 @@ async def list_received_reports(
 
     org_id = get_user_org_id(current_user)
     if not org_id:
-        return {"total": 0, "items": []}
+        from app.core.response import ok_list
+        return ok_list(items=[], total=0)
 
     query = service.db.query(DataReport).filter(DataReport.target_org_id == org_id)
 
@@ -346,7 +348,7 @@ async def list_received_reports(
     reports = query.order_by(DataReport.submitted_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
     from app.core.response import ok_list
-    
+
     return ok_list(
         items=[DataReportResponse.model_validate(r) for r in reports],
         total=total,

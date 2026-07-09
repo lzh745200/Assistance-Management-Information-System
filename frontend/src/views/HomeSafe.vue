@@ -1300,7 +1300,7 @@ async function refreshDashboard() {
       dashStats.value = null
     }
   } catch (error) {
-    console.error('刷新仪表板数据失败:', error)
+    logger.error('刷新仪表板数据失败', error)
     dashStats.value = null
     ElMessage.error('仪表板数据加载失败，请刷新页面重试')
   } finally {

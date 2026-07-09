@@ -12,10 +12,13 @@
           <span v-if="layoutSaved" class="layout-saved"
             ><el-icon><Select /></el-icon> 已保存</span
           >
-          <el-select v-model="layoutPreset" size="small" style="width: 110px" @change="applyPreset">
+          <el-select v-model="layoutPreset" size="small" style="width: 140px" @change="applyPreset">
             <el-option label="默认布局" value="default" />
             <el-option label="紧凑模式" value="compact" />
             <el-option label="展开全部" value="expand" />
+            <el-option label="管理员模板" value="role_admin" />
+            <el-option label="军官模板" value="role_officer" />
+            <el-option label="访客模板" value="role_viewer" />
           </el-select>
           <el-button size="small" text @click="resetLayout">恢复默认</el-button>
           <el-button size="small" type="primary" @click="showLayoutEditor = false">完成</el-button>
@@ -206,6 +209,29 @@ function applyPreset(val: string) {
     )
   } else if (val === 'expand') {
     layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s, visible: true })))
+  } else if (val === 'role_admin') {
+    // 管理员模板：全展开，突出系统管理功能
+    layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s, visible: true })))
+  } else if (val === 'role_officer') {
+    // 军官模板：突出数据趋势和快捷入口，隐藏最新动态
+    layoutSections.splice(
+      0,
+      99,
+      ...defaults.map((s) => ({
+        ...s,
+        visible: s.key !== 'info',
+      }))
+    )
+  } else if (val === 'role_viewer') {
+    // 访客模板：仅显示数据概览和最新动态
+    layoutSections.splice(
+      0,
+      99,
+      ...defaults.map((s) => ({
+        ...s,
+        visible: s.key === 'kpi' || s.key === 'info',
+      }))
+    )
   }
   saveLayout()
   layoutSaved.value = true

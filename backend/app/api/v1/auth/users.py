@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.core.exceptions import AuthenticationException, NotFoundException
 from app.core.permission_utils import is_superuser, require_admin
+from app.core.response import ok_list
 from app.core.security import get_current_user, get_password_hash
 from app.core.cache import cache_result
 from app.core.config import settings
@@ -249,11 +250,8 @@ async def list_users(
         for mc in mc_records:
             machine_codes[mc.user_id] = mc.machine_code
 
-    return {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "items": [
+    return ok_list(
+        items=[
             {
                 "id": u.id,
                 "username": u.username,
@@ -277,7 +275,10 @@ async def list_users(
             }
             for u in users
         ],
-    }
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/pending/list", summary="获取待审核用户列表")
@@ -290,9 +291,8 @@ async def get_pending_users(
 
     pending_users = db.query(User).filter(User.is_active == False).all()  # noqa: E712
 
-    return {
-        "total": len(pending_users),
-        "items": [
+    return ok_list(
+        items=[
             {
                 "id": u.id,
                 "username": u.username,
@@ -303,7 +303,8 @@ async def get_pending_users(
             }
             for u in pending_users
         ],
-    }
+        total=len(pending_users),
+    )
 
 
 class StaffItem(BaseModel):

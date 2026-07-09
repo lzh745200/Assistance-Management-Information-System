@@ -242,6 +242,7 @@ import {
 import * as echarts from 'echarts'
 import request from '@/api/request'
 import { useConfigStore } from '@/stores/config'
+import { logger } from '@/utils/logger'
 
 // ── Types ──
 interface SnapshotData {
@@ -613,9 +614,9 @@ async function refreshAll() {
     const snapData = snap.status === 'fulfilled' ? snap.value : null
     const healthVal = health.status === 'fulfilled' ? health.value : null
 
-    if (snap.status === 'rejected') console.error('Snapshot fetch failed:', snap.reason)
-    if (stats.status === 'rejected') console.error('API stats fetch failed:', stats.reason)
-    if (health.status === 'rejected') console.error('Health fetch failed:', health.reason)
+    if (snap.status === 'rejected') logger.error('Snapshot fetch failed', snap.reason)
+    if (stats.status === 'rejected') logger.error('API stats fetch failed', stats.reason)
+    if (health.status === 'rejected') logger.error('Health fetch failed', health.reason)
 
     if (snapData) {
       pushHistory(snapData.cpu_usage, snapData.memory_usage, snapData.disk_usage)

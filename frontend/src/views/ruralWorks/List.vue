@@ -251,6 +251,7 @@
 // @ts-nocheck
 import { ref, computed, onMounted, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { logger } from '@/utils/logger'
 import { useDesensitize } from '@/composables/useDesensitize'
 import { Search, Plus, Download } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -400,7 +401,7 @@ async function fetchData() {
     tableData.value = result.items || []
     total.value = result.total || 0
   } catch (error) {
-    console.error('加载数据失败:', error)
+    logger.error('加载数据失败', error)
     ElMessage.error('加载数据失败')
     tableData.value = []
     total.value = 0
@@ -491,7 +492,7 @@ async function handleSave() {
     currentPage.value = 1
     await fetchData()
   } catch (error: any) {
-    console.error('保存失败:', error)
+    logger.error('保存失败', error)
     const msg =
       error?.response?.data?.detail ||
       error?.response?.data?.message ||
@@ -519,7 +520,7 @@ async function handleDelete(row: any) {
       return
     }
     // API 调用失败
-    console.error('删除失败:', error)
+    logger.error('删除失败', error)
     const errorMsg = error?.response?.data?.detail || error?.message || '删除失败'
     ElMessage.error(errorMsg)
   }
@@ -608,7 +609,7 @@ async function loadVillages() {
     const { getVillagesForSelect } = await import('@/api/ruralWork')
     villageOptions.value = await getVillagesForSelect()
   } catch (error) {
-    console.error('加载村庄列表失败:', error)
+    logger.error('加载村庄列表失败', error)
     villageOptions.value = []
   }
 }

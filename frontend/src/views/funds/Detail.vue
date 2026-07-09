@@ -599,7 +599,7 @@ async function loadStatusHistory() {
     const res = await request.get(`/funds/${fundData.id}/history/status`)
     statusHistory.value = res.data?.items || []
   } catch (error) {
-    console.error('加载状态历史失败:', error)
+    logger.error('加载状态历史失败', error)
   }
 }
 
@@ -609,7 +609,7 @@ async function loadFieldChanges() {
     const res = await request.get(`/funds/${fundData.id}/history/fields`)
     fieldChanges.value = res.data?.items || []
   } catch (error) {
-    console.error('加载字段变更历史失败:', error)
+    logger.error('加载字段变更历史失败', error)
   }
 }
 
@@ -619,7 +619,7 @@ async function loadOperationLogs() {
     const res = await request.get(`/funds/${fundData.id}/history/operations`)
     operationLogs.value = res.data?.items || []
   } catch (error) {
-    console.error('加载操作日志失败:', error)
+    logger.error('加载操作日志失败', error)
   }
 }
 
