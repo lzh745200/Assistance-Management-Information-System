@@ -1,0 +1,41 @@
+﻿# Auto-detect text files and normalize line endings
+* text=auto
+
+# Prevent BOM (U+FEFF) in Python source files
+*.py working-tree-encoding=UTF-8
+
+# Explicit line ending rules
+*.bat text eol=crlf
+*.nsi text eol=crlf
+*.iss text eol=crlf
+*.sh text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.vue text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.sql text eol=lf
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.icns binary
+*.gif binary
+*.pdf binary
+*.exe binary
+*.dll binary
+*.so binary
+*.zip binary
+*.tar.gz binary
+*.whl binary
+# Lock files
+package-lock.json text eol=lf
+*.exe filter=lfs diff=lfs merge=lfs -text
+*.pkg filter=lfs diff=lfs merge=lfs -text

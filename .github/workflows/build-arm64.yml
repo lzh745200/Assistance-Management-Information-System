@@ -133,6 +133,16 @@ jobs:
           echo "=== Icon ==="
           ls -lh resources/icons/app-circle-256.png
 
+      - name: Cache Electron binary
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: ${{ runner.os }}-electron-arm64-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-arm64-
+
       - name: Build with electron-builder
         run: |
           echo "=== Pre-build debug ==="
@@ -145,8 +155,6 @@ jobs:
           ls -lh resources/icons/app-circle-256.png
           echo "=== Building DEB ==="
           DEBUG=electron-builder npx electron-builder --linux deb --arm64 --publish never
-        env:
-          ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
 
       - name: Inject postinst script into DEB
         run: |
