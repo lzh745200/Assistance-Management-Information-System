@@ -36,7 +36,7 @@ from ...models.school import (
     SupportStatus,
 )
 from ...core.data_permission import require_data_permission
-from .data_scope import DataScope, get_data_scope
+from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from ...services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)

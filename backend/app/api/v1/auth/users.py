@@ -347,8 +347,8 @@ async def get_staff_list(
         .all()
     )
 
-    return {
-        "items": [
+    return ok_list(
+        items=[
             StaffItem(
                 id=u.id,
                 username=u.username,
@@ -361,10 +361,10 @@ async def get_staff_list(
             )
             for u in users
         ],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 # ==================== 用户详情（动态路径必须在静态路径之后） ====================

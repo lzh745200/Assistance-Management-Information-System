@@ -21,7 +21,7 @@ from pydantic import BaseModel
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.v1.data_scope import DataScope, get_data_scope
+from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from app.core.config import settings
 from app.core.database import SessionLocal, get_db
 from app.core.security import get_current_user

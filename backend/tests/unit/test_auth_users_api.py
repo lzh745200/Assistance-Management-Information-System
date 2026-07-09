@@ -183,7 +183,7 @@ class TestListUsers:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}?page=1&page_size=20")
             assert response.status_code == 200
-            assert response.json()["total"] == 0
+            assert response.json()["data"]["total"] == 0
         _clear_overrides(client, get_db, get_current_user)
 
     def test_list_users_with_keyword(self, client):
@@ -195,7 +195,7 @@ class TestListUsers:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}?keyword=target&page=1&page_size=20")
             assert response.status_code == 200
-            assert response.json()["total"] == 1
+            assert response.json()["data"]["total"] == 1
         _clear_overrides(client, get_db, get_current_user)
 
     def test_list_users_with_is_active_filter(self, client):
@@ -246,7 +246,7 @@ class TestListUsers:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}?page=1&page_size=20")
             assert response.status_code == 200
-            assert response.json()["items"][0]["machine_code"] == "MC-001"
+            assert response.json()["data"]["items"][0]["machine_code"] == "MC-001"
         _clear_overrides(client, get_db, get_current_user)
 
 
@@ -262,7 +262,7 @@ class TestGetPendingUsers:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}/pending/list")
             assert response.status_code == 200
-            assert response.json()["total"] == 1
+            assert response.json()["data"]["total"] == 1
         _clear_overrides(client, get_db, get_current_user)
 
     def test_get_pending_users_empty(self, client):
@@ -273,7 +273,7 @@ class TestGetPendingUsers:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}/pending/list")
             assert response.status_code == 200
-            assert response.json()["total"] == 0
+            assert response.json()["data"]["total"] == 0
         _clear_overrides(client, get_db, get_current_user)
 
 
@@ -291,7 +291,7 @@ class TestGetStaffList:
                 mock_fds.return_value = mock_db.query.return_value
                 response = client.get(f"{self.prefix}/staff-list?page=1&page_size=20")
                 assert response.status_code == 200
-                assert response.json()["total"] == 1
+                assert response.json()["data"]["total"] == 1
         _clear_overrides(client, get_db, get_current_user)
 
 

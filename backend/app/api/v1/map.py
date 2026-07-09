@@ -24,7 +24,7 @@ from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.school import School
 from ...models.supported_village import SupportedVillage
-from .data_scope import DataScope, get_data_scope
+from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 
 logger = logging.getLogger(__name__)
 
