@@ -90,7 +90,7 @@ def invalidate_dashboard_cache():
 # ==================== 聚合查询 ====================
 
 
-def _query_village_stats(db: Session, data_scope: DataScope) -> dict:
+def _query_village_stats(db: Session, data_scope: OrgScopeFilter) -> dict:
     """查询1：帮扶村 + 人口 + 学校统计（基于 SupportedVillage）"""
     # 帮扶村查询（带数据范围过滤）— 用 subquery 避免大 IN 列表物化到 Python
     village_query = db.query(SupportedVillage.id)
@@ -151,7 +151,7 @@ def _query_village_stats(db: Session, data_scope: DataScope) -> dict:
     }
 
 
-def _query_fund_stats(db: Session, data_scope: DataScope) -> dict:
+def _query_fund_stats(db: Session, data_scope: OrgScopeFilter) -> dict:
     """查询2：经费聚合（按 status 分组一次性获取，带数据范围过滤）"""
     query = db.query(
         Fund.status,

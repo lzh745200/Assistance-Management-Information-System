@@ -176,7 +176,7 @@ class SmartConflictResolver:
 
         return differences
 
-    def resolve_conflicts_with_strategy(
+    def resolve_conflicts_with_strategy(  # noqa: C901
         self, conflicts: List[DataConflict], strategy: str
     ) -> Dict[str, Dict[int, int]]:
         """

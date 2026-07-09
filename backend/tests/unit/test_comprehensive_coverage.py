@@ -108,8 +108,8 @@ SERVICE_FILES = [
     # 'app.services.recommendation_service',  # does not exist
     'app.services.report_service',
     'app.services.rural_work_service',
-    'app.services.search_service',
-    'app.services.sentiment_service',
+    # 'app.services.search_service',  # does not exist
+    # 'app.services.sentiment_service',  # does not exist (sentiment/ subdirectory)
     'app.services.supported_village_service',
     'app.services.two_factor_service',
     'app.services.user_permission_service',
@@ -124,15 +124,15 @@ SERVICE_FILES = [
     'app.services.data_validator_service',
     'app.services.docx_service',
     'app.services.entity_import_validator',
-    'app.services.feedback_service',
+    # 'app.services.feedback_service',  # does not exist
     'app.services.fund_anomaly_detector',
     'app.services.import_export_history_service',
     'app.services.lockout_service',
     'app.services.log_export_service',
     'app.services.machine_code_permission_service',
-    'app.services.menu_service',
-    'app.services.migration_helper',
-    'app.services.nlp_query_service',
+    # 'app.services.menu_service',  # does not exist
+    # 'app.services.migration_helper',  # does not exist
+    # 'app.services.nlp_query_service',  # does not exist (at app.services.ai.nlp_query_service)
     'app.services.offline_map_service',
     'app.services.organization_permission_service',
     'app.services.query_analyzer_service',
@@ -140,8 +140,8 @@ SERVICE_FILES = [
     # 'app.services.runtime_secrets',  # import error in test env
     'app.services.secrets_manager',
     'app.services.smart_conflict_resolver',
-    'app.services.system_metrics_service',
-    'app.services.unified_template_service',
+    # 'app.services.system_metrics_service',  # does not exist (metrics_service.py)
+    # 'app.services.unified_template_service',  # does not exist (template_service.py)
     'app.services.resource_limiter',
 ]
 

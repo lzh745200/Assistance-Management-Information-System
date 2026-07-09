@@ -201,7 +201,7 @@ async def update_audit_log_remark(
 
 
 @router.get("/logs/export")
-async def export_audit_logs(
+async def export_audit_logs(  # noqa: C901
     action: Optional[str] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
