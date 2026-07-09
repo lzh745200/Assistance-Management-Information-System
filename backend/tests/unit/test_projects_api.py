@@ -402,7 +402,7 @@ class TestProjectsAPI:
         mock_db.query.side_effect = lambda model: fund_q if model == Fund else proj_q
         resp = client.get("/api/v1/projects/1/funds")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_create_project_fund(self, client, mock_db, admin_user, sample_project):
         _setup_client(client, mock_db, admin_user)
@@ -428,7 +428,7 @@ class TestProjectsAPI:
         mock_db.query.side_effect = lambda model: task_q if model == ProjectTask else proj_q
         resp = client.get("/api/v1/projects/1/tasks")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_get_project_tasks_filtered(self, client, mock_db, admin_user, sample_project, sample_task):
         _setup_client(client, mock_db, admin_user)
