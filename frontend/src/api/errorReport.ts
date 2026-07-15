@@ -3,7 +3,7 @@
  * 提供系统错误收集、上报、查询和统计功能
  */
 
-import { get, post, put } from './request'
+import { get, post, put } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

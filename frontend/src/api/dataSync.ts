@@ -1,4 +1,4 @@
-import api from './request'
+import { get, post, apiRequest } from '@/api/request'
 
 // Types
 export interface SyncLog {
@@ -37,7 +37,7 @@ export const importData = (file: File, strategy: string = 'overwrite') => {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('strategy', strategy)
-  return api.post('/data-sync/import', formData, {
+  return post('/data-sync/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
@@ -46,28 +46,28 @@ export const importEncryptedData = (file: File, password: string) => {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('password', password)
-  return api.post('/data-sync/import-encrypted', formData, {
+  return post('/data-sync/import-encrypted', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
 
-export const exportData = (params: any) => api.post('/data-sync/export', params)
+export const exportData = (params: any) => post('/data-sync/export', params)
 
 export const exportEncryptedData = (params: ExportEncryptedParams) =>
-  api.post('/data-sync/export-encrypted', params)
+  post('/data-sync/export-encrypted', params)
 
 export const downloadExportPackage = (packageId: string) =>
-  api.get(`/data-sync/export/download/${packageId}`, { responseType: 'blob' })
+  apiRequest({ method: 'GET', url: `/data-sync/export/download/${packageId}`, responseType: 'blob' })
 
-export const getSyncLogs = (params?: any) => api.get('/data-sync/logs', { params })
+export const getSyncLogs = (params?: any) => get('/data-sync/logs', params)
 
-export const getConflicts = (syncLogId: number) => api.get(`/data-sync/conflicts/${syncLogId}`)
+export const getConflicts = (syncLogId: number) => get(`/data-sync/conflicts/${syncLogId}`)
 
 export const resolveConflict = (params: {
   conflict_id: number
   resolution: string
   merged_data?: Record<string, any>
-}) => api.post('/data-sync/resolve-conflict', params)
+}) => post('/data-sync/resolve-conflict', params)
 
 // Backward-compatible object form
 export const dataSyncApi = {

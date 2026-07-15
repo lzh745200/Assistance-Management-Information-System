@@ -3,7 +3,7 @@
  * 提供用户-组织关联、角色分配、权限管理等功能
  */
 
-import { get, post, del, apiRequest } from './request'
+import { get, post, del, apiRequest } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

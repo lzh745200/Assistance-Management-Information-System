@@ -206,7 +206,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRoute } from 'vue-router'
-import request from '@/api/request'
+import { get, post, del, apiRequest } from '@/api/request'
 import { handleApiError } from '@/utils/errorHandler'
 import { format } from '@/utils'
 
@@ -269,7 +269,7 @@ const compareResult = ref<CompareResult | null>(null)
 // 获取版本列表
 const fetchVersionList = async () => {
   try {
-    const response = await request.get(`/data-packages/${packageId.value}/versions`)
+    const response = await get(`/data-packages/${packageId.value}/versions`)
     if (response.data.success) {
       versionList.value = response.data.versions
     }
@@ -292,7 +292,7 @@ const confirmCreate = async () => {
 
   loading.value = true
   try {
-    const response = await request.post(
+    const response = await post(
       `/data-packages/${packageId.value}/versions`,
       versionForm.value
     )
@@ -312,7 +312,7 @@ const confirmCreate = async () => {
 // 查看详情
 const handleViewDetail = async (version: VersionItem) => {
   try {
-    const response = await request.get(`/data-packages/${packageId.value}/versions/${version.id}`)
+    const response = await get(`/data-packages/${packageId.value}/versions/${version.id}`)
 
     if (response.data.success) {
       currentVersion.value = response.data
@@ -341,12 +341,10 @@ const doCompare = async () => {
   }
 
   try {
-    const response = await request.get(`/data-packages/${packageId.value}/versions/compare`, {
-      params: {
+    const response = await apiRequest({ method: 'GET', url: `/data-packages/${packageId.value}/versions/compare`, params: {
         version1: compareForm.value.version1,
         version2: compareForm.value.version2,
-      },
-    })
+      }})
 
     if (response.data.success) {
       compareResult.value = response.data.comparison
@@ -365,7 +363,7 @@ const handleDelete = async (versionId: number | string) => {
       type: 'warning',
     })
 
-    const response = await request.delete(`/data-packages/${packageId.value}/versions/${versionId}`)
+    const response = await del(`/data-packages/${packageId.value}/versions/${versionId}`)
 
     if (response.data.success) {
       ElMessage.success('删除成功')

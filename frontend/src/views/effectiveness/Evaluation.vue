@@ -116,7 +116,7 @@ import { ElMessage } from 'element-plus'
 import { logger } from '@/utils/logger'
 import { Loading, DataAnalysis } from '@element-plus/icons-vue'
 import { evaluateVillage, compareEvaluations } from '@/api/effectiveness'
-import request from '@/api/request'
+import { apiRequest } from '@/api/request'
 
 const route = useRoute()
 
@@ -189,11 +189,9 @@ function formatValue(key: string, value: any): string {
 
 async function loadVillages() {
   try {
-    const response = await request.get('/supported-villages', {
-      params: { page_size: 1000 },
-    })
+    const response = await apiRequest({ method: 'GET', url: '/supported-villages', params: { page_size: 1000 }})
     const data = response?.data ?? response
-    const inner = data?.data || data
+    const inner = data
     const items = inner?.items || (Array.isArray(inner) ? inner : [])
     villageOptions.value = items.map((v: any) => ({
       id: v.id,

@@ -13,6 +13,7 @@ from app.core.data_permission import apply_data_scope
 from app.core.security import get_current_user
 from app.models.fund_budget import FundBudget, FundTransaction, check_budget_alerts
 from app.api.v1.deps import require_manager_role as _require_manager
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/fund-budgets", tags=["经费预算"])
@@ -144,7 +145,7 @@ async def create_budget(
         created_by=getattr(current_user, "id", None),
     )
     db.add(budget)
-    db.commit()
+    safe_commit(db)
     db.refresh(budget)
 
     resp = budget.to_dict()
@@ -168,7 +169,7 @@ async def update_budget(
 
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(budget, key, value)
-    db.commit()
+    safe_commit(db)
     db.refresh(budget)
 
     resp = budget.to_dict()
@@ -189,7 +190,7 @@ async def delete_budget(
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
     db.delete(budget)
-    db.commit()
+    safe_commit(db)
     return {"message": "删除成功"}
 
 
@@ -311,7 +312,7 @@ async def create_transaction(
         if budget:
             budget.executed_amount = float(budget.executed_amount or 0) + data.amount
 
-    db.commit()
+    safe_commit(db)
     db.refresh(transaction)
     return transaction
 
@@ -335,5 +336,5 @@ async def delete_transaction(
             budget.executed_amount = max(0, float(budget.executed_amount or 0) - float(tx.amount or 0))
 
     db.delete(tx)
-    db.commit()
+    safe_commit(db)
     return {"message": "删除成功"}

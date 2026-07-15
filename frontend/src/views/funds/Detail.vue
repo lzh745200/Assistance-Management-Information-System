@@ -560,7 +560,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Edit, Delete, Loading } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get, post, put, del } from '@/api/request'
 import { fundApi } from '@/api/funds'
 
 const { pushSafe } = useRouterSafe()
@@ -596,7 +596,7 @@ const operationLogs = ref<any[]>([])
 async function loadStatusHistory() {
   if (!fundData.id) return
   try {
-    const res = await request.get(`/funds/${fundData.id}/history/status`)
+    const res = await get(`/funds/${fundData.id}/history/status`)
     statusHistory.value = res.data?.items || []
   } catch (error) {
     logger.error('加载状态历史失败', error)
@@ -606,7 +606,7 @@ async function loadStatusHistory() {
 async function loadFieldChanges() {
   if (!fundData.id) return
   try {
-    const res = await request.get(`/funds/${fundData.id}/history/fields`)
+    const res = await get(`/funds/${fundData.id}/history/fields`)
     fieldChanges.value = res.data?.items || []
   } catch (error) {
     logger.error('加载字段变更历史失败', error)
@@ -616,7 +616,7 @@ async function loadFieldChanges() {
 async function loadOperationLogs() {
   if (!fundData.id) return
   try {
-    const res = await request.get(`/funds/${fundData.id}/history/operations`)
+    const res = await get(`/funds/${fundData.id}/history/operations`)
     operationLogs.value = res.data?.items || []
   } catch (error) {
     logger.error('加载操作日志失败', error)
@@ -854,7 +854,7 @@ const loadFundDetail = async () => {
   }
   loading.value = true
   try {
-    const res = await request.get(`/funds/${id}`)
+    const res = await get(`/funds/${id}`)
     Object.assign(fundData, res.data)
     syncFormData(res.data)
   } catch {
@@ -917,11 +917,11 @@ const handleSubmit = async () => {
       if (payload[k] === null || payload[k] === '') delete payload[k]
     })
     if (isCreate.value) {
-      await request.post('/funds', payload)
+      await post('/funds', payload)
       ElMessage.success('创建成功')
       pushSafe('/funds')
     } else {
-      await request.put(`/funds/${fundData.id}`, payload)
+      await put(`/funds/${fundData.id}`, payload)
       ElMessage.success('保存成功')
       isEdit.value = false
       await loadFundDetail()
@@ -939,7 +939,7 @@ const handleDelete = async () => {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await request.delete(`/funds/${fundData.id}`)
+    await del(`/funds/${fundData.id}`)
     ElMessage.success('删除成功')
     pushSafe('/funds')
   } catch (e: any) {

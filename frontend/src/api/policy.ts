@@ -1,4 +1,4 @@
-import api, { parseContentDisposition, downloadBlob } from './request'
+import { get, post, put, del, apiRequest, downloadBlob, parseContentDisposition } from '@/api/request'
 
 // ── Types ──
 export type PolicyCategory = string
@@ -38,68 +38,68 @@ export type PolicyStatistics = {
 }
 
 // ── Options ──
-export const getLevelOptions = () => api.get('/policies/options/levels')
-export const getStatusOptions = () => api.get('/policies/options/statuses')
-export const getPolicyTypes = () => api.get('/policies/options/levels')
+export const getLevelOptions = () => get('/policies/options/levels')
+export const getStatusOptions = () => get('/policies/options/statuses')
+export const getPolicyTypes = () => get('/policies/options/levels')
 export const searchPolicies = (query: string) =>
-  api.get('/policies/search', { params: { q: query } })
+  get('/policies/search', { q: query })
 
 // ── Categories ──
-export const getPolicyCategories = () => api.get('/policies/categories')
-export const getCategoryTree = () => api.get('/policies/categories/tree')
-export const createCategory = (data: any) => api.post('/policies/categories', data)
-export const updateCategory = (id: number, data: any) => api.put(`/policies/categories/${id}`, data)
-export const deleteCategory = (id: number) => api.delete(`/policies/categories/${id}`)
+export const getPolicyCategories = () => get('/policies/categories')
+export const getCategoryTree = () => get('/policies/categories/tree')
+export const createCategory = (data: any) => post('/policies/categories', data)
+export const updateCategory = (id: number, data: any) => put(`/policies/categories/${id}`, data)
+export const deleteCategory = (id: number) => del(`/policies/categories/${id}`)
 
 // ── Statistics ──
-export const getPolicyStats = () => api.get('/policies/statistics')
+export const getPolicyStats = () => get('/policies/statistics')
 
 // ── CRUD ──
-export const getPolicies = (params?: any) => api.get('/policies', { params })
-export const getPolicy = (id: number) => api.get('/policies/' + id)
-export const createPolicy = (data: any) => api.post('/policies', data)
-export const updatePolicy = (id: number, data: any) => api.put('/policies/' + id, data)
-export const deletePolicy = (id: number) => api.delete('/policies/' + id)
+export const getPolicies = (params?: any) => get('/policies', { params })
+export const getPolicy = (id: number) => get('/policies/' + id)
+export const createPolicy = (data: any) => post('/policies', data)
+export const updatePolicy = (id: number, data: any) => put('/policies/' + id, data)
+export const deletePolicy = (id: number) => del('/policies/' + id)
 
 // ── Publish / Archive ──
-export const publishPolicy = (id: number) => api.post(`/policies/${id}/publish`)
-export const archivePolicy = (id: number) => api.post(`/policies/${id}/archive`)
+export const publishPolicy = (id: number) => post(`/policies/${id}/publish`)
+export const archivePolicy = (id: number) => post(`/policies/${id}/archive`)
 
 // ── File upload / preview / download ──
 export const uploadPolicyFile = (policyId: number, file: File) => {
   const fd = new FormData()
   fd.append('file', file)
-  return api.post(`/policies/${policyId}/upload`, fd, {
+  return post(`/policies/${policyId}/upload`, fd, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
-export const previewPolicyFile = (policyId: number) => api.get(`/policies/${policyId}/preview`)
+export const previewPolicyFile = (policyId: number) => get(`/policies/${policyId}/preview`)
 export const downloadPolicyFile = (policyId: number) =>
-  api.get(`/policies/${policyId}/download`, { responseType: 'blob' })
+  apiRequest({ method: 'GET', url: `/policies/${policyId}/download`, responseType: 'blob' })
 
 // ── Favorites ──
-export const addPolicyFavorite = (policyId: number) => api.post(`/policies/${policyId}/favorite`)
+export const addPolicyFavorite = (policyId: number) => post(`/policies/${policyId}/favorite`)
 export const removePolicyFavorite = (policyId: number) =>
-  api.delete(`/policies/${policyId}/favorite`)
+  del(`/policies/${policyId}/favorite`)
 export const getPolicyFavorites = (userId: number | string) =>
-  api.get(`/policies/user/${userId}/favorites`)
+  get(`/policies/user/${userId}/favorites`)
 
 // ── Related ──
-export const getPolicyRelated = (policyId: number) => api.get(`/policies/${policyId}/related`)
+export const getPolicyRelated = (policyId: number) => get(`/policies/${policyId}/related`)
 
 // ── Batch delete ──
-export const batchDeletePolicies = (ids: number[]) => api.post('/policies/batch-delete', { ids })
+export const batchDeletePolicies = (ids: number[]) => post('/policies/batch-delete', { ids })
 
 // ── Import/export ──
 export const importPolicies = (file: File) => {
   const fd = new FormData()
   fd.append('file', file)
-  return api.post('/policies/import', fd, {
+  return post('/policies/import', fd, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
 export const exportPolicies = (params?: any) =>
-  api.get('/policies/export/excel', { params, responseType: 'blob' }).then((r) => {
+  apiRequest({ method: 'GET', url: '/policies/export/excel', params, responseType: 'blob' }).then((r) => {
     const filename = parseContentDisposition(
       r.headers as Record<string, string>,
       '政策法规导出.xlsx'
@@ -107,7 +107,7 @@ export const exportPolicies = (params?: any) =>
     downloadBlob(r.data, filename)
   })
 export const exportPoliciesPDF = (params?: any) =>
-  api.get('/policies/export/pdf', { params, responseType: 'blob' }).then((r) => {
+  apiRequest({ method: 'GET', url: '/policies/export/pdf', params, responseType: 'blob' }).then((r) => {
     const filename = parseContentDisposition(
       r.headers as Record<string, string>,
       `政策法规_${new Date().getTime()}.pdf`
@@ -115,7 +115,7 @@ export const exportPoliciesPDF = (params?: any) =>
     downloadBlob(r.data, filename)
   })
 export const exportPoliciesWPS = (params?: any) =>
-  api.get('/policies/export/wps', { params, responseType: 'blob' }).then((r) => {
+  apiRequest({ method: 'GET', url: '/policies/export/wps', params, responseType: 'blob' }).then((r) => {
     const filename = parseContentDisposition(
       r.headers as Record<string, string>,
       `政策法规_${new Date().getTime()}.wps`

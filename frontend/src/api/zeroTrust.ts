@@ -3,7 +3,7 @@
  * 提供零信任安全策略管理、访问评估和信任评分功能
  */
 
-import { get, post } from './request'
+import { get, post } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

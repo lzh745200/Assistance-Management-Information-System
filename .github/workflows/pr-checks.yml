@@ -54,9 +54,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-      - run: pip install flake8
-      # flake8 零错误门禁：flake8 默认在有任何错误/警告时返回非零退出码
+      - run: pip install flake8 mypy bandit
+      # flake8 零错误门禁
       - run: cd backend && python -m flake8 app/ --max-line-length=120 --count --max-complexity=16
+      # mypy 类型检查（非阻断，但报告类型问题）
+      - name: mypy type check
+        run: cd backend && python -m mypy app/ --config-file=mypy.ini --ignore-missing-imports || true
+      # bandit 安全扫描（低级别，非阻断）
+      - name: bandit security scan
+        run: cd backend && python -m bandit -r app/ -ll || true
 
   security:
     runs-on: ubuntu-latest
@@ -88,3 +94,71 @@ jobs:
           name: sbom-license-list
           path: sbom.csv
           if-no-files-found: warn
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '22' }
+      # 后端静态分析：检查裸 db.commit()、缺 safe_commit 导入等模式
+      - name: Backend safe_commit audit
+        run: |
+          cd backend && python -c "
+          import os, re, sys
+          violations = []
+          for root, dirs, files in os.walk('app/api'):
+              for f in files:
+                  if not f.endswith('.py'): continue
+                  fp = os.path.join(root, f)
+                  with open(fp, encoding='utf-8') as fh:
+                      content = fh.read()
+                  # 检查裸 db.commit()
+                  if re.search(r'^\s+db\.commit\(\)$', content, re.MULTILINE):
+                      violations.append(f'  {fp}: bare db.commit() found')
+          if violations:
+              print('BARE db.commit() VIOLATIONS:')
+              print('\n'.join(violations))
+              sys.exit(1)
+          else:
+              print('No bare db.commit() found — all commits use safe_commit()')
+          "
+      # 前端静态分析：检查 Pattern A（import request from './request'）残留
+      - name: Frontend API pattern audit
+        run: |
+          cd frontend && npx vue-tsc --noEmit && echo 'TypeScript check passed'
+      # 检查前端 API 调用是否使用具名导入
+      - name: Frontend import pattern audit
+        run: |
+          cd frontend && node -e "
+          const fs = require('fs');
+          const path = require('path');
+          function walk(dir) {
+            const results = [];
+            for (const entry of fs.readdirSync(dir, {withFileTypes: true})) {
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+                results.push(...walk(full));
+              } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.vue'))) {
+                results.push(full);
+              }
+            }
+            return results;
+          }
+          const violations = [];
+          for (const fp of walk('src/api')) {
+            const content = fs.readFileSync(fp, 'utf-8');
+            if (content.includes("import request from './request'") || content.includes('import request from "./request"')) {
+              violations.push(fp);
+            }
+          }
+          if (violations.length) {
+            console.error('Pattern A violations (should use named imports):');
+            violations.forEach(v => console.error('  ' + v));
+            process.exit(1);
+          } else {
+            console.log('All API files use Pattern B (named imports)');
+          }
+          "

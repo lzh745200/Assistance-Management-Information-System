@@ -221,7 +221,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage } from 'element-plus'
 import { Plus, Download, Upload, Search } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { del, apiRequest } from '@/api/request'
 import { schoolApi } from '@/api/schools'
 import { downloadImportTemplateAndSave } from '@/api/import'
 
@@ -324,15 +324,13 @@ function getStatusTagType(status: string) {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await request.get('/schools', {
-      params: {
+    const response = await apiRequest({ method: 'GET', url: '/schools', params: {
         page: currentPage.value,
         page_size: pageSize.value,
         keyword: filterForm.keyword || undefined,
         type: filterForm.type || undefined,
         support_status: filterForm.status || undefined,
-      },
-    })
+      }})
     const res = response
     const inner = res.data || res
     tableData.value = inner.items || (Array.isArray(inner) ? inner : [])
@@ -381,7 +379,7 @@ function handleEdit(row: any) {
 async function handleDelete(row: any) {
   if (!row?.id) return
   try {
-    await request.delete(`/schools/${row.id}`)
+    await del(`/schools/${row.id}`)
     ElMessage.success('删除成功')
     currentPage.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     fetchData()

@@ -267,7 +267,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Search, Tickets } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get, del, apiRequest } from '@/api/request'
 import { fundApi } from '@/api/funds'
 import { downloadImportTemplateAndSave } from '@/api/import'
 
@@ -332,10 +332,8 @@ const stats = computed(() => {
 
 async function loadStats() {
   try {
-    const res = await request.get('/funds/statistics/overview', {
-      showError: false,
-    } as any)
-    const d = res.data?.data || res.data
+    const res = await get('/funds/statistics/overview')
+    const d = res.data || res
     if (d) serverStats.value = d
   } catch {
     /* 统计加载失败不阻塞主流程 */
@@ -354,15 +352,13 @@ function formatAmount(val: any) {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await request.get('/funds', {
-      params: {
+    const response = await apiRequest({ method: 'GET', url: '/funds', params: {
         page: currentPage.value,
         page_size: pageSize.value,
         keyword: filterForm.keyword || undefined,
         fund_type: filterForm.type || undefined,
         status: filterForm.status || undefined,
-      },
-    })
+      }})
     const resData = response.data
     tableData.value =
       resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : [])
@@ -410,7 +406,7 @@ async function handleDelete(row: any) {
   if (deleting.value[row.id]) return
   deleting.value[row.id] = true
   try {
-    await request.delete(`/funds/${row.id}`)
+    await del(`/funds/${row.id}`)
     ElMessage.success('删除成功')
     // 立即从前端列表中移除，确保界面及时更新
     tableData.value = tableData.value.filter((item: any) => item.id !== row.id)
@@ -542,7 +538,7 @@ async function handleBatchDelete() {
     const deletedIds: any[] = []
     for (const row of selectedRows.value) {
       try {
-        await request.delete(`/funds/${row.id}`)
+        await del(`/funds/${row.id}`)
         deleted++
         deletedIds.push(row.id)
       } catch {

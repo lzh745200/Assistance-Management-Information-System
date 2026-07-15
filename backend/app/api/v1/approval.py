@@ -603,6 +603,7 @@ def get_pending_tasks(
     if not tasks:
         from app.models.approval import ApprovalStatus as AS
         from app.models.approval import ApprovalTask as AT
+from app.core.transaction import safe_commit
 
         query = db.query(AT).filter(AT.status == AS.PENDING.value)
         if not is_admin(current_user):
@@ -715,7 +716,7 @@ def remind_task(
             is_read=False,
         )
         db.add(msg)
-        db.commit()
+        safe_commit(db)
     except Exception as e:
         db.rollback()
         logger.error(f"创建提醒消息失败: {e}", exc_info=True)

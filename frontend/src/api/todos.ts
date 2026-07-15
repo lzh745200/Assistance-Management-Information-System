@@ -3,7 +3,7 @@
  * 提供待办事项的增删改查和状态切换
  */
 
-import api from './request'
+import { get, post, put, del, patch } from '@/api/request'
 
 const BASE_URL = '/todos'
 
@@ -14,12 +14,12 @@ export function listTodos(params?: {
   page?: number
   page_size?: number
 }): Promise<any> {
-  return api.get(BASE_URL, { params })
+  return get(BASE_URL, { params })
 }
 
 /** 获取待办详情 */
 export function getTodo(id: number): Promise<any> {
-  return api.get(`${BASE_URL}/${id}`)
+  return get(`${BASE_URL}/${id}`)
 }
 
 /** 创建待办事项 */
@@ -29,7 +29,7 @@ export function createTodo(data: {
   deadline?: string
   priority?: string
 }): Promise<any> {
-  return api.post(BASE_URL, data)
+  return post(BASE_URL, data)
 }
 
 /** 更新待办事项 */
@@ -43,15 +43,15 @@ export function updateTodo(
     priority?: string
   }
 ): Promise<any> {
-  return api.put(`${BASE_URL}/${id}`, data)
+  return put(`${BASE_URL}/${id}`, data)
 }
 
 /** 删除待办事项 */
 export function deleteTodo(id: number): Promise<any> {
-  return api.delete(`${BASE_URL}/${id}`)
+  return del(`${BASE_URL}/${id}`)
 }
 
 /** 切换完成状态 */
 export function toggleTodo(id: number): Promise<any> {
-  return api.patch(`${BASE_URL}/${id}/toggle`)
+  return patch(`${BASE_URL}/${id}/toggle`)
 }

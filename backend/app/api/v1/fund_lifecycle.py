@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from ...core.database import get_db
 from ...core.response import ok_list
 from ...core.security import get_current_user
+from ...core.transaction import safe_commit
 from ...models.fund import Fund
 from ...models.fund_budget import FundTransaction
 from ...models.fund_lifecycle import (
@@ -35,6 +36,8 @@ from ...models.fund_lifecycle import (
 )
 from ...models.project import Project
 from ...core.permission_utils import is_superuser
+from ...core.data_permission import apply_data_scope
+from ...services.work_log_service import write_work_log
 from .deps import ADMIN_ROLES, require_manager_role as _require_manager  # noqa: F401
 
 router = APIRouter(prefix="/fund-lifecycle", tags=["经费生命周期"])
@@ -206,7 +209,7 @@ async def advance_phase(
     for f in funds:
         f.lifecycle_phase = min(new_phase, 7)
 
-    db.commit()
+    safe_commit(db)
     return {"success": True, "message": f"已推进到阶段 {min(new_phase, 7)}"}
 
 
@@ -262,7 +265,7 @@ async def rollback_phase(
     for f in funds:
         f.lifecycle_phase = current.phase - 1
 
-    db.commit()
+    safe_commit(db)
     return {"success": True, "message": f"已退回到阶段 {current.phase - 1}"}
 
 
@@ -296,7 +299,7 @@ async def initiate_project_fund(
         phase1.entered_at = datetime.now()
         phase1.operator = _get_username(current_user)
 
-    db.commit()
+    safe_commit(db)
     return {
         "success": True,
         "message": "论证立项已启动",
@@ -399,7 +402,7 @@ async def lock_budget(
         fund.budget_locked = True
         created_count += 1
 
-    db.commit()
+    safe_commit(db)
     return {
         "success": True,
         "message": f"已锁定 {created_count} 笔经费预算基线",
@@ -562,7 +565,7 @@ async def quota_lock(fund_id: int, current_user=Depends(get_current_user), db: S
                 detail=f"拨付额度 {allocated:.2f} 超过基线 {baseline_val:.2f}，不允许",
             )
 
-    db.commit()
+    safe_commit(db)
     return {
         "success": True,
         "message": "额度已锁定",
@@ -652,6 +655,7 @@ async def list_transfer_vouchers(
 ):
     """划转凭证列表"""
     query = db.query(FundTransferVoucher)
+    query = apply_data_scope(query, FundTransferVoucher, current_user)
     if project_id:
         query = query.filter(FundTransferVoucher.project_id == project_id)
     if fund_id:
@@ -705,8 +709,14 @@ async def create_transfer_voucher(
         created_by=_get_username(current_user),
     )
     db.add(voucher)
-    db.commit()
+    safe_commit(db)
     db.refresh(voucher)
+    write_work_log(
+        db, "fund", "create_transfer_voucher", voucher.id,
+        f"凭证 {voucher.voucher_no}",
+        user_id=current_user.id, username=_get_username(current_user),
+        detail=f"金额: {data.amount} 万元",
+    )
     return {"success": True, "message": "创建成功", "data": _voucher_to_dict(voucher)}
 
 
@@ -741,7 +751,7 @@ async def update_transfer_voucher(
 
     for key, val in data.model_dump(exclude_unset=True).items():
         setattr(v, key, val)
-    db.commit()
+    safe_commit(db)
     db.refresh(v)
     return {"success": True, "message": "更新成功", "data": _voucher_to_dict(v)}
 
@@ -762,7 +772,7 @@ async def delete_transfer_voucher(
         raise HTTPException(status_code=400, detail="仅草稿状态凭证可删除")
 
     db.delete(v)
-    db.commit()
+    safe_commit(db)
     return {"success": True, "message": "删除成功"}
 
 
@@ -784,7 +794,13 @@ async def confirm_transfer_voucher(
     v.status = VoucherStatus.CONFIRMED.value
     v.confirmed_by = _get_username(current_user)
     v.confirmed_at = datetime.now()
-    db.commit()
+    safe_commit(db)
+    write_work_log(
+        db, "fund", "confirm_transfer_voucher", v.id,
+        f"凭证 {v.voucher_no}",
+        user_id=current_user.id, username=_get_username(current_user),
+        detail="凭证已确认",
+    )
     return {"success": True, "message": "凭证已确认"}
 
 
@@ -828,7 +844,7 @@ async def upload_voucher_attachment(
 
     # 关联附件到凭证
     v.attachment_id = attachment.id
-    db.commit()
+    safe_commit(db)
     db.refresh(attachment)
 
     return {
@@ -913,6 +929,7 @@ async def list_contracts(
 ):
     """合同列表"""
     query = db.query(FundContract)
+    query = apply_data_scope(query, FundContract, current_user)
     if project_id:
         query = query.filter(FundContract.project_id == project_id)
     if status:
@@ -942,8 +959,13 @@ async def create_contract(
         created_by=_get_username(current_user),
     )
     db.add(contract)
-    db.commit()
+    safe_commit(db)
     db.refresh(contract)
+    write_work_log(
+        db, "fund", "create_contract", contract.id,
+        contract.contract_name,
+        user_id=current_user.id, username=_get_username(current_user),
+    )
     return {"success": True, "message": "创建成功", "data": _contract_to_dict(contract)}
 
 
@@ -986,7 +1008,7 @@ async def update_contract(
 
     for key, val in data.model_dump(exclude_unset=True).items():
         setattr(c, key, val)
-    db.commit()
+    safe_commit(db)
     db.refresh(c)
     return {"success": True, "message": "更新成功", "data": _contract_to_dict(c)}
 
@@ -1009,7 +1031,7 @@ async def delete_contract(
     # 删除关联付款
     db.query(FundContractPayment).filter(FundContractPayment.contract_id == contract_id).delete()
     db.delete(c)
-    db.commit()
+    safe_commit(db)
     return {"success": True, "message": "删除成功"}
 
 
@@ -1080,7 +1102,7 @@ async def create_contract_payment(
         contract_amt = float(c.contract_amount or 0)
         c.payment_progress = round(float(c.paid_amount or 0) / contract_amt * 100, 2) if contract_amt > 0 else 0
 
-    db.commit()
+    safe_commit(db)
     db.refresh(payment)
     result = _payment_to_dict(payment)
     if approval_info:
@@ -1280,6 +1302,7 @@ async def list_anomalies(
 ):
     """异常记录列表"""
     query = db.query(FundAnomaly)
+    query = apply_data_scope(query, FundAnomaly, current_user)
     if project_id:
         query = query.filter(FundAnomaly.project_id == project_id)
     if fund_id:
@@ -1309,7 +1332,7 @@ async def detect_anomalies(
     from ...services.fund_anomaly_detector import detect_anomalies as run_detection
 
     new_anomalies = run_detection(db, project_id)
-    db.commit()
+    safe_commit(db)
 
     return {
         "success": True,
@@ -1359,7 +1382,7 @@ async def resolve_anomaly(
         if fund:
             fund.has_anomaly = remaining > 0
 
-    db.commit()
+    safe_commit(db)
     return {"success": True, "message": "异常已标记为已处理"}
 
 
@@ -1413,8 +1436,14 @@ async def create_settlement(
     for f in funds:
         f.settlement_status = "draft"
 
-    db.commit()
+    safe_commit(db)
     db.refresh(settlement)
+    write_work_log(
+        db, "fund", "create_settlement", settlement.id,
+        f"决算 {settlement.settlement_no}",
+        user_id=current_user.id, username=_get_username(current_user),
+        detail=f"项目ID: {project_id}, 预算: {total_budget}, 支出: {total_spent}",
+    )
     return {
         "success": True,
         "message": "决算报告已生成",
@@ -1452,7 +1481,7 @@ async def update_settlement(
     if data.total_budget is not None and data.total_spent is not None:
         s.total_remaining = data.total_budget - data.total_spent
 
-    db.commit()
+    safe_commit(db)
     db.refresh(s)
     return {"success": True, "message": "更新成功", "data": _settlement_to_dict(s)}
 
@@ -1504,7 +1533,13 @@ async def approve_settlement(
     for f in funds:
         f.settlement_status = "approved"
 
-    db.commit()
+    safe_commit(db)
+    write_work_log(
+        db, "fund", "approve_settlement", s.id,
+        f"决算 {s.settlement_no}",
+        user_id=current_user.id, username=_get_username(current_user),
+        detail="决算审批通过",
+    )
     return {"success": True, "message": "决算已审批通过"}
 
 
@@ -1571,7 +1606,7 @@ async def get_health(
     from ...services.fund_health import calculate_health_score
 
     result = calculate_health_score(db, project_id)
-    db.commit()
+    safe_commit(db)
     return {"success": True, "data": result}
 
 
@@ -1589,7 +1624,7 @@ async def batch_health(
     from ...services.fund_health import calculate_health_batch
 
     result = calculate_health_batch(db, data.project_ids)
-    db.commit()
+    safe_commit(db)
     return {"success": True, "data": result}
 
 
@@ -1624,6 +1659,7 @@ async def list_allocation_orders(
     from ...models.fund_allocation_order import FundAllocationOrder
 
     query = db.query(FundAllocationOrder)
+    query = apply_data_scope(query, FundAllocationOrder, current_user)
     if project_id:
         query = query.filter(FundAllocationOrder.project_id == project_id)
     if status:
@@ -1661,7 +1697,7 @@ async def create_allocation_order(
         created_by=_get_username(current_user),
     )
     db.add(order)
-    db.commit()
+    safe_commit(db)
     db.refresh(order)
     return {"success": True, "message": "拨款指令创建成功", "data": order.to_dict()}
 
@@ -1684,7 +1720,13 @@ async def issue_allocation_order(
 
     order.status = "issued"
     order.issue_date = date.today()
-    db.commit()
+    safe_commit(db)
+    write_work_log(
+        db, "fund", "issue_allocation_order", order.id,
+        f"拨款指令 {order.order_no}",
+        user_id=current_user.id, username=_get_username(current_user),
+        detail="拨款指令已下达",
+    )
     return {"success": True, "message": "拨款指令已下达"}
 
 
@@ -1756,7 +1798,7 @@ async def quota_adjust(
         bv.approved_by = _get_username(current_user)
         bv.approved_at = datetime.now()
 
-    db.commit()
+    safe_commit(db)
     msg = "紧急额度调整已生效" if data.is_emergency else "额度调整申请已提交，待审批"
     return {"success": True, "message": msg}
 
@@ -1880,7 +1922,7 @@ async def verify_asset(
     s.asset_verified = passed
     s.asset_value = asset_val
 
-    db.commit()
+    safe_commit(db)
     db.refresh(verification)
     return {
         "success": True,

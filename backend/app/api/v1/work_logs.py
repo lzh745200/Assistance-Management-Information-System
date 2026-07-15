@@ -205,7 +205,7 @@ async def create_work_log(
 
     log = WorkLog(user_id=current_user.id, **log_data)
     db.add(log)
-    db.commit()
+    safe_commit(db)
     db.refresh(log)
 
     # 返回时添加兼容字段
@@ -258,7 +258,7 @@ async def update_work_log(
 
     for key, value in update_data.items():
         setattr(log, key, value)
-    db.commit()
+    safe_commit(db)
     db.refresh(log)
 
     # 返回时添加兼容字段
@@ -291,7 +291,7 @@ async def delete_work_log(
         raise HTTPException(status_code=403, detail="只能删除自己的日志")
 
     db.delete(log)
-    db.commit()
+    safe_commit(db)
     return {"message": "删除成功"}
 
 
@@ -316,6 +316,7 @@ async def get_calendar_events(
     role = getattr(current_user, "role", "")
     if role not in ("admin", "super_admin", "manager"):
         from sqlalchemy import or_ as sa_or
+from app.core.transaction import safe_commit
 
         query = query.filter(
             sa_or(

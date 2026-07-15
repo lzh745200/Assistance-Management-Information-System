@@ -169,6 +169,7 @@ def list_funds(
     village_id: Optional[int] = None,
     cursor: Optional[str] = Query(None, description="Keyset分页游标"),
     pagination: str = Query("offset", description="分页方式: 'offset' | 'keyset'"),
+    include_deleted: bool = Query(False, description="是否包含已软删的记录"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -181,6 +182,10 @@ def list_funds(
 
     # 2. 数据权限隔离
     stmt = apply_data_scope(stmt, Fund, current_user)
+
+    # 2.5 软删过滤：默认隐藏 is_active=False 的记录
+    if not include_deleted:
+        stmt = stmt.where(Fund.is_active == True)  # noqa: E712
 
     # 3. 动态过滤
     if keyword:
@@ -329,7 +334,7 @@ def update_fund(
         else:
             logger.warning("update_fund: skipping unknown field '%s' on Fund(id=%d)", key, fund_id)
 
-    db.commit()
+    safe_commit(db)
     return {"message": "更新成功"}
 
 
@@ -339,15 +344,15 @@ def delete_fund(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除经费记录"""
+    """软删经费记录（置 is_active=False，保留数据以便恢复/审计）"""
     require_manager_role(current_user)
     fund = _get_fund_or_404(db, fund_id, current_user)
 
     if fund.status != "pending":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="仅允许删除待审批(pending)状态的经费")
 
-    db.delete(fund)
-    db.commit()
+    fund.is_active = False
+    safe_commit(db)
     return {"message": "删除成功"}
 
 
@@ -523,7 +528,7 @@ def _transition_status(
             setattr(fund, k, v)
         else:
             logger.warning("_transition_status: skipping unknown field '%s' on Fund(id=%d)", k, fund.id)
-    db.commit()
+    safe_commit(db)
 
 
 @router.post("/{fund_id}/approve")
@@ -767,6 +772,7 @@ def fund_history_operations(
     """获取经费操作日志"""
     _get_fund_or_404(db, fund_id, current_user)
     from app.models.fund_history import FundOperationLog
+from app.core.transaction import safe_commit
     rows = (
         db.query(FundOperationLog)
         .filter(FundOperationLog.fund_id == fund_id)
@@ -854,7 +860,7 @@ async def delete_fund_attachment(
 
     # 删除数据库记录
     db.delete(att)
-    db.commit()
+    safe_commit(db)
 
     # 删除磁盘文件（放在 commit 之后，即使文件删除失败也不影响 DB 操作）
     if os.path.exists(file_path):
@@ -941,7 +947,7 @@ async def upload_fund_attachment(
         uploaded_by=uploaded_by,
     )
     db.add(attachment)
-    db.commit()
+    safe_commit(db)
     db.refresh(attachment)
 
     return {"message": "上传成功", "data": attachment.to_dict()}

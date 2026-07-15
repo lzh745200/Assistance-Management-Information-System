@@ -1,4 +1,4 @@
-import api from './request'
+import { get, post, put, del, apiRequest } from '@/api/request'
 
 // Types
 export interface Project {
@@ -27,18 +27,18 @@ export interface CreateProjectRequest {
 // Core API
 export const projectsApi = {
   // ========== 基础 CRUD ==========
-  list: (params?: any) => api.get('/projects', { params }),
-  get: (id: number) => api.get('/projects/' + id),
-  create: (data: any) => api.post('/projects', data),
-  update: (id: number, data: any) => api.put('/projects/' + id, data),
-  delete: (id: number) => api.delete('/projects/' + id),
-  getById: (id: number) => api.get('/projects/' + id),
-  getStats: () => api.get('/projects/stats'),
-  exportList: (params?: any) => api.get('/projects/export', { params, responseType: 'blob' }),
+  list: (params?: any) => get('/projects', params),
+  get: (id: number) => get('/projects/' + id),
+  create: (data: any) => post('/projects', data),
+  update: (id: number, data: any) => put('/projects/' + id, data),
+  delete: (id: number) => del('/projects/' + id),
+  getById: (id: number) => get('/projects/' + id),
+  getStats: () => get('/projects/stats'),
+  exportList: (params?: any) => apiRequest({ method: 'GET', url: '/projects/export', params, responseType: 'blob' }),
   importData: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/projects/import', formData, {
+    return post('/projects/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
@@ -47,32 +47,32 @@ export const projectsApi = {
   uploadFiles: (id: number, files: File[]) => {
     const formData = new FormData()
     files.forEach((f) => formData.append('files', f))
-    return api.post('/projects/' + id + '/files', formData, {
+    return post('/projects/' + id + '/files', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
-  listFiles: (id: number) => api.get('/projects/' + id + '/files'),
+  listFiles: (id: number) => get('/projects/' + id + '/files'),
   getFileDownloadUrl: (projectId: number, fileId: number) =>
     `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/projects/${projectId}/files/${fileId}/download`,
   deleteFile: (projectId: number, fileId: number) =>
-    api.delete('/projects/' + projectId + '/files/' + fileId),
+    del('/projects/' + projectId + '/files/' + fileId),
   previewFile: (projectId: number, fileId: number) =>
-    api.get(`/projects/${projectId}/files/${fileId}/preview`),
+    get(`/projects/${projectId}/files/${fileId}/preview`),
 
   // ========== 项目变更历史 ==========
-  getChangeHistory: (projectId: number) => api.get(`/projects/${projectId}/history/changes`),
+  getChangeHistory: (projectId: number) => get(`/projects/${projectId}/history/changes`),
 
   // ========== 项目经费关联 ==========
-  getFunds: (projectId: number) => api.get(`/projects/${projectId}/funds`),
-  addFund: (projectId: number, data: any) => api.post(`/projects/${projectId}/funds`, data),
+  getFunds: (projectId: number) => get(`/projects/${projectId}/funds`),
+  addFund: (projectId: number, data: any) => post(`/projects/${projectId}/funds`, data),
 
   // ========== 项目任务 ==========
-  getTasks: (projectId: number) => api.get(`/projects/${projectId}/tasks`),
-  createTask: (projectId: number, data: any) => api.post(`/projects/${projectId}/tasks`, data),
+  getTasks: (projectId: number) => get(`/projects/${projectId}/tasks`),
+  createTask: (projectId: number, data: any) => post(`/projects/${projectId}/tasks`, data),
   updateTask: (projectId: number, taskId: number, data: any) =>
-    api.put(`/projects/${projectId}/tasks/${taskId}`, data),
+    put(`/projects/${projectId}/tasks/${taskId}`, data),
   deleteTask: (projectId: number, taskId: number) =>
-    api.delete(`/projects/${projectId}/tasks/${taskId}`),
+    del(`/projects/${projectId}/tasks/${taskId}`),
 }
 
 // Alias for views that use the singular form

@@ -3,7 +3,7 @@
  * 提供系统版本更新历史的查询、记录和管理功能
  */
 
-import { get, post, del } from './request'
+import { get, post, del } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

@@ -39,6 +39,7 @@ async def _get_user_from_token(authorization: Optional[str] = None) -> Optional[
         # runtime because verify_token was not exported, so logged-in users'
         # feedback never recorded their identity (silently caught by except).
         from app.api.v1.auth import verify_token
+from app.core.transaction import safe_commit
 
         info = await verify_token(token, "access_token")
         if info:
@@ -125,7 +126,7 @@ async def submit_feedback(
     )
     try:
         db.add(feedback)
-        db.commit()
+        safe_commit(db)
         db.refresh(feedback)
     except Exception as e:
         db.rollback()

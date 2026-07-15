@@ -134,7 +134,7 @@ async def batch_delete_audit_logs(
                 )
 
     deleted = query.delete(synchronize_session=False)
-    db.commit()
+    safe_commit(db)
     logger.info("批量删除审计日志完成: 删除 %d 条", deleted)
     return {"message": f"已删除 {deleted} 条日志记录", "deleted_count": deleted}
 
@@ -161,7 +161,7 @@ async def delete_audit_log(
         raise HTTPException(status_code=404, detail="Audit log not found")
 
     db.delete(log)
-    db.commit()
+    safe_commit(db)
     logger.info("删除审计日志成功 id=%d", log_id)
     return {"message": "删除成功"}
 
@@ -196,7 +196,7 @@ async def update_audit_log_remark(
             meta = {}
     meta["remark"] = remark
     log.metadata_ = meta
-    db.commit()
+    safe_commit(db)
     return {"message": "备注更新成功", "id": log_id, "remark": remark}
 
 
@@ -593,6 +593,7 @@ async def get_user_activity(
     from datetime import timedelta
 
     from app.models.audit import AuditLog
+from app.core.transaction import safe_commit
 
     start_date = datetime.now() - timedelta(days=days)
 

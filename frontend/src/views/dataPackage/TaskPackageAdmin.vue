@@ -168,7 +168,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get, post, apiRequest } from '@/api/request'
 import { AuthStorage } from '@/utils/authStorage'
 import { DATA_TYPES, DATA_TYPE_LABELS } from '@/constants/dataTypes'
 
@@ -221,7 +221,7 @@ async function createTaskPackage() {
     } catch {
       /* ignore */
     }
-    await request.post('/data-packages/export', {
+    await post('/data-packages/export', {
       data_types: createForm.dataTypes,
       description: `[任务包] ${createForm.name} - ${createForm.description}`,
       type: 'task',
@@ -260,7 +260,7 @@ async function handleFileChange(file: any) {
   const formData = new FormData()
   formData.append('file', selectedFile.value)
   try {
-    const { data } = await request.post('/data-packages/import', formData, {
+    const data = await post('/data-packages/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     if (data?.errors?.length) {
@@ -288,7 +288,7 @@ async function confirmImport() {
   importing.value = true
   try {
     const packageId = importPreview.value.tempId
-    await request.post(`/data-packages/${packageId}/confirm`, {
+    await post(`/data-packages/${packageId}/confirm`, {
       package_id: Number(packageId),
       confirm: true,
     })
@@ -317,7 +317,7 @@ async function loadPackageList() {
     if (listFilter.value) {
       params.type = listFilter.value
     }
-    const { data } = await request.get('/data-packages', { params })
+    const data = await get('/data-packages', { params })
     packageList.value = data?.items || data?.data?.items || []
   } catch {
     packageList.value = []
@@ -355,9 +355,7 @@ function statusLabel(status: string): string {
 
 async function downloadPkg(row: any) {
   try {
-    const response = await request.get(`/data-packages/${row.id}/download`, {
-      responseType: 'blob',
-    })
+    const response = await apiRequest({ method: 'GET', url: `/data-packages/${row.id}/download`, responseType: 'blob' })
     const blob = new Blob([response.data])
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')

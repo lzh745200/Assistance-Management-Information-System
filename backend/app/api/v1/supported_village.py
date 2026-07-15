@@ -447,7 +447,7 @@ async def import_villages(
                 errors.append(error_msg)
         except Exception as e:
             errors.append(f"第{row_idx}行: {str(e)}")
-    db.commit()
+    safe_commit(db)
     await _invalidate_village_cache()
     return {
         "message": f"成功导入 {imported} 条记录" + (f"，{len(errors)} 条跳过" if errors else ""),
@@ -468,7 +468,7 @@ async def batch_delete_villages(
     db.query(SupportedVillage).filter(
         SupportedVillage.id.in_(data.ids)
     ).update({"is_active": False}, synchronize_session=False)
-    db.commit()
+    safe_commit(db)
     await _invalidate_village_cache()
     return {"message": f"已删除 {len(data.ids)} 条记录"}
 
@@ -497,7 +497,7 @@ async def create_village(
     """创建帮扶村"""
     village = SupportedVillage(**data.model_dump())
     db.add(village)
-    db.commit()
+    safe_commit(db)
     db.refresh(village)
     await _invalidate_village_cache()
     return {"data": {"id": village.id}, "message": "创建成功"}
@@ -539,7 +539,7 @@ async def update_village(
     for key, value in update_dict.items():
         if hasattr(village, key) and key != "id":
             setattr(village, key, value)
-    db.commit()
+    safe_commit(db)
     await _invalidate_village_cache()
     return {"message": "更新成功"}
 
@@ -554,7 +554,7 @@ async def delete_village(
     village = _get_village_or_404(db, village_id)
 
     village.is_active = False
-    db.commit()
+    safe_commit(db)
     await _invalidate_village_cache()
     return {"message": "删除成功"}
 
@@ -596,7 +596,7 @@ async def copy_year_data(
     for model in _SECTION_MODEL.values():
         if _copy_section_data(db, model, village_id, data.fromYear, data.toYear):
             copied += 1
-    db.commit()
+    safe_commit(db)
     return {"message": f"年度数据复制成功，已复制 {copied} 个数据组"}
 
 
@@ -615,7 +615,7 @@ async def save_yearly_section(
     _get_village_or_404(db, village_id)
     model = _SECTION_MODEL[section]
     _save_section_data(db, model, village_id, year, data.model_dump())
-    db.commit()
+    safe_commit(db)
     return {"message": f"保存成功: {section}"}
 
 
@@ -771,7 +771,7 @@ async def upload_section_attachment(
         description=f"section:{section}:attachment",
     )
     db.add(attachment)
-    db.commit()
+    safe_commit(db)
     db.refresh(attachment)
     return {"code": 200, "data": {"id": attachment.id, "filename": attachment.file_name}, "message": "上传成功"}
 
@@ -823,7 +823,7 @@ async def delete_section_attachment(
     if not attachment:
         raise HTTPException(status_code=404, detail="附件不存在")
     db.delete(attachment)
-    db.commit()
+    safe_commit(db)
     return {"code": 200, "message": "删除成功"}
 
 
@@ -851,7 +851,7 @@ async def save_committee_data(
     for k, v in data.items():
         if hasattr(committee, k) and k not in ("id", "supported_village_id"):
             setattr(committee, k, v)
-    db.commit()
+    safe_commit(db)
     return {"code": 200, "message": "保存成功"}
 
 
@@ -978,7 +978,7 @@ async def save_transition_funding(
         "totalInvestment": item.totalInvestment,
     } for item in data.items]
     village.transition_fund_items = json.dumps(items_json, ensure_ascii=False)
-    db.commit()
+    safe_commit(db)
     return {"success": True, "message": "转移支付资金已保存", "items": items_json}
 
 
@@ -991,6 +991,7 @@ async def download_all_templates(
 ):
     """下载所有区块模板（Excel 多工作表）"""
     import openpyxl
+from app.core.transaction import safe_commit
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
     sections = ["income", "industry", "infrastructure", "education", "medical", "employment", "population"]

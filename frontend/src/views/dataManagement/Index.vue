@@ -56,7 +56,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, onMounted, defineAsyncComponent } from 'vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { get, apiRequest } from '@/api/request'
 
 // 异步加载子组件
 const ImportSection = defineAsyncComponent(() => import('./components/ImportSection.vue'))
@@ -84,7 +84,7 @@ const qualityStats = ref({
 async function loadStats() {
   try {
     // Use /dashboard/stats for real aggregate statistics
-    const res = await request.get('/dashboard/stats')
+    const res = await get('/dashboard/stats')
     const data = res?.data ?? res ?? {}
     stats.value = {
       villageCount: data.total_villages ?? data.villageCount ?? 0,
@@ -93,9 +93,7 @@ async function loadStats() {
       backupCount: data.backup_count ?? data.backupCount ?? 0,
     }
     // 加载帮扶村数据用于质量统计
-    const villageRes = await request.get('/supported-villages', {
-      params: { page: 1, page_size: 200 },
-    })
+    const villageRes = await apiRequest({ method: 'GET', url: '/supported-villages', params: { page: 1, page_size: 200 }})
     const villages = villageRes.data?.items || []
     const totalRecords = villages.length
     const validRecords = villages.filter(

@@ -102,7 +102,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getApprovalHistory, type ApprovalTask } from '@/api/approval'
-import request from '@/api/request'
+import { post } from '@/api/request'
 
 const loading = ref(false)
 const applications = ref<ApprovalTask[]>([])
@@ -165,7 +165,7 @@ async function handleWithdraw(row: any) {
       '撤回申请',
       { type: 'warning' }
     )
-    await request.post(`/approval/tasks/${row.id}/withdraw`)
+    await post(`/approval/tasks/${row.id}/withdraw`)
     ElMessage.success('已撤回')
     loadData()
   } catch {
@@ -176,7 +176,7 @@ async function handleWithdraw(row: any) {
 async function handleResubmit(row: any) {
   try {
     await ElMessageBox.confirm(`确认重新提交「${row.title || '该申请'}」？`, '重新提交')
-    await request.post(`/approval/tasks/${row.id}/resubmit`)
+    await post(`/approval/tasks/${row.id}/resubmit`)
     ElMessage.success('已重新提交')
     loadData()
   } catch {

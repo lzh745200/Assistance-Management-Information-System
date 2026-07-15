@@ -238,7 +238,7 @@ import {
   Box,
   Folder,
 } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get, del } from '@/api/request'
 import { schoolApi } from '@/api/schools'
 
 const { pushSafe } = useRouterSafe()
@@ -336,8 +336,8 @@ const loadAttachments = async () => {
   const id = route.params.id
   if (!id) return
   try {
-    const resp = await request.get(`/schools/${id}/attachments`)
-    const result = resp.data?.data || resp.data
+    const resp = await get(`/schools/${id}/attachments`)
+    const result = resp.data || resp
     attachments.value = result?.items || (Array.isArray(result) ? result : [])
   } catch (e) {
     logger.error('加载附件失败:', e)
@@ -390,7 +390,7 @@ const loadSchool = async () => {
   }
   loading.value = true
   try {
-    const response = await request.get(`/schools/${id}`)
+    const response = await get(`/schools/${id}`)
     const result = response
     const data = result.data || result
     if (data) {
@@ -438,7 +438,7 @@ const handleDelete = async () => {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await request.delete(`/schools/${school.value.id}`)
+    await del(`/schools/${school.value.id}`)
     ElMessage.success('删除成功')
     pushSafe('/schools')
   } catch (error) {

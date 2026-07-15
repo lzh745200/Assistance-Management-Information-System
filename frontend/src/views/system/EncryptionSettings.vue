@@ -135,7 +135,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import request from '@/api/request'
+import { get, post } from '@/api/request'
 
 const encryptionStatus = ref({
   enabled: false,
@@ -215,7 +215,7 @@ const changeRules: FormRules = {
 
 const loadStatus = async () => {
   try {
-    const response = await request.get('/encryption/status')
+    const response = await get('/encryption/status')
     if (response.data.success) {
       encryptionStatus.value = response.data
     }
@@ -243,7 +243,7 @@ const handleInitialize = async () => {
 
       initializing.value = true
 
-      const response = await request.post('/encryption/initialize', {
+      const response = await post('/encryption/initialize', {
         password: initForm.value.password,
         confirm_password: initForm.value.confirmPassword,
       })
@@ -272,7 +272,7 @@ const handleChangePassword = async () => {
     try {
       changing.value = true
 
-      const response = await request.post('/encryption/change-password', {
+      const response = await post('/encryption/change-password', {
         old_password: changeForm.value.oldPassword,
         new_password: changeForm.value.newPassword,
         confirm_password: changeForm.value.confirmPassword,
@@ -314,7 +314,7 @@ const handleDisable = async () => {
 
     disabling.value = true
 
-    const response = await request.post('/encryption/disable', {
+    const response = await post('/encryption/disable', {
       password: disableForm.value.password,
     })
 

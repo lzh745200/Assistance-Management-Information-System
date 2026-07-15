@@ -89,7 +89,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import request from '@/api/request'
+import { post } from '@/api/request'
 
 defineOptions({ name: 'FundApply' })
 
@@ -130,7 +130,7 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
-    await request.post('/funds/apply', {
+    await post('/funds/apply', {
       name: form.name,
       type: form.type,
       amount: form.amount,

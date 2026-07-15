@@ -213,7 +213,7 @@ import {
   Box,
   Folder,
 } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get, post, put, del } from '@/api/request'
 import MapPicker from '@/components/MapPicker.vue'
 
 const route = useRoute()
@@ -267,7 +267,7 @@ const loadData = async () => {
 
   loading.value = true
   try {
-    const response = await request.get(`/schools/${id}`)
+    const response = await get(`/schools/${id}`)
     const result = response
     const data = result.data || result // 兼容扁平格式
     if (data) {
@@ -313,8 +313,8 @@ const loadAttachments = async () => {
   const id = route.params.id
   if (!id) return
   try {
-    const resp = await request.get(`/schools/${id}/attachments`)
-    const result = resp.data?.data || resp.data
+    const resp = await get(`/schools/${id}/attachments`)
+    const result = resp.data || resp
     attachments.value = result?.items || (Array.isArray(result) ? result : [])
   } catch (e) {
     logger.error('加载附件失败:', e)
@@ -340,7 +340,7 @@ function onAttachmentError() {
 
 async function deleteAttachment(att: any) {
   try {
-    await request.delete(`/schools/attachments/${att.id}`)
+    await del(`/schools/attachments/${att.id}`)
     ElMessage.success('删除成功')
     loadAttachments()
   } catch {
@@ -395,9 +395,9 @@ const handleSubmit = async () => {
     submitLoading.value = true
     try {
       if (isEdit.value) {
-        await request.put(`/schools/${route.params.id}`, formData)
+        await put(`/schools/${route.params.id}`, formData)
       } else {
-        await request.post('/schools', formData)
+        await post('/schools', formData)
       }
       ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
       pushSafe('/schools')

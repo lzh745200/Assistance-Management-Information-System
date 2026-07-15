@@ -287,7 +287,7 @@ import { ref, computed } from 'vue'
 import { Download, Upload, Loading, Bell } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useRouterSafe } from '@/composables/useRouterSafe'
-import request, { downloadBlob, parseContentDisposition } from '@/api/request'
+import { post, apiRequest, downloadBlob, parseContentDisposition } from '@/api/request'
 
 interface ProjectData {
   rowIndex: number
@@ -348,11 +348,7 @@ function clearFileList() {
 const downloadTemplate = async () => {
   downloading.value = true
   try {
-    const resp: any = await request.get('/import/template', {
-      params: { entity_type: 'project' },
-      responseType: 'blob',
-      timeout: 15000,
-    })
+    const resp: any = await apiRequest({ method: 'GET', url: '/import/template', params: { entity_type: 'project' }, responseType: 'blob' })
     const filename = parseContentDisposition(
       resp.headers as Record<string, string>,
       '项目导入模板.xlsx'
@@ -397,10 +393,10 @@ const handleUpload = async () => {
     const formData = new FormData()
     formData.append('file', file.raw || file)
 
-    const resp: any = await request.post('/import/preview?entity_type=project', formData, {
+    const resp: any = await post('/import/preview?entity_type=project', formData, {
       timeout: 120000,
     })
-    const response = resp?.data || resp
+    const response = resp
 
     if (response?.rows) {
       previewData.value = (response.rows as any[]).map((item: any, idx: number) => ({
@@ -447,10 +443,10 @@ const confirmImport = async () => {
     formData.append('entity_type', 'project')
     formData.append('mode', 'incremental')
 
-    const resp: any = await request.post('/import/entities', formData, {
+    const resp: any = await post('/import/entities', formData, {
       timeout: 120000,
     })
-    const response = resp?.data || resp
+    const response = resp
 
     importResult.value = {
       success: true,

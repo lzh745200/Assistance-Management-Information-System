@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import echarts from '@/utils/echarts'
-import request from '@/api/request'
+import { get, apiRequest } from '@/api/request'
 
 const barRef = ref<HTMLElement>()
 const pieRef = ref<HTMLElement>()
@@ -24,10 +24,8 @@ let pieChart: echarts.ECharts | null = null
 async function fetchData() {
   try {
     const [projRes, fundRes] = await Promise.all([
-      request.get('/projects', {
-        params: { summary: true, page_size: 5 },
-      } as any),
-      request.get('/dashboard/stats', { params: { refresh: true } } as any),
+      apiRequest({ method: 'GET', url: '/projects', params: { summary: true, page_size: 5 }}),
+      get('/dashboard/stats', { refresh: true }),
     ])
     return {
       projects: projRes?.data?.items || projRes?.data?.data || [],

@@ -332,7 +332,7 @@ function handleTabChange(_tab: any) {
 }
 import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import { Plus, Key, ArrowDown } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get, post, put, del, apiRequest } from '@/api/request'
 import { useAuthStore } from '@/stores/auth'
 import { useDesensitize } from '@/composables/useDesensitize'
 import PermissionAssignmentDrawer from '@/components/permission/PermissionAssignmentDrawer.vue'
@@ -412,10 +412,8 @@ const orgTreeOptions = ref<any[]>([])
 
 async function loadOrgTree() {
   try {
-    const res = await request.get('/organizations/tree', {
-      showError: false,
-    } as any)
-    const raw = res.data?.data || res.data || []
+    const res = await get('/organizations/tree')
+    const raw = res.data || res || []
     orgTreeOptions.value = Array.isArray(raw) ? normalizeTreeNodes(raw) : []
   } catch {
     orgTreeOptions.value = []
@@ -478,7 +476,7 @@ const roleOptions = ref<{ value: string; label: string }[]>([
 
 async function fetchRoles() {
   try {
-    const res = await request.get('/rbac/roles', { params: { limit: 100 } })
+    const res = await get('/rbac/roles', { limit: 100 })
     const data = res?.data ?? res
     const items = data?.items || (Array.isArray(data) ? data : [])
     if (items.length > 0) {
@@ -566,17 +564,15 @@ const copyPassword = async () => {
 const loadData = async () => {
   loading.value = true
   try {
-    const response = await request.get('/users', {
-      params: {
+    const response = await apiRequest({ method: 'GET', url: '/users', params: {
         page: pagination.page,
         page_size: pagination.size,
         username: searchForm.username || undefined,
         keyword: searchForm.name || undefined,
         role: searchForm.role || undefined,
         is_active: searchForm.is_active,
-      },
-    })
-    const data = response?.data || response
+      }})
+    const data = response
     tableData.value = data.items || []
     pagination.total = data.total || tableData.value.length
   } catch (error) {
@@ -590,8 +586,8 @@ const loadData = async () => {
 const loadPendingCount = async () => {
   if (!isAdmin.value) return
   try {
-    const res = await request.get('/users/pending/list')
-    const data = res.data?.data || res.data || []
+    const res = await get('/users/pending/list')
+    const data = res.data || res || []
     pendingCount.value = Array.isArray(data) ? data.length : data.total || 0
   } catch {
     pendingCount.value = 0
@@ -600,8 +596,8 @@ const loadPendingCount = async () => {
 
 const showPendingUsers = async () => {
   try {
-    const res = await request.get('/users/pending/list')
-    const data = res.data?.data || res.data || []
+    const res = await get('/users/pending/list')
+    const data = res.data || res || []
     const items = Array.isArray(data) ? data : data.items || []
     pendingUsers.value = items
     pendingCount.value = items.length
@@ -674,7 +670,7 @@ const handleSubmit = async () => {
     submitting.value = true
     try {
       if (isEdit.value) {
-        await request.put(`/users/${formData.id}`, {
+        await put(`/users/${formData.id}`, {
           full_name: formData.full_name,
           email: formData.email,
           phone: formData.phone,
@@ -682,7 +678,7 @@ const handleSubmit = async () => {
         })
         ElMessage.success('用户更新成功')
       } else {
-        const res = await request.post('/users', {
+        const res = await post('/users', {
           username: formData.username,
           full_name: formData.full_name,
           password: formData.password || undefined,
@@ -730,7 +726,7 @@ const confirmResetPassword = async () => {
 
   try {
     const newPwd = resetPwdForm.newPassword
-    await request.post(`/users/${currentUser.value?.id}/admin-reset-password`, {
+    await post(`/users/${currentUser.value?.id}/admin-reset-password`, {
       new_password: newPwd,
     })
     try {
@@ -773,8 +769,8 @@ const handlePermPackageCommand = (command: string) => {
 const handleExportPermissionPackage = async () => {
   exportingPermPackage.value = true
   try {
-    const res = await request.post('/permission-packages/export', {})
-    const data = res.data?.data || res.data
+    const res = await post('/permission-packages/export', {})
+    const data = res.data || res
     if (data.file_name) {
       const downloadUrl = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/permission-packages/download/${data.file_name}`
       const a = document.createElement('a')
@@ -820,10 +816,10 @@ const handleImportPermissionPackage = () => {
       }
       const fd = new FormData()
       fd.append('file', file)
-      const res = await request.post('/permission-packages/import', fd, {
+      const res = await post('/permission-packages/import', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      const result = res.data?.data || res.data
+      const result = res.data || res
       if (result.success) {
         const p = result.preview || {}
         let msg = `将导入 ${p.role_count || 0} 个角色, ${p.user_legacy_count || 0} 个用户权限`
@@ -833,11 +829,11 @@ const handleImportPermissionPackage = () => {
           confirmButtonText: '确认导入',
           cancelButtonText: '取消',
         })
-        const cRes = await request.post(
+        const cRes = await post(
           `/permission-packages/confirm/${encodeURIComponent(file.name)}`,
           { overwrite_existing: true }
         )
-        ElMessage.success(cRes.data?.data?.message || cRes.data?.message || '导入完成')
+        ElMessage.success(cRes.data?.message || cRes.message || '导入完成')
         pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
         loadData()
       } else {
@@ -859,7 +855,7 @@ const handleDelete = async (row: any) => {
     await ElMessageBox.confirm(`确定删除用户 "${row.full_name || row.username}" 吗？`, '提示', {
       type: 'warning',
     })
-    await request.delete(`/users/${row.id}`)
+    await del(`/users/${row.id}`)
     ElMessage.success('删除成功')
     pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await Promise.all([loadData(), loadPendingCount()])

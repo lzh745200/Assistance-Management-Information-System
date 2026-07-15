@@ -84,7 +84,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { apiRequest } from '@/api/request'
 
 const loading = ref(false)
 const tableData = ref<any[]>([])
@@ -109,13 +109,11 @@ const typeTagMap: Record<string, TagType> = {
 async function loadData() {
   loading.value = true
   try {
-    const { data } = await request.get('/feedback', {
-      params: {
+    const { data } = await apiRequest({ method: 'GET', url: '/feedback', params: {
         page: pagination.page,
         page_size: pagination.pageSize,
         type: searchForm.type,
-      },
-    })
+      }})
     if (data?.data) {
       tableData.value = data.data.items || []
       pagination.total = data.data.total || 0

@@ -263,7 +263,7 @@ import {
   DataBoard,
   Check,
 } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get } from '@/api/request'
 
 const { pushSafe } = useRouterSafe()
 
@@ -369,7 +369,7 @@ function handleModuleClick(row: any) {
 async function loadOverview() {
   loading.value = true
   try {
-    const res = await request.get('/statistics/overview')
+    const res = await get('/statistics/overview')
     const d = res.data
     Object.assign(overview, {
       villages: d.villages ?? 0,

@@ -13,6 +13,7 @@ from app.core.security import get_current_user
 from app.models.system_config import SystemConfig
 from app.services.password_encryption_service import PasswordEncryptionService
 from app.services.system_config_service import SystemConfigService
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/encryption", tags=["数据库加密"])
@@ -171,7 +172,7 @@ async def disable_encryption(
         config = db.query(SystemConfig).filter(SystemConfig.key == key).first()
         if config:
             db.delete(config)
-    db.commit()
+    safe_commit(db)
 
     logger.info("数据库加密已禁用")
     return {"success": True, "message": "数据库加密已禁用"}

@@ -2,7 +2,7 @@
  * 经费统计 API
  * Requirements: 21.1, 21.2, 21.3
  */
-import request from './request'
+import { get } from '@/api/request'
 
 // 经费类型定义
 export const FUND_TYPES = {
@@ -107,39 +107,39 @@ export interface FundQueryParams {
  * 按类型获取经费统计
  */
 export function getFundStatisticsByType(params?: FundQueryParams) {
-  return request.get<{
+  return get<{
     success: boolean
     data: Record<string, FundStatistics>
     fund_types: Record<string, string>
-  }>('/funds/supported-village/statistics/by-type', { params })
+  }>('/funds/supported-village/statistics/by-type', params)
 }
 
 /**
  * 获取年度经费对比数据
  */
 export function getYearlyFundComparison(params?: FundQueryParams) {
-  return request.get<{
+  return get<{
     success: boolean
     data: YearlyFundSummary[]
-  }>('/funds/supported-village/statistics/yearly-comparison', { params })
+  }>('/funds/supported-village/statistics/yearly-comparison', params)
 }
 
 /**
  * 获取经费利用率统计
  */
 export function getUtilizationRate(params?: FundQueryParams) {
-  return request.get<{
+  return get<{
     success: boolean
     data: UtilizationRateData
-  }>('/funds/supported-village/statistics/utilization-rate', { params })
+  }>('/funds/supported-village/statistics/utilization-rate', params)
 }
 
 /**
  * 获取经费汇总统计
  */
 export function getFundSummary(params?: FundQueryParams) {
-  return request.get<{
+  return get<{
     success: boolean
     data: FundSummaryData
-  }>('/funds/supported-village/statistics/summary', { params })
+  }>('/funds/supported-village/statistics/summary', params)
 }

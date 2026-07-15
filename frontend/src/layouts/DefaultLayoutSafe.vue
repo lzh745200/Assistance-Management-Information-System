@@ -380,7 +380,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useKeyboardShortcuts, type Shortcut } from '@/composables/useKeyboardShortcuts'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
-import { freezeRequests, cancelAllRequests } from '@/api/request'
+import { cancelAllRequests, freezeRequests } from '@/api/request'
 import MobileBottomNav from '@/components/layout/MobileBottomNav.vue'
 import {
   HomeFilled,

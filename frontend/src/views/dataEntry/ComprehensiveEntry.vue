@@ -823,7 +823,7 @@
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import request from '@/api/request'
+import { post } from '@/api/request'
 import {
   PROVINCES,
   HELP_TYPES,
@@ -1235,7 +1235,7 @@ async function submitVillageData() {
     is_revitalization_tier: b.isRevitalizationTier || undefined,
     is_in_overall_plan: b.includedInOverallPlan,
   }
-  const res = await request.post('/supported-villages', payload)
+  const res = await post('/supported-villages', payload)
   const village = res.data
   const villageId = village?.id || village?.data?.id
 
@@ -1244,13 +1244,13 @@ async function submitVillageData() {
   // 提交每年的人口数据和收入数据
   for (const pop of formData.populationData) {
     if (pop.totalPopulation > 0 || pop.households > 0) {
-      await request.post(`/supported-villages/${villageId}/yearly/${pop.year}/population`, {
+      await post(`/supported-villages/${villageId}/yearly/${pop.year}/population`, {
         total_population: pop.totalPopulation,
         total_households: pop.households,
       })
     }
     if (pop.perCapitaIncome > 0 || pop.collectiveEconomyIncome > 0) {
-      await request.post(`/supported-villages/${villageId}/yearly/${pop.year}/income`, {
+      await post(`/supported-villages/${villageId}/yearly/${pop.year}/income`, {
         per_capita_income: pop.perCapitaIncome,
         collective_income: pop.collectiveEconomyIncome,
       })
@@ -1260,7 +1260,7 @@ async function submitVillageData() {
   // 提交每年的力量投入数据
   for (const inv of formData.investmentData) {
     if (inv.leaderVisits > 0 || inv.soldierVisits > 0) {
-      await request.post(`/supported-villages/${villageId}/yearly/${inv.year}/force-investment`, {
+      await post(`/supported-villages/${villageId}/yearly/${inv.year}/force-investment`, {
         senior_leader_visits: inv.leaderVisits,
         unit_soldier_visits: inv.soldierVisits,
       })

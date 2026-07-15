@@ -273,7 +273,7 @@ import { UploadFilled, Folder } from '@element-plus/icons-vue'
 import { useDataReportStore } from '@/stores/dataReport'
 import { useOrganizationStore } from '@/stores/organization'
 import type { DataReport, DataPackagePreviewData } from '@/types/organization'
-import request from '@/api/request'
+import { post } from '@/api/request'
 
 const reportStore = useDataReportStore()
 const orgStore = useOrganizationStore()
@@ -484,7 +484,7 @@ async function handleLocalFileChange(file: any) {
   const formData = new FormData()
   formData.append('file', raw)
   try {
-    const { data } = await request.post('/data-packages/import', formData, {
+    const data = await post('/data-packages/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     if (data?.errors?.length) {
@@ -503,7 +503,7 @@ async function confirmLocalImport() {
   if (!localImportInfo.packageId) return
   localImporting.value = true
   try {
-    await request.post(`/data-packages/${localImportInfo.packageId}/confirm`, {
+    await post(`/data-packages/${localImportInfo.packageId}/confirm`, {
       package_id: Number(localImportInfo.packageId),
       confirm: true,
     })

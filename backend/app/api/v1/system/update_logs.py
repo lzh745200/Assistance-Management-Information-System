@@ -223,6 +223,7 @@ async def delete_update_log(
     需要管理员权限。
     """
     from app.core.permission_utils import is_admin
+from app.core.transaction import safe_commit
     if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="仅超级管理员可删除更新日志")
 
@@ -231,7 +232,7 @@ async def delete_update_log(
         raise HTTPException(status_code=404, detail="更新日志不存在")
 
     db.delete(record)
-    db.commit()
+    safe_commit(db)
 
     logger.info(
         "更新日志 %s (版本 %s) 已被删除，操作人: %s",

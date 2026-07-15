@@ -269,6 +269,7 @@ async def get_regions(
 ):
     """获取行政区划数据（含 GeoJSON geometry），用于地图边界渲染和多级下钻"""
     from app.models.region import Region
+from app.core.transaction import safe_commit
 
     query = db.query(Region)
     if level:
@@ -369,7 +370,7 @@ async def update_marker_coordinates(
     else:
         raise HTTPException(status_code=400, detail="marker_type 必须为 'village' 或 'school'")
 
-    db.commit()
+    safe_commit(db)
     if _map_cache is not None:
         try:
             _map_cache.clear()

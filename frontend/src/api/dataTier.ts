@@ -3,7 +3,7 @@
  * 提供数据分级查询、归档管理和存储统计功能
  */
 
-import { get, post, del } from './request'
+import { get, post, del } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

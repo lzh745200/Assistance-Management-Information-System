@@ -176,7 +176,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { get, post } from '@/api/request'
 import { DATA_TYPES, DATA_TYPE_LABELS } from '@/constants/dataTypes'
 import { handleApiError } from '@/utils/errorHandler'
 
@@ -224,7 +224,7 @@ const importForm = ref({
 // 获取数据包列表
 const fetchPackageList = async () => {
   try {
-    const response = await request.get('/data-packages')
+    const response = await get('/data-packages')
     if (response.data.items) {
       packageList.value = response.data.items.filter((p: PackageItem) => p.type !== 'update')
       incrementalPackages.value = response.data.items.filter(
@@ -249,7 +249,7 @@ const handleDetectChanges = async () => {
   }
 
   try {
-    const response = await request.post('/data-packages/incremental/detect-changes', null, {
+    const response = await post('/data-packages/incremental/detect-changes', null, {
       params: {
         org_id: null, // 使用当前用户组织
         data_types: exportForm.value.data_types,
@@ -269,7 +269,7 @@ const handleDetectChanges = async () => {
 // 导出增量包
 const handleExport = async () => {
   try {
-    const response = await request.post('/data-packages/incremental/export', {
+    const response = await post('/data-packages/incremental/export', {
       org_id: null,
       data_types: exportForm.value.data_types,
       base_package_id: exportForm.value.base_package_id,
@@ -296,7 +296,7 @@ const handleExport = async () => {
 // 导入增量包
 const handleImport = async () => {
   try {
-    const response = await request.post('/data-packages/incremental/import', {
+    const response = await post('/data-packages/incremental/import', {
       package_id: importForm.value.package_id,
       apply_changes: importForm.value.apply_changes,
     })

@@ -298,7 +298,7 @@ import {
   School,
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { post, apiRequest } from '@/api/request'
 import { triggerDownload } from '@/api/export'
 
 const { pushSafe } = useRouterSafe()
@@ -469,12 +469,9 @@ const handleTemplateSelect = (row: any) => {
 
 const handleDownloadTemplate = async () => {
   try {
-    const res = await request.get('/import/template', {
-      params: {
+    const res = await apiRequest({ method: 'GET', url: '/import/template', params: {
         entity_type: selectedTemplate.value,
-      },
-      responseType: 'blob',
-    })
+      }, responseType: 'blob' })
     const tplName = templates.find((t) => t.type === selectedTemplate.value)?.name || '标准'
     triggerDownload(res.data, `${tplName}导入模板_${selectedYear.value}.xlsx`)
     // 模板下载成功 — 浏览器已确认
@@ -494,7 +491,7 @@ const handleValidate = async () => {
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
-    const res = await request.post('/import/validate', formData, {
+    const res = await post('/import/validate', formData, {
       params: { entity_type: selectedTemplate.value },
       headers: { 'Content-Type': 'multipart/form-data' },
     })
@@ -522,7 +519,7 @@ const handleImport = async () => {
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
-    const res = await request.post(
+    const res = await post(
       `/import/entities?mode=${importMode.value}&entity_type=${selectedTemplate.value}`,
       formData,
       {

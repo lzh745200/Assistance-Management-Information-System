@@ -53,7 +53,7 @@
 import { ref, computed } from 'vue'
 import { InfoFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { get, post, apiRequest } from '@/api/request'
 
 interface RbacRole {
   id: string
@@ -86,8 +86,8 @@ const availableRoles = computed(() => {
 
 async function loadAssignedRoles() {
   try {
-    const res = await request.get(`/rbac/user/${props.userId}/roles`)
-    assignedRoles.value = (res.data?.data || res.data || []) as RbacRole[]
+    const res = await get(`/rbac/user/${props.userId}/roles`)
+    assignedRoles.value = (res.data || res || []) as RbacRole[]
   } catch {
     assignedRoles.value = []
   }
@@ -96,7 +96,7 @@ async function loadAssignedRoles() {
 async function assignRole(roleId: string) {
   if (!roleId) return
   try {
-    await request.post('/rbac/assign/role', {
+    await post('/rbac/assign/role', {
       user_id: props.userId,
       role_id: roleId,
     })
@@ -111,9 +111,7 @@ async function assignRole(roleId: string) {
 
 async function removeRole(role: RbacRole) {
   try {
-    await request.delete('/rbac/revoke/role', {
-      data: { user_id: props.userId, role_id: role.id },
-    })
+    await apiRequest({ method: 'DELETE', url: '/rbac/revoke/role', data: { user_id: props.userId, role_id: role.id } })
     await loadAssignedRoles()
     emit('removed')
     ElMessage.success(`角色「${role.name}」已移除`)

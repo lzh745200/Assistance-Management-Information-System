@@ -310,6 +310,7 @@ async def get_dashboard_stats(
 
 # ==================== 近期动态数据表 ====================
 from app.models.dashboard import (  # noqa: E402, F401
+from app.core.transaction import safe_commit
     DashboardActivity,
     HiddenDashboardActivity
 )
@@ -506,7 +507,7 @@ async def create_activity(
             user=getattr(current_user, "name", None) or getattr(current_user, "username", None) or "系统",
         )
         db.add(activity)
-        db.commit()
+        safe_commit(db)
         db.refresh(activity)
         # 清除缓存
         if _cache:
@@ -549,7 +550,7 @@ async def update_activity(
                 activity.action = data.action
             if data.target is not None:
                 activity.target = data.target
-            db.commit()
+            safe_commit(db)
             # 清除缓存
             if _cache:
                 try:
@@ -580,7 +581,7 @@ async def delete_activity(
             activity = db.query(DashboardActivity).filter(DashboardActivity.id == real_id).first()
             if activity:
                 db.delete(activity)
-                db.commit()
+                safe_commit(db)
         else:
             # 系统动态：写入隐藏表，确保刷新后不再出现
             existing = (
@@ -590,7 +591,7 @@ async def delete_activity(
             )
             if not existing:
                 db.add(HiddenDashboardActivity(activity_id=activity_id))
-                db.commit()
+                safe_commit(db)
 
         # 清除缓存
         if _cache:

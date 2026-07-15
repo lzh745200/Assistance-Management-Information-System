@@ -245,7 +245,7 @@ import { logger } from '@/utils/logger'
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh, Check } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get, post, put, apiRequest } from '@/api/request'
 import {
   getBackupList,
   restoreBackup,
@@ -321,7 +321,7 @@ async function handleCreateBackup() {
   creating.value = true
   showCreateDialog.value = false
   try {
-    const res: any = await request.post('/system/backup', {
+    const res: any = await post('/system/backup', {
       description: createForm.description || '',
       compress: true,
       include_uploads: createForm.include_uploads,
@@ -356,9 +356,7 @@ const previewing = ref<string | number | null | undefined>(null)
 async function handlePreview(row: BackupItem) {
   previewing.value = row.id
   try {
-    const res = await request.get(`/system/backup/download/${row.filename || row.id}`, {
-      responseType: 'blob',
-    })
+    const res = await apiRequest({ method: 'GET', url: `/system/backup/download/${row.filename || row.id}`, responseType: 'blob' })
     previewData.value = res.data
     showPreviewDialog.value = true
   } catch {
@@ -420,7 +418,7 @@ async function handleDelete(row: BackupItem) {
 
 async function loadSchedule() {
   try {
-    const res = await request.get('/system/backup/schedule')
+    const res = await get('/system/backup/schedule')
     const d = res.data
     scheduleConfig.enabled = d.enabled ?? false
     scheduleConfig.interval_hours = d.interval_hours ?? 24
@@ -435,7 +433,7 @@ async function loadSchedule() {
 async function saveSchedule() {
   savingSchedule.value = true
   try {
-    await request.put('/system/backup/schedule', {
+    await put('/system/backup/schedule', {
       enabled: scheduleConfig.enabled,
       interval_hours: scheduleConfig.interval_hours,
       keep_count: scheduleConfig.keep_count,

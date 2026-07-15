@@ -320,7 +320,7 @@ async def generate_initial_password(
         # 更新用户密码
         user.hashed_password = get_password_hash(initial_password)
         user.must_change_password = True  # 要求首次登录修改密码
-        db.commit()
+        safe_commit(db)
 
         return {
             "code": 200,
@@ -617,6 +617,7 @@ async def export_organization_pass_codes(
 
     try:
         from app.services.export_service import ExcelExportService
+from app.core.transaction import safe_commit
         import io
 
         service = MachineCodeService(db)

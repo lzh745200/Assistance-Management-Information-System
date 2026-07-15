@@ -178,7 +178,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, ElTree } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useDesensitize } from '@/composables/useDesensitize'
-import request from '@/api/request'
+import { get, post, put, del } from '@/api/request'
 
 interface RoleItem {
   id: string
@@ -325,7 +325,7 @@ const handlePermission = async (row: RoleItem) => {
   currentRole.value = row
   // 从后端加载角色已有权限
   try {
-    const res = await request.get(`/rbac/roles/${row.id}`)
+    const res = await get(`/rbac/roles/${row.id}`)
     const perms: string[] = res.data?.data?.permissions || []
     defaultCheckedKeys.value = perms
   } catch {
@@ -340,8 +340,8 @@ const handleViewUsers = async (row: RoleItem) => {
   loadingUsers.value = true
   try {
     // 从后端加载该角色关联的用户
-    const res = await request.get(`/rbac/roles/${row.id}/users`)
-    roleUsers.value = (res.data?.data || res.data?.users || []) as RoleUser[]
+    const res = await get(`/rbac/roles/${row.id}/users`)
+    roleUsers.value = (res.data || res?.users || []) as RoleUser[]
   } catch {
     roleUsers.value = []
   } finally {
@@ -352,8 +352,8 @@ const handleViewUsers = async (row: RoleItem) => {
 const handleDelete = async (row: RoleItem) => {
   try {
     // 检查是否有关联用户
-    const res = await request.get(`/rbac/roles/${row.id}/users`)
-    const users = res.data?.data || res.data?.users || []
+    const res = await get(`/rbac/roles/${row.id}/users`)
+    const users = res.data || res?.users || []
     if (users.length > 0) {
       await ElMessageBox.confirm(
         `该角色下还有 ${users.length} 个用户，删除后这些用户将失去此角色权限。确定继续删除？`,
@@ -370,7 +370,7 @@ const handleDelete = async (row: RoleItem) => {
       })
     }
 
-    await request.delete(`/rbac/roles/${row.id}`)
+    await del(`/rbac/roles/${row.id}`)
     ElMessage.success('删除成功')
     loadRoles()
   } catch (error) {
@@ -391,14 +391,14 @@ const handleSubmit = async () => {
     saving.value = true
     try {
       if (isEdit.value) {
-        await request.put(`/rbac/roles/${formData.id}`, {
+        await put(`/rbac/roles/${formData.id}`, {
           name: formData.name,
           description: formData.description,
           is_active: formData.status === 'active',
         })
         ElMessage.success('已保存')
       } else {
-        await request.post('/rbac/roles', {
+        await post('/rbac/roles', {
           name: formData.name,
           description: formData.description,
           permissions: [],
@@ -422,7 +422,7 @@ const savePermissions = async () => {
   saving.value = true
   try {
     // 保存角色权限到后端
-    await request.put(`/rbac/roles/${currentRole.value.id}`, {
+    await put(`/rbac/roles/${currentRole.value.id}`, {
       permissions: checkedKeys,
     })
     ElMessage.success('已保存')
@@ -437,7 +437,7 @@ const savePermissions = async () => {
 /** 从后端加载权限列表并构建树形结构 */
 async function loadPermissions() {
   try {
-    const res = await request.get('/rbac/permissions')
+    const res = await get('/rbac/permissions')
     const categories: Record<string, PermissionItem[]> = res.data?.categories || {}
 
     // 扩展权限类别中文映射，覆盖所有系统模块
@@ -517,7 +517,7 @@ async function loadPermissions() {
 /** 加载角色列表 */
 async function loadRoles() {
   try {
-    const res = await request.get('/rbac/roles')
+    const res = await get('/rbac/roles')
     const roles = res.data?.data || []
 
     // 并行加载每个角色的用户数
@@ -527,8 +527,8 @@ async function loadRoles() {
         const rid = String(roleItem.id)
         let userCount = 0
         try {
-          const userRes = await request.get(`/rbac/roles/${rid}/users`)
-          const users = userRes.data?.data || userRes.data?.users || []
+          const userRes = await get(`/rbac/roles/${rid}/users`)
+          const users = userRes.data || userRes?.users || []
           userCount = users.length
         } catch {
           // 如果接口不存在或失败，用户数为0

@@ -20,6 +20,7 @@ from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.organization import Organization, OrganizationLevel, OrganizationType
 from ...services.organization_service import OrganizationService
+from app.core.transaction import safe_commit
 
 router = APIRouter(prefix="/organizations", tags=["组织管理"])
 
@@ -402,7 +403,7 @@ async def create_organization(
 
     org = Organization(**org_data)
     db.add(org)
-    db.commit()
+    safe_commit(db)
     db.refresh(org)
     await cache_manager.delete("orgs:list")
     return org
@@ -448,7 +449,7 @@ async def update_organization(
     for key, value in update_data.items():
         setattr(org, key, value)
 
-    db.commit()
+    safe_commit(db)
     db.refresh(org)
     await cache_manager.delete("orgs:list")
     return org
@@ -500,7 +501,7 @@ async def delete_organization(
     # 逻辑删除：将 is_active 设置为 False
     logger.info(f"执行逻辑删除: org_id={org_id}")
     org.is_active = False
-    db.commit()
+    safe_commit(db)
     logger.info(f"删除成功: org_id={org_id}")
     await cache_manager.delete("orgs:list")
 
@@ -587,7 +588,7 @@ async def move_organization(
             check_id = check_node.parent_id if check_node else None
 
     org.parent_id = new_parent_id
-    db.commit()
+    safe_commit(db)
     await cache_manager.delete("orgs:list")
     return {"message": "移动成功"}
 
@@ -655,7 +656,7 @@ async def activate_organization(
         raise HTTPException(status_code=404, detail="组织不存在")
 
     org.is_active = True
-    db.commit()
+    safe_commit(db)
     await cache_manager.delete("orgs:list")
     return {"message": "组织已激活", "id": org_id, "is_active": True}
 
@@ -678,6 +679,6 @@ async def deactivate_organization(
         raise HTTPException(status_code=404, detail="组织不存在")
 
     org.is_active = False
-    db.commit()
+    safe_commit(db)
     await cache_manager.delete("orgs:list")
     return {"message": "组织已停用", "id": org_id, "is_active": False}

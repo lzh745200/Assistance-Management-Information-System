@@ -202,7 +202,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Loading, CircleCheck, CircleClose } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get, post, put, apiRequest } from '@/api/request'
 import { useSaveStatus } from '@/composables/useSaveStatus'
 import { useAuthStore } from '@/stores/auth'
 
@@ -229,9 +229,7 @@ const newLog = reactive({ version: '', description: '' })
 async function loadUpdateLogs() {
   try {
     // update_logs.py 使用 skip/limit 分页，默认 limit=100
-    const { data } = await request.get('/system/update-logs', {
-      params: { skip: 0, limit: 100 },
-    })
+    const { data } = await apiRequest({ method: 'GET', url: '/system/update-logs', params: { skip: 0, limit: 100 }})
     updateLogs.value = data?.items || data || []
   } catch {
     /* 忽略 */
@@ -245,7 +243,7 @@ async function submitUpdateLog() {
   }
   savingLog.value = true
   try {
-    await request.post('/system/update-logs', {
+    await post('/system/update-logs', {
       version: newLog.version,
       description: newLog.description,
     })
@@ -331,7 +329,7 @@ function applyRemoteConfigs(remoteData: Record<string, any>) {
 async function loadConfigs() {
   loading.value = true
   try {
-    const { data } = await request.get('/system/config')
+    const data = await get('/system/config')
     if (data?.data) {
       applyRemoteConfigs(data.data)
     }
@@ -352,7 +350,7 @@ const SECTION_LABEL: Record<SectionKey, string> = {
 async function saveSection(section: SectionKey) {
   try {
     await saveStatus.wrapSave(() =>
-      request.put('/system/config', { configs: sectionToConfigItems(section) })
+      put('/system/config', { configs: sectionToConfigItems(section) })
     )
     ElMessage.success(`${SECTION_LABEL[section]}已保存`)
   } catch {

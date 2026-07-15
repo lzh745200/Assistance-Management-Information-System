@@ -17,6 +17,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.transaction import safe_commit
 from app.core.exceptions import InvalidCredentialsError, UserAlreadyExistsError
 from app.core.exceptions import ValidationError as BizValidationError
 from app.core.security import PasswordPolicy, check_rate_limit, get_client_ip
@@ -171,7 +172,7 @@ async def login(
             result = db.execute(stmt)
             # 先消费 RETURNING 结果再提交，防止 "SQL statements in progress"
             failed_count = result.scalar() or 0
-            db.commit()
+            safe_commit(db)
             logger.info(f"登录失败: user={login_request.username}, failed_count={failed_count}/{_MAX_FAILED_ATTEMPTS}")
 
             if failed_count >= _MAX_FAILED_ATTEMPTS:
@@ -222,7 +223,7 @@ async def login(
         user.failed_login_count = 0
         user.locked_until = None
     user.last_login = now
-    db.commit()
+    safe_commit(db)
 
     # 创建双Token（带 token_version，支持真正吊销）
     tokens = token_manager.create_token_pair(

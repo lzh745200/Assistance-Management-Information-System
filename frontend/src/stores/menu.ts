@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import request from '@/api/request'
+import { get } from '@/api/request'
 import { AuthStorage } from '@/utils/authStorage'
 
 export interface MenuItem {
@@ -62,8 +62,8 @@ export const useMenuStore = defineStore('menu', () => {
     if (!token) return
     loading.value = true
     try {
-      const res = await request.get('/menus/accessible')
-      const data = res.data?.data || res.data || []
+      const res = await get('/menus/accessible')
+      const data = res.data || res || []
       setMenus(Array.isArray(data) ? data : [])
     } catch {
       // 加载失败：保持 loaded=false 允许下次重试，标记失败状态

@@ -160,7 +160,7 @@ import { useRouter } from 'vue-router'
 import { WarningFilled, Lock, Check, Warning } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAuthStore } from '@/stores/auth'
-import { freezeRequests, cancelAllRequests } from '@/api/request'
+import { cancelAllRequests, freezeRequests } from '@/api/request'
 
 const router = useRouter()
 const userStore = useUserStore()

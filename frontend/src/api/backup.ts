@@ -1,7 +1,7 @@
 /**
  * 备份 API
  */
-import request from './request'
+import { get, post, del } from '@/api/request'
 
 export interface BackupItem {
   filename: string
@@ -23,26 +23,26 @@ export interface BackupStats {
 const BASE = '/system'
 
 export async function getBackupList(params?: { page?: number; page_size?: number }) {
-  const res = await request.get(`${BASE}/backups`, { params })
+  const res = await get(`${BASE}/backups`, { params })
   return res.data
 }
 
 export async function createBackup(type?: string) {
-  const res = await request.post(`${BASE}/backup`, { type })
+  const res = await post(`${BASE}/backup`, { type })
   return res.data
 }
 
 export async function restoreBackup(filename: string) {
-  const res = await request.post(`${BASE}/backup/restore`, { filename })
+  const res = await post(`${BASE}/backup/restore`, { filename })
   return res.data
 }
 
 export async function deleteBackup(filename: string) {
-  const res = await request.delete(`${BASE}/backups/${filename}`)
+  const res = await del(`${BASE}/backups/${filename}`)
   return res.data
 }
 
 export async function getBackupStats(): Promise<BackupStats> {
-  const res = await request.get(`${BASE}/backup/stats`)
+  const res = await get(`${BASE}/backup/stats`)
   return res.data
 }

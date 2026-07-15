@@ -3,7 +3,7 @@
  * 提供用户完整 CRUD 操作、密码管理、角色分配等功能
  */
 
-import { get, post, put, del } from './request'
+import { get, post, put, del } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

@@ -2,7 +2,7 @@
  * 经费全生命周期管理 API
  * 对应后端 /api/v1/fund-lifecycle 前缀
  */
-import request from './request'
+import { get, post, put, del } from '@/api/request'
 
 const BASE = '/fund-lifecycle'
 
@@ -127,19 +127,19 @@ export interface HealthScore {
 export const fundLifecycleApi = {
   // ========== 阶段管理 ==========
   async getPhases(projectId: number): Promise<PhasesData> {
-    const res = await request.get(`${BASE}/phases/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/phases/${projectId}`)
+    return res.data || res
   },
 
   async advancePhase(projectId: number, remarks?: string) {
-    const res = await request.post(`${BASE}/phases/${projectId}/advance`, {
+    const res = await post(`${BASE}/phases/${projectId}/advance`, {
       remarks,
     })
     return res.data
   },
 
   async rollbackPhase(projectId: number, remarks?: string) {
-    const res = await request.post(`${BASE}/phases/${projectId}/rollback`, {
+    const res = await post(`${BASE}/phases/${projectId}/rollback`, {
       remarks,
     })
     return res.data
@@ -147,104 +147,104 @@ export const fundLifecycleApi = {
 
   // ========== 阶段1 - 论证立项 ==========
   async initiate(projectId: number) {
-    const res = await request.post(`${BASE}/initiate/${projectId}`)
+    const res = await post(`${BASE}/initiate/${projectId}`)
     return res.data
   },
 
   async getReportTemplate(projectId: number) {
-    const res = await request.get(`${BASE}/report-template/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/report-template/${projectId}`)
+    return res.data || res
   },
 
   // ========== 阶段2 - 汇总审核 ==========
   async lockBudget(projectId: number) {
-    const res = await request.post(`${BASE}/budget-lock/${projectId}`)
+    const res = await post(`${BASE}/budget-lock/${projectId}`)
     return res.data
   },
 
   async complianceCheck(projectId: number) {
-    const res = await request.get(`${BASE}/compliance-check/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/compliance-check/${projectId}`)
+    return res.data || res
   },
 
   async budgetAggregation(params?: { group_by?: string; year?: number }) {
-    const res = await request.get(`${BASE}/budget-aggregation`, { params })
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/budget-aggregation`, params)
+    return res.data || res
   },
 
   // ========== 阶段3 - 计划下达与资金拨付 ==========
   async quotaLock(fundId: number) {
-    const res = await request.post(`${BASE}/quota-lock/${fundId}`)
+    const res = await post(`${BASE}/quota-lock/${fundId}`)
     return res.data
   },
 
   async allocationPlan(projectId: number) {
-    const res = await request.get(`${BASE}/allocation-plan/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/allocation-plan/${projectId}`)
+    return res.data || res
   },
 
   // ========== 分配调拨订单 ==========
   async listAllocationOrders(params?: Record<string, any>) {
-    const res = await request.get(`${BASE}/allocation-orders`, { params })
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/allocation-orders`, params)
+    return res.data || res
   },
 
   async createAllocationOrder(data: Record<string, any>) {
-    const res = await request.post(`${BASE}/allocation-orders`, data)
+    const res = await post(`${BASE}/allocation-orders`, data)
     return res.data
   },
 
   async issueAllocationOrder(orderId: number) {
-    const res = await request.post(`${BASE}/allocation-orders/${orderId}/issue`)
+    const res = await post(`${BASE}/allocation-orders/${orderId}/issue`)
     return res.data
   },
 
   // ========== 配额调整 ==========
   async quotaAdjust(fundId: number, data: Record<string, any>) {
-    const res = await request.put(`${BASE}/quota-adjust/${fundId}`, data)
+    const res = await put(`${BASE}/quota-adjust/${fundId}`, data)
     return res.data
   },
 
   // ========== 阶段4 - 军地对接与资金划转 ==========
   async listTransferVouchers(params?: Record<string, any>) {
-    const res = await request.get(`${BASE}/transfer-vouchers`, { params })
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/transfer-vouchers`, params)
+    return res.data || res
   },
 
   async createTransferVoucher(data: Record<string, any>) {
-    const res = await request.post(`${BASE}/transfer-vouchers`, data)
+    const res = await post(`${BASE}/transfer-vouchers`, data)
     return res.data
   },
 
   async getTransferVoucher(id: number) {
-    const res = await request.get(`${BASE}/transfer-vouchers/${id}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/transfer-vouchers/${id}`)
+    return res.data || res
   },
 
   async updateTransferVoucher(id: number, data: Record<string, any>) {
-    const res = await request.put(`${BASE}/transfer-vouchers/${id}`, data)
+    const res = await put(`${BASE}/transfer-vouchers/${id}`, data)
     return res.data
   },
 
   async deleteTransferVoucher(id: number) {
-    const res = await request.delete(`${BASE}/transfer-vouchers/${id}`)
+    const res = await del(`${BASE}/transfer-vouchers/${id}`)
     return res.data
   },
 
   async confirmTransferVoucher(id: number) {
-    const res = await request.post(`${BASE}/transfer-vouchers/${id}/confirm`)
+    const res = await post(`${BASE}/transfer-vouchers/${id}/confirm`)
     return res.data
   },
 
   async transferLedger(projectId: number) {
-    const res = await request.get(`${BASE}/transfer-ledger/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/transfer-ledger/${projectId}`)
+    return res.data || res
   },
 
   async uploadVoucherAttachment(voucherId: number, file: File) {
     const fd = new FormData()
     fd.append('file', file)
-    const res = await request.post(`${BASE}/transfer-vouchers/${voucherId}/attachments`, fd, {
+    const res = await post(`${BASE}/transfer-vouchers/${voucherId}/attachments`, fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return res.data
@@ -252,121 +252,121 @@ export const fundLifecycleApi = {
 
   // ========== 阶段5 - 实施监管 ==========
   async listContracts(params?: Record<string, any>) {
-    const res = await request.get(`${BASE}/contracts`, { params })
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/contracts`, params)
+    return res.data || res
   },
 
   async createContract(data: Record<string, any>) {
-    const res = await request.post(`${BASE}/contracts`, data)
+    const res = await post(`${BASE}/contracts`, data)
     return res.data
   },
 
   async getContract(id: number) {
-    const res = await request.get(`${BASE}/contracts/${id}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/contracts/${id}`)
+    return res.data || res
   },
 
   async updateContract(id: number, data: Record<string, any>) {
-    const res = await request.put(`${BASE}/contracts/${id}`, data)
+    const res = await put(`${BASE}/contracts/${id}`, data)
     return res.data
   },
 
   async deleteContract(id: number) {
-    const res = await request.delete(`${BASE}/contracts/${id}`)
+    const res = await del(`${BASE}/contracts/${id}`)
     return res.data
   },
 
   async createContractPayment(contractId: number, data: Record<string, any>) {
-    const res = await request.post(`${BASE}/contracts/${contractId}/payments`, data)
+    const res = await post(`${BASE}/contracts/${contractId}/payments`, data)
     return res.data
   },
 
   async monitoringDeviation(projectId: number) {
-    const res = await request.get(`${BASE}/monitoring/deviation/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/monitoring/deviation/${projectId}`)
+    return res.data || res
   },
 
   async fundFlow(projectId: number) {
-    const res = await request.get(`${BASE}/monitoring/fund-flow/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/monitoring/fund-flow/${projectId}`)
+    return res.data || res
   },
 
   // ========== 阶段6 - 核查督查 ==========
   async listAnomalies(params?: Record<string, any>) {
-    const res = await request.get(`${BASE}/anomalies`, { params })
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/anomalies`, params)
+    return res.data || res
   },
 
   async detectAnomalies(projectId: number) {
-    const res = await request.post(`${BASE}/anomalies/detect/${projectId}`)
+    const res = await post(`${BASE}/anomalies/detect/${projectId}`)
     return res.data
   },
 
   async resolveAnomaly(id: number, resolution: string) {
-    const res = await request.post(`${BASE}/anomalies/${id}/resolve`, {
+    const res = await post(`${BASE}/anomalies/${id}/resolve`, {
       resolution,
     })
     return res.data
   },
 
   async getInspectionClues(projectId: number) {
-    const res = await request.get(`${BASE}/inspection-clues/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/inspection-clues/${projectId}`)
+    return res.data || res
   },
 
   // ========== 阶段7 - 决算与绩效 ==========
   async createSettlement(projectId: number, data?: Record<string, any>) {
-    const res = await request.post(`${BASE}/settlement/${projectId}`, data || {})
+    const res = await post(`${BASE}/settlement/${projectId}`, data || {})
     return res.data
   },
 
   async updateSettlement(id: number, data: Record<string, any>) {
-    const res = await request.put(`${BASE}/settlement/${id}`, data)
+    const res = await put(`${BASE}/settlement/${id}`, data)
     return res.data
   },
 
   async approveSettlement(id: number, data?: Record<string, any>) {
-    const res = await request.post(`${BASE}/settlement/${id}/approve`, data || {})
+    const res = await post(`${BASE}/settlement/${id}/approve`, data || {})
     return res.data
   },
 
   async verifyAsset(settlementId: number, data: Record<string, any>) {
-    const res = await request.post(`${BASE}/settlement/${settlementId}/verify-asset`, data)
+    const res = await post(`${BASE}/settlement/${settlementId}/verify-asset`, data)
     return res.data
   },
 
   async getPerformance(projectId: number) {
-    const res = await request.get(`${BASE}/performance/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/performance/${projectId}`)
+    return res.data || res
   },
 
   async getPerformanceReport(projectId: number) {
-    const res = await request.get(`${BASE}/performance-report/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/performance-report/${projectId}`)
+    return res.data || res
   },
 
   async getFeasibilityReport(projectId: number) {
-    const res = await request.get(`${BASE}/feasibility-report/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/feasibility-report/${projectId}`)
+    return res.data || res
   },
 
   // ========== 资金流向树 ==========
   async getFundFlowTree(projectId: number) {
-    const res = await request.get(`${BASE}/monitoring/fund-flow-tree/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/monitoring/fund-flow-tree/${projectId}`)
+    return res.data || res
   },
 
   // ========== 健康度 ==========
   async getHealth(projectId: number): Promise<HealthScore> {
-    const res = await request.get(`${BASE}/health/${projectId}`)
-    return res.data?.data || res.data
+    const res = await get(`${BASE}/health/${projectId}`)
+    return res.data || res
   },
 
   async batchHealth(projectIds: number[]): Promise<Record<number, number | null>> {
-    const res = await request.post(`${BASE}/health/batch`, {
+    const res = await post(`${BASE}/health/batch`, {
       project_ids: projectIds,
     })
-    return res.data?.data || res.data
+    return res.data || res
   },
 }
 

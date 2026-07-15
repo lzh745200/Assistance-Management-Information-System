@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.todo import Todo
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +170,7 @@ async def create_todo(
             user_id=current_user.id,
         )
         db.add(todo)
-        db.commit()
+        safe_commit(db)
         db.refresh(todo)
 
         return TodoResponse(
@@ -219,7 +220,7 @@ async def update_todo(
             setattr(todo, field, value)
 
         todo.updated_at = datetime.now(timezone.utc)
-        db.commit()
+        safe_commit(db)
         db.refresh(todo)
 
         return TodoResponse(
@@ -265,7 +266,7 @@ async def delete_todo(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="待办事项不存在")
 
         db.delete(todo)
-        db.commit()
+        safe_commit(db)
 
         return {"message": "待办事项已删除", "id": todo_id}
     except HTTPException:
@@ -301,7 +302,7 @@ async def toggle_todo(
 
         todo.completed = not todo.completed
         todo.updated_at = datetime.now(timezone.utc)
-        db.commit()
+        safe_commit(db)
         db.refresh(todo)
 
         return TodoResponse(

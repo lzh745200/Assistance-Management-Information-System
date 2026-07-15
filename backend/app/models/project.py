@@ -62,6 +62,7 @@ class Project(Base):
         Index("ix_projects_start_date", "start_date"),  # 按开始日期查询
         Index("ix_projects_end_date", "end_date"),  # 按结束日期查询
         Index("ix_projects_status_village", "status", "village_id"),  # 按状态+村过滤（与 ix_projects_village_status 列序互补）
+        Index("ix_projects_is_active", "is_active"),
     )
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -137,6 +138,9 @@ class Project(Base):
     expected_economic_benefit = Column(Text, nullable=True, comment="预期经济效益量化指标")
     expected_military_benefit = Column(Text, nullable=True, comment="预期战备效益量化指标")
 
+    # ================= 软删标记 =================
+    is_active = Column(Boolean, default=True, nullable=False, comment="是否启用(软删标记)")
+
     created_by = Column(
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
@@ -211,6 +215,10 @@ class Project(Base):
             "achievements": self.achievements,
             "tags": self.tags,
             "remarks": self.remarks,
+            "is_active": self.is_active,
+            "isActive": self.is_active,
+            "isDeleted": self.is_active is False,
+            "is_deleted": self.is_active is False,
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

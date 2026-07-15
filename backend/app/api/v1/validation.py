@@ -102,7 +102,7 @@ async def create_rule(
         created_by=current_user.id,
     )
     db.add(rule)
-    db.commit()
+    safe_commit(db)
     db.refresh(rule)
     return rule
 
@@ -129,7 +129,7 @@ async def update_rule(
     for key, value in update_data.items():
         setattr(rule, key, value)
 
-    db.commit()
+    safe_commit(db)
     db.refresh(rule)
     return rule
 
@@ -145,7 +145,7 @@ async def delete_rule(
     if not rule:
         raise HTTPException(status_code=404, detail="规则不存在")
     db.delete(rule)
-    db.commit()
+    safe_commit(db)
     return {"message": "规则已删除"}
 
 
@@ -271,6 +271,7 @@ def _check_regex(value, params, full_data):
 
 def _check_date_format(value, params, full_data):
     from datetime import datetime
+from app.core.transaction import safe_commit
     fmt = params.get("format", "%Y-%m-%d")
     try:
         datetime.strptime(str(value), fmt)

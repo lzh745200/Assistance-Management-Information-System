@@ -1,5 +1,4 @@
-import { get, post, put, del, apiRequest, parseContentDisposition } from './request'
-import api from './request' // keep for blob-only calls
+import { get, post, put, del, apiRequest } from '@/api/request'
 
 /** 将 Blob 响应触发为浏览器文件下载 */
 function triggerDownload(blob: Blob, filename: string) {
@@ -36,27 +35,15 @@ export const importSupportedVillages = (file: File) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
-// blob 响应：触发浏览器下载（统一用 parseContentDisposition 解析 RFC 5987 文件名）
+// blob 响应：触发浏览器下载
 export const exportSupportedVillages = (params?: any) =>
-  api.get('/supported-villages/export', { params, responseType: 'blob' }).then((r) => {
-    const filename = parseContentDisposition(
-      r.headers as Record<string, string>,
-      '帮扶村数据导出.xlsx'
-    )
-    triggerDownload(r.data, filename)
+  apiRequest<Blob>({ method: 'GET', url: '/supported-villages/export', params, responseType: 'blob' }).then((blob) => {
+    triggerDownload(blob, '帮扶村数据导出.xlsx')
   })
 export const downloadImportTemplate = () =>
-  api
-    .get('/import/template', {
-      params: { entity_type: 'supported_village' },
-      responseType: 'blob',
-    })
-    .then((r) => {
-      const filename = parseContentDisposition(
-        r.headers as Record<string, string>,
-        '帮扶村导入模板.xlsx'
-      )
-      triggerDownload(r.data, filename)
+  apiRequest<Blob>({ method: 'GET', url: '/import/template', params: { entity_type: 'supported_village' }, responseType: 'blob' })
+    .then((blob) => {
+      triggerDownload(blob, '帮扶村导入模板.xlsx')
     })
 export const downloadTemplate = downloadImportTemplate
 
@@ -147,10 +134,9 @@ export const importSectionData = (
   })
 }
 export const downloadAllTemplates = (year?: number) =>
-  api
-    .get('/supported-villages/templates/all', { params: { year }, responseType: 'blob' })
-    .then((r) => {
-      triggerDownload(r.data, '全部板块模板.xlsx')
+  apiRequest<Blob>({ method: 'GET', url: '/supported-villages/templates/all', params: { year }, responseType: 'blob' })
+    .then((blob) => {
+      triggerDownload(blob, '全部板块模板.xlsx')
     })
 export const importAllSectionsData = (villageId: number, year: number, file: File) => {
   const fd = new FormData()

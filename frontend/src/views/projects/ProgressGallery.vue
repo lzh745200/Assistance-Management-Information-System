@@ -91,7 +91,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import ProgressAlbum from '@/components/business/ProgressAlbum.vue'
 import ImageComparison from '@/components/business/ImageComparison.vue'
-import request from '@/api/request'
+import { get, post, apiRequest } from '@/api/request'
 
 const route = useRoute()
 const router = useRouter()
@@ -239,7 +239,7 @@ const handleUpload = async (uploadData: any) => {
     formData.append('reference_id', projectId.value.toString())
     formData.append('type', 'project')
 
-    const response = await request.post('/files/upload', formData, {
+    const response = await post('/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -266,7 +266,7 @@ const handleView = (viewData: any) => {
 
 const loadProjectData = async () => {
   try {
-    const response = await request.get(`/projects/${projectId.value}`)
+    const response = await get(`/projects/${projectId.value}`)
     if (response) {
       Object.assign(projectData.value, response)
     }
@@ -278,12 +278,10 @@ const loadProjectData = async () => {
 
 const loadProgressData = async () => {
   try {
-    const response = await request.get(`/projects/${projectId.value}/progress`, {
-      params: {
+    const response = await apiRequest({ method: 'GET', url: `/projects/${projectId.value}/progress`, params: {
         skip: 0,
         limit: 100,
-      },
-    })
+      }})
     if (response) {
       progressData.value = response.items || response || []
     }

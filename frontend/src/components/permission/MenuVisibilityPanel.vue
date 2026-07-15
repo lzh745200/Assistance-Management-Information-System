@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { get, put } from '@/api/request'
 
 interface MenuTreeNode {
   key: string
@@ -96,8 +96,8 @@ function getMenuLabel(key: string): string {
 
 async function loadMenuTree() {
   try {
-    const res = await request.get('/menus/all')
-    menuTreeData.value = (res.data?.data || res.data || []) as MenuTreeNode[]
+    const res = await get('/menus/all')
+    menuTreeData.value = (res.data || res || []) as MenuTreeNode[]
     buildLabelMap(menuTreeData.value)
   } catch {
     // 使用前端静态配置作为回退
@@ -114,8 +114,8 @@ async function loadMenuTree() {
 async function loadUserMenuConfig() {
   if (!props.userId) return
   try {
-    const res = await request.get(`/menus/user-menus/${props.userId}`)
-    const data = res.data?.data || res.data
+    const res = await get(`/menus/user-menus/${props.userId}`)
+    const data = res.data || res
     if (data && data.menu_keys !== null && data.menu_keys !== undefined) {
       // 用户有自定义配置 → 显示当前配置
       selectedMenuKeys.value = data.menu_keys
@@ -141,7 +141,7 @@ async function saveConfig() {
   saving.value = true
   try {
     // null → 恢复角色默认；[] → 清空所有菜单；[...] → 自定义
-    await request.put(`/menus/user-menus/${props.userId}`, {
+    await put(`/menus/user-menus/${props.userId}`, {
       menu_keys: selectedMenuKeys.value,
     })
     emit('saved')

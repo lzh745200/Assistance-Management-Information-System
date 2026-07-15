@@ -117,7 +117,7 @@ import { logger } from '@/utils/logger'
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { auditApi } from '@/api/audit'
-import request from '@/api/request'
+import { get, patch, apiRequest } from '@/api/request'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
@@ -236,7 +236,7 @@ function openRemarkDialog(row: any) {
 async function saveRemark() {
   remarkSaving.value = true
   try {
-    await request.patch(`/system/audit/logs/${remarkForm.id}/remark`, {
+    await patch(`/system/audit/logs/${remarkForm.id}/remark`, {
       remark: remarkForm.remark,
     })
     if (currentEditRow) currentEditRow.remark = remarkForm.remark
@@ -263,7 +263,7 @@ async function handleExport() {
       params.start_date = filters.dateRange[0]
       params.end_date = filters.dateRange[1]
     }
-    const res = await request.get('/system/audit/logs/export', { params })
+    const res = await get('/system/audit/logs/export', { params })
     const data = res.data
     // 生成CSV并下载
     let csv = '\uFEFFID,时间,用户,操作类型,资源类型,状态,IP,备注\n'
@@ -296,9 +296,7 @@ async function handleClearLogs() {
     clearing.value = true
     try {
       // 注意：使用 actions（数组），与后端 BatchDeleteRequest.actions 字段对应
-      const res = await request.delete('/system/audit/logs/batch', {
-        data: { actions: DATA_OPERATION_TYPES },
-      })
+      const res = await apiRequest({ method: 'DELETE', url: '/system/audit/logs/batch', data: { actions: DATA_OPERATION_TYPES } })
       const count = res?.data?.deleted_count ?? 0
       ElMessage.success(`日志清除成功，共删除 ${count} 条记录`)
       await loadLogs()

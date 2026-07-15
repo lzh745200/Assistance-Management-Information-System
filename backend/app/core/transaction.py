@@ -197,6 +197,38 @@ nested_transaction = TransactionManager.nested_transaction
 savepoint = TransactionManager.savepoint
 
 
+def safe_commit(db: Session, logger: Optional[logging.Logger] = None) -> bool:
+    """
+    安全提交事务：commit 失败时自动 rollback 并记录日志。
+
+    用作 ``db.commit()`` 的安全替代品，确保不会因 commit 异常
+    导致 session 卡在脏状态。
+
+    Args:
+        db: SQLAlchemy 会话
+        logger: 可选的 logger 实例（默认使用模块 logger）
+
+    Returns:
+        True 表示提交成功，False 表示失败已回滚
+
+    Usage::
+
+        # 替换裸 db.commit()
+        safe_commit(db)
+
+        # 带自定义 logger
+        safe_commit(db, logger=my_logger)
+    """
+    log = logger or logging.getLogger(__name__)
+    try:
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        log.error(f"safe_commit: commit failed, rolled back: {e}")
+        return False
+
+
 def _apply_tx_settings(sess: Session, isolation: Optional[str], readonly: bool):
     """Apply transaction isolation level and read-only settings."""
     # SQLite 不支持 SET TRANSACTION 语法，直接短路

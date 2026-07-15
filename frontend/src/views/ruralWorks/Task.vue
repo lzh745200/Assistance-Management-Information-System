@@ -682,8 +682,8 @@ const staff = ref<Staff[]>([])
 
 async function loadStaffFromApi() {
   try {
-    const { default: request } = await import('@/api/request')
-    const response = await request.get('/users/staff-list')
+    const { get } = await import('@/api/request')
+    const response = await get('/users/staff-list')
     const users = response?.data?.items || response?.items || response || []
     if (Array.isArray(users) && users.length > 0) {
       staff.value = users.map((u: any) => ({
@@ -702,9 +702,9 @@ const projects = ref<Project[]>([])
 
 async function loadProjectsFromApi() {
   try {
-    const { default: request } = await import('@/api/request')
-    const response = await request.get('/projects', { params: { page_size: 100 } })
-    const items = response?.items || response?.data || response || []
+    const { get } = await import('@/api/request')
+    const response = await get('/projects', { page_size: 100 })
+    const items = response?.items || response || []
     if (Array.isArray(items) && items.length > 0) {
       projects.value = items.map((p: any) => ({
         id: String(p.id),

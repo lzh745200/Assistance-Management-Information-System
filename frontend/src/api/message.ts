@@ -4,7 +4,7 @@
  * Requirements: 5.1, 5.2, 5.3, 5.7, 6.2
  */
 
-import { get, post, put, apiRequest } from './request'
+import { get, post, put, apiRequest } from '@/api/request'
 
 // ==================== 类型定义 ====================
 
@@ -128,7 +128,7 @@ export async function getStats(): Promise<{
  * 获取最近活动
  */
 export async function getRecentActivities(params?: { limit?: number }): Promise<any[]> {
-  const response = await get<any[]>('/messages/recent-activities', { params })
+  const response = await get<any[]>('/messages/recent-activities', params)
   return Array.isArray(response) ? response : []
 }
 

@@ -278,7 +278,7 @@ async def create_category(
 
     category = PolicyCategory(**data.model_dump())
     db.add(category)
-    db.commit()
+    safe_commit(db)
     db.refresh(category)
     return {"id": category.id, "name": category.name, "code": category.code}
 
@@ -297,7 +297,7 @@ async def update_category(
 
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(category, key, value)
-    db.commit()
+    safe_commit(db)
     db.refresh(category)
     return {"id": category.id, "name": category.name, "code": category.code}
 
@@ -321,7 +321,7 @@ async def delete_category(
         raise HTTPException(status_code=400, detail="该分类下有子分类，无法删除")
 
     db.delete(category)
-    db.commit()
+    safe_commit(db)
     return {"message": "删除成功"}
 
 
@@ -685,7 +685,7 @@ async def upload_policy_file(
     setattr(policy, "file_path", file_path)
     setattr(policy, "file_size", len(content))
     setattr(policy, "file_type", ext)
-    db.commit()
+    safe_commit(db)
 
     return {
         "message": "上传成功",
@@ -771,7 +771,7 @@ async def download_policy_file(
 
     current_count = policy.download_count or 0
     setattr(policy, "download_count", current_count + 1)
-    db.commit()
+    safe_commit(db)
 
     return FileResponse(
         path=policy.file_path,
@@ -791,7 +791,7 @@ async def batch_delete_policies(data: dict, current_user=Depends(get_current_use
         raise HTTPException(status_code=400, detail="未提供要删除的ID")
 
     deleted = db.query(Policy).filter(Policy.id.in_(ids)).delete(synchronize_session=False)
-    db.commit()
+    safe_commit(db)
     await cache_manager.delete("policies:list")
     return {"message": f"成功删除{deleted}条政策", "deleted": deleted}
 
@@ -921,7 +921,7 @@ async def get_policy(
 
     current_count = policy.view_count or 0
     setattr(policy, "view_count", current_count + 1)
-    db.commit()
+    safe_commit(db)
 
     return _policy_to_frontend(policy)
 
@@ -961,7 +961,7 @@ async def create_policy(
             keywords=data.keywords,
         )
         db.add(policy)
-        db.commit()
+        safe_commit(db)
         db.refresh(policy)
         await cache_manager.delete("policies:list")
         return _policy_to_frontend(policy)
@@ -1015,7 +1015,7 @@ async def update_policy(
         for key, value in update_data.items():
             setattr(policy, key, value)
 
-        db.commit()
+        safe_commit(db)
         db.refresh(policy)
         await cache_manager.delete("policies:list")
         return _policy_to_frontend(policy)
@@ -1039,7 +1039,7 @@ async def delete_policy(
         raise HTTPException(status_code=404, detail="政策不存在")
 
     db.delete(policy)
-    db.commit()
+    safe_commit(db)
     await cache_manager.delete("policies:list")
     return {"message": "删除成功"}
 
@@ -1056,7 +1056,7 @@ async def publish_policy(
         raise HTTPException(status_code=404, detail="政策不存在")
 
     setattr(policy, "status", "active")
-    db.commit()
+    safe_commit(db)
     await cache_manager.delete("policies:list")
     return {"message": "发布成功"}
 
@@ -1073,7 +1073,7 @@ async def archive_policy(
         raise HTTPException(status_code=404, detail="政策不存在")
 
     setattr(policy, "status", "invalid")
-    db.commit()
+    safe_commit(db)
     await cache_manager.delete("policies:list")
     return {"message": "归档成功"}
 
@@ -1104,7 +1104,7 @@ async def add_favorite(
 
     favorite = PolicyFavorite(policy_id=policy_id, user_id=user_id)
     db.add(favorite)
-    db.commit()
+    safe_commit(db)
     return {"message": "收藏成功"}
 
 
@@ -1125,7 +1125,7 @@ async def remove_favorite(
         raise HTTPException(status_code=404, detail="未收藏该政策")
 
     db.delete(favorite)
-    db.commit()
+    safe_commit(db)
     return {"message": "取消收藏成功"}
 
 
@@ -1151,5 +1151,6 @@ async def search_policies(
 ):
     """全文检索帮扶政策（FTS5 + 关键词高亮）"""
     from app.services.policy_fts_service import search_policies_fts
+from app.core.transaction import safe_commit
     results = search_policies_fts(db, q, limit=limit, offset=offset)
     return {"data": results, "total": len(results), "query": q}

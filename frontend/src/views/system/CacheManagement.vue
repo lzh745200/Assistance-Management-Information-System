@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import request from '@/api/request'
+import { get, post } from '@/api/request'
 
 const loading = ref(false)
 const clearing = ref(false)
@@ -96,7 +96,7 @@ function formatSize(bytes: number) {
 async function refreshData() {
   loading.value = true
   try {
-    const res = await request.get('/system/cache/stats')
+    const res = await get('/system/cache/stats')
     if (res.data?.success !== false && res.data?.data) {
       stats.value = res.data.data
     }
@@ -113,7 +113,7 @@ async function clearAllCache() {
       type: 'warning',
     })
     clearing.value = true
-    const res = await request.post('/system/cache/clear')
+    const res = await post('/system/cache/clear')
     if (res.data?.success !== false) {
       ElMessage.success(res.data?.message || '缓存已清除')
     }

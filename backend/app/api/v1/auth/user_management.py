@@ -239,7 +239,7 @@ async def create_user(
     )
 
     db.add(user)
-    db.commit()
+    safe_commit(db)
     db.refresh(user)
 
     return {
@@ -292,7 +292,7 @@ async def update_user(
         user.organization_id = user_data.organization_id
 
     user.updated_at = datetime.now()
-    db.commit()
+    safe_commit(db)
 
     return {"success": True, "message": "用户更新成功"}
 
@@ -372,6 +372,7 @@ async def reset_password(
     # 仅当调用方显式提供密码时才校验强度；自动生成的密码已符合策略
     if reset_data.new_password:
         from app.core.security import PasswordPolicy
+from app.core.transaction import safe_commit
 
         is_valid, msg = PasswordPolicy.validate(new_password, username=user.username)
         if not is_valid:
@@ -379,7 +380,7 @@ async def reset_password(
 
     user.hashed_password = get_password_hash(new_password)
     user.updated_at = datetime.now()
-    db.commit()
+    safe_commit(db)
 
     return {
         "success": True,
@@ -410,6 +411,6 @@ async def assign_role(
     user.is_superuser = role_code in (UserRole.ADMIN, UserRole.SUPER_ADMIN)
 
     user.updated_at = datetime.now()
-    db.commit()
+    safe_commit(db)
 
     return {"success": True, "message": "角色分配成功"}

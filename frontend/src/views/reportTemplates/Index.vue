@@ -419,7 +419,7 @@ import {
   Document,
 } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import request from '@/api/request'
+import { get, post, put, del, apiRequest } from '@/api/request'
 
 interface Template {
   id: number
@@ -550,7 +550,7 @@ function onFilterChange() {
 async function loadTemplates() {
   loading.value = true
   try {
-    const { data } = await request.get('/report-templates')
+    const data = await get('/report-templates')
     // 兼容多种后端响应格式: 直接数组 / { data: [...] } / { items: [...] }
     const list = Array.isArray(data)
       ? data
@@ -586,7 +586,7 @@ async function handleCreate() {
   }
   creating.value = true
   try {
-    await request.post('/report-templates', newTemplate)
+    await post('/report-templates', newTemplate)
     ElMessage.success('模板创建成功')
     showCreateDialog.value = false
     activeTab.value = newTemplate.type
@@ -600,9 +600,7 @@ async function handleCreate() {
 
 async function handleDownload(t: Template) {
   try {
-    const res = await request.get(`/report-templates/${t.id}/download`, {
-      responseType: 'blob',
-    })
+    const res = await apiRequest({ method: 'GET', url: `/report-templates/${t.id}/download`, responseType: 'blob' })
     const url = window.URL.createObjectURL(res.data)
     const link = document.createElement('a')
     link.href = url
@@ -634,7 +632,7 @@ async function handleSaveEdit() {
   }
   creating.value = true
   try {
-    await request.put(`/report-templates/${editTemplate.value.id}`, {
+    await put(`/report-templates/${editTemplate.value.id}`, {
       name: editTemplate.value.name,
       description: editTemplate.value.description,
       is_active: editTemplate.value.is_active,
@@ -659,7 +657,7 @@ async function handleDelete(t: Template) {
     await ElMessageBox.confirm(`确定删除模板“${t.name}”？此操作不可恢复。`, '提示', {
       type: 'warning',
     })
-    await request.delete(`/report-templates/${t.id}`)
+    await del(`/report-templates/${t.id}`)
     ElMessage.success('删除成功')
     loadTemplates()
   } catch {
@@ -704,7 +702,7 @@ async function handleFilePreview() {
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
-    const res = await request.post(
+    const res = await post(
       `/report-templates/${currentUploadTemplate.value!.id}/upload?mode=preview`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -743,7 +741,7 @@ async function handleConfirmImport() {
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
-    const res = await request.post(
+    const res = await post(
       `/report-templates/${currentUploadTemplate.value!.id}/upload?mode=confirm&import_mode=${importMode.value}`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }

@@ -1,4 +1,4 @@
-import { get, post, apiRequest } from './request'
+import { get, post, apiRequest } from '@/api/request'
 
 export type CreateOrganizationPassCodeRequest = {
   organization_id: number

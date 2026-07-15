@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.core.transaction import safe_commit
 from app.core.data_permission import filter_by_data_scope, require_data_permission
 from app.core.errors import AppError
 from app.core.exceptions import NotFoundException
@@ -609,6 +610,7 @@ async def list_projects(
     sort_by: Optional[str] = None,
     sort_order: Optional[str] = Query("desc"),
     include_cancelled: bool = Query(False, description="是否包含已取消项目"),
+    include_deleted: bool = Query(False, description="是否包含已软删的记录"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -628,6 +630,10 @@ async def list_projects(
 
     if not include_cancelled:
         query = query.filter(Project.status != ProjectStatus.CANCELLED.value)
+
+    # 软删过滤：默认隐藏 is_active=False 的记录
+    if not include_deleted:
+        query = query.filter(Project.is_active == True)  # noqa: E712
 
     query = filter_by_data_scope(query, Project, current_user, db=db)
 
@@ -810,7 +816,7 @@ async def create_project(
         detail="，".join(detail_parts),
     )
 
-    db.commit()
+    safe_commit(db)
     db.refresh(project)
 
     try:
@@ -966,7 +972,7 @@ async def update_project(
             changed_fields, old_project_data, current_user,
         )
 
-    db.commit()
+    safe_commit(db)
     db.refresh(project)
     _invalidate_project_cache()
 
@@ -996,6 +1002,7 @@ async def delete_project(
     old_project_data = _project_to_diff_dict(project)
 
     project.status = ProjectStatus.CANCELLED.value
+    project.is_active = False
 
     audit = AuditLogService(db)
     await audit.log(
@@ -1040,7 +1047,7 @@ async def delete_project(
         username=getattr(current_user, "username", "系统"),
     )
 
-    db.commit()
+    safe_commit(db)
 
     try:
         from app.api.v1.data.dashboard import invalidate_dashboard_cache
@@ -1104,7 +1111,7 @@ async def create_project_fund(
             purpose=data.purpose,
         )
         db.add(fund)
-        db.commit()
+        safe_commit(db)
         db.refresh(fund)
         return {"id": fund.id, "message": "经费添加成功"}
     except Exception as e:
@@ -1164,7 +1171,7 @@ async def create_project_task(
             due_date=date.fromisoformat(data.due_date) if data.due_date else None,
         )
         db.add(task)
-        db.commit()
+        safe_commit(db)
         db.refresh(task)
         return _task_to_dict(task)
     except Exception as e:
@@ -1196,7 +1203,7 @@ async def update_project_task(
             if hasattr(task, key):
                 setattr(task, key, value)
 
-        db.commit()
+        safe_commit(db)
         return _task_to_dict(task)
     except HTTPException:
         raise
@@ -1221,7 +1228,7 @@ async def delete_project_task(
 
     try:
         db.delete(task)
-        db.commit()
+        safe_commit(db)
         return {"message": "任务删除成功"}
     except Exception as e:
         db.rollback()
@@ -1718,7 +1725,7 @@ async def import_projects(
     created, failed, errors = _process_import_rows(db, ws, header_row, headers, current_user)
 
     try:
-        db.commit()
+        safe_commit(db)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"数据提交失败: {e}")
@@ -1819,7 +1826,7 @@ async def upload_project_files(
         db.flush()
         uploaded.append(_file_to_dict(pf))
 
-    db.commit()
+    safe_commit(db)
     return {"success": True, "files": uploaded}
 
 
@@ -1869,7 +1876,7 @@ async def delete_project_file(
             pass
 
     db.delete(pf)
-    db.commit()
+    safe_commit(db)
     return {"success": True}
 
 

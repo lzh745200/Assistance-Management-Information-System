@@ -118,7 +118,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { post } from '@/api/request'
 
 interface QualityStats {
   totalRecords: number
@@ -228,7 +228,7 @@ function getStatusText(status: string): string {
 async function handleCheck() {
   checking.value = true
   try {
-    const res = await request.post('/data-quality/validate', {
+    const res = await post('/data-quality/validate', {
       entity_type: 'village',
       data: {},
     })
@@ -259,7 +259,7 @@ async function handleCheck() {
 async function handleViewIssues(check: CheckItem) {
   selectedCheck.value = check
   try {
-    const res = await request.post('/data-quality/validate', {
+    const res = await post('/data-quality/validate', {
       entity_type: 'village',
       data: {},
     })
@@ -284,7 +284,7 @@ async function handleAutoFix() {
   if (!selectedCheck.value) return
   fixing.value = true
   try {
-    const res = await request.post('/data-quality/clean', {
+    const res = await post('/data-quality/clean', {
       records: [],
       cleaning_rules: { trim_whitespace: true, normalize_empty: true },
     })

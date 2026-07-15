@@ -191,7 +191,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
-import request from '@/api/request'
+import { get } from '@/api/request'
 import {
   UserFilled,
   Files,
@@ -263,10 +263,7 @@ function formatSize(bytes: number): string {
 
 async function loadAdminData() {
   try {
-    const res = await request.get('/dashboard/stats', {
-      params: { admin: true },
-      showError: false,
-    } as any)
+    const res = await get('/dashboard/stats')
     const data = res.data?.data || res.data || {}
 
     adminStats.value[0].value = data.total_users || 0

@@ -97,7 +97,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { get, post, put } from '@/api/request'
 import PermissionTreePanel from './PermissionTreePanel.vue'
 import RoleTagsPanel from './RoleTagsPanel.vue'
 import MenuVisibilityPanel from './MenuVisibilityPanel.vue'
@@ -158,8 +158,8 @@ const legacyForm = ref({
 
 async function loadAllRoles() {
   try {
-    const res = await request.get('/rbac/roles')
-    allRoles.value = (res.data?.data || res.data || []) as RbacRole[]
+    const res = await get('/rbac/roles')
+    allRoles.value = (res.data || res || []) as RbacRole[]
   } catch {
     allRoles.value = []
   }
@@ -168,8 +168,8 @@ async function loadAllRoles() {
 async function loadCurrentPermissions() {
   if (!props.user?.id) return
   try {
-    const res = await request.get(`/rbac/user/${props.user.id}/permissions`)
-    const payload = res.data?.data || res.data
+    const res = await get(`/rbac/user/${props.user.id}/permissions`)
+    const payload = res.data || res
     const perms = payload?.permissions || payload || []
     currentPermissions.value = Array.isArray(perms) ? perms : []
     permissionsLoadFailed.value = false
@@ -182,8 +182,8 @@ async function loadCurrentPermissions() {
 async function loadMenuConfig() {
   if (!props.user?.id) return
   try {
-    const res = await request.get(`/menus/user-menus/${props.user.id}`)
-    const data = res.data?.data || res.data
+    const res = await get(`/menus/user-menus/${props.user.id}`)
+    const data = res.data || res
     if (data) {
       currentMenuKeys.value = data.menu_keys || []
       isMenuCustomized.value = data.is_customized || false
@@ -213,7 +213,7 @@ async function savePermissions() {
   savingPermissions.value = true
   try {
     // 原子性保存：后端在单个事务内完成撤销+授予
-    const res = await request.post('/rbac/save-permissions', {
+    const res = await post('/rbac/save-permissions', {
       user_id: props.user.id,
       permissions: currentPermissions.value,
     })
@@ -252,7 +252,7 @@ async function saveLegacyRole() {
   if (!props.user?.id) return
   savingLegacy.value = true
   try {
-    await request.put(`/users/${props.user.id}/permissions`, {
+    await put(`/users/${props.user.id}/permissions`, {
       role: legacyForm.value.role,
       data_scope: legacyForm.value.data_scope,
     })

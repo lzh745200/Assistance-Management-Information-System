@@ -5,7 +5,7 @@
  * 响应格式: Bare（{ total, items }，非 envelope）
  * 对应后端: backend/app/api/v1/search.py → SearchResponse
  */
-import { get } from './request'
+import { get } from '@/api/request'
 
 /** 搜索结果项（与后端 SearchItem 模型 1:1 对齐） */
 export interface SearchItem {

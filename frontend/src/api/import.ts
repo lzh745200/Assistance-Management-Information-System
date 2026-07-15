@@ -7,7 +7,7 @@
  * - 查询导入历史
  */
 
-import request, { parseContentDisposition, downloadBlob } from '@/api/request'
+import { post, apiRequest, downloadBlob, parseContentDisposition } from '@/api/request'
 
 // ==================== 类型定义 ====================
 
@@ -62,10 +62,7 @@ interface ImportHistoryResponse {
  * @returns Blob 文件数据
  */
 export async function downloadImportTemplate(type: string): Promise<Blob> {
-  const response = await request.get(`/import/template`, {
-    params: { entity_type: type },
-    responseType: 'blob',
-  })
+  const response = await apiRequest({ method: 'GET', url: `/import/template`, params: { entity_type: type }, responseType: 'blob' })
   return response.data
 }
 
@@ -79,10 +76,7 @@ export async function downloadImportTemplateAndSave(
   type: string,
   fallbackName = '导入模板'
 ): Promise<void> {
-  const response = await request.get(`/import/template`, {
-    params: { entity_type: type },
-    responseType: 'blob',
-  })
+  const response = await apiRequest({ method: 'GET', url: `/import/template`, params: { entity_type: type }, responseType: 'blob' })
   const filename = parseContentDisposition(
     response.headers as Record<string, string>,
     `${fallbackName}.xlsx`
@@ -107,7 +101,7 @@ export async function importEntities(
   formData.append('entity_type', entityType)
   formData.append('mode', mode)
 
-  const response = await request.post('/import/entities', formData, {
+  const response = await post('/import/entities', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 120000,
   })
@@ -127,7 +121,7 @@ export async function previewImportData(
   formData.append('file', file)
   formData.append('entity_type', entityType)
 
-  const response = await request.post('/import/preview', formData, {
+  const response = await post('/import/preview', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 60000,
   })
@@ -144,9 +138,7 @@ export async function getImportHistory(
   page: number = 1,
   pageSize: number = 10
 ): Promise<ImportHistoryResponse> {
-  const response = await request.get('/import/history', {
-    params: { page, page_size: pageSize },
-  })
+  const response = await apiRequest({ method: 'GET', url: '/import/history', params: { page, page_size: pageSize }})
   return response.data
 }
 
@@ -166,13 +158,13 @@ export async function validateImport(data: { file?: File; entity_type?: string }
     if (data.entity_type) {
       formData.append('entity_type', data.entity_type)
     }
-    const response = await request.post('/import/validate', formData, {
+    const response = await post('/import/validate', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000,
     })
     return response.data
   }
-  const response = await request.post('/import/validate', data)
+  const response = await post('/import/validate', data)
   return response.data
 }
 

@@ -1,7 +1,7 @@
 /**
  * 经费管理 API
  */
-import request from './request'
+import { get, post, put, del, apiRequest } from '@/api/request'
 import type { PaginatedResponse } from '@/types/api'
 
 /** 经费记录 */
@@ -68,76 +68,76 @@ const BUDGETS_BASE = '/fund-budgets'
 export const fundApi = {
   /** 获取经费列表 */
   async list(params?: FundListParams): Promise<PaginatedResponse<Fund>> {
-    const response = await request.get(FUNDS_BASE, { params })
+    const response = await get(FUNDS_BASE, params)
     return response.data
   },
 
   /** 获取经费详情 */
   async getById(id: number): Promise<Fund> {
-    const response = await request.get(`${FUNDS_BASE}/${id}`)
+    const response = await get(`${FUNDS_BASE}/${id}`)
     return response.data
   },
 
   /** 创建经费记录 */
   async create(data: Partial<Fund>): Promise<Fund> {
-    const response = await request.post(FUNDS_BASE, data)
+    const response = await post(FUNDS_BASE, data)
     return response.data
   },
 
   /** 更新经费记录 */
   async update(id: number, data: Partial<Fund>): Promise<Fund> {
-    const response = await request.put(`${FUNDS_BASE}/${id}`, data)
+    const response = await put(`${FUNDS_BASE}/${id}`, data)
     return response.data
   },
 
   /** 删除经费记录 */
   async delete(id: number): Promise<{ message: string }> {
-    const response = await request.delete(`${FUNDS_BASE}/${id}`)
+    const response = await del(`${FUNDS_BASE}/${id}`)
     return response.data
   },
 
   // ========== 工作流 ==========
   async approve(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/approve`, data || {})
+    const response = await post(`${FUNDS_BASE}/${id}/approve`, data || {})
     return response.data
   },
   async reject(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/reject`, data || {})
+    const response = await post(`${FUNDS_BASE}/${id}/reject`, data || {})
     return response.data
   },
   async allocate(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/allocate`, data || {})
+    const response = await post(`${FUNDS_BASE}/${id}/allocate`, data || {})
     return response.data
   },
   async startUse(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/start-use`, data || {})
+    const response = await post(`${FUNDS_BASE}/${id}/start-use`, data || {})
     return response.data
   },
   async complete(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/complete`, data || {})
+    const response = await post(`${FUNDS_BASE}/${id}/complete`, data || {})
     return response.data
   },
   async audit(id: number, data?: WorkflowRequest) {
-    const response = await request.post(`${FUNDS_BASE}/${id}/audit`, data || {})
+    const response = await post(`${FUNDS_BASE}/${id}/audit`, data || {})
     return response.data
   },
 
   // ========== 统计 ==========
   async statisticsOverview() {
-    const response = await request.get(`${FUNDS_BASE}/statistics/overview`)
+    const response = await get(`${FUNDS_BASE}/statistics/overview`)
     return response.data
   },
   async statisticsMultiDimension(params?: Record<string, string | number | boolean>) {
-    const response = await request.get(`${FUNDS_BASE}/statistics/multi-dimension`, {
-      params,
-    })
+    const response = await get(`${FUNDS_BASE}/statistics/multi-dimension`, params)
     return response.data
   },
 
-  // ========== 导出 ==========
+  // ========== 导出（默认CSV格式下载） ==========
   async exportList(params?: { search?: string; type?: string; status?: string }) {
-    const response = await request.get(`${FUNDS_BASE}/export`, {
-      params,
+    const response = await apiRequest({
+      method: 'GET',
+      url: `${FUNDS_BASE}/export`,
+      params: { ...params, format: 'csv' },
       responseType: 'blob',
     })
     const url = window.URL.createObjectURL(response.data)
@@ -150,7 +150,7 @@ export const fundApi = {
 
   // ========== 附件 ==========
   async listAttachments(fundId: number) {
-    const res = await request.get(`${FUNDS_BASE}/${fundId}/attachments`)
+    const res = await get(`${FUNDS_BASE}/${fundId}/attachments`)
     const body: any = res.data
     const items = Array.isArray(body) ? body : body?.items || body?.data || []
     return { items, total: items.length } as {
@@ -159,7 +159,7 @@ export const fundApi = {
     }
   },
   async deleteAttachment(attachmentId: number) {
-    const response = await request.delete(`${FUNDS_BASE}/attachments/${attachmentId}`)
+    const response = await del(`${FUNDS_BASE}/attachments/${attachmentId}`)
     return response.data
   },
   getPreviewUrl(attachmentId: number) {
@@ -171,21 +171,21 @@ export const fundApi = {
 
   // ========== 经费状态/字段/操作历史 ==========
   async getStatusHistory(fundId: number) {
-    const response = await request.get(`${FUNDS_BASE}/${fundId}/history/status`)
+    const response = await get(`${FUNDS_BASE}/${fundId}/history/status`)
     return response.data
   },
   async getFieldHistory(fundId: number) {
-    const response = await request.get(`${FUNDS_BASE}/${fundId}/history/fields`)
+    const response = await get(`${FUNDS_BASE}/${fundId}/history/fields`)
     return response.data
   },
   async getOperationHistory(fundId: number) {
-    const response = await request.get(`${FUNDS_BASE}/${fundId}/history/operations`)
+    const response = await get(`${FUNDS_BASE}/${fundId}/history/operations`)
     return response.data
   },
 
   // ========== 预算 ==========
   async listBudgets(year?: number) {
-    const res = await request.get(`${BUDGETS_BASE}`, { params: { year } })
+    const res = await get(`${BUDGETS_BASE}`, year ? { year } : undefined)
     const body: any = res.data
     const items = Array.isArray(body) ? body : body?.items || body?.data || []
     return { items, total: items.length } as {
@@ -201,7 +201,7 @@ export const fundApi = {
     remaining_reason?: string
     remarks?: string
   }) {
-    const response = await request.post(BUDGETS_BASE, data)
+    const response = await post(BUDGETS_BASE, data)
     return response.data
   },
   async updateBudget(
@@ -215,29 +215,37 @@ export const fundApi = {
       remarks?: string
     }>
   ) {
-    const response = await request.put(`${BUDGETS_BASE}/${budgetId}`, data)
+    const response = await put(`${BUDGETS_BASE}/${budgetId}`, data)
     return response.data
   },
   async deleteBudget(budgetId: number) {
-    const response = await request.delete(`${BUDGETS_BASE}/${budgetId}`)
+    const response = await del(`${BUDGETS_BASE}/${budgetId}`)
     return response.data
   },
 
   // ========== 预算告警与汇总 ==========
   async getBudgetAlerts() {
-    const response = await request.get(`${BUDGETS_BASE}/alerts`)
+    const response = await get(`${BUDGETS_BASE}/alerts`)
     return response.data
   },
   async getBudgetSummary() {
-    const response = await request.get(`${BUDGETS_BASE}/summary`)
+    const response = await get(`${BUDGETS_BASE}/summary`)
+    return response.data
+  },
+
+  // ========== 帮扶村/学校经费汇总 ==========
+  async getVillageFundSummary(villageId: number, year?: number) {
+    const response = await get(`${FUNDS_BASE}/village/${villageId}/summary`, year ? { year } : undefined)
+    return response.data
+  },
+  async getSchoolFundSummary(schoolId: number, year?: number) {
+    const response = await get(`${FUNDS_BASE}/school/${schoolId}/summary`, year ? { year } : undefined)
     return response.data
   },
 
   // ========== 预算交易记录 ==========
   async listTransactions(budgetId: number) {
-    const res = await request.get(`${BUDGETS_BASE}/transactions`, {
-      params: { budget_id: budgetId },
-    })
+    const res = await apiRequest({ method: 'GET', url: `${BUDGETS_BASE}/transactions`, params: { budget_id: budgetId }})
     const body: any = res.data
     const items = Array.isArray(body) ? body : body?.items || body?.data || []
     return { items, total: items.length } as {
@@ -246,14 +254,14 @@ export const fundApi = {
     }
   },
   async createTransaction(budgetId: number, data: Record<string, any>) {
-    const response = await request.post(`${BUDGETS_BASE}/transactions`, {
+    const response = await post(`${BUDGETS_BASE}/transactions`, {
       ...data,
       budget_id: budgetId,
     })
     return response.data
   },
   async deleteTransaction(transactionId: number) {
-    const response = await request.delete(`${BUDGETS_BASE}/transactions/${transactionId}`)
+    const response = await del(`${BUDGETS_BASE}/transactions/${transactionId}`)
     return response.data
   },
 }

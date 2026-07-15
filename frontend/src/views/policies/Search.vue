@@ -139,7 +139,7 @@ import { logger } from '@/utils/logger'
 import { ref, reactive, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { get, apiRequest } from '@/api/request'
 
 interface Policy {
   id: string
@@ -184,8 +184,8 @@ const pagination = reactive({
 // 加载分类选项
 const loadCategories = async () => {
   try {
-    const res = await request.get('/policies/categories')
-    const data = res.data?.data || res.data
+    const res = await get('/policies/categories')
+    const data = res.data || res
     // API may return array of categories or a config object
     if (Array.isArray(data)) {
       categoryOptions.value = data as Category[]
@@ -213,16 +213,14 @@ const loadData = async () => {
     if (searchForm.keyword) searchParts.push(searchForm.keyword)
     const searchStr = searchParts.join(' ') || undefined
 
-    const res = await request.get('/policies', {
-      params: {
+    const res = await apiRequest({ method: 'GET', url: '/policies', params: {
         page: pagination.currentPage,
         page_size: pagination.pageSize,
         search: searchStr,
         category: searchForm.category || undefined,
         status: searchForm.status || undefined,
-      },
-    })
-    const data = res.data?.data || res.data
+      }})
+    const data = res.data || res
     const items = data?.items || (Array.isArray(data) ? data : [])
 
     tableData.value = items.map((item: any) => ({

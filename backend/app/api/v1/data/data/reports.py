@@ -374,7 +374,7 @@ async def create_subscription(
         )
 
         db.add(db_subscription)
-        db.commit()
+        safe_commit(db)
         db.refresh(db_subscription)
 
         # 转换响应
@@ -499,7 +499,7 @@ async def update_subscription(
         for key, value in update_dict.items():
             setattr(subscription, key, value)
 
-        db.commit()
+        safe_commit(db)
         db.refresh(subscription)
 
         return _subscription_to_response(subscription)
@@ -535,7 +535,7 @@ async def delete_subscription(
             raise HTTPException(status_code=404, detail="订阅不存在")
 
         db.delete(subscription)
-        db.commit()
+        safe_commit(db)
 
         return {"message": "订阅已删除", "id": subscription_id}
     except HTTPException:
@@ -570,7 +570,7 @@ async def toggle_subscription(
             raise HTTPException(status_code=404, detail="订阅不存在")
 
         subscription.is_active = not subscription.is_active  # type: ignore[assignment]
-        db.commit()
+        safe_commit(db)
 
         return {
             "id": subscription_id,
@@ -635,6 +635,7 @@ async def generate_report(
     """
     try:
         from app.models.supported_village import SupportedVillage
+from app.core.transaction import safe_commit
 
         # 构建报表数据
         report_data = {

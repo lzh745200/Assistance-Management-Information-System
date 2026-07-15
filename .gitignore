@@ -206,9 +206,14 @@ backend/cov_summary.txt
 backend/server_log*.txt
 frontend/eslint_result.txt
 frontend/tsc_result.txt
+frontend/tsc_errors*.txt
+frontend/tsc_final*.txt
+frontend/tsc_output*.txt
 frontend/vitest_result.txt
 check_lock.txt
 test_diff.txt
+fix_output.txt
+backend/test_result.txt
 
 # ===== 额外测试产物 =====
 .pytest_cache/**

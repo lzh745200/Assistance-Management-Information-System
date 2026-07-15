@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.utils.helpers import safe_json_loads
+from app.core.transaction import safe_commit
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook, load_workbook
@@ -364,7 +365,7 @@ async def create_template(
             created_by=current_user.id,
         )
         db.add(template)
-        db.commit()
+        safe_commit(db)
         db.refresh(template)
         return _template_to_dict(template)
     except HTTPException:
@@ -402,7 +403,7 @@ async def update_template(
     try:
         for key, value in tpl_in.model_dump(exclude_unset=True).items():
             setattr(t, key, value)
-        db.commit()
+        safe_commit(db)
         db.refresh(t)
         return _template_to_dict(t)
     except HTTPException:
@@ -425,7 +426,7 @@ async def delete_template(
         raise HTTPException(status_code=404, detail="模板不存在")
     try:
         db.delete(t)
-        db.commit()
+        safe_commit(db)
         return {"code": 200, "data": {"id": template_id}, "detail": "模板已删除"}
     except Exception as e:
         db.rollback()
@@ -608,7 +609,7 @@ def _village_prepare_import(
     deleted = 0
     if mode == "overwrite":
         deleted = db.query(SupportedVillage).delete()
-        db.commit()
+        safe_commit(db)
 
     existing_names = set()
     if mode == "incremental":
@@ -701,7 +702,7 @@ def _import_village_data(
         db, parsed_data, mode, existing_names, village_map, user_id,
     )
 
-    db.commit()
+    safe_commit(db)
     msg = (
         f"成功导入 {created} 条（全量覆盖，删除 {deleted} 条旧记录）"
         if mode == "overwrite"
@@ -753,7 +754,7 @@ def _import_school_data(
     # overwrite 模式：清空现有记录
     if mode == "overwrite":
         deleted = db.query(School).delete()
-        db.commit()
+        safe_commit(db)
 
     existing_names = set()
     if mode == "incremental":
@@ -804,7 +805,7 @@ def _import_school_data(
         except Exception as e:
             errors.append(f"第{idx + 3}行: {str(e)}")
 
-    db.commit()
+    safe_commit(db)
     msg = (
         f"成功导入 {created} 所学校（全量覆盖，删除 {deleted} 条旧记录）"
         if mode == "overwrite"
@@ -861,7 +862,7 @@ def _project_prepare_import(
     deleted = 0
     if mode == "overwrite":
         deleted = db.query(Project).delete()
-        db.commit()
+        safe_commit(db)
 
     existing_names = set()
     if mode == "incremental":
@@ -973,7 +974,7 @@ def _import_project_data(
         db, parsed_data, mode, existing_names, user_id,
     )
 
-    db.commit()
+    safe_commit(db)
     msg = (
         f"成功导入 {created} 个项目（全量覆盖，删除 {deleted} 条旧记录）"
         if mode == "overwrite"
@@ -1027,7 +1028,7 @@ def _rural_work_prepare_import(
     deleted = 0
     if mode == "overwrite":
         deleted = db.query(RuralWork).delete()
-        db.commit()
+        safe_commit(db)
 
     existing_names = set()
     if mode == "incremental":
@@ -1112,7 +1113,7 @@ def _import_rural_work_data(
         db, parsed_data, mode, existing_names, user_id,
     )
 
-    db.commit()
+    safe_commit(db)
     msg = (
         f"成功导入 {created} 条乡村工作（全量覆盖，删除 {deleted} 条旧记录）"
         if mode == "overwrite"

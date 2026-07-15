@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.transaction import safe_commit
 from app.core.security import get_current_user
 from app.core.config import settings
 from app.services.system_config_service import SystemConfigService
@@ -151,7 +152,7 @@ async def initialize_system(
                     full_name="系统管理员",
                 )
                 db.add(admin_user)
-                db.commit()
+                safe_commit(db)
                 steps.append({"step": "admin_user", "status": "success", "message": "超级管理员账号创建成功"})
         except Exception as e:
             logger.warning("创建管理员账号失败: %s", e)

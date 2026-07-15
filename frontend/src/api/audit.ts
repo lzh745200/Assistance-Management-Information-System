@@ -1,7 +1,7 @@
 /**
  * 审计管理 API
  */
-import request from './request'
+import { get, post, del } from '@/api/request'
 import type { PaginatedResponse } from '@/types/api'
 
 /** 审计日志 */
@@ -95,37 +95,37 @@ const BASE = '/system/audit'
 export const auditApi = {
   /** 获取审计日志列表 */
   async getLogs(params?: AuditLogQuery): Promise<PaginatedResponse<AuditLog>> {
-    const res = await request.get(`${BASE}/logs`, { params })
+    const res = await get(`${BASE}/logs`, { params })
     return res.data
   },
 
   /** 获取审计统计 */
   async getStats(params?: { start_date?: string; end_date?: string }): Promise<AuditStats> {
-    const res = await request.get(`${BASE}/stats`, { params })
+    const res = await get(`${BASE}/stats`, { params })
     return res.data
   },
 
   /** 获取登录尝试记录 */
   async getLoginAttempts(params?: LoginAttemptQuery): Promise<PaginatedResponse<LoginAttempt>> {
-    const res = await request.get(`${BASE}/login-attempts`, { params })
+    const res = await get(`${BASE}/login-attempts`, { params })
     return res.data
   },
 
   /** 获取安全事件列表 */
   async getSecurityEvents(params?: SecurityEventQuery): Promise<PaginatedResponse<SecurityEvent>> {
-    const res = await request.get(`${BASE}/security/events`, { params })
+    const res = await get(`${BASE}/security/events`, { params })
     return res.data
   },
 
   /** 获取安全统计 */
   async getSecurityStats(): Promise<Record<string, any>> {
-    const res = await request.get(`${BASE}/security/stats`)
+    const res = await get(`${BASE}/security/stats`)
     return res.data
   },
 
   /** 处理安全事件 */
   async resolveSecurityEvent(eventId: number, notes: string) {
-    const res = await request.post(`${BASE}/security/events/${eventId}/resolve`, null, {
+    const res = await post(`${BASE}/security/events/${eventId}/resolve`, null, {
       params: { resolution_notes: notes },
     })
     return res.data
@@ -133,7 +133,7 @@ export const auditApi = {
 
   /** 删除审计日志 */
   async deleteLog(logId: number) {
-    const res = await request.delete(`${BASE}/logs/${logId}`)
+    const res = await del(`${BASE}/logs/${logId}`)
     return res.data
   },
 }

@@ -3,7 +3,7 @@
  * 提供系统多语言支持和翻译资源管理
  */
 
-import { get } from './request'
+import { get } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

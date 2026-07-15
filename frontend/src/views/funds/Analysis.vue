@@ -279,8 +279,8 @@ const loadFundStatsByType = async () => {
       year_end: filterForm.yearEnd,
       department: filterForm.department || undefined,
     })
-    if (res.data?.success) {
-      fundStatsByType.value = res.data.data
+    if (res.success) {
+      fundStatsByType.value = res.data
     }
   } catch (error) {
     logger.error('加载经费分类统计失败:', error)

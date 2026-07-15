@@ -25,7 +25,7 @@ alembic upgrade head（包含所有独立迁移）。
 """
 # revision identifiers, used by Alembic.
 revision = '012_consolidate_baseline'
-down_revision = '011_add_machine_code_permissions'
+down_revision = '011'
 branch_labels = None
 depends_on = None
 

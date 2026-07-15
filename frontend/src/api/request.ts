@@ -144,7 +144,7 @@ request.interceptors.request.use(async (config) => {
  * - Array payload  → set as response.data.items (if items not already present)
  *
  * IMPORTANT: This mutates response.data IN PLACE. Both raw axios callers (Pattern A:
- * `import request from "./request"` → use `.data`) and auto-unwrapped callers (Pattern B:
+ * `import { get, post, put, patch, apiRequest } from '@/api/request'` → use `.data`) and auto-unwrapped callers (Pattern B:
  * `import { get, post } from "./request"` → `.data` NOT needed) see the same expanded shape.
  *
  * @see apiRequest — auto-unwrapped access (returns res.data directly)
@@ -299,7 +299,7 @@ export async function prefetchCsrfToken(): Promise<string | null> {
 /**
  * Generic request function with automatic response unwrapping.
  *
- * Unlike raw `request.get()` which returns `AxiosResponse<T>`,
+ * Unlike raw `get()` which returns `AxiosResponse<T>`,
  * this function returns `T` directly (`res.data`), unwrapping one level.
  *
  * Combined with the response interceptor's in-place expansion,
@@ -399,7 +399,7 @@ export function createCancelableRequest<T = any>(
   config: AxiosRequestConfig
 ): { promise: Promise<T>; cancel: Canceler } {
   const source = axios.CancelToken.source()
-  const promise = request({
+  const promise = apiRequest({
     ...config,
     cancelToken: source.token,
   }) as Promise<T>

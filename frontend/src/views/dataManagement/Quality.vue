@@ -325,7 +325,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { SuccessFilled, WarningFilled, CircleCloseFilled } from '@element-plus/icons-vue'
 import { runFullCheck as apiRunFullCheck } from '@/api/dataQuality'
-import request from '@/api/request'
+import { get, post } from '@/api/request'
 
 const loading = ref(false)
 const fullChecking = ref(false)
@@ -377,7 +377,7 @@ function progressColor(rate: number): string {
 async function loadReport() {
   loading.value = true
   try {
-    const res = await request.get('/data-quality/report')
+    const res = await get('/data-quality/report')
     const d = res.data
 
     stats.generatedAt = d.generated_at || ''
@@ -431,7 +431,7 @@ async function runFullCheck() {
   } catch (err: any) {
     // 回退到原有 API
     try {
-      const res = await request.post('/data-quality/full-check')
+      const res = await post('/data-quality/full-check')
       fullCheckResults.value = res.data
       activeTab.value = 'full'
       activeCheckItems.value = (fullCheckResults.value.checks || [])

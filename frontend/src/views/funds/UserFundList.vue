@@ -252,7 +252,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { EditPen, Search, Tickets, Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import request from '@/api/request'
+import { get, post, put, del, apiRequest } from '@/api/request'
 import { useAuthStore } from '@/stores/auth'
 
 defineOptions({ name: 'UserFundList' })
@@ -344,8 +344,8 @@ const stats = computed(() => {
 
 async function loadFundStats() {
   try {
-    const res = await request.get('/funds/statistics/overview')
-    const d = res.data?.data || res.data
+    const res = await get('/funds/statistics/overview')
+    const d = res.data || res
     if (d) serverFundStats.value = d
   } catch {
     /* 统计加载失败不阻塞主流程 */
@@ -364,15 +364,13 @@ function formatAmount(val: any) {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await request.get('/funds', {
-      params: {
+    const response = await apiRequest({ method: 'GET', url: '/funds', params: {
         page: currentPage.value,
         page_size: pageSize.value,
         search: filterForm.keyword || undefined,
         type: filterForm.type || undefined,
         status: filterForm.status || undefined,
-      },
-    })
+      }})
     const resData = response.data
     tableData.value =
       resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : [])
@@ -447,10 +445,10 @@ async function handleSubmitDialog() {
     try {
       const payload = { ...dialogForm }
       if (isEditing.value && editingId.value) {
-        await request.put(`/funds/${editingId.value}`, payload)
+        await put(`/funds/${editingId.value}`, payload)
         ElMessage.success('经费记录已更新')
       } else {
-        await request.post('/funds', payload)
+        await post('/funds', payload)
         ElMessage.success('经费记录已新增')
       }
       dialogVisible.value = false
@@ -469,7 +467,7 @@ async function handleDelete(row: any) {
     await ElMessageBox.confirm(`确定要删除经费记录「${row.name}」吗？`, '删除确认', {
       type: 'warning',
     })
-    await request.delete(`/funds/${row.id}`)
+    await del(`/funds/${row.id}`)
     ElMessage.success('删除成功')
     currentPage.value = 1
     fetchData()

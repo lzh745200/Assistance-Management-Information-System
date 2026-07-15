@@ -77,6 +77,7 @@ class Fund(BaseModel):
         Index("ix_funds_year_month_status", "year_month", "status"),
         Index("ix_funds_year_quarter_type", "year_quarter", "fund_type"),
         Index("ix_funds_year_source", "year", "fund_source"),
+        Index("ix_funds_is_active", "is_active"),
     )
 
     # ================= 核心业务字段 =================
@@ -135,6 +136,9 @@ class Fund(BaseModel):
 
     budget_version = Column(Integer, default=1, comment="预算版本号")
     budget_status = Column(String(20), default="draft", comment="预算状态: draft/submitted/approved")
+
+    # ================= 软删标记 =================
+    is_active = Column(Boolean, default=True, nullable=False, comment="是否启用(软删标记)")
 
     # ================= 数据权限字段 =================
     organization_id = Column(

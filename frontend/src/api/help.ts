@@ -3,7 +3,7 @@
  * 提供系统使用帮助、用户手册、常见问题解答等功能
  */
 
-import { get } from './request'
+import { get } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

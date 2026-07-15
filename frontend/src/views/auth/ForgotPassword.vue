@@ -107,7 +107,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { CircleCheckFilled, Key } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { logger } from '@/utils/logger'
-import request from '@/api/request'
+import { get, post } from '@/api/request'
 
 const { pushSafe } = useRouterSafe()
 
@@ -134,7 +134,7 @@ const canSubmit = computed(() => {
 const useCurrentMachineCode = async () => {
   loadingMachineCode.value = true
   try {
-    const response = await request.get('/machine-code/get-machine-code')
+    const response = await get('/machine-code/get-machine-code')
     const resData = response.data
     const payload = resData?.code === 200 ? resData.data : (resData?.data ?? resData)
     if (payload?.machine_code) {
@@ -166,7 +166,7 @@ const handleResetPassword = async () => {
   resetting.value = true
 
   try {
-    const response = await request.post(
+    const response = await post(
       '/machine-code/reset-password-with-machine-code',
       undefined,
       { params: resetForm.value }

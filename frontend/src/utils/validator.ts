@@ -2,7 +2,7 @@
  * 前端数据校验引擎
  * 从后端动态加载校验规则并执行实时校验
  */
-import request from '@/api/request'
+import { apiRequest } from '@/api/request'
 
 export interface ValidationRule {
   id: number
@@ -39,9 +39,7 @@ export async function fetchRules(module: string): Promise<ValidationRule[]> {
     return cached.rules
   }
   try {
-    const { data } = await request.get('/validation/rules', {
-      params: { module, is_active: true },
-    })
+    const { data } = await apiRequest({ method: 'GET', url: '/validation/rules', params: { module, is_active: true }})
     const rules = data as ValidationRule[]
     rulesCache.set(module, { rules, timestamp: Date.now() })
     return rules

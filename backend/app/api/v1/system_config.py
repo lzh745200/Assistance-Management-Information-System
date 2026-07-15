@@ -13,6 +13,7 @@ import logging
 
 from app.core.database import SessionLocal
 from app.models.system_config import SystemConfig
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ async def set_system_config(key: str, value):
             row.value = serialized
         else:
             db.add(SystemConfig(key=key, value=serialized))
-        db.commit()
+        safe_commit(db)
         return True
     except Exception as e:
         db.rollback()

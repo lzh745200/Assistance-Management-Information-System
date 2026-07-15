@@ -3,7 +3,7 @@
  * 提供密钥轮换、版本管理和安全存储功能
  */
 
-import { get, post } from './request'
+import { get, post } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

@@ -5,7 +5,7 @@
  */
 
 import { logger } from '@/utils/logger'
-import request from '@/api/request'
+import { get, post } from '@/api/request'
 
 export interface UniqueCheckParams {
   model: string
@@ -24,16 +24,14 @@ export interface UniqueCheckResult {
  */
 export async function checkUnique(params: UniqueCheckParams): Promise<UniqueCheckResult> {
   try {
-    const response = await request.get<UniqueCheckResult>('/validation/check-unique', {
-      params: {
-        model: params.model,
-        field: params.field,
-        value: params.value,
-        exclude_id: params.excludeId,
-      },
+    const response = await get<UniqueCheckResult>('/validation/check-unique', {
+      model: params.model,
+      field: params.field,
+      value: params.value,
+      exclude_id: params.excludeId,
     })
 
-    return response.data
+    return response
   } catch (error) {
     logger.error('唯一性检查失败:', error)
     return {
@@ -48,12 +46,12 @@ export async function checkUnique(params: UniqueCheckParams): Promise<UniqueChec
  */
 export async function checkUniqueBatch(checks: UniqueCheckParams[]): Promise<UniqueCheckResult[]> {
   try {
-    const response = await request.post<UniqueCheckResult[]>(
+    const response = await post<UniqueCheckResult[]>(
       '/validation/check-unique-batch',
       checks
     )
 
-    return response.data
+    return response
   } catch (error) {
     logger.error('批量唯一性检查失败:', error)
     return checks.map(() => ({

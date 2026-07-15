@@ -229,7 +229,7 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { logger } from '@/utils/logger'
-import request from '@/api/request'
+import { post } from '@/api/request'
 
 import { ref, reactive, onMounted } from 'vue'
 import { Download, Refresh, Document, DocumentChecked } from '@element-plus/icons-vue'
@@ -443,7 +443,7 @@ async function handleExport() {
     }
 
     // 同步导出报表，直接下载文件
-    const response = await request.post('/async-export/reports', params, {
+    const response = await post('/async-export/reports', params, {
       responseType: 'blob',
     })
 

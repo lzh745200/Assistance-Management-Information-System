@@ -104,7 +104,7 @@ def _record_security_event(
             details={"source": source, **(details or {})},
         )
         db.add(event)
-        db.commit()
+        safe_commit(db)
         db.refresh(event)
         event_dict["id"] = event.id
         event_dict["timestamp"] = (
@@ -508,6 +508,7 @@ async def get_security_event_stats(
 ):
     """获取安全事件的统计分析数据（从数据库读取）"""
     from app.models.audit import SecurityEvent
+from app.core.transaction import safe_commit
 
     events = db.query(SecurityEvent).all()
 

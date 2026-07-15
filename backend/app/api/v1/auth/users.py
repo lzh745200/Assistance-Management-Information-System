@@ -182,7 +182,7 @@ async def update_current_user_profile(
         if hasattr(user, field):
             setattr(user, field, value)
 
-    db.commit()
+    safe_commit(db)
     db.refresh(user)
     return {
         "code": 200, "success": True, "message": "资料更新成功",
@@ -481,7 +481,7 @@ async def create_user(
     )
 
     db.add(user)
-    db.commit()
+    safe_commit(db)
     db.refresh(user)
 
     return {
@@ -542,7 +542,7 @@ async def update_user(
     for field, value in update_fields.items():
         setattr(user, field, value)
 
-    db.commit()
+    safe_commit(db)
 
     return {"code": 200, "message": "更新成功", "updated_fields": list(update_fields.keys())}
 
@@ -559,7 +559,7 @@ async def delete_user(user_id: int, current_user=Depends(get_current_user), db: 
         raise HTTPException(status_code=400, detail="不能删除当前登录用户")
 
     db.delete(user)
-    db.commit()
+    safe_commit(db)
 
     return {"code": 200, "message": "删除成功"}
 
@@ -614,7 +614,7 @@ async def update_user_permissions(
     for field, value in update_fields.items():
         setattr(user, field, value)
 
-    db.commit()
+    safe_commit(db)
     db.refresh(user)
 
     return {
@@ -727,7 +727,7 @@ async def admin_reset_password(
     user.hashed_password = get_password_hash(data.new_password)
     user.revoke_all_tokens()
     user.must_change_password = True
-    db.commit()
+    safe_commit(db)
 
     return {"code": 200, "message": "密码重置成功"}
 
@@ -768,7 +768,7 @@ async def change_password(
     user.hashed_password = get_password_hash(data.new_password)
     user.revoke_all_tokens()
     user.must_change_password = False
-    db.commit()
+    safe_commit(db)
 
     # 审计日志（密码修改已提交，审计失败不影响主流程）
     try:
@@ -804,6 +804,7 @@ async def upload_avatar(
     import os as _os
     import uuid as _uuid
     from pathlib import Path as _Path
+from app.core.transaction import safe_commit
 
     # 权限检查：仅本人或管理员可上传
     if current_user.id != user_id and not is_superuser(current_user):
@@ -839,7 +840,7 @@ async def upload_avatar(
     # 更新用户头像 URL
     avatar_url = f"/uploads/avatars/{filename}"
     user.avatar = avatar_url
-    db.commit()
+    safe_commit(db)
 
     return {
         "code": 200,

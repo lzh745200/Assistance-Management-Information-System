@@ -536,7 +536,7 @@ import { ref, computed, onMounted, onUnmounted, watch, type Component } from 'vu
 import QuickActions from '@/views/dashboard/components/QuickActions.vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useAuthStore } from '@/stores/auth'
-import request from '@/api/request'
+import { get, post, put, del, patch, apiRequest } from '@/api/request'
 import { useOnboarding } from '@/composables/useOnboarding'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { enhancedStorage, STORAGE_KEYS } from '@/utils/enhancedStorage'
@@ -748,11 +748,8 @@ function mapTaskItem(item: any) {
 async function loadTasks() {
   tasksLoading.value = true
   try {
-    const res = await request.get('/todos', {
-      params: { page: 1, page_size: 50 },
-      showError: false,
-    } as any)
-    const data = res.data?.data || res.data
+    const res = await get('/todos')
+    const data = res.data || res
     const items = data?.items || (Array.isArray(data) ? data : [])
     tasks.value = items.map(mapTaskItem)
   } catch (e) {
@@ -767,11 +764,11 @@ async function addTask() {
   const title = newTaskTitle.value.trim()
   if (!title) return
   try {
-    const res = await request.post('/todos', {
+    const res = await post('/todos', {
       title,
       priority: newTaskPriority.value,
     })
-    const created = res.data?.data || res.data
+    const created = res.data || res
     if (created?.id) {
       tasks.value.unshift(mapTaskItem(created))
     } else {
@@ -788,8 +785,8 @@ async function toggleTask(id: number) {
   const task = tasks.value.find((t: any) => t.id === id)
   if (!task) return
   try {
-    const res = await request.patch(`/todos/${id}/toggle`)
-    const updated = res.data?.data || res.data
+    const res = await patch(`/todos/${id}/toggle`)
+    const updated = res.data || res
     if (updated) {
       task.completed = updated.completed
     } else {
@@ -802,7 +799,7 @@ async function toggleTask(id: number) {
 
 async function removeTask(id: number) {
   try {
-    await request.delete(`/todos/${id}`)
+    await del(`/todos/${id}`)
     tasks.value = tasks.value.filter((t: any) => t.id !== id)
   } catch (e) {
     logger.error('删除待办失败:', e)
@@ -814,7 +811,7 @@ async function addActivity() {
   const { type, action, target } = newActivity.value
   if (!action.trim() || !target.trim()) return
   try {
-    const res = await request.post('/dashboard/recent-activities', {
+    const res = await post('/dashboard/recent-activities', {
       type,
       action: action.trim(),
       target: target.trim(),
@@ -851,7 +848,7 @@ async function saveActivity(id: number | string) {
   const { type, action, target } = editingActivity.value
   if (!action.trim() || !target.trim()) return
   try {
-    const res = await request.put(`/dashboard/recent-activities/${id}`, {
+    const res = await put(`/dashboard/recent-activities/${id}`, {
       type,
       action: action.trim(),
       target: target.trim(),
@@ -893,7 +890,7 @@ async function deleteActivity(id: number | string) {
     return
   }
   try {
-    await request.delete(`/dashboard/recent-activities/${id}`)
+    await del(`/dashboard/recent-activities/${id}`)
     // 使用宽松比较确保 string/number id 都能匹配
     recentActivities.value = recentActivities.value.filter((a: any) => String(a.id) !== String(id))
   } catch (e: any) {
@@ -905,9 +902,7 @@ async function deleteActivity(id: number | string) {
 
 async function reloadActivities() {
   try {
-    const res = await request.get('/dashboard/recent-activities', {
-      showError: false,
-    } as any)
+    const res = await get('/dashboard/recent-activities')
     const d = res.data
     recentActivities.value = (d?.items || (Array.isArray(d) ? d : [])).slice(0, 8)
   } catch {
@@ -1206,7 +1201,7 @@ function formatBackupTime(iso: string) {
 async function handleOneKeyBackup() {
   backingUp.value = true
   try {
-    await request.post('/system/backup', {
+    await post('/system/backup', {
       description: `一键备份 ${new Date().toLocaleString('zh-CN')}`,
     })
     ElMessage.success('备份创建成功！')
@@ -1219,9 +1214,7 @@ async function handleOneKeyBackup() {
 
 async function loadRestoreBackups() {
   try {
-    const res = await request.get('/system/backup', {
-      showError: false,
-    } as any)
+    const res = await get('/system/backup')
     const d = res.data
     restoreBackups.value = Array.isArray(d) ? d : d?.items || d?.data || []
   } catch {
@@ -1241,7 +1234,7 @@ async function restoreFromBackup(filename: string) {
   }
   restoring.value = true
   try {
-    await request.post('/system/backup/restore', { filename })
+    await post('/system/backup/restore', { filename })
     ElMessage.success('数据恢复成功！请刷新页面。')
     showRestoreDialog.value = false
   } catch {
@@ -1269,7 +1262,7 @@ async function handleUploadRestore(event: Event) {
   try {
     const formData = new FormData()
     formData.append('file', file)
-    await request.post('/system/backup/upload-restore', formData, {
+    await post('/system/backup/upload-restore', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     ElMessage.success('数据恢复成功！请刷新页面。')
@@ -1289,10 +1282,7 @@ const REFRESH_INTERVAL = 2 * 60 * 1000 // 2分钟自动刷新
 async function refreshDashboard() {
   dashRefreshing.value = true
   try {
-    const res = await request.get('/dashboard/stats', {
-      params: { refresh: true },
-      showError: false,
-    } as any)
+    const res = await get('/dashboard/stats')
     // 只有当数据不为空且至少有一个非零值时才设置
     if (res.data && Object.values(res.data).some((v) => typeof v === 'number' && v > 0)) {
       dashStats.value = res.data
@@ -1313,13 +1303,10 @@ async function loadDashboard() {
   const silentConfig = { showError: false } as any
   try {
     const results = await Promise.allSettled([
-      request.get('/dashboard/stats', silentConfig),
-      request.get('/projects', {
-        params: { page: 1, page_size: 5 },
-        ...silentConfig,
-      }),
-      request.get('/dashboard/recent-activities', silentConfig),
-      request.get('/messages', silentConfig),
+      apiRequest({ method: 'GET', url: '/dashboard/stats', ...silentConfig }),
+      apiRequest({ method: 'GET', url: '/projects', params: { page: 1, page_size: 5 }, ...silentConfig }),
+      apiRequest({ method: 'GET', url: '/dashboard/recent-activities', ...silentConfig }),
+      apiRequest({ method: 'GET', url: '/messages', ...silentConfig }),
     ])
 
     // 统计数据（拦截器已自动解包 response => response）

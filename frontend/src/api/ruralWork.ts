@@ -1,4 +1,4 @@
-import api from './request'
+import { get, post, put, del } from '@/api/request'
 
 // Types
 export type WorkStatus = 'pending' | 'in_progress' | 'completed' | 'delayed' | 'cancelled'
@@ -24,35 +24,35 @@ export interface WorkReportData {
 
 // Named functions — unwrap AxiosResponse，返回 res.data
 export const getRuralWorks = (params?: any) =>
-  api.get('/rural-works', { params }).then((r: any) => r.data)
+  get('/rural-works', { params })
 
 export const createRuralWork = (data: any) =>
-  api.post('/rural-works', data).then((r: any) => r.data)
+  post('/rural-works', data)
 
 export const updateRuralWork = (id: number, data: any) =>
-  api.put('/rural-works/' + id, data).then((r: any) => r.data)
+  put('/rural-works/' + id, data)
 
 export const deleteRuralWork = (id: number) =>
-  api.delete('/rural-works/' + id).then((r: any) => r.data)
+  del('/rural-works/' + id)
 
 export const generateWorkReport = (params?: any) =>
-  api.get('/rural-works/report/generate', { params }).then((r: any) => r.data)
+  get('/rural-works/report/generate', { params })
 
 // Backward-compatible object form
 export const ruralWorkApi = {
-  list: (params?: any) => api.get('/rural-works', { params }).then((r: any) => r.data),
-  get: (id: number) => api.get('/rural-works/' + id).then((r: any) => r.data),
-  getById: (id: number) => api.get('/rural-works/' + id).then((r: any) => r.data),
-  create: (data: any) => api.post('/rural-works', data).then((r: any) => r.data),
-  update: (id: number, data: any) => api.put('/rural-works/' + id, data).then((r: any) => r.data),
+  list: (params?: any) => get('/rural-works', { params }),
+  get: (id: number) => get('/rural-works/' + id),
+  getById: (id: number) => get('/rural-works/' + id),
+  create: (data: any) => post('/rural-works', data),
+  update: (id: number, data: any) => put('/rural-works/' + id, data),
   delete: deleteRuralWork,
   getRuralWorks,
   createRuralWork,
   updateRuralWork,
   deleteRuralWork,
   generateWorkReport,
-  getStatistics: () => api.get('/rural-works/statistics/summary'),
-  getVillagesForSelect: () => api.get('/rural-works/villages'),
-  getAvailableYears: () => api.get('/rural-works/years'),
-  batchDelete: (ids: number[]) => api.post('/rural-works/batch-delete', { ids }),
+  getStatistics: () => get('/rural-works/statistics/summary'),
+  getVillagesForSelect: () => get('/rural-works/villages'),
+  getAvailableYears: () => get('/rural-works/years'),
+  batchDelete: (ids: number[]) => post('/rural-works/batch-delete', { ids }),
 }

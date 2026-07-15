@@ -3,7 +3,7 @@
  * 提供系统后台任务的状态查询、控制和监控功能
  */
 
-import { get, post, del } from './request'
+import { get, post, del } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

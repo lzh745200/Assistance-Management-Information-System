@@ -240,7 +240,7 @@ import {
   FirstAidKit,
 } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
-import request from '@/api/request'
+import { get, apiRequest } from '@/api/request'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'
 
@@ -567,7 +567,7 @@ function pushHistory(cpu: number, mem: number, disk: number) {
 // ── Data fetching ──
 async function fetchSnapshot() {
   try {
-    const res = await request.get('/system/monitor/snapshot')
+    const res = await get('/system/monitor/snapshot')
     const data = (res as any)?.data?.data ?? (res as any)?.data ?? {}
     snapshot.value = data
     return data as SnapshotData | null
@@ -579,9 +579,7 @@ async function fetchSnapshot() {
 
 async function fetchApiStats() {
   try {
-    const res = await request.get('/system/monitor/api-stats', {
-      params: { hours: 24 },
-    })
+    const res = await apiRequest({ method: 'GET', url: '/system/monitor/api-stats', params: { hours: 24 }})
     const data = (res as any)?.data?.data ?? (res as any)?.data ?? {}
     apiStats.value = data?.top_endpoints ?? []
     return apiStats.value
@@ -593,7 +591,7 @@ async function fetchApiStats() {
 
 async function fetchHealth() {
   try {
-    const res = await request.get('/health/full')
+    const res = await get('/health/full')
     const data = (res as any)?.data ?? {}
     healthData.value = data
     return data as HealthData | null

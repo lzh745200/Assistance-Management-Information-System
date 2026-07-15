@@ -1,7 +1,7 @@
 /**
  * 地图可视化API
  */
-import { get, put } from './request'
+import { get, put } from '@/api/request'
 
 const BASE_URL = '/map'
 

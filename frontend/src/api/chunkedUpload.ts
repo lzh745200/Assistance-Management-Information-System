@@ -3,7 +3,7 @@
  * 实现大文件分片上传功能
  */
 
-import { get, post, del } from './request'
+import { get, post, del } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

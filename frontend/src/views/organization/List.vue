@@ -117,7 +117,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import request from '@/api/request'
+import { post, put, del, apiRequest } from '@/api/request'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import Sortable from 'sortablejs'
@@ -181,14 +181,12 @@ const parentOrgOptions = computed(() => {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await request.get('/organizations', {
-      params: {
+    const response = await apiRequest({ method: 'GET', url: '/organizations', params: {
         page: currentPage.value,
         page_size: pageSize.value,
         search: searchText.value || undefined,
         is_active: true, // 只显示活跃的组织，过滤掉已删除的
-      },
-    })
+      }})
     const resData = response.data
     tableData.value =
       resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : [])
@@ -253,11 +251,11 @@ async function handleSubmit() {
 
     if (formData.value.id) {
       // 编辑
-      await request.put(`/organizations/${formData.value.id}`, payload)
+      await put(`/organizations/${formData.value.id}`, payload)
       ElMessage.success('已保存')
     } else {
       // 新增
-      await request.post('/organizations', payload)
+      await post('/organizations', payload)
       ElMessage.success('已创建')
     }
 
@@ -286,7 +284,7 @@ async function handleDelete(row: any) {
     )
 
     // 执行物理删除
-    const response = await request.delete(`/organizations/${row.id}`)
+    const response = await del(`/organizations/${row.id}`)
 
     // 显示后端返回的消息
     ElMessage.success(response.data?.message || '组织已删除')

@@ -587,7 +587,7 @@ import { ElMessage, ElMessageBox, ElForm } from 'element-plus'
 import { Upload, ArrowLeft, Check, Wallet } from '@element-plus/icons-vue'
 
 import { projectApi } from '@/api/projects'
-import request from '@/api/request'
+import { get } from '@/api/request'
 
 // 文件分类定义
 const fileCategories = [
@@ -638,7 +638,7 @@ const villages = ref<{ id: number | string; name: string; county?: string }[]>([
 // 加载帮扶村下拉选项
 async function loadVillageOptions() {
   try {
-    const res = await request.get('/supported-villages/options/dropdown')
+    const res = await get('/supported-villages/options/dropdown')
     const items = res.data?.items || []
     villages.value = items.map((v: any) => ({
       id: v.id,
@@ -908,7 +908,7 @@ async function loadProjectData() {
   loading.value = true
   try {
     const resp = await projectApi.getById(projectId)
-    const data = resp?.data || resp
+    const data = resp
     if (!data) {
       ElMessage.error('未找到项目数据')
       pushSafe('/projects')

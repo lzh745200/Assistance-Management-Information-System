@@ -3,7 +3,7 @@
  * 提供 TOTP 双因素认证的启用、验证、禁用和状态查询
  */
 
-import { get, post } from './request'
+import { get, post } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

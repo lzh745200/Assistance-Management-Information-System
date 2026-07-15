@@ -128,7 +128,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import request from '@/api/request'
+import { get, post, del } from '@/api/request'
 
 const loading = ref(false)
 const creating = ref(false)
@@ -155,7 +155,7 @@ const restoreForm = ref({ password: '' })
 
 async function fetchBackupList() {
   try {
-    const res = await request.get('/system/backup')
+    const res = await get('/system/backup')
     const resData = res.data
     backupList.value = resData?.data?.items ?? resData?.items ?? []
   } catch {
@@ -165,7 +165,7 @@ async function fetchBackupList() {
 
 async function fetchBackupStats() {
   try {
-    const res = await request.get('/system/backup/stats')
+    const res = await get('/system/backup/stats')
     const resData = res.data?.data ?? res.data
     backupStats.value = {
       totalBackups: resData?.totalBackups ?? 0,
@@ -201,7 +201,7 @@ function handleCreateBackup() {
 async function confirmCreateBackup() {
   creating.value = true
   try {
-    const res = await request.post('/system/backup', {
+    const res = await post('/system/backup', {
       description: backupForm.value.description,
       include_uploads: backupForm.value.include_uploads,
       password: backupForm.value.password || null,
@@ -223,7 +223,7 @@ async function handleDelete(row: any) {
     await ElMessageBox.confirm(`确定要删除备份 "${row.file_name}" 吗？`, '警告', {
       type: 'warning',
     })
-    const res = await request.delete(`/system/backup/${row.file_name}`)
+    const res = await del(`/system/backup/${row.file_name}`)
     if (res.data?.success !== false) {
       ElMessage.success('已删除')
       await refreshAll()
@@ -245,7 +245,7 @@ async function confirmRestore() {
   if (!restoreTarget.value) return
   restoring.value = true
   try {
-    const res = await request.post('/system/backup/restore', {
+    const res = await post('/system/backup/restore', {
       filename: restoreTarget.value.file_name,
       password: restoreForm.value.password || null,
     })

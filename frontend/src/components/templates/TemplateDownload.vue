@@ -27,7 +27,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Document } from '@element-plus/icons-vue'
-import { parseContentDisposition, downloadBlob } from '@/api/request'
+import { downloadBlob, parseContentDisposition } from '@/api/request'
 
 export interface TemplateOption {
   type: string

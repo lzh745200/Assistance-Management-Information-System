@@ -3,7 +3,7 @@
  * 提供系统运行环境的诊断与检查
  */
 
-import { get } from './request'
+import { get } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

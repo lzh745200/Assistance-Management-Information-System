@@ -137,7 +137,7 @@ import { logger } from '@/utils/logger'
 import { ref, reactive, computed, onErrorCaptured } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Cpu } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { post, apiRequest } from '@/api/request'
 import { DATA_TYPES, DATA_TYPE_LABELS } from '@/constants/dataTypes'
 
 defineOptions({ name: 'ReportPackage' })
@@ -206,7 +206,7 @@ async function previewData() {
   if (!validateForm()) return
   previewing.value = true
   try {
-    const { data } = await request.post('/data-packages/preview', {
+    const data = await post('/data-packages/preview', {
       year: form.year,
       data_types: form.dataTypes,
     })
@@ -229,7 +229,7 @@ async function generatePackage() {
 
   generating.value = true
   try {
-    const { data } = await request.post('/data-packages/export', {
+    const data = await post('/data-packages/export', {
       data_types: form.dataTypes,
       description: form.remarks || `${form.year}年度数据上报`,
       type: 'report',
@@ -256,9 +256,7 @@ async function downloadPackage() {
   }
   downloading.value = true
   try {
-    const response = await request.get(`/data-packages/${packageId.value}/download`, {
-      responseType: 'blob',
-    })
+    const response = await apiRequest({ method: 'GET', url: `/data-packages/${packageId.value}/download`, responseType: 'blob' })
     const blob = new Blob([response.data])
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -283,7 +281,7 @@ async function handleOneClickReport() {
   try {
     // 尝试使用一键上报接口
     try {
-      const response = await request.post('/data-packages/one-click-report', {
+      const response = await post('/data-packages/one-click-report', {
         year: form.year,
         data_types: form.dataTypes,
         remarks: form.remarks || `一键上报 ${form.year}年度数据`,
@@ -303,9 +301,7 @@ async function handleOneClickReport() {
         URL.revokeObjectURL(url)
       } else if (data?.download_url) {
         // JSON 响应带下载链接
-        const dlRes = await request.get(data.download_url, {
-          responseType: 'blob',
-        })
+        const dlRes = await apiRequest({ method: 'GET', url: data.download_url, responseType: 'blob' })
         const blob = new Blob([dlRes.data])
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
@@ -326,18 +322,16 @@ async function handleOneClickReport() {
     }
 
     // 回退流程：预览 → 生成 → 下载
-    const { data: previewResult } = await request
-      .post('/data-packages/preview', {
-        year: form.year,
-        data_types: form.dataTypes,
-      })
-      .catch((): { data: any } => ({ data: null }))
+    const previewResult = await post('/data-packages/preview', {
+      year: form.year,
+      data_types: form.dataTypes,
+    }).catch((): any => null)
 
     if (previewResult) {
       previewCounts.value = previewResult?.counts || previewResult?.data?.counts || {}
     }
 
-    const { data: genResult } = await request.post('/data-packages', {
+    const { data: genResult } = await post('/data-packages', {
       year: form.year,
       data_types: form.dataTypes,
       type: 'report',

@@ -33,6 +33,11 @@ class _MetricsStore:
         self.active_requests = 0
         self.total_duration = 0.0
         self._path_counts = {}  # (method, status) -> count
+        self._path_durations = {}  # (method, path) -> [total, count, max]
+        self._slow_requests = []  # [(method, path, duration, timestamp)]
+        self._max_slow = 100  # 最多保留 100 条慢请求记录
+        self._slow_threshold = 1.0  # 慢请求阈值（秒）
+        self._start_time = time.time()
 
     def record(self, method: str, path: str, status: int, duration: float):
         with self._lock:
@@ -42,6 +47,22 @@ class _MetricsStore:
                 self.error_count += 1
             key = (method, status)
             self._path_counts[key] = self._path_counts.get(key, 0) + 1
+
+            # 按路径统计耗时
+            path_key = (method, path)
+            if path_key not in self._path_durations:
+                self._path_durations[path_key] = [0.0, 0, 0.0]
+            entry = self._path_durations[path_key]
+            entry[0] += duration
+            entry[1] += 1
+            if duration > entry[2]:
+                entry[2] = duration
+
+            # 记录慢请求
+            if duration > self._slow_threshold:
+                self._slow_requests.append((method, path, duration, time.time()))
+                if len(self._slow_requests) > self._max_slow:
+                    self._slow_requests = self._slow_requests[-self._max_slow:]
 
     def inc_active(self):
         with self._lock:
@@ -58,14 +79,49 @@ class _MetricsStore:
                 if self.request_count > 0
                 else 0.0
             )
+            uptime = time.time() - self._start_time
+            error_rate = (
+                self.error_count / self.request_count
+                if self.request_count > 0
+                else 0.0
+            )
+            # 构建按路径的统计
+            top_endpoints = []
+            for (method, path), (total, count, max_dur) in sorted(
+                self._path_durations.items(), key=lambda x: x[1][0], reverse=True
+            )[:10]:
+                top_endpoints.append({
+                    "method": method,
+                    "path": path,
+                    "total_duration": round(total, 3),
+                    "count": count,
+                    "avg_duration": round(total / count, 3) if count > 0 else 0,
+                    "max_duration": round(max_dur, 3),
+                })
+            # 慢请求列表
+            slow_reqs = []
+            for method, path, dur, ts in reversed(self._slow_requests):
+                slow_reqs.append({
+                    "method": method,
+                    "path": path,
+                    "duration": round(dur, 3),
+                    "timestamp": ts,
+                })
             return {
                 "request_count": self.request_count,
                 "error_count": self.error_count,
+                "error_rate": round(error_rate, 4),
                 "active_requests": self.active_requests,
                 "avg_duration": round(avg_duration, 3),
+                "uptime_seconds": round(uptime, 1),
+                "requests_per_second": round(self.request_count / uptime, 2) if uptime > 0 else 0,
                 "by_method_status": {
                     f"{m}_{s}": c for (m, s), c in self._path_counts.items()
                 },
+                "top_endpoints": top_endpoints,
+                "slow_requests": slow_reqs,
+                "slow_request_count": len(self._slow_requests),
+                "slow_threshold_seconds": self._slow_threshold,
             }
 
 

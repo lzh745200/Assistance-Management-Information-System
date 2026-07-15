@@ -118,7 +118,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { logger } from '@/utils/logger'
 import { QuestionFilled } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { apiRequest } from '@/api/request'
 
 const { pushSafe } = useRouterSafe()
 const registerFormRef = ref<FormInstance>()
@@ -171,7 +171,7 @@ const handleRegister = async () => {
     await registerFormRef.value.validate()
     loading.value = true
 
-    await request({
+    await apiRequest({
       url: '/auth/register',
       method: 'post',
       data: {

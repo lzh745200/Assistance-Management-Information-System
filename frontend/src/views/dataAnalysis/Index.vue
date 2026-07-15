@@ -127,7 +127,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, onMounted } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get } from '@/api/request'
 
 const activeTab = ref('investment')
 const loading = ref(false)
@@ -158,7 +158,7 @@ const yearlyComparison = ref({
 async function loadAnalysisData() {
   loading.value = true
   try {
-    const res = await request.get('/statistics/analysis')
+    const res = await get('/statistics/analysis')
     const data = res.data
     overview.value = data.overview || overview.value
     // 处理后端返回小数形式的完整率（如 0.85 → 85）

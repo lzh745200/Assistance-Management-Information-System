@@ -4,7 +4,7 @@
  * Requirements: 1.2, 2.1-2.5
  */
 
-import { get, post, apiRequest } from './request'
+import { get, post, apiRequest } from '@/api/request'
 import type {
   VillageFilters,
   FilterOptions,
@@ -111,10 +111,8 @@ export async function compareYears(
   metrics?: CompareMetric[]
 ): Promise<YearCompareResult> {
   const response = await get<YearCompareResult>(`${BASE_URL}/compare-years/${villageId}`, {
-    params: {
-      years: years.join(','),
-      metrics: metrics?.join(','),
-    },
+    years: years.join(','),
+    metrics: metrics?.join(','),
   })
   return response
 }
@@ -131,12 +129,10 @@ export async function getSummaryStatistics(params?: {
   isKeyCounty?: boolean
 }): Promise<SummaryStatistics> {
   const response = await get<SummaryStatistics>(`${BASE_URL}/summary`, {
-    params: {
-      year: params?.year,
-      department: params?.department,
-      is_three_regions: params?.isThreeRegions,
-      is_key_county: params?.isKeyCounty,
-    },
+    year: params?.year,
+    department: params?.department,
+    is_three_regions: params?.isThreeRegions,
+    is_key_county: params?.isKeyCounty,
   })
   return response
 }

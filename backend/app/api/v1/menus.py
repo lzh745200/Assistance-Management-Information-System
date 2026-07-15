@@ -28,6 +28,7 @@ from app.core.security import (
     ROLE_SUPER_ADMIN,
 )
 from app.models.user import User
+from app.core.transaction import safe_commit
 
 
 def _is_admin(user) -> bool:
@@ -576,7 +577,7 @@ async def set_user_menu_config(
         mode = "custom"
         message = f"已设置用户菜单权限（共 {len(data.menu_keys)} 个菜单）"
 
-    db.commit()
+    safe_commit(db)
     logger.info(f"管理员 {current_user.username} 设置用户 {user.username} 菜单权限: {mode}")
 
     return {

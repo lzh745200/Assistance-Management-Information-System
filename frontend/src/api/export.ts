@@ -1,7 +1,7 @@
 /**
  * 导出 API
  */
-import request from './request'
+import { get, apiRequest } from '@/api/request'
 
 export interface ExportTask {
   id: string
@@ -24,32 +24,27 @@ const EXPORT_BASE = '/export'
 const ASYNC_EXPORT_BASE = '/async-export'
 
 export async function exportVillages(params: ExportFilterParams) {
-  const res = await request.get(`${EXPORT_BASE}/villages`, {
-    params,
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${EXPORT_BASE}/villages`, params, responseType: 'blob' })
   return res.data
 }
 
 export async function getExportTasks(params?: { page?: number; page_size?: number }) {
-  const res = await request.get(`${ASYNC_EXPORT_BASE}/tasks`, { params })
+  const res = await get(`${ASYNC_EXPORT_BASE}/tasks`, { params })
   return res.data
 }
 
 export async function getExportStatus(taskId: string) {
-  const res = await request.get(`${ASYNC_EXPORT_BASE}/status/${taskId}`)
+  const res = await get(`${ASYNC_EXPORT_BASE}/status/${taskId}`)
   return res.data
 }
 
 export async function getExportHistory(params?: { page?: number; page_size?: number }) {
-  const res = await request.get(`${ASYNC_EXPORT_BASE}/tasks`, { params })
+  const res = await get(`${ASYNC_EXPORT_BASE}/tasks`, { params })
   return res.data
 }
 
 export async function downloadExportFile(taskId: string) {
-  const res = await request.get(`${ASYNC_EXPORT_BASE}/download/${taskId}`, {
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${ASYNC_EXPORT_BASE}/download/${taskId}`, responseType: 'blob' })
   return res.data
 }
 
@@ -82,57 +77,36 @@ export function triggerDownload(blob: Blob, filename: string) {
 }
 
 export async function exportReportWord(reportType: string, year?: number) {
-  const res = await request.get(`${EXPORT_BASE}/report-word`, {
-    params: { report_type: reportType, ...(year ? { year } : {}) },
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${EXPORT_BASE}/report-word`, params: { report_type: reportType, ...(year ? { year } : {}) }, responseType: 'blob' })
   return res.data
 }
 
 export async function exportReportPdf(reportType: string, year?: number) {
-  const res = await request.get(`${EXPORT_BASE}/report-pdf`, {
-    params: { report_type: reportType, ...(year ? { year } : {}) },
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${EXPORT_BASE}/report-pdf`, params: { report_type: reportType, ...(year ? { year } : {}) }, responseType: 'blob' })
   return res.data
 }
 
 export async function exportUsers(params?: ExportFilterParams) {
-  const res = await request.get(`${EXPORT_BASE}/users`, {
-    params,
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${EXPORT_BASE}/users`, params, responseType: 'blob' })
   return res.data
 }
 
 export async function exportSchools(params?: ExportFilterParams) {
-  const res = await request.get(`${EXPORT_BASE}/schools`, {
-    params,
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${EXPORT_BASE}/schools`, params, responseType: 'blob' })
   return res.data
 }
 
 export async function exportProjects(params?: ExportFilterParams) {
-  const res = await request.get(`${EXPORT_BASE}/projects`, {
-    params,
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${EXPORT_BASE}/projects`, params, responseType: 'blob' })
   return res.data
 }
 
 export async function exportFunds(params?: ExportFilterParams) {
-  const res = await request.get(`${EXPORT_BASE}/funds`, {
-    params,
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${EXPORT_BASE}/funds`, params, responseType: 'blob' })
   return res.data
 }
 
 export async function exportComprehensive(params?: ExportFilterParams) {
-  const res = await request.get(`${EXPORT_BASE}/comprehensive`, {
-    params,
-    responseType: 'blob',
-  })
+  const res = await apiRequest({ method: 'GET', url: `${EXPORT_BASE}/comprehensive`, params, responseType: 'blob' })
   return res.data
 }

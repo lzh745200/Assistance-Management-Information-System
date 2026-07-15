@@ -155,7 +155,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage } from 'element-plus'
 import { logger } from '@/utils/logger'
 import { CopyDocument, ArrowLeft, Key } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get } from '@/api/request'
 import { copyToClipboard } from '@/utils/clipboard'
 
 const { pushSafe } = useRouterSafe()
@@ -180,7 +180,7 @@ const machineData = ref<MachineData | null>(null)
 const getMachineCode = async () => {
   loading.value = true
   try {
-    const response = await request.get('/machine-code/get-machine-code')
+    const response = await get('/machine-code/get-machine-code')
     // 后端返回 {code:200, data:{machine_code, verification_code, machine_info}}
     const resData = response?.data ?? response
     const payload = resData?.data ?? resData

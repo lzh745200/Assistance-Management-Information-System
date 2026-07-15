@@ -78,7 +78,7 @@ export const useFundsStore = defineStore('funds', () => {
   }
 
   async function approveFund(id: number) {
-    await post<any>('/funds/approve/' + id, {})
+    await post<any>('/funds/' + id + '/approve', {})
     const idx = fundList.value.findIndex((f: any) => f.id === id)
     if (idx >= 0) fundList.value[idx].status = 'approved'
   }

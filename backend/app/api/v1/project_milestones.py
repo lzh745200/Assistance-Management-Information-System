@@ -128,7 +128,7 @@ async def create_milestone(
 
     milestone = ProjectMilestone(project_id=project_id, **data.model_dump())
     db.add(milestone)
-    db.commit()
+    safe_commit(db)
     db.refresh(milestone)
     return milestone
 
@@ -161,7 +161,7 @@ async def update_milestone(
     if update_data.get("status") == "completed" and not milestone.actual_date:
         milestone.actual_date = date.today()
 
-    db.commit()
+    safe_commit(db)
     db.refresh(milestone)
 
     # 自动更新项目进度
@@ -190,7 +190,7 @@ async def delete_milestone(
         raise HTTPException(status_code=404, detail="里程碑不存在")
 
     db.delete(milestone)
-    db.commit()
+    safe_commit(db)
 
     # 自动更新项目进度
     _auto_update_project_progress(db, project_id)
@@ -287,7 +287,7 @@ async def transition_status(
         operator_id=getattr(current_user, "id", None),
     )
     db.add(change_log)
-    db.commit()
+    safe_commit(db)
 
     return StatusTransitionResponse(valid=True, new_status=data.new_status)
 
@@ -324,6 +324,7 @@ async def get_upcoming_milestones(
 ):
     """获取即将到期的里程碑（首页仪表板用）"""
     from datetime import timedelta
+from app.core.transaction import safe_commit
 
     today = date.today()
     deadline = today + timedelta(days=days)
@@ -420,4 +421,4 @@ def _auto_update_project_progress(db: Session, project_id: int):
     if milestones:
         progress = calculate_milestone_progress(milestones)
         db.query(Project).filter(Project.id == project_id).update({"progress": progress})
-        db.commit()
+        safe_commit(db)

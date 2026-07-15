@@ -142,7 +142,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { post, apiRequest } from '@/api/request'
 
 const loading = ref(false)
 const batchChecking = ref(false)
@@ -179,9 +179,7 @@ const getVerifyStatusText = (status: string): string => {
 async function loadData() {
   loading.value = true
   try {
-    const res = await request.get('/supported-villages', {
-      params: { page: 1, page_size: 50 },
-    })
+    const res = await apiRequest({ method: 'GET', url: '/supported-villages', params: { page: 1, page_size: 50 }})
     const data = res.data
     const items = data?.items || (Array.isArray(data) ? data : [])
     rawVillages.value = items
@@ -236,7 +234,7 @@ async function handleBatchCheck() {
     if (!row) continue
 
     try {
-      const resp = await request.post('/validation/validate', raw, {
+      const resp = await post('/validation/validate', raw, {
         params: { module: 'village' },
       })
       const result = resp.data

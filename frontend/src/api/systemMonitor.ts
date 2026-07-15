@@ -4,7 +4,7 @@
  * 对应后端 /api/v1/system/monitor/snapshot 端点
  * 提供 CPU/内存/磁盘/数据库文件大小等系统资源信息
  */
-import { get } from './request'
+import { get } from '@/api/request'
 
 export interface MonitorSnapshot {
   timestamp: string

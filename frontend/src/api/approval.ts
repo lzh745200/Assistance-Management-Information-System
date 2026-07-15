@@ -4,7 +4,7 @@
  * Requirements: 3.2, 3.4, 3.5, 3.6, 3.7, 3.8, 4.1, 4.3, 4.6
  */
 
-import { get, post, put, del } from './request'
+import { get, post, put, del } from '@/api/request'
 
 // ==================== 类型定义 ====================
 

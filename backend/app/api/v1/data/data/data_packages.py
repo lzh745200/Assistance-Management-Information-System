@@ -627,7 +627,7 @@ async def delete_data_package(
 
     # 删除数据库记录
     db.delete(package)
-    db.commit()
+    safe_commit(db)
 
     return {"message": "删除成功"}
 
@@ -811,6 +811,7 @@ async def upload_encrypted_package(
 
         # 创建数据包记录
         from app.models.data_package import PackageStatus
+from app.core.transaction import safe_commit
 
         package = service._create_package_record(
             file_path=temp_file_path,
@@ -823,7 +824,7 @@ async def upload_encrypted_package(
         # 如果检测到加密，更新记录
         if is_encrypted:
             package.is_encrypted = True
-            service.db.commit()
+            service.safe_commit(db)
 
         return DataPackageResponse(
             id=package.id,

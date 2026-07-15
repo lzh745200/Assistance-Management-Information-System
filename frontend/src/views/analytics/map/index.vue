@@ -160,7 +160,7 @@ import { parseCoordinate, calculateRoute, type LatLng, type RouteResult } from '
 import OfflineMap from '@/components/map/OfflineMap.vue'
 import MapVisualization from './MapVisualization.vue'
 import { Van, Search } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { get } from '@/api/request'
 import { logger } from '@/utils/logger'
 
 const { pushSafe } = useRouterSafe()
@@ -341,7 +341,7 @@ async function handleSearch() {
   searching.value = true
   showSearchResults.value = false
   try {
-    const res = await request.get('/map/search', { params: { q: searchKeyword.value.trim() } })
+    const res = await get('/map/search', { q: searchKeyword.value.trim() })
     const data = res.data || res
     const results: any[] = []
     if (data.villages) {

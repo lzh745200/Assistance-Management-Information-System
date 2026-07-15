@@ -1,26 +1,22 @@
 /**
  * 用户变更操作 API
  */
-import request from '../request'
+import { post, put, del } from '../request'
 
 export async function createUser(data: any) {
-  const response = await request.post('/users', data)
-  return response.data
+  return post('/users', data)
 }
 
 export async function updateUser(id: string, data: any) {
-  const response = await request.put(`/users/${id}`, data)
-  return response.data
+  return put(`/users/${id}`, data)
 }
 
 export async function deleteUser(id: string) {
-  const response = await request.delete(`/users/${id}`)
-  return response.data
+  return del(`/users/${id}`)
 }
 
 export async function resetPassword(id: string, newPassword?: string) {
-  const response = await request.post(`/users/${id}/admin-reset-password`, {
+  return post(`/users/${id}/admin-reset-password`, {
     new_password: newPassword,
   })
-  return response.data
 }

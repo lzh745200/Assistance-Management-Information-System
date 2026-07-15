@@ -36,7 +36,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { EditPen, Close } from '@element-plus/icons-vue'
-import request from '@/api/request'
+import { put, del, apiRequest } from '@/api/request'
 
 const activities = ref<any[]>([])
 const editingId = ref<string | null>(null)
@@ -49,7 +49,7 @@ function startEdit(item: any) {
 
 async function saveEdit(id: string) {
   try {
-    await request.put(`/dashboard/recent-activities/${id}`, editForm.value)
+    await put(`/dashboard/recent-activities/${id}`, editForm.value)
     const idx = activities.value.findIndex((a) => a.id === id)
     if (idx >= 0) {
       activities.value[idx].action = editForm.value.action
@@ -63,7 +63,7 @@ async function saveEdit(id: string) {
 
 async function deleteActivity(id: string) {
   try {
-    await request.delete(`/dashboard/recent-activities/${id}`)
+    await del(`/dashboard/recent-activities/${id}`)
     activities.value = activities.value.filter((a) => a.id !== id)
   } catch {
     ElMessage.error('删除失败，请重试')
@@ -79,9 +79,7 @@ function formatTime(t: string): string {
 
 async function loadActivities() {
   try {
-    const res = await request.get('/dashboard/recent-activities', {
-      params: { limit: 10 },
-    } as any)
+    const res = await apiRequest({ method: 'GET', url: '/dashboard/recent-activities', params: { limit: 10 }})
     const data = (res as any)?.data?.items || (res as any)?.items || []
     activities.value = (Array.isArray(data) ? data : []).slice(0, 10)
   } catch {

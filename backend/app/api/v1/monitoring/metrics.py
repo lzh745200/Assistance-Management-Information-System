@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_active_user
+from app.middleware.metrics_middleware import metrics_store
 from app.models.user import User
 from app.services.business_metrics_service import business_metrics_service
 
@@ -41,3 +42,53 @@ async def get_prometheus_metrics():
     return PlainTextResponse(
         content=business_metrics_service.to_prometheus_format(), media_type="text/plain; charset=utf-8"
     )
+
+
+@router.get("/performance-dashboard")
+async def get_performance_dashboard(
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    性能监控面板 — 综合展示 HTTP 请求指标、慢请求、错误率等
+    需要管理员权限
+    """
+    if not current_user.is_superuser:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="需要管理员权限")
+
+    summary = metrics_store.get_summary()
+
+    # 数据库统计
+    db_stats = {}
+    try:
+        from app.core.database import SessionLocal
+        from sqlalchemy import text
+        db = SessionLocal()
+        try:
+            # 表行数统计
+            tables = ["users", "funds", "projects", "supported_villages", "schools", "audit_logs"]
+            for table in tables:
+                result = db.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                db_stats[table] = result.scalar() or 0
+            # 数据库文件大小（SQLite）
+            from app.core.database import IS_SQLITE
+            if IS_SQLITE:
+                result = db.execute(text("PRAGMA page_count"))
+                page_count = result.scalar() or 0
+                result2 = db.execute(text("PRAGMA page_size"))
+                page_size = result2.scalar() or 0
+                db_stats["db_size_mb"] = round(page_count * page_size / 1024 / 1024, 2)
+        finally:
+            db.close()
+    except Exception:
+        pass
+
+    return {
+        "code": 200,
+        "success": True,
+        "message": "成功",
+        "data": {
+            "http_metrics": summary,
+            "db_stats": db_stats,
+        }
+    }

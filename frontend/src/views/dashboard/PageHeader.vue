@@ -50,7 +50,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useAuthStore } from '@/stores/auth'
 import { Plus, TrendCharts, Upload, MoreFilled, Grid } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import request from '@/api/request'
+import { post } from '@/api/request'
 import GlobalSearch from './components/GlobalSearch.vue'
 
 const emit = defineEmits<{
@@ -77,7 +77,7 @@ const formattedDate = computed(() => {
 async function handleBackup() {
   backingUp.value = true
   try {
-    await request.post('/system/backup', {
+    await post('/system/backup', {
       description: '主页手动备份',
       include_uploads: true,
     })

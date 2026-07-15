@@ -83,6 +83,7 @@ async def run_integrity_check(
         warnings = []
         try:
             from app.core.database_indexes import EXTRA_INDEXES
+from app.core.transaction import safe_commit
 
             expected_custom_indexes = set()
             for idx_name, _, _ in EXTRA_INDEXES:
@@ -205,7 +206,7 @@ async def run_vacuum(
     start = time.time()
     try:
         db.execute(text("VACUUM"))
-        db.commit()
+        safe_commit(db)
         elapsed = round(time.time() - start, 2)
         db_info_after = _get_db_file_info(db)
         saved = db_info_before.get("size_mb", 0) - db_info_after.get("size_mb", 0)

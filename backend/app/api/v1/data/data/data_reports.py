@@ -233,7 +233,7 @@ async def cancel_report(
 
     report.status = ReportStatus.CANCELLED.value
     report.comment = reason
-    service.db.commit()
+    service.safe_commit(db)
     service.db.refresh(report)
 
     return DataReportResponse.model_validate(report)
@@ -313,7 +313,7 @@ async def approve_data_report(
     report.reviewed_by = current_user.id
     report.comment = comment
 
-    service.db.commit()
+    service.safe_commit(db)
     service.db.refresh(report)
 
     return DataReportResponse.model_validate(report)
@@ -440,6 +440,7 @@ async def download_data_report(
 ):
     """下载上报数据包文件"""
     from app.models.data_package import DataPackage
+from app.core.transaction import safe_commit
 
     report = service.get_report(report_id)
     if not report:

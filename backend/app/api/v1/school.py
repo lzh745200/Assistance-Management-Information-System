@@ -253,7 +253,7 @@ async def import_schools_excel(
             except Exception as e:
                 errors.append(_fmt_row_error(row_idx, e, str(e),
                                              row[1] if row and len(row) > 1 else "?"))
-        db.commit()
+        safe_commit(db)
         return {
             "success": True,
             "message": f"成功导入 {imported} 所学校",
@@ -307,7 +307,7 @@ async def import_scholarship_students(
             except Exception as e:
                 errors.append(_fmt_row_error(row_idx, e, str(e),
                                              row[0] if row and len(row) > 0 else "?"))
-        db.commit()
+        safe_commit(db)
         return {
             "success": True,
             "message": f"成功导入 {imported} 名资助学生",
@@ -519,7 +519,7 @@ async def delete_attachment(
     os.remove(file_path)
 
     db.delete(att)
-    db.commit()
+    safe_commit(db)
     return {"message": "删除成功"}
 
 
@@ -662,7 +662,7 @@ async def create_school(
 
     school = School(**school_data)
     db.add(school)
-    db.commit()
+    safe_commit(db)
     db.refresh(school)
 
     write_work_log(
@@ -728,7 +728,7 @@ async def update_school(
     for key, value in update_data.items():
         setattr(school, key, value)
 
-    db.commit()
+    safe_commit(db)
     db.refresh(school)
 
     write_work_log(
@@ -771,7 +771,7 @@ async def delete_school(
     )
 
     school.is_active = False
-    db.commit()
+    safe_commit(db)
 
     write_work_log(
         db,
@@ -787,6 +787,7 @@ async def delete_school(
     # 清除仪表板缓存
     try:
         from app.api.v1.data.dashboard import invalidate_dashboard_cache
+from app.core.transaction import safe_commit
 
         invalidate_dashboard_cache()
     except Exception:
@@ -871,7 +872,7 @@ async def upload_attachment(
         uploaded_by=getattr(current_user, "username", "") or getattr(current_user, "full_name", ""),
     )
     db.add(attachment)
-    db.commit()
+    safe_commit(db)
     db.refresh(attachment)
 
     return {"message": "上传成功", "data": attachment.to_dict()}
@@ -934,7 +935,7 @@ async def create_project(
         project_data["phase"] = ProjectPhase(project_data["phase"])
     project = SchoolProject(school_id=school_id, **project_data)
     db.add(project)
-    db.commit()
+    safe_commit(db)
     db.refresh(project)
     return {"message": "创建成功", "data": project.to_dict()}
 
@@ -959,7 +960,7 @@ async def update_project(
         update_data["phase"] = ProjectPhase(update_data["phase"])
     for key, val in update_data.items():
         setattr(project, key, val)
-    db.commit()
+    safe_commit(db)
     db.refresh(project)
     return {"message": "更新成功", "data": project.to_dict()}
 
@@ -979,7 +980,7 @@ async def delete_project(
     if not project:
         raise AppError.not_found("项目")
     db.delete(project)
-    db.commit()
+    safe_commit(db)
     return {"message": "删除成功"}
 
 
@@ -1037,7 +1038,7 @@ async def create_scholarship_student(
         stu_data["status"] = ScholarshipStatus(stu_data["status"])
     student = ScholarshipStudent(school_id=school_id, **stu_data)
     db.add(student)
-    db.commit()
+    safe_commit(db)
     db.refresh(student)
     return {"message": "创建成功", "data": student.to_dict()}
 
@@ -1067,7 +1068,7 @@ async def update_scholarship_student(
         update_data["status"] = ScholarshipStatus(update_data["status"])
     for key, val in update_data.items():
         setattr(stu, key, val)
-    db.commit()
+    safe_commit(db)
     db.refresh(stu)
     return {"message": "更新成功", "data": stu.to_dict()}
 
@@ -1092,7 +1093,7 @@ async def delete_scholarship_student(
     if not stu:
         raise AppError.not_found("资助学生记录")
     db.delete(stu)
-    db.commit()
+    safe_commit(db)
     return {"message": "删除成功"}
 
 
@@ -1148,7 +1149,7 @@ async def import_school_scholarship_students(
             except Exception as e:
                 errors.append(_fmt_row_error(row_idx, e, str(e),
                                              row[0] if row and len(row) > 0 else "?"))
-        db.commit()
+        safe_commit(db)
         return {
             "success": True,
             "message": f"成功导入 {imported} 名资助学生",
