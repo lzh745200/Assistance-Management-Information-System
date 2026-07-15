@@ -199,25 +199,29 @@ savepoint = TransactionManager.savepoint
 
 def safe_commit(db: Session, logger: Optional[logging.Logger] = None) -> bool:
     """
-    安全提交事务：commit 失败时自动 rollback 并记录日志。
+    安全提交事务：commit 失败时自动 rollback、记录日志并重新抛出异常。
 
-    用作 ``db.commit()`` 的安全替代品，确保不会因 commit 异常
-    导致 session 卡在脏状态。
+    用作 ``db.commit()`` 的安全替代品，确保：
+    1. commit 异常时 session 一定被 rollback（不会卡在脏状态）
+    2. 异常被重新抛出，调用方的 try/except 仍能捕获并返回适当的 HTTP 错误
 
     Args:
         db: SQLAlchemy 会话
         logger: 可选的 logger 实例（默认使用模块 logger）
 
     Returns:
-        True 表示提交成功，False 表示失败已回滚
+        True 表示提交成功（失败时抛出异常，不会返回 False）
 
     Usage::
 
         # 替换裸 db.commit()
         safe_commit(db)
 
-        # 带自定义 logger
-        safe_commit(db, logger=my_logger)
+        # 在 try/except 中使用（异常会被抛出）
+        try:
+            safe_commit(db)
+        except Exception:
+            raise HTTPException(status_code=500, detail="提交失败")
     """
     log = logger or logging.getLogger(__name__)
     try:
@@ -226,7 +230,7 @@ def safe_commit(db: Session, logger: Optional[logging.Logger] = None) -> bool:
     except Exception as e:
         db.rollback()
         log.error(f"safe_commit: commit failed, rolled back: {e}")
-        return False
+        raise
 
 
 def _apply_tx_settings(sess: Session, isolation: Optional[str], readonly: bool):
