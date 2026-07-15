@@ -11,9 +11,11 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.data_permission import apply_data_scope
 from app.core.security import get_current_user
+from app.models.fund import Fund
 from app.models.fund_budget import FundBudget, FundTransaction, check_budget_alerts
 from app.api.v1.deps import require_manager_role as _require_manager
 from app.core.transaction import safe_commit
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/fund-budgets", tags=["经费预算"])
@@ -228,7 +230,9 @@ async def get_budget_summary(
 ):
     """获取预算汇总统计"""
     target_year = year or date.today().year
-    budgets = db.query(FundBudget).filter(FundBudget.year == target_year).all()
+    query = db.query(FundBudget).filter(FundBudget.year == target_year)
+    query = apply_data_scope(query, FundBudget, current_user)
+    budgets = query.all()
 
     total_budget = sum(float(b.budget_amount or 0) for b in budgets)
     total_executed = sum(float(b.executed_amount or 0) for b in budgets)
@@ -277,6 +281,7 @@ async def get_transactions(
 ):
     """获取经费使用明细列表"""
     query = db.query(FundTransaction)
+    query = apply_data_scope(query, FundTransaction, current_user)
     if fund_id:
         query = query.filter(FundTransaction.fund_id == fund_id)
     if project_id:
@@ -312,8 +317,21 @@ async def create_transaction(
         if budget:
             budget.executed_amount = float(budget.executed_amount or 0) + data.amount
 
+    # 如果关联了 Fund，自动更新 Fund.used_amount 和 remaining_amount
+    if data.fund_id:
+        fund = db.query(Fund).filter(Fund.id == data.fund_id).first()
+        if fund:
+            fund.used_amount = float(fund.used_amount or 0) + data.amount
+            fund.remaining_amount = float(fund.allocated_amount or 0) - float(fund.used_amount or 0)
+
     safe_commit(db)
     db.refresh(transaction)
+    write_work_log(
+        db, "fund_budget", "create_transaction", transaction.id,
+        f"支出明细: {data.purpose}",
+        user_id=current_user.id, username=getattr(current_user, "full_name", None) or getattr(current_user, "username", ""),
+        detail=f"金额: {data.amount} 万元",
+    )
     return transaction
 
 
@@ -334,6 +352,13 @@ async def delete_transaction(
         budget = db.query(FundBudget).filter(FundBudget.id == tx.budget_id).first()
         if budget:
             budget.executed_amount = max(0, float(budget.executed_amount or 0) - float(tx.amount or 0))
+
+    # 如果关联了 Fund，减回 Fund.used_amount
+    if tx.fund_id:
+        fund = db.query(Fund).filter(Fund.id == tx.fund_id).first()
+        if fund:
+            fund.used_amount = max(0, float(fund.used_amount or 0) - float(tx.amount or 0))
+            fund.remaining_amount = float(fund.allocated_amount or 0) - float(fund.used_amount or 0)
 
     db.delete(tx)
     safe_commit(db)

@@ -33,6 +33,16 @@
           </el-select>
         </el-form-item>
 
+        <el-form-item label="经费来源" prop="fund_source">
+          <el-select v-model="form.fund_source" placeholder="请选择经费来源" style="width: 100%">
+            <el-option label="军队投资" value="military" />
+            <el-option label="政府拨款" value="government" />
+            <el-option label="社会捐赠" value="donation" />
+            <el-option label="企业投资" value="enterprise" />
+            <el-option label="其他" value="other" />
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="申请金额(万元)" prop="amount">
           <el-input-number
             v-model="form.amount"
@@ -43,12 +53,44 @@
           />
         </el-form-item>
 
-        <el-form-item label="关联项目" prop="project_name">
-          <el-input v-model="form.project_name" placeholder="请输入关联项目名称（可选）" />
+        <el-form-item label="关联帮扶村" prop="village_id">
+          <el-select
+            v-model="form.village_id"
+            placeholder="选择帮扶村（可选）"
+            clearable
+            filterable
+            style="width: 100%"
+            :loading="villageLoading"
+          >
+            <el-option
+              v-for="v in villageOptions"
+              :key="v.id"
+              :label="v.name"
+              :value="v.id"
+            />
+          </el-select>
         </el-form-item>
 
-        <el-form-item label="经费来源" prop="source">
-          <el-input v-model="form.source" placeholder="请输入经费来源" />
+        <el-form-item label="关联帮扶学校" prop="school_id">
+          <el-select
+            v-model="form.school_id"
+            placeholder="选择帮扶学校（可选）"
+            clearable
+            filterable
+            style="width: 100%"
+            :loading="schoolLoading"
+          >
+            <el-option
+              v-for="s in schoolOptions"
+              :key="s.id"
+              :label="s.name"
+              :value="s.id"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="关联项目" prop="project_name">
+          <el-input v-model="form.project_name" placeholder="请输入关联项目名称（可选）" />
         </el-form-item>
 
         <el-form-item label="用途说明" prop="purpose">
@@ -85,11 +127,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { post } from '@/api/request'
+import { post, get } from '@/api/request'
+import { logger } from '@/utils/logger'
 
 defineOptions({ name: 'FundApply' })
 
@@ -97,11 +140,18 @@ const router = useRouter()
 const { pushSafe } = useRouterSafe()
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
+const villageLoading = ref(false)
+const schoolLoading = ref(false)
+const villageOptions = ref<any[]>([])
+const schoolOptions = ref<any[]>([])
 
 const form = reactive({
   name: '',
   type: '',
+  fund_source: '',
   amount: 0,
+  village_id: undefined as number | undefined,
+  school_id: undefined as number | undefined,
   project_name: '',
   source: '',
   purpose: '',
@@ -116,6 +166,32 @@ const rules: FormRules = {
     { type: 'number', min: 0.01, message: '申请金额必须大于0', trigger: 'blur' },
   ],
   purpose: [{ required: true, message: '请填写用途说明', trigger: 'blur' }],
+}
+
+async function loadVillages() {
+  villageLoading.value = true
+  try {
+    const res = await get('/supported-villages', { page: 1, page_size: 200 })
+    const d = res.data || res
+    villageOptions.value = d?.items || d?.data?.items || []
+  } catch (e) {
+    logger.error('加载帮扶村列表失败:', e)
+  } finally {
+    villageLoading.value = false
+  }
+}
+
+async function loadSchools() {
+  schoolLoading.value = true
+  try {
+    const res = await get('/schools', { page: 1, page_size: 200 })
+    const d = res.data || res
+    schoolOptions.value = d?.items || d?.data?.items || []
+  } catch (e) {
+    logger.error('加载帮扶学校列表失败:', e)
+  } finally {
+    schoolLoading.value = false
+  }
 }
 
 async function handleSubmit() {
@@ -133,7 +209,10 @@ async function handleSubmit() {
     await post('/funds/apply', {
       name: form.name,
       type: form.type,
+      fund_source: form.fund_source || undefined,
       amount: form.amount,
+      village_id: form.village_id || undefined,
+      school_id: form.school_id || undefined,
       project_name: form.project_name || undefined,
       source: form.source || undefined,
       purpose: form.purpose,
@@ -149,6 +228,11 @@ async function handleSubmit() {
     submitting.value = false
   }
 }
+
+onMounted(() => {
+  loadVillages()
+  loadSchools()
+})
 </script>
 
 <style scoped>

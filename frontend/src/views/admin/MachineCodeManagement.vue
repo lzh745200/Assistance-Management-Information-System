@@ -173,10 +173,11 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { logger } from '@/utils/logger'
 import { Plus, CopyDocument } from '@element-plus/icons-vue'
+import { useUserStore } from '@/stores/user'
 import {
   listMachineCodes,
   createMachineCode,
@@ -185,6 +186,12 @@ import {
 } from '@/api/machineCode'
 import { format } from '@/utils'
 import { copyToClipboard } from '@/utils/clipboard'
+
+const userStore = useUserStore()
+const isAdmin = computed(() => {
+  const role = userStore.user?.role
+  return role === 'super_admin' || role === 'admin'
+})
 
 const loading = ref(false)
 const submitting = ref(false)

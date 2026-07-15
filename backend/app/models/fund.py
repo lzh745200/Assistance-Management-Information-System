@@ -156,6 +156,7 @@ class Fund(BaseModel):
     # ================= 关联关系 =================
     project = relationship("Project", back_populates="funds", foreign_keys=[project_id])
     village = relationship("SupportedVillage", back_populates="funds", foreign_keys=[village_id])
+    school = relationship("School", foreign_keys=[school_id])
     organization = relationship("Organization", back_populates="funds", foreign_keys=[organization_id])
 
     def __repr__(self):

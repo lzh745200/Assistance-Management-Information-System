@@ -569,12 +569,7 @@ async def get_export_logs(
     total = query.count()
     logs = query.order_by(DataExportLog.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
-    return {
-        "items": [log.to_dict() for log in logs],
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
+    return ok_list(items=[log.to_dict() for log in logs], total=total, page=page, page_size=page_size)
 
 
 @router.get("/user-activity/{user_id}")

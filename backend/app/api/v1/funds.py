@@ -13,27 +13,27 @@
 
 import logging
 import mimetypes
-import os
-import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api.v1.deps import require_manager_role
-from app.core.config import settings
 from app.core.database import get_db
 from app.core.response import ok_list
 from app.core.security import get_current_user
+from app.core.transaction import safe_commit
 from app.utils.pagination import keyset_paginate
 from app.core.data_permission import apply_data_scope
+from app.services.work_log_service import write_work_log
+from app.utils.upload_helper import save_upload_file, get_attachment_response, delete_attachment_file
 
 from app.models.fund import Fund, FundAttachment
+from app.models.fund_history import FundStatusHistory, FundOperationLog
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -137,6 +137,8 @@ def _fund_to_dict(f: Fund) -> Dict[str, Any]:
         result["project_name"] = f.project.name
     if hasattr(f, "village") and f.village:
         result["village_name"] = f.village.name
+    if hasattr(f, "school") and f.school:
+        result["school_name"] = f.school.name
 
     return result
 
@@ -177,7 +179,8 @@ def list_funds(
     # 1. 构建基础查询 (SQLAlchemy 2.0)
     stmt = select(Fund).options(
         selectinload(Fund.project),
-        selectinload(Fund.village)
+        selectinload(Fund.village),
+        selectinload(Fund.school),
     )
 
     # 2. 数据权限隔离
@@ -270,7 +273,7 @@ def get_fund(
     stmt = (
         select(Fund)
         .where(Fund.id == fund_id)
-        .options(joinedload(Fund.project), joinedload(Fund.village), selectinload(Fund.organization))
+        .options(joinedload(Fund.project), joinedload(Fund.village), joinedload(Fund.school), selectinload(Fund.organization))
     )
     stmt = apply_data_scope(stmt, Fund, current_user)
     fund = db.execute(stmt).scalar_one_or_none()
@@ -498,7 +501,6 @@ def _transition_status(
 
     # ── 文档强制上传检查 ──
     if required_attachments is not None:
-        from app.models.fund import FundAttachment
         existing = db.query(FundAttachment).filter(
             FundAttachment.fund_id == fund.id
         ).all()
@@ -730,7 +732,6 @@ def fund_stats_summary(
 def fund_history_status(fund_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """获取经费状态变更历史"""
     _get_fund_or_404(db, fund_id, current_user)
-    from app.models.fund_history import FundStatusHistory
     rows = (
         db.query(FundStatusHistory)
         .filter(FundStatusHistory.fund_id == fund_id)
@@ -771,8 +772,6 @@ def fund_history_operations(
 ):
     """获取经费操作日志"""
     _get_fund_or_404(db, fund_id, current_user)
-    from app.models.fund_history import FundOperationLog
-from app.core.transaction import safe_commit
     rows = (
         db.query(FundOperationLog)
         .filter(FundOperationLog.fund_id == fund_id)
@@ -801,12 +800,8 @@ async def download_fund_attachment(
     if not att:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
 
-    file_path = att.file_path
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件文件不存在")
-
-    return FileResponse(
-        path=file_path,
+    return get_attachment_response(
+        file_path=att.file_path,
         filename=att.file_name,
         media_type=att.file_type or "application/octet-stream",
     )
@@ -823,12 +818,8 @@ async def preview_fund_attachment(
     if not att:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
 
-    file_path = att.file_path
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件文件不存在")
-
     # 推断 MIME 类型以决定是否内联显示
-    mime_type, _ = mimetypes.guess_type(file_path)
+    mime_type, _ = mimetypes.guess_type(att.file_path)
     if not mime_type:
         mime_type = att.file_type or "application/octet-stream"
 
@@ -838,11 +829,14 @@ async def preview_fund_attachment(
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    headers = {}
-    if any(mime_type.startswith(t) for t in inline_types):
-        headers["Content-Disposition"] = f"inline; filename*=UTF-8''{att.file_name}"
+    use_inline = any(mime_type.startswith(t) for t in inline_types)
 
-    return FileResponse(path=file_path, media_type=mime_type, headers=headers if headers else None)
+    return get_attachment_response(
+        file_path=att.file_path,
+        filename=att.file_name,
+        media_type=mime_type,
+        inline=use_inline,
+    )
 
 
 @router.delete("/attachments/{attachment_id}")
@@ -851,24 +845,39 @@ async def delete_fund_attachment(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除经费附件"""
+    """删除经费附件
+
+    自动记录 FundOperationLog + write_work_log
+    """
     att = db.query(FundAttachment).filter(FundAttachment.id == attachment_id).first()
     if not att:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
 
+    fund_id = att.fund_id
+    file_name = getattr(att, "file_name", "unknown")
     file_path = att.file_path
 
     # 删除数据库记录
     db.delete(att)
+
+    # 记录操作日志
+    op_log = FundOperationLog(
+        fund_id=fund_id,
+        operation_type="attachment_delete",
+        operation_detail=f"删除附件: {file_name}",
+        operator_id=current_user.id,
+        operator_name=getattr(current_user, "full_name", None) or current_user.username,
+    )
+    db.add(op_log)
     safe_commit(db)
 
-    # 删除磁盘文件（放在 commit 之后，即使文件删除失败也不影响 DB 操作）
-    if os.path.exists(file_path):
-        try:
-            os.remove(file_path)
-        except OSError as e:
-            logger.warning("删除附件文件失败: %s, 原因: %s", file_path, e)
+    # 删除磁盘文件（使用统一工具，放在 commit 之后）
+    delete_attachment_file(file_path)
 
+    write_work_log(
+        db, "fund", "delete_attachment", fund_id, file_name,
+        user_id=current_user.id, username=getattr(current_user, "username", "系统"),
+    )
     return {"message": "删除成功"}
 
 
@@ -902,52 +911,43 @@ async def upload_fund_attachment(
     """上传经费附件"""
     _get_fund_or_404(db, fund_id, current_user)
 
-    # 检查文件大小
-    content = await file.read()
-    if len(content) > settings.MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"文件大小超过限制({settings.MAX_FILE_SIZE // 1048576}MB)",
-        )
-
-    # 检查文件类型
-    ext = (file.filename or "").rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else ""
-    allowed_types = settings.allowed_file_types_list + [
-        "doc", "docx", "ppt", "pptx", "txt", "zip", "rar", "xlsx", "xls",
-    ]
-    if ext and ext not in allowed_types:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"不支持的文件类型: .{ext}",
-        )
-
-    # 创建存储目录
-    base_upload = os.path.abspath(settings.UPLOAD_DIR)
-    upload_dir = os.path.join(base_upload, "funds", str(fund_id))
-    os.makedirs(upload_dir, exist_ok=True)
-
-    # 生成唯一文件名
-    unique_name = f"{uuid.uuid4().hex[:12]}_{file.filename}"
-    file_path = os.path.join(upload_dir, unique_name)
-
-    # 写入文件
-    with open(file_path, "wb") as f:
-        f.write(content)
+    # 使用统一上传工具
+    file_info = await save_upload_file(
+        file=file,
+        sub_dir=f"funds/{fund_id}",
+    )
 
     # 保存数据库记录
     uploaded_by = getattr(current_user, "full_name", None) or current_user.username
     attachment = FundAttachment(
         fund_id=fund_id,
-        file_name=file.filename or "unknown",
-        file_path=file_path,
-        file_size=len(content),
-        file_type=file.content_type or "application/octet-stream",
+        file_name=file_info["file_name"],
+        file_path=file_info["file_path"],
+        file_size=file_info["file_size"],
+        file_type=file_info["file_type"],
         category=category or "other",
         description=description or "",
         uploaded_by=uploaded_by,
     )
     db.add(attachment)
+
+    # 记录操作日志
+    op_log = FundOperationLog(
+        fund_id=fund_id,
+        operation_type="attachment_upload",
+        operation_detail=f"上传附件: {file_info['file_name']} (分类: {category or 'other'})",
+        operator_id=current_user.id,
+        operator_name=uploaded_by,
+    )
+    db.add(op_log)
+
     safe_commit(db)
     db.refresh(attachment)
 
+    write_work_log(
+        db, "fund", "upload_attachment", fund_id,
+        file_info["file_name"],
+        user_id=current_user.id, username=getattr(current_user, "username", "系统"),
+        detail=f"分类: {category or 'other'}",
+    )
     return {"message": "上传成功", "data": attachment.to_dict()}

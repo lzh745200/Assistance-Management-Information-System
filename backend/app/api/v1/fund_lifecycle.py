@@ -9,7 +9,7 @@
 from datetime import date, datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func as sa_func
 from sqlalchemy.orm import Session
@@ -432,11 +432,10 @@ async def budget_aggregation(
     db: Session = Depends(get_db),
 ):
     """多维度预算汇总（按年度/类型/村/单位/组织），含可视化预计算数据"""
-    from app.core.data_permission import apply_data_scope
     query = db.query(Fund)
     query = apply_data_scope(query, Fund, current_user)
     if year:
-        query = query.filter(sa_func.strftime("%Y", Fund.date) == str(year))
+        query = query.filter(Fund.year == year)
 
     # 按组织筛选（通过 project 关联）
     if organization_id:
@@ -469,7 +468,7 @@ async def budget_aggregation(
         group_col = sa_func.coalesce(_Project.organization_id, 0)
         query = query.join(_Project, Fund.project_id == _Project.id)
     else:
-        group_col = sa_func.strftime("%Y", Fund.date)
+        group_col = Fund.year
 
     rows = (
         query.with_entities(
@@ -804,23 +803,19 @@ async def confirm_transfer_voucher(
     return {"success": True, "message": "凭证已确认"}
 
 
-class VoucherAttachmentUpload(BaseModel):
-    file_name: str
-    file_path: str
-    file_size: int = 0
-    file_type: Optional[str] = None
-    category: str = "bank_receipt"
-    description: Optional[str] = None
-
-
 @router.post("/transfer-vouchers/{voucher_id}/attachments")
 async def upload_voucher_attachment(
     voucher_id: int,
-    data: VoucherAttachmentUpload,
+    file: UploadFile = File(...),
+    category: str = "bank_receipt",
+    description: Optional[str] = None,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """凭证附件上传（银行回单等电子化归档）"""
+    """凭证附件上传（银行回单等电子化归档）
+
+    使用统一的 save_upload_file 工具，支持真实文件上传。
+    """
     _require_manager(current_user)
 
     v = db.query(FundTransferVoucher).filter(FundTransferVoucher.id == voucher_id).first()
@@ -828,15 +823,22 @@ async def upload_voucher_attachment(
         raise HTTPException(status_code=404, detail="凭证不存在")
 
     from ...models.fund import FundAttachment
+    from ...utils.upload_helper import save_upload_file
+
+    # 使用统一上传工具
+    file_info = await save_upload_file(
+        file=file,
+        sub_dir=f"vouchers/{voucher_id}",
+    )
 
     attachment = FundAttachment(
         fund_id=v.fund_id or 0,
-        file_name=data.file_name,
-        file_path=data.file_path,
-        file_size=data.file_size,
-        file_type=data.file_type,
-        category=data.category,
-        description=data.description or f"划转凭证 {v.voucher_no} 附件",
+        file_name=file_info["file_name"],
+        file_path=file_info["file_path"],
+        file_size=file_info["file_size"],
+        file_type=file_info["file_type"],
+        category=category,
+        description=description or f"划转凭证 {v.voucher_no} 附件",
         uploaded_by=_get_username(current_user),
     )
     db.add(attachment)
@@ -1233,25 +1235,36 @@ async def fund_flow(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """穿透式资金流查询"""
+    """穿透式资金流查询（批量预加载，避免 N+1）"""
     funds = db.query(Fund).filter(Fund.project_id == project_id).all()
+    fund_ids = [f.id for f in funds]
+
+    # 批量预加载所有交易记录和凭证（避免 N+1 查询）
+    all_transactions = (
+        db.query(FundTransaction)
+        .filter(FundTransaction.fund_id.in_(fund_ids))
+        .order_by(FundTransaction.transaction_date.desc())
+        .all()
+    ) if fund_ids else []
+    all_vouchers = (
+        db.query(FundTransferVoucher)
+        .filter(FundTransferVoucher.fund_id.in_(fund_ids))
+        .order_by(FundTransferVoucher.transfer_date.desc())
+        .all()
+    ) if fund_ids else []
+
+    # 构建索引映射
+    tx_by_fund = {}
+    for t in all_transactions:
+        tx_by_fund.setdefault(t.fund_id, []).append(t)
+    vc_by_fund = {}
+    for v in all_vouchers:
+        vc_by_fund.setdefault(v.fund_id, []).append(v)
 
     flow_items = []
     for f in funds:
-        # 获取支出明细
-        transactions = (
-            db.query(FundTransaction)
-            .filter(FundTransaction.fund_id == f.id)
-            .order_by(FundTransaction.transaction_date.desc())
-            .all()
-        )
-        # 获取划转凭证
-        vouchers = (
-            db.query(FundTransferVoucher)
-            .filter(FundTransferVoucher.fund_id == f.id)
-            .order_by(FundTransferVoucher.transfer_date.desc())
-            .all()
-        )
+        transactions = tx_by_fund.get(f.id, [])
+        vouchers = vc_by_fund.get(f.id, [])
 
         flow_items.append(
             {
@@ -1814,13 +1827,20 @@ async def inspection_clues(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """生成标准化督查线索清单"""
+    """生成标准化督查线索清单（批量预加载 Fund，避免 N+1）"""
     anomalies = (
         db.query(FundAnomaly)
         .filter(FundAnomaly.project_id == project_id)
         .order_by(FundAnomaly.severity.desc(), FundAnomaly.detected_at.desc())
         .all()
     )
+
+    # 批量预加载关联的 Fund 记录
+    fund_ids = {a.fund_id for a in anomalies if a.fund_id}
+    fund_map = {}
+    if fund_ids:
+        funds = db.query(Fund).filter(Fund.id.in_(list(fund_ids))).all()
+        fund_map = {f.id: f for f in funds}
 
     type_labels = {
         "overspend": "超支",
@@ -1845,7 +1865,7 @@ async def inspection_clues(
 
     clues = []
     for a in anomalies:
-        fund = db.query(Fund).filter(Fund.id == a.fund_id).first() if a.fund_id else None
+        fund = fund_map.get(a.fund_id) if a.fund_id else None
         clues.append(
             {
                 "anomaly_id": a.id,
