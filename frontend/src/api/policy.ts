@@ -1,4 +1,5 @@
-import { get, post, put, del, apiRequest, downloadBlob, parseContentDisposition } from '@/api/request'
+import request, { get, post, put, del, apiRequest } from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 // ── Types ──
 export type PolicyCategory = string
@@ -55,7 +56,7 @@ export const deleteCategory = (id: number) => del(`/policies/categories/${id}`)
 export const getPolicyStats = () => get('/policies/statistics')
 
 // ── CRUD ──
-export const getPolicies = (params?: any) => get('/policies', { params })
+export const getPolicies = (params?: any) => get('/policies', params)
 export const getPolicy = (id: number) => get('/policies/' + id)
 export const createPolicy = (data: any) => post('/policies', data)
 export const updatePolicy = (id: number, data: any) => put('/policies/' + id, data)
@@ -99,29 +100,20 @@ export const importPolicies = (file: File) => {
   })
 }
 export const exportPolicies = (params?: any) =>
-  apiRequest({ method: 'GET', url: '/policies/export/excel', params, responseType: 'blob' }).then((r) => {
-    const filename = parseContentDisposition(
-      r.headers as Record<string, string>,
-      '政策法规导出.xlsx'
-    )
-    downloadBlob(r.data, filename)
-  })
+  downloadBlobAsFile(
+    () => request.get('/policies/export/excel', { params, responseType: 'blob' }),
+    { fallbackFileName: '政策法规导出.xlsx' }
+  )
 export const exportPoliciesPDF = (params?: any) =>
-  apiRequest({ method: 'GET', url: '/policies/export/pdf', params, responseType: 'blob' }).then((r) => {
-    const filename = parseContentDisposition(
-      r.headers as Record<string, string>,
-      `政策法规_${new Date().getTime()}.pdf`
-    )
-    downloadBlob(r.data, filename)
-  })
+  downloadBlobAsFile(
+    () => request.get('/policies/export/pdf', { params, responseType: 'blob' }),
+    { fallbackFileName: `政策法规_${Date.now()}.pdf` }
+  )
 export const exportPoliciesWPS = (params?: any) =>
-  apiRequest({ method: 'GET', url: '/policies/export/wps', params, responseType: 'blob' }).then((r) => {
-    const filename = parseContentDisposition(
-      r.headers as Record<string, string>,
-      `政策法规_${new Date().getTime()}.wps`
-    )
-    downloadBlob(r.data, filename)
-  })
+  downloadBlobAsFile(
+    () => request.get('/policies/export/wps', { params, responseType: 'blob' }),
+    { fallbackFileName: `政策法规_${Date.now()}.wps` }
+  )
 // ── Display helpers (used by views for status/label formatting) ──
 const CATEGORY_LABELS: Record<string, string> = {}
 const LEVEL_LABELS: Record<string, string> = {}

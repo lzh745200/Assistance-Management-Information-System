@@ -213,7 +213,7 @@ const handleExport = async () => {
       response = await exportData(params)
     }
 
-    if (response.data.success) {
+    if (response.success) {
       ElMessage.success(`导出成功! 共 ${response.data.total_records} 条记录`)
       // 自动下载
       await handleDownloadByName(response.data.package_name)
@@ -254,7 +254,7 @@ const handleDownloadByName = async (packageName: string) => {
 const loadExportHistory = async () => {
   try {
     const response = await getSyncLogs('export', 20)
-    if (response.data.success) {
+    if (response.success) {
       exportHistory.value = response.data
     }
   } catch (error) {

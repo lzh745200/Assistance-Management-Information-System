@@ -31,8 +31,9 @@ from app.models.supported_village import (
     VillageCommitteeInfo,
     VillageCommitteeMember,
 )
-from app.core.data_permission import filter_by_data_scope
+from app.core.data_permission import filter_by_data_scope, check_record_access
 from app.schemas.supported_village import SupportedVillageCreate, SupportedVillageUpdate
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -197,11 +198,16 @@ def _save_section_data(db: Session, model: Any, village_id: int, year: int, data
     return row
 
 
-def _get_village_or_404(db: Session, village_id: int) -> SupportedVillage:
-    """根据 ID 获取帮扶村，不存在时抛 404"""
+def _get_village_or_404(db: Session, village_id: int, current_user: User = None) -> SupportedVillage:
+    """根据 ID 获取帮扶村，不存在时抛 404；存在但跨组织时抛 403（数据隔离）。"""
     village = db.query(SupportedVillage).filter(SupportedVillage.id == village_id).first()
     if not village:
         raise HTTPException(status_code=404, detail="帮扶村不存在")
+    # 数据权限校验：非本组织/非本人创建且非管理员 → 403（区分"不存在"与"越权"）
+    if current_user is not None and not check_record_access(
+        village, current_user, owner_field="created_by", dept_field="organization_id"
+    ):
+        raise HTTPException(status_code=403, detail="无权访问该帮扶村")
     return village
 
 
@@ -233,6 +239,7 @@ def _process_import_row(row: tuple, field_names: List[str], db: Session, row_idx
     existing = db.query(SupportedVillage).filter(
         SupportedVillage.village_name == values["village_name"],
         SupportedVillage.county == values.get("county"),
+        SupportedVillage.is_active == True,  # noqa: E712
     ).first()
     if existing:
         return False, f"第{row_idx}行: 帮扶村 '{values['village_name']}' 已存在，跳过"
@@ -273,7 +280,8 @@ async def list_villages(
                 [keyword, department, county, isRevitalizationTier, isThreeRegions, include_deleted],
                 default=str,
             ).encode()
-            _ckey = f"villages:list:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
+            _org_id = getattr(current_user, "organization_id", None) or 0
+            _ckey = f"villages:list:{_org_id}:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
             _cached = await _cache.get(_ckey)
             if _cached is not None:
                 return _cached
@@ -337,12 +345,14 @@ async def get_filter_options(
     departments = (
         db.query(SupportedVillage.department)
         .filter(SupportedVillage.department.isnot(None))
+        .filter(SupportedVillage.is_active == True)  # noqa: E712
         .distinct()
         .all()
     )
     counties = (
         db.query(SupportedVillage.county)
         .filter(SupportedVillage.county.isnot(None))
+        .filter(SupportedVillage.is_active == True)  # noqa: E712
         .distinct()
         .all()
     )
@@ -359,6 +369,7 @@ async def get_village_dropdown(
     """获取帮扶村下拉选项（id + name + county，供前端 Select 使用）"""
     villages = (
         db.query(SupportedVillage.id, SupportedVillage.village_name, SupportedVillage.county)
+        .filter(SupportedVillage.is_active == True)  # noqa: E712
         .order_by(SupportedVillage.id)
         .all()
     )
@@ -388,7 +399,7 @@ async def export_villages(
     db: Session = Depends(get_db),
 ):
     """导出帮扶村数据到 Excel"""
-    query = db.query(SupportedVillage)
+    query = db.query(SupportedVillage).filter(SupportedVillage.is_active == True)  # noqa: E712
     query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
     villages = query.all()
     wb = openpyxl.Workbook()
@@ -462,15 +473,16 @@ async def batch_delete_villages(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """批量软删帮扶村"""
+    """批量软删帮扶村（仅可删除当前用户有权访问的记录）"""
     if not data.ids:
         raise HTTPException(status_code=400, detail="请提供要删除的ID列表")
-    db.query(SupportedVillage).filter(
-        SupportedVillage.id.in_(data.ids)
-    ).update({"is_active": False}, synchronize_session=False)
+    query = db.query(SupportedVillage).filter(SupportedVillage.id.in_(data.ids))
+    # 数据权限过滤：仅允许操作本组织/本人创建的记录，防止跨组织批量删除
+    query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
+    deleted_count = query.update({"is_active": False}, synchronize_session=False)
     safe_commit(db)
     await _invalidate_village_cache()
-    return {"message": f"已删除 {len(data.ids)} 条记录"}
+    return {"message": f"已删除 {deleted_count} 条记录"}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -484,7 +496,7 @@ async def get_village(
     db: Session = Depends(get_db),
 ):
     """获取帮扶村详情"""
-    village = _get_village_or_404(db, village_id)
+    village = _get_village_or_404(db, village_id, current_user)
     return {"data": village.to_dict() if hasattr(village, "to_dict") else {"id": village.id}}
 
 
@@ -496,6 +508,9 @@ async def create_village(
 ):
     """创建帮扶村"""
     village = SupportedVillage(**data.model_dump())
+    # 强制写入数据归属字段，确保新记录纳入组织隔离体系
+    village.organization_id = getattr(current_user, "organization_id", None)
+    village.created_by = current_user.id
     db.add(village)
     safe_commit(db)
     db.refresh(village)
@@ -511,7 +526,7 @@ async def update_village(
     db: Session = Depends(get_db),
 ):
     """更新帮扶村（过渡状态变更需管理员权限 + 写入审计日志）"""
-    village = _get_village_or_404(db, village_id)
+    village = _get_village_or_404(db, village_id, current_user)
     update_dict = data.model_dump(exclude_unset=True)
 
     # ── 过渡状态变更强制审批检查 ──
@@ -551,7 +566,7 @@ async def delete_village(
     db: Session = Depends(get_db),
 ):
     """软删帮扶村（置 is_active=False，保留关联数据以便恢复/审计）"""
-    village = _get_village_or_404(db, village_id)
+    village = _get_village_or_404(db, village_id, current_user)
 
     village.is_active = False
     safe_commit(db)
@@ -571,7 +586,7 @@ async def get_yearly_data(
     db: Session = Depends(get_db),
 ):
     """获取帮扶村某年度全部数据（所有section）"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     # 统一 camelCase 键名（内层已由 _get_section_data→dict_keys_to_camel 处理）
     # camelCase 为主键名，snake_case 保留向后兼容（计划 2027-01-01 移除）
     result = {"villageId": village_id, "village_id": village_id, "year": year}
@@ -589,7 +604,7 @@ async def copy_year_data(
     db: Session = Depends(get_db),
 ):
     """将某年的全部年度数据复制到另一年"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     if data.fromYear == data.toYear:
         raise HTTPException(status_code=400, detail="来源年份和目标年份不能相同")
     copied = 0
@@ -612,7 +627,7 @@ async def save_yearly_section(
     """保存帮扶村某年度某个section的数据"""
     if section not in _SECTION_MODEL:
         raise HTTPException(status_code=400, detail=f"未知的数据分类: {section}")
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     model = _SECTION_MODEL[section]
     _save_section_data(db, model, village_id, year, data.model_dump())
     safe_commit(db)
@@ -632,9 +647,9 @@ async def validate_yearly_data(
     - 8 大板块必填字段
     - 数值合理性（人均收入≥0）
     - 同比变动超 ±50% 预警
-    返回错误列表 + 修正建议。
+        返回错误列表 + 修正建议。
     """
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     errors = []
     warnings = []
 
@@ -715,7 +730,7 @@ async def get_section_attachments(
     db: Session = Depends(get_db),
 ):
     """获取帮扶村某区块的附件列表"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     from app.models.supported_village import VillageAttachment
     attachments = (
         db.query(VillageAttachment)
@@ -751,7 +766,7 @@ async def upload_section_attachment(
     db: Session = Depends(get_db),
 ):
     """上传帮扶村某区块的附件"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     from app.models.supported_village import VillageAttachment
     import os as _os
 
@@ -785,7 +800,7 @@ async def download_section_attachment(
     db: Session = Depends(get_db),
 ):
     """下载帮扶村某区块的附件"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     from app.models.supported_village import VillageAttachment
     import os as _os
     attachment = (
@@ -813,7 +828,7 @@ async def delete_section_attachment(
     db: Session = Depends(get_db),
 ):
     """删除帮扶村某区块的附件"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     from app.models.supported_village import VillageAttachment
     attachment = (
         db.query(VillageAttachment)
@@ -838,7 +853,7 @@ async def save_committee_data(
     db: Session = Depends(get_db),
 ):
     """保存帮扶村委数据"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     from app.models.supported_village import VillageCommitteeInfo
     committee = (
         db.query(VillageCommitteeInfo)
@@ -868,7 +883,7 @@ async def import_section_data(
     db: Session = Depends(get_db),
 ):
     """导入帮扶村单个区块数据（Excel）"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     try:
         import openpyxl
         wb = openpyxl.load_workbook(io.BytesIO(await file.read()))
@@ -899,7 +914,7 @@ async def import_all_sections_data(
     db: Session = Depends(get_db),
 ):
     """导入帮扶村所有区块数据（Excel）"""
-    _get_village_or_404(db, village_id)
+    _get_village_or_404(db, village_id, current_user)
     try:
         import openpyxl
         wb = openpyxl.load_workbook(io.BytesIO(await file.read()))
@@ -942,9 +957,7 @@ async def get_transition_funding(
     db: Session = Depends(get_db),
 ):
     """获取转移支付资金按年度明细"""
-    village = db.query(SupportedVillage).filter(SupportedVillage.id == village_id).first()
-    if not village:
-        raise HTTPException(status_code=404, detail="帮扶村不存在")
+    village = _get_village_or_404(db, village_id, current_user)
     items = []
     if village.transition_fund_items:
         try:
@@ -962,9 +975,7 @@ async def save_transition_funding(
     db: Session = Depends(get_db),
 ):
     """保存转移支付资金数据"""
-    village = db.query(SupportedVillage).filter(SupportedVillage.id == village_id).first()
-    if not village:
-        raise HTTPException(status_code=404, detail="帮扶村不存在")
+    village = _get_village_or_404(db, village_id, current_user)
     # Sum up military and local totals from the submitted items
     military = sum(item.militaryInvestment for item in data.items)
     local = sum(item.localInvestment for item in data.items)
@@ -991,7 +1002,6 @@ async def download_all_templates(
 ):
     """下载所有区块模板（Excel 多工作表）"""
     import openpyxl
-from app.core.transaction import safe_commit
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
     sections = ["income", "industry", "infrastructure", "education", "medical", "employment", "population"]

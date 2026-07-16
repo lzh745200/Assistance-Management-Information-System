@@ -169,6 +169,7 @@ def list_funds(
     fund_source: Optional[str] = None,
     project_id: Optional[int] = None,
     village_id: Optional[int] = None,
+    school_id: Optional[int] = None,
     cursor: Optional[str] = Query(None, description="Keyset分页游标"),
     pagination: str = Query("offset", description="分页方式: 'offset' | 'keyset'"),
     include_deleted: bool = Query(False, description="是否包含已软删的记录"),
@@ -206,6 +207,8 @@ def list_funds(
         stmt = stmt.where(Fund.project_id == project_id)
     if village_id:
         stmt = stmt.where(Fund.village_id == village_id)
+    if school_id:
+        stmt = stmt.where(Fund.school_id == school_id)
 
     # 4. 分页执行
     if pagination == "keyset":
@@ -245,8 +248,8 @@ def export_funds(
     db: Session = Depends(get_db),
     limit: int = Query(5000, ge=1, le=50000, description="最大导出条数"),
 ):
-    """导出经费数据（带分页上限，防止内存溢出）"""
-    stmt = select(Fund).order_by(Fund.id.desc()).limit(limit)
+    """导出经费数据（带分页上限，防止内存溢出；排除软删记录）"""
+    stmt = select(Fund).where(Fund.is_active == True).order_by(Fund.id.desc()).limit(limit)  # noqa: E712
     stmt = apply_data_scope(stmt, Fund, current_user)
     funds = db.execute(stmt).scalars().all()
     return {
@@ -273,7 +276,10 @@ def get_fund(
     stmt = (
         select(Fund)
         .where(Fund.id == fund_id)
-        .options(joinedload(Fund.project), joinedload(Fund.village), joinedload(Fund.school), selectinload(Fund.organization))
+        .options(
+            joinedload(Fund.project), joinedload(Fund.village),
+            joinedload(Fund.school), selectinload(Fund.organization),
+        )
     )
     stmt = apply_data_scope(stmt, Fund, current_user)
     fund = db.execute(stmt).scalar_one_or_none()
@@ -369,13 +375,13 @@ def fund_statistics_overview(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """经费统计概览 (单次聚合查询)"""
+    """经费统计概览 (单次聚合查询，排除软删记录)"""
     stmt = select(
         func.count(Fund.id).label("total_count"),
         func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
         func.sum(case((Fund.status == "pending", 1), else_=0)).label("pending_count"),
         func.sum(case((Fund.status == "approved", 1), else_=0)).label("approved_count"),
-    )
+    ).where(Fund.is_active == True)  # noqa: E712
     stmt = apply_data_scope(stmt, Fund, current_user)
 
     row = db.execute(stmt).one()
@@ -398,8 +404,8 @@ def fund_statistics_multi_dimension(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """经费多维度统计分析 (利用冗余字段消灭全表扫描)"""
-    stmt = select(Fund)
+    """经费多维度统计分析 (利用冗余字段消灭全表扫描，排除软删记录)"""
+    stmt = select(Fund).where(Fund.is_active == True)  # noqa: E712
     stmt = apply_data_scope(stmt, Fund, current_user)
 
     try:
@@ -638,6 +644,7 @@ def fund_stats_by_type(
         stmt = stmt.where(Fund.year >= year_start)
     if year_end:
         stmt = stmt.where(Fund.year <= year_end)
+    stmt = stmt.where(Fund.is_active == True)  # noqa: E712
     stmt = apply_data_scope(stmt, Fund, current_user)
     rows = db.execute(stmt).all()
     type_labels = {"project": "项目经费", "operation": "运营经费", "education": "教育帮扶",
@@ -671,6 +678,7 @@ def fund_stats_yearly_comparison(
         stmt = stmt.where(Fund.year >= year_start)
     if year_end:
         stmt = stmt.where(Fund.year <= year_end)
+    stmt = stmt.where(Fund.is_active == True)  # noqa: E712
     stmt = apply_data_scope(stmt, Fund, current_user)
     rows = db.execute(stmt).all()
     return {"success": True, "data": [
@@ -689,7 +697,7 @@ def fund_stats_utilization(
     stmt = select(
         func.coalesce(func.sum(Fund.allocated_amount), 0).label("planned"),
         func.coalesce(func.sum(Fund.used_amount), 0).label("actual"),
-    )
+    ).where(Fund.is_active == True)  # noqa: E712
     if year_start:
         stmt = stmt.where(Fund.year >= year_start)
     if year_end:
@@ -715,7 +723,7 @@ def fund_stats_summary(
         func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
         func.coalesce(func.sum(Fund.allocated_amount), 0).label("total_allocated"),
         func.coalesce(func.sum(Fund.used_amount), 0).label("total_used"),
-    )
+    ).where(Fund.is_active == True)  # noqa: E712
     if year_start:
         stmt = stmt.where(Fund.year >= year_start)
     if year_end:
@@ -726,6 +734,74 @@ def fund_stats_summary(
         "total_count": row.total_count, "total_amount": float(row.total_amount),
         "total_allocated": float(row.total_allocated), "total_used": float(row.total_used),
     }}
+
+
+@router.get("/village/{village_id}/summary")
+def village_fund_summary(
+    village_id: int,
+    year: int = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """帮扶村经费汇总：按年度统计该村所有经费的申请/批准/拨付/使用金额"""
+    stmt = select(
+        func.count(Fund.id).label("count"),
+        func.coalesce(func.sum(Fund.planned_amount), 0).label("planned"),
+        func.coalesce(func.sum(Fund.approved_amount), 0).label("approved"),
+        func.coalesce(func.sum(Fund.allocated_amount), 0).label("allocated"),
+        func.coalesce(func.sum(Fund.used_amount), 0).label("used"),
+    ).where(Fund.village_id == village_id, Fund.is_active == True)  # noqa: E712
+    if year:
+        stmt = stmt.where(Fund.year == year)
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    row = db.execute(stmt).one()
+    return {
+        "success": True,
+        "data": {
+            "village_id": village_id,
+            "year": year,
+            "fund_count": row.count,
+            "planned_amount": float(row.planned),
+            "approved_amount": float(row.approved),
+            "allocated_amount": float(row.allocated),
+            "used_amount": float(row.used),
+            "remaining_amount": float(row.approved) - float(row.used),
+        },
+    }
+
+
+@router.get("/school/{school_id}/summary")
+def school_fund_summary(
+    school_id: int,
+    year: int = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """帮扶学校经费汇总：按年度统计该校所有经费的申请/批准/拨付/使用金额"""
+    stmt = select(
+        func.count(Fund.id).label("count"),
+        func.coalesce(func.sum(Fund.planned_amount), 0).label("planned"),
+        func.coalesce(func.sum(Fund.approved_amount), 0).label("approved"),
+        func.coalesce(func.sum(Fund.allocated_amount), 0).label("allocated"),
+        func.coalesce(func.sum(Fund.used_amount), 0).label("used"),
+    ).where(Fund.school_id == school_id, Fund.is_active == True)  # noqa: E712
+    if year:
+        stmt = stmt.where(Fund.year == year)
+    stmt = apply_data_scope(stmt, Fund, current_user)
+    row = db.execute(stmt).one()
+    return {
+        "success": True,
+        "data": {
+            "school_id": school_id,
+            "year": year,
+            "fund_count": row.count,
+            "planned_amount": float(row.planned),
+            "approved_amount": float(row.approved),
+            "allocated_amount": float(row.allocated),
+            "used_amount": float(row.used),
+            "remaining_amount": float(row.approved) - float(row.used),
+        },
+    }
 
 
 @router.get("/{fund_id}/history/status")
@@ -800,6 +876,9 @@ async def download_fund_attachment(
     if not att:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
 
+    # 数据隔离：校验附件所属经费的访问权限（防止跨组织下载）
+    _get_fund_or_404(db, att.fund_id, current_user)
+
     return get_attachment_response(
         file_path=att.file_path,
         filename=att.file_name,
@@ -817,6 +896,9 @@ async def preview_fund_attachment(
     att = db.query(FundAttachment).filter(FundAttachment.id == attachment_id).first()
     if not att:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
+
+    # 数据隔离：校验附件所属经费的访问权限（防止跨组织预览）
+    _get_fund_or_404(db, att.fund_id, current_user)
 
     # 推断 MIME 类型以决定是否内联显示
     mime_type, _ = mimetypes.guess_type(att.file_path)
@@ -852,6 +934,9 @@ async def delete_fund_attachment(
     att = db.query(FundAttachment).filter(FundAttachment.id == attachment_id).first()
     if not att:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="附件不存在")
+
+    # 数据隔离：校验附件所属经费的访问权限（防止跨组织删除）
+    _get_fund_or_404(db, att.fund_id, current_user)
 
     fund_id = att.fund_id
     file_name = getattr(att, "file_name", "unknown")

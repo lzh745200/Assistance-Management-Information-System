@@ -218,7 +218,7 @@ const handleImport = async () => {
 
     importResult.value = response.data
 
-    if (response.data.success) {
+    if (response.success) {
       const stats = [
         `成功 ${response.data.success_records} 条`,
         `失败 ${response.data.failed_records} 条`,
@@ -261,7 +261,7 @@ const showConflicts = () => {
 const loadImportHistory = async () => {
   try {
     const response = await getSyncLogs('import', 20)
-    if (response.data.success) {
+    if (response.success) {
       importHistory.value = response.data
     }
   } catch (error) {

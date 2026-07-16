@@ -270,7 +270,7 @@ const compareResult = ref<CompareResult | null>(null)
 const fetchVersionList = async () => {
   try {
     const response = await get(`/data-packages/${packageId.value}/versions`)
-    if (response.data.success) {
+    if (response.success) {
       versionList.value = response.data.versions
     }
   } catch {
@@ -297,7 +297,7 @@ const confirmCreate = async () => {
       versionForm.value
     )
 
-    if (response.data.success) {
+    if (response.success) {
       ElMessage.success('版本创建成功')
       createDialogVisible.value = false
       fetchVersionList()
@@ -314,7 +314,7 @@ const handleViewDetail = async (version: VersionItem) => {
   try {
     const response = await get(`/data-packages/${packageId.value}/versions/${version.id}`)
 
-    if (response.data.success) {
+    if (response.success) {
       currentVersion.value = response.data
       if (Object.keys(currentVersion.value.changes).length > 0) {
         activeTab.value = Object.keys(currentVersion.value.changes)[0]
@@ -346,7 +346,7 @@ const doCompare = async () => {
         version2: compareForm.value.version2,
       }})
 
-    if (response.data.success) {
+    if (response.success) {
       compareResult.value = response.data.comparison
     }
   } catch (error: unknown) {
@@ -365,7 +365,7 @@ const handleDelete = async (versionId: number | string) => {
 
     const response = await del(`/data-packages/${packageId.value}/versions/${versionId}`)
 
-    if (response.data.success) {
+    if (response.success) {
       ElMessage.success('删除成功')
       fetchVersionList()
     }

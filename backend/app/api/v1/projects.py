@@ -29,7 +29,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.transaction import safe_commit
-from app.core.data_permission import filter_by_data_scope, require_data_permission
+from app.core.data_permission import filter_by_data_scope, require_data_permission, check_record_access
 from app.core.errors import AppError
 from app.core.exceptions import NotFoundException
 from app.core.response import ok_list, success_response
@@ -101,11 +101,15 @@ def _can_modify_project(project: Project, user) -> bool:
     return getattr(user, "id", None) == project.created_by
 
 
-def _get_project_or_404(db: Session, project_id: int) -> Project:
-    """获取项目或抛出 404"""
+def _get_project_or_404(db: Session, project_id: int, current_user=None) -> Project:
+    """获取项目或抛出 404；存在但跨组织时抛 403（数据隔离）。"""
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise NotFoundException("项目不存在")
+    if current_user is not None and not check_record_access(
+        project, current_user, owner_field="created_by", dept_field="organization_id"
+    ):
+        raise HTTPException(status_code=403, detail="无权访问该项目")
     return project
 
 
@@ -273,7 +277,10 @@ class TaskUpdate(BaseModel):
 
 def _get_fund_health_fields(db: Session, project_id: int) -> dict:
     """获取项目经费健康度、预算执行率、支付偏差率（项目列表用）"""
-    funds = db.query(Fund).filter(Fund.project_id == project_id).all()
+    funds = db.query(Fund).filter(
+        Fund.project_id == project_id,
+        Fund.is_active == True,  # noqa: E712
+    ).all()
     if not funds:
         return {
             "fund_health_score": None,
@@ -320,7 +327,10 @@ def _batch_get_fund_health_fields(db: Session, project_ids: List[int]) -> dict:
     if not project_ids:
         return {}
 
-    funds = db.query(Fund).filter(Fund.project_id.in_(project_ids)).all()
+    funds = db.query(Fund).filter(
+        Fund.project_id.in_(project_ids),
+        Fund.is_active == True,  # noqa: E712
+    ).all()
 
     # 按 project_id 分组
     from collections import defaultdict
@@ -477,6 +487,7 @@ async def get_project_stats(
             func.coalesce(func.sum(Project.budget), 0),
         )
         .filter(Project.status != ProjectStatus.CANCELLED.value)
+        .filter(Project.is_active == True)  # noqa: E712
         .group_by(Project.status)
         .all()
     )
@@ -491,6 +502,7 @@ async def get_project_stats(
     invested = (
         db.query(func.coalesce(func.sum(Project.invested_amount), 0))
         .filter(Project.status != ProjectStatus.CANCELLED.value)
+        .filter(Project.is_active == True)  # noqa: E712
         .scalar()
     )
     stats.total_invested = float(invested)
@@ -510,7 +522,10 @@ async def export_projects(
     db: Session = Depends(get_db),
 ):
     """导出项目列表为 Excel（或 CSV 兜底），上限 10000 条防内存溢出"""
-    query = db.query(Project).filter(Project.status != ProjectStatus.CANCELLED.value)
+    query = db.query(Project).filter(
+        Project.status != ProjectStatus.CANCELLED.value,
+        Project.is_active == True,  # noqa: E712
+    )
     if keyword:
         query = query.filter(Project.name.contains(keyword))
     if project_type:
@@ -701,7 +716,11 @@ async def get_project(
         error_message="无权访问该项目数据",
     )
 
-    funds_total = db.query(func.count(Fund.id)).filter(Fund.project_id == project_id).scalar() or 0
+    funds_total = (
+        db.query(func.count(Fund.id))
+        .filter(Fund.project_id == project_id, Fund.is_active == True)  # noqa: E712
+        .scalar() or 0
+    )
     tasks_total = db.query(func.count(ProjectTask.id)).filter(ProjectTask.project_id == project_id).scalar() or 0
 
     data = _project_to_dict(project)
@@ -1065,7 +1084,7 @@ async def get_project_change_history(
     db: Session = Depends(get_db),
 ):
     """获取项目关键字段的变更历史（Diff 留痕）"""
-    _get_project_or_404(db, project_id)
+    _get_project_or_404(db, project_id, current_user)
     history = AuditEnhancementService.get_change_history(db, "project", str(project_id), limit=100)
     return {"items": history}
 
@@ -1082,9 +1101,12 @@ async def get_project_funds(
     db: Session = Depends(get_db),
 ):
     """获取指定项目关联的经费记录。"""
-    _get_project_or_404(db, project_id)
+    _get_project_or_404(db, project_id, current_user)
 
-    query = db.query(Fund).filter(Fund.project_id == project_id)
+    query = db.query(Fund).filter(
+        Fund.project_id == project_id,
+        Fund.is_active == True,  # noqa: E712
+    )
     total = query.count()
     funds = query.order_by(Fund.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
 
@@ -1099,7 +1121,7 @@ async def create_project_fund(
     db: Session = Depends(get_db),
 ):
     """为项目添加经费记录（使用请求体传参）。"""
-    project = _get_project_or_404(db, project_id)
+    project = _get_project_or_404(db, project_id, current_user)
 
     try:
         fund = Fund(
@@ -1109,6 +1131,7 @@ async def create_project_fund(
             amount=data.amount,
             source=data.source,
             purpose=data.purpose,
+            organization_id=project.organization_id,
         )
         db.add(fund)
         safe_commit(db)
@@ -1133,7 +1156,7 @@ async def get_project_tasks(
     db: Session = Depends(get_db),
 ):
     """获取指定项目下的任务列表。"""
-    _get_project_or_404(db, project_id)
+    _get_project_or_404(db, project_id, current_user)
 
     query = db.query(ProjectTask).filter(ProjectTask.project_id == project_id)
     if task_status:
@@ -1158,7 +1181,7 @@ async def create_project_task(
     db: Session = Depends(get_db),
 ):
     """为项目创建任务。"""
-    _get_project_or_404(db, project_id)
+    _get_project_or_404(db, project_id, current_user)
 
     try:
         task = ProjectTask(
@@ -1189,7 +1212,7 @@ async def update_project_task(
     db: Session = Depends(get_db),
 ):
     """更新指定任务。"""
-    _get_project_or_404(db, project_id)
+    _get_project_or_404(db, project_id, current_user)
     task = db.query(ProjectTask).filter(ProjectTask.id == task_id, ProjectTask.project_id == project_id).first()
     if not task:
         raise NotFoundException("任务不存在")
@@ -1221,7 +1244,7 @@ async def delete_project_task(
     db: Session = Depends(get_db),
 ):
     """删除指定任务（物理删除）。"""
-    _get_project_or_404(db, project_id)
+    _get_project_or_404(db, project_id, current_user)
     task = db.query(ProjectTask).filter(ProjectTask.id == task_id, ProjectTask.project_id == project_id).first()
     if not task:
         raise NotFoundException("任务不存在")
@@ -1838,7 +1861,7 @@ async def list_project_files(
     db: Session = Depends(get_db),
 ):
     """获取项目附件列表，可按 category 筛选"""
-    _get_project_or_404(db, project_id)
+    _get_project_or_404(db, project_id, current_user)
     q = db.query(ProjectFile).filter(ProjectFile.project_id == project_id)
     if category:
         q = q.filter(ProjectFile.category == category)
@@ -1859,7 +1882,7 @@ async def delete_project_file(
     db: Session = Depends(get_db),
 ):
     """删除项目附件（同时删除磁盘文件）。仅管理员或项目创建者可删除。"""
-    project = _get_project_or_404(db, project_id)
+    project = _get_project_or_404(db, project_id, current_user)
 
     # 权限检查：管理员或项目创建者可删除
     if not _can_modify_project(project, current_user):
@@ -1888,6 +1911,7 @@ async def download_project_file(
     db: Session = Depends(get_db),
 ):
     """下载项目附件"""
+    _get_project_or_404(db, project_id, current_user)
     pf = db.query(ProjectFile).filter(ProjectFile.id == file_id, ProjectFile.project_id == project_id).first()
     if not pf:
         raise NotFoundException("文件不存在")
@@ -1910,6 +1934,7 @@ async def preview_project_file(
     db: Session = Depends(get_db),
 ):
     """在线预览项目附件（图片、PDF 等直接内嵌显示）"""
+    _get_project_or_404(db, project_id, current_user)
     pf = db.query(ProjectFile).filter(ProjectFile.id == file_id, ProjectFile.project_id == project_id).first()
     if not pf or not pf.filepath or not os.path.exists(pf.filepath):
         raise NotFoundException("文件不存在")

@@ -20,6 +20,8 @@ from ...core.database import get_db
 from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.policy import Policy, PolicyCategory, PolicyFavorite
+from app.core.transaction import safe_commit
+from app.api.v1.deps import require_manager_role
 
 logger = logging.getLogger(__name__)
 
@@ -393,6 +395,7 @@ async def import_policies(
     前端调用 POST /policies/import
     返回格式: { imported: int, errors: list }
     """
+    require_manager_role(current_user)
     from ...services.policy_import_service import import_policies_from_excel
     return await import_policies_from_excel(file, db, current_user)
 
@@ -653,6 +656,7 @@ async def upload_policy_file(
     db: Session = Depends(get_db),
 ):
     """上传政策附件文件（支持 pdf/doc/docx/pptx）"""
+    require_manager_role(current_user)
     import os
 
     from app.core.config import settings
@@ -786,6 +790,7 @@ async def download_policy_file(
 @router.post("/batch-delete")
 async def batch_delete_policies(data: dict, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """批量删除政策"""
+    require_manager_role(current_user)
     ids = data.get("ids", [])
     if not ids:
         raise HTTPException(status_code=400, detail="未提供要删除的ID")
@@ -933,6 +938,7 @@ async def create_policy(
     db: Session = Depends(get_db),
 ):
     """创建政策"""
+    require_manager_role(current_user)
     try:
         issue_date = None
         effective_date = None
@@ -981,6 +987,7 @@ async def update_policy(
     db: Session = Depends(get_db),
 ):
     """更新政策"""
+    require_manager_role(current_user)
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="政策不存在")
@@ -1034,6 +1041,7 @@ async def delete_policy(
     db: Session = Depends(get_db),
 ):
     """删除政策"""
+    require_manager_role(current_user)
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="政策不存在")
@@ -1051,6 +1059,7 @@ async def publish_policy(
     db: Session = Depends(get_db),
 ):
     """发布政策"""
+    require_manager_role(current_user)
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="政策不存在")
@@ -1068,6 +1077,7 @@ async def archive_policy(
     db: Session = Depends(get_db),
 ):
     """归档政策"""
+    require_manager_role(current_user)
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="政策不存在")
@@ -1084,12 +1094,11 @@ async def archive_policy(
 @router.post("/{policy_id}/favorite")
 async def add_favorite(
     policy_id: int,
-    user_id: int = Query(..., description="用户ID"),
-    note: Optional[str] = None,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """收藏政策"""
+    """收藏政策（仅能为当前登录用户收藏，忽略客户端传入的 user_id 以防 IDOR）"""
+    user_id = current_user.id
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="政策不存在")
@@ -1111,11 +1120,11 @@ async def add_favorite(
 @router.delete("/{policy_id}/favorite")
 async def remove_favorite(
     policy_id: int,
-    user_id: int = Query(..., description="用户ID"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """取消收藏"""
+    """取消收藏（仅能取消当前登录用户的收藏，忽略客户端传入的 user_id 以防 IDOR）"""
+    user_id = current_user.id
     favorite = (
         db.query(PolicyFavorite)
         .filter(PolicyFavorite.policy_id == policy_id, PolicyFavorite.user_id == user_id)
@@ -1130,8 +1139,14 @@ async def remove_favorite(
 
 
 @router.get("/user/{user_id}/favorites")
-async def get_user_favorites(user_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    """获取用户收藏的政策"""
+async def get_user_favorites(
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取用户收藏的政策（仅允许查看自己的收藏，防止越权读取他人数据）"""
+    if user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="只能查看自己的收藏")
     favorites = db.query(PolicyFavorite).filter(PolicyFavorite.user_id == user_id).all()
     policy_ids = [f.policy_id for f in favorites]
     if not policy_ids:
@@ -1151,6 +1166,5 @@ async def search_policies(
 ):
     """全文检索帮扶政策（FTS5 + 关键词高亮）"""
     from app.services.policy_fts_service import search_policies_fts
-from app.core.transaction import safe_commit
     results = search_policies_fts(db, q, limit=limit, offset=offset)
     return {"data": results, "total": len(results), "query": q}

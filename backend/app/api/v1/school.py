@@ -37,6 +37,7 @@ from ...models.school import (
 )
 from ...core.data_permission import require_data_permission
 from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
+from app.core.transaction import safe_commit
 from ...services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
@@ -244,6 +245,8 @@ async def import_schools_excel(
                     support_unit=str(row[11]) if row[11] else None,
                     principal=str(row[12]) if row[12] else None,
                     contact_phone=str(row[13]) if row[13] else None,
+                    organization_id=getattr(current_user, "organization_id", None),
+                    created_by=current_user.id,
                 )
                 db.add(school)
                 imported += 1
@@ -493,6 +496,14 @@ async def download_attachment(
     if not att:
         raise AppError.not_found("附件")
 
+    # 数据隔离：校验附件所属学校的访问权限（防止跨组织下载）
+    school = db.query(School).filter(School.id == att.school_id).first()
+    if school:
+        require_data_permission(
+            current_user, school.organization_id, school.created_by, db,
+            error_message="无权下载该附件",
+        )
+
     file_path = _validate_file_path(att.file_path)
 
     return FileResponse(
@@ -512,6 +523,14 @@ async def delete_attachment(
     att = db.query(SchoolAttachment).filter(SchoolAttachment.id == attachment_id).first()
     if not att:
         raise AppError.not_found("附件")
+
+    # 数据隔离：校验附件所属学校的访问权限（防止跨组织删除）
+    school = db.query(School).filter(School.id == att.school_id).first()
+    if school:
+        require_data_permission(
+            current_user, school.organization_id, school.created_by, db,
+            error_message="无权删除该附件",
+        )
 
     file_path = _validate_file_path(att.file_path)
 
@@ -556,7 +575,8 @@ async def list_schools(
             _key_data = json.dumps(
                 [keyword, name, type, status_filter, include_deleted], default=str
             ).encode()
-            _ckey = f"schools:list:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
+            _org_id = getattr(current_user, "organization_id", None) or 0
+            _ckey = f"schools:list:{_org_id}:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
             _cached = await _cache.get(_ckey)
             if _cached is not None:
                 return _cached
@@ -787,7 +807,6 @@ async def delete_school(
     # 清除仪表板缓存
     try:
         from app.api.v1.data.dashboard import invalidate_dashboard_cache
-from app.core.transaction import safe_commit
 
         invalidate_dashboard_cache()
     except Exception:
@@ -806,6 +825,7 @@ async def list_attachments(
     db: Session = Depends(get_db),
 ):
     """获取学校附件列表"""
+    _get_school_and_check_permission(school_id, current_user, db, "查看附件")
     attachments = (
         db.query(SchoolAttachment)
         .filter(SchoolAttachment.school_id == school_id)
@@ -824,10 +844,8 @@ async def upload_attachment(
     db: Session = Depends(get_db),
 ):
     """上传学校电子资料"""
-    # 检查学校是否存在
-    school = db.query(School).filter(School.id == school_id, School.is_active == True).first()  # noqa: E712
-    if not school:
-        raise AppError.not_found("学校")
+    # 检查学校是否存在并校验数据权限
+    school = _get_school_and_check_permission(school_id, current_user, db, "上传附件")
 
     # 检查文件大小
     content = await file.read()
@@ -912,6 +930,7 @@ async def list_projects(
     db: Session = Depends(get_db),
 ):
     """获取学校帮扶项目列表"""
+    _get_school_and_check_permission(school_id, current_user, db, "查看项目")
     items = (
         db.query(SchoolProject)
         .filter(SchoolProject.school_id == school_id)
@@ -1017,6 +1036,7 @@ async def list_scholarship_students(
     db: Session = Depends(get_db),
 ):
     """获取资助学生列表"""
+    _get_school_and_check_permission(school_id, current_user, db, "查看资助学生")
     q = db.query(ScholarshipStudent).filter(ScholarshipStudent.school_id == school_id)
     if year:
         q = q.filter(ScholarshipStudent.year == year)

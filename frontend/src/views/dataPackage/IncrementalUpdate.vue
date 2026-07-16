@@ -257,7 +257,7 @@ const handleDetectChanges = async () => {
       },
     })
 
-    if (response.data.success) {
+    if (response.success) {
       changesSummary.value = response.data.summary
       ElMessage.success('变更检测完成')
     }
@@ -276,7 +276,7 @@ const handleExport = async () => {
       description: exportForm.value.description || '增量更新包',
     })
 
-    if (response.data.success) {
+    if (response.success) {
       ElMessage.success('增量包导出成功')
 
       // 下载文件
@@ -301,7 +301,7 @@ const handleImport = async () => {
       apply_changes: importForm.value.apply_changes,
     })
 
-    if (response.data.success) {
+    if (response.success) {
       importResult.value = response.data
       ElMessage.success(importForm.value.apply_changes ? '导入成功' : '预览完成')
     }
