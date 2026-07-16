@@ -576,7 +576,8 @@ async def list_schools(
                 [keyword, name, type, status_filter, include_deleted], default=str
             ).encode()
             _org_id = getattr(current_user, "organization_id", None) or 0
-            _ckey = f"schools:list:{_org_id}:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
+            _hash = hashlib.md5(_key_data, usedforsecurity=False).hexdigest()
+            _ckey = f"schools:list:{_org_id}:{page}:{page_size}:{_hash}"
             _cached = await _cache.get(_ckey)
             if _cached is not None:
                 return _cached
@@ -845,7 +846,7 @@ async def upload_attachment(
 ):
     """上传学校电子资料"""
     # 检查学校是否存在并校验数据权限
-    school = _get_school_and_check_permission(school_id, current_user, db, "上传附件")
+    _get_school_and_check_permission(school_id, current_user, db, "上传附件")
 
     # 检查文件大小
     content = await file.read()

@@ -281,7 +281,8 @@ async def list_villages(
                 default=str,
             ).encode()
             _org_id = getattr(current_user, "organization_id", None) or 0
-            _ckey = f"villages:list:{_org_id}:{page}:{page_size}:{hashlib.md5(_key_data, usedforsecurity=False).hexdigest()}"
+            _hash = hashlib.md5(_key_data, usedforsecurity=False).hexdigest()
+            _ckey = f"villages:list:{_org_id}:{page}:{page_size}:{_hash}"
             _cached = await _cache.get(_ckey)
             if _cached is not None:
                 return _cached
