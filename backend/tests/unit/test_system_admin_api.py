@@ -427,7 +427,7 @@ class TestClearCache:
 
         with patch("app.core.cache.cache_manager") as cm, \
              patch.dict("sys.modules", {
-                 "app.api.v1.data.dashboard": fake_dashboard,
+                 "app.api.v1.data.data.dashboard": fake_dashboard,
                  "app.api.v1.map": fake_map,
              }):
             resp = auth_client.post("/api/v1/system/admin/clear-cache")
@@ -443,7 +443,7 @@ class TestClearCache:
 
         with patch("app.core.cache.cache_manager") as cm, \
              patch.dict("sys.modules", {
-                 "app.api.v1.data.dashboard": fake_dashboard,
+                 "app.api.v1.data.data.dashboard": fake_dashboard,
                  "app.api.v1.map": fake_map,
              }):
             resp = auth_client.post("/api/v1/system/admin/clear-cache")

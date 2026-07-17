@@ -277,7 +277,7 @@ async def clear_cache(current_user=Depends(get_current_user)):
 
         # 清除各模块独立的 diskcache 实例
         try:
-            from app.api.v1.data.dashboard import invalidate_dashboard_cache
+            from app.api.v1.data.data.dashboard import invalidate_dashboard_cache
 
             invalidate_dashboard_cache()
         except Exception as e:

@@ -699,7 +699,7 @@ async def create_school(
 
     # 清除仪表板缓存
     try:
-        from app.api.v1.data.dashboard import invalidate_dashboard_cache
+        from app.api.v1.data.data.dashboard import invalidate_dashboard_cache
 
         invalidate_dashboard_cache()
     except Exception:
@@ -764,7 +764,7 @@ async def update_school(
 
     # 清除仪表板缓存
     try:
-        from app.api.v1.data.dashboard import invalidate_dashboard_cache
+        from app.api.v1.data.data.dashboard import invalidate_dashboard_cache
 
         invalidate_dashboard_cache()
     except Exception:
@@ -807,7 +807,7 @@ async def delete_school(
 
     # 清除仪表板缓存
     try:
-        from app.api.v1.data.dashboard import invalidate_dashboard_cache
+        from app.api.v1.data.data.dashboard import invalidate_dashboard_cache
 
         invalidate_dashboard_cache()
     except Exception:

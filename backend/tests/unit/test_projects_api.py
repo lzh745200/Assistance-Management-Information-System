@@ -1,7 +1,6 @@
 """Tests for app/api/v1/projects.py — 100% branch coverage."""
 import io
 import os
-import sys
 import tempfile
 from datetime import date, datetime
 from decimal import Decimal
@@ -23,9 +22,6 @@ from app.api.v1.projects import (
 )
 from app.core.exceptions import NotFoundException
 from app.models.project import Fund, Project, ProjectFile, ProjectTask
-
-sys.modules.setdefault("app.api.v1.data", type(sys)("app.api.v1.data"))
-sys.modules["app.api.v1.data"].dashboard = MagicMock(invalidate_dashboard_cache=MagicMock())
 
 
 @pytest.fixture

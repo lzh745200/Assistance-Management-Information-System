@@ -5,17 +5,8 @@ import io
 import pytest
 pytestmark = pytest.mark.xdist_group("school")
 import os
-import sys
-import types
 from unittest.mock import AsyncMock, MagicMock, patch
 
-# Ensure app.api.v1.data.dashboard exists so invalidate_dashboard_cache() lines are covered
-_dash_mod = types.ModuleType("app.api.v1.data.dashboard")
-_dash_mod.invalidate_dashboard_cache = MagicMock()
-sys.modules.setdefault("app.api.v1.data", types.ModuleType("app.api.v1.data"))
-sys.modules["app.api.v1.data.dashboard"] = _dash_mod
-
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -452,15 +443,15 @@ class TestCreateSchool:
     @patch("app.api.v1.school.write_work_log")
     @patch("app.api.v1.school.logger")
     def test_create_cache_invalidation_fail(self, mock_log, mock_log2, auth_setup, db_session):
-        _dash_mod.invalidate_dashboard_cache.side_effect = Exception("cache fail")
-        try:
+        with patch(
+            "app.api.v1.data.data.dashboard.invalidate_dashboard_cache",
+            side_effect=Exception("cache fail"),
+        ):
             resp = auth_setup.post(
                 P("/schools"),
                 json={"name": "缓存失败测试", "code": "CACHEFAIL"},
             )
             assert resp.status_code == 200
-        finally:
-            _dash_mod.invalidate_dashboard_cache.side_effect = None
 
     def test_create_school_type_enum_mapping(self, auth_setup, db_session):
         resp = auth_setup.post(
@@ -554,15 +545,15 @@ class TestUpdateSchool:
     @patch("app.api.v1.school.write_work_log")
     @patch("app.api.v1.school.logger")
     def test_update_cache_fail(self, mock_log, mock_log2, auth_setup, school):
-        _dash_mod.invalidate_dashboard_cache.side_effect = Exception("cache fail")
-        try:
+        with patch(
+            "app.api.v1.data.data.dashboard.invalidate_dashboard_cache",
+            side_effect=Exception("cache fail"),
+        ):
             resp = auth_setup.put(
                 P(f"/schools/{school.id}"),
                 json={"name": "CacheFail"},
             )
             assert resp.status_code == 200
-        finally:
-            _dash_mod.invalidate_dashboard_cache.side_effect = None
 
 
 class TestDeleteSchool:
@@ -596,12 +587,12 @@ class TestDeleteSchool:
     @patch("app.api.v1.school.write_work_log")
     @patch("app.api.v1.school.logger")
     def test_delete_cache_fail(self, mock_log, mock_log2, auth_setup, school):
-        _dash_mod.invalidate_dashboard_cache.side_effect = Exception("cache fail")
-        try:
+        with patch(
+            "app.api.v1.data.data.dashboard.invalidate_dashboard_cache",
+            side_effect=Exception("cache fail"),
+        ):
             resp = auth_setup.delete(P(f"/schools/{school.id}"))
             assert resp.status_code == 200
-        finally:
-            _dash_mod.invalidate_dashboard_cache.side_effect = None
 
 
 # ══════════════════════════════════════════════════════════════

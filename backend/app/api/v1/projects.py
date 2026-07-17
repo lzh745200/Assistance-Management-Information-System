@@ -839,7 +839,7 @@ async def create_project(
     db.refresh(project)
 
     try:
-        from app.api.v1.data.dashboard import invalidate_dashboard_cache
+        from app.api.v1.data.data.dashboard import invalidate_dashboard_cache
 
         invalidate_dashboard_cache()
     except Exception:
@@ -946,7 +946,7 @@ async def _log_project_update_audit(
 def _invalidate_project_cache() -> None:
     """失效仪表盘缓存"""
     try:
-        from app.api.v1.data.dashboard import invalidate_dashboard_cache
+        from app.api.v1.data.data.dashboard import invalidate_dashboard_cache
 
         invalidate_dashboard_cache()
     except Exception:
@@ -1069,7 +1069,7 @@ async def delete_project(
     safe_commit(db)
 
     try:
-        from app.api.v1.data.dashboard import invalidate_dashboard_cache
+        from app.api.v1.data.data.dashboard import invalidate_dashboard_cache
         invalidate_dashboard_cache()
     except Exception:
         logger.debug("仪表盘缓存失效失败")
