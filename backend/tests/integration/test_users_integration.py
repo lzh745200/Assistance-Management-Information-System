@@ -67,7 +67,7 @@ class TestUserList:
     def test_list_users(self, client, admin_user, admin_headers):
         resp = client.get("/api/v1/users", headers=admin_headers)
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]  # 列表接口统一 ok_list() 信封格式
         assert "total" in data
         assert "items" in data
         assert data["total"] >= 1
@@ -76,7 +76,7 @@ class TestUserList:
         resp = client.get("/api/v1/users", headers=admin_headers, params={
             "page": 1, "page_size": 1,
         })
-        data = resp.json()
+        data = resp.json()["data"]  # 列表接口统一 ok_list() 信封格式
         assert data["page"] == 1
         assert data["page_size"] == 1
         assert len(data["items"]) <= 1
@@ -86,7 +86,7 @@ class TestUserList:
         resp = client.get("/api/v1/users", headers=admin_headers, params={
             "keyword": user.username,
         })
-        data = resp.json()
+        data = resp.json()["data"]  # 列表接口统一 ok_list() 信封格式
         assert data["total"] >= 1
         assert any(u["username"] == user.username for u in data["items"])
 
@@ -94,7 +94,7 @@ class TestUserList:
         resp = client.get("/api/v1/users", headers=admin_headers, params={
             "is_active": True,
         })
-        data = resp.json()
+        data = resp.json()["data"]  # 列表接口统一 ok_list() 信封格式
         assert all(u["is_active"] for u in data["items"])
 
 

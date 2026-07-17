@@ -164,7 +164,8 @@ class TestEventBusService:
     def test_system_event_types(self):
         from app.services.event_bus import SystemEventTypes
         assert SystemEventTypes.PROJECT_CREATED == 'project.created'
-        assert hasattr(SystemEventTypes, 'FUND_CREATED')
+        assert SystemEventTypes.FUND_ALLOCATED == 'fund.allocated'
+        assert hasattr(SystemEventTypes, 'FUND_TRANSFERRED')
 
 
 # ══════════════════════════════════════════════════════════════

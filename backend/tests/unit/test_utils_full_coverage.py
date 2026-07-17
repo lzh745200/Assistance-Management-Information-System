@@ -15,6 +15,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from sqlalchemy import Column, Integer, String, create_engine, select
+from sqlalchemy.orm import Session, declarative_base, defer
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -22,6 +24,28 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 # ══════════════════════════════════════════════════════════════
 # pagination
 # ══════════════════════════════════════════════════════════════
+
+_PageBase = declarative_base()
+
+
+class _PagedItem(_PageBase):
+    """用于分页工具测试的最小真实 ORM 模型（SQLite 内存库）。"""
+
+    __tablename__ = "test_paged_items"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), default="")
+
+
+def _make_pagination_session(rows=0):
+    """构建含 rows 行数据的 SQLite 内存 Session。"""
+    engine = create_engine("sqlite:///:memory:")
+    _PageBase.metadata.create_all(engine)
+    session = Session(engine)
+    for i in range(1, rows + 1):
+        session.add(_PagedItem(id=i, name=f"item{i}"))
+    session.commit()
+    return session
 
 
 class TestPagination:
@@ -56,41 +80,17 @@ class TestPagination:
 
     def test_keyset_paginate(self):
         from app.utils.pagination import keyset_paginate
-        db = MagicMock()
-        # Mock count
-        db.execute.return_value.scalar_one.return_value = 5
-        # Mock items
-        item1 = MagicMock(id=1)
-        item2 = MagicMock(id=2)
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.unique.return_value.all.return_value = [item1, item2]
-        db.execute.return_value = result_mock
-
-        stmt = MagicMock()
-        order_col = MagicMock()
-        order_col.key = 'id'
-        order_col.desc.return_value = MagicMock()
-
-        result = keyset_paginate(stmt, order_col, page_size=10, db=db)
-        assert result['items'] == [item1, item2]
+        db = _make_pagination_session(2)
+        result = keyset_paginate(select(_PagedItem), _PagedItem.id, page_size=10, db=db)
+        assert [i.id for i in result['items']] == [2, 1]  # 默认降序
+        assert result['total'] == 2
 
     def test_keyset_paginate_with_cursor(self):
         from app.utils.pagination import keyset_paginate, encode_cursor
-        db = MagicMock()
-        db.execute.return_value.scalar_one.return_value = 5
-        item = MagicMock(id=1)
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.unique.return_value.all.return_value = [item]
-        db.execute.return_value = result_mock
-
-        stmt = MagicMock()
-        order_col = MagicMock()
-        order_col.key = 'id'
-        order_col.desc.return_value = MagicMock()
-
-        cursor = encode_cursor(10)
-        result = keyset_paginate(stmt, order_col, cursor=cursor, db=db)
-        assert len(result['items']) == 1
+        db = _make_pagination_session(3)
+        cursor = encode_cursor(3)
+        result = keyset_paginate(select(_PagedItem), _PagedItem.id, cursor=cursor, db=db)
+        assert [i.id for i in result['items']] == [2, 1]
 
     def test_keyset_paginate_no_total(self):
         from app.utils.pagination import keyset_paginate
@@ -110,36 +110,14 @@ class TestPagination:
 
     def test_keyset_paginate_asc(self):
         from app.utils.pagination import keyset_paginate
-        db = MagicMock()
-        db.execute.return_value.scalar_one.return_value = 1
-        item = MagicMock(id=1)
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.unique.return_value.all.return_value = [item]
-        db.execute.return_value = result_mock
-
-        stmt = MagicMock()
-        order_col = MagicMock()
-        order_col.key = 'id'
-        order_col.asc.return_value = MagicMock()
-
-        result = keyset_paginate(stmt, order_col, desc=False, db=db)
-        assert result['items'] == [item]
+        db = _make_pagination_session(2)
+        result = keyset_paginate(select(_PagedItem), _PagedItem.id, desc=False, db=db)
+        assert [i.id for i in result['items']] == [1, 2]
 
     def test_keyset_paginate_has_more(self):
         from app.utils.pagination import keyset_paginate
-        db = MagicMock()
-        db.execute.return_value.scalar_one.return_value = 10
-        items = [MagicMock(id=i) for i in range(6)]  # page_size + 1 = 6
-        result_mock = MagicMock()
-        result_mock.scalars.return_value.unique.return_value.all.return_value = items
-        db.execute.return_value = result_mock
-
-        stmt = MagicMock()
-        order_col = MagicMock()
-        order_col.key = 'id'
-        order_col.desc.return_value = MagicMock()
-
-        result = keyset_paginate(stmt, order_col, page_size=5, db=db)
+        db = _make_pagination_session(6)
+        result = keyset_paginate(select(_PagedItem), _PagedItem.id, page_size=5, db=db)
         assert result['has_more'] is True
         assert len(result['items']) == 5
         assert result['next_cursor'] is not None
@@ -147,7 +125,6 @@ class TestPagination:
     def test_keyset_paginate_fallback_to_all(self):
         from app.utils.pagination import keyset_paginate
         db = MagicMock()
-        db.execute.return_value.scalar_one.return_value = 2
         # scalars().unique().all() raises -> falls back to .all()
         result_mock = MagicMock()
         result_mock.scalars.side_effect = Exception('err')
@@ -159,75 +136,38 @@ class TestPagination:
         order_col.key = 'id'
         order_col.desc.return_value = MagicMock()
 
-        result = keyset_paginate(stmt, order_col, db=db)
+        # calculate_total=False：跳过 count 查询（count 需要真实 Select 子查询）
+        result = keyset_paginate(stmt, order_col, calculate_total=False, db=db)
         assert len(result['items']) == 2
 
     def test_paginate_query(self):
         from app.utils.pagination import paginate_query
-        db = MagicMock()
-        db.execute.return_value.scalar_one.return_value = 10
-        scalars_mock = MagicMock()
-        scalars_mock.unique.return_value.all.return_value = ['item1', 'item2']
-        db.execute.return_value = MagicMock(scalars=MagicMock(return_value=scalars_mock))
-
-        # Need two calls to db.execute: one for count, one for data
-        count_result = MagicMock()
-        count_result.scalar_one.return_value = 10
-        data_result = MagicMock()
-        data_scalars = MagicMock()
-        data_scalars.unique.return_value.all.return_value = ['item1', 'item2']
-        data_result.scalars.return_value = data_scalars
-        db.execute.side_effect = [count_result, data_result]
-
-        model = MagicMock()
-        result = paginate_query(db, model, page=1, page_size=5)
-        assert result['total'] == 10
-        assert result['items'] == ['item1', 'item2']
+        db = _make_pagination_session(2)
+        result = paginate_query(db, _PagedItem, page=1, page_size=5)
+        assert result['total'] == 2
+        assert len(result['items']) == 2
 
     def test_paginate_query_with_filters(self):
         from app.utils.pagination import paginate_query
-        db = MagicMock()
-        count_result = MagicMock()
-        count_result.scalar_one.return_value = 3
-        data_scalars = MagicMock()
-        data_scalars.unique.return_value.all.return_value = ['a', 'b', 'c']
-        data_result = MagicMock()
-        data_result.scalars.return_value = data_scalars
-        db.execute.side_effect = [count_result, data_result]
-
-        model = MagicMock()
-        result = paginate_query(db, model, page=1, page_size=10, filters=[MagicMock()])
-        assert result['total'] == 3
+        db = _make_pagination_session(3)
+        result = paginate_query(db, _PagedItem, page=1, page_size=10,
+                                filters=[_PagedItem.id > 1])
+        assert result['total'] == 2
+        assert len(result['items']) == 2
 
     def test_paginate_query_with_eager_loads(self):
         from app.utils.pagination import paginate_query
-        db = MagicMock()
-        count_result = MagicMock()
-        count_result.scalar_one.return_value = 1
-        data_scalars = MagicMock()
-        data_scalars.unique.return_value.all.return_value = ['x']
-        data_result = MagicMock()
-        data_result.scalars.return_value = data_scalars
-        db.execute.side_effect = [count_result, data_result]
-
-        model = MagicMock()
-        result = paginate_query(db, model, page=1, page_size=10, eager_loads=[MagicMock()])
-        assert result['items'] == ['x']
+        db = _make_pagination_session(1)
+        result = paginate_query(db, _PagedItem, page=1, page_size=10,
+                                eager_loads=[defer(_PagedItem.name)])
+        assert len(result['items']) == 1
 
     def test_paginate_query_with_order_by(self):
         from app.utils.pagination import paginate_query
-        db = MagicMock()
-        count_result = MagicMock()
-        count_result.scalar_one.return_value = 1
-        data_scalars = MagicMock()
-        data_scalars.unique.return_value.all.return_value = ['x']
-        data_result = MagicMock()
-        data_result.scalars.return_value = data_scalars
-        db.execute.side_effect = [count_result, data_result]
-
-        model = MagicMock()
-        result = paginate_query(db, model, page=1, page_size=10, order_by=MagicMock())
-        assert result['items'] == ['x']
+        db = _make_pagination_session(2)
+        result = paginate_query(db, _PagedItem, page=1, page_size=10,
+                                order_by=_PagedItem.id.desc())
+        assert [i.id for i in result['items']] == [2, 1]
 
 
 # ══════════════════════════════════════════════════════════════

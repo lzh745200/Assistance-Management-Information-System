@@ -803,7 +803,10 @@ class TestAuditLogService:
                 user_id=1,
                 action="test",
             )
-            mock_warn.assert_called_once()
+            # commit 失败和 rollback 失败各记录一条 warning
+            assert mock_warn.call_count == 2
+            mock_warn.assert_any_call("审计日志写入失败: DB error")
+            mock_warn.assert_any_call("审计日志回滚失败: Rollback error")
 
 
 class TestSecurityHeadersMiddleware:

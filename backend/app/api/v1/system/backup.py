@@ -279,6 +279,61 @@ async def download_backup(
     )
 
 
+@router.get("/preview/{filename}", summary="预览备份包内容")
+async def preview_backup(
+    filename: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """读取备份 ZIP 的文件清单与元信息（backup_info.json），供前端预览弹窗使用。
+
+    返回 {filename, size, files: [{name, size}], meta}；加密/损坏的 ZIP 返回 400。
+    需要管理员权限。
+    """
+    require_admin(current_user, error_message="仅超级管理员可预览备份")
+
+    import json
+    import zipfile
+
+    from app.utils.paths import get_backup_path
+
+    backup_dir = str(get_backup_path())
+    file_path = os.path.join(backup_dir, filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail=f"备份文件 '{filename}' 不存在")
+
+    # 安全检查：确保路径在备份目录内
+    real_path = os.path.realpath(file_path)
+    real_backup_dir = os.path.realpath(backup_dir)
+    if not real_path.startswith(real_backup_dir):
+        raise HTTPException(status_code=403, detail="禁止访问备份目录外的文件")
+
+    try:
+        with zipfile.ZipFile(file_path, "r") as zf:
+            files = [
+                {"name": info.filename, "size": info.file_size}
+                for info in zf.infolist()
+            ]
+            try:
+                meta = json.loads(zf.read("backup_info.json"))
+            except Exception:
+                # 无元信息文件或内容加密时降级为空 dict
+                meta = {}
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=400, detail="备份文件损坏或已加密，无法预览")
+
+    return {
+        "success": True,
+        "data": {
+            "filename": filename,
+            "size": os.path.getsize(file_path),
+            "files": files,
+            "meta": meta,
+        },
+    }
+
+
 @router.post("/verify/{filename}", summary="验证备份文件完整性")
 async def verify_backup(
     filename: str,

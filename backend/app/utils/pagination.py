@@ -96,9 +96,11 @@ def keyset_paginate(
     # 1. 计算 Total (可选)
     total = 0
     if calculate_total:
-        # 优化：清除 order_by 和 eager_loads，使用子查询计算总数，避免性能损耗
+        # 优化：清除 order_by，使用子查询计算总数，避免性能损耗。
+        # 注意：不能用 func.literal(1)（SQLite 无 literal() 函数会报错，
+        # 且 with_only_columns 会裁剪 FROM 导致计数恒为 1）。
         count_stmt = select(func.count()).select_from(
-            stmt.with_only_columns(func.literal(1)).order_by(None).subquery()
+            stmt.order_by(None).subquery()
         )
         total = db.execute(count_stmt).scalar_one()
 

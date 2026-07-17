@@ -150,49 +150,20 @@ class TestGetMapMarkers:
         assert "schools" in data
 
     def test_villages_only(self, client_with_mocked_auth):
-        with patch("app.api.v1.map.get_db") as mock_get_db:
-            mock_db = MagicMock()
-            mock_get_db.return_value = mock_db
-
-            mock_v_query = MagicMock()
-            mock_v_filter = MagicMock()
-            mock_v_filter.all.return_value = []
-            mock_v_query.filter.return_value = mock_v_filter
-            mock_db.query.return_value = mock_v_query
-
-            with patch("app.api.v1.map.get_data_scope") as mock_get_ds:
-                mock_ds = MagicMock()
-                mock_ds.filter_by_org_ids.side_effect = lambda q, *a, **kw: q
-                mock_get_ds.return_value = mock_ds
-
-                resp = client_with_mocked_auth.get(f"{BASE}/markers", params={"marker_type": "villages"})
-                assert resp.status_code == 200
-                data = resp.json()
-                assert "villages" in data
-                assert "schools" not in data
+        # 管理员用户经真实 get_org_scope 依赖获得 is_admin 全量数据权限，
+        # 直接走测试库即可（与 test_all_marker_types 一致）
+        resp = client_with_mocked_auth.get(f"{BASE}/markers", params={"marker_type": "villages"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "villages" in data
+        assert "schools" not in data
 
     def test_schools_only(self, client_with_mocked_auth):
-        from app.models.school import School
-        with patch("app.api.v1.map.get_db") as mock_get_db:
-            mock_db = MagicMock()
-            mock_get_db.return_value = mock_db
-
-            mock_s_query = MagicMock()
-            mock_s_filter = MagicMock()
-            mock_s_filter.all.return_value = []
-            mock_s_query.filter.return_value = mock_s_filter
-            mock_db.query.return_value = mock_s_query
-
-            with patch("app.api.v1.map.get_data_scope") as mock_get_ds:
-                mock_ds = MagicMock()
-                mock_ds.filter_by_org_ids.side_effect = lambda q, *a, **kw: q
-                mock_get_ds.return_value = mock_ds
-
-                resp = client_with_mocked_auth.get(f"{BASE}/markers", params={"marker_type": "schools"})
-                assert resp.status_code == 200
-                data = resp.json()
-                assert "schools" in data
-                assert "villages" not in data
+        resp = client_with_mocked_auth.get(f"{BASE}/markers", params={"marker_type": "schools"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "schools" in data
+        assert "villages" not in data
 
 
 class TestGetCountyCoordinates:
@@ -341,49 +312,26 @@ class TestGetDistances:
         mock_cache.get.return_value = {"cached": True}
         mock_cache.set.return_value = None
 
+        # 缓存命中时端点直接返回缓存内容，不会触达数据库/数据权限
         with patch("app.api.v1.map._map_cache", mock_cache):
-            with patch("app.api.v1.map.get_db") as mock_get_db:
-                mock_db = MagicMock()
-                mock_get_db.return_value = mock_db
-                mock_db.query.return_value.filter.return_value.all.return_value = []
-                with patch("app.api.v1.map.get_data_scope") as mock_get_ds:
-                    mock_ds = MagicMock()
-                    mock_ds.filter_by_org_ids.side_effect = lambda q, *a, **kw: q
-                    mock_get_ds.return_value = mock_ds
-                    resp = client_with_mocked_auth.get(f"{BASE}/distances")
-                    assert resp.status_code == 200
-                    assert resp.json()["cached"] is True
+            resp = client_with_mocked_auth.get(f"{BASE}/distances")
+            assert resp.status_code == 200
+            assert resp.json()["cached"] is True
 
     def test_success_no_cache(self, client_with_mocked_auth):
-        mock_db = MagicMock()
-
-        def mock_query(model):
-            q = MagicMock()
-            f = MagicMock()
-            f.all.return_value = []
-            q.filter.return_value = f
-            return q
-
-        mock_db.query.side_effect = mock_query
-
+        # _map_cache=None 时走真实测试库（空表），返回完整结构
         with patch("app.api.v1.map._map_cache", None):
-            with patch("app.api.v1.map.get_db") as mock_get_db:
-                mock_get_db.return_value = mock_db
-                with patch("app.api.v1.map.get_data_scope") as mock_get_ds:
-                    mock_ds = MagicMock()
-                    mock_ds.filter_by_org_ids.side_effect = lambda q, *a, **kw: q
-                    mock_get_ds.return_value = mock_ds
-                    resp = client_with_mocked_auth.get(f"{BASE}/distances")
-                    assert resp.status_code == 200
-                    data = resp.json()
-                    assert "base" in data
-                    assert "villages" in data
-                    assert "schools" in data
-                    assert "county_distances" in data
-                    # county_distances should only include full names
-                    county_names = [c["county"] for c in data["county_distances"]]
-                    assert "都匀市" in county_names
-                    assert "都匀" not in county_names
+            resp = client_with_mocked_auth.get(f"{BASE}/distances")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert "base" in data
+            assert "villages" in data
+            assert "schools" in data
+            assert "county_distances" in data
+            # county_distances should only include full names
+            county_names = [c["county"] for c in data["county_distances"]]
+            assert "都匀市" in county_names
+            assert "都匀" not in county_names
 
 
 class TestGetTileInfo:

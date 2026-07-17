@@ -65,7 +65,9 @@ class TestRunInThread:
         from app.utils.async_executor import run_in_thread
 
         def never_ending():
-            time.sleep(100)
+            # sleep 仅用于触发超时；超时后线程仍会存活至 sleep 结束，
+            # 因此时长必须足够短，避免泄漏线程拖累后续测试（曾用 100s 导致全套件挂死）
+            time.sleep(2)
             return "done"
 
         with pytest.raises(TimeoutError, match="超时"):

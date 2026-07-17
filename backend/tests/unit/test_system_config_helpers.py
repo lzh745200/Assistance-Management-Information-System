@@ -357,7 +357,12 @@ class TestSetSystemConfig:
     # -- failure paths -------------------------------------------------------
 
     def test_commit_failure_rollback_and_false(self, mock_db):
-        """commit() raises -> rollback() called, returns False."""
+        """commit() raises -> rollback() called, returns False.
+
+        safe_commit() rolls back and re-raises on commit failure, then the
+        except handler in set_system_config() rolls back again defensively
+        (a no-op on an already rolled-back session), so rollback fires twice.
+        """
         mock_db.first.return_value = None
         mock_db.commit.side_effect = Exception("DB error")
 
@@ -366,7 +371,7 @@ class TestSetSystemConfig:
             result = asyncio.run(set_system_config("fail_key", "value"))
 
         assert result is False
-        mock_db.rollback.assert_called_once()
+        assert mock_db.rollback.call_count == 2
 
     def test_add_failure_rollback_and_false(self, mock_db):
         """add() raises -> rollback() called, returns False."""

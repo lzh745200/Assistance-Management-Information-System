@@ -91,7 +91,9 @@ class TestCreateTodo:
         mock_db.commit.side_effect = Exception("commit error")
         resp = client.post("/todos", json={"title": "失败"})
         assert resp.status_code == 500
-        mock_db.rollback.assert_called_once()
+        # safe_commit 失败时先回滚一次并重新抛出，端点 except 兜底再回滚一次；
+        # 此处只断言“发生错误时确实回滚了”，不锁死具体次数
+        mock_db.rollback.assert_called()
 
 
 class TestUpdateTodo:

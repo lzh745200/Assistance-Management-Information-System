@@ -507,10 +507,12 @@ class TestProjectsAPI:
 
     def test_get_project_stats(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
-        mock_db.query.return_value.filter.return_value.group_by.return_value.all.return_value = [
+        q = mock_db.query.return_value
+        q.filter.return_value = q  # 端点链式调用两次 .filter()，需自返回
+        q.group_by.return_value.all.return_value = [
             ("draft", 5, 1000.0), ("in_progress", 3, 2000.0),
         ]
-        mock_db.query.return_value.filter.return_value.scalar.return_value = 500.0
+        q.scalar.return_value = 500.0
         resp = client.get("/api/v1/projects/stats")
         assert resp.status_code == 200
         assert resp.json()["total"] == 8 and resp.json()["total_budget"] == 3000.0

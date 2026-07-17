@@ -176,7 +176,7 @@ class TestGetPendingReports:
         _setup_user_override(client_with_mocked_auth, org_id=None)
         resp = client_with_mocked_auth.get(f"{BASE}/pending")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
     def test_success(self, client_with_mocked_auth):
         _setup_user_override(client_with_mocked_auth, org_id=1)
@@ -185,7 +185,7 @@ class TestGetPendingReports:
         _setup_service_override(client_with_mocked_auth, mock_svc)
         resp = client_with_mocked_auth.get(f"{BASE}/pending")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
 
 # ──────────────────────────────────────────────────────

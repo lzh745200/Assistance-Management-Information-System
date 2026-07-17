@@ -613,7 +613,7 @@ class TestGetExportLogs:
         session.commit()
         resp = client.get(self.URL)
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_export_type(self, db_client):
         client, session = db_client
@@ -623,7 +623,7 @@ class TestGetExportLogs:
         session.commit()
         resp = client.get(self.URL, params={"export_type": "csv"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_user_id(self, db_client):
         client, session = db_client
@@ -633,7 +633,7 @@ class TestGetExportLogs:
         session.commit()
         resp = client.get(self.URL, params={"user_id": 1})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_start_date(self, db_client):
         client, session = db_client
@@ -642,7 +642,7 @@ class TestGetExportLogs:
         session.commit()
         resp = client.get(self.URL, params={"start_date": "2020-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_filters_by_end_date(self, db_client):
         client, session = db_client
@@ -651,7 +651,7 @@ class TestGetExportLogs:
         session.commit()
         resp = client.get(self.URL, params={"end_date": "2099-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
 
 class TestGetUserActivity:

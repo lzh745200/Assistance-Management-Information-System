@@ -20,12 +20,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 class TestBaseModel:
     def test_base_to_dict(self):
+        from types import SimpleNamespace
+
         from app.models.base import Base, _base_to_dict
-        # Create a simple mock object with __mapper__
-        obj = MagicMock()
+        # Create a simple object with __mapper__ (MagicMock cannot auto-create
+        # dunder attributes like __mapper__, so use a plain namespace instead)
         attr = MagicMock()
         attr.key = 'id'
-        obj.__mapper__.column_attrs = [attr]
+        obj = SimpleNamespace()
+        obj.__mapper__ = SimpleNamespace(column_attrs=[attr])
         obj.id = 1
         result = _base_to_dict(obj)
         assert result['id'] == 1
@@ -66,11 +69,12 @@ class TestBaseModel:
     def test_base_model_repr(self):
         from app.models.base import BaseModel
         # BaseModel is abstract, can't instantiate directly
-        # Test via a concrete model
-        from app.models.user import User
-        u = User()
-        u.id = 42
-        r = repr(u)
+        # Test via a concrete model without a custom __repr__
+        # (User overrides __repr__ without id, so use DataSyncLog)
+        from app.models.data_sync import DataSyncLog
+        d = DataSyncLog()
+        d.id = 42
+        r = repr(d)
         assert '42' in r
 
 
@@ -168,15 +172,15 @@ class TestModelsToDict:
         assert d is not None
 
     def test_approval_to_dict(self):
-        from app.models.approval import Approval
-        a = Approval()
+        from app.models.approval import ApprovalTask
+        a = ApprovalTask()
         a.id = 1
         d = a.to_dict()
         assert d is not None
 
     def test_effectiveness_to_dict(self):
-        from app.models.effectiveness import Effectiveness
-        e = Effectiveness()
+        from app.models.effectiveness import EffectivenessIndicator
+        e = EffectivenessIndicator()
         e.id = 1
         d = e.to_dict()
         assert d is not None
@@ -196,8 +200,8 @@ class TestModelsToDict:
         assert d is not None
 
     def test_fund_lifecycle_to_dict(self):
-        from app.models.fund_lifecycle import FundLifecycle
-        f = FundLifecycle()
+        from app.models.fund_lifecycle import ProjectFundPhase
+        f = ProjectFundPhase()
         f.id = 1
         d = f.to_dict()
         assert d is not None
@@ -245,8 +249,8 @@ class TestModelsToDict:
         assert d is not None
 
     def test_monitoring_to_dict(self):
-        from app.models.monitoring import MonitoringRecord
-        m = MonitoringRecord()
+        from app.models.monitoring import APIMetric
+        m = APIMetric()
         m.id = 1
         d = m.to_dict()
         assert d is not None
@@ -329,8 +333,8 @@ class TestModelsToDict:
         assert d is not None
 
     def test_dashboard_to_dict(self):
-        from app.models.dashboard import Dashboard
-        d = Dashboard()
+        from app.models.dashboard import DashboardActivity
+        d = DashboardActivity()
         d.id = 1
         result = d.to_dict()
         assert result is not None
@@ -392,8 +396,8 @@ class TestModelsToDict:
         assert d is not None
 
     def test_industry_to_dict(self):
-        from app.models.industry import Industry
-        i = Industry()
+        from app.models.industry import TeaPlantation
+        i = TeaPlantation()
         i.id = 1
         d = i.to_dict()
         assert d is not None
@@ -413,8 +417,8 @@ class TestModelsToDict:
         assert d is not None
 
     def test_fund_history_to_dict(self):
-        from app.models.fund_history import FundHistory
-        f = FundHistory()
+        from app.models.fund_history import FundStatusHistory
+        f = FundStatusHistory()
         f.id = 1
         d = f.to_dict()
         assert d is not None
@@ -434,8 +438,8 @@ class TestModelsToDict:
         assert d is not None
 
     def test_issue_tracking_to_dict(self):
-        from app.models.issue_tracking import IssueTracking
-        i = IssueTracking()
+        from app.models.issue_tracking import Issue
+        i = Issue()
         i.id = 1
         d = i.to_dict()
         assert d is not None

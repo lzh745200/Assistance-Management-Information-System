@@ -187,7 +187,7 @@ def init_default_users(db: SessionLocal) -> None:
             is_active=True,
             is_superuser=True,
             phone="13800138000",
-            force_password_change=True,  # 强制首次登录修改密码
+            must_change_password=True,  # 强制首次登录修改密码
         )
 
         officer_user = User(
@@ -199,7 +199,7 @@ def init_default_users(db: SessionLocal) -> None:
             is_active=True,
             is_superuser=False,
             phone="13900139001",
-            force_password_change=True,  # 强制首次登录修改密码
+            must_change_password=True,  # 强制首次登录修改密码
         )
 
         db.add_all([admin_user, officer_user])

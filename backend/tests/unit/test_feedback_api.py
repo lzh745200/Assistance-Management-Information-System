@@ -595,7 +595,10 @@ class TestSubmitFeedback:
 
         resp = c.post("/api/v1/feedback", json={"content": "触发 DB 提交错误"})
         assert resp.status_code == 500
-        mock_db.rollback.assert_called_once()
+        # safe_commit（app/core/transaction.py）在 commit 失败时先自行 rollback
+        # 并重新抛异常；端点 except 块（app/api/v1/feedback.py）再 rollback 一次
+        # （对已回滚的 session 是无害 no-op），因此共调用 2 次。
+        assert mock_db.rollback.call_count == 2
 
     def test_db_refresh_fails_500(self, app, c):
         """db.refresh() 抛异常 → rollback + 500"""

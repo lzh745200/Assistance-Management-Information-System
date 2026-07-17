@@ -288,7 +288,9 @@ class TestRecordSecurityEvent:
             severity="high", message="fail test",
         )
         assert result["id"] is None
-        mock_db.rollback.assert_called_once()
+        # safe_commit 失败时先回滚一次并重新抛出异常，
+        # 端点的 except 兜底分支会再防御性回滚一次（对 SQLAlchemy 会话是幂等的）。
+        assert mock_db.rollback.call_count >= 1
 
     def test_logs_warning_for_high_severity(self):
         from app.api.v1.system.zero_trust import _record_security_event

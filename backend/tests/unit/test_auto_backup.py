@@ -1,8 +1,20 @@
 """TDD: 自动备份调度 — 100% 行覆盖（测试需启用自动备份）."""
 import os
-os.environ["BACKUP_ENABLED"] = "true"  # Enable for backup tests (uses tmp_path)
 import time
 from unittest.mock import patch
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _backup_enabled(monkeypatch):
+    """每个测试独立启用自动备份（替代原先的模块级 os.environ 污染）。
+
+    app.services.auto_backup.BACKUP_ENABLED 在模块 import 时即定型，
+    模块级设置 os.environ 既会泄漏到整个 pytest 会话，又对已缓存的
+    模块无效；直接 patch 模块常量才是隔离可靠的做法。
+    """
+    monkeypatch.setattr("app.services.auto_backup.BACKUP_ENABLED", True)
 
 
 class TestBackupScheduler:

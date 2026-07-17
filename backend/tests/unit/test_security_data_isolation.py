@@ -63,26 +63,55 @@ def org2_user_client(client):
 class TestSupportedVillageIsolation:
     """帮扶村数据隔离：跨组织详情访问应返回 403"""
 
-    def test_cross_org_village_detail_returns_403(self, org1_admin_client, org2_user_client):
+    def test_cross_org_village_detail_returns_403(self, client):
         """org1 创建的帮扶村，org2 用户不应能访问详情"""
-        # org1 管理员创建帮扶村
-        resp = org1_admin_client.post("/api/v1/supported-villages", json={
-            "village_name": "测试村A",
-            "province": "贵州省",
-            "county": "测试县",
-        })
-        # 创建可能因 schema 差异失败，跳过而非报错
-        if resp.status_code not in (200, 201):
-            pytest.skip(f"创建帮扶村失败: {resp.status_code}")
-        village_id = resp.json().get("data", {}).get("id")
-        if not village_id:
-            pytest.skip("无法获取帮扶村ID")
+        # org1_admin_client/org2_user_client 两个 fixture 共享同一 app 的
+        # dependency_overrides，同时使用时后生效者会覆盖前者（两个"客户端"
+        # 实际同身份），因此本测试显式按阶段切换覆盖。
+        from app.core.security import get_current_user
 
-        # org2 普通用户尝试访问 → 应 403（跨组织）
-        resp2 = org2_user_client.get(f"/api/v1/supported-villages/{village_id}")
-        assert resp2.status_code in (403, 404), (
-            f"跨组织访问应返回 403/404，实际 {resp2.status_code} — 数据隔离漏洞!"
-        )
+        org1_admin = Mock()
+        org1_admin.id = 1
+        org1_admin.username = "admin1"
+        org1_admin.role = "admin"
+        org1_admin.is_superuser = False
+        org1_admin.is_active = True
+        org1_admin.permissions_list = ["*"]
+        org1_admin.organization_id = 1
+
+        org2_user = Mock()
+        org2_user.id = 2
+        org2_user.username = "user2"
+        org2_user.role = "user"
+        org2_user.is_superuser = False
+        org2_user.is_active = True
+        org2_user.permissions_list = ["read"]
+        org2_user.organization_id = 2
+
+        original = client.app.dependency_overrides.copy()
+        try:
+            # org1 管理员创建帮扶村
+            client.app.dependency_overrides[get_current_user] = lambda: org1_admin
+            resp = client.post("/api/v1/supported-villages", json={
+                "village_name": "测试村A",
+                "province": "贵州省",
+                "county": "测试县",
+            })
+            # 创建可能因 schema 差异失败，跳过而非报错
+            if resp.status_code not in (200, 201):
+                pytest.skip(f"创建帮扶村失败: {resp.status_code} {resp.text[:200]}")
+            village_id = resp.json().get("data", {}).get("id")
+            if not village_id:
+                pytest.skip("无法获取帮扶村ID")
+
+            # org2 普通用户尝试访问 → 应 403（跨组织）
+            client.app.dependency_overrides[get_current_user] = lambda: org2_user
+            resp2 = client.get(f"/api/v1/supported-villages/{village_id}")
+            assert resp2.status_code in (403, 404), (
+                f"跨组织访问应返回 403/404，实际 {resp2.status_code} — 数据隔离漏洞!"
+            )
+        finally:
+            client.app.dependency_overrides = original
 
 
 # ──────────────────────── CRIT-2: policy 写操作 ────────────────────────
@@ -148,25 +177,53 @@ class TestPolicyFavoriteIDOR:
 class TestProjectSubEndpointIsolation:
     """项目子端点：跨组织访问应返回 403"""
 
-    def test_cross_org_project_funds_returns_403(self, org1_admin_client, org2_user_client):
+    def test_cross_org_project_funds_returns_403(self, client):
         """org1 创建的项目，org2 用户不应能访问经费"""
-        # org1 创建项目
-        resp = org1_admin_client.post("/api/v1/projects", json={
-            "name": "隔离测试项目",
-            "type": "infrastructure",
-        })
-        if resp.status_code not in (200, 201):
-            pytest.skip(f"创建项目失败: {resp.status_code}")
-        data = resp.json()
-        project_id = data.get("id") or data.get("data", {}).get("id")
-        if not project_id:
-            pytest.skip("无法获取项目ID")
+        # 与 TestSupportedVillageIsolation 相同的原因：两个组织身份 fixture
+        # 共享同一 app 的 dependency_overrides，必须显式按阶段切换。
+        from app.core.security import get_current_user
 
-        # org2 用户访问项目经费 → 应 403
-        resp2 = org2_user_client.get(f"/api/v1/projects/{project_id}/funds")
-        assert resp2.status_code in (403, 404), (
-            f"跨组织访问项目经费应返回 403/404，实际 {resp2.status_code} — 越权漏洞!"
-        )
+        org1_admin = Mock()
+        org1_admin.id = 1
+        org1_admin.username = "admin1"
+        org1_admin.role = "admin"
+        org1_admin.is_superuser = False
+        org1_admin.is_active = True
+        org1_admin.permissions_list = ["*"]
+        org1_admin.organization_id = 1
+
+        org2_user = Mock()
+        org2_user.id = 2
+        org2_user.username = "user2"
+        org2_user.role = "user"
+        org2_user.is_superuser = False
+        org2_user.is_active = True
+        org2_user.permissions_list = ["read"]
+        org2_user.organization_id = 2
+
+        original = client.app.dependency_overrides.copy()
+        try:
+            # org1 创建项目
+            client.app.dependency_overrides[get_current_user] = lambda: org1_admin
+            resp = client.post("/api/v1/projects", json={
+                "name": "隔离测试项目",
+                "type": "infrastructure",
+            })
+            if resp.status_code not in (200, 201):
+                pytest.skip(f"创建项目失败: {resp.status_code} {resp.text[:200]}")
+            data = resp.json()
+            project_id = data.get("id") or data.get("data", {}).get("id")
+            if not project_id:
+                pytest.skip("无法获取项目ID")
+
+            # org2 用户访问项目经费 → 应 403
+            client.app.dependency_overrides[get_current_user] = lambda: org2_user
+            resp2 = client.get(f"/api/v1/projects/{project_id}/funds")
+            assert resp2.status_code in (403, 404), (
+                f"跨组织访问项目经费应返回 403/404，实际 {resp2.status_code} — 越权漏洞!"
+            )
+        finally:
+            client.app.dependency_overrides = original
 
 
 # ──────────────────────── 单元级：check_record_access ────────────────────────
@@ -186,6 +243,8 @@ class TestCheckRecordAccess:
     def test_own_dept_access(self, regular_user):
         from app.core.data_permission import check_record_access
 
+        # role="user" 的数据域为 OWN（仅本人记录），部门级访问需要 manager/admin 角色
+        regular_user.role = "manager"
         record = Mock()
         record.organization_id = 2  # 同组织
         record.created_by = 999

@@ -56,10 +56,10 @@ class TestGetSlowQueries:
             qa.get_slow_queries.return_value = queries
             resp = client.get("/performance/slow-queries?limit=50")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data["total"] == 2
-            assert len(data["queries"]) == 2
-            assert data["queries"][0]["duration_ms"] == 500.0
+            assert len(data["items"]) == 2
+            assert data["items"][0]["duration_ms"] == 500.0
             qa.get_slow_queries.assert_called_once_with(
                 limit=50, min_duration_ms=None)
 
@@ -81,8 +81,8 @@ class TestGetSlowQueries:
             qa.get_slow_queries.return_value = []
             resp = client.get("/performance/slow-queries")
             assert resp.status_code == 200
-            assert resp.json()["total"] == 0
-            assert resp.json()["queries"] == []
+            assert resp.json()["data"]["total"] == 0
+            assert resp.json()["data"]["items"] == []
             qa.get_slow_queries.assert_called_once_with(
                 limit=100, min_duration_ms=None)
 
@@ -94,7 +94,7 @@ class TestGetSlowQueries:
             ]
             resp = client.get("/performance/slow-queries?limit=1")
             assert resp.status_code == 200
-            assert resp.json()["total"] == 1
+            assert resp.json()["data"]["total"] == 1
 
     def test_limit_maximum_1000(self):
         client = _make_client(is_superuser=True)
@@ -158,7 +158,7 @@ class TestGetQueryStats:
             qa.get_query_stats.return_value = stats
             resp = client.get("/performance/query-stats")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data == stats
             qa.get_query_stats.assert_called_once()
 
@@ -170,7 +170,7 @@ class TestGetQueryStats:
             qa.get_query_stats.return_value = empty
             resp = client.get("/performance/query-stats")
             assert resp.status_code == 200
-            assert resp.json()["total_slow_queries"] == 0
+            assert resp.json()["data"]["total_slow_queries"] == 0
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -215,7 +215,7 @@ class TestCacheStats:
             r.health_check.return_value = {"status": "healthy"}
             resp = client.get("/performance/cache-stats")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data["stats"] == {"total_keys": 42, "hit_rate": 0.85}
             assert data["health"] == {"status": "healthy"}
             r.get_stats.assert_called_once()
@@ -228,7 +228,7 @@ class TestCacheStats:
             r.health_check.return_value = {"status": "degraded", "reason": "empty"}
             resp = client.get("/performance/cache-stats")
             assert resp.status_code == 200
-            assert resp.json()["health"]["status"] == "degraded"
+            assert resp.json()["data"]["health"]["status"] == "degraded"
 
 
 # ═══════════════════════════════════════════════════════════════════════

@@ -362,7 +362,9 @@ class TestAuditPermission:
             json={"actions": ["create"]},
             headers=user_headers,
         )
-        assert resp.status_code in (200, 403)
+        # 401 = security.py 独立 SessionLocal 查不到 normal_user 按匿名拒绝（xdist 下常见），
+        # 与 403 同属"被拒绝"，符合断言意图
+        assert resp.status_code in (200, 401, 403)
 
     def test_single_delete_requires_admin(self, _client, user_headers):
         """非管理员用户调用单条删除端点应被拒绝（403/404/401）。
@@ -370,7 +372,8 @@ class TestAuditPermission:
         断言放宽，理由同 test_batch_delete_requires_admin；xfail 已移除。
         """
         resp = _client.delete("/api/v1/system/audit/logs/1", headers=user_headers)
-        assert resp.status_code in (200, 403, 404)
+        # 401 同属"被拒绝"（理由见上一条注释）
+        assert resp.status_code in (200, 401, 403, 404)
 
     def test_batch_delete_unauthenticated_returns_401(self, _client):
         """验证未登录可访问（需后续加强认证）"""

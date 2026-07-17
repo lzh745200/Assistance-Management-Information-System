@@ -65,10 +65,10 @@ async def get_performance_dashboard(
         from sqlalchemy import text
         db = SessionLocal()
         try:
-            # 表行数统计
+            # 表行数统计（tables 为硬编码白名单，不接收任何外部输入，无注入风险）
             tables = ["users", "funds", "projects", "supported_villages", "schools", "audit_logs"]
             for table in tables:
-                result = db.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                result = db.execute(text(f"SELECT COUNT(*) FROM {table}"))  # nosec B608 - table 来自上方硬编码白名单
                 db_stats[table] = result.scalar() or 0
             # 数据库文件大小（SQLite）
             from app.core.database import IS_SQLITE

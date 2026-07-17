@@ -1494,7 +1494,7 @@ class TestDownloadFundAttachment:
 
     def test_download_file_missing_on_disk(self, client, mock_db):
         """Download when file is missing on disk returns 404."""
-        att = SimpleObj(id=1, file_path="/tmp/missing.pdf", file_name="missing.pdf",
+        att = SimpleObj(id=1, fund_id=1, file_path="/tmp/missing.pdf", file_name="missing.pdf",
                         file_type="application/pdf")
         q = MagicMock()
         q.filter.return_value.first.return_value = att
@@ -1518,7 +1518,7 @@ class TestPreviewFundAttachment:
 
     def test_preview_file_missing_on_disk(self, client, mock_db):
         """Preview when file is missing on disk returns 404."""
-        att = SimpleObj(id=1, file_path="/tmp/missing.pdf", file_name="missing.pdf",
+        att = SimpleObj(id=1, fund_id=1, file_path="/tmp/missing.pdf", file_name="missing.pdf",
                         file_type="application/pdf")
         q = MagicMock()
         q.filter.return_value.first.return_value = att

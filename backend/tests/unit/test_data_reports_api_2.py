@@ -195,10 +195,12 @@ class TestFilterVillages:
 
         resp = test_client.post("/api/v1/reports/analytics/filter", json={"province": "省X"})
         assert resp.status_code == 200
-        data = resp.json()
+        payload = resp.json()
+        data = payload["data"]
         assert data["total"] == 1
         assert data["page"] == 1
-        assert data["pages"] == 1
+        # ok_list 的 pages 作为 extra kwarg 透传，位于信封顶层而非 data 内
+        assert payload["pages"] == 1
         assert len(data["items"]) == 1
 
     def test_exception(self, client):
@@ -394,8 +396,9 @@ class TestListSubscriptions:
 
         resp = test_client.get("/api/v1/reports/subscriptions")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 2
-        assert resp.json()["page"] == 1
+        # ok_list 信封格式：{code, data: {items, total, page, ...}, message}
+        assert resp.json()["data"]["total"] == 2
+        assert resp.json()["data"]["page"] == 1
 
     def test_success_with_active_filter(self, client):
         test_client, db = client
@@ -406,7 +409,7 @@ class TestListSubscriptions:
 
         resp = test_client.get("/api/v1/reports/subscriptions?is_active=true")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_exception(self, client):
         test_client, db = client
