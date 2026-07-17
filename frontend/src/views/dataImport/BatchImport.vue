@@ -469,9 +469,14 @@ const handleTemplateSelect = (row: any) => {
 
 const handleDownloadTemplate = async () => {
   try {
-    const res = await apiRequest({ method: 'GET', url: '/import/template', params: {
+    const res = await apiRequest({
+      method: 'GET',
+      url: '/import/template',
+      params: {
         entity_type: selectedTemplate.value,
-      }, responseType: 'blob' })
+      },
+      responseType: 'blob',
+    })
     const tplName = templates.find((t) => t.type === selectedTemplate.value)?.name || '标准'
     triggerDownload(res.data, `${tplName}导入模板_${selectedYear.value}.xlsx`)
     // 模板下载成功 — 浏览器已确认

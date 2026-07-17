@@ -20,29 +20,31 @@ export interface BackupStats {
   totalSize?: number
 }
 
-const BASE = '/system'
+const BASE = '/system/backup'
+
+export interface CreateBackupPayload {
+  description?: string
+  include_uploads?: boolean
+  password?: string
+}
 
 export async function getBackupList(params?: { page?: number; page_size?: number }) {
-  const res = await get(`${BASE}/backups`, params)
-  return res.data
+  return get(BASE, params)
 }
 
-export async function createBackup(type?: string) {
-  const res = await post(`${BASE}/backup`, { type })
-  return res.data
+export async function createBackup(data: CreateBackupPayload) {
+  return post(BASE, data)
 }
 
-export async function restoreBackup(filename: string) {
-  const res = await post(`${BASE}/backup/restore`, { filename })
-  return res.data
+export async function restoreBackup(filename: string, password?: string) {
+  return post(`${BASE}/restore`, { filename, password })
 }
 
 export async function deleteBackup(filename: string) {
-  const res = await del(`${BASE}/backups/${filename}`)
-  return res.data
+  return del(`${BASE}/${filename}`)
 }
 
 export async function getBackupStats(): Promise<BackupStats> {
-  const res = await get(`${BASE}/backup/stats`)
+  const res = await get(`${BASE}/stats`)
   return res.data
 }

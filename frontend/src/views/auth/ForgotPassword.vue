@@ -166,11 +166,9 @@ const handleResetPassword = async () => {
   resetting.value = true
 
   try {
-    const response = await post(
-      '/machine-code/reset-password-with-machine-code',
-      undefined,
-      { params: resetForm.value }
-    )
+    const response = await post('/machine-code/reset-password-with-machine-code', undefined, {
+      params: resetForm.value,
+    })
 
     const resData = response.data
     const payload = resData?.code === 200 ? resData.data : (resData?.data ?? resData)

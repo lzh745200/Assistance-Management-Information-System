@@ -179,7 +179,11 @@ const getVerifyStatusText = (status: string): string => {
 async function loadData() {
   loading.value = true
   try {
-    const res = await apiRequest({ method: 'GET', url: '/supported-villages', params: { page: 1, page_size: 50 }})
+    const res = await apiRequest({
+      method: 'GET',
+      url: '/supported-villages',
+      params: { page: 1, page_size: 50 },
+    })
     const data = res.data
     const items = data?.items || (Array.isArray(data) ? data : [])
     rawVillages.value = items

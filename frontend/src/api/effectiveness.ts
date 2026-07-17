@@ -14,15 +14,23 @@ export function evaluateVillage(data: { village_id: number; year: number }): Pro
 
 /** 获取评估报告 */
 export function getEvaluationReport(villageId: number, year: number): Promise<any> {
-  return apiRequest({ method: 'GET', url: `${BASE_URL}/report/${villageId}`, params: { year }})
+  return apiRequest({ method: 'GET', url: `${BASE_URL}/report/${villageId}`, params: { year } })
 }
 
 /** 对比两年的评估结果 */
 export function compareEvaluations(villageId: number, year1: number, year2: number): Promise<any> {
-  return apiRequest({ method: 'GET', url: `${BASE_URL}/compare/${villageId}`, params: { year1, year2 }})
+  return apiRequest({
+    method: 'GET',
+    url: `${BASE_URL}/compare/${villageId}`,
+    params: { year1, year2 },
+  })
 }
 
 /** 获取排名列表 */
 export function getRankings(year: number, limit?: number): Promise<any> {
-  return apiRequest({ method: 'GET', url: `${BASE_URL}/rankings`, params: { year, limit: limit ?? 20 }})
+  return apiRequest({
+    method: 'GET',
+    url: `${BASE_URL}/rankings`,
+    params: { year, limit: limit ?? 20 },
+  })
 }

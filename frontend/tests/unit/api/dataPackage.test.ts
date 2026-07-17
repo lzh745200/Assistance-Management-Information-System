@@ -1,22 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockGet = vi.fn()
-const mockPost = vi.fn()
-const mockDelete = vi.fn()
-
-vi.mock('@/utils/request', () => ({
-  default: {
-    get: (...args: any[]) => mockGet(...args),
-    post: (...args: any[]) => mockPost(...args),
-    delete: (...args: any[]) => mockDelete(...args),
-  },
+const mocks = vi.hoisted(() => ({
+  mockGet: vi.fn(),
+  mockPost: vi.fn(),
+  mockApiRequest: vi.fn(),
 }))
+const { mockGet, mockPost, mockApiRequest } = mocks
+
+// src/api/dataPackage.ts 导入的是 { get, post, apiRequest } 命名导出，
+// 它们返回的是已解包的 envelope body，因此 mock 的 resolved 值即 body 本身
+// （源码对 get/post 的返回值再取 .data，即 envelope body 内的 data 字段）。
 vi.mock('@/api/request', () => ({
-  default: {
-    get: (...args: any[]) => mockGet(...args),
-    post: (...args: any[]) => mockPost(...args),
-    delete: (...args: any[]) => mockDelete(...args),
-  },
+  get: mocks.mockGet,
+  post: mocks.mockPost,
+  apiRequest: mocks.mockApiRequest,
 }))
 
 import {
@@ -98,22 +95,34 @@ describe('api/dataPackage', () => {
   })
 
   it('downloadDataPackage GET blob', async () => {
-    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    mockApiRequest.mockResolvedValueOnce(new Blob(['x']))
     const result = await downloadDataPackage(3)
-    expect(mockGet).toHaveBeenCalledWith('/data-packages/3/download', { responseType: 'blob' })
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/data-packages/3/download',
+      responseType: 'blob',
+    })
     expect(result).toBeInstanceOf(Blob)
   })
 
   it('deleteDataPackage DELETE (no reason)', async () => {
-    mockDelete.mockResolvedValueOnce({ data: { message: 'ok' } })
+    mockApiRequest.mockResolvedValueOnce({ message: 'ok' })
     await deleteDataPackage(3)
-    expect(mockDelete).toHaveBeenCalledWith('/data-packages/3', { params: undefined })
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/data-packages/3',
+      params: undefined,
+    })
   })
 
   it('deleteDataPackage DELETE (with reason)', async () => {
-    mockDelete.mockResolvedValueOnce({ data: { message: 'ok' } })
+    mockApiRequest.mockResolvedValueOnce({ message: 'ok' })
     await deleteDataPackage(3, 'cleanup')
-    expect(mockDelete).toHaveBeenCalledWith('/data-packages/3', { params: { reason: 'cleanup' } })
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/data-packages/3',
+      params: { reason: 'cleanup' },
+    })
   })
 
   it('getPackageHistory GET /data-packages/{id}/history', async () => {

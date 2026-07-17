@@ -63,9 +63,13 @@ interface ImportHistoryResponse {
  * @returns Blob 文件数据
  */
 export async function downloadImportTemplate(type: string): Promise<Blob> {
-  return apiRequest<Blob>({ method: 'GET', url: `/import/template`, params: { entity_type: type }, responseType: 'blob' })
+  return apiRequest<Blob>({
+    method: 'GET',
+    url: `/import/template`,
+    params: { entity_type: type },
+    responseType: 'blob',
+  })
 }
-
 
 /**
  * 下载导入模板并触发浏览器保存（自动解析正确文件名）。
@@ -78,10 +82,11 @@ export async function downloadImportTemplateAndSave(
   fallbackName = '导入模板'
 ): Promise<void> {
   await downloadBlobAsFile(
-    () => request.get(`/import/template`, {
-      params: { entity_type: type },
-      responseType: 'blob',
-    }),
+    () =>
+      request.get(`/import/template`, {
+        params: { entity_type: type },
+        responseType: 'blob',
+      }),
     { fallbackFileName: `${fallbackName}.xlsx` }
   )
 }
@@ -140,7 +145,11 @@ export async function getImportHistory(
   page: number = 1,
   pageSize: number = 10
 ): Promise<ImportHistoryResponse> {
-  const response = await apiRequest({ method: 'GET', url: '/import/history', params: { page, page_size: pageSize }})
+  const response = await apiRequest({
+    method: 'GET',
+    url: '/import/history',
+    params: { page, page_size: pageSize },
+  })
   return response.data
 }
 

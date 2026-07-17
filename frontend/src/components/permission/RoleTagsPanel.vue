@@ -111,7 +111,11 @@ async function assignRole(roleId: string) {
 
 async function removeRole(role: RbacRole) {
   try {
-    await apiRequest({ method: 'DELETE', url: '/rbac/revoke/role', data: { user_id: props.userId, role_id: role.id } })
+    await apiRequest({
+      method: 'DELETE',
+      url: '/rbac/revoke/role',
+      data: { user_id: props.userId, role_id: role.id },
+    })
     await loadAssignedRoles()
     emit('removed')
     ElMessage.success(`角色「${role.name}」已移除`)

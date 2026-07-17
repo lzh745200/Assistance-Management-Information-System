@@ -23,20 +23,15 @@ export interface WorkReportData {
 }
 
 // Named functions — unwrap AxiosResponse，返回 res.data
-export const getRuralWorks = (params?: any) =>
-  get('/rural-works', params)
+export const getRuralWorks = (params?: any) => get('/rural-works', params)
 
-export const createRuralWork = (data: any) =>
-  post('/rural-works', data)
+export const createRuralWork = (data: any) => post('/rural-works', data)
 
-export const updateRuralWork = (id: number, data: any) =>
-  put('/rural-works/' + id, data)
+export const updateRuralWork = (id: number, data: any) => put('/rural-works/' + id, data)
 
-export const deleteRuralWork = (id: number) =>
-  del('/rural-works/' + id)
+export const deleteRuralWork = (id: number) => del('/rural-works/' + id)
 
-export const generateWorkReport = (params?: any) =>
-  get('/rural-works/report/generate', params)
+export const generateWorkReport = (params?: any) => get('/rural-works/report/generate', params)
 
 // Backward-compatible object form
 export const ruralWorkApi = {

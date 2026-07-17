@@ -256,7 +256,11 @@ async function downloadPackage() {
   }
   downloading.value = true
   try {
-    const response = await apiRequest({ method: 'GET', url: `/data-packages/${packageId.value}/download`, responseType: 'blob' })
+    const response = await apiRequest({
+      method: 'GET',
+      url: `/data-packages/${packageId.value}/download`,
+      responseType: 'blob',
+    })
     const blob = new Blob([response.data])
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -301,7 +305,11 @@ async function handleOneClickReport() {
         URL.revokeObjectURL(url)
       } else if (data?.download_url) {
         // JSON 响应带下载链接
-        const dlRes = await apiRequest({ method: 'GET', url: data.download_url, responseType: 'blob' })
+        const dlRes = await apiRequest({
+          method: 'GET',
+          url: data.download_url,
+          responseType: 'blob',
+        })
         const blob = new Blob([dlRes.data])
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')

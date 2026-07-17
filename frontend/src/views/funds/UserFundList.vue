@@ -364,13 +364,17 @@ function formatAmount(val: any) {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await apiRequest({ method: 'GET', url: '/funds', params: {
+    const response = await apiRequest({
+      method: 'GET',
+      url: '/funds',
+      params: {
         page: currentPage.value,
         page_size: pageSize.value,
         search: filterForm.keyword || undefined,
         type: filterForm.type || undefined,
         status: filterForm.status || undefined,
-      }})
+      },
+    })
     const resData = response.data
     tableData.value =
       resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : [])

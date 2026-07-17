@@ -33,7 +33,11 @@ export function getRecommendations(data: {
 
 /** 收入趋势预测 */
 export function forecastIncome(forecastYears?: number): Promise<any> {
-  return apiRequest({ method: 'GET', url: `${AI_BASE}/forecast/income`, params: { forecast_years: forecastYears ?? 2 }})
+  return apiRequest({
+    method: 'GET',
+    url: `${AI_BASE}/forecast/income`,
+    params: { forecast_years: forecastYears ?? 2 },
+  })
 }
 
 /** 年度经费完成率预测 */
@@ -68,7 +72,11 @@ export function detectAnomalies(data: {
 
 /** 项目推荐 */
 export function recommendProjects(villageId: number, limit?: number): Promise<any> {
-  return apiRequest({ method: 'GET', url: `${AI_ENHANCED_BASE}/recommendations/projects`, params: { village_id: villageId, limit: limit ?? 5 }})
+  return apiRequest({
+    method: 'GET',
+    url: `${AI_ENHANCED_BASE}/recommendations/projects`,
+    params: { village_id: villageId, limit: limit ?? 5 },
+  })
 }
 
 /** 资金分配建议 */

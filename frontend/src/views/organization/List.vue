@@ -181,12 +181,16 @@ const parentOrgOptions = computed(() => {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await apiRequest({ method: 'GET', url: '/organizations', params: {
+    const response = await apiRequest({
+      method: 'GET',
+      url: '/organizations',
+      params: {
         page: currentPage.value,
         page_size: pageSize.value,
         search: searchText.value || undefined,
         is_active: true, // 只显示活跃的组织，过滤掉已删除的
-      }})
+      },
+    })
     const resData = response.data
     tableData.value =
       resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : [])

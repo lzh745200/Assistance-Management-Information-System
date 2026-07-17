@@ -296,7 +296,11 @@ async function handleClearLogs() {
     clearing.value = true
     try {
       // 注意：使用 actions（数组），与后端 BatchDeleteRequest.actions 字段对应
-      const res = await apiRequest({ method: 'DELETE', url: '/system/audit/logs/batch', data: { actions: DATA_OPERATION_TYPES } })
+      const res = await apiRequest({
+        method: 'DELETE',
+        url: '/system/audit/logs/batch',
+        data: { actions: DATA_OPERATION_TYPES },
+      })
       const count = res?.data?.deleted_count ?? 0
       ElMessage.success(`日志清除成功，共删除 ${count} 条记录`)
       await loadLogs()

@@ -1,25 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockGet = vi.fn()
-const mockPost = vi.fn()
-const mockPut = vi.fn()
-const mockDelete = vi.fn()
-
-vi.mock('@/utils/request', () => ({
-  default: {
-    get: (...args: any[]) => mockGet(...args),
-    post: (...args: any[]) => mockPost(...args),
-    put: (...args: any[]) => mockPut(...args),
-    delete: (...args: any[]) => mockDelete(...args),
-  },
+const { mockGet, mockPost, mockPut, mockDelete, mockDownloadBlob } = vi.hoisted(() => ({
+  mockGet: vi.fn(),
+  mockPost: vi.fn(),
+  mockPut: vi.fn(),
+  mockDelete: vi.fn(),
+  mockDownloadBlob: vi.fn(),
 }))
 
+// src/api/funds.ts 实际 import：
+//   import { get, post, put, del, apiRequest } from '@/api/request'  // 命名辅助，返回已解包的 envelope body
+//   import request from '@/api/request'                              // 默认导出（原始 axios 实例，exportList 用）
+// src/api/helpers/blobDownload.ts 还 import 了 parseContentDisposition / downloadBlob。
+// 因此 mock 必须提供全部命名导出 + default。
 vi.mock('@/api/request', () => ({
+  // 命名 get(url, params)：适配为 axios 风格断言 mockGet(url, { params })，
+  // 用 rest 参数区分 get(url) 与 get(url, undefined)（测试对两者断言不同）
+  get: (url: string, ...rest: any[]) =>
+    rest.length > 0 ? mockGet(url, { params: rest[0] }) : mockGet(url),
+  post: (url: string, data?: any) => mockPost(url, data),
+  put: (url: string, data?: any) => mockPut(url, data),
+  del: (url: string) => mockDelete(url),
+  apiRequest: vi.fn(),
+  parseContentDisposition: (_headers: any, fallback = 'download') => fallback,
+  downloadBlob: (...args: any[]) => mockDownloadBlob(...args),
+  // 默认导出：原始 axios 实例（exportList 走 request.get(url, config)）
   default: {
-    get: (...args: any[]) => mockGet(...args),
-    post: (...args: any[]) => mockPost(...args),
-    put: (...args: any[]) => mockPut(...args),
-    delete: (...args: any[]) => mockDelete(...args),
+    get: (url: string, config?: any) => mockGet(url, config),
+    post: (url: string, data?: any, config?: any) => mockPost(url, data, config),
+    put: (url: string, data?: any) => mockPut(url, data),
+    delete: (url: string) => mockDelete(url),
   },
 }))
 
@@ -181,27 +191,14 @@ describe('api/funds', () => {
   describe('exportList', () => {
     it('调用 GET /funds/export with blob responseType', async () => {
       mockGet.mockResolvedValue({ data: new Blob(['test']) })
-      const createObjectURL = vi.fn(() => 'blob:fake')
-      const revokeObjectURL = vi.fn()
-      const click = vi.fn()
-      const realCreate = URL.createObjectURL
-      const realRevoke = URL.revokeObjectURL
-      URL.createObjectURL = createObjectURL
-      URL.revokeObjectURL = revokeObjectURL
-      const a = document.createElement('a')
-      a.click = click
-      const realDocCreate = document.createElement.bind(document)
-      vi.spyOn(document, 'createElement').mockImplementation((tag: any) => {
-        if (tag === 'a') return a
-        return realDocCreate(tag)
-      })
       await fundApi.exportList({ type: 'project' })
+      // 源码会自动附加 format: 'csv'（默认 CSV 格式下载）
       expect(mockGet).toHaveBeenCalledWith('/funds/export', {
-        params: { type: 'project' },
+        params: { type: 'project', format: 'csv' },
         responseType: 'blob',
       })
-      URL.createObjectURL = realCreate
-      URL.revokeObjectURL = realRevoke
+      // 下载流程经 downloadBlobAsFile → downloadBlob 触发
+      expect(mockDownloadBlob).toHaveBeenCalled()
     })
   })
 })

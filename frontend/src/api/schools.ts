@@ -64,10 +64,13 @@ export const schoolsApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
-  deleteAttachment: (attachmentId: number | string) =>
-    del(`/schools/attachments/${attachmentId}`),
+  deleteAttachment: (attachmentId: number | string) => del(`/schools/attachments/${attachmentId}`),
   downloadAttachment: (attachmentId: number | string) =>
-    apiRequest({ method: 'GET', url: `/schools/attachments/${attachmentId}/download`, responseType: 'blob' }),
+    apiRequest({
+      method: 'GET',
+      url: `/schools/attachments/${attachmentId}/download`,
+      responseType: 'blob',
+    }),
 }
 
 export const schoolApi = schoolsApi

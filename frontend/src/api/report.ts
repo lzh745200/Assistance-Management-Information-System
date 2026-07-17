@@ -12,5 +12,6 @@ export const reportApi = {
   // ── 报表生成与下载 ──
   // 后端 /reports 路由: POST /reports/generate, GET /reports/{id}/download
   generate: (d: any) => post('/reports/generate', d),
-  download: (id: number) => apiRequest({ method: 'GET', url: '/reports/' + id + '/download', responseType: 'blob' }),
+  download: (id: number) =>
+    apiRequest({ method: 'GET', url: '/reports/' + id + '/download', responseType: 'blob' }),
 }

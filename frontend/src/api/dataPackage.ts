@@ -104,14 +104,22 @@ export async function confirmImport(
  * 下载数据包
  */
 export async function downloadDataPackage(id: number): Promise<Blob> {
-  return apiRequest<Blob>({ method: 'GET', url: `${BASE_URL}/${id}/download`, responseType: 'blob' })
+  return apiRequest<Blob>({
+    method: 'GET',
+    url: `${BASE_URL}/${id}/download`,
+    responseType: 'blob',
+  })
 }
 
 /**
  * 删除数据包
  */
 export async function deleteDataPackage(id: number, reason?: string): Promise<{ message: string }> {
-  return apiRequest({ method: 'DELETE', url: `${BASE_URL}/${id}`, params: reason ? { reason } : undefined })
+  return apiRequest({
+    method: 'DELETE',
+    url: `${BASE_URL}/${id}`,
+    params: reason ? { reason } : undefined,
+  })
 }
 
 /**

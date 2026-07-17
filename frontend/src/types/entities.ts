@@ -95,7 +95,14 @@ export interface School {
 export type FundCategory = 'infrastructure' | 'education' | 'healthcare' | 'agriculture' | 'other'
 
 // 资金状态
-export type FundStatus = 'pending' | 'planned' | 'approved' | 'allocated' | 'in_use' | 'completed' | 'audited'
+export type FundStatus =
+  | 'pending'
+  | 'planned'
+  | 'approved'
+  | 'allocated'
+  | 'in_use'
+  | 'completed'
+  | 'audited'
 
 // 经费实体（与 Fund.to_dict() 对齐）
 export interface Fund {
@@ -130,7 +137,13 @@ export interface Fund {
 // ==================== 项目 ====================
 
 // 项目状态
-export type ProjectStatus = 'draft' | 'pending' | 'approved' | 'in_progress' | 'completed' | 'cancelled'
+export type ProjectStatus =
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled'
 
 // 项目实体（与 Project.to_dict() 对齐）
 export interface Project {

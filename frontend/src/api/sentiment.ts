@@ -32,15 +32,23 @@ export function getNews(params?: {
 
 /** 获取舆情统计 */
 export function getStatistics(days?: number): Promise<any> {
-  return apiRequest({ method: 'GET', url: `${BASE_URL}/statistics`, params: { days: days ?? 7 }})
+  return apiRequest({ method: 'GET', url: `${BASE_URL}/statistics`, params: { days: days ?? 7 } })
 }
 
 /** 获取热词列表 */
 export function getHotKeywords(days?: number, topK?: number): Promise<any> {
-  return apiRequest({ method: 'GET', url: `${BASE_URL}/hot-keywords`, params: { days: days ?? 7, top_k: topK ?? 20 }})
+  return apiRequest({
+    method: 'GET',
+    url: `${BASE_URL}/hot-keywords`,
+    params: { days: days ?? 7, top_k: topK ?? 20 },
+  })
 }
 
 /** 获取预警列表 */
 export function getAlerts(days?: number, limit?: number): Promise<any> {
-  return apiRequest({ method: 'GET', url: `${BASE_URL}/alerts`, params: { days: days ?? 7, limit: limit ?? 50 }})
+  return apiRequest({
+    method: 'GET',
+    url: `${BASE_URL}/alerts`,
+    params: { days: days ?? 7, limit: limit ?? 50 },
+  })
 }

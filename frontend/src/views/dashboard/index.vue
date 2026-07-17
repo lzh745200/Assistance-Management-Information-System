@@ -241,7 +241,7 @@ function applyPreset(val: string) {
 async function handleBackup() {
   backingUp.value = true
   try {
-    await createBackup('manual')
+    await createBackup({ description: '手动备份' })
     ElMessage.success('备份创建成功')
   } catch (e: any) {
     ElMessage.error(e?.message || '备份失败，请前往系统管理→备份管理重试')

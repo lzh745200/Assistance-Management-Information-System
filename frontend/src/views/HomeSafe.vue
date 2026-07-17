@@ -1304,7 +1304,12 @@ async function loadDashboard() {
   try {
     const results = await Promise.allSettled([
       apiRequest({ method: 'GET', url: '/dashboard/stats', ...silentConfig }),
-      apiRequest({ method: 'GET', url: '/projects', params: { page: 1, page_size: 5 }, ...silentConfig }),
+      apiRequest({
+        method: 'GET',
+        url: '/projects',
+        params: { page: 1, page_size: 5 },
+        ...silentConfig,
+      }),
       apiRequest({ method: 'GET', url: '/dashboard/recent-activities', ...silentConfig }),
       apiRequest({ method: 'GET', url: '/messages', ...silentConfig }),
     ])

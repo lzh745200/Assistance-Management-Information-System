@@ -213,13 +213,17 @@ const loadData = async () => {
     if (searchForm.keyword) searchParts.push(searchForm.keyword)
     const searchStr = searchParts.join(' ') || undefined
 
-    const res = await apiRequest({ method: 'GET', url: '/policies', params: {
+    const res = await apiRequest({
+      method: 'GET',
+      url: '/policies',
+      params: {
         page: pagination.currentPage,
         page_size: pagination.pageSize,
         search: searchStr,
         category: searchForm.category || undefined,
         status: searchForm.status || undefined,
-      }})
+      },
+    })
     const data = res.data || res
     const items = data?.items || (Array.isArray(data) ? data : [])
 

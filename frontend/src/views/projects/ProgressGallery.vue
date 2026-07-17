@@ -278,10 +278,14 @@ const loadProjectData = async () => {
 
 const loadProgressData = async () => {
   try {
-    const response = await apiRequest({ method: 'GET', url: `/projects/${projectId.value}/progress`, params: {
+    const response = await apiRequest({
+      method: 'GET',
+      url: `/projects/${projectId.value}/progress`,
+      params: {
         skip: 0,
         limit: 100,
-      }})
+      },
+    })
     if (response) {
       progressData.value = response.items || response || []
     }

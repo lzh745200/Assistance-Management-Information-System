@@ -93,7 +93,11 @@ async function loadStats() {
       backupCount: data.backup_count ?? data.backupCount ?? 0,
     }
     // 加载帮扶村数据用于质量统计
-    const villageRes = await apiRequest({ method: 'GET', url: '/supported-villages', params: { page: 1, page_size: 200 }})
+    const villageRes = await apiRequest({
+      method: 'GET',
+      url: '/supported-villages',
+      params: { page: 1, page_size: 200 },
+    })
     const villages = villageRes.data?.items || []
     const totalRecords = villages.length
     const validRecords = villages.filter(

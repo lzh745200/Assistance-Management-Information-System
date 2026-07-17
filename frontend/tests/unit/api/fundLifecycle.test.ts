@@ -1,25 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockGet = vi.fn()
-const mockPost = vi.fn()
-const mockPut = vi.fn()
-const mockDelete = vi.fn()
-
-vi.mock('@/utils/request', () => ({
-  default: {
-    get: (...args: any[]) => mockGet(...args),
-    post: (...args: any[]) => mockPost(...args),
-    put: (...args: any[]) => mockPut(...args),
-    delete: (...args: any[]) => mockDelete(...args),
-  },
+// src/api/fundLifecycle.ts 从 '@/api/request' 导入命名导出 { get, post, put, del }，
+// 这些辅助函数返回已解包的 envelope body，因此 mock 也按命名导出提供。
+const { mockGet, mockPost, mockPut, mockDelete } = vi.hoisted(() => ({
+  mockGet: vi.fn(),
+  mockPost: vi.fn(),
+  mockPut: vi.fn(),
+  mockDelete: vi.fn(),
 }))
+
 vi.mock('@/api/request', () => ({
-  default: {
-    get: (...args: any[]) => mockGet(...args),
-    post: (...args: any[]) => mockPost(...args),
-    put: (...args: any[]) => mockPut(...args),
-    delete: (...args: any[]) => mockDelete(...args),
-  },
+  get: mockGet,
+  post: mockPost,
+  put: mockPut,
+  del: mockDelete,
 }))
 
 import { fundLifecycleApi } from '@/api/fundLifecycle'
@@ -72,7 +66,7 @@ describe('api/fundLifecycle (30 methods)', () => {
   it('budgetAggregation GET with params', async () => {
     mockGet.mockResolvedValueOnce({ data: { data: [] } })
     await fundLifecycleApi.budgetAggregation({ group_by: 'year' })
-    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/budget-aggregation', { params: { group_by: 'year' } })
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/budget-aggregation', { group_by: 'year' })
   })
 
   it('quotaLock POST', async () => {
@@ -90,7 +84,7 @@ describe('api/fundLifecycle (30 methods)', () => {
   it('listTransferVouchers GET', async () => {
     mockGet.mockResolvedValueOnce({ data: { data: [] } })
     await fundLifecycleApi.listTransferVouchers({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/transfer-vouchers', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/transfer-vouchers', { page: 1 })
   })
 
   it('createTransferVoucher POST', async () => {
@@ -132,7 +126,7 @@ describe('api/fundLifecycle (30 methods)', () => {
   it('listContracts GET', async () => {
     mockGet.mockResolvedValueOnce({ data: { data: [] } })
     await fundLifecycleApi.listContracts({ status: 'active' })
-    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/contracts', { params: { status: 'active' } })
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/contracts', { status: 'active' })
   })
 
   it('createContract POST', async () => {
@@ -180,7 +174,7 @@ describe('api/fundLifecycle (30 methods)', () => {
   it('listAnomalies GET', async () => {
     mockGet.mockResolvedValueOnce({ data: { data: [] } })
     await fundLifecycleApi.listAnomalies({ severity: 'high' })
-    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/anomalies', { params: { severity: 'high' } })
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/anomalies', { severity: 'high' })
   })
 
   it('detectAnomalies POST', async () => {

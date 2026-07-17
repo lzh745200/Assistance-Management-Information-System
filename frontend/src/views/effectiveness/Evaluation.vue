@@ -189,7 +189,11 @@ function formatValue(key: string, value: any): string {
 
 async function loadVillages() {
   try {
-    const response = await apiRequest({ method: 'GET', url: '/supported-villages', params: { page_size: 1000 }})
+    const response = await apiRequest({
+      method: 'GET',
+      url: '/supported-villages',
+      params: { page_size: 1000 },
+    })
     const data = response?.data ?? response
     const inner = data
     const items = inner?.items || (Array.isArray(inner) ? inner : [])

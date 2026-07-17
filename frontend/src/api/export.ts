@@ -71,10 +71,11 @@ export async function downloadExportFile(taskId: string): Promise<void> {
  */
 export async function exportReportWord(reportType: string, year?: number): Promise<void> {
   await downloadBlobAsFile(
-    () => request.get(`${EXPORT_BASE}/report-word`, {
-      params: { report_type: reportType, ...(year ? { year } : {}) },
-      responseType: 'blob',
-    }),
+    () =>
+      request.get(`${EXPORT_BASE}/report-word`, {
+        params: { report_type: reportType, ...(year ? { year } : {}) },
+        responseType: 'blob',
+      }),
     { fallbackFileName: `报告_${reportType}.docx` }
   )
 }
@@ -84,10 +85,11 @@ export async function exportReportWord(reportType: string, year?: number): Promi
  */
 export async function exportReportPdf(reportType: string, year?: number): Promise<void> {
   await downloadBlobAsFile(
-    () => request.get(`${EXPORT_BASE}/report-pdf`, {
-      params: { report_type: reportType, ...(year ? { year } : {}) },
-      responseType: 'blob',
-    }),
+    () =>
+      request.get(`${EXPORT_BASE}/report-pdf`, {
+        params: { report_type: reportType, ...(year ? { year } : {}) },
+        responseType: 'blob',
+      }),
     { fallbackFileName: `报告_${reportType}.pdf` }
   )
 }

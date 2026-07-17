@@ -199,7 +199,7 @@ const resetForm = ref({
 })
 
 const isAdmin = computed(() => {
-  const role = userStore.user?.role
+  const role = userStore.currentUser?.role
   return role === 'super_admin' || role === 'admin'
 })
 

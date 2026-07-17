@@ -2,13 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockGet = vi.fn()
 
-vi.mock('@/utils/request', () => ({
-  default: {
-    get: (...args: any[]) => mockGet(...args),
-  },
-}))
-
 vi.mock('@/api/request', () => ({
+  // 源模块使用命名导出 get(url, params)，自动解包 envelope body
+  get: (url: string, params?: any) => mockGet(url, { params }),
   default: {
     get: (...args: any[]) => mockGet(...args),
   },

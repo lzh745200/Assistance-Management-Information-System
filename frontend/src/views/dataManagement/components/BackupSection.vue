@@ -245,7 +245,7 @@ import { logger } from '@/utils/logger'
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh, Check } from '@element-plus/icons-vue'
-import { get, post, put, apiRequest } from '@/api/request'
+import { get, post, put } from '@/api/request'
 import {
   getBackupList,
   restoreBackup,
@@ -289,7 +289,13 @@ async function loadBackups() {
   loading.value = true
   try {
     const [listRes, statsRes] = await Promise.all([getBackupList(), getBackupStats()])
-    backups.value = listRes.items ?? []
+    // 后端字段为 snake_case（file_name/backup_id），统一映射为组件使用的 filename/id，
+    // 否则文件名列为空、预览/恢复/删除拿到 undefined
+    backups.value = (listRes.items ?? []).map((it: any) => ({
+      ...it,
+      filename: it.filename ?? it.file_name,
+      id: it.id ?? it.backup_id,
+    }))
     Object.assign(stats, statsRes)
   } catch (error) {
     logger.error('加载备份列表失败:', error)
@@ -323,18 +329,16 @@ async function handleCreateBackup() {
   try {
     const res: any = await post('/system/backup', {
       description: createForm.description || '',
-      compress: true,
       include_uploads: createForm.include_uploads,
-      include_config: createForm.include_config,
       password: createForm.password || undefined,
     })
 
-    if (res.data.success !== false) {
+    if (res.success !== false) {
       ElMessage.success('备份创建成功')
       emit('backup-complete')
       loadBackups()
     } else {
-      ElMessage.error(res.data.message || '备份创建失败')
+      ElMessage.error(res.message || '备份创建失败')
     }
   } catch {
     ElMessage.error('备份创建失败')
@@ -356,7 +360,8 @@ const previewing = ref<string | number | null | undefined>(null)
 async function handlePreview(row: BackupItem) {
   previewing.value = row.id
   try {
-    const res = await apiRequest({ method: 'GET', url: `/system/backup/download/${row.filename || row.id}`, responseType: 'blob' })
+    // 预览读取 ZIP 清单与元信息（JSON），不是下载 blob
+    const res = await get(`/system/backup/preview/${row.filename}`)
     previewData.value = res.data
     showPreviewDialog.value = true
   } catch {
@@ -379,7 +384,7 @@ async function confirmRestore() {
   restoring.value = true
   try {
     const res = await restoreBackup(selectedBackup.value.filename)
-    if (res.data.success !== false) {
+    if (res.success !== false) {
       ElMessage.success('恢复成功，页面将在 3 秒后刷新')
       showRestoreDialog.value = false
       emit('backup-complete')
@@ -388,7 +393,7 @@ async function confirmRestore() {
         window.location.reload()
       }, 3000)
     } else {
-      ElMessage.error(res.data.message || '恢复失败')
+      ElMessage.error(res.message || '恢复失败')
     }
   } catch {
     ElMessage.error('恢复失败')
@@ -405,11 +410,11 @@ async function handleDelete(row: BackupItem) {
     })
 
     const res = await deleteBackup(row.filename)
-    if (res.data.success) {
-      ElMessage.success(res.data.message || '删除成功')
+    if (res.success) {
+      ElMessage.success(res.message || '删除成功')
       loadBackups()
     } else {
-      ElMessage.error(res.data.message || '删除失败')
+      ElMessage.error(res.message || '删除失败')
     }
   } catch {
     // 用户取消

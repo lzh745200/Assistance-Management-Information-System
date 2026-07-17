@@ -600,7 +600,11 @@ async function handleCreate() {
 
 async function handleDownload(t: Template) {
   try {
-    const res = await apiRequest({ method: 'GET', url: `/report-templates/${t.id}/download`, responseType: 'blob' })
+    const res = await apiRequest({
+      method: 'GET',
+      url: `/report-templates/${t.id}/download`,
+      responseType: 'blob',
+    })
     const url = window.URL.createObjectURL(res.data)
     const link = document.createElement('a')
     link.href = url

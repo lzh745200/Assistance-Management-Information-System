@@ -97,12 +97,7 @@
             filterable
             style="width: 160px"
           >
-            <el-option
-              v-for="v in villageOptions"
-              :key="v.id"
-              :label="v.name"
-              :value="v.id"
-            />
+            <el-option v-for="v in villageOptions" :key="v.id" :label="v.name" :value="v.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="帮扶学校">
@@ -113,12 +108,7 @@
             filterable
             style="width: 160px"
           >
-            <el-option
-              v-for="s in schoolOptions"
-              :key="s.id"
-              :label="s.name"
-              :value="s.id"
-            />
+            <el-option v-for="s in schoolOptions" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -392,7 +382,10 @@ function formatAmount(val: any) {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await apiRequest({ method: 'GET', url: '/funds', params: {
+    const response = await apiRequest({
+      method: 'GET',
+      url: '/funds',
+      params: {
         page: currentPage.value,
         page_size: pageSize.value,
         keyword: filterForm.keyword || undefined,
@@ -400,7 +393,8 @@ async function fetchData() {
         status: filterForm.status || undefined,
         village_id: filterForm.village_id || undefined,
         school_id: filterForm.school_id || undefined,
-      }})
+      },
+    })
     const resData = response.data
     tableData.value =
       resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : [])
@@ -620,7 +614,10 @@ async function loadVillageOptions() {
     const res = await getSupportedVillages({ page: 1, page_size: 9999 })
     const body: any = res.data || res
     const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
-    villageOptions.value = items.map((v: any) => ({ id: v.id, name: v.village_name || v.name || `村${v.id}` }))
+    villageOptions.value = items.map((v: any) => ({
+      id: v.id,
+      name: v.village_name || v.name || `村${v.id}`,
+    }))
   } catch {
     /* 非关键路径，静默失败 */
   }
@@ -631,7 +628,10 @@ async function loadSchoolOptions() {
     const res = await schoolsApi.list({ page: 1, page_size: 9999 })
     const body: any = res.data || res
     const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
-    schoolOptions.value = items.map((s: any) => ({ id: s.id, name: s.school_name || s.name || `学校${s.id}` }))
+    schoolOptions.value = items.map((s: any) => ({
+      id: s.id,
+      name: s.school_name || s.name || `学校${s.id}`,
+    }))
   } catch {
     /* 非关键路径，静默失败 */
   }

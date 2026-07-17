@@ -100,12 +100,7 @@ export async function downloadBlobAsFile(
   requestFn: () => Promise<AxiosResponse<Blob> | Blob>,
   options: DownloadOptions = {}
 ): Promise<void> {
-  const {
-    fallbackFileName = 'download',
-    onStart,
-    onEnd,
-    onError,
-  } = options
+  const { fallbackFileName = 'download', onStart, onEnd, onError } = options
 
   onStart?.()
 
@@ -152,14 +147,7 @@ export async function downloadBlobAsFile(
  * @param fallback 兜底文件名
  * @returns 解析出的文件名
  */
-export function getFileNameFromResponse(
-  response: AxiosResponse,
-  fallback = 'download'
-): string {
+export function getFileNameFromResponse(response: AxiosResponse, fallback = 'download'): string {
   const headers = response.headers || {}
-  const cd =
-    headers['content-disposition'] ||
-    headers['Content-Disposition'] ||
-    headers['CONTENT-DISPOSITION']
   return parseContentDisposition(headers as Record<string, string>, fallback)
 }

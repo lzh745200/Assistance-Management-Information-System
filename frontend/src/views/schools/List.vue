@@ -324,13 +324,17 @@ function getStatusTagType(status: string) {
 async function fetchData() {
   loading.value = true
   try {
-    const response = await apiRequest({ method: 'GET', url: '/schools', params: {
+    const response = await apiRequest({
+      method: 'GET',
+      url: '/schools',
+      params: {
         page: currentPage.value,
         page_size: pageSize.value,
         keyword: filterForm.keyword || undefined,
         type: filterForm.type || undefined,
         support_status: filterForm.status || undefined,
-      }})
+      },
+    })
     const res = response
     const inner = res.data || res
     tableData.value = inner.items || (Array.isArray(inner) ? inner : [])

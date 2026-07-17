@@ -355,7 +355,11 @@ function statusLabel(status: string): string {
 
 async function downloadPkg(row: any) {
   try {
-    const blob = await apiRequest({ method: 'GET', url: `/data-packages/${row.id}/download`, responseType: 'blob' })
+    const blob = await apiRequest({
+      method: 'GET',
+      url: `/data-packages/${row.id}/download`,
+      responseType: 'blob',
+    })
     downloadBlob(blob, `${row.name || '数据包'}.zip`)
   } catch {
     ElMessage.error('下载失败')

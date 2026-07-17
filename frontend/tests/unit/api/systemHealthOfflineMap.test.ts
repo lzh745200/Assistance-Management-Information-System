@@ -13,11 +13,9 @@ vi.mock('@/utils/request', () => ({
 }))
 
 vi.mock('@/api/request', () => ({
-  default: {
-    get: (...args: any[]) => mockGet(...args),
-    post: (...args: any[]) => mockPost(...args),
-    delete: (...args: any[]) => mockDelete(...args),
-  },
+  get: (...args: any[]) => mockGet(...args),
+  post: (...args: any[]) => mockPost(...args),
+  del: (...args: any[]) => mockDelete(...args),
 }))
 
 import {

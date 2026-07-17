@@ -1,20 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// 源代码（ruralWork.ts 等）会对 api.get/post/put/delete 的返回值链式调用 .then(r => r.data)，
-// 因此 mock 必须返回 Promise，否则会抛 "Cannot read properties of undefined (reading 'then')"。
-const mockGet = vi.fn().mockResolvedValue({ data: {} })
-const mockPost = vi.fn().mockResolvedValue({ data: {} })
-const mockPut = vi.fn().mockResolvedValue({ data: {} })
-const mockDelete = vi.fn().mockResolvedValue({ data: {} })
+// 被测模块（policy.ts / ruralWork.ts）从 '@/api/request' 导入命名辅助函数
+// get/post/put/del（返回已自动解包的 body，不是 AxiosResponse）；policy.ts 另用
+// default 导出（原始 axios 实例）做 blob 下载，并导入了 apiRequest。
+// 因此 mock 必须提供全部被 import 的命名导出，否则抛
+// "No "get" export is defined on the "@/api/request" mock"。
+//
+// 注意两套签名差异：
+// - 命名 get 签名是 get(url, params)，params 直接作为第二参（不包 { params }）；
+// - default.get 是 axios 实例签名 get(url, { params, ...config })。
+// default.get 的返回值会被 downloadBlobAsFile 当 AxiosResponse 检查 'data' in result，
+// 因此统一默认 resolve { data: {} }；导出测试里再改为 { data: Blob }。
+const { mockGet, mockPost, mockPut, mockDelete, mockApiRequest, mockDownloadBlob } =
+  vi.hoisted(() => ({
+    mockGet: vi.fn().mockResolvedValue({ data: {} }),
+    mockPost: vi.fn().mockResolvedValue({ data: {} }),
+    mockPut: vi.fn().mockResolvedValue({ data: {} }),
+    mockDelete: vi.fn().mockResolvedValue({ data: {} }),
+    mockApiRequest: vi.fn().mockResolvedValue({ data: {} }),
+    mockDownloadBlob: vi.fn(),
+  }))
 
-vi.mock('@/utils/request', () => ({
-  default: {
-    get: (...args: any[]) => mockGet(...args),
-    post: (...args: any[]) => mockPost(...args),
-    put: (...args: any[]) => mockPut(...args),
-    delete: (...args: any[]) => mockDelete(...args),
-  },
-}))
 vi.mock('@/api/request', () => ({
   default: {
     get: (...args: any[]) => mockGet(...args),
@@ -22,8 +28,13 @@ vi.mock('@/api/request', () => ({
     put: (...args: any[]) => mockPut(...args),
     delete: (...args: any[]) => mockDelete(...args),
   },
+  get: (...args: any[]) => mockGet(...args),
+  post: (...args: any[]) => mockPost(...args),
+  put: (...args: any[]) => mockPut(...args),
+  del: (...args: any[]) => mockDelete(...args),
+  apiRequest: (...args: any[]) => mockApiRequest(...args),
   parseContentDisposition: (_headers: any, fallback: string) => fallback,
-  downloadBlob: vi.fn(),
+  downloadBlob: (...args: any[]) => mockDownloadBlob(...args),
 }))
 
 import {
@@ -69,7 +80,7 @@ describe('api/policy', () => {
   })
   it('searchPolicies GET /policies/search with q', () => {
     searchPolicies('农业')
-    expect(mockGet).toHaveBeenCalledWith('/policies/search', { params: { q: '农业' } })
+    expect(mockGet).toHaveBeenCalledWith('/policies/search', { q: '农业' })
   })
   it('getPolicyCategories', () => {
     getPolicyCategories()
@@ -81,7 +92,7 @@ describe('api/policy', () => {
   })
   it('getPolicies GET /policies', () => {
     getPolicies({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/policies', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/policies', { page: 1 })
   })
   it('getPolicy GET /policies/{id}', () => {
     getPolicy(1)
@@ -113,14 +124,9 @@ describe('api/policy', () => {
   describe('export 系列触发下载', () => {
     beforeEach(() => {
       vi.clearAllMocks()
+      // downloadBlobAsFile 会把 default.get 的返回值当 AxiosResponse 解包 .data；
+      // downloadBlob 已被 mock，不会触发真实 DOM 下载。
       mockGet.mockResolvedValue({ data: new Blob(['x']) })
-      const realAnchor = (globalThis as any).document.createElement('a')
-      realAnchor.click = vi.fn()
-      const realCreate = (globalThis as any).document.createElement.bind((globalThis as any).document)
-      ;(globalThis as any).document.createElement = (tag: any) => {
-        if (tag === 'a') return realAnchor
-        return realCreate(tag)
-      }
     })
 
     it('exportPolicies -> xlsx', async () => {
@@ -159,7 +165,7 @@ describe('api/ruralWork', () => {
 
   it('getRuralWorks GET', () => {
     getRuralWorks({ status: 'pending' })
-    expect(mockGet).toHaveBeenCalledWith('/rural-works', { params: { status: 'pending' } })
+    expect(mockGet).toHaveBeenCalledWith('/rural-works', { status: 'pending' })
   })
   it('createRuralWork POST', () => {
     createRuralWork({ title: 'W' })
@@ -175,7 +181,7 @@ describe('api/ruralWork', () => {
   })
   it('generateWorkReport GET /rural-works/report/generate', () => {
     generateWorkReport({ year: 2026 })
-    expect(mockGet).toHaveBeenCalledWith('/rural-works/report/generate', { params: { year: 2026 } })
+    expect(mockGet).toHaveBeenCalledWith('/rural-works/report/generate', { year: 2026 })
   })
 
   it('ruralWorkApi.list / get / create / update / delete / generateWorkReport 转发', () => {

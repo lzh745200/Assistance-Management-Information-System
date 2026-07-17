@@ -292,10 +292,7 @@ const confirmCreate = async () => {
 
   loading.value = true
   try {
-    const response = await post(
-      `/data-packages/${packageId.value}/versions`,
-      versionForm.value
-    )
+    const response = await post(`/data-packages/${packageId.value}/versions`, versionForm.value)
 
     if (response.success) {
       ElMessage.success('版本创建成功')
@@ -341,10 +338,14 @@ const doCompare = async () => {
   }
 
   try {
-    const response = await apiRequest({ method: 'GET', url: `/data-packages/${packageId.value}/versions/compare`, params: {
+    const response = await apiRequest({
+      method: 'GET',
+      url: `/data-packages/${packageId.value}/versions/compare`,
+      params: {
         version1: compareForm.value.version1,
         version2: compareForm.value.version2,
-      }})
+      },
+    })
 
     if (response.success) {
       compareResult.value = response.data.comparison

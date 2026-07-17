@@ -19,6 +19,7 @@ describe('exportUtil', () => {
       mockCreateElement = vi.spyOn(document, 'createElement').mockReturnValue({
         href: '',
         download: '',
+        style: {},
         click: clickSpy,
       } as any)
       mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation((n) => n)

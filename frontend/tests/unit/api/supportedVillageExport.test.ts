@@ -5,6 +5,7 @@ const mockPost = vi.fn()
 const mockPut = vi.fn()
 const mockDel = vi.fn()
 const mockApiRequest = vi.fn()
+const mockDownloadBlob = vi.fn()
 
 vi.mock('@/utils/request', () => ({
   default: {
@@ -45,7 +46,7 @@ vi.mock('@/api/request', () => ({
     if (quotedMatch) return quotedMatch[1].trim()
     return fallback
   },
-  downloadBlob: () => {},
+  downloadBlob: (...args: any[]) => mockDownloadBlob(...args),
 }))
 
 import {
@@ -182,13 +183,16 @@ describe('api/export', () => {
       params: { village_ids: [1] },
       responseType: 'blob',
     })
-    expect(r).toBeInstanceOf(Blob)
+    // 当前实现触发浏览器下载并返回 void（downloadBlobAsFile）
+    expect(r).toBeUndefined()
+    expect(mockDownloadBlob).toHaveBeenCalledWith(expect.any(Blob), expect.any(String))
   })
 
   it('getExportTasks GET /async-export/tasks', async () => {
     mockGet.mockResolvedValueOnce({ data: { items: [] } })
     await getExportTasks({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/async-export/tasks', { params: { page: 1 } })
+    // 命名 get(url, params) 辅助函数：params 直接作为第二参数
+    expect(mockGet).toHaveBeenCalledWith('/async-export/tasks', { page: 1 })
   })
 
   it('getExportStatus GET /async-export/status/{id}', async () => {
@@ -200,14 +204,17 @@ describe('api/export', () => {
   it('getExportHistory GET /async-export/tasks', async () => {
     mockGet.mockResolvedValueOnce({ data: { items: [] } })
     await getExportHistory({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/async-export/tasks', { params: { page: 1 } })
+    // 命名 get(url, params) 辅助函数：params 直接作为第二参数
+    expect(mockGet).toHaveBeenCalledWith('/async-export/tasks', { page: 1 })
   })
 
   it('downloadExportFile GET blob', async () => {
     mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
     const r = await downloadExportFile('T1')
     expect(mockGet).toHaveBeenCalledWith('/async-export/download/T1', { responseType: 'blob' })
-    expect(r).toBeInstanceOf(Blob)
+    // 当前实现触发浏览器下载并返回 void（downloadBlobAsFile）
+    expect(r).toBeUndefined()
+    expect(mockDownloadBlob).toHaveBeenCalledWith(expect.any(Blob), expect.any(String))
   })
 
   it('exportReportWord GET /export/report-word with report_type', async () => {

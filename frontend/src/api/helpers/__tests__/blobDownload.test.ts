@@ -22,7 +22,7 @@ beforeEach(() => {
   createdObjectURLs = []
   revokedURLs = []
   vi.stubGlobal('URL', {
-    createObjectURL: vi.fn((blob: Blob) => {
+    createObjectURL: vi.fn((_blob: Blob) => {
       const url = `blob:mock/${createdObjectURLs.length}`
       createdObjectURLs.push(url)
       return url
@@ -96,13 +96,13 @@ describe('parseFileName', () => {
   })
 
   it('RFC 5987 格式无分隔符返回 null', () => {
-    const cd = "attachment; filename*=UTF-8data.xlsx"
+    const cd = 'attachment; filename*=UTF-8data.xlsx'
     expect(parseFileName(cd)).toBe('data.xlsx') // 回退到 ASCII 解析
   })
 
   it('URL 编码解析失败时回退到 ASCII', () => {
     // 无效的 percent-encoding
-    const cd = "attachment; filename*=UTF-8''%ZZ; filename=\"fallback.csv\""
+    const cd = 'attachment; filename*=UTF-8\'\'%ZZ; filename="fallback.csv"'
     expect(parseFileName(cd)).toBe('fallback.csv')
   })
 })
@@ -183,17 +183,17 @@ describe('downloadBlobAsFile', () => {
     const onEnd = vi.fn()
     const error = new Error('Network error')
 
-    await expect(
-      downloadBlobAsFile(async () => Promise.reject(error), { onEnd })
-    ).rejects.toThrow('Network error')
+    await expect(downloadBlobAsFile(async () => Promise.reject(error), { onEnd })).rejects.toThrow(
+      'Network error'
+    )
 
     expect(onEnd).toHaveBeenCalledTimes(1)
   })
 
   it('非 Blob 且非 AxiosResponse 的返回值抛出错误', async () => {
-    await expect(
-      downloadBlobAsFile(async () => 'invalid' as any)
-    ).rejects.toThrow('既不是 Blob 也不是 AxiosResponse')
+    await expect(downloadBlobAsFile(async () => 'invalid' as any)).rejects.toThrow(
+      '既不是 Blob 也不是 AxiosResponse'
+    )
   })
 })
 

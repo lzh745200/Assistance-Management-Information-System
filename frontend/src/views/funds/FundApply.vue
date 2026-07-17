@@ -62,12 +62,7 @@
             style="width: 100%"
             :loading="villageLoading"
           >
-            <el-option
-              v-for="v in villageOptions"
-              :key="v.id"
-              :label="v.name"
-              :value="v.id"
-            />
+            <el-option v-for="v in villageOptions" :key="v.id" :label="v.name" :value="v.id" />
           </el-select>
         </el-form-item>
 
@@ -80,12 +75,7 @@
             style="width: 100%"
             :loading="schoolLoading"
           >
-            <el-option
-              v-for="s in schoolOptions"
-              :key="s.id"
-              :label="s.name"
-              :value="s.id"
-            />
+            <el-option v-for="s in schoolOptions" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
 

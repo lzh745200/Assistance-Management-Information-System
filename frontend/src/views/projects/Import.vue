@@ -348,7 +348,12 @@ function clearFileList() {
 const downloadTemplate = async () => {
   downloading.value = true
   try {
-    const resp: any = await apiRequest({ method: 'GET', url: '/import/template', params: { entity_type: 'project' }, responseType: 'blob' })
+    const resp: any = await apiRequest({
+      method: 'GET',
+      url: '/import/template',
+      params: { entity_type: 'project' },
+      responseType: 'blob',
+    })
     const filename = parseContentDisposition(
       resp.headers as Record<string, string>,
       '项目导入模板.xlsx'

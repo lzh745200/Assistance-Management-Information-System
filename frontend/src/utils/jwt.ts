@@ -44,12 +44,9 @@ interface CacheEntry {
 /** 简单的 JWT 解析结果缓存（带LRU清理） */
 const jwtCache = new Map<string, CacheEntry>()
 
-/** 获取缓存键（使用token签名部分，更唯一） */
+/** 获取缓存键（使用完整 token —— 截取前缀会导致同结构 token 碰撞，错返他人 payload） */
 function getCacheKey(token: string): string {
-  const parts = token.split('.')
-  if (parts.length !== 3) return token.slice(0, 32)
-  // 使用header+payload的组合，更唯一
-  return parts[0].slice(0, 16) + parts[1].slice(0, 16)
+  return token
 }
 
 /** 清理过期条目 */

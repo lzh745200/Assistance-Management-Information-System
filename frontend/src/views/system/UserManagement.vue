@@ -564,14 +564,18 @@ const copyPassword = async () => {
 const loadData = async () => {
   loading.value = true
   try {
-    const response = await apiRequest({ method: 'GET', url: '/users', params: {
+    const response = await apiRequest({
+      method: 'GET',
+      url: '/users',
+      params: {
         page: pagination.page,
         page_size: pagination.size,
         username: searchForm.username || undefined,
         keyword: searchForm.name || undefined,
         role: searchForm.role || undefined,
         is_active: searchForm.is_active,
-      }})
+      },
+    })
     const data = response
     tableData.value = data.items || []
     pagination.total = data.total || tableData.value.length
@@ -829,10 +833,9 @@ const handleImportPermissionPackage = () => {
           confirmButtonText: '确认导入',
           cancelButtonText: '取消',
         })
-        const cRes = await post(
-          `/permission-packages/confirm/${encodeURIComponent(file.name)}`,
-          { overwrite_existing: true }
-        )
+        const cRes = await post(`/permission-packages/confirm/${encodeURIComponent(file.name)}`, {
+          overwrite_existing: true,
+        })
         ElMessage.success(cRes.data?.message || cRes.message || '导入完成')
         pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
         loadData()

@@ -124,7 +124,7 @@ describe('stores/funds', () => {
       const s = useFundsStore()
       s.fundList = [{ id: 1, status: 'pending' }]
       await s.approveFund(1)
-      expect(post).toHaveBeenCalledWith('/funds/approve/1', {})
+      expect(post).toHaveBeenCalledWith('/funds/1/approve', {})
       expect(s.fundList[0].status).toBe('approved')
     })
 

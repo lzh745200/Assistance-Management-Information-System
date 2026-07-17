@@ -98,7 +98,8 @@ describe('api/analytics', () => {
     mockGet.mockResolvedValueOnce({ items: [] })
     await compareYears(1, [2024, 2025, 2026], ['gdp'])
     expect(mockGet).toHaveBeenCalledWith('/reports/analytics/compare-years/1', {
-      params: { years: '2024,2025,2026', metrics: 'gdp' },
+      years: '2024,2025,2026',
+      metrics: 'gdp',
     })
   })
 
@@ -111,7 +112,10 @@ describe('api/analytics', () => {
       isKeyCounty: false,
     })
     expect(mockGet).toHaveBeenCalledWith('/reports/analytics/summary', {
-      params: { year: 2026, department: 'X', is_three_regions: true, is_key_county: false },
+      year: 2026,
+      department: 'X',
+      is_three_regions: true,
+      is_key_county: false,
     })
   })
 
@@ -119,7 +123,10 @@ describe('api/analytics', () => {
     mockGet.mockResolvedValueOnce({ total: 0 })
     await getSummaryStatistics()
     expect(mockGet).toHaveBeenCalledWith('/reports/analytics/summary', {
-      params: { year: undefined, department: undefined, is_three_regions: undefined, is_key_county: undefined },
+      year: undefined,
+      department: undefined,
+      is_three_regions: undefined,
+      is_key_county: undefined,
     })
   })
 })

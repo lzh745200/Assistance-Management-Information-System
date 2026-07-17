@@ -79,7 +79,11 @@ function formatTime(t: string): string {
 
 async function loadActivities() {
   try {
-    const res = await apiRequest({ method: 'GET', url: '/dashboard/recent-activities', params: { limit: 10 }})
+    const res = await apiRequest({
+      method: 'GET',
+      url: '/dashboard/recent-activities',
+      params: { limit: 10 },
+    })
     const data = (res as any)?.data?.items || (res as any)?.items || []
     activities.value = (Array.isArray(data) ? data : []).slice(0, 10)
   } catch {

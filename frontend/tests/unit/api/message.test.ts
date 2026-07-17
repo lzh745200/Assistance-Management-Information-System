@@ -47,7 +47,7 @@ describe('api/message', () => {
   it('getMessages GET /messages', async () => {
     mockGet.mockResolvedValueOnce({ items: [], total: 0, page: 1, page_size: 20, unread_count: 0 })
     await getMessages({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/messages', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/messages', { page: 1 })
   })
 
   it('getUnreadCount GET /messages/unread-count', async () => {

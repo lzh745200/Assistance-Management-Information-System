@@ -1,18 +1,6 @@
 import request, { get, post, put, del, apiRequest } from '@/api/request'
 import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
-/** 将 Blob 响应触发为浏览器文件下载 */
-function triggerDownload(blob: Blob, filename: string) {
-  const url = window.URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  window.URL.revokeObjectURL(url)
-}
-
 // ── List / detail ──
 export const getSupportedVillages = (params?: any) => get('/supported-villages', params)
 export const getSupportedVillage = (id: number) => get('/supported-villages/' + id)
@@ -44,7 +32,11 @@ export const exportSupportedVillages = (params?: any) =>
   )
 export const downloadImportTemplate = () =>
   downloadBlobAsFile(
-    () => request.get('/import/template', { params: { entity_type: 'supported_village' }, responseType: 'blob' }),
+    () =>
+      request.get('/import/template', {
+        params: { entity_type: 'supported_village' },
+        responseType: 'blob',
+      }),
     { fallbackFileName: '帮扶村导入模板.xlsx' }
   )
 export const downloadTemplate = downloadImportTemplate
@@ -137,7 +129,8 @@ export const importSectionData = (
 }
 export const downloadAllTemplates = (year?: number) =>
   downloadBlobAsFile(
-    () => request.get('/supported-villages/templates/all', { params: { year }, responseType: 'blob' }),
+    () =>
+      request.get('/supported-villages/templates/all', { params: { year }, responseType: 'blob' }),
     { fallbackFileName: '全部板块模板.xlsx' }
   )
 export const importAllSectionsData = (villageId: number, year: number, file: File) => {

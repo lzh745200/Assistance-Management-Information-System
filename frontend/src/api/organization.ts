@@ -23,5 +23,4 @@ export const moveOrganization = (orgId: number, data: any) =>
 
 export const activateOrganization = (orgId: number) => post(`/organizations/${orgId}/activate`)
 
-export const deactivateOrganization = (orgId: number) =>
-  post(`/organizations/${orgId}/deactivate`)
+export const deactivateOrganization = (orgId: number) => post(`/organizations/${orgId}/deactivate`)

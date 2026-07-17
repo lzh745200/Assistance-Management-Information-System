@@ -42,8 +42,7 @@ export type PolicyStatistics = {
 export const getLevelOptions = () => get('/policies/options/levels')
 export const getStatusOptions = () => get('/policies/options/statuses')
 export const getPolicyTypes = () => get('/policies/options/levels')
-export const searchPolicies = (query: string) =>
-  get('/policies/search', { q: query })
+export const searchPolicies = (query: string) => get('/policies/search', { q: query })
 
 // ── Categories ──
 export const getPolicyCategories = () => get('/policies/categories')
@@ -80,8 +79,7 @@ export const downloadPolicyFile = (policyId: number) =>
 
 // ── Favorites ──
 export const addPolicyFavorite = (policyId: number) => post(`/policies/${policyId}/favorite`)
-export const removePolicyFavorite = (policyId: number) =>
-  del(`/policies/${policyId}/favorite`)
+export const removePolicyFavorite = (policyId: number) => del(`/policies/${policyId}/favorite`)
 export const getPolicyFavorites = (userId: number | string) =>
   get(`/policies/user/${userId}/favorites`)
 
@@ -105,15 +103,13 @@ export const exportPolicies = (params?: any) =>
     { fallbackFileName: '政策法规导出.xlsx' }
   )
 export const exportPoliciesPDF = (params?: any) =>
-  downloadBlobAsFile(
-    () => request.get('/policies/export/pdf', { params, responseType: 'blob' }),
-    { fallbackFileName: `政策法规_${Date.now()}.pdf` }
-  )
+  downloadBlobAsFile(() => request.get('/policies/export/pdf', { params, responseType: 'blob' }), {
+    fallbackFileName: `政策法规_${Date.now()}.pdf`,
+  })
 export const exportPoliciesWPS = (params?: any) =>
-  downloadBlobAsFile(
-    () => request.get('/policies/export/wps', { params, responseType: 'blob' }),
-    { fallbackFileName: `政策法规_${Date.now()}.wps` }
-  )
+  downloadBlobAsFile(() => request.get('/policies/export/wps', { params, responseType: 'blob' }), {
+    fallbackFileName: `政策法规_${Date.now()}.wps`,
+  })
 // ── Display helpers (used by views for status/label formatting) ──
 const CATEGORY_LABELS: Record<string, string> = {}
 const LEVEL_LABELS: Record<string, string> = {}

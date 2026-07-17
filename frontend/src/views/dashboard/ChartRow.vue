@@ -24,7 +24,7 @@ let pieChart: echarts.ECharts | null = null
 async function fetchData() {
   try {
     const [projRes, fundRes] = await Promise.all([
-      apiRequest({ method: 'GET', url: '/projects', params: { summary: true, page_size: 5 }}),
+      apiRequest({ method: 'GET', url: '/projects', params: { summary: true, page_size: 5 } }),
       get('/dashboard/stats', { refresh: true }),
     ])
     return {

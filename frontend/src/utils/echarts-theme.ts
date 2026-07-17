@@ -14,7 +14,9 @@
  */
 
 import type { EChartsCoreOption } from 'echarts/core'
-import echarts from '@/utils/echarts'
+// 直接从 echarts/core 导入，避免与 @/utils/echarts 形成循环导入
+// （echarts.ts 顶层会调用本模块的 registerMilitaryTheme()）
+import * as echarts from 'echarts/core'
 
 // ============================================================================
 // 色彩体系

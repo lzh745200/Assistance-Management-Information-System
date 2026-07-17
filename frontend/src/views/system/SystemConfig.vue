@@ -229,7 +229,11 @@ const newLog = reactive({ version: '', description: '' })
 async function loadUpdateLogs() {
   try {
     // update_logs.py 使用 skip/limit 分页，默认 limit=100
-    const { data } = await apiRequest({ method: 'GET', url: '/system/update-logs', params: { skip: 0, limit: 100 }})
+    const { data } = await apiRequest({
+      method: 'GET',
+      url: '/system/update-logs',
+      params: { skip: 0, limit: 100 },
+    })
     updateLogs.value = data?.items || data || []
   } catch {
     /* 忽略 */

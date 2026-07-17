@@ -2,12 +2,25 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockGet = vi.fn()
 const mockPost = vi.fn()
-const mockApiRequest = vi.fn()
+const mockRequestGet = vi.fn()
 
 vi.mock('@/api/request', () => ({
   get: (...args: any[]) => mockGet(...args),
   post: (...args: any[]) => mockPost(...args),
-  apiRequest: (...args: any[]) => mockApiRequest(...args),
+  // downloadBlobAsFile（src/api/helpers/blobDownload.ts）内部从 '@/api/request'
+  // 导入 downloadBlob / parseContentDisposition，需一并提供
+  downloadBlob: (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+  },
+  parseContentDisposition: vi.fn(() => 'download.xlsx'),
+  // 源模块 exportOrganizationPassCodes 使用默认导出 request.get 获取带响应头的 AxiosResponse
+  default: {
+    get: (...args: any[]) => mockRequestGet(...args),
+  },
 }))
 
 import {
@@ -56,7 +69,7 @@ describe('api/organizationPassCode', () => {
   })
 
   it('exportOrganizationPassCodes 触发下载', async () => {
-    mockApiRequest.mockResolvedValueOnce(new Blob(['test']))
+    mockRequestGet.mockResolvedValueOnce({ data: new Blob(['test']), headers: {} })
     const createObjectURL = vi.fn(() => 'blob:fake')
     const revokeObjectURL = vi.fn()
     const click = vi.fn()
@@ -70,9 +83,7 @@ describe('api/organizationPassCode', () => {
       return realCreate(tag)
     })
     await exportOrganizationPassCodes({ status: 'active' })
-    expect(mockApiRequest).toHaveBeenCalledWith({
-      method: 'GET',
-      url: '/machine-code/organization/export',
+    expect(mockRequestGet).toHaveBeenCalledWith('/machine-code/organization/export', {
       params: { status: 'active' },
       responseType: 'blob',
     })

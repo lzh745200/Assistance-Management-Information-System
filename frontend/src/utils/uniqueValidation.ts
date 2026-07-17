@@ -46,10 +46,7 @@ export async function checkUnique(params: UniqueCheckParams): Promise<UniqueChec
  */
 export async function checkUniqueBatch(checks: UniqueCheckParams[]): Promise<UniqueCheckResult[]> {
   try {
-    const response = await post<UniqueCheckResult[]>(
-      '/validation/check-unique-batch',
-      checks
-    )
+    const response = await post<UniqueCheckResult[]>('/validation/check-unique-batch', checks)
 
     return response
   } catch (error) {

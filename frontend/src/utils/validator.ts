@@ -39,7 +39,11 @@ export async function fetchRules(module: string): Promise<ValidationRule[]> {
     return cached.rules
   }
   try {
-    const { data } = await apiRequest({ method: 'GET', url: '/validation/rules', params: { module, is_active: true }})
+    const { data } = await apiRequest({
+      method: 'GET',
+      url: '/validation/rules',
+      params: { module, is_active: true },
+    })
     const rules = data as ValidationRule[]
     rulesCache.set(module, { rules, timestamp: Date.now() })
     return rules

@@ -137,10 +137,11 @@ export const fundApi = {
   // ========== 导出（默认CSV格式下载） ==========
   async exportList(params?: { search?: string; type?: string; status?: string }) {
     await downloadBlobAsFile(
-      () => request.get(`${FUNDS_BASE}/export`, {
-        params: { ...params, format: 'csv' },
-        responseType: 'blob',
-      }),
+      () =>
+        request.get(`${FUNDS_BASE}/export`, {
+          params: { ...params, format: 'csv' },
+          responseType: 'blob',
+        }),
       { fallbackFileName: `经费列表_${new Date().toISOString().slice(0, 10)}.csv` }
     )
   },
@@ -232,17 +233,27 @@ export const fundApi = {
 
   // ========== 帮扶村/学校经费汇总 ==========
   async getVillageFundSummary(villageId: number, year?: number) {
-    const response = await get(`${FUNDS_BASE}/village/${villageId}/summary`, year ? { year } : undefined)
+    const response = await get(
+      `${FUNDS_BASE}/village/${villageId}/summary`,
+      year ? { year } : undefined
+    )
     return response.data
   },
   async getSchoolFundSummary(schoolId: number, year?: number) {
-    const response = await get(`${FUNDS_BASE}/school/${schoolId}/summary`, year ? { year } : undefined)
+    const response = await get(
+      `${FUNDS_BASE}/school/${schoolId}/summary`,
+      year ? { year } : undefined
+    )
     return response.data
   },
 
   // ========== 预算交易记录 ==========
   async listTransactions(budgetId: number) {
-    const res = await apiRequest({ method: 'GET', url: `${BUDGETS_BASE}/transactions`, params: { budget_id: budgetId }})
+    const res = await apiRequest({
+      method: 'GET',
+      url: `${BUDGETS_BASE}/transactions`,
+      params: { budget_id: budgetId },
+    })
     const body: any = res.data
     const items = Array.isArray(body) ? body : body?.items || body?.data || []
     return { items, total: items.length } as {

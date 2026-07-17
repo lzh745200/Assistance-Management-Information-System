@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-const { mockRequest } = vi.hoisted(() => ({
-  mockRequest: { get: vi.fn(), post: vi.fn() },
+const { mockGet, mockPost } = vi.hoisted(() => ({
+  mockGet: vi.fn(),
+  mockPost: vi.fn(),
 }))
 
-vi.mock('@/api/request', () => ({ default: mockRequest }))
+vi.mock('@/api/request', () => ({ get: mockGet, post: mockPost }))
 vi.mock('@/utils/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }))
@@ -22,24 +23,24 @@ describe('utils/uniqueValidation', () => {
 
   describe('checkUnique', () => {
     it('available=true', async () => {
-      mockRequest.get.mockResolvedValue({ data: { available: true, message: 'ok' } })
+      mockGet.mockResolvedValue({ available: true, message: 'ok' })
       const r = await checkUnique({ model: 'm', field: 'f', value: 'v' })
       expect(r).toEqual({ available: true, message: 'ok' })
-      expect(mockRequest.get).toHaveBeenCalledWith('/validation/check-unique', {
-        params: { model: 'm', field: 'f', value: 'v', exclude_id: undefined },
+      expect(mockGet).toHaveBeenCalledWith('/validation/check-unique', {
+        model: 'm', field: 'f', value: 'v', exclude_id: undefined,
       })
     })
 
     it('with excludeId', async () => {
-      mockRequest.get.mockResolvedValue({ data: { available: true, message: 'ok' } })
+      mockGet.mockResolvedValue({ available: true, message: 'ok' })
       await checkUnique({ model: 'm', field: 'f', value: 'v', excludeId: 7 })
-      expect(mockRequest.get).toHaveBeenCalledWith('/validation/check-unique', {
-        params: { model: 'm', field: 'f', value: 'v', exclude_id: 7 },
+      expect(mockGet).toHaveBeenCalledWith('/validation/check-unique', {
+        model: 'm', field: 'f', value: 'v', exclude_id: 7,
       })
     })
 
     it('error -> default to available=true', async () => {
-      mockRequest.get.mockRejectedValue(new Error('net'))
+      mockGet.mockRejectedValue(new Error('net'))
       const r = await checkUnique({ model: 'm', field: 'f', value: 'v' })
       expect(r.available).toBe(true)
       expect(r.message).toContain('验证失败')
@@ -48,13 +49,13 @@ describe('utils/uniqueValidation', () => {
 
   describe('checkUniqueBatch', () => {
     it('success', async () => {
-      mockRequest.post.mockResolvedValue({ data: [{ available: true, message: 'a' }] })
+      mockPost.mockResolvedValue([{ available: true, message: 'a' }])
       const r = await checkUniqueBatch([{ model: 'm', field: 'f', value: 'v' }])
       expect(r).toEqual([{ available: true, message: 'a' }])
     })
 
     it('error -> fallback', async () => {
-      mockRequest.post.mockRejectedValue(new Error('net'))
+      mockPost.mockRejectedValue(new Error('net'))
       const r = await checkUniqueBatch([
         { model: 'm', field: 'f', value: 'v1' },
         { model: 'm', field: 'f', value: 'v2' },
@@ -71,23 +72,23 @@ describe('utils/uniqueValidation', () => {
     })
 
     it('available -> resolve', async () => {
-      mockRequest.get.mockResolvedValue({ data: { available: true, message: 'ok' } })
+      mockGet.mockResolvedValue({ available: true, message: 'ok' })
       const v = createUniqueValidator('m', 'f', 'msg')
       await expect(v.asyncValidator({}, 'val')).resolves.toBeUndefined()
     })
 
     it('!available -> reject with msg', async () => {
-      mockRequest.get.mockResolvedValue({ data: { available: false, message: 'taken' } })
+      mockGet.mockResolvedValue({ available: false, message: 'taken' })
       const v = createUniqueValidator('m', 'f', 'customErr')
       await expect(v.asyncValidator({}, 'val')).rejects.toBe('customErr')
     })
 
     it('with excludeIdGetter', async () => {
-      mockRequest.get.mockResolvedValue({ data: { available: true, message: 'ok' } })
+      mockGet.mockResolvedValue({ available: true, message: 'ok' })
       const v = createUniqueValidator('m', 'f', 'msg', () => 99)
       await v.asyncValidator({}, 'val')
-      expect(mockRequest.get).toHaveBeenCalledWith('/validation/check-unique', {
-        params: { model: 'm', field: 'f', value: 'val', exclude_id: 99 },
+      expect(mockGet).toHaveBeenCalledWith('/validation/check-unique', {
+        model: 'm', field: 'f', value: 'val', exclude_id: 99,
       })
     })
 
@@ -107,7 +108,7 @@ describe('utils/uniqueValidation', () => {
     })
 
     it('debounced + available -> resolve', async () => {
-      mockRequest.get.mockResolvedValue({ data: { available: true, message: 'ok' } })
+      mockGet.mockResolvedValue({ available: true, message: 'ok' })
       const v = createDebouncedUniqueValidator('m', 'f', 'msg', 100)
       const p = v.asyncValidator({}, 'val')
       await vi.advanceTimersByTimeAsync(150)
@@ -115,7 +116,7 @@ describe('utils/uniqueValidation', () => {
     })
 
     it('debounced + !available -> reject', async () => {
-      mockRequest.get.mockResolvedValue({ data: { available: false, message: 'taken' } })
+      mockGet.mockResolvedValue({ available: false, message: 'taken' })
       const v = createDebouncedUniqueValidator('m', 'f', 'msg', 100)
       const p = v.asyncValidator({}, 'val')
       p.catch(() => {})  // suppress unhandled
@@ -124,12 +125,12 @@ describe('utils/uniqueValidation', () => {
     })
 
     it('with excludeIdGetter', async () => {
-      mockRequest.get.mockResolvedValue({ data: { available: true, message: 'ok' } })
+      mockGet.mockResolvedValue({ available: true, message: 'ok' })
       const v = createDebouncedUniqueValidator('m', 'f', 'msg', 100, () => 5)
       const p = v.asyncValidator({}, 'val')
       await vi.advanceTimersByTimeAsync(150)
       await p
-      expect(mockRequest.get.mock.calls[0][1].params.exclude_id).toBe(5)
+      expect(mockGet.mock.calls[0][1].exclude_id).toBe(5)
     })
 
     it('trigger is blur', () => {

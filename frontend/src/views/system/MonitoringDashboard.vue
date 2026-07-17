@@ -579,7 +579,11 @@ async function fetchSnapshot() {
 
 async function fetchApiStats() {
   try {
-    const res = await apiRequest({ method: 'GET', url: '/system/monitor/api-stats', params: { hours: 24 }})
+    const res = await apiRequest({
+      method: 'GET',
+      url: '/system/monitor/api-stats',
+      params: { hours: 24 },
+    })
     const data = (res as any)?.data?.data ?? (res as any)?.data ?? {}
     apiStats.value = data?.top_endpoints ?? []
     return apiStats.value

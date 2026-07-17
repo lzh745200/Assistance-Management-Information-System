@@ -20,6 +20,15 @@ vi.mock('@/api/request', () => ({
     put: (...args: any[]) => mockPut(...args),
     delete: (...args: any[]) => mockDelete(...args),
   },
+  // 命名导出（返回已解包 body 的辅助函数）
+  get: (...args: any[]) => mockGet(...args),
+  post: (...args: any[]) => mockPost(...args),
+  put: (...args: any[]) => mockPut(...args),
+  del: (...args: any[]) => mockDelete(...args),
+  apiRequest: vi.fn(),
+  // @/api/helpers/blobDownload 依赖的两个工具
+  parseContentDisposition: vi.fn(),
+  downloadBlob: vi.fn(),
 }))
 
 import { projectsApi, projectApi } from '@/api/projects'
@@ -30,7 +39,7 @@ describe('api/projects', () => {
 
   it('list GET /projects', () => {
     projectsApi.list({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/projects', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/projects', { page: 1 })
   })
   it('get GET /projects/{id}', () => {
     projectsApi.get(5)
@@ -107,7 +116,7 @@ describe('api/schools', () => {
 
   it('list GET /schools', () => {
     schoolsApi.list({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/schools', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/schools', { page: 1 })
   })
   it('get GET /schools/{id}', () => {
     schoolsApi.get(5)

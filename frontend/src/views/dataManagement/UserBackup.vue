@@ -94,7 +94,12 @@ async function loadBackups() {
   loading.value = true
   try {
     const res = await getBackupList()
-    backups.value = res.data?.items || (Array.isArray(res.data) ? res.data : [])
+    // 后端返回 snake_case（file_name/backup_id），映射为组件使用的 filename/id
+    backups.value = (res.items || []).map((it: any) => ({
+      ...it,
+      filename: it.filename ?? it.file_name,
+      id: it.id ?? it.backup_id,
+    }))
   } catch {
     backups.value = []
   } finally {
@@ -113,16 +118,14 @@ async function confirmCreate() {
   try {
     const res = await createBackup({
       description: createForm.description || '用户手动备份',
-      compress: true,
       include_uploads: true,
-      include_config: false,
       password: createForm.password || undefined,
     })
-    if (res.data?.success !== false) {
+    if (res.success !== false) {
       ElMessage.success('备份创建成功')
       loadBackups()
     } else {
-      ElMessage.error(res.data?.message || '备份创建失败')
+      ElMessage.error(res.message || '备份创建失败')
     }
   } catch {
     ElMessage.error('备份创建失败')

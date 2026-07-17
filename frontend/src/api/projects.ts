@@ -1,4 +1,4 @@
-import request, { get, post, put, del, apiRequest } from '@/api/request'
+import request, { get, post, put, del } from '@/api/request'
 import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 // Types
@@ -36,10 +36,9 @@ export const projectsApi = {
   getById: (id: number) => get('/projects/' + id),
   getStats: () => get('/projects/stats'),
   exportList: (params?: any) =>
-    downloadBlobAsFile(
-      () => request.get('/projects/export', { params, responseType: 'blob' }),
-      { fallbackFileName: '项目数据导出.xlsx' }
-    ),
+    downloadBlobAsFile(() => request.get('/projects/export', { params, responseType: 'blob' }), {
+      fallbackFileName: '项目数据导出.xlsx',
+    }),
   importData: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
@@ -76,8 +75,7 @@ export const projectsApi = {
   createTask: (projectId: number, data: any) => post(`/projects/${projectId}/tasks`, data),
   updateTask: (projectId: number, taskId: number, data: any) =>
     put(`/projects/${projectId}/tasks/${taskId}`, data),
-  deleteTask: (projectId: number, taskId: number) =>
-    del(`/projects/${projectId}/tasks/${taskId}`),
+  deleteTask: (projectId: number, taskId: number) => del(`/projects/${projectId}/tasks/${taskId}`),
 }
 
 // Alias for views that use the singular form
