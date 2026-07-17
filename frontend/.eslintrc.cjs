@@ -21,7 +21,17 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'vue/multi-word-component-names': 'off',
-    'vue/require-default-prop': 'off' // Vue 3 中可选props不需要默认值
+    'vue/require-default-prop': 'off', // Vue 3 中可选props不需要默认值
+    // 禁止 response.data.success 双重解包：
+    // get/post/apiRequest 返回已解包的 envelope body，success 在顶层。
+    // 访问 response.data.success 会得到 undefined，导致 if 判断恒假、功能静默失效。
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector: "MemberExpression[object.property.name='data'][property.name='success']",
+        message: "禁止 response.data.success 双重解包。get/post/apiRequest 返回已解包的 envelope，请直接用 response.success。详见 AGENTS.md Bug 模式 #1。"
+      }
+    ]
   },
   overrides: [
     {
