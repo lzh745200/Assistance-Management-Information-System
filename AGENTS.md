@@ -340,6 +340,28 @@ Fixed in 16 files (43 handler instances): `funds/{ContractManage,TransferVoucher
 
 **Rule**: `useRouterSafe()` MUST be called at Vue `<script setup>` top level (NOT inside event handlers — `inject()` only works during setup).
 
+## Test-Writing Conventions (Added 2026-07-17)
+
+The 2026-07 coverage sprint introduced **244 failing tests** written against assumed APIs. These conventions prevent recurrence.
+
+### Frontend (vitest)
+
+1. **Mock ALL named exports the source imports**: `vi.mock('@/api/request')` must return every named export the module under test imports (`get`/`post`/`put`/`del`/`apiRequest`), plus `default` if the source uses it, plus `parseContentDisposition`/`downloadBlob` when `src/api/helpers/blobDownload.ts` is in the import chain. Missing export → `No "X" export is defined on the mock`. Define mock fns via `vi.hoisted`.
+2. **Helpers return the unwrapped body**: `get/post/put/del/apiRequest` auto-unwrap the envelope — `mockResolvedValue(body)` NOT `mockResolvedValue({ data: body })`.
+3. **`get(url, params)` takes params directly** (2nd arg), NOT axios-style `{ params: {...} }`. Assert `toHaveBeenCalledWith(url, { page: 1 })`.
+4. **Never mock `@/utils/request`** — the module does not exist.
+5. **Blob downloads** go through `downloadBlobAsFile`: mock `downloadBlob` and assert it received `(Blob, filename)` instead of spying on DOM anchor clicks.
+
+### Backend (pytest)
+
+6. **List endpoints return the `ok_list()` envelope**: assert `resp.json()["data"]["total"]`, never `resp.json()["total"]`.
+7. **`dependency_overrides` is app-global**: two fixtures overriding `get_current_user` cannot be used in the same test (last one wins for BOTH). Switch identity explicitly per phase inside one test with try/finally restore (see `test_security_data_isolation.py`).
+8. **Data scope semantics** (`get_data_scope`): role `user` → OWN (own records only); `admin`/`manager`/`approval_leader` → OWN_DEPT; `super_admin` → ALL. Write `check_record_access` assertions accordingly.
+9. **Verify model class names** against `app/models/` before importing in tests (e.g., `TeaPlantation` not `Industry`, `FundStatusHistory` not `FundHistory`, `Issue` not `IssueTracking`).
+10. **No leaked threads/timers in tests**: functions submitted to the global executor must finish in ≤2s even when testing timeouts (a `sleep(100)` leaked thread once hung the whole suite at 18%).
+11. **No module-level `os.environ` mutation** in test files — use a `monkeypatch` fixture (`monkeypatch.setattr` on the target module constant).
+12. **Before `mock.patch(target)`, confirm the attribute exists** on the current source module (refactors rename things; stale patch targets fail with AttributeError).
+
 ## Rate Limiting
 
 | Endpoint | Limit | Window |

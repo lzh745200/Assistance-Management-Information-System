@@ -273,6 +273,25 @@ View 点击保存 → Store.fetchXxx() → api/request.ts (axios) → 网络
 
 ---
 
+## 8.6 测试编写约定（2026-07-17 批量测试修复后确立，详见 AGENTS.md "Test-Writing Conventions"）
+
+**前端 vitest**：
+1. `vi.mock('@/api/request')` 必须提供源模块实际 import 的**全部**命名导出（`get/post/put/del/apiRequest`），用到 default 导出或 blobDownload 链路时也要补齐；mock 函数用 `vi.hoisted` 定义。
+2. `get/post/put/del/apiRequest` 返回**已解包的 envelope body**：`mockResolvedValue(body)`，不要再包 `{ data: ... }`。
+3. `get(url, params)` 第二参**直传** params 对象，不是 axios 风格 `{ params: {...} }`；断言按此书写。
+4. 禁止 mock 不存在的 `@/utils/request` 模块。
+
+**后端 pytest**：
+5. 列表接口均为 `ok_list()` 信封：断言 `resp.json()["data"]["total"]`。
+6. `dependency_overrides` 是 app 级全局：**同一测试不能同时使用两个覆盖 `get_current_user` 的 fixture**（后生效者覆盖前者），需在测试内按阶段显式切换 + try/finally 恢复。
+7. 数据域语义：role `user`→OWN（仅本人记录），`admin/manager/approval_leader`→OWN_DEPT，`super_admin`→ALL。
+8. 测试中 import 模型前先核对 `app/models/` 真实类名。
+9. 提交到全局线程池的函数必须在 ≤2s 内结束（禁止 `sleep(100)` 式泄漏线程）。
+10. 禁止测试文件模块级修改 `os.environ`，用 `monkeypatch.setattr` fixture。
+11. `mock.patch` 目标属性必须先确认在当前源码中存在（重构改名会导致 AttributeError）。
+
+---
+
 ## 9. AI 交互协议
 
 当用户提出需求时，AI 应：
