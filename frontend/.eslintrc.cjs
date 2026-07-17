@@ -42,6 +42,15 @@ module.exports = {
       rules: {
         'vue/no-v-html': 'off'
       }
+    },
+    {
+      // src/types/index.ts 是纯 re-export barrel；@typescript-eslint 8.63.0 的
+      // no-unused-vars 在 export * 上崩溃（Cannot use 'in' operator ... undefined）。
+      // 仅对此文件关闭，避免全局放松未使用变量检查。
+      files: ['src/types/index.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
     }
   ]
 }
