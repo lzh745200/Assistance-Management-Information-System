@@ -27,7 +27,7 @@ export function getNews(params?: {
   limit?: number
   offset?: number
 }): Promise<any> {
-  return get(`${BASE_URL}/news`, { params })
+  return get(`${BASE_URL}/news`, params)
 }
 
 /** 获取舆情统计 */

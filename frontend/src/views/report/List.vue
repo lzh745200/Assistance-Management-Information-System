@@ -90,6 +90,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { reportApi } from '@/api/report'
+import { downloadBlob } from '@/api/request'
 
 const subscriptions = ref<any[]>([])
 const loading = ref(false)
@@ -194,20 +195,14 @@ async function handleGenerate(row: any) {
   }
 }
 
-function handleDownload(row: any) {
+async function handleDownload(row: any) {
   if (!row.id) return
-  reportApi
-    .download(row.id)
-    .then((res: any) => {
-      const blob = new Blob([res.data || res], {
-        type: 'application/octet-stream',
-      })
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = `report_${row.id}.xlsx`
-      link.click()
-    })
-    .catch(() => ElMessage.error('下载失败'))
+  try {
+    const blob = await reportApi.download(row.id)
+    downloadBlob(blob, `report_${row.id}.xlsx`)
+  } catch {
+    ElMessage.error('下载失败')
+  }
 }
 
 async function handleDelete(row: any) {

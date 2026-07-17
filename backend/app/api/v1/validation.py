@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from ...core.database import get_db
 from ...core.security import get_current_user
 from ...models.validation_rule import RuleType, ValidationRule
+from app.core.transaction import safe_commit
 
 router = APIRouter(prefix="/validation", tags=["数据校验"])
 
@@ -271,7 +272,6 @@ def _check_regex(value, params, full_data):
 
 def _check_date_format(value, params, full_data):
     from datetime import datetime
-from app.core.transaction import safe_commit
     fmt = params.get("format", "%Y-%m-%d")
     try:
         datetime.strptime(str(value), fmt)

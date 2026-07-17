@@ -16,6 +16,7 @@ from app.core.security import generate_password, get_current_user, get_password_
 from app.core.constants import UserRole
 from app.core.permission_utils import is_superuser
 from app.models.user import User
+from app.core.transaction import safe_commit
 
 router = APIRouter(prefix="/user-management", tags=["用户管理"])
 
@@ -372,7 +373,6 @@ async def reset_password(
     # 仅当调用方显式提供密码时才校验强度；自动生成的密码已符合策略
     if reset_data.new_password:
         from app.core.security import PasswordPolicy
-from app.core.transaction import safe_commit
 
         is_valid, msg = PasswordPolicy.validate(new_password, username=user.username)
         if not is_valid:

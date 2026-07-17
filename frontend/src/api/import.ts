@@ -7,7 +7,8 @@
  * - 查询导入历史
  */
 
-import { post, apiRequest, downloadBlob, parseContentDisposition } from '@/api/request'
+import request, { post, apiRequest } from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 // ==================== 类型定义 ====================
 
@@ -62,9 +63,9 @@ interface ImportHistoryResponse {
  * @returns Blob 文件数据
  */
 export async function downloadImportTemplate(type: string): Promise<Blob> {
-  const response = await apiRequest({ method: 'GET', url: `/import/template`, params: { entity_type: type }, responseType: 'blob' })
-  return response.data
+  return apiRequest<Blob>({ method: 'GET', url: `/import/template`, params: { entity_type: type }, responseType: 'blob' })
 }
+
 
 /**
  * 下载导入模板并触发浏览器保存（自动解析正确文件名）。
@@ -76,12 +77,13 @@ export async function downloadImportTemplateAndSave(
   type: string,
   fallbackName = '导入模板'
 ): Promise<void> {
-  const response = await apiRequest({ method: 'GET', url: `/import/template`, params: { entity_type: type }, responseType: 'blob' })
-  const filename = parseContentDisposition(
-    response.headers as Record<string, string>,
-    `${fallbackName}.xlsx`
+  await downloadBlobAsFile(
+    () => request.get(`/import/template`, {
+      params: { entity_type: type },
+      responseType: 'blob',
+    }),
+    { fallbackFileName: `${fallbackName}.xlsx` }
   )
-  downloadBlob(response.data, filename)
 }
 
 /**

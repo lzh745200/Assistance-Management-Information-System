@@ -97,8 +97,9 @@ async function refreshData() {
   loading.value = true
   try {
     const res = await get('/system/cache/stats')
-    if (res.data?.success !== false && res.data?.data) {
-      stats.value = res.data.data
+    // get() 已自动解包，res 即响应体 { success, data, ...expanded_fields }
+    if (res?.success !== false) {
+      stats.value = res?.data || res || {}
     }
   } catch {
     ElMessage.error('加载缓存信息失败')
@@ -114,8 +115,9 @@ async function clearAllCache() {
     })
     clearing.value = true
     const res = await post('/system/cache/clear')
-    if (res.data?.success !== false) {
-      ElMessage.success(res.data?.message || '缓存已清除')
+    // post() 已自动解包，res 即响应体 { success, message, data }
+    if (res?.success !== false) {
+      ElMessage.success(res?.message || '缓存已清除')
     }
     await refreshData()
   } catch (e: any) {

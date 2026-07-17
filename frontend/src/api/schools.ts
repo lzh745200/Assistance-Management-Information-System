@@ -1,5 +1,5 @@
-import { get, post, put, del, apiRequest } from '@/api/request'
-import { parseContentDisposition, downloadBlob } from './request'
+import request, { get, post, put, del, apiRequest } from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 export const schoolsApi = {
   // ========== 基础 CRUD ==========
@@ -23,13 +23,10 @@ export const schoolsApi = {
     })
   },
   exportExcel: (params?: any) =>
-    apiRequest({ method: 'GET', url: '/schools/export/excel', params, responseType: 'blob' }).then((r) => {
-      const filename = parseContentDisposition(
-        r.headers as Record<string, string>,
-        '学校数据导出.xlsx'
-      )
-      downloadBlob(r.data, filename)
-    }),
+    downloadBlobAsFile(
+      () => request.get('/schools/export/excel', { params, responseType: 'blob' }),
+      { fallbackFileName: '学校数据导出.xlsx' }
+    ),
   // downloadImportTemplate removed — use downloadImportTemplateAndSave from @/api/import
 
   // ========== 学校帮扶项目 ==========

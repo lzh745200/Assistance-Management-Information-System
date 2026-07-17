@@ -11,6 +11,7 @@ from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.audit import AuditAction, AuditLevel, AuditStatus
 from app.services.audit_service import AuditService, SecurityEventService
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -588,7 +589,6 @@ async def get_user_activity(
     from datetime import timedelta
 
     from app.models.audit import AuditLog
-from app.core.transaction import safe_commit
 
     start_date = datetime.now() - timedelta(days=days)
 

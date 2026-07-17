@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -508,7 +509,6 @@ async def get_security_event_stats(
 ):
     """获取安全事件的统计分析数据（从数据库读取）"""
     from app.models.audit import SecurityEvent
-from app.core.transaction import safe_commit
 
     events = db.query(SecurityEvent).all()
 

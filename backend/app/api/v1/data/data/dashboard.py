@@ -93,7 +93,9 @@ def invalidate_dashboard_cache():
 def _query_village_stats(db: Session, data_scope: OrgScopeFilter) -> dict:
     """查询1：帮扶村 + 人口 + 学校统计（基于 SupportedVillage）"""
     # 帮扶村查询（带数据范围过滤）— 用 subquery 避免大 IN 列表物化到 Python
-    village_query = db.query(SupportedVillage.id)
+    village_query = db.query(SupportedVillage.id).filter(
+        SupportedVillage.is_active == True  # noqa: E712
+    )
     village_query = data_scope.filter_by_org_ids(
         village_query, SupportedVillage.organization_id,
         created_by_column=SupportedVillage.created_by,
@@ -156,14 +158,16 @@ def _query_fund_stats(db: Session, data_scope: OrgScopeFilter) -> dict:
     query = db.query(
         Fund.status,
         func.coalesce(func.sum(Fund.amount), 0),
-    )
+    ).filter(Fund.is_active == True)  # noqa: E712
 
     # 非管理员仅统计关联到可访问帮扶村/学校的经费
     if not data_scope.has_full_access():
         from sqlalchemy import or_
 
         # 获取当前用户可访问的帮扶村 ID
-        village_query = db.query(SupportedVillage.id)
+        village_query = db.query(SupportedVillage.id).filter(
+            SupportedVillage.is_active == True  # noqa: E712
+        )
         village_query = data_scope.filter_by_org_ids(
             village_query, SupportedVillage.organization_id,
             created_by_column=SupportedVillage.created_by,
@@ -213,7 +217,10 @@ def _query_project_approval_stats(db: Session, data_scope: OrgScopeFilter) -> di
     proj_query = db.query(
         func.count(Project.id),
         func.coalesce(func.sum(case((Project.status.in_(["active", "in_progress"]), 1), else_=0)), 0),
-    ).filter(Project.status != "cancelled")
+    ).filter(
+        Project.status != "cancelled",
+        Project.is_active == True,  # noqa: E712
+    )
     # 非管理员按组织数据范围过滤项目
     if not data_scope.has_full_access():
         if hasattr(Project, "organization_id") and data_scope.org_ids:
@@ -252,7 +259,9 @@ def _query_project_approval_stats(db: Session, data_scope: OrgScopeFilter) -> di
     expected_years = max(current_year - _DATA_START_YEAR + 1, 1)
     data_completeness = 0.0
 
-    total_villages_count = db.query(func.count(SupportedVillage.id)).scalar() or 0
+    total_villages_count = db.query(func.count(SupportedVillage.id)).filter(
+        SupportedVillage.is_active == True  # noqa: E712
+    ).scalar() or 0
     if total_villages_count > 0:
         # 简化计算：总填报条数 / (村数 × 应填年份数)
         total_expected = total_villages_count * expected_years
@@ -309,8 +318,8 @@ async def get_dashboard_stats(
 
 
 # ==================== 近期动态数据表 ====================
+from app.core.transaction import safe_commit  # noqa: E402
 from app.models.dashboard import (  # noqa: E402, F401
-from app.core.transaction import safe_commit
     DashboardActivity,
     HiddenDashboardActivity
 )

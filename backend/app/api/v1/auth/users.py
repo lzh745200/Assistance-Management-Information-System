@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.models.machine_code import MachineCode
 from app.models.user import User
 from app.services.user_service import VALID_ROLES
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -804,7 +805,6 @@ async def upload_avatar(
     import os as _os
     import uuid as _uuid
     from pathlib import Path as _Path
-from app.core.transaction import safe_commit
 
     # 权限检查：仅本人或管理员可上传
     if current_user.id != user_id and not is_superuser(current_user):

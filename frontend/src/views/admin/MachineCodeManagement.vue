@@ -1,4 +1,5 @@
 <template>
+  <template v-if="isAdmin">
   <div class="machine-code-management">
     <el-card>
       <template #header>
@@ -169,6 +170,8 @@
       </template>
     </el-dialog>
   </div>
+  </template>
+  <el-empty v-else description="无权限访问此页面" />
 </template>
 
 <script setup lang="ts">

@@ -206,7 +206,7 @@ async function confirmCreateBackup() {
       include_uploads: backupForm.value.include_uploads,
       password: backupForm.value.password || null,
     })
-    if (res.data?.success !== false) {
+    if (res?.success !== false) {
       ElMessage.success('已创建')
       createDialogVisible.value = false
       await refreshAll()
@@ -224,7 +224,7 @@ async function handleDelete(row: any) {
       type: 'warning',
     })
     const res = await del(`/system/backup/${row.file_name}`)
-    if (res.data?.success !== false) {
+    if (res?.success !== false) {
       ElMessage.success('已删除')
       await refreshAll()
     }
@@ -249,7 +249,7 @@ async function confirmRestore() {
       filename: restoreTarget.value.file_name,
       password: restoreForm.value.password || null,
     })
-    if (res.data?.success !== false) {
+    if (res?.success !== false) {
       ElMessage.success('系统恢复成功，请重新登录')
       restoreDialogVisible.value = false
       setTimeout(() => {

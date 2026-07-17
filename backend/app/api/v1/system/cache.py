@@ -13,6 +13,7 @@ from app.core.cache import cache_manager, default_cache
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.permission_utils import require_admin
+from app.core.response import success_response
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +43,8 @@ async def get_cache_stats(
             sys.getsizeof(k) + sys.getsizeof(v) for k, (_, v) in backend._store.items()
         )
 
-        return {
-            "success": True,
-            "data": {
+        return success_response(
+            data={
                 "item_count": item_count,
                 "max_size": backend._max_size,
                 "hits": hits,
@@ -55,7 +55,8 @@ async def get_cache_stats(
                 "estimated_size_mb": round(estimated_size / 1024 / 1024, 2),
                 "backend_type": "memory",
             },
-        }
+            message="获取缓存统计成功",
+        )
     except Exception as e:
         logger.error("获取缓存统计失败: %s", e)
         raise HTTPException(status_code=500, detail=f"获取缓存统计失败: {str(e)}")
@@ -85,14 +86,13 @@ async def clear_cache(
             stats_before, getattr(current_user, "username", "unknown"),
         )
 
-        return {
-            "success": True,
-            "message": f"缓存已清除（清除前共 {stats_before} 个键）",
-            "data": {
+        return success_response(
+            data={
                 "cleared_keys": stats_before,
                 "timestamp": time.time(),
             },
-        }
+            message=f"缓存已清除（清除前共 {stats_before} 个键）",
+        )
     except Exception as e:
         logger.error("清除缓存失败: %s", e)
         raise HTTPException(status_code=500, detail=f"清除缓存失败: {str(e)}")

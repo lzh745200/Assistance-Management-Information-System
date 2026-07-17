@@ -1,4 +1,5 @@
-import { get, post, put, del, apiRequest } from '@/api/request'
+import request, { get, post, put, del, apiRequest } from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 // Types
 export interface Project {
@@ -34,7 +35,11 @@ export const projectsApi = {
   delete: (id: number) => del('/projects/' + id),
   getById: (id: number) => get('/projects/' + id),
   getStats: () => get('/projects/stats'),
-  exportList: (params?: any) => apiRequest({ method: 'GET', url: '/projects/export', params, responseType: 'blob' }),
+  exportList: (params?: any) =>
+    downloadBlobAsFile(
+      () => request.get('/projects/export', { params, responseType: 'blob' }),
+      { fallbackFileName: '项目数据导出.xlsx' }
+    ),
   importData: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)

@@ -1,6 +1,6 @@
 import { get, post, put, del } from '@/api/request'
 
-export const getOrganizations = (params?: any) => get('/organizations', { params })
+export const getOrganizations = (params?: any) => get('/organizations', params)
 export const getOrganization = (id: number) => get('/organizations/' + id)
 export const getOrganizationTree = () => get('/organizations/tree')
 export const createOrganization = (data: any) => post('/organizations', data)

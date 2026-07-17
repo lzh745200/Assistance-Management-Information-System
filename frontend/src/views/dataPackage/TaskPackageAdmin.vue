@@ -168,7 +168,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
-import { get, post, apiRequest } from '@/api/request'
+import { get, post, apiRequest, downloadBlob } from '@/api/request'
 import { AuthStorage } from '@/utils/authStorage'
 import { DATA_TYPES, DATA_TYPE_LABELS } from '@/constants/dataTypes'
 
@@ -317,7 +317,7 @@ async function loadPackageList() {
     if (listFilter.value) {
       params.type = listFilter.value
     }
-    const data = await get('/data-packages', { params })
+    const data = await get('/data-packages', params)
     packageList.value = data?.items || data?.data?.items || []
   } catch {
     packageList.value = []
@@ -355,16 +355,8 @@ function statusLabel(status: string): string {
 
 async function downloadPkg(row: any) {
   try {
-    const response = await apiRequest({ method: 'GET', url: `/data-packages/${row.id}/download`, responseType: 'blob' })
-    const blob = new Blob([response.data])
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${row.name || '数据包'}.zip`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+    const blob = await apiRequest({ method: 'GET', url: `/data-packages/${row.id}/download`, responseType: 'blob' })
+    downloadBlob(blob, `${row.name || '数据包'}.zip`)
   } catch {
     ElMessage.error('下载失败')
   }

@@ -2,11 +2,13 @@
  * API 通用类型定义
  */
 
-/** API 响应基础结构 */
+/** API 响应基础结构（匹配后端 success_response() 输出） */
 export interface ApiResponse<T = unknown> {
   code: number
   message: string
-  data: T
+  success?: boolean
+  data?: T
+  [key: string]: unknown
 }
 
 /** 标准列表响应（后端 ok_list() 输出） */

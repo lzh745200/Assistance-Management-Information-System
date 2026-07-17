@@ -1,4 +1,6 @@
-import { get, post, apiRequest } from '@/api/request'
+import { get, post } from '@/api/request'
+import request from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 export type CreateOrganizationPassCodeRequest = {
   organization_id: number
@@ -48,18 +50,8 @@ export const exportOrganizationPassCodes = async (params?: {
   organization_id?: number
   status?: string
 }) => {
-  const blob = await apiRequest<Blob>({
-    method: 'GET',
-    url: '/machine-code/organization/export',
-    params,
-    responseType: 'blob',
-  })
-  const url = window.URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = '组织通行证码.xlsx'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  window.URL.revokeObjectURL(url)
+  await downloadBlobAsFile(
+    () => request.get('/machine-code/organization/export', { params, responseType: 'blob' }),
+    { fallbackFileName: '组织通行证码.xlsx' }
+  )
 }

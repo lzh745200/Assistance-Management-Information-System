@@ -36,6 +36,7 @@ from app.core.security import get_current_user
 from app.models.message import Message
 from app.models.user import User
 from app.services.approval_workflow_service import ApprovalWorkflowService
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -603,7 +604,6 @@ def get_pending_tasks(
     if not tasks:
         from app.models.approval import ApprovalStatus as AS
         from app.models.approval import ApprovalTask as AT
-from app.core.transaction import safe_commit
 
         query = db.query(AT).filter(AT.status == AS.PENDING.value)
         if not is_admin(current_user):

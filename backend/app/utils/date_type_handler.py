@@ -18,7 +18,7 @@ import logging
 from datetime import date, datetime
 from typing import Any, Type
 
-from sqlalchemy import Column, Date, event
+from sqlalchemy import Date, event
 from sqlalchemy.orm import DeclarativeBase
 
 logger = logging.getLogger(__name__)

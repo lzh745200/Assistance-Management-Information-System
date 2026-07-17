@@ -65,7 +65,7 @@ export function getAlertHistory(params?: {
   page?: number
   page_size?: number
 }): Promise<{ success: boolean; data: any[] }> {
-  return get<{ success: boolean; data: any[] }>('/system/monitor/alerts/history', { params })
+  return get<{ success: boolean; data: any[] }>('/system/monitor/alerts/history', params)
 }
 
 /** 获取 API 调用统计 */

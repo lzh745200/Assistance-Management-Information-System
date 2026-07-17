@@ -778,18 +778,24 @@ class TestUploadVoucherAttachment:
         )
         db_session.add(v)
         db_session.flush()
-        resp = client.post("/api/v1/fund-lifecycle/transfer-vouchers/1/attachments", json={
-            "file_name": "receipt.pdf", "file_path": "/r.pdf",
-            "file_size": 1024, "file_type": "application/pdf",
-            "category": "bank_receipt",
-        })
+        # Send as multipart file upload
+        import io
+        file_content = io.BytesIO(b"%PDF-1.4 fake pdf content")
+        resp = client.post(
+            "/api/v1/fund-lifecycle/transfer-vouchers/1/attachments",
+            files={"file": ("receipt.pdf", file_content, "application/pdf")},
+            data={"category": "bank_receipt"},
+        )
         assert resp.status_code == 200
         assert resp.json()["data"]["file_name"] == "receipt.pdf"
 
     def test_not_found(self, client):
-        resp = client.post("/api/v1/fund-lifecycle/transfer-vouchers/999/attachments", json={
-            "file_name": "t.pdf", "file_path": "/t.pdf",
-        })
+        import io
+        file_content = io.BytesIO(b"fake")
+        resp = client.post(
+            "/api/v1/fund-lifecycle/transfer-vouchers/999/attachments",
+            files={"file": ("t.pdf", file_content, "application/pdf")},
+        )
         assert resp.status_code == 404
 
     def test_with_description(self, client, project, db_session):
@@ -799,9 +805,13 @@ class TestUploadVoucherAttachment:
         )
         db_session.add(v)
         db_session.flush()
-        resp = client.post("/api/v1/fund-lifecycle/transfer-vouchers/1/attachments", json={
-            "file_name": "scan.jpg", "file_path": "/s.jpg", "description": "银行回单",
-        })
+        import io
+        file_content = io.BytesIO(b"fake image content")
+        resp = client.post(
+            "/api/v1/fund-lifecycle/transfer-vouchers/1/attachments",
+            files={"file": ("scan.jpg", file_content, "image/jpeg")},
+            data={"description": "银行回单"},
+        )
         assert resp.status_code == 200
 
 
@@ -1784,7 +1794,7 @@ class TestForbiddenForViewer:
         ("DELETE", "/api/v1/fund-lifecycle/transfer-vouchers/1", None),
         ("POST", "/api/v1/fund-lifecycle/transfer-vouchers/1/confirm", None),
         ("POST", "/api/v1/fund-lifecycle/transfer-vouchers/1/attachments",
-         {"file_name": "t.pdf", "file_path": "/t.pdf"}),
+         {"_multipart": True, "file_name": "t.pdf"}),
         ("POST", "/api/v1/fund-lifecycle/contracts", {"contract_no": "CX", "contract_name": "x"}),
         ("PUT", "/api/v1/fund-lifecycle/contracts/1", {"contract_name": "x"}),
         ("DELETE", "/api/v1/fund-lifecycle/contracts/1", None),
@@ -1802,6 +1812,7 @@ class TestForbiddenForViewer:
 
     @pytest.mark.parametrize("method,path,body", ENDPOINTS)
     def test_viewer_gets_403(self, client, db_session, method, path, body):
+        import io
         from app.main import app
         u = _viewer_user()
         async def _auth(): return u
@@ -1809,7 +1820,15 @@ class TestForbiddenForViewer:
         _original_overrides = app.dependency_overrides.copy()
         app.dependency_overrides[get_current_user] = _auth
         try:
-            resp = client.request(method, path, json=body)
+            # Handle multipart file upload endpoints differently
+            if body and isinstance(body, dict) and body.pop("_multipart", False):
+                file_content = io.BytesIO(b"fake")
+                resp = client.request(
+                    method, path,
+                    files={"file": (body.get("file_name", "t.pdf"), file_content, "application/pdf")},
+                )
+            else:
+                resp = client.request(method, path, json=body)
             assert resp.status_code == 403, f"{method} {path} expected 403 got {resp.status_code}"
         finally:
             if original:

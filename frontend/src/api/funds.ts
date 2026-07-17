@@ -2,6 +2,8 @@
  * 经费管理 API
  */
 import { get, post, put, del, apiRequest } from '@/api/request'
+import request from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 import type { PaginatedResponse } from '@/types/api'
 
 /** 经费记录 */
@@ -134,18 +136,13 @@ export const fundApi = {
 
   // ========== 导出（默认CSV格式下载） ==========
   async exportList(params?: { search?: string; type?: string; status?: string }) {
-    const response = await apiRequest({
-      method: 'GET',
-      url: `${FUNDS_BASE}/export`,
-      params: { ...params, format: 'csv' },
-      responseType: 'blob',
-    })
-    const url = window.URL.createObjectURL(response.data)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `经费列表_${new Date().toISOString().slice(0, 10)}.csv`
-    link.click()
-    window.URL.revokeObjectURL(url)
+    await downloadBlobAsFile(
+      () => request.get(`${FUNDS_BASE}/export`, {
+        params: { ...params, format: 'csv' },
+        responseType: 'blob',
+      }),
+      { fallbackFileName: `经费列表_${new Date().toISOString().slice(0, 10)}.csv` }
+    )
   },
 
   // ========== 附件 ==========

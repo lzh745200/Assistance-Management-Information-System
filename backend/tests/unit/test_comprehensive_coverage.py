@@ -149,13 +149,8 @@ SERVICE_FILES = [
 @pytest.mark.parametrize('module_name', SERVICE_FILES)
 def test_service_importable(module_name):
     """Verify every service module can be imported."""
-    try:
-        mod = importlib.import_module(module_name)
-        assert mod is not None
-    except ImportError as e:
-        if 'greenlet' in str(e):
-            pytest.skip('greenlet not available')
-        raise
+    mod = importlib.import_module(module_name)
+    assert mod is not None
 
 # ══════════════════════════════════════════════════════════════
 # 3. All API routers have expected structure
@@ -198,13 +193,10 @@ API_ROUTER_FILES = [
 @pytest.mark.parametrize('module_name,attr', API_ROUTER_FILES)
 def test_api_router_has_endpoints(module_name, attr):
     """Verify every API router has registered endpoints."""
-    try:
-        mod = importlib.import_module(module_name)
-        router = getattr(mod, attr, None)
-        assert router is not None, f'{module_name} has no {attr}'
-        assert len(router.routes) > 0, f'{module_name} router has no routes'
-    except ImportError as e:
-        pytest.skip(str(e))
+    mod = importlib.import_module(module_name)
+    router = getattr(mod, attr, None)
+    assert router is not None, f'{module_name} has no {attr}'
+    assert len(router.routes) > 0, f'{module_name} router has no routes'
 
 # ══════════════════════════════════════════════════════════════
 # 4. Core utility modules importable
@@ -421,19 +413,29 @@ SCHEMA_FILES = [
     'app.schemas.user',
     'app.schemas.organization',
     'app.schemas.policy',
-    'app.schemas.rbac',
+    'app.schemas.role',
+    'app.schemas.permission',
     'app.schemas.rural_work',
-    'app.schemas.approval',
-    'app.schemas.audit',
-    'app.schemas.effectiveness',
+    'app.schemas.rural_task',
+    'app.schemas.audit_log',
+    'app.schemas.auth',
+    'app.schemas.common',
+    'app.schemas.data_package',
+    'app.schemas.data_report',
+    'app.schemas.monitor',
+    'app.schemas.permission_package',
+    'app.schemas.template_fields',
+    'app.schemas.village',
+    'app.schemas.army_unit',
+    'app.schemas.document',
+    'app.schemas.resource',
+    'app.schemas.activity_log',
+    'app.schemas.data_package_encrypted',
 ]
 
 
 @pytest.mark.parametrize('module_name', SCHEMA_FILES)
 def test_schema_importable(module_name):
     """Verify every schema module can be imported."""
-    try:
-        mod = importlib.import_module(module_name)
-        assert mod is not None
-    except ImportError:
-        pytest.skip(f'{module_name} not available')
+    mod = importlib.import_module(module_name)
+    assert mod is not None

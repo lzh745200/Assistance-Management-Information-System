@@ -23,7 +23,7 @@ export interface BackupStats {
 const BASE = '/system'
 
 export async function getBackupList(params?: { page?: number; page_size?: number }) {
-  const res = await get(`${BASE}/backups`, { params })
+  const res = await get(`${BASE}/backups`, params)
   return res.data
 }
 

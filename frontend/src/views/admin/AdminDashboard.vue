@@ -1,4 +1,5 @@
 <template>
+  <template v-if="isAdmin">
   <div class="admin-dashboard">
     <!-- 管理员欢迎横幅 -->
     <div class="admin-banner">
@@ -184,6 +185,8 @@
       </div>
     </div>
   </div>
+  </template>
+  <el-empty v-else description="无权限访问此页面" />
 </template>
 
 <script setup lang="ts">
@@ -191,6 +194,7 @@ import { logger } from '@/utils/logger'
 
 import { ref, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useUserStore } from '@/stores/user'
 import { get } from '@/api/request'
 import {
   UserFilled,
@@ -208,6 +212,11 @@ import {
 } from '@element-plus/icons-vue'
 
 const { pushSafe } = useRouterSafe()
+const userStore = useUserStore()
+const isAdmin = computed(() => {
+  const role = userStore.user?.role
+  return role === 'super_admin' || role === 'admin'
+})
 
 const currentDate = new Date().toLocaleDateString('zh-CN', {
   year: 'numeric',

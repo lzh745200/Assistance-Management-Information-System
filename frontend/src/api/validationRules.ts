@@ -9,7 +9,7 @@ const BASE_URL = '/validation'
 
 /** 获取校验规则列表 */
 export function listRules(params?: { module?: string; is_active?: boolean }): Promise<any> {
-  return get(`${BASE_URL}/rules`, { params })
+  return get(`${BASE_URL}/rules`, params)
 }
 
 /** 创建校验规则（管理员） */

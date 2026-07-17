@@ -14,7 +14,7 @@ export function listTodos(params?: {
   page?: number
   page_size?: number
 }): Promise<any> {
-  return get(BASE_URL, { params })
+  return get(BASE_URL, params)
 }
 
 /** 获取待办详情 */

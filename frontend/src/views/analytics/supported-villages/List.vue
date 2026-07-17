@@ -411,7 +411,8 @@ async function handleDelete(row: SupportedVillage) {
     tableData.value = tableData.value.filter((item) => item.id !== row.id)
     pagination.total = Math.max(0, pagination.total - 1)
     ElMessage.success('删除成功')
-    // 后台静默刷新列表数据（不显示 loading）
+    // 后台静默刷新列表数据（不显示 loading），重置到第1页确保数据可见
+    pagination.page = 1
     loadData()
   } catch (error) {
     ElMessage.error('删除失败')
@@ -437,7 +438,8 @@ async function handleBatchDelete() {
     ElMessage.success(result.message)
     selectedRows.value = []
     if (tableRef.value) tableRef.value.clearSelection()
-    // 后台静默刷新列表数据
+    // 后台静默刷新列表数据，重置到第1页确保数据可见
+    pagination.page = 1
     loadData()
   } catch (error) {
     ElMessage.error('批量删除失败')

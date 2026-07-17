@@ -22,6 +22,7 @@ from app.models.user import User
 from app.services.machine_code_service import MachineCodeService
 from app.services.machine_code_permission_service import MachineCodePermissionService
 from app.services.rbac_service import Permission, rbac_service
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -617,7 +618,6 @@ async def export_organization_pass_codes(
 
     try:
         from app.services.export_service import ExcelExportService
-from app.core.transaction import safe_commit
         import io
 
         service = MachineCodeService(db)

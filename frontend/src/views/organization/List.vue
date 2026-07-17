@@ -289,7 +289,8 @@ async function handleDelete(row: any) {
     // 显示后端返回的消息
     ElMessage.success(response.data?.message || '组织已删除')
 
-    // 刷新列表
+    // 刷新列表（重置到第1页，确保删除后数据可见）
+    currentPage.value = 1
     await fetchDataWithSort()
   } catch (err: any) {
     if (err !== 'cancel' && err?.toString() !== 'cancel') {

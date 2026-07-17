@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.project import Project
+from app.core.transaction import safe_commit
 from app.models.project_milestone import (
     TRANSITION_REQUIREMENTS,
     VALID_TRANSITIONS,
@@ -324,7 +325,6 @@ async def get_upcoming_milestones(
 ):
     """获取即将到期的里程碑（首页仪表板用）"""
     from datetime import timedelta
-from app.core.transaction import safe_commit
 
     today = date.today()
     deadline = today + timedelta(days=days)

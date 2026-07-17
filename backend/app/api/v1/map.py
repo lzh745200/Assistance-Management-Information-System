@@ -25,6 +25,7 @@ from ...core.security import get_current_user
 from ...models.school import School
 from ...models.supported_village import SupportedVillage
 from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -269,7 +270,6 @@ async def get_regions(
 ):
     """获取行政区划数据（含 GeoJSON geometry），用于地图边界渲染和多级下钻"""
     from app.models.region import Region
-from app.core.transaction import safe_commit
 
     query = db.query(Region)
     if level:

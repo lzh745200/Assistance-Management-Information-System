@@ -104,8 +104,7 @@ export async function confirmImport(
  * 下载数据包
  */
 export async function downloadDataPackage(id: number): Promise<Blob> {
-  const response = await apiRequest({ method: 'GET', url: `${BASE_URL}/${id}/download`, responseType: 'blob' })
-  return response.data
+  return apiRequest<Blob>({ method: 'GET', url: `${BASE_URL}/${id}/download`, responseType: 'blob' })
 }
 
 /**

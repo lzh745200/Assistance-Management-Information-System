@@ -17,6 +17,7 @@ from app.core.security import get_current_user
 from app.core.config import settings
 from app.services.update_log_service import UpdateLogService
 from app.models.system_config import SystemUpdateLog
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -223,7 +224,6 @@ async def delete_update_log(
     需要管理员权限。
     """
     from app.core.permission_utils import is_admin
-from app.core.transaction import safe_commit
     if not is_admin(current_user):
         raise HTTPException(status_code=403, detail="仅超级管理员可删除更新日志")
 

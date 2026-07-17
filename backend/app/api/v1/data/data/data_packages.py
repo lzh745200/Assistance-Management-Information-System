@@ -32,6 +32,7 @@ from app.schemas.data_package import (DataPackageConfirmRequest,
 from app.services.data_package_service import DataPackageService
 from app.services.import_export_history_service import \
     ImportExportHistoryService
+from app.core.transaction import safe_commit
 from app.services.organization_permission_service import \
     OrganizationPermissionService
 
@@ -811,7 +812,6 @@ async def upload_encrypted_package(
 
         # 创建数据包记录
         from app.models.data_package import PackageStatus
-from app.core.transaction import safe_commit
 
         package = service._create_package_record(
             file_path=temp_file_path,
@@ -824,7 +824,7 @@ from app.core.transaction import safe_commit
         # 如果检测到加密，更新记录
         if is_encrypted:
             package.is_encrypted = True
-            service.safe_commit(db)
+            safe_commit(service.db)
 
         return DataPackageResponse(
             id=package.id,

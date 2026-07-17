@@ -56,7 +56,7 @@ export async function getMessages(params?: {
   message_type?: MessageType
   is_read?: boolean
 }): Promise<MessageListResponse> {
-  const response = await get<MessageListResponse>('/messages', { params })
+  const response = await get<MessageListResponse>('/messages', params)
   return response
 }
 

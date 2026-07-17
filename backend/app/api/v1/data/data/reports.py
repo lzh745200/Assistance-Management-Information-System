@@ -31,6 +31,7 @@ from app.schemas.supported_village import (
 )
 from app.services.analytics_service import AnalyticsService
 from app.services.report_service import ReportService
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -635,7 +636,6 @@ async def generate_report(
     """
     try:
         from app.models.supported_village import SupportedVillage
-from app.core.transaction import safe_commit
 
         # 构建报表数据
         report_data = {

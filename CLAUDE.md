@@ -74,6 +74,14 @@ docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml --profile 
 docker compose -f docker-compose.yml -f docker/docker-compose.e2e.yml --profile performance up
 ```
 
+**已修复的测试问题**（2026-07-15）：
+- ✅ 修复 20+ 个后端 API 文件中 `from app.core.transaction import safe_commit` 错误缩进导致的 `SyntaxError`/`IndentationError`（影响 11 个路由模块加载失败）
+- ✅ 修复 `test_comprehensive_coverage.py` 中 3 个 `pytest.skip()` 调用 → 改为直接断言，消除所有跳过的测试
+- ✅ 修复 `test_core_transaction.py` 中 `with_transaction` 装饰器 `_execute_in_transaction` 函数缺少 `return` 语句导致返回 `None`（4 个失败测试）
+- ✅ 修复 `pyproject.toml` 与 `pytest.ini` 配置冲突警告（统一到 `pytest.ini`，移除 `[tool.pytest.ini_options]` 段）
+- ✅ 修复 `test_comprehensive_coverage.py` 中 `SCHEMA_FILES` 列表引用不存在的 schema 模块（`rbac`/`approval`/`audit`/`effectiveness`）→ 更新为实际存在的模块
+- ✅ 修复前端 `smoke.test.ts` 中 Vite 动态导入警告（添加 `.ts` 文件扩展名 + `@vite-ignore` 注释）
+
 **已知预存测试错误**（非本次修复引入）：
 - `test_import_export_history_service_full` + `test_token_blacklist_service_full`（16 errors）
 - `test_chart.py` 导入错误（matplotlib 未安装）

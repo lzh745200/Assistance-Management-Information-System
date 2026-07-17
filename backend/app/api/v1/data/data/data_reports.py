@@ -25,6 +25,7 @@ from app.schemas.data_report import (DataReportCreate, DataReportListResponse,
 from app.services.data_report_service import (DataReportService,
                                               ReportNotFoundError,
                                               ReportStatusError)
+from app.core.transaction import safe_commit
 from app.services.organization_permission_service import \
     OrganizationPermissionService
 
@@ -233,7 +234,7 @@ async def cancel_report(
 
     report.status = ReportStatus.CANCELLED.value
     report.comment = reason
-    service.safe_commit(db)
+    safe_commit(service.db)
     service.db.refresh(report)
 
     return DataReportResponse.model_validate(report)
@@ -313,7 +314,7 @@ async def approve_data_report(
     report.reviewed_by = current_user.id
     report.comment = comment
 
-    service.safe_commit(db)
+    safe_commit(service.db)
     service.db.refresh(report)
 
     return DataReportResponse.model_validate(report)
@@ -440,7 +441,6 @@ async def download_data_report(
 ):
     """下载上报数据包文件"""
     from app.models.data_package import DataPackage
-from app.core.transaction import safe_commit
 
     report = service.get_report(report_id)
     if not report:

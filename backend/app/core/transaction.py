@@ -248,7 +248,7 @@ def _execute_in_transaction(db: Optional[Session], func: Callable, args, kwargs,
                             isolation: Optional[str], readonly: bool):
     """Execute function within a transaction, handling commit/rollback."""
     if db is not None:
-        _execute_with_existing_session(db, func, args, kwargs, isolation, readonly)
+        return _execute_with_existing_session(db, func, args, kwargs, isolation, readonly)
     else:
         return _execute_with_new_session(func, args, kwargs, isolation, readonly)
 

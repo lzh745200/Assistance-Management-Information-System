@@ -13,6 +13,7 @@ from app.core.database import get_db
 from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.work_log import WorkLog
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/work-logs", tags=["工作日志"])
@@ -316,7 +317,6 @@ async def get_calendar_events(
     role = getattr(current_user, "role", "")
     if role not in ("admin", "super_admin", "manager"):
         from sqlalchemy import or_ as sa_or
-from app.core.transaction import safe_commit
 
         query = query.filter(
             sa_or(

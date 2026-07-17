@@ -236,6 +236,22 @@ Scheduled daily at 2:00 UTC + manual trigger (`workflow_dispatch`). Three jobs:
 
 ## Known Issues & Fixes
 
+### Pytest Config Conflict (Fixed 2026-07-15)
+
+Previously, both `pytest.ini` and `pyproject.toml` had `[tool.pytest.ini_options]` sections, causing pytest to warn: `WARNING: ignoring pytest config in pyproject.toml!`. Fixed by consolidating all pytest config into `pytest.ini` and removing the `[tool.pytest.ini_options]` section from `pyproject.toml`. The `pyproject.toml` now only retains `[tool.coverage.*]` sections.
+
+### Misplaced `safe_commit` Import (Fixed 2026-07-15)
+
+A previous automated edit inserted `from app.core.transaction import safe_commit` at wrong indentation levels inside 20+ API files, causing `SyntaxError`/`IndentationError` in 11 route modules. All instances have been removed — the import belongs at module top-level (already present in most files) or should use `safe_commit(db)` at call site without a local import.
+
+### `with_transaction` Missing Return (Fixed 2026-07-15)
+
+`_execute_in_transaction()` in `app/core/transaction.py` was missing `return` before `_execute_with_existing_session()` call, causing all `@with_transaction`-decorated functions with an existing session to return `None`. Fixed by adding the missing `return` statement.
+
+### `pytest.skip()` Removal (Fixed 2026-07-15)
+
+Removed all 3 `pytest.skip()` calls in `test_comprehensive_coverage.py` — tests now fail on import errors instead of silently skipping. Also updated `SCHEMA_FILES` list to reference actual existing schema modules.
+
 ### WinError 10054 (Connection Reset)
 
 Auto-fixed by `app/utils/win_proactor_fix.py`. Loaded by `start.py` and `main.py`. No action needed.

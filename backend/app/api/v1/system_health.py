@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/system-health", tags=["系统健壮性"])
@@ -83,7 +84,6 @@ async def run_integrity_check(
         warnings = []
         try:
             from app.core.database_indexes import EXTRA_INDEXES
-from app.core.transaction import safe_commit
 
             expected_custom_indexes = set()
             for idx_name, _, _ in EXTRA_INDEXES:

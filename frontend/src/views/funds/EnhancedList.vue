@@ -89,6 +89,38 @@
             <el-option label="已审计" value="audited" />
           </el-select>
         </el-form-item>
+        <el-form-item label="帮扶村">
+          <el-select
+            v-model="filterForm.village_id"
+            placeholder="全部村"
+            clearable
+            filterable
+            style="width: 160px"
+          >
+            <el-option
+              v-for="v in villageOptions"
+              :key="v.id"
+              :label="v.name"
+              :value="v.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="帮扶学校">
+          <el-select
+            v-model="filterForm.school_id"
+            placeholder="全部学校"
+            clearable
+            filterable
+            style="width: 160px"
+          >
+            <el-option
+              v-for="s in schoolOptions"
+              :key="s.id"
+              :label="s.name"
+              :value="s.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>搜索
@@ -269,6 +301,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Search, Tickets } from '@element-plus/icons-vue'
 import { get, del, apiRequest } from '@/api/request'
 import { fundApi } from '@/api/funds'
+import { getSupportedVillages } from '@/api/supportedVillage'
+import { schoolsApi } from '@/api/schools'
 import { downloadImportTemplateAndSave } from '@/api/import'
 
 const phaseLabels: Record<number, string> = {
@@ -299,7 +333,13 @@ const filterForm = reactive({
   keyword: '',
   type: '',
   status: '',
+  village_id: '' as string | number,
+  school_id: '' as string | number,
 })
+
+// 帮扶村/学校下拉选项
+const villageOptions = ref<{ id: number; name: string }[]>([])
+const schoolOptions = ref<{ id: number; name: string }[]>([])
 
 // 服务端统计数据（全量准确）
 const serverStats = ref<any>(null)
@@ -358,6 +398,8 @@ async function fetchData() {
         keyword: filterForm.keyword || undefined,
         fund_type: filterForm.type || undefined,
         status: filterForm.status || undefined,
+        village_id: filterForm.village_id || undefined,
+        school_id: filterForm.school_id || undefined,
       }})
     const resData = response.data
     tableData.value =
@@ -378,6 +420,8 @@ function handleReset() {
   filterForm.keyword = ''
   filterForm.type = ''
   filterForm.status = ''
+  filterForm.village_id = ''
+  filterForm.school_id = ''
   currentPage.value = 1
   fetchData()
 }
@@ -571,9 +615,33 @@ async function handleBatchExport() {
   }
 }
 
+async function loadVillageOptions() {
+  try {
+    const res = await getSupportedVillages({ page: 1, page_size: 9999 })
+    const body: any = res.data || res
+    const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
+    villageOptions.value = items.map((v: any) => ({ id: v.id, name: v.village_name || v.name || `村${v.id}` }))
+  } catch {
+    /* 非关键路径，静默失败 */
+  }
+}
+
+async function loadSchoolOptions() {
+  try {
+    const res = await schoolsApi.list({ page: 1, page_size: 9999 })
+    const body: any = res.data || res
+    const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
+    schoolOptions.value = items.map((s: any) => ({ id: s.id, name: s.school_name || s.name || `学校${s.id}` }))
+  } catch {
+    /* 非关键路径，静默失败 */
+  }
+}
+
 onMounted(() => {
   fetchData()
   loadStats()
+  loadVillageOptions()
+  loadSchoolOptions()
 })
 </script>
 

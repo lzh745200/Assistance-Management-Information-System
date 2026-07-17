@@ -329,7 +329,8 @@ async def create_transaction(
     write_work_log(
         db, "fund_budget", "create_transaction", transaction.id,
         f"支出明细: {data.purpose}",
-        user_id=current_user.id, username=getattr(current_user, "full_name", None) or getattr(current_user, "username", ""),
+        user_id=current_user.id,
+        username=getattr(current_user, "full_name", None) or getattr(current_user, "username", ""),
         detail=f"金额: {data.amount} 万元",
     )
     return transaction
