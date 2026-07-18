@@ -80,14 +80,14 @@
       "target": [
         "nsis"
       ],
-      "icon": "resources/icons/app.ico"
+      "icon": "resources/icons/app-circle.ico"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": true,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "resources/icons/app.ico",
-      "uninstallerIcon": "resources/icons/app.ico",
+      "installerIcon": "resources/icons/app-circle.ico",
+      "uninstallerIcon": "resources/icons/app-circle.ico",
       "include": "build-scripts/electron-builder-nsis-hook.nsh",
       "shortcutName": "帮扶管理系统",
       "createDesktopShortcut": true,
