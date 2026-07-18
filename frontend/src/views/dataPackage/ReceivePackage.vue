@@ -57,9 +57,7 @@
       </template>
 
       <template #footer>
-        <el-button
-          @click="clearLocalImport(); showLocalImport = false"
-        >
+        <el-button @click="closeLocalImport">
           {{ localImportStep === 2 ? '关闭' : '取消' }}
         </el-button>
         <el-button
@@ -523,6 +521,11 @@ function clearLocalImport() {
   localImportInfo.fileName = ''
   localImportInfo.packageId = ''
   localUploadRef.value?.clearFiles?.()
+}
+
+function closeLocalImport() {
+  clearLocalImport()
+  showLocalImport.value = false
 }
 
 // 生命周期
