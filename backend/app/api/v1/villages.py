@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query as QueryParam
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 
 router = APIRouter(prefix="/villages", tags=["村庄管理"])
@@ -49,9 +50,11 @@ async def list_villages(
     from app.core.data_permission import filter_by_data_scope
     query = filter_by_data_scope(query, Village, current_user, db=db)
 
+    # 先取 total 再分页（避免分页后 total 不准）
+    total = query.count()
     villages = query.offset(skip).limit(limit).all()
 
-    return [
+    items = [
         {
             "id": v.id,
             "name": v.name,
@@ -79,6 +82,10 @@ async def list_villages(
         for v in villages
     ]
 
+    # envelope 格式：{code:200, data:{items,total,...}, message:"成功"}
+    page = (skip // limit) + 1 if limit > 0 else 1
+    return ok_list(items, total, page=page, page_size=limit)
+
 
 @router.get("/{village_id}")
 async def get_village(
@@ -102,6 +109,15 @@ async def get_village(
     )
     if not village:
         raise HTTPException(status_code=404, detail="村庄不存在")
+
+    # 数据权限校验：非本组织/非本人创建且非管理员 → 403（区分"不存在"与"越权"）
+    from app.core.data_permission import check_record_access
+    if current_user is not None and not check_record_access(
+        village, current_user, owner_field="created_by", dept_field="organization_id"
+    ):
+        raise HTTPException(status_code=403, detail="无权访问该村庄")
+
+    from app.utils.common import StringHelper
     return {
         "id": village.id,
         "name": village.name,
@@ -122,7 +138,7 @@ async def get_village(
             {
                 "id": vl.id,
                 "name": vl.name,
-                "phone": vl.phone,
+                "phone": StringHelper.mask_sensitive(vl.phone),
                 "is_poverty": vl.is_poverty,
             }
             for vl in (village.villagers or [])

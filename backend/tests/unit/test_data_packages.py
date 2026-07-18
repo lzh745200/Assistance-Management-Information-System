@@ -812,14 +812,14 @@ class TestExportEncryptedPackage:
 
     def test_no_org_id(self, client_with_mocked_auth):
         with patch("app.api.v1.data.data.data_packages.get_org_with_fallback", return_value=None):
-            resp = client_with_mocked_auth.post(f"{BASE}/export-encrypted", params={"data_types": ["villages"]})
+            resp = client_with_mocked_auth.post(f"{BASE}/export-encrypted", json={"data_types": ["villages"]})
             assert resp.status_code == 400
 
     def test_short_password(self, client_with_mocked_auth):
         with patch("app.api.v1.data.data.data_packages.get_org_with_fallback", return_value=1):
             resp = client_with_mocked_auth.post(
                 f"{BASE}/export-encrypted",
-                params={"data_types": ["villages"], "password": "short"}
+                json={"data_types": ["villages"], "password": "short"}
             )
             assert resp.status_code == 400
 
@@ -838,7 +838,7 @@ class TestExportEncryptedPackage:
             with _override_deps(client_with_mocked_auth, svc=mock_svc, hist=MagicMock()):
                 resp = client_with_mocked_auth.post(
                     f"{BASE}/export-encrypted",
-                    params={"data_types": ["villages"], "password": "longenough"}
+                    json={"data_types": ["villages"], "password": "longenough"}
                 )
                 assert resp.status_code == 200
                 assert resp.json()["package_id"] == 1
@@ -850,7 +850,7 @@ class TestExportEncryptedPackage:
             with _override_deps(client_with_mocked_auth, svc=mock_svc, hist=MagicMock()):
                 resp = client_with_mocked_auth.post(
                     f"{BASE}/export-encrypted",
-                    params={"data_types": ["villages"], "password": "longenough"}
+                    json={"data_types": ["villages"], "password": "longenough"}
                 )
                 assert resp.status_code == 500
 
@@ -928,7 +928,7 @@ class TestDecryptAndPreviewPackage:
         with _override_deps(client_with_mocked_auth, svc=mock_svc):
             resp = client_with_mocked_auth.post(
                 f"{BASE}/decrypt-preview/1",
-                params={"password": "decrypt123"}
+                json={"password": "decrypt123"}
             )
             assert resp.status_code == 200
             assert resp.json()["decrypted"] is True
@@ -940,7 +940,7 @@ class TestDecryptAndPreviewPackage:
         with _override_deps(client_with_mocked_auth, svc=mock_svc):
             resp = client_with_mocked_auth.post(
                 f"{BASE}/decrypt-preview/1",
-                params={"password": "wrong"}
+                json={"password": "wrong"}
             )
             assert resp.status_code == 400
 
@@ -950,7 +950,7 @@ class TestDecryptAndPreviewPackage:
         with _override_deps(client_with_mocked_auth, svc=mock_svc):
             resp = client_with_mocked_auth.post(
                 f"{BASE}/decrypt-preview/1",
-                params={"password": "test1234"}
+                json={"password": "test1234"}
             )
             assert resp.status_code == 500
 

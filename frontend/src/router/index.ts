@@ -557,7 +557,7 @@ export const routes: RouteRecordRaw[] = [
         path: '/system/feedback',
         name: 'SystemFeedback',
         component: () => retryImport(() => import('@/views/system/Feedback.vue')),
-        meta: { title: '反馈管理' },
+        meta: { title: '反馈管理', roles: ['admin', 'super_admin'] },
       },
       {
         path: '/system/update-logs',

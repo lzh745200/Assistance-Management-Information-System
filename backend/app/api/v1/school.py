@@ -833,7 +833,8 @@ async def list_attachments(
         .order_by(SchoolAttachment.created_at.desc())
         .all()
     )
-    return {"items": [a.to_dict() for a in attachments], "total": len(attachments)}
+    # envelope 格式：前端拦截器自动展开 data.items 到顶层，res.items 仍可用
+    return ok_list(items=[a.to_dict() for a in attachments], total=len(attachments))
 
 
 @router.post("/{school_id}/attachments")
@@ -938,7 +939,8 @@ async def list_projects(
         .order_by(SchoolProject.created_at.desc())
         .all()
     )
-    return {"items": [p.to_dict() for p in items], "total": len(items)}
+    # envelope 格式：前端拦截器自动展开 data.items 到顶层，res.items 仍可用
+    return ok_list(items=[p.to_dict() for p in items], total=len(items))
 
 
 @router.post("/{school_id}/projects")

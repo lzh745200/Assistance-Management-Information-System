@@ -208,7 +208,7 @@ onMounted(() => {
   }
 
   &.local {
-    color: #409eff;
+    color: var(--color-primary);
   }
 }
 
@@ -236,17 +236,17 @@ onMounted(() => {
   }
 
   &.local {
-    background: rgba(64, 158, 255, 0.1);
-    border-color: rgba(64, 158, 255, 0.3);
+    background: rgba(45, 106, 79, 0.1);
+    border-color: rgba(45, 106, 79, 0.3);
 
     &:hover {
-      background: rgba(64, 158, 255, 0.2);
-      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+      background: rgba(45, 106, 79, 0.2);
+      box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
     }
 
     .level-icon {
-      background: rgba(64, 158, 255, 0.2);
-      color: #409eff;
+      background: rgba(45, 106, 79, 0.2);
+      color: var(--color-primary);
     }
   }
 }

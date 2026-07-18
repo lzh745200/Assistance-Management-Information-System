@@ -46,7 +46,7 @@
             :key="log.id"
             :timestamp="formatDate(log.created_at)"
             placement="top"
-            :color="log.version === latestLog?.version ? '#409eff' : '#909399'"
+            :color="log.version === latestLog?.version ? 'var(--color-primary)' : '#909399'"
           >
             <el-card shadow="hover" class="timeline-item-card">
               <div class="log-header">
@@ -252,7 +252,7 @@ onMounted(() => {
 
 .latest-card {
   margin-bottom: 20px;
-  border-left: 4px solid #409eff;
+  border-left: 4px solid var(--color-primary);
 
   .latest-header {
     display: flex;

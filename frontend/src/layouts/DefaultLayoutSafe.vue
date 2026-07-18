@@ -374,7 +374,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useKeyboardShortcuts, type Shortcut } from '@/composables/useKeyboardShortcuts'
@@ -419,6 +419,22 @@ onMounted(async () => {
 })
 
 const isCollapsed = ref(false)
+
+// ── 窄屏（< 768px）自动收起侧边栏 ──
+// 只在进入窄屏时强制压窄为 68px；回到宽屏时不改写用户的折叠偏好
+const narrowMq = window.matchMedia('(max-width: 767px)')
+function handleNarrowChange(e: MediaQueryListEvent | MediaQueryList) {
+  if (e.matches) {
+    isCollapsed.value = true
+  }
+}
+onMounted(() => {
+  handleNarrowChange(narrowMq)
+  narrowMq.addEventListener('change', handleNarrowChange)
+})
+onUnmounted(() => {
+  narrowMq.removeEventListener('change', handleNarrowChange)
+})
 const username = computed(() => authStore.user?.username || authStore.user?.full_name || '管理员')
 const currentRoute = computed(() => (route.meta?.title as string) || '')
 
@@ -952,6 +968,21 @@ function handleCommand(command: string) {
 }
 .skip-link:focus {
   top: 0;
+}
+
+/* ===================================================================
+   窄屏响应式（< 768px）
+   底部 MobileBottomNav 已覆盖主导航，隐藏侧边栏避免挤压主内容
+   =================================================================== */
+@media (max-width: 767px) {
+  .layout-aside {
+    display: none;
+  }
+
+  /* MobileBottomNav 固定底部高 56px，为滚动容器留出底部净空，避免遮挡内容 */
+  .layout-content {
+    padding-bottom: calc(56px + var(--spacing-md));
+  }
 }
 </style>
 

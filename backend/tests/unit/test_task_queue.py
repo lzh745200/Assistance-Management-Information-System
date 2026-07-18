@@ -403,9 +403,21 @@ class TestTaskQueueWrapper:
         task_id = await q.submit_task(dummy)
         assert task_id is not None
 
-    def test_get_status_executes_line(self):
+    def test_get_status_not_found(self):
         from app.services.task_queue import TaskQueue
-        import pytest
         q = TaskQueue()
-        with pytest.raises(AttributeError):
-            q.get_status("tid")
+        assert q.get_status("nonexistent") is None
+
+    @pytest.mark.asyncio
+    async def test_get_status_found(self):
+        from app.services.task_queue import TaskQueue
+        q = TaskQueue()
+
+        async def dummy():
+            return 1
+
+        task_id = await q.submit_task(dummy)
+        status = q.get_status(task_id)
+        assert status is not None
+        assert status["id"] == task_id
+        assert status["status"] == "pending"

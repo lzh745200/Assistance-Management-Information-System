@@ -38,6 +38,8 @@ class UserInfo(BaseModel):
     organization_id: Optional[int] = Field(None, description="所属组织ID")
     organization_name: Optional[str] = Field(None, description="所属组织名称")
     permissions: Optional[list] = Field(default_factory=list, description="权限列表")
+    allowed_menus: Optional[list] = Field(None, description="允许访问的菜单列表")
+    allowed_menus_list: Optional[list] = Field(None, description="允许访问的菜单key列表")
 
 
 class LoginData(BaseModel):

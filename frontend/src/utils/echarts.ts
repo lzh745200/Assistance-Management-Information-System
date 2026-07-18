@@ -1,6 +1,6 @@
 // ECharts tree-shaking — 按需注册组件，替代全量 import * as echarts
 import * as echarts from 'echarts/core'
-import { BarChart, LineChart, PieChart, ScatterChart, RadarChart } from 'echarts/charts'
+import { BarChart, LineChart, PieChart, ScatterChart, RadarChart, MapChart } from 'echarts/charts'
 import {
   TitleComponent,
   TooltipComponent,
@@ -8,6 +8,7 @@ import {
   GridComponent,
   DataZoomComponent,
   ToolboxComponent,
+  GeoComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
@@ -17,12 +18,14 @@ echarts.use([
   PieChart,
   ScatterChart,
   RadarChart,
+  MapChart,
   TitleComponent,
   TooltipComponent,
   LegendComponent,
   GridComponent,
   DataZoomComponent,
   ToolboxComponent,
+  GeoComponent,
   CanvasRenderer,
 ])
 

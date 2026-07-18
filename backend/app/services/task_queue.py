@@ -295,7 +295,7 @@ class TaskQueue:
         return await self._queue.submit(func, *args, name=name, priority=priority, **kwargs)
 
     def get_status(self, task_id: str):
-        return self._queue.get_status(task_id)
+        return self._queue.get_task(task_id)
 
     @staticmethod
     def create(db: Session = None) -> "TaskQueue":

@@ -11,6 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import success_response
 from app.core.security import get_current_user
 from app.core.transaction import safe_commit
 
@@ -56,11 +57,13 @@ async def get_system_overview(
     else:
         overall = "ok"
 
-    return {
-        "overall_status": overall,
-        "checks": checks,
-        "timestamp": datetime.now().isoformat(),
-    }
+    return success_response(
+        data={
+            "overall_status": overall,
+            "checks": checks,
+            "timestamp": datetime.now().isoformat(),
+        }
+    )
 
 
 # ==================== SQLite 完整性校验 ====================
@@ -106,21 +109,25 @@ async def run_integrity_check(
         except Exception as idx_err:
             logger.warning("索引数量校验失败: %s", idx_err)
 
-        return {
-            "status": "ok" if is_ok else "error",
-            "messages": messages,
-            "warnings": warnings,
-            "elapsed_seconds": elapsed,
-            "timestamp": datetime.now().isoformat(),
-        }
+        return success_response(
+            data={
+                "status": "ok" if is_ok else "error",
+                "messages": messages,
+                "warnings": warnings,
+                "elapsed_seconds": elapsed,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
     except Exception as e:
-        return {
-            "status": "error",
-            "messages": [str(e)],
-            "warnings": [],
-            "elapsed_seconds": round(time.time() - start, 2),
-            "timestamp": datetime.now().isoformat(),
-        }
+        return success_response(
+            data={
+                "status": "error",
+                "messages": [str(e)],
+                "warnings": [],
+                "elapsed_seconds": round(time.time() - start, 2),
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
 
 # ==================== WAL 检查点 ====================
@@ -137,23 +144,27 @@ async def run_wal_checkpoint(
         result = db.execute(text("PRAGMA wal_checkpoint(TRUNCATE)")).fetchone()
         after_wal = _check_wal_status(db)
 
-        return {
-            "status": "ok",
-            "result": {
-                "busy": result[0] if result else None,
-                "log_pages": result[1] if result else None,
-                "checkpointed_pages": result[2] if result else None,
-            },
-            "before": before_wal,
-            "after": after_wal,
-            "timestamp": datetime.now().isoformat(),
-        }
+        return success_response(
+            data={
+                "status": "ok",
+                "result": {
+                    "busy": result[0] if result else None,
+                    "log_pages": result[1] if result else None,
+                    "checkpointed_pages": result[2] if result else None,
+                },
+                "before": before_wal,
+                "after": after_wal,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "timestamp": datetime.now().isoformat(),
-        }
+        return success_response(
+            data={
+                "status": "error",
+                "message": str(e),
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
 
 # ==================== 磁盘空间监控 ====================
@@ -164,7 +175,7 @@ async def get_disk_space(
     current_user=Depends(get_current_user),
 ):
     """获取磁盘空间详情"""
-    return _check_disk_space()
+    return success_response(data=_check_disk_space())
 
 
 # ==================== 数据库表统计 ====================
@@ -190,7 +201,7 @@ async def get_table_stats(
         except Exception:
             stats.append({"table": table_name, "rows": -1, "error": True})
 
-    return {"tables": stats, "total_tables": len(stats), "total_rows": total_rows}
+    return success_response(data={"tables": stats, "total_tables": len(stats), "total_rows": total_rows})
 
 
 # ==================== VACUUM（数据库压缩） ====================
@@ -210,19 +221,23 @@ async def run_vacuum(
         elapsed = round(time.time() - start, 2)
         db_info_after = _get_db_file_info(db)
         saved = db_info_before.get("size_mb", 0) - db_info_after.get("size_mb", 0)
-        return {
-            "status": "ok",
-            "before_size_mb": db_info_before.get("size_mb"),
-            "after_size_mb": db_info_after.get("size_mb"),
-            "saved_mb": round(saved, 2),
-            "elapsed_seconds": elapsed,
-        }
+        return success_response(
+            data={
+                "status": "ok",
+                "before_size_mb": db_info_before.get("size_mb"),
+                "after_size_mb": db_info_after.get("size_mb"),
+                "saved_mb": round(saved, 2),
+                "elapsed_seconds": elapsed,
+            }
+        )
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "elapsed_seconds": round(time.time() - start, 2),
-        }
+        return success_response(
+            data={
+                "status": "error",
+                "message": str(e),
+                "elapsed_seconds": round(time.time() - start, 2),
+            }
+        )
 
 
 # ==================== 内部函数 ====================

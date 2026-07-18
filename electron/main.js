@@ -156,30 +156,15 @@ function checkPortInUse(port) {
   });
 }
 
-function killProcessOnPort(port) {
-  return new Promise((resolve) => {
-    console.warn(`[Port] 强制终止端口 ${port}`);
-    writeDiagnosticLog(`强制终止端口 ${port}`);
-    const onExit = () => setTimeout(resolve, 500);
-    if (process.platform === 'win32') {
-      const proc = spawn('cmd.exe', ['/c', `for /f "tokens=5" %a in ('netstat -aon ^| findstr :${port} ^| findstr LISTENING') do taskkill /f /pid %a`], { windowsHide: true });
-      proc.on('exit', onExit);
-    } else {
-      const proc = spawn('sh', ['-c', `lsof -ti:${port} | xargs kill -9 2>/dev/null`]);
-      proc.on('exit', onExit);
-    }
-  });
-}
-
 async function findAvailablePort(startPort, maxAttempts) {
+  // 不再强杀端口占用进程（可能误杀同机第三方服务），直接顺移探测备用端口
   for (let i = 0; i < maxAttempts; i++) {
     const port = startPort + i;
     const inUse = await checkPortInUse(port);
     if (!inUse) return port;
     if (i === 0) {
-      await killProcessOnPort(port);
-      const still = await checkPortInUse(port);
-      if (!still) return port;
+      console.warn(`[Port] 默认端口 ${port} 被占用，尝试备用端口...`);
+      writeDiagnosticLog(`默认端口 ${port} 被占用，尝试备用端口`);
     }
   }
   return null;
@@ -581,9 +566,24 @@ function setupIpcHandlers() {
     ipcMain.handle('worker-stats', () => workerPool.stats);
   } catch (_) {}
   ipcMain.handle('read-file-chunked', async (_, filePath, chunkSize) => {
+    // 路径白名单：仅允许应用数据目录/安装目录/系统临时目录，
+    // 并显式拒绝密钥文件，防止被注入的渲染进程读取任意文件（如 SECRET_KEY）
+    const os = require('os');
+    const resolved = path.resolve(String(filePath || ''));
+    const allowedRoots = [app.getPath('userData'), app.getAppPath(), os.tmpdir()]
+      .map((p) => path.resolve(p));
+    const inScope = allowedRoots.some(
+      (root) => resolved === root || resolved.startsWith(root + path.sep)
+    );
+    const lower = resolved.toLowerCase();
+    const isSecrets = lower.includes('runtime_secrets.json') || lower.includes('secrets.json');
+    if (!inScope || isSecrets) {
+      console.warn(`[IPC] read-file-chunked 拒绝越界路径: ${resolved}`);
+      return { error: 'forbidden-path' };
+    }
     return new Promise((resolve) => {
       const chunks = [];
-      const stream = fs.createReadStream(filePath, { highWaterMark: chunkSize || 256 * 1024, encoding: 'base64' });
+      const stream = fs.createReadStream(resolved, { highWaterMark: chunkSize || 256 * 1024, encoding: 'base64' });
       stream.on('data', (chunk) => chunks.push(chunk));
       stream.on('end', () => resolve({ data: chunks.join('') }));
       stream.on('error', () => resolve({ error: 'read-failed' }));

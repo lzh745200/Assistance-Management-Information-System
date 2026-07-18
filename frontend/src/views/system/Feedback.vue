@@ -46,7 +46,7 @@
         </el-table-column>
         <el-table-column prop="contact" label="联系方式" width="150">
           <template #default="{ row }">
-            {{ row.contact || '-' }}
+            {{ row.contact ? ds(row.contact, 'email') : '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="提交时间" width="180" />
@@ -73,7 +73,7 @@
           currentItem?.username || '匿名'
         }}</el-descriptions-item>
         <el-descriptions-item label="联系方式">{{
-          currentItem?.contact || '-'
+          currentItem?.contact ? ds(currentItem.contact, 'email') : '-'
         }}</el-descriptions-item>
         <el-descriptions-item label="时间">{{ currentItem?.created_at }}</el-descriptions-item>
       </el-descriptions>
@@ -85,6 +85,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { apiRequest } from '@/api/request'
+import { useDesensitize } from '@/composables/useDesensitize'
+
+const { ds } = useDesensitize()
 
 const loading = ref(false)
 const tableData = ref<any[]>([])

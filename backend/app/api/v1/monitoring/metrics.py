@@ -3,6 +3,8 @@
 提供业务指标查询和 Prometheus 格式导出
 """
 
+import logging
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -11,6 +13,8 @@ from app.core.security import get_current_active_user
 from app.middleware.metrics_middleware import metrics_store
 from app.models.user import User
 from app.services.business_metrics_service import business_metrics_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/metrics", tags=["监控指标"])
 
@@ -80,8 +84,9 @@ async def get_performance_dashboard(
                 db_stats["db_size_mb"] = round(page_count * page_size / 1024 / 1024, 2)
         finally:
             db.close()
-    except Exception:
-        pass
+    except Exception as e:
+        # 数据库统计收集失败不应拖垮整个监控接口，但必须留痕
+        logger.warning("数据库统计收集失败，返回空统计: %s", e, exc_info=True)
 
     return {
         "code": 200,

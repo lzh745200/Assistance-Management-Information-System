@@ -273,6 +273,7 @@ async def create_category(
     db: Session = Depends(get_db),
 ):
     """创建政策分类"""
+    require_manager_role(current_user)
     if data.code:
         existing = db.query(PolicyCategory).filter(PolicyCategory.code == data.code).first()
         if existing:
@@ -293,6 +294,7 @@ async def update_category(
     db: Session = Depends(get_db),
 ):
     """更新政策分类"""
+    require_manager_role(current_user)
     category = db.query(PolicyCategory).filter(PolicyCategory.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="分类不存在")
@@ -311,6 +313,7 @@ async def delete_category(
     db: Session = Depends(get_db),
 ):
     """删除政策分类"""
+    require_manager_role(current_user)
     category = db.query(PolicyCategory).filter(PolicyCategory.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="分类不存在")
@@ -410,6 +413,7 @@ async def import_policies_excel(
     db: Session = Depends(get_db),
 ):
     """从 Excel 导入政策（旧路径兼容）"""
+    require_manager_role(current_user)
     return await import_policies(file=file, current_user=current_user, db=db)
 
 

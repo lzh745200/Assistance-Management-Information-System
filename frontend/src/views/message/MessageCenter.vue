@@ -294,6 +294,7 @@ async function handleDelete(message: Message) {
     })
     await deleteMessages([message.id])
     ElMessage.success('删除成功')
+    page.value = 1 // 重置到第1页，确保删除后的数据列表可见
     loadMessages()
   } catch {
     // 用户取消
@@ -316,6 +317,7 @@ async function handleBatchDelete() {
     const ids = selectedMessages.value.map((m) => m.id)
     await deleteMessages(ids)
     ElMessage.success('删除成功')
+    page.value = 1 // 重置到第1页，确保批量删除后的数据列表可见
     loadMessages()
   } catch {
     // 用户取消
@@ -404,7 +406,7 @@ onUnmounted(() => {
   }
 
   :deep(.unread-row) {
-    background-color: #f0f9ff;
+    background-color: var(--color-primary-light-8);
   }
 }
 

@@ -3,7 +3,7 @@
     <el-row :gutter="16">
       <el-col v-for="tpl in displayTemplates" :key="tpl.type" :xs="24" :sm="12" :md="8" :lg="6">
         <el-card shadow="hover" :body-style="{ padding: '20px', textAlign: 'center' }">
-          <el-icon :size="36" color="#409EFF"><Document /></el-icon>
+          <el-icon :size="36" color="var(--color-primary)"><Document /></el-icon>
           <h4 style="margin: 12px 0 4px; font-size: 15px">{{ tpl.label }}模板</h4>
           <p style="color: #909399; font-size: 12px; margin-bottom: 16px; min-height: 32px">
             {{ tpl.desc }}

@@ -4,27 +4,34 @@
     <div class="timeline-section">
       <h3 class="section-title">近期动态</h3>
       <div class="timeline-list">
-        <div v-for="item in activities" :key="item.id" class="timeline-item">
-          <span class="tl-time">{{ formatTime(item.time || item.created_at) }}</span>
-          <span class="tl-dot" />
-          <template v-if="editingId === item.id">
-            <input v-model="editForm.action" class="tl-edit-input" placeholder="操作" />
-            <input v-model="editForm.target" class="tl-edit-input" placeholder="目标" />
-            <button class="tl-save-btn" @click="saveEdit(item.id)">保存</button>
-            <button class="tl-cancel-btn" @click="editingId = null">取消</button>
-          </template>
-          <template v-else>
-            <span class="tl-text">{{ item.action || item.description || '--' }}</span>
-            <span v-if="item.target" class="tl-target">— {{ item.target }}</span>
-            <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">
-              <el-icon><EditPen /></el-icon>
-            </button>
-            <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">
-              <el-icon><Close /></el-icon>
-            </button>
-          </template>
+        <div v-if="loading" class="tl-state">加载中...</div>
+        <div v-else-if="error && activities.length === 0" class="tl-state tl-state--error">
+          <span>数据加载失败，请稍后重试</span>
+          <el-button size="small" type="primary" @click="loadActivities">重试</el-button>
         </div>
-        <div v-if="activities.length === 0" class="tl-empty">暂无动态</div>
+        <template v-else>
+          <div v-for="item in activities" :key="item.id" class="timeline-item">
+            <span class="tl-time">{{ formatTime(item.time || item.created_at) }}</span>
+            <span class="tl-dot" />
+            <template v-if="editingId === item.id">
+              <input v-model="editForm.action" class="tl-edit-input" placeholder="操作" />
+              <input v-model="editForm.target" class="tl-edit-input" placeholder="目标" />
+              <button class="tl-save-btn" @click="saveEdit(item.id)">保存</button>
+              <button class="tl-cancel-btn" @click="editingId = null">取消</button>
+            </template>
+            <template v-else>
+              <span class="tl-text">{{ item.action || item.description || '--' }}</span>
+              <span v-if="item.target" class="tl-target">— {{ item.target }}</span>
+              <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">
+                <el-icon><EditPen /></el-icon>
+              </button>
+              <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">
+                <el-icon><Close /></el-icon>
+              </button>
+            </template>
+          </div>
+          <div v-if="activities.length === 0" class="tl-empty">暂无动态</div>
+        </template>
       </div>
     </div>
 
@@ -37,8 +44,11 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { EditPen, Close } from '@element-plus/icons-vue'
 import { put, del, apiRequest } from '@/api/request'
+import { logger } from '@/utils/logger'
 
 const activities = ref<any[]>([])
+const loading = ref(true)
+const error = ref(false)
 const editingId = ref<string | null>(null)
 const editForm = ref({ action: '', target: '' })
 
@@ -78,6 +88,8 @@ function formatTime(t: string): string {
 }
 
 async function loadActivities() {
+  loading.value = true
+  error.value = false
   try {
     const res = await apiRequest({
       method: 'GET',
@@ -86,8 +98,13 @@ async function loadActivities() {
     })
     const data = (res as any)?.data?.items || (res as any)?.items || []
     activities.value = (Array.isArray(data) ? data : []).slice(0, 10)
-  } catch {
+  } catch (e) {
+    logger.error('近期动态加载失败', e)
+    error.value = true
     activities.value = []
+    ElMessage.error('数据加载失败，请稍后重试')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -227,5 +244,15 @@ onMounted(() => {
   color: #94a3b8;
   font-size: 13px;
   padding: 20px 0;
+}
+.tl-state {
+  text-align: center;
+  color: $color-text-secondary;
+  font-size: 13px;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
 }
 </style>

@@ -13,7 +13,7 @@
  * - 支持标记点（村庄、学校等）、路线连线、出发点标注
  */
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 
 interface Marker {
   lng: number
@@ -164,7 +164,7 @@ function renderMap() {
     return `hsla(${hues[i] || i * 40}, 35%, 85%, 0.7)`
   })
 
-  const option: echarts.EChartsOption = {
+  const option: echarts.EChartsCoreOption = {
     tooltip: {
       trigger: 'item',
       formatter: (params: any) => {

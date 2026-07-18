@@ -19,7 +19,7 @@
             :body-style="{ padding: '20px', textAlign: 'center' }"
             class="template-card"
           >
-            <el-icon :size="32" color="#409EFF"><Document /></el-icon>
+            <el-icon :size="32" color="var(--color-primary)"><Document /></el-icon>
             <h4 style="margin: 12px 0 4px">{{ tpl.label }}模板</h4>
             <p style="color: #909399; font-size: 12px; margin-bottom: 16px">
               {{ tpl.desc }}

@@ -585,7 +585,7 @@ onMounted(() => {
 }
 
 .selection-info {
-  color: #409eff;
+  color: var(--color-primary);
   font-size: 14px;
 }
 

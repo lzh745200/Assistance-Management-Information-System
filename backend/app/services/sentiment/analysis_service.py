@@ -7,7 +7,7 @@
 import heapq
 import re
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 # 情感词典（模块级常量，避免每次调用重建）
 _POSITIVE_WORDS = ["好", "优秀", "棒", "喜欢", "满意", "成功", "提升", "增长"]
@@ -101,6 +101,81 @@ class SentimentAnalysisService:
             return "negative"
         else:
             return "neutral"
+
+    # 舆情预警阈值：负面且分数不高于该值时标记 is_alert
+    ALERT_SCORE_THRESHOLD = -0.4
+
+    @classmethod
+    def analyze_news_batch(cls, db, limit: int = 100) -> int:
+        """批量分析未处理新闻的情感并回写结果。
+
+        Args:
+            db: 数据库会话
+            limit: 单次最多处理条数
+
+        Returns:
+            int: 本次处理的新闻数量
+        """
+        from app.models.sentiment import SentimentNews
+
+        service = cls()
+        news_list = (
+            db.query(SentimentNews)
+            .filter(SentimentNews.processed == False)  # noqa: E712
+            .order_by(SentimentNews.published_at.desc())
+            .limit(limit)
+            .all()
+        )
+        for news in news_list:
+            result = service.analyze_text(news.title or "")
+            news.sentiment_label = result.sentiment
+            news.sentiment_score = result.score
+            news.keywords = ",".join(result.keywords) if result.keywords else (news.keywords or "")
+            news.is_alert = result.sentiment == "negative" and result.score <= cls.ALERT_SCORE_THRESHOLD
+            news.processed = True
+        if news_list:
+            db.commit()
+        return len(news_list)
+
+    @classmethod
+    def generate_hot_keywords(cls, db, days: int = 7, top_k: int = 20) -> List[Dict[str, Any]]:
+        """统计近 N 天新闻热词（标题关键词提取 + 已存 keywords 字段聚合）。
+
+        Returns:
+            [{"word": w, "count": n, "sentiment": 多数派情感标签}]，按词频降序
+        """
+        from collections import Counter
+        from datetime import datetime, timedelta, timezone
+
+        from app.models.sentiment import SentimentNews
+
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        rows = (
+            db.query(SentimentNews.title, SentimentNews.keywords, SentimentNews.sentiment_label)
+            .filter(SentimentNews.published_at >= since)
+            .all()
+        )
+
+        counter: Counter = Counter()
+        sentiment_votes: Dict[str, Counter] = {}
+        for title, stored_keywords, label in rows:
+            words = set(extract_keywords(title or "", top_n=8))
+            for kw in (stored_keywords or "").split(","):
+                kw = kw.strip()
+                if kw:
+                    words.add(kw)
+            for word in words:
+                counter[word] += 1
+                sentiment_votes.setdefault(word, Counter())[label or "neutral"] += 1
+
+        return [
+            {
+                "word": word,
+                "count": count,
+                "sentiment": sentiment_votes[word].most_common(1)[0][0],
+            }
+            for word, count in counter.most_common(top_k)
+        ]
 
 
 def normalize_text(text: str) -> str:

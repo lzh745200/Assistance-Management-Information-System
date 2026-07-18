@@ -248,6 +248,7 @@ tests/**
 !backend/tests/**
 !frontend/src/**/*.test.*
 !frontend/src/**/*.spec.*
+!frontend/tests/**
 
 # ===== requirements 备份与临时文件 =====
 **/requirements.txt.backup

@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from typing import Optional
 
 from app.core.exceptions import BusinessError
 from app.core.security import require_admin
@@ -76,15 +75,10 @@ async def download_tiles(
         if min_zoom > max_zoom:
             raise HTTPException(status_code=400, detail="min_zoom must be <= max_zoom")
 
-        result = await offline_map_service.download_region(
-            min_lat=min_lat,
-            max_lat=max_lat,
-            min_lon=min_lon,
-            max_lon=max_lon,
-            min_zoom=min_zoom,
-            max_zoom=max_zoom,
-        )
-        return result
+        # 服务按区域标识记录已下载区域，由请求参数构造区域标识（同步方法）
+        region = f"{min_lat},{min_lon}-{max_lat},{max_lon}@{min_zoom}-{max_zoom}"
+        success = offline_map_service.download_region(region)
+        return {"success": success, "data": {"region": region}}
 
     except HTTPException:
         raise
@@ -94,18 +88,12 @@ async def download_tiles(
 
 @router.delete("/clear")
 async def clear_tiles(
-    zoom_level: Optional[int] = None,
     current_user=Depends(require_admin()),
 ):
-    """清理瓦片缓存(管理员功能)"""
+    """清理瓦片缓存(管理员功能)，服务层为整体清理，不支持按缩放级别"""
     try:
-        if zoom_level is not None and not (0 <= zoom_level <= 18):
-            raise HTTPException(status_code=400, detail="Invalid zoom level")
+        offline_map_service.clear_cache()
+        return {"success": True, "message": "瓦片缓存已清理"}
 
-        result = await offline_map_service.clear_tiles(zoom_level)
-        return result
-
-    except HTTPException:
-        raise
     except Exception as e:
         raise BusinessError(f"清理瓦片缓存失败: {str(e)}")

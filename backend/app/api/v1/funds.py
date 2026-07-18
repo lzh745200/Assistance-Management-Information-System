@@ -136,7 +136,7 @@ def _fund_to_dict(f: Fund) -> Dict[str, Any]:
     if hasattr(f, "project") and f.project:
         result["project_name"] = f.project.name
     if hasattr(f, "village") and f.village:
-        result["village_name"] = f.village.name
+        result["village_name"] = f.village.village_name
     if hasattr(f, "school") and f.school:
         result["school_name"] = f.school.name
 

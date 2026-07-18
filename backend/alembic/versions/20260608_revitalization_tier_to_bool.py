@@ -23,6 +23,13 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # 幂等守卫：目标终态（is_revitalization_tier 列）已存在则整体跳过
+    insp = sa.inspect(op.get_bind())
+    if insp.has_table("supported_villages"):
+        existing = {c["name"] for c in insp.get_columns("supported_villages")}
+        if "is_revitalization_tier" in existing:
+            return
+
     # 1. 删除旧索引（索引操作 SQLite 也支持）
     op.drop_index("ix_supported_villages_tier", table_name="supported_villages", if_exists=True)
     op.drop_index("ix_villages_province_tier", table_name="supported_villages", if_exists=True)

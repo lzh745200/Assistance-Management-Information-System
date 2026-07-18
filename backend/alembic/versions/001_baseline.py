@@ -19,8 +19,27 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # 基线迁移，现有表已存在，无需操作
-    pass
+    # 空库引导：历史基线原为 pass，导致 alembic upgrade 无法从零建库。
+    # 检测核心表缺失时直接从当前模型 metadata 建全部表（create_all 幂等，
+    # 已初始化的库自动跳过）；后续迁移各自带存在性守卫，链可完整重放。
+    from alembic import op
+    import sqlalchemy as sa
+
+    insp = sa.inspect(op.get_bind())
+    tables = set(insp.get_table_names())
+    if "users" in tables and "supported_villages" in tables:
+        return
+
+    import importlib
+    import pkgutil
+
+    import app.models as _models_pkg
+    from app.models.base import Base
+
+    for _m in pkgutil.iter_modules(_models_pkg.__path__):
+        importlib.import_module(f"app.models.{_m.name}")
+
+    Base.metadata.create_all(op.get_bind())
 
 
 def downgrade() -> None:

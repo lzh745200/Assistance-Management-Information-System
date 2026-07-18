@@ -269,6 +269,7 @@ const loadDimensionStats = async () => {
     }
   } catch (error) {
     logger.error('加载统计数据失败:', error)
+    ElMessage.error('加载统计数据失败，请稍后重试')
   }
 }
 
@@ -284,6 +285,7 @@ const loadFundStatsByType = async () => {
     }
   } catch (error) {
     logger.error('加载经费分类统计失败:', error)
+    ElMessage.error('加载经费分类统计失败，请稍后重试')
   }
 }
 

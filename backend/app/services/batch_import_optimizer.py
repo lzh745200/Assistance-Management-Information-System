@@ -53,7 +53,7 @@ def read_excel_fast(file_content: bytes) -> Tuple[List[str], List[Dict[str, Any]
     # 转为字典列表（列名已在 df.columns 中清理过，无需再次 strip）
     rows = df.to_dict(orient="records")
 
-    return headers, rows
+    return rows, headers
 
 
 def _read_excel_fallback(file_content: bytes) -> Tuple[List[str], List[Dict[str, Any]]]:
@@ -79,7 +79,7 @@ def _read_excel_fallback(file_content: bytes) -> Tuple[List[str], List[Dict[str,
         rows.append({headers[i]: (str(v) if v is not None else "") for i, v in enumerate(row) if i < len(headers)})
 
     wb.close()
-    return headers, rows
+    return rows, headers
 
 
 def validate_rows(

@@ -40,7 +40,7 @@ class TestReadExcelFast:
     def test_success_pandas_available(self, sample_excel_bytes):
         """Happy path: pandas reads the Excel successfully."""
         from app.services.batch_import_optimizer import read_excel_fast
-        headers, rows = read_excel_fast(sample_excel_bytes)
+        rows, headers = read_excel_fast(sample_excel_bytes)
         assert headers == ["name", "age", "city"]
         assert len(rows) == 3
         assert rows[0] == {"name": "Alice", "age": "30", "city": "Beijing"}
@@ -50,7 +50,7 @@ class TestReadExcelFast:
         """ImportError from pd.read_excel → fallback to openpyxl."""
         with patch("pandas.read_excel", side_effect=ImportError("engine missing")):
             from app.services.batch_import_optimizer import read_excel_fast
-            headers, rows = read_excel_fast(sample_excel_bytes)
+            rows, headers = read_excel_fast(sample_excel_bytes)
             assert headers == ["name", "age", "city"]
             assert len(rows) == 3
             assert rows[0]["name"] == "Alice"
@@ -75,7 +75,7 @@ class TestReadExcelFallback:
         wb.save(buf)
 
         from app.services.batch_import_optimizer import _read_excel_fallback
-        headers, rows = _read_excel_fallback(buf.getvalue())
+        rows, headers = _read_excel_fallback(buf.getvalue())
         assert headers == ["col_a", "col_b"]
         assert len(rows) == 2
         assert rows[0] == {"col_a": "x", "col_b": "1"}
@@ -88,7 +88,7 @@ class TestReadExcelFallback:
         wb.save(buf)
 
         from app.services.batch_import_optimizer import _read_excel_fallback
-        headers, rows = _read_excel_fallback(buf.getvalue())
+        rows, headers = _read_excel_fallback(buf.getvalue())
         assert headers == []
         assert rows == []
 
@@ -104,7 +104,7 @@ class TestReadExcelFallback:
         wb.save(buf)
 
         from app.services.batch_import_optimizer import _read_excel_fallback
-        headers, rows = _read_excel_fallback(buf.getvalue())
+        rows, headers = _read_excel_fallback(buf.getvalue())
         assert len(rows) == 1
         assert rows[0] == {"a": "v1", "b": "v2"}
 
@@ -119,7 +119,7 @@ class TestReadExcelFallback:
         wb.save(buf)
 
         from app.services.batch_import_optimizer import _read_excel_fallback
-        headers, rows = _read_excel_fallback(buf.getvalue())
+        rows, headers = _read_excel_fallback(buf.getvalue())
         assert headers == ["h1", "h2", "h3"]
         assert len(rows) == 1
         # openpyxl pads to max column count → missing become None → ""
@@ -137,7 +137,7 @@ class TestReadExcelFallback:
         wb.save(buf)
 
         from app.services.batch_import_optimizer import _read_excel_fallback
-        headers, rows = _read_excel_fallback(buf.getvalue())
+        rows, headers = _read_excel_fallback(buf.getvalue())
         # openpyxl pads header row to max column count → 2 new col_N headers
         assert len(headers) == 4
         assert headers[0] == "h1"
@@ -158,7 +158,7 @@ class TestReadExcelFallback:
         wb.save(buf)
 
         from app.services.batch_import_optimizer import _read_excel_fallback
-        headers, rows = _read_excel_fallback(buf.getvalue())
+        rows, headers = _read_excel_fallback(buf.getvalue())
         assert len(headers) == 3
         # the second header should be "col_1" (index 1)
         assert headers[0] == "good"

@@ -62,7 +62,7 @@
       <div class="indicator-card military-card">
         <div class="indicator-header">
           <span class="indicator-title">总工作量</span>
-          <span class="indicator-icon" style="background-color: #409eff">
+          <span class="indicator-icon" style="background-color: var(--color-primary)">
             <el-icon><Document /></el-icon>
           </span>
         </div>
@@ -1260,11 +1260,11 @@ const getQualityScoreClass = (score: number) => {
     }
 
     .refresh-button {
-      background-color: #409eff;
+      background-color: var(--color-primary);
       color: white;
 
       &:hover {
-        background-color: #66b1ff;
+        background-color: var(--color-primary-light-2);
       }
     }
 

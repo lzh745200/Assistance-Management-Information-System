@@ -7,7 +7,7 @@
         <p class="page-desc">管理帮扶学校信息，跟踪教育帮扶进展</p>
       </div>
       <div class="header-actions">
-        <el-button type="primary" class="btn-create" @click="handleCreate">
+        <el-button type="primary" @click="handleCreate">
           <el-icon><Plus /></el-icon>新增学校
         </el-button>
         <el-button type="success" plain @click="handleDownloadTemplate">
@@ -24,15 +24,36 @@
 
     <!-- 统计卡片 -->
     <div class="stats-row">
-      <div class="stat-item" @click="filterByStatus('')">
+      <div
+        class="stat-item clickable"
+        role="button"
+        tabindex="0"
+        @click="filterByStatus('')"
+        @keydown.enter.prevent="filterByStatus('')"
+        @keydown.space.prevent="filterByStatus('')"
+      >
         <div class="stat-value">{{ stats.total }}</div>
         <div class="stat-label">学校总数</div>
       </div>
-      <div class="stat-item" @click="filterByStatus('active')">
+      <div
+        class="stat-item clickable"
+        role="button"
+        tabindex="0"
+        @click="filterByStatus('active')"
+        @keydown.enter.prevent="filterByStatus('active')"
+        @keydown.space.prevent="filterByStatus('active')"
+      >
         <div class="stat-value text-success">{{ stats.active }}</div>
         <div class="stat-label">帮扶中</div>
       </div>
-      <div class="stat-item" @click="filterByStatus('completed')">
+      <div
+        class="stat-item clickable"
+        role="button"
+        tabindex="0"
+        @click="filterByStatus('completed')"
+        @keydown.enter.prevent="filterByStatus('completed')"
+        @keydown.space.prevent="filterByStatus('completed')"
+      >
         <div class="stat-value text-primary">{{ stats.completed }}</div>
         <div class="stat-label">已完成</div>
       </div>
@@ -105,74 +126,89 @@
 
     <!-- 数据表格 -->
     <div class="table-card">
-      <el-table v-loading="loading" :data="tableData" stripe>
-        <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="name" label="学校名称" min-width="180">
-          <template #default="scope">
-            <el-link type="primary" @click="handleView(scope.row)">{{ scope.row.name }}</el-link>
+      <el-result
+        v-if="loadError && !tableData.length"
+        icon="error"
+        title="数据加载失败"
+        sub-title="请稍后重试"
+      >
+        <template #extra>
+          <el-button type="primary" @click="fetchData">重试</el-button>
+        </template>
+      </el-result>
+      <template v-else>
+        <el-table v-loading="loading" :data="tableData" stripe>
+          <template #empty>
+            <el-empty description="暂无数据" />
           </template>
-        </el-table-column>
-        <el-table-column prop="type" label="类型" width="100" align="center">
-          <template #default="scope">
-            <el-tag size="small">{{ typeMap[scope.row.type] || scope.row.type || '-' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="support_unit" label="帮扶单位" width="140" show-overflow-tooltip />
-        <el-table-column prop="student_count" label="学生数" width="90" align="right">
-          <template #default="scope">
-            {{ scope.row.student_count || scope.row.students || 0 }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="teacher_count" label="教师数" width="90" align="right">
-          <template #default="scope">
-            {{ scope.row.teacher_count || scope.row.teachers || 0 }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="support_status" label="帮扶状态" width="100" align="center">
-          <template #default="scope">
-            <el-tag :type="getStatusTagType(scope.row.support_status)" size="small">
-              {{ statusMap[scope.row.support_status] || '未帮扶' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="address" label="地址" min-width="160" show-overflow-tooltip>
-          <template #default="scope">
-            {{ ds(scope.row.address, 'address') }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="created_at" label="创建时间" width="110" align="center">
-          <template #default="scope">
-            {{ scope.row.created_at ? String(scope.row.created_at).split('T')[0] : '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
-          <template #default="scope">
-            <el-button type="primary" link size="small" @click="handleView(scope.row)"
-              >查看</el-button
-            >
-            <el-button type="primary" link size="small" @click="handleEdit(scope.row)"
-              >编辑</el-button
-            >
-            <el-popconfirm title="确定删除该学校吗？" @confirm="handleDelete(scope.row)">
-              <template #reference>
-                <el-button type="danger" link size="small">删除</el-button>
-              </template>
-            </el-popconfirm>
-          </template>
-        </el-table-column>
-      </el-table>
+          <el-table-column type="index" label="序号" width="60" align="center" />
+          <el-table-column prop="name" label="学校名称" min-width="180">
+            <template #default="scope">
+              <el-link type="primary" @click="handleView(scope.row)">{{ scope.row.name }}</el-link>
+            </template>
+          </el-table-column>
+          <el-table-column prop="type" label="类型" width="100" align="center">
+            <template #default="scope">
+              <el-tag size="small">{{ typeMap[scope.row.type] || scope.row.type || '-' }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="support_unit" label="帮扶单位" width="140" show-overflow-tooltip />
+          <el-table-column prop="student_count" label="学生数" width="90" align="right">
+            <template #default="scope">
+              {{ scope.row.student_count || scope.row.students || 0 }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="teacher_count" label="教师数" width="90" align="right">
+            <template #default="scope">
+              {{ scope.row.teacher_count || scope.row.teachers || 0 }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="support_status" label="帮扶状态" width="100" align="center">
+            <template #default="scope">
+              <el-tag :type="getStatusTagType(scope.row.support_status)" size="small">
+                {{ statusMap[scope.row.support_status] || '未帮扶' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="address" label="地址" min-width="160" show-overflow-tooltip>
+            <template #default="scope">
+              {{ ds(scope.row.address, 'address') }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="created_at" label="创建时间" width="110" align="center">
+            <template #default="scope">
+              {{ scope.row.created_at ? String(scope.row.created_at).split('T')[0] : '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="200" fixed="right">
+            <template #default="scope">
+              <el-button type="primary" link size="small" @click="handleView(scope.row)"
+                >查看</el-button
+              >
+              <el-button type="primary" link size="small" @click="handleEdit(scope.row)"
+                >编辑</el-button
+              >
+              <el-popconfirm title="确定删除该学校吗？" @confirm="handleDelete(scope.row)">
+                <template #reference>
+                  <el-button type="danger" link size="small">删除</el-button>
+                </template>
+              </el-popconfirm>
+            </template>
+          </el-table-column>
+        </el-table>
 
-      <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
-        />
-      </div>
+        <div class="pagination-wrapper">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+      </template>
     </div>
 
     <!-- 导入对话框 -->
@@ -229,6 +265,7 @@ const { pushSafe } = useRouterSafe()
 const { ds } = useDesensitize()
 const tableData = ref<any[]>([])
 const loading = ref(false)
+const loadError = ref(false)
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(20)
@@ -312,6 +349,7 @@ async function loadApiStats() {
     if (data) serverSchoolStats.value = data
   } catch (error) {
     logger.error('Failed to load API stats:', error)
+    ElMessage.error('统计数据加载失败')
   }
 }
 
@@ -323,6 +361,7 @@ function getStatusTagType(status: string) {
 
 async function fetchData() {
   loading.value = true
+  loadError.value = false
   try {
     const response = await apiRequest({
       method: 'GET',
@@ -341,6 +380,8 @@ async function fetchData() {
     total.value = inner.total || tableData.value.length
   } catch (e) {
     logger.error('加载数据失败:', e)
+    loadError.value = true
+    ElMessage.error('数据加载失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -493,24 +534,8 @@ onActivated(() => {
 
 .header-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-}
-
-.btn-create {
-  background: linear-gradient(135deg, #2d6a4f, #40916c) !important;
-  border-color: #2d6a4f !important;
-  color: white !important;
-  font-weight: 600;
-  padding: 10px 20px;
-  font-size: 14px;
-  box-shadow: 0 2px 8px rgba(45, 106, 79, 0.3);
-  transition: all 0.3s;
-}
-
-.btn-create:hover {
-  background: linear-gradient(135deg, #1b4332, #2d6a4f) !important;
-  box-shadow: 0 4px 12px rgba(27, 67, 50, 0.4);
-  transform: translateY(-1px);
 }
 
 .import-dialog-body {
@@ -520,56 +545,66 @@ onActivated(() => {
 /* 统计卡片 */
 .stats-row {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
   margin-bottom: 20px;
 }
 
 .stat-item {
-  flex: 1;
-  background: linear-gradient(135deg, rgba(27, 67, 50, 0.08) 0%, rgba(45, 106, 79, 0.05) 100%);
-  border: 1px solid rgba(45, 106, 79, 0.2);
-  border-radius: 8px;
-  padding: 16px 20px;
+  flex: 1 1 140px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-lighter);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
   text-align: center;
-  cursor: pointer;
   transition: all 0.3s;
 }
 
-.stat-item:hover {
-  border-color: rgba(45, 106, 79, 0.5);
-  box-shadow: 0 2px 12px rgba(27, 67, 50, 0.12);
+.stat-item.clickable {
+  cursor: pointer;
+}
+
+.stat-item.clickable:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-item.clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #1b4332;
+  color: var(--color-text-primary);
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 13px;
-  color: #666;
+  color: var(--color-text-secondary);
   margin-top: 4px;
 }
 
 .text-success {
-  color: #40916c;
+  color: var(--color-success);
 }
 .text-primary {
-  color: #2d6a4f;
+  color: var(--color-primary);
 }
 .text-warning {
-  color: #d4af37;
+  color: var(--color-warning);
 }
 .text-info {
-  color: #409eff;
+  color: var(--color-info);
 }
 .text-project {
-  color: #e6a23c;
+  color: var(--color-primary);
 }
 .text-scholarship {
-  color: #f56c6c;
+  color: var(--color-accent-gold);
 }
 
 /* 筛选区 */

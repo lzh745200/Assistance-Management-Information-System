@@ -14,12 +14,34 @@ down_revision = '005'
 branch_labels = None
 depends_on = None
 
+def _create_table(name, *args, **kwargs):
+    """幂等建表：表已存在则跳过（兼容 create_all 已建表场景）。"""
+    import sqlalchemy as sa
+    if not sa.inspect(op.get_bind()).has_table(name):
+        op.create_table(name, *args, **kwargs)
+
+
+def _create_index(name, table, columns, **kwargs):
+    """幂等建索引：表缺失、列不存在或索引已存在则跳过。"""
+    import sqlalchemy as sa
+    insp = sa.inspect(op.get_bind())
+    if not insp.has_table(table):
+        return
+    table_cols = {c["name"] for c in insp.get_columns(table)}
+    if not all(c in table_cols for c in columns):
+        return
+    if name in {i["name"] for i in insp.get_indexes(table)}:
+        return
+    op.create_index(name, table, columns, **kwargs)
+
+
+
 
 def upgrade():
     """添加成效评估和舆情监控相关表"""
 
     # 评估指标表
-    op.create_table(
+    _create_table(
         'effectiveness_indicators',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=100), nullable=False),
@@ -37,10 +59,10 @@ def upgrade():
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('code')
     )
-    op.create_index('idx_effectiveness_indicators_category', 'effectiveness_indicators', ['category'])
+    _create_index('idx_effectiveness_indicators_category', 'effectiveness_indicators', ['category'])
 
     # 成效评估表
-    op.create_table(
+    _create_table(
         'effectiveness_evaluations',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('village_id', sa.Integer(), nullable=False),
@@ -61,11 +83,11 @@ def upgrade():
         sa.ForeignKeyConstraint(['evaluated_by'], ['users.id'], ondelete='SET NULL'),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('idx_effectiveness_evaluations_village_id', 'effectiveness_evaluations', ['village_id'])
-    op.create_index('idx_effectiveness_evaluations_year', 'effectiveness_evaluations', ['year'])
+    _create_index('idx_effectiveness_evaluations_village_id', 'effectiveness_evaluations', ['village_id'])
+    _create_index('idx_effectiveness_evaluations_year', 'effectiveness_evaluations', ['year'])
 
     # 舆情关键词表
-    op.create_table(
+    _create_table(
         'sentiment_keywords',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('keyword', sa.String(length=100), nullable=False),
@@ -79,7 +101,7 @@ def upgrade():
     )
 
     # 舆情新闻表
-    op.create_table(
+    _create_table(
         'sentiment_news',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('title', sa.String(length=500), nullable=False),
@@ -97,10 +119,10 @@ def upgrade():
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('idx_sentiment_news_published_at', 'sentiment_news', ['published_at'])
+    _create_index('idx_sentiment_news_published_at', 'sentiment_news', ['published_at'])
 
     # 舆情报告表
-    op.create_table(
+    _create_table(
         'sentiment_reports',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('start_date', sa.DateTime(), nullable=False),
@@ -116,7 +138,7 @@ def upgrade():
         sa.Column('generated_at', sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('idx_sentiment_reports_generated_at', 'sentiment_reports', ['generated_at'])
+    _create_index('idx_sentiment_reports_generated_at', 'sentiment_reports', ['generated_at'])
 
 
 def downgrade():

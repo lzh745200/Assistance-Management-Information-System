@@ -10,7 +10,6 @@ from io import BytesIO
 from typing import List
 
 import pyotp
-import qrcode
 from sqlalchemy.orm import Session
 
 from app.models.two_factor_auth import TwoFactorAuth
@@ -63,7 +62,10 @@ class TwoFactorService:
         totp = pyotp.TOTP(secret)
         uri = totp.provisioning_uri(name=user_email, issuer_name=issuer)
 
-        # 生成二维码
+        # 生成二维码（qrcode 懒加载：该包导入代价高——实测 AV 环境下
+        # 首次 import 可达 100s+，移入方法内避免拖慢模块导入与测试收集）
+        import qrcode
+
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(uri)
         qr.make(fit=True)

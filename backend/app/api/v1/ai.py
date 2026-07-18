@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.core.database import get_db
+from app.core.response import success_response
 from app.core.security import get_current_user
 from app.services.ai_service import ai_service_manager
 
@@ -45,13 +46,12 @@ async def get_ai_status(
     """获取AI服务的运行状态"""
     await ai_service_manager.initialize()
     status = await ai_service_manager.get_service_status()
-    return {
-        "success": True,
-        "data": {
+    return success_response(
+        data={
             "initialized": ai_service_manager._initialized,
             "services": status,
-        },
-    }
+        }
+    )
 
 
 @router.post("/analyze", summary="执行数据分析")
@@ -79,13 +79,12 @@ async def analyze_data(
     if "error" in result:
         raise HTTPException(status_code=500, detail=result["error"])
 
-    return {
-        "success": True,
-        "data": {
+    return success_response(
+        data={
             "analysis_type": request.analysis_type,
             "result": result,
-        },
-    }
+        }
+    )
 
 
 @router.post("/recommendations", summary="获取智能推荐")
@@ -103,13 +102,12 @@ async def get_recommendations(
         user=current_user,
     )
 
-    return {
-        "success": True,
-        "data": {
+    return success_response(
+        data={
             "recommendations": recommendations,
             "total": len(recommendations),
-        },
-    }
+        }
+    )
 
 
 @router.get("/forecast/income", summary="收入趋势预测")
@@ -126,7 +124,7 @@ async def forecast_income(
     result = await run_in_threadpool(
         ai_service_manager.forecast_income_trend, db, forecast_years=forecast_years, user=current_user
     )
-    return {"success": True, "data": result}
+    return success_response(data=result)
 
 
 @router.get("/forecast/funds", summary="年度经费完成率预测")
@@ -139,4 +137,4 @@ async def forecast_funds(
     并给出资金执行风险评级（低/中/高）。
     """
     result = await run_in_threadpool(ai_service_manager.forecast_fund_completion, db, user=current_user)
-    return {"success": True, "data": result}
+    return success_response(data=result)

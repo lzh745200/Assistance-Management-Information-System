@@ -24,7 +24,7 @@ class LogExportService:
         try:
             self.export_dir.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            print(f"Warning: 创建导出目录失败: {e}")
+            logger.warning(f"创建导出目录失败: {e}")
 
         # 脱敏规则
         self.sensitive_patterns = {

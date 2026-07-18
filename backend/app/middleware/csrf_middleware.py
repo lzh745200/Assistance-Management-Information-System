@@ -121,6 +121,12 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if _is_path_exempt(request.url.path):
             return await call_next(request)
 
+        # 本机内部通道豁免：Electron 自动备份携带启动时注入环境变量的
+        # X-Internal-Backup 密钥（与 shutdown 端点同一内部密钥模式）
+        internal_key = os.getenv("INTERNAL_BACKUP_KEY", "")
+        if internal_key and request.headers.get("X-Internal-Backup", "") == internal_key:
+            return await call_next(request)
+
         # ── 状态变更请求（POST/PUT/DELETE/PATCH）验证 CSRF token ──
         csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME, "")
         csrf_header = request.headers.get(CSRF_HEADER_NAME, "")

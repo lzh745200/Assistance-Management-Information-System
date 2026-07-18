@@ -132,7 +132,7 @@ function resetForm() {
 .text-btn {
   background: none;
   border: none;
-  color: #409eff;
+  color: var(--color-primary);
   cursor: pointer;
   font-size: 13px;
 }

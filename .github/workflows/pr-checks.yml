@@ -60,9 +60,9 @@ jobs:
       # mypy 类型检查（非阻断，但报告类型问题）
       - name: mypy type check
         run: cd backend && python -m mypy app/ --config-file=mypy.ini --ignore-missing-imports || true
-      # bandit 安全扫描（低级别，非阻断）
+      # bandit 安全扫描（低级别，阻断）
       - name: bandit security scan
-        run: cd backend && python -m bandit -r app/ -ll || true
+        run: cd backend && python -m bandit -r app/ -ll
 
   security:
     runs-on: ubuntu-latest
@@ -76,14 +76,12 @@ jobs:
       - run: pip install pip-audit pip-licenses
       - name: Backend dependency audit
         run: pip-audit -r backend/requirements.txt
-        continue-on-error: true
       # 前端依赖漏洞扫描（npm audit，仅 high 以上阻断）
       - name: Frontend dependency audit
         run: |
           cd frontend
           npm install --legacy-peer-deps
           npm audit --audit-level=high
-        continue-on-error: true
       # 生成 SBOM（许可证清单），作为 artifact 上传供军口许可证白名单审查
       - name: Generate SBOM (license list)
         run: |

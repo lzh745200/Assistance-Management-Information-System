@@ -394,7 +394,7 @@ onMounted(() => {
   h4 {
     margin: 0 0 8px;
     font-size: 15px;
-    color: #409eff;
+    color: var(--color-primary);
   }
 }
 
@@ -444,8 +444,8 @@ onMounted(() => {
   }
 
   &.active {
-    background: #ecf5ff;
-    color: #409eff;
+    background: var(--color-bg-active);
+    color: var(--color-primary);
   }
 }
 

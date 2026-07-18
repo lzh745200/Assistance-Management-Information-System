@@ -11,6 +11,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.permission_utils import require_admin
+from app.core.response import ok_list, success_response
 from app.core.security import get_current_user
 from app.models.issue_tracking import Feedback
 from app.core.transaction import safe_commit
@@ -60,6 +62,7 @@ async def list_feedback(
     """
     获取反馈列表（管理员接口）
     """
+    require_admin(current_user, error_message="仅管理员可查看反馈列表")
     query = db.query(Feedback)
 
     # 按类型筛选
@@ -85,15 +88,12 @@ async def list_feedback(
             }
         )
 
-    return {
-        "success": True,
-        "data": {
-            "items": items,
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        },
-    }
+    return ok_list(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.post("")
@@ -132,4 +132,4 @@ async def submit_feedback(
         db.rollback()
         logger.error("保存反馈失败: %s", e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="保存反馈失败")
-    return {"success": True, "message": "感谢您的反馈"}
+    return success_response(message="感谢您的反馈")

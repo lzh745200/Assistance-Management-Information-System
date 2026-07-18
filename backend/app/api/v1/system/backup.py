@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -49,21 +49,48 @@ class BackupScheduleUpdate(BaseModel):
     keep_count: Optional[int] = Field(10, description="保留备份数量")
 
 
+async def _authenticate_backup_request(request: Request) -> str:
+    """备份创建鉴权：本机内部密钥 或 管理员 JWT 二选一。
+
+    Electron 主进程的定时/托盘自动备份无 JWT，携带启动时注入环境变量的
+    X-Internal-Backup 密钥（与 shutdown 端点同模式）；普通用户走 JWT 管理员校验。
+
+    Returns: 操作人标识（内部通道返回 "internal-backup"）
+    """
+    import os
+
+    internal_key = os.getenv("INTERNAL_BACKUP_KEY", "")
+    if internal_key and request.headers.get("X-Internal-Backup", "") == internal_key:
+        return "internal-backup"
+
+    from fastapi.security import HTTPAuthorizationCredentials
+
+    from app.core.security import get_current_user
+
+    auth = request.headers.get("Authorization", "")
+    scheme, _, token = auth.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=401, detail="未提供认证凭证")
+    user = await get_current_user(HTTPAuthorizationCredentials(scheme=scheme, credentials=token))
+    require_admin(user, error_message="仅超级管理员可创建备份")
+    return getattr(user, "username", "unknown")
+
+
 # ==================== API 端点 ====================
 
 @router.post("", summary="创建数据库备份")
 async def create_backup(
     body: CreateBackupRequest,
+    request: Request,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
+    operator: str = Depends(_authenticate_backup_request),
 ):
     """创建系统数据库备份
 
     将当前数据库和上传文件打包为 ZIP 备份文件。
     支持可选的 AES-256 加密保护。
-    需要管理员权限。
+    需要管理员权限（或 Electron 内部备份密钥）。
     """
-    require_admin(current_user, error_message="仅超级管理员可创建备份")
 
     try:
         svc = get_backup_service(db)
@@ -75,7 +102,7 @@ async def create_backup(
 
         logger.info(
             "备份已创建: %s，操作人: %s",
-            record.file_name, getattr(current_user, "username", "unknown"),
+            record.file_name, operator,
         )
 
         return {

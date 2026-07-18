@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.v1.deps import get_current_active_user, get_db
+from app.core.response import ok_list, success_response
 from app.models.user import User
 from app.services.sentiment.analysis_service import SentimentAnalysisService as AnalysisService
 from app.services.sentiment.crawler_service import CrawlerService
@@ -45,7 +46,7 @@ async def collect_news(
         # 保存到数据库
         saved_count = CrawlerService.save_news(db=db, news_list=news_list)
 
-        return {"collected": len(news_list), "saved": saved_count}
+        return success_response(data={"collected": len(news_list), "saved": saved_count})
     except HTTPException:
         raise
     except Exception:
@@ -68,7 +69,7 @@ async def analyze_news(
 
     try:
         processed_count = AnalysisService.analyze_news_batch(db=db, limit=limit)
-        return {"processed": processed_count}
+        return success_response(data={"processed": processed_count})
     except HTTPException:
         raise
     except Exception:
@@ -102,9 +103,8 @@ async def get_news_list(
 
         news_list = query.order_by(SentimentNews.published_at.desc()).limit(limit).offset(offset).all()
 
-        return {
-            "total": len(news_list),
-            "news": [
+        return ok_list(
+            items=[
                 {
                     "id": news.id,
                     "title": news.title,
@@ -118,7 +118,8 @@ async def get_news_list(
                 }
                 for news in news_list
             ],
-        }
+            total=len(news_list),
+        )
     except Exception:
         logger.exception("Failed to get news list")
         raise HTTPException(status_code=500, detail="获取新闻列表失败")
@@ -158,15 +159,17 @@ async def get_sentiment_statistics(
         # 获取热词
         hot_keywords = AnalysisService.generate_hot_keywords(db=db, days=days, top_k=20)
 
-        return {
-            "period_days": days,
-            "total_news": sum(sentiment_counts.values()),
-            "positive_count": sentiment_counts.get("positive", 0),
-            "negative_count": sentiment_counts.get("negative", 0),
-            "neutral_count": sentiment_counts.get("neutral", 0),
-            "alert_count": alert_count,
-            "hot_keywords": hot_keywords,
-        }
+        return success_response(
+            data={
+                "period_days": days,
+                "total_news": sum(sentiment_counts.values()),
+                "positive_count": sentiment_counts.get("positive", 0),
+                "negative_count": sentiment_counts.get("negative", 0),
+                "neutral_count": sentiment_counts.get("neutral", 0),
+                "alert_count": alert_count,
+                "hot_keywords": hot_keywords,
+            }
+        )
     except Exception:
         logger.exception("Failed to get sentiment statistics")
         raise HTTPException(status_code=500, detail="获取舆情统计失败")
@@ -182,7 +185,7 @@ async def get_hot_keywords(
     """获取热词列表"""
     try:
         hot_keywords = AnalysisService.generate_hot_keywords(db=db, days=days, top_k=top_k)
-        return {"period_days": days, "keywords": hot_keywords}
+        return success_response(data={"period_days": days, "keywords": hot_keywords})
     except Exception:
         logger.exception("Failed to get hot keywords")
         raise HTTPException(status_code=500, detail="获取热词失败")
@@ -209,9 +212,8 @@ async def get_alerts(
             .all()
         )
 
-        return {
-            "total": len(alerts),
-            "alerts": [
+        return ok_list(
+            items=[
                 {
                     "id": alert.id,
                     "title": alert.title,
@@ -223,7 +225,8 @@ async def get_alerts(
                 }
                 for alert in alerts
             ],
-        }
+            total=len(alerts),
+        )
     except Exception:
         logger.exception("Failed to get alerts")
         raise HTTPException(status_code=500, detail="获取预警列表失败")

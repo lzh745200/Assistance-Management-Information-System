@@ -52,8 +52,8 @@
       <el-card v-if="setupStep === 1" class="setup-card">
         <h3 class="section-title">第 1 步：扫描二维码</h3>
         <div class="qr-section">
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div class="qr-container" v-html="qrCodeSvg"></div>
+          <!-- 后端返回 data:image/png;base64,... 的 dataURL，用 <img> 渲染而非 v-html -->
+          <img class="qr-container" :src="qrCodeSvg" alt="TOTP 二维码" />
           <div class="secret-info">
             <p class="secret-label">或手动输入密钥：</p>
             <div class="secret-display">
@@ -269,7 +269,7 @@ onMounted(() => {
   margin: 0 0 16px;
   font-size: 17px;
   color: #303133;
-  border-bottom: 2px solid #409eff;
+  border-bottom: 2px solid var(--color-primary);
   padding-bottom: 8px;
 }
 

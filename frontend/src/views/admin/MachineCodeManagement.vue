@@ -429,7 +429,7 @@ onMounted(() => {
     font-family: 'Courier New', monospace;
     font-size: 18px;
     font-weight: 600;
-    color: #409eff;
+    color: var(--color-primary);
     padding: 20px;
     background: #f5f7fa;
     border-radius: 8px;

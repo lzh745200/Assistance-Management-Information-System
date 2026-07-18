@@ -65,7 +65,7 @@ const text = computed(() => {
 }
 
 .strength-strong {
-  background-color: #f0f9ff;
+  background-color: var(--color-primary-light-8);
   color: #67c23a;
 }
 </style>

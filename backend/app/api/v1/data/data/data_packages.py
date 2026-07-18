@@ -8,8 +8,8 @@ import tempfile
 import time
 from typing import List, Optional
 
-from fastapi import (APIRouter, Depends, File, HTTPException, Query, Request,
-                     UploadFile, status)
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, Query,
+                     Request, UploadFile, status)
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -679,13 +679,19 @@ async def get_package_history(
 # ========================================================================
 
 
+class ExportEncryptedRequest(BaseModel):
+    """加密导出请求（密码经请求体传输，避免落入 URL/请求日志）"""
+
+    data_types: List[str]
+    password: Optional[str] = None
+    description: Optional[str] = None
+    package_type: PackageType = PackageType.report
+
+
 @router.post("/export-encrypted", response_model=DataPackageExportResult)
 async def export_encrypted_package(
     request: Request,
-    data_types: List[str] = Query(..., description="要导出的数据类型"),
-    password: Optional[str] = Query(None, description="加密密码（可选）"),
-    description: Optional[str] = Query(None, description="导出描述"),
-    package_type: PackageType = Query(PackageType.report, description="数据包类型: task/report"),
+    body: ExportEncryptedRequest,
     current_user=Depends(get_current_user),
     service: DataPackageService = Depends(get_package_service),
     history_service: ImportExportHistoryService = Depends(get_history_service),
@@ -695,6 +701,11 @@ async def export_encrypted_package(
 
     支持密码加密，使用PBKDF2密钥派生和Fernet加密
     """
+    password = body.password
+    data_types = body.data_types
+    description = body.description
+    package_type = body.package_type
+
     # 获取组织ID（支持超级管理员回退到第一个可用组织）
     org_id = get_org_with_fallback(
         current_user=current_user,
@@ -769,14 +780,14 @@ class UploadEncryptedPackageRequest(BaseModel):
 async def upload_encrypted_package(
     request: Request,
     file: UploadFile = File(...),
-    password: Optional[str] = Query(None, description="解密密码"),
+    password: Optional[str] = Form(None),
     current_user=Depends(get_current_user),
     service: DataPackageService = Depends(get_package_service),
 ):
     """
     上传加密数据包（第一步：上传并检测加密）
 
-    返回数据包ID和是否需要密码
+    返回数据包ID和是否需要密码（密码经 multipart 表单字段传输，避免落入 URL/请求日志）
     """
     # 获取组织ID（支持超级管理员回退到第一个可用组织）
     org_id = get_org_with_fallback(
@@ -844,10 +855,16 @@ async def upload_encrypted_package(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+class DecryptPreviewRequest(BaseModel):
+    """解密预览请求（密码经请求体传输，避免落入 URL/请求日志）"""
+
+    password: str
+
+
 @router.post("/decrypt-preview/{package_id}")
 async def decrypt_and_preview_package(
     package_id: int,
-    password: str = Query(..., description="解密密码"),
+    body: DecryptPreviewRequest,
     current_user=Depends(get_current_user),
     service: DataPackageService = Depends(get_package_service),
 ):
@@ -857,7 +874,7 @@ async def decrypt_and_preview_package(
     返回预览数据和冲突信息
     """
     try:
-        result = await service.decrypt_and_preview_package(package_id, password)
+        result = await service.decrypt_and_preview_package(package_id, body.password)
         return result
     except BusinessError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

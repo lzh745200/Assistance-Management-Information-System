@@ -175,8 +175,9 @@ def init_default_users(db: SessionLocal) -> None:
                         and any(c in "!@#$%^&*" for c in password)):
                     return password
 
-        admin_password = "Admin@2024!Secure#"  # 默认密码，首次登录强制修改
-        officer_password = "Officer@2024!Military#"  # 默认密码，首次登录强制修改
+        # 初始口令随机生成（不再硬编码），首次登录强制修改
+        admin_password = generate_strong_password()
+        officer_password = generate_strong_password()
 
         admin_user = User(
             username="admin",
@@ -229,9 +230,15 @@ def init_default_users(db: SessionLocal) -> None:
         logger.info("✅ 默认用户初始化成功")
         logger.info("📝 管理员账号: admin")
         logger.info("📝 军官账号: officer01")
-        logger.info("⚠️  安全提醒：首次登录后立即修改默认密码")
-        logger.info(f"🔐 管理员默认密码: {admin_password}")
-        logger.info(f"🔐 军官默认密码: {officer_password}")
+        logger.info("⚠️  安全提醒：首次登录后立即修改初始口令")
+        logger.info("🔐 初始口令已随机生成，仅在控制台一次性展示，不写入日志")
+        # 控制台一次性提示（明文口令仅出现在 stdout，不进入日志文件）
+        print("=" * 60)
+        print("初始登录口令（仅此一次展示，请立即记录并妥善保管）:")
+        print(f"  admin     : {admin_password}")
+        print(f"  officer01 : {officer_password}")
+        print("首次登录后系统将强制修改口令。")
+        print("=" * 60)
     except Exception as e:
         db.rollback()
         logger.error(f"❌ 初始化用户失败: {str(e)}")

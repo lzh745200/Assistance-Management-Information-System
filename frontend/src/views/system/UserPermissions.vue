@@ -890,7 +890,7 @@ onMounted(() => {
 }
 
 .tree-node .el-icon {
-  color: #409eff;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -937,7 +937,7 @@ onMounted(() => {
 }
 
 .org-title .el-icon {
-  color: #409eff;
+  color: var(--color-primary);
 }
 
 .org-name {
@@ -1002,7 +1002,7 @@ onMounted(() => {
 }
 
 .dialog-user-info strong {
-  color: #409eff;
+  color: var(--color-primary);
 }
 
 .dialog-form {

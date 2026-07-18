@@ -10,6 +10,17 @@ import pytest
 BASE = "/api/v1/system/backup"
 
 
+def _override_actor(client, actor="admin"):
+    """覆盖备份创建端点的操作人鉴权依赖。
+
+    create_backup 自 2026-07 起改用 Depends(_authenticate_backup_request)
+    （内部密钥 / JWT 双通道），测试需直接覆盖该依赖而非 get_current_user。
+    """
+    from app.api.v1.system.backup import _authenticate_backup_request
+
+    client.app.dependency_overrides[_authenticate_backup_request] = lambda: actor
+
+
 # ── create_backup ────────────────────────────────────────────────────
 
 class TestCreateBackup:
@@ -32,6 +43,7 @@ class TestCreateBackup:
             mock_svc.create_backup.return_value = mock_record
             mock_get_svc.return_value = mock_svc
 
+            _override_actor(client_with_mocked_auth, "admin")
             resp = client_with_mocked_auth.post(
                 BASE,
                 json={"description": "test backup", "include_uploads": True},
@@ -56,6 +68,7 @@ class TestCreateBackup:
             mock_svc.create_backup.return_value = mock_record
             mock_get_svc.return_value = mock_svc
 
+            _override_actor(client_with_mocked_auth, "admin")
             resp = client_with_mocked_auth.post(
                 BASE,
                 json={"description": "encrypted", "password": "secret123"},
@@ -67,11 +80,21 @@ class TestCreateBackup:
             mock_svc = MagicMock()
             mock_svc.create_backup.side_effect = RuntimeError("disk full")
             mock_get_svc.return_value = mock_svc
+            _override_actor(client_with_mocked_auth, "admin")
             resp = client_with_mocked_auth.post(BASE, json={})
             assert resp.status_code == 500
 
     def test_regular_user_cannot_create(self, client_with_regular_user_auth):
-        resp = client_with_regular_user_auth.post(BASE, json={})
+        # 端点经 _authenticate_backup_request → get_current_user 解析身份，
+        # 此处 patch 模块级 get_current_user 返回普通用户，验证 require_admin 拦截
+        regular = MagicMock()
+        regular.role = "user"
+        regular.is_superuser = False
+        regular.username = "user"
+        with patch("app.core.security.get_current_user", return_value=regular):
+            resp = client_with_regular_user_auth.post(
+                BASE, json={}, headers={"Authorization": "Bearer fake-token"}
+            )
         assert resp.status_code == 403
 
 

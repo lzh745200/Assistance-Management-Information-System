@@ -239,7 +239,7 @@ import {
   Setting,
   FirstAidKit,
 } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 import { get, apiRequest } from '@/api/request'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'
@@ -669,7 +669,7 @@ function buildChart() {
   if (chartInstance) chartInstance.dispose()
 
   const isDark = configStore.theme === 'dark' || configStore.theme === 'military'
-  chartInstance = echarts.init(chartRef.value, isDark ? 'dark' : undefined)
+  chartInstance = echarts.init(chartRef.value, isDark ? 'militaryTechDark' : undefined)
 
   const endpoints = apiStats.value.slice(0, 10)
   const names = endpoints.map((e) => `${e.method ?? ''} ${e.endpoint}`)
@@ -741,8 +741,14 @@ function exportData() {
   const a = document.createElement('a')
   a.href = url
   a.download = `monitoring-export-${Date.now()}.json`
+  a.style.display = 'none'
+  document.body.appendChild(a)
   a.click()
-  URL.revokeObjectURL(url)
+  // 延迟移除节点并释放对象 URL，避免内存泄漏
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 100)
   ElMessage.success('监控数据已导出')
 }
 
@@ -969,7 +975,7 @@ watch(healthExpanded, (val) => {
 }
 .spark-dot {
   flex: 1;
-  background: #409eff;
+  background: var(--color-primary);
   border-radius: 2px 2px 0 0;
   min-width: 4px;
   transition: height 0.4s ease;

@@ -36,7 +36,7 @@
     "sortablejs": "^1.15.2",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.1/xlsx-0.20.1.tgz"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.3",

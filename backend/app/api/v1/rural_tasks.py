@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permission_utils import is_admin
 from app.core.security import get_current_user
+from app.core.transaction import safe_commit
 from app.interfaces.schemas.responses import ResponseModel
 from app.models.rural_task import RuralTask, TaskStatus
 from app.models.rural_work import RuralWork
@@ -48,6 +49,20 @@ def _generate_code(db: Session, year: int) -> str:
     else:
         num = 1
     return f"{prefix}{num:03d}"
+
+
+def _get_task_or_403(task_id: int, current_user, db: Session) -> RuralTask:
+    """按 ID 取任务并校验属主。
+
+    列表端点对非管理员按 created_by 过滤，详情/写操作必须做同样的
+    属主校验，否则任意登录用户可读/改/删他人任务（IDOR）。
+    """
+    task = db.query(RuralTask).filter(RuralTask.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    if not is_admin(current_user) and task.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="无权访问该任务")
+    return task
 
 
 # ---------- CRUD ----------
@@ -152,9 +167,7 @@ async def get_task(
     current_user=Depends(get_current_user),
 ):
     """获取任务详情"""
-    task = db.query(RuralTask).filter(RuralTask.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = _get_task_or_403(task_id, current_user, db)
     return ResponseModel(code=200, data=_task_to_response(task), message="success")
 
 
@@ -194,7 +207,7 @@ async def create_task(
         created_by=current_user.id,
     )
     db.add(task)
-    db.flush()
+    safe_commit(db)
     db.refresh(task)
 
     return ResponseModel(code=200, data=_task_to_response(task), message="创建成功")
@@ -208,16 +221,14 @@ async def update_task(
     current_user=Depends(get_current_user),
 ):
     """更新任务"""
-    task = db.query(RuralTask).filter(RuralTask.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = _get_task_or_403(task_id, current_user, db)
 
     update_data = data.model_dump(exclude_unset=True)
     for key, val in update_data.items():
         setattr(task, key, val)
     task.updated_by = current_user.id
 
-    db.flush()
+    safe_commit(db)
     db.refresh(task)
     return ResponseModel(code=200, data=_task_to_response(task), message="更新成功")
 
@@ -229,10 +240,9 @@ async def delete_task(
     current_user=Depends(get_current_user),
 ):
     """删除任务"""
-    task = db.query(RuralTask).filter(RuralTask.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = _get_task_or_403(task_id, current_user, db)
     db.delete(task)
+    safe_commit(db)
     return ResponseModel(code=200, message="删除成功")
 
 
@@ -247,16 +257,14 @@ async def submit_task(
     current_user=Depends(get_current_user),
 ):
     """提交任务审批"""
-    task = db.query(RuralTask).filter(RuralTask.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = _get_task_or_403(task_id, current_user, db)
     if task.status not in (TaskStatus.draft, TaskStatus.rejected):
         raise HTTPException(status_code=400, detail="仅草稿或被驳回的任务可提交")
 
     task.status = TaskStatus.pending_approval
     task.submitted_by = current_user.id
     task.submitted_at = datetime.now(timezone.utc)
-    db.flush()
+    safe_commit(db)
     return ResponseModel(code=200, message="提交成功")
 
 
@@ -268,9 +276,7 @@ async def approve_task(
     current_user=Depends(get_current_user),
 ):
     """审批任务"""
-    task = db.query(RuralTask).filter(RuralTask.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="任务不存在")
+    task = _get_task_or_403(task_id, current_user, db)
     if task.status != TaskStatus.pending_approval:
         raise HTTPException(status_code=400, detail="仅待审批的任务可审批")
 
@@ -283,7 +289,7 @@ async def approve_task(
     else:
         task.status = TaskStatus.rejected
 
-    db.flush()
+    safe_commit(db)
     action = "批准" if body.approved else "驳回"
     return ResponseModel(code=200, message=f"任务已{action}")
 
@@ -294,6 +300,10 @@ async def batch_delete_tasks(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """批量删除任务"""
-    deleted = db.query(RuralTask).filter(RuralTask.id.in_(ids)).delete(synchronize_session=False)
+    """批量删除任务（非管理员仅能删除自己创建的任务）"""
+    query = db.query(RuralTask).filter(RuralTask.id.in_(ids))
+    if not is_admin(current_user):
+        query = query.filter(RuralTask.created_by == current_user.id)
+    deleted = query.delete(synchronize_session=False)
+    safe_commit(db)
     return ResponseModel(code=200, data={"deleted": deleted}, message=f"成功删除{deleted}条记录")

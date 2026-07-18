@@ -78,8 +78,13 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
 
-    # 前置步骤：补齐 _migrate_missing_columns 管理的列
-    _run_auto_column_migration(connectable)
+    # 前置补列仅对 revision --autogenerate 生效：
+    # autogenerate 需要看到完整表结构（含 _migrate_missing_columns 管理的列），
+    # 但 upgrade/downgrade 时执行它会让迁移里的 add_column 撞上已存在的列（重复列报错）。
+    _cmd = getattr(getattr(config, "cmd_opts", None), "cmd", None)
+    _cmd_name = getattr(_cmd[0], "__name__", "") if _cmd else ""
+    if "revision" in _cmd_name:
+        _run_auto_column_migration(connectable)
 
     with connectable.connect() as connection:
         context.configure(

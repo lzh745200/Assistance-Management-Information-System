@@ -17,7 +17,7 @@ const handleSkip = () => {
   position: absolute;
   top: -40px;
   left: 0;
-  background: #409eff;
+  background: var(--color-primary);
   color: white;
   padding: 8px 16px;
   text-decoration: none;

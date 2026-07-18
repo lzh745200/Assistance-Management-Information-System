@@ -37,6 +37,8 @@ def mock_db():
     q.first.return_value = None
     q.distinct.return_value = q
     q.delete.return_value = 1
+    # get_filter_options 使用 with_entities 投影列后再 filter/distinct/all
+    q.with_entities.return_value = q
     db.query.return_value = q
     db.add.return_value = None
     db.commit.return_value = None

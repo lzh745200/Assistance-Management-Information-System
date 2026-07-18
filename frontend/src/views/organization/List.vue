@@ -387,7 +387,7 @@ onMounted(() => fetchDataWithSort())
 /* 拖拽时的样式 */
 :deep(.sortable-ghost) {
   opacity: 0.4;
-  background: #f0f9ff;
+  background: var(--color-primary-light-8);
 }
 :deep(.el-table__body-wrapper tbody tr) {
   cursor: move;

@@ -21,6 +21,23 @@ TABLE_MODEL_MAP: dict = {
 
 ALLOWED_TABLES = frozenset(TABLE_MODEL_MAP.keys())
 
+# 高权限表：批量写/校验接口直接拒绝（提权通道封堵，即使管理员也不例外）
+_PROTECTED_TABLES = frozenset({"users", "organizations"})
+
+# 批量更新禁止触碰的字段（端点校验之外的二次防线）
+_FORBIDDEN_UPDATE_FIELDS = frozenset({
+    "id", "created_at", "organization_id",
+    "role", "is_superuser", "hashed_password", "password",
+    "permissions", "token_version", "allowed_menus", "allowed_permissions",
+})
+
+
+def _reject_protected_table(table_name: str) -> None:
+    """users/organizations 表禁止走通用批量接口。"""
+    if table_name in _PROTECTED_TABLES:
+        from app.core.error_handler import BusinessLogicError
+        raise BusinessLogicError(f"表 {table_name} 不允许通过批量接口操作")
+
 
 # 表名 → 模型属性名映射（用于 _resolve_model 快速查找）
 _TABLE_TO_MODEL_NAME = {
@@ -124,13 +141,16 @@ class BatchService:
     async def batch_update(self, table_name: str, ids: List[int],
                            updates: dict, **kwargs) -> Dict[str, Any]:
         self._validate_table_name(table_name)
+        _reject_protected_table(table_name)
         model = _resolve_model(table_name)
+        # 二次防线：过滤禁止更新的敏感字段
+        safe_updates = {k: v for k, v in updates.items() if k not in _FORBIDDEN_UPDATE_FIELDS}
         count = 0
         if self.db:
             for id_ in ids:
                 inst = self.db.get(model, id_) if hasattr(self.db, 'get') else self.db.query(model).get(id_)
                 if inst:
-                    for k, v in updates.items():
+                    for k, v in safe_updates.items():
                         if hasattr(inst, k):
                             setattr(inst, k, v)
                     count += 1
@@ -140,6 +160,7 @@ class BatchService:
     async def batch_delete(self, table_name: str, ids: List[int],
                            soft_delete: bool = False, **kwargs) -> Dict[str, Any]:
         self._validate_table_name(table_name)
+        _reject_protected_table(table_name)
         model = _resolve_model(table_name)
         count = 0
         if self.db:
@@ -175,6 +196,7 @@ class BatchService:
     async def validate_batch(self, table_name: str,
                              ids: List[int], **kwargs) -> Dict[str, Any]:
         self._validate_table_name(table_name)
+        _reject_protected_table(table_name)
         model = _resolve_model(table_name)
         existing_count = 0
         if self.db:

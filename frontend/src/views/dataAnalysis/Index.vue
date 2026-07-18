@@ -221,7 +221,7 @@ onMounted(() => loadAnalysisData())
   color: #1b4332;
 }
 .stat-value.text-primary {
-  color: #409eff;
+  color: var(--color-primary);
 }
 .stat-value.text-success {
   color: #40916c;

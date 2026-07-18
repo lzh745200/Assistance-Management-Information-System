@@ -250,6 +250,21 @@ class SupportedVillage(Base, TimestampMixin):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
+    @property
+    def name(self) -> str:
+        """village_name 的别名 property。
+
+        防御性措施：历史代码中存在误用 ``village.name`` 访问帮扶村名称的
+        情形（实际字段为 ``village_name``）。提供此别名可避免 AttributeError
+        导致 500 错误，同时保持向后兼容。
+        """
+        return self.village_name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """允许通过 .name 设置 village_name（双向兼容）。"""
+        self.village_name = value
+
     def __repr__(self):
         return f"<SupportedVillage(id={self.id}, name={self.village_name})>"
 

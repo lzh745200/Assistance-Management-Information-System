@@ -93,7 +93,9 @@ async def anomaly_detection_job():
                 try:
                     anomalies = detect_anomalies(db, project.id)
                     total_new += len(anomalies)
-                except Exception:
+                except Exception as e:
+                    # 单项目检测失败不阻断其他项目，但必须可见（资金异常漏报风险）
+                    logger.warning("项目 %s 异常检测失败: %s", project.id, e, exc_info=True)
                     continue
 
             if total_new > 0:

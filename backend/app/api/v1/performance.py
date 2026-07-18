@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 
 from app.api.v1.deps import get_current_active_user
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from app.core.redis_adapter import redis_adapter
 from app.models.user import User
 from app.services.query_analyzer_service import query_analyzer
@@ -57,7 +57,7 @@ async def get_query_stats(current_user: User = Depends(get_current_active_user))
 
     stats = query_analyzer.get_query_stats()
 
-    return {"code": 200, "message": "成功获取查询统计信息", "success": True, "data": stats}
+    return success_response(data=stats, message="成功获取查询统计信息")
 
 
 @router.delete("/slow-queries")
@@ -74,7 +74,7 @@ async def clear_slow_queries(current_user: User = Depends(get_current_active_use
 
     query_analyzer.clear_slow_queries()
 
-    return {"message": "慢查询记录已清空"}
+    return success_response(message="慢查询记录已清空")
 
 
 @router.get("/cache-stats")
@@ -92,7 +92,7 @@ async def get_cache_stats(current_user: User = Depends(get_current_active_user))
     stats = redis_adapter.get_stats()
     health = redis_adapter.health_check()
 
-    return {"code": 200, "message": "成功获取缓存统计信息", "success": True, "data": {"stats": stats, "health": health}}
+    return success_response(data={"stats": stats, "health": health}, message="成功获取缓存统计信息")
 
 
 @router.post("/cache/clear")
@@ -110,7 +110,7 @@ async def clear_cache(current_user: User = Depends(get_current_active_user)):
     success = redis_adapter.clear()
 
     if success:
-        return {"message": "缓存已清空"}
+        return success_response(message="缓存已清空")
     else:
         from fastapi import HTTPException
 

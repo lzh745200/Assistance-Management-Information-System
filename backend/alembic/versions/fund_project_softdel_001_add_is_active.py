@@ -19,35 +19,53 @@ branch_labels = None
 depends_on = None
 
 
+def _has_column(table: str, column: str) -> bool:
+    insp = sa.inspect(op.get_bind())
+    return column in [c["name"] for c in insp.get_columns(table)]
+
+
+def _has_index(table: str, index_name: str) -> bool:
+    insp = sa.inspect(op.get_bind())
+    return index_name in [i["name"] for i in insp.get_indexes(table)]
+
+
 def upgrade():
-    """Add is_active column to funds and projects tables."""
+    """Add is_active column to funds and projects tables.
+
+    幂等：应用启动的 _migrate_missing_columns 可能已建同名列/索引，
+    存在则跳过，保证 alembic upgrade 在任意历史库上可重放。
+    """
     # ── funds 表 ──
-    op.add_column(
-        "funds",
-        sa.Column(
-            "is_active",
-            sa.Boolean(),
-            nullable=False,
-            server_default=sa.text("1"),
-            comment="是否启用(软删标记)",
-        ),
-    )
+    if not _has_column("funds", "is_active"):
+        op.add_column(
+            "funds",
+            sa.Column(
+                "is_active",
+                sa.Boolean(),
+                nullable=False,
+                server_default=sa.text("1"),
+                comment="是否启用(软删标记)",
+            ),
+        )
     op.execute("UPDATE funds SET is_active = 1 WHERE is_active IS NULL")
-    op.create_index("ix_funds_is_active", "funds", ["is_active"])
+    if not _has_index("funds", "ix_funds_is_active"):
+        op.create_index("ix_funds_is_active", "funds", ["is_active"])
 
     # ── projects 表 ──
-    op.add_column(
-        "projects",
-        sa.Column(
-            "is_active",
-            sa.Boolean(),
-            nullable=False,
-            server_default=sa.text("1"),
-            comment="是否启用(软删标记)",
-        ),
-    )
+    if not _has_column("projects", "is_active"):
+        op.add_column(
+            "projects",
+            sa.Column(
+                "is_active",
+                sa.Boolean(),
+                nullable=False,
+                server_default=sa.text("1"),
+                comment="是否启用(软删标记)",
+            ),
+        )
     op.execute("UPDATE projects SET is_active = 1 WHERE is_active IS NULL")
-    op.create_index("ix_projects_is_active", "projects", ["is_active"])
+    if not _has_index("projects", "ix_projects_is_active"):
+        op.create_index("ix_projects_is_active", "projects", ["is_active"])
 
 
 def downgrade():

@@ -16,51 +16,59 @@ depends_on = None
 
 
 def upgrade():
-    """添加性能优化索引"""
+    """添加性能优化索引（幂等：表或索引已存在则跳过）"""
+    import sqlalchemy as sa
 
-    # 用户表索引
-    op.create_index('idx_users_username', 'users', ['username'])
-    op.create_index('idx_users_email', 'users', ['email'])
-    op.create_index('idx_users_is_active', 'users', ['is_active'])
+    indexes = [
+        # 用户表索引
+        ('idx_users_username', 'users', ['username']),
+        ('idx_users_email', 'users', ['email']),
+        ('idx_users_is_active', 'users', ['is_active']),
+        # 村庄表索引
+        ('idx_villages_name', 'villages', ['name']),
+        ('idx_villages_province_city', 'villages', ['province', 'city']),
+        ('idx_villages_army_unit_id', 'villages', ['army_unit_id']),
+        # 项目表索引
+        ('idx_projects_village_id', 'projects', ['supported_village_id']),
+        ('idx_projects_status', 'projects', ['status']),
+        ('idx_projects_start_date', 'projects', ['start_date']),
+        ('idx_projects_village_status', 'projects', ['supported_village_id', 'status']),
+        # 资金表索引
+        ('idx_funds_project_id', 'funds', ['project_id']),
+        ('idx_funds_village_id', 'funds', ['supported_village_id']),
+        ('idx_funds_allocation_date', 'funds', ['allocation_date']),
+        ('idx_funds_status', 'funds', ['status']),
+        # 审计日志索引
+        ('idx_audit_logs_user_id', 'audit_logs', ['user_id']),
+        ('idx_audit_logs_action', 'audit_logs', ['action']),
+        ('idx_audit_logs_timestamp', 'audit_logs', ['timestamp']),
+        ('idx_audit_logs_entity_type_id', 'audit_logs', ['entity_type', 'entity_id']),
+        # 审批流索引
+        ('idx_approvals_entity_type_id', 'approvals', ['entity_type', 'entity_id']),
+        ('idx_approvals_status', 'approvals', ['status']),
+        ('idx_approvals_approver_id', 'approvals', ['approver_id']),
+        # 消息表索引
+        ('idx_messages_receiver_id', 'messages', ['receiver_id']),
+        ('idx_messages_is_read', 'messages', ['is_read']),
+        ('idx_messages_created_at', 'messages', ['created_at']),
+        # 年度数据表索引
+        ('idx_annual_population_village_year', 'annual_population', ['supported_village_id', 'year']),
+        ('idx_annual_income_village_year', 'annual_income', ['supported_village_id', 'year']),
+        ('idx_annual_industry_village_year', 'annual_industry', ['supported_village_id', 'year']),
+        ('idx_annual_infrastructure_village_year', 'annual_infrastructure', ['supported_village_id', 'year']),
+    ]
 
-    # 村庄表索引
-    op.create_index('idx_villages_name', 'villages', ['name'])
-    op.create_index('idx_villages_province_city', 'villages', ['province', 'city'])
-    op.create_index('idx_villages_army_unit_id', 'villages', ['army_unit_id'])
-
-    # 项目表索引
-    op.create_index('idx_projects_village_id', 'projects', ['supported_village_id'])
-    op.create_index('idx_projects_status', 'projects', ['status'])
-    op.create_index('idx_projects_start_date', 'projects', ['start_date'])
-    op.create_index('idx_projects_village_status', 'projects', ['supported_village_id', 'status'])
-
-    # 资金表索引
-    op.create_index('idx_funds_project_id', 'funds', ['project_id'])
-    op.create_index('idx_funds_village_id', 'funds', ['supported_village_id'])
-    op.create_index('idx_funds_allocation_date', 'funds', ['allocation_date'])
-    op.create_index('idx_funds_status', 'funds', ['status'])
-
-    # 审计日志索引
-    op.create_index('idx_audit_logs_user_id', 'audit_logs', ['user_id'])
-    op.create_index('idx_audit_logs_action', 'audit_logs', ['action'])
-    op.create_index('idx_audit_logs_timestamp', 'audit_logs', ['timestamp'])
-    op.create_index('idx_audit_logs_entity_type_id', 'audit_logs', ['entity_type', 'entity_id'])
-
-    # 审批流索引
-    op.create_index('idx_approvals_entity_type_id', 'approvals', ['entity_type', 'entity_id'])
-    op.create_index('idx_approvals_status', 'approvals', ['status'])
-    op.create_index('idx_approvals_approver_id', 'approvals', ['approver_id'])
-
-    # 消息表索引
-    op.create_index('idx_messages_receiver_id', 'messages', ['receiver_id'])
-    op.create_index('idx_messages_is_read', 'messages', ['is_read'])
-    op.create_index('idx_messages_created_at', 'messages', ['created_at'])
-
-    # 年度数据表索引
-    op.create_index('idx_annual_population_village_year', 'annual_population', ['supported_village_id', 'year'])
-    op.create_index('idx_annual_income_village_year', 'annual_income', ['supported_village_id', 'year'])
-    op.create_index('idx_annual_industry_village_year', 'annual_industry', ['supported_village_id', 'year'])
-    op.create_index('idx_annual_infrastructure_village_year', 'annual_infrastructure', ['supported_village_id', 'year'])
+    insp = sa.inspect(op.get_bind())
+    for name, table, columns in indexes:
+        if not insp.has_table(table):
+            continue
+        # 表结构可能已演进：引用的列不存在则跳过（历史索引名）
+        table_cols = {c["name"] for c in insp.get_columns(table)}
+        if not all(c in table_cols for c in columns):
+            continue
+        existing = {i["name"] for i in insp.get_indexes(table)}
+        if name not in existing:
+            op.create_index(name, table, columns)
 
 
 def downgrade():

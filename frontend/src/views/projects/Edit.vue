@@ -1324,7 +1324,7 @@ onMounted(async () => {
 }
 
 .el-switch {
-  --el-switch-on-color: #409eff;
+  --el-switch-on-color: var(--color-primary);
   --el-switch-off-color: #dcdfe6;
   --el-switch-on-text-color: #ffffff;
   --el-switch-off-text-color: #ffffff;

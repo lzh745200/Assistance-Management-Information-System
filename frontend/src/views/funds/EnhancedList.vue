@@ -28,15 +28,36 @@
         <div class="stat-value">{{ stats.totalAmount }}</div>
         <div class="stat-label">经费总额(万元)</div>
       </div>
-      <div class="stat-item" @click="filterByStatus('allocated')">
+      <div
+        class="stat-item stat-item--clickable"
+        role="button"
+        tabindex="0"
+        @click="filterByStatus('allocated')"
+        @keydown.enter.prevent="filterByStatus('allocated')"
+        @keydown.space.prevent="filterByStatus('allocated')"
+      >
         <div class="stat-value text-success">{{ stats.allocatedAmount }}</div>
         <div class="stat-label">已拨付(万元)</div>
       </div>
-      <div class="stat-item" @click="filterByStatus('pending')">
+      <div
+        class="stat-item stat-item--clickable"
+        role="button"
+        tabindex="0"
+        @click="filterByStatus('pending')"
+        @keydown.enter.prevent="filterByStatus('pending')"
+        @keydown.space.prevent="filterByStatus('pending')"
+      >
         <div class="stat-value text-warning">{{ stats.pendingCount }}</div>
         <div class="stat-label">待审批</div>
       </div>
-      <div class="stat-item" @click="filterByStatus('planned')">
+      <div
+        class="stat-item stat-item--clickable"
+        role="button"
+        tabindex="0"
+        @click="filterByStatus('planned')"
+        @keydown.enter.prevent="filterByStatus('planned')"
+        @keydown.space.prevent="filterByStatus('planned')"
+      >
         <div class="stat-value text-info">{{ stats.plannedCount }}</div>
         <div class="stat-label">规划中</div>
       </div>
@@ -144,13 +165,24 @@
         </el-button>
         <el-button size="small" text @click="clearSelection">取消选择</el-button>
       </div>
+      <div v-if="error && tableData.length === 0" class="error-placeholder">
+        <el-result icon="error" title="数据加载失败" sub-title="请稍后重试">
+          <template #extra>
+            <el-button type="primary" :loading="loading" @click="fetchData">重试</el-button>
+          </template>
+        </el-result>
+      </div>
       <el-table
+        v-else
         ref="tableRef"
         v-loading="loading"
         :data="tableData"
         stripe
         @selection-change="handleSelectionChange"
       >
+        <template #empty>
+          <el-empty description="暂无数据" />
+        </template>
         <el-table-column type="selection" width="45" />
         <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="name" label="经费名称" min-width="180">
@@ -215,7 +247,7 @@
             }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column label="操作" width="280">
           <template #default="scope">
             <el-button type="primary" link size="small" @click="handleView(scope.row)"
               >查看</el-button
@@ -308,6 +340,7 @@ const phaseLabels: Record<number, string> = {
 const { pushSafe } = useRouterSafe()
 const tableData = ref<any[]>([])
 const loading = ref(false)
+const error = ref(false)
 const exporting = ref(false)
 const approving = ref<Record<number, boolean>>({})
 const allocating = ref<Record<number, boolean>>({})
@@ -381,6 +414,7 @@ function formatAmount(val: any) {
 
 async function fetchData() {
   loading.value = true
+  error.value = false
   try {
     const response = await apiRequest({
       method: 'GET',
@@ -400,7 +434,9 @@ async function fetchData() {
       resData?.items || resData?.data?.items || (Array.isArray(resData) ? resData : [])
     total.value = resData?.total || resData?.data?.total || tableData.value.length
   } catch (e) {
+    error.value = true
     logger.error('加载数据失败:', e)
+    ElMessage.error('数据加载失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -678,30 +714,35 @@ onMounted(() => {
 /* 统计卡片 */
 .stats-row {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
   margin-bottom: 20px;
 }
 
 .stat-item {
   flex: 1;
-  background: linear-gradient(135deg, rgba(27, 67, 50, 0.08) 0%, rgba(45, 106, 79, 0.05) 100%);
-  border: 1px solid rgba(45, 106, 79, 0.2);
-  border-radius: 8px;
+  min-width: 160px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-lighter);
+  border-radius: var(--radius-lg);
   padding: 16px 20px;
   text-align: center;
-  cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s;
 }
 
-.stat-item:hover {
-  border-color: rgba(45, 106, 79, 0.5);
-  box-shadow: 0 2px 12px rgba(27, 67, 50, 0.12);
+.stat-item--clickable {
+  cursor: pointer;
+}
+
+.stat-item--clickable:hover {
+  border-color: var(--color-primary-light-3);
 }
 
 .stat-value {
   font-size: 26px;
   font-weight: 700;
-  color: #1b4332;
+  color: var(--color-primary-dark-1);
   line-height: 1.2;
 }
 
@@ -712,16 +753,16 @@ onMounted(() => {
 }
 
 .text-success {
-  color: #40916c;
+  color: var(--color-success);
 }
 .text-primary {
-  color: #2d6a4f;
+  color: var(--color-primary);
 }
 .text-warning {
-  color: #e6a23c;
+  color: var(--color-warning);
 }
 .text-info {
-  color: #409eff;
+  color: var(--color-info);
 }
 
 /* 筛选区 */
@@ -751,15 +792,15 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: #f0f9ff;
-  border: 1px solid #b3d8ff;
+  background: var(--color-bg-active);
+  border: 1px solid var(--color-primary-light-3);
   border-radius: 6px;
   margin-bottom: 12px;
 }
 
 .batch-info {
   font-size: 13px;
-  color: #409eff;
+  color: var(--color-primary-dark-1);
   font-weight: 500;
 }
 

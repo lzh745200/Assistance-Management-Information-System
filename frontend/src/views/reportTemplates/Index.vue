@@ -307,7 +307,7 @@
 
         <!-- 预览数据表格 -->
         <div v-if="previewResult.parsed_data?.length" style="margin-bottom: 16px">
-          <h4 style="margin: 0 0 8px; font-size: 14px; color: #409eff">
+          <h4 style="margin: 0 0 8px; font-size: 14px; color: var(--color-primary)">
             数据预览（前 {{ previewResult.parsed_data.length }} 条）
           </h4>
           <el-table :data="previewResult.parsed_data" border size="small" max-height="220" stripe>
@@ -605,7 +605,8 @@ async function handleDownload(t: Template) {
       url: `/report-templates/${t.id}/download`,
       responseType: 'blob',
     })
-    const url = window.URL.createObjectURL(res.data)
+    // apiRequest 在 responseType:'blob' 下直接返回 Blob 本身（不要再取 .data）
+    const url = window.URL.createObjectURL(res)
     const link = document.createElement('a')
     link.href = url
     link.download = `${t.name}.xlsx`

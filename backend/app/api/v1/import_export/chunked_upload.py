@@ -67,11 +67,11 @@ async def init_upload(
     upload_service: ChunkedUploadService = Depends(get_chunked_upload_service),
 ):
     """初始化分片上传会话"""
-    session = await upload_service.init_upload(
+    session = upload_service.create_session(
         file_name=request.file_name,
         file_size=request.file_size,
-        chunk_size=request.chunk_size,
         user_id=current_user.id,
+        chunk_size=request.chunk_size,
         file_hash=request.file_hash,
     )
     return InitUploadResponse(
@@ -95,7 +95,7 @@ async def upload_chunk(
 ):
     """上传单个分片"""
     # 用户隔离：验证 session 属于当前用户
-    session = await upload_service.get_session(session_id)
+    session = upload_service.get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="上传会话不存在")
     if session.user_id != current_user.id:
@@ -120,7 +120,7 @@ async def get_progress(
     upload_service: ChunkedUploadService = Depends(get_chunked_upload_service),
 ):
     """获取上传进度"""
-    session = await upload_service.get_session(session_id)
+    session = upload_service.get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="上传会话不存在")
     if session.user_id != current_user.id:
@@ -143,7 +143,7 @@ async def merge_chunks(
 ):
     """合并所有分片"""
     # 用户隔离验证
-    session = await upload_service.get_session(session_id)
+    session = upload_service.get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="上传会话不存在")
     if session.user_id != current_user.id:
@@ -152,7 +152,7 @@ async def merge_chunks(
     file_path = await upload_service.merge_chunks(session_id)
     if not file_path:
         raise HTTPException(status_code=400, detail="合并失败")
-    session = await upload_service.get_session(session_id)
+    session = upload_service.get_session(session_id)
     return MergeResponse(
         session_id=session_id,
         file_path=file_path,
@@ -169,13 +169,13 @@ async def cancel_upload(
 ):
     """取消上传并清理"""
     # 用户隔离验证
-    session = await upload_service.get_session(session_id)
+    session = upload_service.get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="上传会话不存在")
     if session.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="无权取消此上传会话")
 
-    success = await upload_service.cancel_upload(session_id)
+    success = upload_service.delete_session(session_id)
     if not success:
         raise HTTPException(status_code=404, detail="上传会话不存在")
     return {"success": True, "message": "上传已取消"}

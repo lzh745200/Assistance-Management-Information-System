@@ -2,50 +2,78 @@
   <div class="chart-row">
     <div class="chart-card">
       <h3 class="chart-title">项目进度跟踪</h3>
-      <div ref="barRef" class="chart-body" />
+      <el-skeleton v-if="loading" animated :rows="5" class="chart-skeleton" />
+      <div v-else-if="error" class="chart-state chart-state--error">
+        <span>数据加载失败，请稍后重试</span>
+        <el-button size="small" type="primary" @click="loadAndRender">重试</el-button>
+      </div>
+      <div v-else-if="!hasProjects" class="chart-state">暂无数据</div>
+      <div v-else ref="barRef" class="chart-body" />
     </div>
     <div class="chart-card">
       <h3 class="chart-title">经费使用概览</h3>
-      <div ref="pieRef" class="chart-body" />
+      <el-skeleton v-if="loading" animated :rows="5" class="chart-skeleton" />
+      <div v-else-if="error" class="chart-state chart-state--error">
+        <span>数据加载失败，请稍后重试</span>
+        <el-button size="small" type="primary" @click="loadAndRender">重试</el-button>
+      </div>
+      <div v-else-if="!hasFunds" class="chart-state">暂无数据</div>
+      <div v-else ref="pieRef" class="chart-body" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ElMessage } from 'element-plus'
 import echarts from '@/utils/echarts'
 import { get, apiRequest } from '@/api/request'
+import { logger } from '@/utils/logger'
 
 const barRef = ref<HTMLElement>()
 const pieRef = ref<HTMLElement>()
 let barChart: echarts.ECharts | null = null
 let pieChart: echarts.ECharts | null = null
 
-async function fetchData() {
+const loading = ref(true)
+const error = ref(false)
+const projects = ref<any[]>([])
+const funds = ref({ allocated: 0, pending: 0, planned: 0 })
+
+const hasProjects = computed(() => projects.value.length > 0)
+const hasFunds = computed(
+  () => funds.value.allocated + funds.value.pending + funds.value.planned > 0
+)
+
+async function loadData() {
+  loading.value = true
+  error.value = false
   try {
     const [projRes, fundRes] = await Promise.all([
       apiRequest({ method: 'GET', url: '/projects', params: { summary: true, page_size: 5 } }),
       get('/dashboard/stats', { refresh: true }),
     ])
-    return {
-      projects: projRes?.data?.items || projRes?.data?.data || [],
-      funds: {
-        allocated: fundRes?.data?.funds_allocated || fundRes?.data?.total_funds || 0,
-        pending: fundRes?.data?.funds_pending || 0,
-        planned: fundRes?.data?.funds_planned || 0,
-      },
+    projects.value = projRes?.data?.items || projRes?.data?.data || []
+    funds.value = {
+      allocated: fundRes?.data?.funds_allocated || fundRes?.data?.total_funds || 0,
+      pending: fundRes?.data?.funds_pending || 0,
+      planned: fundRes?.data?.funds_planned || 0,
     }
-  } catch {
-    return {
-      projects: [],
-      funds: { allocated: 600, pending: 200, planned: 90 },
-    }
+  } catch (e) {
+    // 接口失败时置零（空数据），不展示编造的假数字；同时记录日志并给出重试入口
+    logger.error('图表数据加载失败', e)
+    error.value = true
+    projects.value = []
+    funds.value = { allocated: 0, pending: 0, planned: 0 }
+    ElMessage.error('数据加载失败，请稍后重试')
+  } finally {
+    loading.value = false
   }
 }
 
-function buildBarOption(projects: any[]): echarts.EChartsCoreOption {
-  const names = projects.map((p: any) => p.name || p.project_name || '')
-  const values = projects.map((p: any) => p.progress ?? p.completion_rate ?? 0)
+function buildBarOption(projectList: any[]): echarts.EChartsCoreOption {
+  const names = projectList.map((p: any) => p.name || p.project_name || '')
+  const values = projectList.map((p: any) => p.progress ?? p.completion_rate ?? 0)
   return {
     tooltip: {
       trigger: 'axis',
@@ -92,7 +120,7 @@ function buildBarOption(projects: any[]): echarts.EChartsCoreOption {
   }
 }
 
-function buildPieOption(funds: {
+function buildPieOption(fundsData: {
   allocated: number
   pending: number
   planned: number
@@ -119,24 +147,35 @@ function buildPieOption(funds: {
           itemStyle: { shadowBlur: 16, shadowColor: 'rgba(0,0,0,.12)' },
         },
         data: [
-          { value: funds.allocated, name: '已拨付' },
-          { value: funds.pending, name: '待拨付' },
-          { value: funds.planned, name: '计划中' },
+          { value: fundsData.allocated, name: '已拨付' },
+          { value: fundsData.pending, name: '待拨付' },
+          { value: fundsData.planned, name: '计划中' },
         ],
       },
     ],
   }
 }
 
-function initCharts(data: { projects: any[]; funds: any }) {
-  if (barRef.value) {
+function renderCharts() {
+  barChart?.dispose()
+  barChart = null
+  pieChart?.dispose()
+  pieChart = null
+  if (error.value) return
+  if (barRef.value && hasProjects.value) {
     barChart = echarts.init(barRef.value)
-    barChart.setOption(buildBarOption(data.projects || []))
+    barChart.setOption(buildBarOption(projects.value))
   }
-  if (pieRef.value) {
+  if (pieRef.value && hasFunds.value) {
     pieChart = echarts.init(pieRef.value)
-    pieChart.setOption(buildPieOption(data.funds))
+    pieChart.setOption(buildPieOption(funds.value))
   }
+}
+
+async function loadAndRender() {
+  await loadData()
+  await nextTick()
+  renderCharts()
 }
 
 function handleResize() {
@@ -145,9 +184,7 @@ function handleResize() {
 }
 
 onMounted(async () => {
-  const data = await fetchData()
-  await nextTick()
-  initCharts(data)
+  await loadAndRender()
   window.addEventListener('resize', handleResize)
 })
 
@@ -193,5 +230,18 @@ onUnmounted(() => {
 .chart-body {
   width: 100%;
   height: 260px;
+}
+.chart-skeleton {
+  height: 260px;
+}
+.chart-state {
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
 }
 </style>

@@ -478,7 +478,7 @@ const handleDownloadTemplate = async () => {
       responseType: 'blob',
     })
     const tplName = templates.find((t) => t.type === selectedTemplate.value)?.name || '标准'
-    triggerDownload(res.data, `${tplName}导入模板_${selectedYear.value}.xlsx`)
+    triggerDownload(res, `${tplName}导入模板_${selectedYear.value}.xlsx`)
     // 模板下载成功 — 浏览器已确认
   } catch {
     ElMessage.error('下载模板失败')

@@ -564,7 +564,7 @@ onMounted(() => {
 }
 
 .stat-value.text-primary {
-  color: #409eff;
+  color: var(--color-primary);
 }
 .stat-value.text-success {
   color: #67c23a;
@@ -594,15 +594,15 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: #f0f9ff;
-  border: 1px solid #b3d8ff;
+  background: var(--color-primary-light-8);
+  border: 1px solid var(--color-primary-light-5);
   border-radius: 6px;
   margin-bottom: 12px;
 }
 
 .batch-info {
   font-size: 13px;
-  color: #409eff;
+  color: var(--color-primary);
   font-weight: 500;
 }
 

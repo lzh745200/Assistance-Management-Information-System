@@ -189,7 +189,9 @@
                 label="负责人"
                 width="100"
               ></el-table-column>
-              <el-table-column prop="contactPhone" label="联系电话" width="120"></el-table-column>
+              <el-table-column prop="contactPhone" label="联系电话" width="120">
+                <template #default="{ row }">{{ ds(row.contactPhone, 'phone') }}</template>
+              </el-table-column>
               <el-table-column prop="startDate" label="开始时间" width="120"></el-table-column>
               <el-table-column prop="endDate" label="结束时间" width="120"></el-table-column>
               <el-table-column prop="totalBudget" label="总预算(元)" width="120"></el-table-column>
@@ -287,6 +289,7 @@ import { ref, computed } from 'vue'
 import { Download, Upload, Loading, Bell } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useDesensitize } from '@/composables/useDesensitize'
 import { post, apiRequest, downloadBlob, parseContentDisposition } from '@/api/request'
 
 interface ProjectData {
@@ -318,6 +321,7 @@ interface ImportResult {
 }
 
 const { pushSafe } = useRouterSafe()
+const { ds } = useDesensitize()
 
 const currentStep = ref(0)
 const fileList = ref<File[]>([])

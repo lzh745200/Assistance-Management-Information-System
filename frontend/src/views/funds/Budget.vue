@@ -448,7 +448,7 @@ onMounted(() => loadBudgets())
   color: #40916c;
 }
 .text-info {
-  color: #409eff;
+  color: var(--color-primary);
 }
 .text-warning {
   color: #e6a23c;

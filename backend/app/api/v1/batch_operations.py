@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 import logging
 
 from app.core.exceptions import BusinessError, ValidationError, DatabaseError
+from app.core.permission_utils import require_admin
 from app.core.security import get_current_user
 from app.models.user import User
 from app.services.batch_service import batch_service, TABLE_MODEL_MAP
@@ -46,7 +47,12 @@ class BatchUpdateRequest(BaseModel):
         """验证更新字段"""
         if not v:
             raise ValueError("更新字段不能为空")
-        forbidden_fields = {"id", "created_at"}
+        forbidden_fields = {
+            "id", "created_at", "organization_id",
+            # 账号权限类字段：批量接口绝不允许更新（提权通道封堵）
+            "role", "is_superuser", "hashed_password", "password",
+            "permissions", "token_version", "allowed_menus", "allowed_permissions",
+        }
         if any(field in forbidden_fields for field in v.keys()):
             raise ValueError("不允许更新敏感字段")
         return v
@@ -113,7 +119,8 @@ async def batch_update(
     request: BatchUpdateRequest,
     current_user: User = Depends(get_current_user),
 ):
-    """批量更新"""
+    """批量更新（仅管理员）"""
+    require_admin(current_user)
     try:
         result = await batch_service.batch_update(
             table_name=request.table_name, ids=request.ids, updates=request.updates
@@ -136,7 +143,8 @@ async def batch_delete(
     request: BatchDeleteRequest,
     current_user: User = Depends(get_current_user),
 ):
-    """批量删除"""
+    """批量删除（仅管理员）"""
+    require_admin(current_user)
     try:
         result = await batch_service.batch_delete(
             table_name=request.table_name,
@@ -158,7 +166,8 @@ async def batch_export(
     request: BatchExportRequest,
     current_user: User = Depends(get_current_user),
 ):
-    """批量导出"""
+    """批量导出（仅管理员）"""
+    require_admin(current_user)
     try:
         result = await batch_service.batch_export(table_name=request.table_name, ids=request.ids, format=request.format)
         return result

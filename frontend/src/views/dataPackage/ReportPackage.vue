@@ -261,7 +261,8 @@ async function downloadPackage() {
       url: `/data-packages/${packageId.value}/download`,
       responseType: 'blob',
     })
-    const blob = new Blob([response.data])
+    // apiRequest 在 responseType:'blob' 下直接返回 Blob 本身
+    const blob = new Blob([response])
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -310,7 +311,8 @@ async function handleOneClickReport() {
           url: data.download_url,
           responseType: 'blob',
         })
-        const blob = new Blob([dlRes.data])
+        // dlRes 已是 Blob 本身（apiRequest responseType:'blob' 直接返回）
+        const blob = new Blob([dlRes])
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url

@@ -333,7 +333,7 @@ const statsCards = computed(() => {
   const s = serverStats.value
   if (s) {
     return [
-      { label: '工作总数', value: s.total ?? 0, color: '#409eff' },
+      { label: '工作总数', value: s.total ?? 0, color: 'var(--color-primary)' },
       { label: '进行中', value: s.in_progress ?? 0, color: '#e6a23c' },
       { label: '已完成', value: s.completed ?? 0, color: '#67c23a' },
       { label: '已延期', value: s.delayed ?? 0, color: '#f56c6c' },
@@ -341,7 +341,7 @@ const statsCards = computed(() => {
   }
   const data = dataSource.value
   return [
-    { label: '工作总数', value: total.value || data.length, color: '#409eff' },
+    { label: '工作总数', value: total.value || data.length, color: 'var(--color-primary)' },
     {
       label: '进行中',
       value: data.filter((d: any) => d.status === 'in_progress').length,

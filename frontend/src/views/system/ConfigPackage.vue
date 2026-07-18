@@ -17,7 +17,7 @@
         </el-col>
         <el-col :span="8">
           <el-card shadow="hover" class="action-card" @click="triggerImport">
-            <el-icon :size="32" color="#337ecc"><Upload /></el-icon>
+            <el-icon :size="32" color="var(--color-primary)"><Upload /></el-icon>
             <h4>导入配置</h4>
             <p>从JSON文件恢复系统配置</p>
           </el-card>

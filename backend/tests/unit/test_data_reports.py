@@ -249,7 +249,7 @@ class TestCreateDataReport:
 
     def test_no_org_id(self, client_with_mocked_auth):
         _setup_user_override(client_with_mocked_auth, org_id=None)
-        resp = client_with_mocked_auth.post(BASE, json={"title": "Test", "report_type": "monthly", "target_org_id": 2})
+        resp = client_with_mocked_auth.post(BASE, json={"title": "Test", "report_type": "monthly", "package_id": 1, "target_org_id": 2})
         assert resp.status_code == 400
 
     def test_success(self, client_with_mocked_auth):
@@ -257,7 +257,7 @@ class TestCreateDataReport:
         mock_svc = Mock()
         mock_svc.create_report = AsyncMock(return_value=_make_report(id=1, status="draft", source_org_id=1, target_org_id=2))
         _setup_service_override(client_with_mocked_auth, mock_svc)
-        resp = client_with_mocked_auth.post(BASE, json={"title": "New Report", "report_type": "monthly", "target_org_id": 2})
+        resp = client_with_mocked_auth.post(BASE, json={"title": "New Report", "report_type": "monthly", "package_id": 1, "target_org_id": 2})
         assert resp.status_code == 201
         assert resp.json()["id"] == 1
 
@@ -268,7 +268,7 @@ class TestCreateDataReport:
         mock_svc = Mock()
         mock_svc.create_report = AsyncMock(side_effect=BusinessError("invalid data"))
         _setup_service_override(client_with_mocked_auth, mock_svc)
-        resp = client_with_mocked_auth.post(BASE, json={"title": "Bad", "report_type": "monthly", "target_org_id": 2})
+        resp = client_with_mocked_auth.post(BASE, json={"title": "Bad", "report_type": "monthly", "package_id": 1, "target_org_id": 2})
         assert resp.status_code == 400
 
 

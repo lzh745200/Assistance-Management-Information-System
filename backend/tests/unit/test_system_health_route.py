@@ -52,7 +52,7 @@ class TestGetSystemOverview:
         }):
             resp = client.get("/system-health/overview")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data["overall_status"] == "ok"
             assert "checks" in data
 
@@ -68,7 +68,7 @@ class TestGetSystemOverview:
         }):
             resp = client.get("/system-health/overview")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data["overall_status"] == "error"
 
     def test_overall_warning(self, client, mock_db):
@@ -84,7 +84,7 @@ class TestGetSystemOverview:
         }):
             resp = client.get("/system-health/overview")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data["overall_status"] == "warning"
 
 
@@ -95,7 +95,7 @@ class TestRunIntegrityCheck:
         with patch("app.api.v1.system_health.EXTRA_INDEXES", [], create=True):
             resp = client.post("/system-health/integrity-check")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data["status"] == "ok"
 
     def test_corrupt(self, client, mock_db):
@@ -104,7 +104,7 @@ class TestRunIntegrityCheck:
         with patch("app.api.v1.system_health.EXTRA_INDEXES", [], create=True):
             resp = client.post("/system-health/integrity-check")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data["status"] == "error"
 
     def test_missing_indexes_warning(self, client, mock_db):
@@ -118,7 +118,7 @@ class TestRunIntegrityCheck:
 
         resp = client.post("/system-health/integrity-check")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         # Real EXTRA_INDEXES is imported inside the function; since we have no
         # real indexes defined for the "users" table, warnings should be generated
         assert data["status"] == "ok"  # integrity check itself passed
@@ -129,7 +129,7 @@ class TestRunIntegrityCheck:
 
         resp = client.post("/system-health/integrity-check")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["status"] == "error"
 
 
@@ -150,7 +150,7 @@ class TestWalCheckpoint:
 
         resp = client.post("/system-health/wal-checkpoint")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["status"] == "error"
 
 
@@ -161,7 +161,7 @@ class TestGetDiskSpace:
         }):
             resp = client.get("/system-health/disk-space")
             assert resp.status_code == 200
-            assert resp.json()["status"] == "ok"
+            assert resp.json()["data"]["status"] == "ok"
 
 
 class TestGetTableStats:
@@ -171,7 +171,7 @@ class TestGetTableStats:
 
         resp = client.get("/system-health/table-stats")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total_tables"] == 2
 
     def test_table_error(self, client, mock_db):
@@ -180,7 +180,7 @@ class TestGetTableStats:
 
         resp = client.get("/system-health/table-stats")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["tables"][0]["error"] is True
 
 
@@ -192,7 +192,7 @@ class TestRunVacuum:
         ]):
             resp = client.post("/system-health/vacuum")
             assert resp.status_code == 200
-            data = resp.json()
+            data = resp.json()["data"]
             assert data["status"] == "ok"
             assert data["saved_mb"] == 5.0
 
@@ -204,7 +204,7 @@ class TestRunVacuum:
         }):
             resp = client.post("/system-health/vacuum")
             assert resp.status_code == 200
-            assert resp.json()["status"] == "error"
+            assert resp.json()["data"]["status"] == "error"
 
 
 class TestCheckDiskSpace:

@@ -306,7 +306,7 @@ function handleRestore() {
 // 布局编辑器
 .layout-editor {
   background: #fff;
-  border: 2px solid #409eff;
+  border: 2px solid var(--el-color-primary);
   border-radius: 12px;
   padding: 16px 20px;
 }
@@ -364,8 +364,8 @@ function handleRestore() {
   padding-left: 2px;
 }
 .drag-over {
-  background: #ecf5ff !important;
-  border-color: #409eff !important;
+  background: var(--el-color-primary-light-9) !important;
+  border-color: var(--el-color-primary) !important;
   transform: scale(1.03);
 }
 .drag-handle {

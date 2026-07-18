@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.v1.deps import get_current_active_user, get_db
+from app.core.response import success_response
 from app.models.user import User
 from app.services.monitoring_service import MonitoringService
 
@@ -31,7 +32,7 @@ async def get_api_performance(
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     stats = MonitoringService.get_api_performance_stats(db, hours, endpoint)
-    return stats
+    return success_response(data=stats)
 
 
 @router.get("/endpoints")
@@ -51,7 +52,7 @@ async def get_endpoint_stats(
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     stats = MonitoringService.get_endpoint_stats(db, hours, limit)
-    return {"endpoints": stats}
+    return success_response(data={"endpoints": stats})
 
 
 @router.get("/errors")
@@ -70,7 +71,7 @@ async def get_error_stats(
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     stats = MonitoringService.get_error_stats(db, hours)
-    return stats
+    return success_response(data=stats)
 
 
 @router.get("/resources")
@@ -85,4 +86,4 @@ async def get_resource_stats(current_user: User = Depends(get_current_active_use
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     stats = MonitoringService.get_resource_stats()
-    return stats
+    return success_response(data=stats)

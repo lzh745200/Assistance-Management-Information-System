@@ -398,6 +398,7 @@ Every new feature must verify:
 | Frontend HTTP client | `frontend/src/api/request.ts` |
 | Safe router composable | `frontend/src/composables/useRouterSafe.ts` |
 | Design tokens | `frontend/src/styles/tokens.scss` |
+| SCSS vars injection (no CSS rules allowed) | `frontend/src/styles/tokens-vars.scss` (vite `additionalData`; rules live in tokens.scss via index.scss only) |
 | lint-staged config | `frontend/package.json` → `"lint-staged"` |
 | Pre-commit config | `.pre-commit-config.yaml` (staged strategy: pre-commit + pre-push) |
 | E2E Docker compose | `docker/docker-compose.e2e.yml` |

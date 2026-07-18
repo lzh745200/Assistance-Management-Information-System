@@ -1,0 +1,132 @@
+/**
+ * SCSS 变量注入文件（纯变量，无 CSS 规则）
+ *
+ * 本文件由 vite.config.ts 的 additionalData 注入到每个 SFC 的 <style lang="scss">。
+ * 严禁在此文件书写任何实体 CSS 规则（:root、选择器等），否则规则会随每个
+ * 组件样式块重复打包。实体规则（CSS 变量定义）只在 tokens.scss 维护，
+ * 经 styles/index.scss 全局引入一次。
+ *
+ * 变量取值与 tokens.scss 底部的 SCSS 变量映射保持一致（均为 var(--xxx) 引用）。
+ */
+
+// 颜色变量
+$color-primary: var(--color-primary);
+$color-success: var(--color-success);
+$color-warning: var(--color-warning);
+$color-danger: var(--color-danger);
+$color-info: var(--color-info);
+
+$color-text-primary: var(--color-text-primary);
+$color-text-regular: var(--color-text-regular);
+$color-text-secondary: var(--color-text-secondary);
+$color-text-placeholder: var(--color-text-placeholder);
+
+$color-bg-page: var(--color-bg-page);
+$color-bg-card: var(--color-bg-card);
+$color-bg-hover: var(--color-bg-hover);
+
+$color-border: var(--color-border);
+$color-border-light: var(--color-border-light);
+
+// 间距变量
+$spacing-xs: var(--spacing-xs);
+$spacing-sm: var(--spacing-sm);
+$spacing-md: var(--spacing-md);
+$spacing-lg: var(--spacing-lg);
+$spacing-xl: var(--spacing-xl);
+$spacing-xxl: var(--spacing-xxl);
+
+// 圆角变量
+$radius-sm: var(--radius-sm);
+$radius-md: var(--radius-md);
+$radius-lg: var(--radius-lg);
+$radius-xl: var(--radius-xl);
+$radius-round: var(--radius-round);
+
+// 阴影变量
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+$shadow-lg: var(--shadow-lg);
+$shadow-xl: var(--shadow-xl);
+$shadow-card: var(--shadow-card);
+
+// 过渡变量
+$transition-fast: var(--transition-fast);
+$transition-normal: var(--transition-normal);
+$transition-slow: var(--transition-slow);
+
+// 字体变量
+$font-family-base: var(--font-family-base);
+$font-family-mono: var(--font-family-mono);
+
+$font-size-xs: var(--font-size-xs);
+$font-size-sm: var(--font-size-sm);
+$font-size-md: var(--font-size-md);
+$font-size-lg: var(--font-size-lg);
+$font-size-xl: var(--font-size-xl);
+
+$font-weight-normal: var(--font-weight-normal);
+$font-weight-medium: var(--font-weight-medium);
+$font-weight-bold: var(--font-weight-bold);
+
+$line-height-tight: var(--line-height-tight);
+$line-height-normal: var(--line-height-normal);
+$line-height-relaxed: var(--line-height-relaxed);
+
+// 布局变量
+$layout-header-height: var(--layout-header-height);
+$layout-sidebar-width: var(--layout-sidebar-width);
+$layout-sidebar-collapsed-width: var(--layout-sidebar-collapsed-width);
+
+// ==================== 军事主题SCSS变量 ====================
+// 为了方便在组件中使用，提供SCSS变量
+
+// 军绿色系
+$military-darkest: #081c15;
+$military-dark: #1b4332;
+$military-medium: #2d6a4f;
+$military-light: #40916c;
+$military-lighter: #52b788;
+$military-lightest: #74c69d;
+
+// 金色系
+$badge-gold: #d4af37;
+$badge-gold-light: #e6c158;
+$badge-gold-lighter: #f0e68c;
+$badge-gold-dark: #b8960c;
+
+// 语义色
+$alert-red: #e63946;
+$success-green: #2ecc71;
+$warning-orange: #f39c12;
+$info-blue: #3498db;
+
+// 文字色
+$text-white: #ffffff;
+$text-gray: #95a5a6;
+$text-light-gray: #bdc3c7;
+$text-muted: #a8dadc;
+
+// 背景色
+$card-bg: rgba(10, 30, 20, 0.95);
+$card-header-bg: rgba(27, 67, 50, 0.85);
+$input-bg: rgba(255, 255, 255, 0.05);
+
+// 边框色
+$border-military: rgba(64, 145, 108, 0.2);
+$border-military-light: rgba(64, 145, 108, 0.3);
+
+// 阴影
+$shadow-dark: rgba(0, 0, 0, 0.7);
+$glow-military: rgba(64, 145, 108, 0.4);
+$glow-gold: rgba(212, 175, 55, 0.7);
+
+// 渐变
+$gradient-military: linear-gradient(135deg, $military-dark, $military-medium);
+$gradient-military-dark: linear-gradient(
+  135deg,
+  $military-darkest,
+  $military-dark
+);
+$gradient-badge: linear-gradient(135deg, $badge-gold, $badge-gold-light);
+$gradient-title: linear-gradient(45deg, $badge-gold, $text-white);

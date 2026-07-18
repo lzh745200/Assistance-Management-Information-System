@@ -16,6 +16,8 @@ def mock_db():
     session.limit.return_value = session
     session.all.return_value = []
     session.first.return_value = None
+    # ok_list() envelope 需要先调用 query.count() 取 total
+    session.count.return_value = 0
     return session
 
 

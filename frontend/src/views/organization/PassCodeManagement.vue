@@ -432,7 +432,7 @@ onMounted(() => {
       .pass-code-text {
         font-size: 18px;
         font-weight: bold;
-        color: #409eff;
+        color: var(--color-primary);
         font-family: 'Courier New', monospace;
       }
     }

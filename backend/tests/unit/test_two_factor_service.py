@@ -36,23 +36,28 @@ class TestGenerateBackupCodes:
 
 
 class TestGenerateQrCode:
-    @patch("app.services.two_factor_service.pyotp.TOTP")
-    @patch("app.services.two_factor_service.qrcode")
-    def test_generates_data_url(self, mock_qrcode, mock_totp):
+    def test_generates_data_url(self):
         from app.services.two_factor_service import TwoFactorService
-        mock_totp_instance = MagicMock()
-        mock_totp.return_value = mock_totp_instance
-        mock_totp_instance.provisioning_uri.return_value = "otpauth://totp/..."
+
+        mock_qrcode_module = MagicMock()
         mock_qr = MagicMock()
-        mock_qrcode.QRCode.return_value = mock_qr
+        mock_qrcode_module.QRCode.return_value = mock_qr
         mock_img = MagicMock()
         mock_qr.make_image.return_value = mock_img
         mock_buffer = MagicMock()
         mock_buffer.getvalue.return_value = b"image_data"
-        with patch("app.services.two_factor_service.BytesIO", return_value=mock_buffer):
-            with patch("app.services.two_factor_service.b64encode", return_value=b"base64data"):
-                result = TwoFactorService.generate_qr_code("secret", "user@test.com")
-                assert result == "data:image/png;base64,base64data"
+
+        # qrcode 在服务层为方法内懒加载；用 sys.modules 注入假模块，
+        # 使测试完全不触发真实 qrcode 导入（该包在 AV 环境下导入极慢）
+        with patch.dict("sys.modules", {"qrcode": mock_qrcode_module}):
+            with patch("app.services.two_factor_service.pyotp.TOTP") as mock_totp:
+                mock_totp_instance = MagicMock()
+                mock_totp.return_value = mock_totp_instance
+                mock_totp_instance.provisioning_uri.return_value = "otpauth://totp/..."
+                with patch("app.services.two_factor_service.BytesIO", return_value=mock_buffer):
+                    with patch("app.services.two_factor_service.b64encode", return_value=b"base64data"):
+                        result = TwoFactorService.generate_qr_code("secret", "user@test.com")
+                        assert result == "data:image/png;base64,base64data"
 
 
 class TestVerifyTotp:

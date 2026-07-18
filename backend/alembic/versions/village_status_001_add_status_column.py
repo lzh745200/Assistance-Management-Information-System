@@ -19,17 +19,20 @@ depends_on = None
 
 
 def upgrade():
-    """Add status column to villages table."""
-    op.add_column(
-        "villages",
-        sa.Column(
-            "status",
-            sa.String(50),
-            nullable=True,
-            server_default=sa.text("'active'"),
-            comment="状态: active/inactive/developing/completed",
-        ),
-    )
+    """Add status column to villages table（幂等：已存在则跳过）."""
+    insp = sa.inspect(op.get_bind())
+    cols = {c["name"] for c in insp.get_columns("villages")} if insp.has_table("villages") else set()
+    if "status" not in cols:
+        op.add_column(
+            "villages",
+            sa.Column(
+                "status",
+                sa.String(50),
+                nullable=True,
+                server_default=sa.text("'active'"),
+                comment="状态: active/inactive/developing/completed",
+            ),
+        )
     # 为现有行设置默认值
     op.execute("UPDATE villages SET status = 'active' WHERE status IS NULL")
 

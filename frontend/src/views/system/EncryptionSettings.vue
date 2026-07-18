@@ -376,7 +376,7 @@ onMounted(() => {
   margin: 0 0 20px 0;
   font-size: 18px;
   color: #303133;
-  border-bottom: 2px solid #409eff;
+  border-bottom: 2px solid var(--color-primary);
   padding-bottom: 10px;
 }
 </style>

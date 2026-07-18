@@ -87,6 +87,11 @@ class SensitiveDataFilter(logging.Filter):
     _EMAIL = re.compile(
         r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
     )
+    # 键值对形式的口令/令牌（query string、配置、错误消息等），如 password=xxx、token: xxx
+    _SECRET_KV = re.compile(
+        r"(?i)\b(password|passwd|pwd|token|secret|api[_-]?key|csrf[_-]?secret)"
+        r"([\s]*[=:]\s*)(['\"]?)[^\s&,'\"]{4,}\3"
+    )
 
     def filter(self, record: logging.LogRecord) -> bool:
         try:
@@ -108,6 +113,7 @@ class SensitiveDataFilter(logging.Filter):
         text = cls._ID_CARD.sub("***", text)
         text = cls._MOBILE.sub("***", text)
         text = cls._EMAIL.sub("***", text)
+        text = cls._SECRET_KV.sub(lambda m: m.group(1) + m.group(2) + "***", text)
         return text
 
 

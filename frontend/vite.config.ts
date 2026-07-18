@@ -153,8 +153,8 @@ export default defineConfig(({ mode }) => {
       preprocessorOptions: {
         scss: {
           api: 'modern-compiler',
-          // 全局引入设计Token
-          additionalData: `@use "@/styles/tokens.scss" as *;`
+          // 全局注入纯 SCSS 变量（实体 CSS 规则在 styles/index.scss 只加载一次，避免随 SFC 重复打包）
+          additionalData: `@use "@/styles/tokens-vars.scss" as *;`
         }
       },
       // 开发环境启用 source map

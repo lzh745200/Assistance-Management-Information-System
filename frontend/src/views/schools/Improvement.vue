@@ -374,7 +374,7 @@ const goBack = () => {
               .stat-value {
                 font-size: 20px;
                 font-weight: 600;
-                color: #409eff;
+                color: var(--color-primary);
                 margin-bottom: 4px;
               }
 

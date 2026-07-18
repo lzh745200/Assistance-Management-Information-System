@@ -342,18 +342,24 @@ async def get_filter_options(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取筛选选项（部门、县市列表）"""
+    """获取筛选选项（部门、县市列表）
+
+    数据隔离：仅返回当前用户数据范围内的部门/县市，避免跨组织泄露。
+    """
+    # 基础查询应用数据范围过滤，再投影到 department/county 列
+    base_query = db.query(SupportedVillage)
+    base_query = filter_by_data_scope(base_query, SupportedVillage, current_user, db=db)
+    base_query = base_query.filter(SupportedVillage.is_active == True)  # noqa: E712
+
     departments = (
-        db.query(SupportedVillage.department)
+        base_query.with_entities(SupportedVillage.department)
         .filter(SupportedVillage.department.isnot(None))
-        .filter(SupportedVillage.is_active == True)  # noqa: E712
         .distinct()
         .all()
     )
     counties = (
-        db.query(SupportedVillage.county)
+        base_query.with_entities(SupportedVillage.county)
         .filter(SupportedVillage.county.isnot(None))
-        .filter(SupportedVillage.is_active == True)  # noqa: E712
         .distinct()
         .all()
     )
@@ -365,12 +371,21 @@ async def get_filter_options(
 
 @router.get("/options/dropdown")
 async def get_village_dropdown(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取帮扶村下拉选项（id + name + county，供前端 Select 使用）"""
+    """获取帮扶村下拉选项（id + name + county，供前端 Select 使用）
+
+    数据隔离：仅返回当前用户数据范围内的帮扶村，避免跨组织泄露。
+    """
+    query = db.query(
+        SupportedVillage.id,
+        SupportedVillage.village_name,
+        SupportedVillage.county,
+    )
+    query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
     villages = (
-        db.query(SupportedVillage.id, SupportedVillage.village_name, SupportedVillage.county)
-        .filter(SupportedVillage.is_active == True)  # noqa: E712
+        query.filter(SupportedVillage.is_active == True)  # noqa: E712
         .order_by(SupportedVillage.id)
         .all()
     )
@@ -548,7 +563,7 @@ async def update_village(
             details={
                 "old_transition_status": old_status,
                 "new_transition_status": new_status,
-                "village_name": village.name,
+                "village_name": village.village_name,
             },
         )
 

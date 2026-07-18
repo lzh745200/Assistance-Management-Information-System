@@ -1119,7 +1119,7 @@ onMounted(() => {
 }
 
 .attachment-item:hover {
-  background: #ecf5ff;
+  background: var(--color-primary-light-8);
 }
 
 .attachment-info {
@@ -1131,7 +1131,7 @@ onMounted(() => {
 }
 
 .file-icon {
-  color: #409eff;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 

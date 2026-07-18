@@ -464,7 +464,7 @@ class TestGetFund:
         """Fund detail includes project_name and village_name from associations."""
         fund1 = FundMock(1)
         fund1.project = SimpleObj(name="项目A")
-        fund1.village = SimpleObj(name="村庄B")
+        fund1.village = SimpleObj(village_name="村庄B")
         fund1.organization = SimpleObj(name="组织C")
         mock_db.execute.return_value = _exec_with_scalar_one_or_none(fund1)
 
@@ -1594,7 +1594,7 @@ class TestSafeVal:
         """Associated project and village names appear in the result."""
         fund = FundMock(1)
         fund.project = SimpleObj(name="项目X")
-        fund.village = SimpleObj(name="村庄Y")
+        fund.village = SimpleObj(village_name="村庄Y")
         fund.organization = SimpleObj(name="组织Z")
         mock_db.execute.return_value = _exec_with_scalar_one_or_none(fund)
 

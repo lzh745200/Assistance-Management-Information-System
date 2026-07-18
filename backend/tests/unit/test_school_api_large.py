@@ -604,7 +604,7 @@ class TestListAttachments:
     def test_list_attachments(self, auth_setup, school):
         resp = auth_setup.get(P(f"/schools/{school.id}/attachments"))
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
 
 class TestUploadAttachment:
@@ -742,7 +742,7 @@ class TestProjects:
     def test_list_projects(self, auth_setup, school):
         resp = auth_setup.get(P(f"/schools/{school.id}/projects"))
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
     def test_create_project(self, auth_setup, school, db_session):
         resp = auth_setup.post(

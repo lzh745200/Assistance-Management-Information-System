@@ -607,7 +607,7 @@ onMounted(() => {
 }
 
 .user-avatar:hover {
-  border-color: #409eff;
+  border-color: var(--color-primary);
 }
 
 .avatar-loading {

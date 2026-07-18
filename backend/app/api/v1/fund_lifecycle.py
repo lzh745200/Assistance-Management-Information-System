@@ -15,7 +15,7 @@ from sqlalchemy import func as sa_func
 from sqlalchemy.orm import Session
 
 from ...core.database import get_db
-from ...core.response import ok_list
+from ...core.response import ok_list, success_response
 from ...core.security import get_current_user
 from ...core.transaction import safe_commit
 from ...models.fund import Fund
@@ -36,7 +36,7 @@ from ...models.fund_lifecycle import (
 )
 from ...models.project import Project
 from ...core.permission_utils import is_superuser
-from ...core.data_permission import apply_data_scope
+from ...core.data_permission import apply_data_scope, check_record_access
 from ...services.work_log_service import write_work_log
 from .deps import ADMIN_ROLES, require_manager_role as _require_manager  # noqa: F401
 
@@ -45,6 +45,19 @@ router = APIRouter(prefix="/fund-lifecycle", tags=["经费生命周期"])
 
 def _get_username(current_user) -> str:
     return getattr(current_user, "full_name", None) or getattr(current_user, "username", "")
+
+
+def _get_project_or_403(project_id: int, current_user, db: Session) -> Project:
+    """加载项目并做 404/403 数据权限校验（区分"不存在"与"跨组织"）。
+
+    所有带 project_id 的详情端点必须先过此校验，防止跨组织读取经费数据。
+    """
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="项目不存在")
+    if not check_record_access(project, current_user):
+        raise HTTPException(status_code=403, detail="无权访问该组织数据")
+    return project
 
 
 # =====================================================================
@@ -59,9 +72,7 @@ async def get_phases(
     db: Session = Depends(get_db),
 ):
     """获取项目各阶段状态"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    _get_project_or_403(project_id, current_user, db)
 
     phases = (
         db.query(ProjectFundPhase)
@@ -98,14 +109,13 @@ async def get_phases(
         elif p.status == PhaseStatus.COMPLETED.value:
             current_phase = p.phase + 1
 
-    return {
-        "success": True,
-        "data": {
+    return success_response(
+        data={
             "project_id": project_id,
             "current_phase": min(current_phase, 7),
             "phases": result,
-        },
-    }
+        }
+    )
 
 
 class PhaseAdvanceRequest(BaseModel):
@@ -210,7 +220,7 @@ async def advance_phase(
         f.lifecycle_phase = min(new_phase, 7)
 
     safe_commit(db)
-    return {"success": True, "message": f"已推进到阶段 {min(new_phase, 7)}"}
+    return success_response(message=f"已推进到阶段 {min(new_phase, 7)}")
 
 
 @router.post("/phases/{project_id}/rollback")
@@ -266,7 +276,7 @@ async def rollback_phase(
         f.lifecycle_phase = current.phase - 1
 
     safe_commit(db)
-    return {"success": True, "message": f"已退回到阶段 {current.phase - 1}"}
+    return success_response(message=f"已退回到阶段 {current.phase - 1}")
 
 
 # =====================================================================
@@ -283,9 +293,7 @@ async def initiate_project_fund(
     """初始化预算并生成项目报告模板"""
     _require_manager(current_user)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = _get_project_or_403(project_id, current_user, db)
 
     # 确保阶段记录存在
     phases = db.query(ProjectFundPhase).filter(ProjectFundPhase.project_id == project_id).all()
@@ -300,16 +308,15 @@ async def initiate_project_fund(
         phase1.operator = _get_username(current_user)
 
     safe_commit(db)
-    return {
-        "success": True,
-        "message": "论证立项已启动",
-        "data": {
+    return success_response(
+        message="论证立项已启动",
+        data={
             "project_id": project_id,
             "project_name": project.name,
             "budget": float(project.budget or 0),
             "phase": 1,
         },
-    }
+    )
 
 
 @router.get("/report-template/{project_id}")
@@ -319,17 +326,14 @@ async def get_report_template(
     db: Session = Depends(get_db),
 ):
     """获取论证报告数据（经济指标 + 预算概算）"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = _get_project_or_403(project_id, current_user, db)
 
     funds = db.query(Fund).filter(Fund.project_id == project_id).all()
     total_planned = sum(float(f.planned_amount or 0) for f in funds)
     total_approved = sum(float(f.approved_amount or 0) for f in funds)
 
-    return {
-        "success": True,
-        "data": {
+    return success_response(
+        data={
             "project": {
                 "id": project.id,
                 "name": project.name,
@@ -357,8 +361,8 @@ async def get_report_template(
                     for f in funds
                 ],
             },
-        },
-    }
+        }
+    )
 
 
 # =====================================================================
@@ -403,11 +407,10 @@ async def lock_budget(
         created_count += 1
 
     safe_commit(db)
-    return {
-        "success": True,
-        "message": f"已锁定 {created_count} 笔经费预算基线",
-        "data": {"locked_count": created_count},
-    }
+    return success_response(
+        message=f"已锁定 {created_count} 笔经费预算基线",
+        data={"locked_count": created_count},
+    )
 
 
 @router.get("/compliance-check/{project_id}")
@@ -417,10 +420,11 @@ async def compliance_check(
     db: Session = Depends(get_db),
 ):
     """合规性校验（10%预警线 / 15%否决线 + 费用标准匹配）"""
+    _get_project_or_403(project_id, current_user, db)
     from ...services.compliance_engine import run_compliance_check
 
     result = run_compliance_check(db, project_id)
-    return {"success": True, "data": result}
+    return success_response(data=result)
 
 
 @router.get("/budget-aggregation")
@@ -447,13 +451,12 @@ async def budget_aggregation(
         if project_ids:
             query = query.filter(Fund.project_id.in_(project_ids))
         else:
-            return {
-                "success": True,
-                "data": [],
-                "group_by": group_by,
-                "pie_chart_data": [],
-                "bar_chart_data": [],
-            }
+            return success_response(
+                data=[],
+                group_by=group_by,
+                pie_chart_data=[],
+                bar_chart_data=[],
+            )
 
     if group_by == "type":
         group_col = sa_func.coalesce(Fund.type, "other")
@@ -525,13 +528,12 @@ async def budget_aggregation(
         for it in items
     ]
 
-    return {
-        "success": True,
-        "data": items,
-        "group_by": group_by,
-        "pie_chart_data": pie_chart_data,
-        "bar_chart_data": bar_chart_data,
-    }
+    return success_response(
+        data=items,
+        group_by=group_by,
+        pie_chart_data=pie_chart_data,
+        bar_chart_data=bar_chart_data,
+    )
 
 
 # =====================================================================
@@ -565,11 +567,10 @@ async def quota_lock(fund_id: int, current_user=Depends(get_current_user), db: S
             )
 
     safe_commit(db)
-    return {
-        "success": True,
-        "message": "额度已锁定",
-        "data": {"fund_id": fund_id, "allocated": allocated},
-    }
+    return success_response(
+        message="额度已锁定",
+        data={"fund_id": fund_id, "allocated": allocated},
+    )
 
 
 @router.get("/allocation-plan/{project_id}")
@@ -579,6 +580,7 @@ async def allocation_plan(
     db: Session = Depends(get_db),
 ):
     """拨付计划分解"""
+    _get_project_or_403(project_id, current_user, db)
     funds = db.query(Fund).filter(Fund.project_id == project_id).all()
     # 预加载所有 baseline，避免 N+1 查询
     fund_ids = [f.id for f in funds]
@@ -612,7 +614,7 @@ async def allocation_plan(
             }
         )
 
-    return {"success": True, "data": {"project_id": project_id, "items": items}}
+    return success_response(data={"project_id": project_id, "items": items})
 
 
 # =====================================================================
@@ -716,7 +718,7 @@ async def create_transfer_voucher(
         user_id=current_user.id, username=_get_username(current_user),
         detail=f"金额: {data.amount} 万元",
     )
-    return {"success": True, "message": "创建成功", "data": _voucher_to_dict(voucher)}
+    return success_response(message="创建成功", data=_voucher_to_dict(voucher))
 
 
 @router.get("/transfer-vouchers/{voucher_id}")
@@ -729,7 +731,8 @@ async def get_transfer_voucher(
     v = db.query(FundTransferVoucher).filter(FundTransferVoucher.id == voucher_id).first()
     if not v:
         raise HTTPException(status_code=404, detail="凭证不存在")
-    return {"success": True, "data": _voucher_to_dict(v)}
+    _get_project_or_403(v.project_id, current_user, db)
+    return success_response(data=_voucher_to_dict(v))
 
 
 @router.put("/transfer-vouchers/{voucher_id}")
@@ -752,7 +755,7 @@ async def update_transfer_voucher(
         setattr(v, key, val)
     safe_commit(db)
     db.refresh(v)
-    return {"success": True, "message": "更新成功", "data": _voucher_to_dict(v)}
+    return success_response(message="更新成功", data=_voucher_to_dict(v))
 
 
 @router.delete("/transfer-vouchers/{voucher_id}")
@@ -772,7 +775,7 @@ async def delete_transfer_voucher(
 
     db.delete(v)
     safe_commit(db)
-    return {"success": True, "message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 @router.post("/transfer-vouchers/{voucher_id}/confirm")
@@ -800,7 +803,7 @@ async def confirm_transfer_voucher(
         user_id=current_user.id, username=_get_username(current_user),
         detail="凭证已确认",
     )
-    return {"success": True, "message": "凭证已确认"}
+    return success_response(message="凭证已确认")
 
 
 @router.post("/transfer-vouchers/{voucher_id}/attachments")
@@ -849,11 +852,10 @@ async def upload_voucher_attachment(
     safe_commit(db)
     db.refresh(attachment)
 
-    return {
-        "success": True,
-        "message": "附件上传成功",
-        "data": attachment.to_dict(),
-    }
+    return success_response(
+        message="附件上传成功",
+        data=attachment.to_dict(),
+    )
 
 
 @router.get("/transfer-ledger/{project_id}")
@@ -863,6 +865,7 @@ async def transfer_ledger(
     db: Session = Depends(get_db),
 ):
     """军地协调台账"""
+    _get_project_or_403(project_id, current_user, db)
     vouchers = (
         db.query(FundTransferVoucher)
         .filter(FundTransferVoucher.project_id == project_id)
@@ -877,9 +880,8 @@ async def transfer_ledger(
         float(v.amount or 0) for v in vouchers if v.direction == "local_to_military" and v.status == "confirmed"
     )
 
-    return {
-        "success": True,
-        "data": {
+    return success_response(
+        data={
             "project_id": project_id,
             "total_military_to_local": mil_to_local,
             "total_local_to_military": local_to_mil,
@@ -887,8 +889,8 @@ async def transfer_ledger(
             "voucher_count": len(vouchers),
             "confirmed_count": sum(1 for v in vouchers if v.status == "confirmed"),
             "vouchers": [_voucher_to_dict(v) for v in vouchers],
-        },
-    }
+        }
+    )
 
 
 # =====================================================================
@@ -968,7 +970,7 @@ async def create_contract(
         contract.contract_name,
         user_id=current_user.id, username=_get_username(current_user),
     )
-    return {"success": True, "message": "创建成功", "data": _contract_to_dict(contract)}
+    return success_response(message="创建成功", data=_contract_to_dict(contract))
 
 
 @router.get("/contracts/{contract_id}")
@@ -981,6 +983,7 @@ async def get_contract(
     c = db.query(FundContract).filter(FundContract.id == contract_id).first()
     if not c:
         raise HTTPException(status_code=404, detail="合同不存在")
+    _get_project_or_403(c.project_id, current_user, db)
 
     payments = (
         db.query(FundContractPayment)
@@ -991,7 +994,7 @@ async def get_contract(
 
     result = _contract_to_dict(c)
     result["payments"] = [_payment_to_dict(p) for p in payments]
-    return {"success": True, "data": result}
+    return success_response(data=result)
 
 
 @router.put("/contracts/{contract_id}")
@@ -1012,7 +1015,7 @@ async def update_contract(
         setattr(c, key, val)
     safe_commit(db)
     db.refresh(c)
-    return {"success": True, "message": "更新成功", "data": _contract_to_dict(c)}
+    return success_response(message="更新成功", data=_contract_to_dict(c))
 
 
 @router.delete("/contracts/{contract_id}")
@@ -1034,7 +1037,7 @@ async def delete_contract(
     db.query(FundContractPayment).filter(FundContractPayment.contract_id == contract_id).delete()
     db.delete(c)
     safe_commit(db)
-    return {"success": True, "message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 # 付款审批阈值（超过此金额自动触发上级审批）
@@ -1110,7 +1113,7 @@ async def create_contract_payment(
     if approval_info:
         result["approval"] = approval_info
     msg = "付款登记成功" if not needs_approval else f"付款金额 {data.amount:.2f} 万元超过阈值，已自动提交审批"
-    return {"success": True, "message": msg, "data": result}
+    return success_response(message=msg, data=result)
 
 
 def _create_payment_approval(db: Session, payment, contract, current_user, amount: float) -> dict:
@@ -1168,9 +1171,7 @@ async def monitoring_deviation(
     db: Session = Depends(get_db),
 ):
     """进度-支付偏差分析（可选生成报告）"""
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    project = _get_project_or_403(project_id, current_user, db)
 
     funds = db.query(Fund).filter(Fund.project_id == project_id).all()
     project_progress = project.progress or 0
@@ -1210,15 +1211,14 @@ async def monitoring_deviation(
 
     db.flush()
 
-    result = {
-        "success": True,
-        "data": {
+    result = success_response(
+        data={
             "project_id": project_id,
             "project_progress": project_progress,
             "deviations": deviations,
             "threshold": {"green": "±5%", "yellow": "±5%-10%", "red": "±10%以上"},
-        },
-    }
+        }
+    )
 
     # 可选：生成偏差分析报告
     if generate_report:
@@ -1236,6 +1236,7 @@ async def fund_flow(
     db: Session = Depends(get_db),
 ):
     """穿透式资金流查询（批量预加载，避免 N+1）"""
+    _get_project_or_403(project_id, current_user, db)
     funds = db.query(Fund).filter(Fund.project_id == project_id).all()
     fund_ids = [f.id for f in funds]
 
@@ -1290,10 +1291,7 @@ async def fund_flow(
             }
         )
 
-    return {
-        "success": True,
-        "data": {"project_id": project_id, "fund_flows": flow_items},
-    }
+    return success_response(data={"project_id": project_id, "fund_flows": flow_items})
 
 
 # =====================================================================
@@ -1347,11 +1345,10 @@ async def detect_anomalies(
     new_anomalies = run_detection(db, project_id)
     safe_commit(db)
 
-    return {
-        "success": True,
-        "message": f"检测完成，发现 {len(new_anomalies)} 个新异常",
-        "data": {"new_count": len(new_anomalies), "anomalies": new_anomalies},
-    }
+    return success_response(
+        message=f"检测完成，发现 {len(new_anomalies)} 个新异常",
+        data={"new_count": len(new_anomalies), "anomalies": new_anomalies},
+    )
 
 
 class AnomalyResolveRequest(BaseModel):
@@ -1396,7 +1393,7 @@ async def resolve_anomaly(
             fund.has_anomaly = remaining > 0
 
     safe_commit(db)
-    return {"success": True, "message": "异常已标记为已处理"}
+    return success_response(message="异常已标记为已处理")
 
 
 # =====================================================================
@@ -1419,9 +1416,7 @@ async def create_settlement(
     """生成决算报告"""
     _require_manager(current_user)
 
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="项目不存在")
+    _get_project_or_403(project_id, current_user, db)
 
     funds = db.query(Fund).filter(Fund.project_id == project_id).all()
     total_budget = sum(float(f.approved_amount or f.planned_amount or f.amount or 0) for f in funds)
@@ -1457,11 +1452,10 @@ async def create_settlement(
         user_id=current_user.id, username=_get_username(current_user),
         detail=f"项目ID: {project_id}, 预算: {total_budget}, 支出: {total_spent}",
     )
-    return {
-        "success": True,
-        "message": "决算报告已生成",
-        "data": _settlement_to_dict(settlement),
-    }
+    return success_response(
+        message="决算报告已生成",
+        data=_settlement_to_dict(settlement),
+    )
 
 
 class SettlementUpdateRequest(BaseModel):
@@ -1496,7 +1490,7 @@ async def update_settlement(
 
     safe_commit(db)
     db.refresh(s)
-    return {"success": True, "message": "更新成功", "data": _settlement_to_dict(s)}
+    return success_response(message="更新成功", data=_settlement_to_dict(s))
 
 
 class SettlementApproveRequest(BaseModel):
@@ -1553,7 +1547,7 @@ async def approve_settlement(
         user_id=current_user.id, username=_get_username(current_user),
         detail="决算审批通过",
     )
-    return {"success": True, "message": "决算已审批通过"}
+    return success_response(message="决算已审批通过")
 
 
 @router.get("/performance/{project_id}")
@@ -1563,6 +1557,7 @@ async def get_performance(
     db: Session = Depends(get_db),
 ):
     """绩效评估数据"""
+    _get_project_or_403(project_id, current_user, db)
     settlement = (
         db.query(FundSettlement)
         .filter(FundSettlement.project_id == project_id)
@@ -1584,9 +1579,8 @@ async def get_performance(
         or 0
     )
 
-    return {
-        "success": True,
-        "data": {
+    return success_response(
+        data={
             "project_id": project_id,
             "settlement": _settlement_to_dict(settlement) if settlement else None,
             "budget_summary": {
@@ -1600,8 +1594,8 @@ async def get_performance(
                 "unresolved": anomaly_total - anomaly_resolved,
                 "resolution_rate": (round(anomaly_resolved / anomaly_total * 100, 1) if anomaly_total > 0 else 100),
             },
-        },
-    }
+        }
+    )
 
 
 # =====================================================================
@@ -1616,11 +1610,12 @@ async def get_health(
     db: Session = Depends(get_db),
 ):
     """资金健康度评分"""
+    _get_project_or_403(project_id, current_user, db)
     from ...services.fund_health import calculate_health_score
 
     result = calculate_health_score(db, project_id)
     safe_commit(db)
-    return {"success": True, "data": result}
+    return success_response(data=result)
 
 
 class BatchHealthRequest(BaseModel):
@@ -1638,7 +1633,7 @@ async def batch_health(
 
     result = calculate_health_batch(db, data.project_ids)
     safe_commit(db)
-    return {"success": True, "data": result}
+    return success_response(data=result)
 
 
 # =====================================================================
@@ -1680,15 +1675,7 @@ async def list_allocation_orders(
 
     total = query.count()
     items = query.order_by(FundAllocationOrder.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
-    return {
-        "success": True,
-        "data": {
-            "items": [i.to_dict() for i in items],
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        },
-    }
+    return ok_list(items=[i.to_dict() for i in items], total=total, page=page, page_size=page_size)
 
 
 @router.post("/allocation-orders")
@@ -1712,7 +1699,7 @@ async def create_allocation_order(
     db.add(order)
     safe_commit(db)
     db.refresh(order)
-    return {"success": True, "message": "拨款指令创建成功", "data": order.to_dict()}
+    return success_response(message="拨款指令创建成功", data=order.to_dict())
 
 
 @router.post("/allocation-orders/{order_id}/issue")
@@ -1740,7 +1727,7 @@ async def issue_allocation_order(
         user_id=current_user.id, username=_get_username(current_user),
         detail="拨款指令已下达",
     )
-    return {"success": True, "message": "拨款指令已下达"}
+    return success_response(message="拨款指令已下达")
 
 
 # =====================================================================
@@ -1813,7 +1800,7 @@ async def quota_adjust(
 
     safe_commit(db)
     msg = "紧急额度调整已生效" if data.is_emergency else "额度调整申请已提交，待审批"
-    return {"success": True, "message": msg}
+    return success_response(message=msg)
 
 
 # =====================================================================
@@ -1828,6 +1815,7 @@ async def inspection_clues(
     db: Session = Depends(get_db),
 ):
     """生成标准化督查线索清单（批量预加载 Fund，避免 N+1）"""
+    _get_project_or_403(project_id, current_user, db)
     anomalies = (
         db.query(FundAnomaly)
         .filter(FundAnomaly.project_id == project_id)
@@ -1881,15 +1869,14 @@ async def inspection_clues(
             }
         )
 
-    return {
-        "success": True,
-        "data": {
+    return success_response(
+        data={
             "project_id": project_id,
             "total_clues": len(clues),
             "unresolved_count": sum(1 for c in clues if not c["resolved"]),
             "clues": clues,
-        },
-    }
+        }
+    )
 
 
 # =====================================================================
@@ -1944,11 +1931,10 @@ async def verify_asset(
 
     safe_commit(db)
     db.refresh(verification)
-    return {
-        "success": True,
-        "message": ("资产校验通过" if passed else f"资产校验未通过（差异率 {diff_rate}%）"),
-        "data": verification.to_dict(),
-    }
+    return success_response(
+        message=("资产校验通过" if passed else f"资产校验未通过（差异率 {diff_rate}%）"),
+        data=verification.to_dict(),
+    )
 
 
 # =====================================================================
@@ -1963,10 +1949,11 @@ async def performance_report(
     db: Session = Depends(get_db),
 ):
     """绩效自评报告（基于经济指标量化对比）"""
+    _get_project_or_403(project_id, current_user, db)
     from ...services.performance_evaluator import generate_performance_report
 
     result = generate_performance_report(db, project_id)
-    return {"success": True, "data": result}
+    return success_response(data=result)
 
 
 @router.get("/feasibility-report/{project_id}")
@@ -1976,10 +1963,11 @@ async def feasibility_report(
     db: Session = Depends(get_db),
 ):
     """可行性研究报告投资估算章节"""
+    _get_project_or_403(project_id, current_user, db)
     from ...services.fund_report_generator import generate_feasibility_report
 
     result = generate_feasibility_report(db, project_id)
-    return {"success": True, "data": result}
+    return success_response(data=result)
 
 
 # =====================================================================
@@ -1998,6 +1986,7 @@ async def fund_flow_tree(
 
     优化：使用 joinedload 预加载关联数据，避免 N+1 查询。
     """
+    _get_project_or_403(project_id, current_user, db)
     from ...models.fund_allocation_order import AllocationOrderItem, FundAllocationOrder
 
     query = db.query(Fund).filter(Fund.project_id == project_id)
@@ -2090,7 +2079,7 @@ async def fund_flow_tree(
             }
         )
 
-    return {"success": True, "data": {"project_id": project_id, "fund_tree": tree}}
+    return success_response(data={"project_id": project_id, "fund_tree": tree})
 
 
 # =====================================================================

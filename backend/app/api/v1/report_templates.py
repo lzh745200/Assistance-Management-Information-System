@@ -710,9 +710,12 @@ def _import_village_data(
     )
 
     try:
-        from app.services.work_log_service import get_work_log_recorder
-        recorder = get_work_log_recorder(db)
-        recorder.record_batch_import("village", created, mode, user_id=user_id, username="系统")
+        from app.services.work_log_service import write_work_log
+
+        write_work_log(
+            db, "village", "batch_import", 0, f"批量导入{created}条帮扶村数据",
+            user_id=user_id, username="系统", detail=msg,
+        )
     except Exception:
         logger.debug("记录工作日志失败")
 
@@ -814,10 +817,12 @@ def _import_school_data(
 
     # 自动记录工作日志
     try:
-        from app.services.work_log_service import get_work_log_recorder
+        from app.services.work_log_service import write_work_log
 
-        recorder = get_work_log_recorder(db)
-        recorder.record_batch_import("school", created, mode, user_id=user_id, username="系统")
+        write_work_log(
+            db, "school", "batch_import", 0, f"批量导入{created}所学校",
+            user_id=user_id, username="系统", detail=msg,
+        )
     except Exception:
         logger.debug("记录工作日志失败")
 
@@ -982,9 +987,12 @@ def _import_project_data(
     )
 
     try:
-        from app.services.work_log_service import get_work_log_recorder
-        recorder = get_work_log_recorder(db)
-        recorder.record_batch_import("project", created, mode, user_id=user_id, username="系统")
+        from app.services.work_log_service import write_work_log
+
+        write_work_log(
+            db, "project", "batch_import", 0, f"批量导入{created}个项目",
+            user_id=user_id, username="系统", detail=msg,
+        )
     except Exception:
         logger.debug("记录工作日志失败")
 
@@ -1121,9 +1129,12 @@ def _import_rural_work_data(
     )
 
     try:
-        from app.services.work_log_service import get_work_log_recorder
-        recorder = get_work_log_recorder(db)
-        recorder.record_batch_import("rural_work", created, mode, user_id=user_id, username="系统")
+        from app.services.work_log_service import write_work_log
+
+        write_work_log(
+            db, "rural_work", "batch_import", 0, f"批量导入{created}条乡村工作",
+            user_id=user_id, username="系统", detail=msg,
+        )
     except Exception:
         logger.debug("记录工作日志失败")
 

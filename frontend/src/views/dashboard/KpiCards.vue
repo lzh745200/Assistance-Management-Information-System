@@ -1,38 +1,68 @@
 <template>
   <div class="kpi-cards">
-    <div v-for="(card, i) in cards" :key="i" class="kpi-col">
-      <div class="stat-card" :class="card.theme" @click="navigateTo(card.route)">
-        <div class="stat-icon">
-          <el-icon><component :is="card.icon" /></el-icon>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">{{ card.label }}</div>
-          <div class="stat-value">
-            <span class="data-number data-number--lg">{{ card.formatted }}</span>
-            <span v-if="card.unit" class="data-unit">{{ card.unit }}</span>
-          </div>
-          <div class="stat-trend" :class="trendClass(card.trend)">
-            <span class="trend-tag" :class="trendTagClass(card.trend)">
-              <i class="trend-tag__arrow">{{ trendArrow(card.trend) }}</i>
-              <template v-if="card.trend !== 0">{{ Math.abs(card.trend) }}%</template>
-              <template v-else>持平</template>
-            </span>
-            <span class="trend-label">较上月</span>
-          </div>
-        </div>
-        <div :ref="(el: any) => (sparkRefs[i] = el)" class="stat-sparkline" />
+    <template v-if="loading">
+      <div v-for="i in 5" :key="'skeleton-' + i" class="kpi-col">
+        <el-skeleton animated :rows="2" class="stat-skeleton" />
       </div>
+    </template>
+    <div v-else-if="error" class="kpi-error">
+      <span class="kpi-error__text">数据加载失败，请稍后重试</span>
+      <el-button size="small" type="primary" @click="loadStats">重试</el-button>
     </div>
+    <template v-else>
+      <div v-for="(card, i) in cards" :key="i" class="kpi-col">
+        <div
+          class="stat-card"
+          :class="card.theme"
+          role="button"
+          tabindex="0"
+          @click="navigateTo(card.route)"
+          @keydown.enter.prevent="navigateTo(card.route)"
+          @keydown.space.prevent="navigateTo(card.route)"
+        >
+          <div class="stat-icon">
+            <el-icon><component :is="card.icon" /></el-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">{{ card.label }}</div>
+            <div class="stat-value">
+              <span class="data-number data-number--lg">{{ card.formatted }}</span>
+              <span v-if="card.unit" class="data-unit">{{ card.unit }}</span>
+            </div>
+            <div class="stat-trend" :class="trendClass(card.trend)">
+              <span class="trend-tag" :class="trendTagClass(card.trend)">
+                <el-icon class="trend-tag__icon">
+                  <component :is="trendIcon(card.trend)" />
+                </el-icon>
+                <template v-if="card.trend !== 0">{{ Math.abs(card.trend) }}%</template>
+                <template v-else>持平</template>
+              </span>
+              <span class="trend-label">较上月</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { OfficeBuilding, Folder, School, Money, User } from '@element-plus/icons-vue'
-import echarts from '@/utils/echarts'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import {
+  OfficeBuilding,
+  Folder,
+  School,
+  Money,
+  User,
+  Top,
+  Bottom,
+  Minus,
+} from '@element-plus/icons-vue'
 import { get } from '@/api/request'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { unwrapData } from '@/utils/unwrapData'
+import { logger } from '@/utils/logger'
 
 const { pushSafe } = useRouterSafe()
 
@@ -72,6 +102,8 @@ const stats = ref<DashboardStats>({
   total_population: 0,
   total_funds: 0,
 })
+const loading = ref(true)
+const error = ref(false)
 
 function fmt(v: number | undefined): string {
   return v != null ? v.toLocaleString() : '--'
@@ -89,8 +121,8 @@ function trendClass(v: number) {
 function trendTagClass(v: number) {
   return v > 0 ? 'trend-tag--up' : v < 0 ? 'trend-tag--down' : 'trend-tag--flat'
 }
-function trendArrow(v: number) {
-  return v > 0 ? '↗' : v < 0 ? '↘' : '→'
+function trendIcon(v: number) {
+  return v > 0 ? Top : v < 0 ? Bottom : Minus
 }
 
 const icons: Record<string, any> = {
@@ -154,60 +186,9 @@ function navigateTo(route?: string) {
   pushSafe(route)
 }
 
-const SPARK_COLORS = ['#1e4d8c', '#2d6a4f', '#f59e0b', '#ef4444', '#6366f1']
-const SPARK_ALPHAS = [
-  'rgba(30,77,140,0.19)',
-  'rgba(45,106,79,0.19)',
-  'rgba(245,158,11,0.19)',
-  'rgba(239,68,68,0.19)',
-  'rgba(99,102,241,0.19)',
-]
-const sparkRefs: (HTMLElement | null)[] = [null, null, null, null, null]
-let sparkCharts: (echarts.ECharts | null)[] = []
-
-function makeSparkOption(data: number[], color: string, alpha: string): echarts.EChartsCoreOption {
-  return {
-    grid: { left: 0, right: 0, top: 2, bottom: 0 },
-    xAxis: { type: 'category', data: data.map((_, idx) => idx), show: false },
-    yAxis: { type: 'value', show: false },
-    series: [
-      {
-        type: 'line',
-        data,
-        smooth: true,
-        symbol: 'none',
-        lineStyle: { width: 2, color },
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: alpha },
-            { offset: 1, color: 'rgba(255,255,255,0)' },
-          ]),
-        },
-      },
-    ],
-  }
-}
-
-function initSparklines() {
-  sparkCharts.forEach((c) => c?.dispose())
-  sparkCharts = sparkRefs.map((el, i) => {
-    if (!el) return null
-    const chart = echarts.init(el)
-    const statValues = [
-      stats.value.total_villages,
-      stats.value.total_projects,
-      stats.value.total_schools,
-      stats.value.total_funds,
-      stats.value.total_population,
-    ]
-    const base = statValues[i] || 100
-    const data = Array.from({ length: 8 }, () => Math.round(base * (0.7 + Math.random() * 0.5)))
-    chart.setOption(makeSparkOption(data, SPARK_COLORS[i], SPARK_ALPHAS[i]))
-    return chart
-  })
-}
-
 async function loadStats() {
+  loading.value = true
+  error.value = false
   try {
     const res = await get('/dashboard/stats', { refresh: true } as any)
     const d = unwrapData<Record<string, number>>(res, {} as Record<string, number>)
@@ -220,26 +201,17 @@ async function loadStats() {
         total_funds: d.total_funds ?? 0,
       }
     }
-  } catch {
-    /* use defaults */
+  } catch (e) {
+    logger.error('KPI 统计数据加载失败', e)
+    error.value = true
+    ElMessage.error('数据加载失败，请稍后重试')
+  } finally {
+    loading.value = false
   }
-}
-
-function handleResize() {
-  sparkCharts.forEach((c) => c?.resize())
 }
 
 onMounted(async () => {
   await loadStats()
-  await nextTick()
-  initSparklines()
-  window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  sparkCharts.forEach((c) => c?.dispose())
-  sparkCharts = []
 })
 </script>
 
@@ -254,6 +226,30 @@ onUnmounted(() => {
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
   }
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-skeleton {
+  background: $color-bg-card;
+  padding: $spacing-md;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-sm;
+}
+
+.kpi-error {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-md;
+  padding: $spacing-xl;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-sm;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
 }
 
 .stat-card {
@@ -284,19 +280,19 @@ onUnmounted(() => {
     border-radius: 0 4px 4px 0;
   }
   &.primary::before {
-    background: #1e4d8c;
+    background: $color-primary;
   }
   &.success::before {
-    background: #2d6a4f;
+    background: $color-success;
   }
   &.warning::before {
-    background: #f59e0b;
+    background: $color-warning;
   }
   &.danger::before {
-    background: #ef4444;
+    background: $color-danger;
   }
   &.info-card::before {
-    background: #6366f1;
+    background: $color-info;
   }
 }
 
@@ -312,24 +308,24 @@ onUnmounted(() => {
   margin-right: 12px;
 }
 .primary .stat-icon {
-  background: rgba(30, 77, 140, 0.08);
-  color: #1e4d8c;
+  background: var(--color-primary-light-8);
+  color: $color-primary;
 }
 .success .stat-icon {
-  background: rgba(45, 106, 79, 0.08);
-  color: #2d6a4f;
+  background: var(--color-success-lightest);
+  color: $color-success;
 }
 .warning .stat-icon {
-  background: rgba(245, 158, 11, 0.08);
-  color: #f59e0b;
+  background: var(--color-warning-lightest);
+  color: $color-warning;
 }
 .danger .stat-icon {
-  background: rgba(239, 68, 68, 0.08);
-  color: #ef4444;
+  background: var(--color-danger-lightest);
+  color: $color-danger;
 }
 .info-card .stat-icon {
-  background: rgba(99, 102, 241, 0.08);
-  color: #6366f1;
+  background: var(--color-info-lightest);
+  color: $color-info;
 }
 
 .stat-content {
@@ -338,7 +334,7 @@ onUnmounted(() => {
 }
 .stat-label {
   font-size: 12px;
-  color: #64748b;
+  color: $color-text-secondary;
   margin-bottom: 2px;
 }
 .stat-value {
@@ -355,13 +351,13 @@ onUnmounted(() => {
   font-size: 12px;
 }
 .stat-trend--up {
-  color: #16a34a;
+  color: $color-success;
 }
 .stat-trend--down {
-  color: #dc2626;
+  color: $color-danger;
 }
 .trend-label {
-  color: #94a3b8;
+  color: $color-text-placeholder;
   font-size: 11px;
 }
 .trend-tag {
@@ -375,23 +371,18 @@ onUnmounted(() => {
   border-radius: 10px;
 }
 .trend-tag--up {
-  color: #16a34a;
-  background: rgba(22, 163, 74, 0.08);
+  color: $color-success;
+  background: var(--color-success-lightest);
 }
 .trend-tag--down {
-  color: #dc2626;
-  background: rgba(220, 38, 38, 0.08);
+  color: $color-danger;
+  background: var(--color-danger-lightest);
 }
 .trend-tag--flat {
-  color: #64748b;
-  background: rgba(100, 116, 139, 0.08);
+  color: $color-info;
+  background: var(--color-info-lightest);
 }
-.trend-tag__arrow {
-  font-size: 10px;
-}
-.stat-sparkline {
-  width: 100%;
-  height: 36px;
-  margin-top: 8px;
+.trend-tag__icon {
+  font-size: 12px;
 }
 </style>

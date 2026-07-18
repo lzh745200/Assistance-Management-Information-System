@@ -171,6 +171,7 @@ const loadSchoolInfo = async (id: string) => {
     }
   } catch (error) {
     logger.error('加载学校信息失败:', error)
+    ElMessage.error('加载学校信息失败，请稍后重试')
   }
 }
 
@@ -182,6 +183,7 @@ const loadRecords = async (schoolId: string) => {
     records.value = allRecords || []
   } catch (error) {
     logger.error('加载帮扶记录失败:', error)
+    ElMessage.error('加载帮扶记录失败，请稍后重试')
   }
 }
 

@@ -444,12 +444,12 @@ onMounted(() => {
   color: white;
 }
 .stat-card.primary .stat-icon {
-  color: #409eff;
-  background: #ecf5ff;
+  color: var(--color-primary);
+  background: var(--color-primary-light-8);
 }
 .stat-card.success .stat-icon {
   color: #67c23a;
-  background: #f0f9ff;
+  background: var(--color-primary-light-8);
 }
 .stat-card.warning .stat-icon {
   color: #e6a23c;
@@ -585,7 +585,7 @@ onMounted(() => {
   gap: 4px;
 }
 .log-user {
-  color: #409eff;
+  color: var(--color-primary);
 }
 .log-separator {
   color: #ddd;

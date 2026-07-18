@@ -330,7 +330,10 @@ class TestSubmitFeedback:
             "contact": "user@example.com",
         })
         assert resp.status_code == 200
-        assert resp.json() == {"success": True, "message": "感谢您的反馈"}
+        # 端点返回 success_response 信封，断言关键字段而非精确相等
+        body = resp.json()
+        assert body["success"] is True
+        assert body["message"] == "感谢您的反馈"
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
         mock_db.refresh.assert_called_once()

@@ -621,7 +621,7 @@ onMounted(() => {
 }
 
 .permission-header strong {
-  color: #409eff;
+  color: var(--color-primary);
 }
 
 .permission-tree {
