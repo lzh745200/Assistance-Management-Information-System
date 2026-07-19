@@ -30,6 +30,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.transaction import safe_commit
 from app.core.data_permission import filter_by_data_scope, require_data_permission, check_record_access
+from app.api.v1.deps import enforce_admin_include_deleted, build_viewable_because
 from app.core.errors import AppError
 from app.core.exceptions import NotFoundException
 from app.core.response import ok_list, success_response
@@ -625,7 +626,7 @@ async def list_projects(
     sort_by: Optional[str] = None,
     sort_order: Optional[str] = Query("desc"),
     include_cancelled: bool = Query(False, description="是否包含已取消项目"),
-    include_deleted: bool = Query(False, description="是否包含已软删的记录"),
+    include_deleted: bool = Depends(enforce_admin_include_deleted),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -646,10 +647,7 @@ async def list_projects(
     if not include_cancelled:
         query = query.filter(Project.status != ProjectStatus.CANCELLED.value)
 
-    # 安全基线：include_deleted 仅管理员可用（参考 AGENTS.md 软删除模式约定）
-    # 非管理员即使显式传入 include_deleted=true 也强制降级为 False，避免越权查看软删记录
-    if include_deleted and not is_admin(current_user):
-        include_deleted = False
+    # include_deleted 已由 enforce_admin_include_deleted 依赖收敛：非管理员自动降级为 False
 
     # 软删过滤：默认隐藏 is_active=False 的记录
     if not include_deleted:
@@ -731,6 +729,8 @@ async def get_project(
     data = _project_to_dict(project)
     data["funds_count"] = funds_total
     data["tasks_count"] = tasks_total
+    # 管理员查看已软删记录时附带可见性元数据，便于前端审计展示
+    data["viewableBecause"] = build_viewable_because(current_user, project)
     # 统一 envelope：{code:200, data:{...}, message:"成功"}
     return success_response(data=data, message="成功")
 

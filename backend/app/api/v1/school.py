@@ -36,6 +36,7 @@ from ...models.school import (
     SupportStatus,
 )
 from ...core.data_permission import require_data_permission, is_admin
+from app.api.v1.deps import enforce_admin_include_deleted, build_viewable_because
 from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from app.core.transaction import safe_commit
 from ...services.work_log_service import write_work_log
@@ -554,7 +555,7 @@ async def list_schools(
     type: Optional[str] = None,
     support_status: Optional[str] = None,
     supportStatus: Optional[str] = None,
-    include_deleted: bool = Query(False, description="是否包含已软删的记录"),
+    include_deleted: bool = Depends(enforce_admin_include_deleted),
     current_user=Depends(get_current_user),
     data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
@@ -584,11 +585,7 @@ async def list_schools(
         except (TypeError, ValueError):
             _ckey = None
 
-    # 安全基线：include_deleted 仅管理员可用（参考 AGENTS.md 软删除模式约定）
-    # 非管理员即使显式传入 include_deleted=true 也强制降级为 False，避免越权查看软删记录
-    if include_deleted and not is_admin(current_user):
-        include_deleted = False
-
+    # include_deleted 已由 enforce_admin_include_deleted 依赖收敛：非管理员自动降级为 False
     query = db.query(School)
     # 默认过滤软删记录（is_active=False），include_deleted=True 时显示全部
     if not include_deleted:
@@ -633,7 +630,7 @@ async def get_school(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取学校详情（含已软删记录，前端按 is_deleted 标记展示）"""
+    """获取学校详情（含已软删记录，管理员可见时附带 viewableBecause 元数据）"""
     # 详情不强制 is_active=True，软删记录可见
     school = db.query(School).filter(School.id == school_id).first()
     if not school:
@@ -645,7 +642,9 @@ async def get_school(
         db,
         error_message="无权访问该学校数据",
     )
-    return success_response(data=school.to_dict(), message="成功")
+    data = school.to_dict()
+    data["viewableBecause"] = build_viewable_because(current_user, school)
+    return success_response(data=data, message="成功")
 
 
 @router.post("")

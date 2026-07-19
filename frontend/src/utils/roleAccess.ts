@@ -53,6 +53,19 @@ export function isAdminUser(): boolean {
 }
 
 /**
+ * 检查当前用户是否可查看软删记录（回收站入口可见性）。
+ *
+ * 采用严格路线：仅 super_admin/admin 可见。
+ * 参考 AGENTS.md "软删除模式" 章节 — `include_deleted=true 显示全部（管理员）`。
+ *
+ * 后端依赖 `enforce_admin_include_deleted`（app/api/v1/deps.py）会对非管理员
+ * 静默降级 `include_deleted=true` → `False`，此处仅控制 UI 入口可见性。
+ */
+export function canViewDeleted(): boolean {
+  return isAdminUser()
+}
+
+/**
  * 基于角色白名单判断是否可访问
  * @param role 当前角色
  * @param allowedRoles 白名单角色；为空表示不限制

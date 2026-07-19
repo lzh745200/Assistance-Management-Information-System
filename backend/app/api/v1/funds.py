@@ -22,7 +22,7 @@ from pydantic import BaseModel
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.api.v1.deps import require_manager_role
+from app.api.v1.deps import require_manager_role, enforce_admin_include_deleted, build_viewable_because
 from app.core.database import get_db
 from app.core.response import ok_list
 from app.core.security import get_current_user
@@ -172,7 +172,7 @@ def list_funds(
     school_id: Optional[int] = None,
     cursor: Optional[str] = Query(None, description="Keyset分页游标"),
     pagination: str = Query("offset", description="分页方式: 'offset' | 'keyset'"),
-    include_deleted: bool = Query(False, description="是否包含已软删的记录"),
+    include_deleted: bool = Depends(enforce_admin_include_deleted),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -187,10 +187,7 @@ def list_funds(
     # 2. 数据权限隔离
     stmt = apply_data_scope(stmt, Fund, current_user)
 
-    # 安全基线：include_deleted 仅管理员可用（参考 AGENTS.md 软删除模式约定）
-    # 非管理员即使显式传入 include_deleted=true 也强制降级为 False，避免越权查看软删记录
-    if include_deleted and not is_admin(current_user):
-        include_deleted = False
+    # include_deleted 已由 enforce_admin_include_deleted 依赖收敛：非管理员自动降级为 False
 
     # 2.5 软删过滤：默认隐藏 is_active=False 的记录
     if not include_deleted:
@@ -272,6 +269,7 @@ def get_fund(
     """查询经费详情。
 
     跨组织访问时返回明确 403，避免用户误以为记录不存在。
+    管理员查看已软删记录时附带 viewableBecause="admin" 元数据。
     """
     # 先不带数据权限查一次，区分"不存在"和"无权访问"
     exists = db.execute(select(Fund.id).where(Fund.id == fund_id)).scalar_one_or_none()
@@ -292,7 +290,9 @@ def get_fund(
     if not fund:
         # 记录存在但数据权限过滤后为空 → 跨组织访问
         raise HTTPException(status_code=403, detail="无权访问该组织数据")
-    return {"data": _fund_to_dict(fund)}
+    data = _fund_to_dict(fund)
+    data["viewableBecause"] = build_viewable_because(current_user, fund)
+    return {"data": data}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)

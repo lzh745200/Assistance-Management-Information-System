@@ -32,6 +32,7 @@ from app.models.supported_village import (
     VillageCommitteeMember,
 )
 from app.core.data_permission import filter_by_data_scope, check_record_access, is_admin
+from app.api.v1.deps import enforce_admin_include_deleted, build_viewable_because
 from app.schemas.supported_village import SupportedVillageCreate, SupportedVillageUpdate
 from app.core.transaction import safe_commit
 
@@ -261,7 +262,7 @@ async def list_villages(
     county: Optional[str] = None,
     isRevitalizationTier: Optional[bool] = None,
     isThreeRegions: Optional[int] = None,
-    include_deleted: bool = Query(False, description="是否包含已软删的记录"),
+    include_deleted: bool = Depends(enforce_admin_include_deleted),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -289,11 +290,7 @@ async def list_villages(
         except (TypeError, ValueError):
             _ckey = None
 
-    # 安全基线：include_deleted 仅管理员可用（参考 AGENTS.md 软删除模式约定）
-    # 非管理员即使显式传入 include_deleted=true 也强制降级为 False，避免越权查看软删记录
-    if include_deleted and not is_admin(current_user):
-        include_deleted = False
-
+    # include_deleted 已由 enforce_admin_include_deleted 依赖收敛：非管理员自动降级为 False
     query = db.query(SupportedVillage)
     query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
 
@@ -516,9 +513,12 @@ async def get_village(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取帮扶村详情"""
+    """获取帮扶村详情（含已软删记录，管理员可见时附带 viewableBecause 元数据）"""
     village = _get_village_or_404(db, village_id, current_user)
-    return {"data": village.to_dict() if hasattr(village, "to_dict") else {"id": village.id}}
+    data = village.to_dict() if hasattr(village, "to_dict") else {"id": village.id}
+    # 管理员查看已软删记录时附带可见性元数据，便于前端审计展示
+    data["viewableBecause"] = build_viewable_because(current_user, village)
+    return {"data": data}
 
 
 @router.post("")
