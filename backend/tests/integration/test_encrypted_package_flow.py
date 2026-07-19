@@ -22,20 +22,9 @@ def real_db_session():
     """创建真实的数据库会话（使用内存数据库避免文件锁定和超时）"""
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
 
-    # 只创建测试需要的表，避免创建所有表导致超时
+    # 使用内存数据库创建所有表（内存数据库速度快，不会超时）
     from app.models.base import Base
-    # 创建必要的表（包括依赖的表）
-    tables_to_create = [
-        Organization.__table__,
-        Village.__table__,
-    ]
-    # 检查是否有 DataPackage 模型需要创建
-    try:
-        from app.models.data_package import DataPackage
-        tables_to_create.append(DataPackage.__table__)
-    except ImportError:
-        pass
-    Base.metadata.create_all(bind=engine, tables=tables_to_create)
+    Base.metadata.create_all(bind=engine)
 
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = SessionLocal()
