@@ -17,18 +17,25 @@ from app.models.organization import Organization
 from app.services.data_package_service import DataPackageService
 
 
-# Create a real SQLite database for testing
-TEST_DATABASE_URL = "sqlite:///./test_encrypted_package.db"
-
-
 @pytest.fixture(scope="function")
 def real_db_session():
-    """创建真实的数据库会话"""
-    engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+    """创建真实的数据库会话（使用内存数据库避免文件锁定和超时）"""
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
 
-    # Create all tables
+    # 只创建测试需要的表，避免创建所有表导致超时
     from app.models.base import Base
-    Base.metadata.create_all(bind=engine)
+    # 创建必要的表（包括依赖的表）
+    tables_to_create = [
+        Organization.__table__,
+        Village.__table__,
+    ]
+    # 检查是否有 DataPackage 模型需要创建
+    try:
+        from app.models.data_package import DataPackage
+        tables_to_create.append(DataPackage.__table__)
+    except ImportError:
+        pass
+    Base.metadata.create_all(bind=engine, tables=tables_to_create)
 
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = SessionLocal()
@@ -37,7 +44,7 @@ def real_db_session():
 
     # Cleanup
     session.close()
-    Base.metadata.drop_all(bind=engine)
+    engine.dispose()
 
 
 class TestEncryptedPackageFlow:

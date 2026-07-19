@@ -28,6 +28,19 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = computed(
     () => user.value?.is_superuser === true || ADMIN_ROLES.includes(user.value?.role ?? '')
   )
+  /**
+   * 回收站入口可见性：仅 super_admin/admin 可见软删记录。
+   *
+   * 采用严格路线（参考 AGENTS.md "软删除模式" 章节）：
+   *   - True → UI 显示"回收站"入口，请求列表时附加 `include_deleted=true`
+   *   - False → 入口隐藏；后端 `enforce_admin_include_deleted` 依赖会兜底降级
+   *
+   * 注意：manager/approval_leader 不在允许列表内（数据范围 OWN_DEPT
+   * 不等于"可查看软删记录"）。
+   */
+  const canViewDeleted = computed(
+    () => user.value?.is_superuser === true || ADMIN_ROLES.includes(user.value?.role ?? '')
+  )
   const mustChangePassword = computed(() => user.value?.must_change_password ?? false)
 
   /**
@@ -136,6 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
     mustChangePassword,
     isAuthenticated,
     isAdmin,
+    canViewDeleted,
     modulePermissions,
     logout,
     login,

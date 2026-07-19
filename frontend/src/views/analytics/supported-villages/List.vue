@@ -89,6 +89,20 @@
           <el-icon><Download /></el-icon>
           下载模板
         </el-button>
+        <!-- 回收站入口（仅管理员可见）：切换显示已软删记录 -->
+        <el-tooltip
+          v-if="canViewDeleted"
+          content="切换显示已软删的帮扶村记录（管理员可见）"
+          placement="top"
+        >
+          <el-switch
+            v-model="showDeletedOnly"
+            inline-prompt
+            active-text="回收站"
+            inactive-text="正常"
+            @change="handleToggleDeleted"
+          />
+        </el-tooltip>
       </div>
       <div v-if="selectedRows.length > 0" class="action-bar-right">
         <span class="selection-info">已选择 {{ selectedRows.length }} 条</span>
@@ -208,6 +222,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Plus, Download, Upload, Delete } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
 import {
   getSupportedVillages,
   deleteSupportedVillage,
@@ -225,6 +240,11 @@ import SupportedVillageForm from './components/SupportedVillageForm.vue'
 import YearlyDataForm from './components/YearlyDataForm.vue'
 
 const { pushSafe } = useRouterSafe()
+const authStore = useAuthStore()
+// 回收站入口可见性：仅 super_admin/admin（严格路线，参考 AGENTS.md 软删除模式）
+const canViewDeleted = computed(() => authStore.canViewDeleted)
+// 是否处于"回收站"模式（显示已软删记录）。非管理员无法开启
+const showDeletedOnly = ref(false)
 
 // 状态
 const loading = ref(false)
@@ -310,7 +330,10 @@ async function loadData() {
       is_three_regions: filters.isThreeRegions || undefined,
       is_ethnic_area: filters.isEthnicArea || undefined,
       is_key_county: filters.isKeyCounty || undefined,
-    })
+      // 回收站模式：管理员开启时附加 include_deleted=true
+      // 后端 enforce_admin_include_deleted 依赖会兜底降级非管理员的请求
+      include_deleted: showDeletedOnly.value ? true : undefined,
+    } as any)
     tableData.value = (response as any)?.data?.items || (response as any)?.items
     pagination.total =
       (response as any)?.data?.total || (response as any)?.total || tableData.value.length
@@ -319,6 +342,18 @@ async function loadData() {
   } finally {
     loading.value = false
   }
+}
+
+// 切换"回收站"模式（仅管理员可触发；非管理员开关被隐藏）
+function handleToggleDeleted(val: boolean | string | number) {
+  // val 为 el-switch 的当前值；非管理员理论上不应被触发（UI 已隐藏）
+  if (val && !canViewDeleted.value) {
+    showDeletedOnly.value = false
+    ElMessage.warning('仅管理员可查看已删除记录')
+    return
+  }
+  pagination.page = 1
+  loadData()
 }
 
 // 加载筛选选项
