@@ -191,7 +191,11 @@ class Settings(BaseSettings):
 
     # 启动时自动迁移（ALTER TABLE ADD COLUMN）
     # 设为 False 可禁用运行时自动 DDL，改用 Alembic 迁移管理
-    ENABLE_AUTO_MIGRATION: bool = False  # 禁用启动时列扫描，节省 2-3s 启动时间；Alembic 迁移优先
+    # 注意：必须保持 True。部署环境的 SQLite 数据库可能缺少 is_active 等较新的列
+    # （如 supported_villages.is_active / projects.is_active / funds.is_active），
+    # 自动迁移会在启动时检测并 ALTER TABLE ADD COLUMN 补齐，避免运行时
+    # OperationalError: no such column: xxx.is_active
+    ENABLE_AUTO_MIGRATION: bool = True
 
     @property
     def CORS_ALLOWED_ORIGINS(self) -> List[str]:
@@ -320,6 +324,15 @@ class Settings(BaseSettings):
             self.UPLOAD_DIR = _get_default_uploads_dir()
         if self.EXPORT_DIR.startswith("./"):
             self.EXPORT_DIR = _get_default_exports_dir()
+        # 额外安全网：如果 UPLOAD_DIR 仍然是相对路径（如 env var 设为 "uploads"），
+        # 转换为绝对路径，避免在 Program Files 等只读目录下创建文件夹失败
+        import os as _os
+        if self.UPLOAD_DIR and not _os.path.isabs(self.UPLOAD_DIR):
+            self.UPLOAD_DIR = _get_default_uploads_dir()
+        if self.EXPORT_DIR and not _os.path.isabs(self.EXPORT_DIR):
+            self.EXPORT_DIR = _get_default_exports_dir()
+        if self.CACHE_DIR and not _os.path.isabs(self.CACHE_DIR):
+            self.CACHE_DIR = _get_default_cache_dir()
 
 
 # SECRET_KEY 安全校验：

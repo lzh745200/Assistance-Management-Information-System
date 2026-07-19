@@ -194,18 +194,25 @@ def _enrich_fund_time_fields(mapper, connection, target: Fund):
     """
     在 Fund 插入或更新前，自动计算并填充 year, year_month, year_quarter。
     优先使用 date 字段，如果为空则回退到 application_date。
-    """
-    target_date = _parse_date_value(target.date)
-    if not target_date:
-        target_date = _parse_date_value(target.application_date)
 
-    if target_date:
-        target.year = target_date.year
-        target.year_month = target_date.strftime("%Y-%m")
+    同时将 target.date 统一转换为 Python date 对象，
+    避免字符串传入 SQLite Date 列导致 TypeError。
+    """
+    # 将 target.date 转换为 date 对象（防止前端传入字符串）
+    parsed_date = _parse_date_value(target.date)
+    if parsed_date is not None:
+        target.date = parsed_date  # 回写 date 对象，避免 TypeError
+
+    if not parsed_date:
+        parsed_date = _parse_date_value(target.application_date)
+
+    if parsed_date:
+        target.year = parsed_date.year
+        target.year_month = parsed_date.strftime("%Y-%m")
 
         # 计算季度: 1-3月为Q1, 4-6月为Q2, 7-9月为Q3, 10-12月为Q4
-        quarter = (target_date.month - 1) // 3 + 1
-        target.year_quarter = f"{target_date.year}-Q{quarter}"
+        quarter = (parsed_date.month - 1) // 3 + 1
+        target.year_quarter = f"{parsed_date.year}-Q{quarter}"
 
 
 # 监听插入和更新事件

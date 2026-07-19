@@ -75,6 +75,18 @@ def write_work_log(db, log_type, action, entity_id, entity_name, **kwargs):
         parts.append(f"by {username}")
     if detail:
         parts.append(detail)
+
+    # 防御性检查：user_id 列为 NOT NULL，如果 user_id 为 None 则跳过
+    # （crash log 中 current_user.id 偶发为 None 导致 IntegrityError）
+    user_id = kwargs.get("user_id")
+    if user_id is None:
+        import logging
+        logging.getLogger(__name__).warning(
+            "write_work_log 跳过：user_id 为 None (action=%s, entity=%s)",
+            action, entity_name,
+        )
+        return None
+
     log = WorkLog(
         category=log_type,
         content=" | ".join(parts),

@@ -146,32 +146,18 @@ async def login(
     _check_account_lockout(user, login_request.username, db, now=now)
 
     if not verify_password(login_request.password, user.hashed_password):
-        # 登录失败：原子递增失败计数（避免竞态条件）
+        # 登录失败：递增失败计数
         failed_count = 0
         try:
-            from sqlalchemy import func, update, case
+            # 使用读-改-写方式替代 RETURNING 子句
+            # （旧版 SQLite < 3.35 不支持 RETURNING 语法）
             from app.models.user import User
 
-            # 原子更新：使用 SQL 表达式直接递增（COALESCE 防御 NULL），避免读-改-写竞态
-            # 条件锁定：失败次数达到阈值时自动设置 locked_until
-            # 使用 RETURNING 子句获取更新后的值，避免额外 SELECT 往返
-            new_count_expr = func.coalesce(User.failed_login_count, 0) + 1
-            stmt = (
-                update(User)
-                .where(User.id == user.id)
-                .values(
-                    failed_login_count=new_count_expr,
-                    locked_until=case(
-                        (new_count_expr >= _MAX_FAILED_ATTEMPTS,
-                         now + timedelta(minutes=_LOCKOUT_MINUTES)),
-                        else_=User.locked_until,
-                    ),
-                )
-                .returning(User.failed_login_count)
-            )
-            result = db.execute(stmt)
-            # 先消费 RETURNING 结果再提交，防止 "SQL statements in progress"
-            failed_count = result.scalar() or 0
+            db.refresh(user)  # 确保读取最新值
+            user.failed_login_count = (user.failed_login_count or 0) + 1
+            failed_count = user.failed_login_count
+            if failed_count >= _MAX_FAILED_ATTEMPTS:
+                user.locked_until = now + timedelta(minutes=_LOCKOUT_MINUTES)
             safe_commit(db)
             logger.info(f"登录失败: user={login_request.username}, failed_count={failed_count}/{_MAX_FAILED_ATTEMPTS}")
 

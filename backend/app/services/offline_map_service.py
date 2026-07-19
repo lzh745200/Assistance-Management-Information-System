@@ -14,7 +14,18 @@ from app.utils.paths import get_data_path
 
 logger = logging.getLogger(__name__)
 
-TILE_CACHE_DIR = get_data_path("offline_tiles")
+# 模块级别获取瓦片缓存目录。
+# 使用 try/except 防护：如果 get_data_path() 因权限问题失败，
+# 回退到用户临时目录，避免整个路由模块加载失败（crash log 中曾导致 41/42 路由加载）。
+try:
+    TILE_CACHE_DIR = get_data_path("offline_tiles")
+except Exception as _e:
+    import tempfile
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "离线地图缓存目录初始化失败，回退到临时目录: %s", _e
+    )
+    TILE_CACHE_DIR = Path(tempfile.gettempdir()) / "bumofu_offline_tiles"
 
 
 class OfflineMapService:

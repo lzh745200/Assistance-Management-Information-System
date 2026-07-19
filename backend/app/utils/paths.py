@@ -49,8 +49,15 @@ def _safe_join(base: Path, sub_path: str) -> Path:
 
 
 def is_bundled() -> bool:
-    """检测是否在 PyInstaller 打包环境中运行"""
-    return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
+    """检测是否在 PyInstaller 打包环境中运行
+
+    注意：以前同时检查 sys.frozen 和 sys._MEIPASS，但 _MEIPASS 仅在
+    onefile 模式下存在。onedir 模式下 sys.frozen=True 但 _MEIPASS 不存在，
+    导致打包后 is_bundled() 误判为 False，进而使用 CWD（如 Program Files
+    只读目录）作为数据目录，引发 PermissionError。
+    现仅检查 sys.frozen，兼容 onefile 和 onedir 两种模式。
+    """
+    return getattr(sys, "frozen", False)
 
 
 def is_linux() -> bool:
