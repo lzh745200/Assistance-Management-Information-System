@@ -6,7 +6,13 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from app.utils.chart import ChartGenerator, generate_analysis_charts
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib.pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+    plt = None
 
 
 class TestChartGeneratorNoMatplotlib:
@@ -34,6 +40,7 @@ class TestChartGeneratorNoMatplotlib:
         assert result == ""
 
 
+@pytest.mark.skipif(not HAS_MATPLOTLIB, reason="matplotlib not installed")
 class TestChartGeneratorWithMatplotlib:
     def setup_method(self):
         plt.close("all")
@@ -96,6 +103,7 @@ class TestGenerateAnalysisCharts:
             result = generate_analysis_charts({"a": 1}, MagicMock())
         assert result == []
 
+    @pytest.mark.skipif(not HAS_MATPLOTLIB, reason="matplotlib not installed")
     def test_generate_with_mpl(self, tmp_path):
         result = generate_analysis_charts({"a": 1, "b": 2}, tmp_path, "prefix")
         assert len(result) == 2
