@@ -33,6 +33,12 @@ coverage.xml
 coverage_report.txt
 backend/coverage.json
 
+# Test output temp files
+backend/test_*.txt
+backend/final_verify.txt
+backend/verify_output.txt
+verify_output.txt
+
 # Virtual environments
 **/.venv*/
 **/venv*/
