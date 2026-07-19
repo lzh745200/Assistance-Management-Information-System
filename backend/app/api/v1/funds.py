@@ -28,7 +28,7 @@ from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.core.transaction import safe_commit
 from app.utils.pagination import keyset_paginate
-from app.core.data_permission import apply_data_scope
+from app.core.data_permission import apply_data_scope, is_admin
 from app.services.work_log_service import write_work_log
 from app.utils.upload_helper import save_upload_file, get_attachment_response, delete_attachment_file
 
@@ -186,6 +186,11 @@ def list_funds(
 
     # 2. 数据权限隔离
     stmt = apply_data_scope(stmt, Fund, current_user)
+
+    # 安全基线：include_deleted 仅管理员可用（参考 AGENTS.md 软删除模式约定）
+    # 非管理员即使显式传入 include_deleted=true 也强制降级为 False，避免越权查看软删记录
+    if include_deleted and not is_admin(current_user):
+        include_deleted = False
 
     # 2.5 软删过滤：默认隐藏 is_active=False 的记录
     if not include_deleted:

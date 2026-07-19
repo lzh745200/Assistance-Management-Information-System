@@ -1,4 +1,4 @@
-from app.core.permission_utils import is_superuser
+from app.core.permission_utils import is_superuser, is_admin
 
 """项目管理 API — 完整 CRUD + 任务管理 + 经费关联 + 统计导出 + 模板导入"""
 
@@ -645,6 +645,11 @@ async def list_projects(
 
     if not include_cancelled:
         query = query.filter(Project.status != ProjectStatus.CANCELLED.value)
+
+    # 安全基线：include_deleted 仅管理员可用（参考 AGENTS.md 软删除模式约定）
+    # 非管理员即使显式传入 include_deleted=true 也强制降级为 False，避免越权查看软删记录
+    if include_deleted and not is_admin(current_user):
+        include_deleted = False
 
     # 软删过滤：默认隐藏 is_active=False 的记录
     if not include_deleted:

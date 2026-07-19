@@ -10,7 +10,6 @@
 """
 import pytest
 from unittest.mock import Mock
-from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -298,3 +297,101 @@ class TestRequireManagerRole:
         with pytest.raises(HTTPException) as exc_info:
             require_manager_role(regular_user)
         assert exc_info.value.status_code == 403
+
+
+# ──────────────────────── SEC-1: include_deleted 权限收敛 ────────────────────────
+
+
+class TestIncludeDeletedAdminEnforcement:
+    """验证 include_deleted=true 仅管理员可用（AGENTS.md / CLAUDE.md 安全基线）。
+
+    非管理员即使显式传入 include_deleted=true，后端也应强制降级为 False，
+    避免越权查看软删记录（is_active=False）。
+    """
+
+    @pytest.mark.parametrize(
+        "role,is_superuser,expected_admin",
+        [
+            ("super_admin", True, True),
+            ("super_admin", False, True),
+            ("admin", False, True),
+            ("manager", False, False),
+            ("approval_leader", False, False),
+            ("operator", False, False),
+            ("viewer", False, False),
+            ("user", False, False),
+        ],
+    )
+    def test_is_admin_role_matrix(self, role, is_superuser, expected_admin):
+        """验证 is_admin() 的角色判断矩阵：仅 super_admin/admin 为 True。"""
+        from app.core.permission_utils import is_admin
+
+        user = Mock()
+        user.role = role
+        user.is_superuser = is_superuser
+        assert is_admin(user) is expected_admin, (
+            f"role={role}, is_superuser={is_superuser} 应为 is_admin={expected_admin}"
+        )
+
+    def test_admin_can_pass_include_deleted(self, client):
+        """管理员传入 include_deleted=true 不应被拒绝（HTTP 200）。"""
+        if client is None:
+            pytest.skip("client fixture unavailable")
+        from app.core.security import get_current_user
+
+        admin = Mock()
+        admin.id = 1
+        admin.username = "admin1"
+        admin.role = "admin"
+        admin.is_superuser = False
+        admin.is_active = True
+        admin.permissions_list = ["*"]
+        admin.organization_id = 1
+
+        original = client.app.dependency_overrides.copy()
+        try:
+            client.app.dependency_overrides[get_current_user] = lambda: admin
+            # 列表请求带 include_deleted=true，管理员应能正常获取（200）
+            resp = client.get("/api/v1/supported-villages?include_deleted=true")
+            assert resp.status_code == 200, (
+                f"管理员请求 include_deleted=true 应返回 200，实际 {resp.status_code}"
+            )
+        finally:
+            client.app.dependency_overrides = original
+
+    def test_non_admin_include_deleted_silently_ignored(self, client):
+        """非管理员传入 include_deleted=true 应被静默降级（仍返回 200，但不包含软删记录）。"""
+        if client is None:
+            pytest.skip("client fixture unavailable")
+        from app.core.security import get_current_user
+
+        regular = Mock()
+        regular.id = 2
+        regular.username = "user2"
+        regular.role = "user"
+        regular.is_superuser = False
+        regular.is_active = True
+        regular.permissions_list = ["read"]
+        regular.organization_id = 2
+
+        original = client.app.dependency_overrides.copy()
+        try:
+            client.app.dependency_overrides[get_current_user] = lambda: regular
+            # 非管理员请求 include_deleted=true，应静默降级为 False（不报 403/500）
+            resp = client.get("/api/v1/supported-villages?include_deleted=true")
+            assert resp.status_code == 200, (
+                f"非管理员请求 include_deleted=true 应静默降级返回 200，"
+                f"实际 {resp.status_code} — 不应抛 403/500 暴露参数存在"
+            )
+            # 数据中不应包含 is_active=False 的记录（由于 is_active 默认 True，此处仅验证不报错）
+            body = resp.json()
+            data = body.get("data", body)
+            items = data.get("items", []) if isinstance(data, dict) else data
+            for item in items:
+                if isinstance(item, dict):
+                    # 非管理员不应看到任何 is_active=False 的记录
+                    assert item.get("is_active", True) is not False, (
+                        "非管理员看到了软删记录 — include_deleted 权限收敛失效!"
+                    )
+        finally:
+            client.app.dependency_overrides = original

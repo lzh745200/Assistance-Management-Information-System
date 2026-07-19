@@ -31,7 +31,7 @@ from app.models.supported_village import (
     VillageCommitteeInfo,
     VillageCommitteeMember,
 )
-from app.core.data_permission import filter_by_data_scope, check_record_access
+from app.core.data_permission import filter_by_data_scope, check_record_access, is_admin
 from app.schemas.supported_village import SupportedVillageCreate, SupportedVillageUpdate
 from app.core.transaction import safe_commit
 
@@ -288,6 +288,11 @@ async def list_villages(
                 return _cached
         except (TypeError, ValueError):
             _ckey = None
+
+    # 安全基线：include_deleted 仅管理员可用（参考 AGENTS.md 软删除模式约定）
+    # 非管理员即使显式传入 include_deleted=true 也强制降级为 False，避免越权查看软删记录
+    if include_deleted and not is_admin(current_user):
+        include_deleted = False
 
     query = db.query(SupportedVillage)
     query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)

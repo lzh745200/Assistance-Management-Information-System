@@ -35,7 +35,7 @@ from ...models.school import (
     SchoolType,
     SupportStatus,
 )
-from ...core.data_permission import require_data_permission
+from ...core.data_permission import require_data_permission, is_admin
 from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from app.core.transaction import safe_commit
 from ...services.work_log_service import write_work_log
@@ -583,6 +583,11 @@ async def list_schools(
                 return _cached
         except (TypeError, ValueError):
             _ckey = None
+
+    # 安全基线：include_deleted 仅管理员可用（参考 AGENTS.md 软删除模式约定）
+    # 非管理员即使显式传入 include_deleted=true 也强制降级为 False，避免越权查看软删记录
+    if include_deleted and not is_admin(current_user):
+        include_deleted = False
 
     query = db.query(School)
     # 默认过滤软删记录（is_active=False），include_deleted=True 时显示全部
