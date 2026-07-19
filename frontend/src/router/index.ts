@@ -420,18 +420,8 @@ export const routes: RouteRecordRaw[] = [
         component: () => retryImport(() => import('@/views/dataManagement/Index.vue')),
         meta: { title: '数据管理' },
       },
-      {
-        path: '/data-management/backup',
-        name: 'DataBackup',
-        component: () => retryImport(() => import('@/views/dataManagement/Backup.vue')),
-        meta: { title: '数据备份' },
-      },
-      {
-        path: '/data-management/logs',
-        name: 'DataLogs',
-        component: () => retryImport(() => import('@/views/dataManagement/Logs.vue')),
-        meta: { title: '操作日志' },
-      },
+      // /data-management/backup 和 /data-management/logs 已整合到系统管理模块
+      // 重定向定义见下方"旧版路径兼容重定向"区域
       // ── 数据分析 ──
       {
         path: '/data-analysis',
@@ -471,8 +461,8 @@ export const routes: RouteRecordRaw[] = [
       { path: '/data-entry/comprehensive', redirect: '/data-entry' },
       { path: '/report-export', redirect: '/export/report' },
       // 模块整合重定向：旧路径统一收口到新入口
-      { path: '/data-management/backup', redirect: '/system/backup' },
-      { path: '/data-management/logs', redirect: '/system/audit' },
+      { path: '/data-management/backup', redirect: '/system/backup', meta: { title: '数据备份' } },
+      { path: '/data-management/logs', redirect: '/system/audit', meta: { title: '操作日志' } },
       { path: '/data-import/batch', redirect: '/data-package' },
       {
         path: '/data-package/receive',

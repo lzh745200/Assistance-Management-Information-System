@@ -60,7 +60,11 @@ artifacts/
 frontend/temp_build/
 frontend/coverage/
 backend/build/
+backend/build_x64/
+backend/build_x86/
+backend/dist/
 resources/frontend/
+resources/frontend-old/
 resources/frontend_corrupted/
 resources/vcredist/
 
@@ -154,7 +158,9 @@ backend/gen_cover*.py
 .arts/
 .gstack/
 claude-code/
+/MagicMock/
 backend/MagicMock/
+backend/data/MagicMock/
 backend/uploads_snapshot_*/
 backend/requirements.txt.tmp
 backend/tests/unit/backup_*.zip

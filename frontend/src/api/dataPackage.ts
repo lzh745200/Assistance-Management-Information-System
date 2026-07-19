@@ -28,7 +28,7 @@ export async function getDataPackages(params?: {
   status?: string
 }): Promise<DataPackageListResponse> {
   const response = await get(BASE_URL, { params })
-  return response.data
+  return response
 }
 
 /**
@@ -36,7 +36,7 @@ export async function getDataPackages(params?: {
  */
 export async function getDataPackage(id: number): Promise<DataPackage> {
   const response = await get(`${BASE_URL}/${id}`)
-  return response.data
+  return response
 }
 
 /**
@@ -46,7 +46,7 @@ export async function exportDataPackage(
   data: DataPackageExportRequest
 ): Promise<DataPackageExportResult> {
   const response = await post(`${BASE_URL}/export`, data)
-  return response.data
+  return response
 }
 
 /**
@@ -70,7 +70,7 @@ export async function importDataPackage(
       'Content-Type': 'multipart/form-data',
     },
   })
-  return response.data
+  return response
 }
 
 /**
@@ -78,7 +78,7 @@ export async function importDataPackage(
  */
 export async function validateDataPackage(id: number): Promise<DataPackageValidationResult> {
   const response = await post(`${BASE_URL}/${id}/validate`)
-  return response.data
+  return response
 }
 
 /**
@@ -86,7 +86,7 @@ export async function validateDataPackage(id: number): Promise<DataPackageValida
  */
 export async function previewDataPackage(id: number): Promise<DataPackagePreviewData[]> {
   const response = await get(`${BASE_URL}/${id}/preview`)
-  return response.data
+  return response
 }
 
 /**
@@ -97,7 +97,7 @@ export async function confirmImport(
   data?: DataPackageConfirmRequest
 ): Promise<DataPackageConfirmResult> {
   const response = await post(`${BASE_URL}/${id}/confirm`, data || {})
-  return response.data
+  return response
 }
 
 /**
@@ -136,7 +136,7 @@ export async function getPackageHistory(
   items: ImportExportHistory[]
 }> {
   const response = await get(`${BASE_URL}/${id}/history`, { params })
-  return response.data
+  return response
 }
 
 /**
@@ -144,7 +144,7 @@ export async function getPackageHistory(
  */
 export async function oneClickReport(data: Record<string, any>): Promise<any> {
   const response = await post(`${BASE_URL}/one-click-report`, data)
-  return response.data
+  return response
 }
 
 /**
@@ -152,7 +152,7 @@ export async function oneClickReport(data: Record<string, any>): Promise<any> {
  */
 export async function previewExport(data: Record<string, any>): Promise<any> {
   const response = await post(`${BASE_URL}/preview`, data)
-  return response.data
+  return response
 }
 
 /**

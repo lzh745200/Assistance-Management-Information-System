@@ -61,6 +61,6 @@ Write-Host "  1. 直接运行: docker run -p 8000:8000 -p 3000:3000 assistance-s
 Write-Host "  2. 使用 compose: docker-compose up -d"
 Write-Host "  3. 运行脚本: .\run.ps1"
 Write-Host ""
-Write-Host "默认账号: admin / admin123"
+Write-Host "默认账号: admin /（首次启动时设置密码）"
 Write-Host "访问地址: http://localhost:8000"
 Write-Host "==========================================" -ForegroundColor Cyan

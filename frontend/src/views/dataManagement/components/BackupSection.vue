@@ -362,7 +362,7 @@ async function handlePreview(row: BackupItem) {
   try {
     // 预览读取 ZIP 清单与元信息（JSON），不是下载 blob
     const res = await get(`/system/backup/preview/${row.filename}`)
-    previewData.value = res.data
+    previewData.value = res
     showPreviewDialog.value = true
   } catch {
     ElMessage.error('加载备份预览失败')
@@ -424,7 +424,7 @@ async function handleDelete(row: BackupItem) {
 async function loadSchedule() {
   try {
     const res = await get('/system/backup/schedule')
-    const d = res.data
+    const d = res
     scheduleConfig.enabled = d.enabled ?? false
     scheduleConfig.interval_hours = d.interval_hours ?? 24
     scheduleConfig.keep_count = d.keep_count ?? 7

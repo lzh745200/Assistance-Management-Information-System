@@ -31,17 +31,17 @@ const ASYNC_EXPORT_BASE = '/async-export'
 
 export async function getExportTasks(params?: { page?: number; page_size?: number }) {
   const res = await get(`${ASYNC_EXPORT_BASE}/tasks`, params)
-  return res.data
+  return res
 }
 
 export async function getExportStatus(taskId: string) {
   const res = await get(`${ASYNC_EXPORT_BASE}/status/${taskId}`)
-  return res.data
+  return res
 }
 
 export async function getExportHistory(params?: { page?: number; page_size?: number }) {
   const res = await get(`${ASYNC_EXPORT_BASE}/tasks`, params)
-  return res.data
+  return res
 }
 
 // ─── Blob 下载端点（使用统一工具函数）──

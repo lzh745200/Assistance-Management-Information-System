@@ -41,11 +41,11 @@ if _prophet_spec and _prophet_spec.submodule_search_locations:
     _prophet_dir = list(_prophet_spec.submodule_search_locations)[0]
     datas.append((_prophet_dir, 'prophet'))
 
-# 自动收集 snownlp 包数据
-_snownlp_spec = _ilu.find_spec('snownlp')
-if _snownlp_spec and _snownlp_spec.submodule_search_locations:
-    _snownlp_dir = list(_snownlp_spec.submodule_search_locations)[0]
-    datas.append((_snownlp_dir, 'snownlp'))
+# snownlp 已从依赖中移除（离线模式不再需要中文情感分析原生库）
+# _snownlp_spec = _ilu.find_spec('snownlp')
+# if _snownlp_spec and _snownlp_spec.submodule_search_locations:
+#     _snownlp_dir = list(_snownlp_spec.submodule_search_locations)[0]
+#     datas.append((_snownlp_dir, 'snownlp'))
 
 # 自动收集 prometheus_client 包数据（包含 HTML 模板等静态文件）
 datas += collect_data_files('prometheus_client')
@@ -69,7 +69,6 @@ hiddenimports = [
     'starlette.middleware.sessions',
     'starlette.templating',
     'anyio._backends._asyncio',
-    'slowapi',
 
     # SQLAlchemy 核心
     'sqlalchemy.dialects.sqlite',
@@ -102,7 +101,6 @@ hiddenimports = [
     'filelock',
 
     # 日志
-    'structlog.processors',
     'pythonjsonlogger.jsonlogger',
 
     # 数据处理
@@ -121,12 +119,9 @@ hiddenimports = [
     'prophet',
     'jieba',
     'jieba.analyse',
-    'snownlp',
 
-    # 舆情监控
-    'scrapy',
+    # 舆情监控（scrapy/feedparser/snownlp 已从依赖中移除，离线模式下禁用）
     'bs4.builder._lxml',
-    'feedparser',
 
     # 业务指标监控
     'prometheus_client',
@@ -171,6 +166,7 @@ hiddenimports += [
     'app.api.v1.ai',
     'app.api.v1.map',
     'app.api.v1.project_milestones',
+    'app.api.v1.funds',
     'app.api.v1.fund_budgets',
     'app.api.v1.fund_lifecycle',
     'app.api.v1.work_logs',
@@ -200,7 +196,8 @@ excludes = [
     'tkinter', 'test', 'tests',
     'matplotlib', 'IPython', 'jupyter',
     'notebook', 'spyder', 'pylint',
-    'docx', 'mammoth', 'apscheduler',
+    'docx', 'apscheduler',
+    # 注意：mammoth 不再排除（policy.py 用于 .docx → HTML 转换，是运行时依赖）
     'jose.backends.native_types',
     'jose.backends.pycryptodome_backend',
     'app.api.v1.users',           # 旧路径，已不存在

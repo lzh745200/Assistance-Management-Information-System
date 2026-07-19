@@ -112,7 +112,7 @@ export async function importEntities(
     headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 120000,
   })
-  return response.data
+  return response
 }
 
 /** @deprecated 使用 importEntities 替代 */
@@ -132,7 +132,7 @@ export async function previewImportData(
     headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 60000,
   })
-  return response.data
+  return response
 }
 
 /**
@@ -150,7 +150,7 @@ export async function getImportHistory(
     url: '/import/history',
     params: { page, page_size: pageSize },
   })
-  return response.data
+  return response
 }
 
 /**
@@ -173,10 +173,10 @@ export async function validateImport(data: { file?: File; entity_type?: string }
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000,
     })
-    return response.data
+    return response
   }
   const response = await post('/import/validate', data)
-  return response.data
+  return response
 }
 
 /**

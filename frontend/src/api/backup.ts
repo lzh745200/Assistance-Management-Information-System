@@ -46,5 +46,5 @@ export async function deleteBackup(filename: string) {
 
 export async function getBackupStats(): Promise<BackupStats> {
   const res = await get(`${BASE}/stats`)
-  return res.data
+  return res
 }

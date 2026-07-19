@@ -151,8 +151,6 @@ async def login(
         try:
             # 使用读-改-写方式替代 RETURNING 子句
             # （旧版 SQLite < 3.35 不支持 RETURNING 语法）
-            from app.models.user import User
-
             db.refresh(user)  # 确保读取最新值
             user.failed_login_count = (user.failed_login_count or 0) + 1
             failed_count = user.failed_login_count

@@ -26,7 +26,7 @@ python -m bandit -r app/ -ll                            # Security scan
 ```bash
 cd frontend
 npm run dev                                             # Dev server (http://localhost:5173)
-npm run test -- --run                                   # Run all tests (1681, 137 test files)
+npm run test -- --run                                   # Run all tests (1979, 141 test files)
 npx vitest run src/views/xxx/xxx.test.ts               # Run single test file
 npm run lint                                            # ESLint (CI gate, --max-warnings=0)
 npx vue-tsc --noEmit                                    # Type check (CI gate)
