@@ -31,7 +31,7 @@ from app.models.supported_village import (
     VillageCommitteeInfo,
     VillageCommitteeMember,
 )
-from app.core.data_permission import filter_by_data_scope, check_record_access, is_admin
+from app.core.data_permission import filter_by_data_scope, check_record_access
 from app.api.v1.deps import enforce_admin_include_deleted, build_viewable_because
 from app.schemas.supported_village import SupportedVillageCreate, SupportedVillageUpdate
 from app.core.transaction import safe_commit

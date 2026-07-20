@@ -91,10 +91,22 @@ Models use `is_active` column (Boolean, default=True, nullable=False) for soft d
 - `is_active=False` = deleted (hidden from default queries)
 - `include_deleted=true` query param shows all records (admin only)
 - `to_dict()` exposes `isDeleted` (camelCase) and `is_deleted` (snake_case) fields
-- Currently applied to: `SupportedVillage`, `School`
+- Currently applied to: `SupportedVillage`, `School`, `Project`, `Fund`
 - Migration: `alembic/versions/village_softdel_001_add_is_active.py`
 - List endpoints filter `is_active=True` by default; detail endpoints show soft-deleted records (for audit)
 - Cross-org access returns **403** (not 404) to distinguish "exists but not yours" from "doesn't exist"
+
+**Permission Convergence (2026-07-20 Security Hardening)**:
+- `include_deleted` parameter is converged via `enforce_admin_include_deleted` dependency in `app/api/v1/deps.py`
+- Non-admin users passing `include_deleted=true` get **silently downgraded** to `False` (no 403 to avoid exposing the parameter)
+- Admin users (role=`admin`/`super_admin` or `is_superuser=True`) get `True` passed through
+- All 4 soft-delete endpoints use `Depends(enforce_admin_include_deleted)` — no inline permission checks
+- Detail endpoints return `viewableBecause` metadata via `build_viewable_because(current_user, record)`:
+  - `"admin"` when admin views a soft-deleted record
+  - `null` for active records or non-admin viewers
+- `SoftDeleteMixin` in `models/base.py` now includes `deleted_by` column (Integer, nullable) for audit tracking
+- Regression tests: `tests/unit/api/test_include_deleted_enforcement.py` (49 tests: unit + API integration)
+- E2E tests: `tests/unit/test_soft_delete_e2e.py` (2 tests: full lifecycle for supported-villages + funds)
 
 ### Route Registration
 

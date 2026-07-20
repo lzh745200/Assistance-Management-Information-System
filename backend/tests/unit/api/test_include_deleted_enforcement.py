@@ -84,7 +84,6 @@ class TestEnforceAdminIncludeDeletedUnit:
     def test_non_admin_does_not_raise(self):
         """非管理员传入 include_deleted=True 不应抛 HTTPException（静默降级）。"""
         from app.api.v1.deps import enforce_admin_include_deleted
-        from fastapi import HTTPException
 
         user = _make_user("user", is_superuser=False)
         # 不应抛异常

@@ -35,7 +35,7 @@ from ...models.school import (
     SchoolType,
     SupportStatus,
 )
-from ...core.data_permission import require_data_permission, is_admin
+from ...core.data_permission import require_data_permission
 from app.api.v1.deps import enforce_admin_include_deleted, build_viewable_because
 from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from app.core.transaction import safe_commit

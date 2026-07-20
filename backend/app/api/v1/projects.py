@@ -1,4 +1,4 @@
-from app.core.permission_utils import is_superuser, is_admin
+from app.core.permission_utils import is_superuser
 
 """项目管理 API — 完整 CRUD + 任务管理 + 经费关联 + 统计导出 + 模板导入"""
 

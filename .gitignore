@@ -140,6 +140,14 @@ conversation-*.txt
 test-*.html
 debug-*.html
 
+# ===== Temp scratch scripts & test outputs (automated sessions) =====
+backend/run_*.py
+backend/simple_run.py
+backend/final_verify*.py
+backend/final_verify_output.txt
+backend/*_result*.txt
+logs/*.log.*
+
 # ===== Backend temp scripts & artifacts =====
 backend/test_full_results.txt
 backend/test_results.txt

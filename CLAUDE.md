@@ -116,7 +116,8 @@ bash build-scripts/build-linux-arm64.sh           # Linux ARM64 安装包
 - **帮扶经费** 支持动态年度（用户可选择年份添加），不再固定 2021-2026
 - **工作台自定义布局**: 支持预设布局 + 拖拽排序 + 可见性切换，状态持久化到 localStorage
 - **QuickActions**: 4 组 26 个快捷入口（核心业务/数据同步/审批协作/系统管理）
-- **软删除模式** (2026-07-05): 模型使用 `is_active` 列（Boolean, default=True）。`is_active=False`=已删除。列表端点默认过滤 `is_active=True`，`include_deleted=true` 显示全部（管理员）。`to_dict()` 暴露 `isDeleted`/`is_deleted`。已应用于 `SupportedVillage`、`School`。
+- **软删除模式** (2026-07-05): 模型使用 `is_active` 列（Boolean, default=True）。`is_active=False`=已删除。列表端点默认过滤 `is_active=True`，`include_deleted=true` 显示全部（管理员）。`to_dict()` 暴露 `isDeleted`/`is_deleted`。已应用于 `SupportedVillage`、`School`、`Project`、`Fund`。
+- **软删除权限收敛** (2026-07-20): `include_deleted` 参数通过 `enforce_admin_include_deleted` 依赖（`app/api/v1/deps.py`）统一收敛。非管理员传入 `include_deleted=true` 静默降级为 `False`（不抛 403）。4 个端点（supported-villages/schools/projects/funds）均使用 `Depends(enforce_admin_include_deleted)`。详情端点返回 `viewableBecause` 元数据（`build_viewable_because()` 函数）。`SoftDeleteMixin` 预留 `deleted_by` 审计字段。回归测试：`tests/unit/api/test_include_deleted_enforcement.py`（49 项）、E2E：`tests/unit/test_soft_delete_e2e.py`（2 项）。
 - **统一列表响应** (2026-07-08): 所有列表端点已使用 `ok_list()` (envelope)。新增列表端点必须使用 `ok_list()` 而非裸 dict。前端 `_unwrapList()` 仍兼容两种格式以保证向后兼容。
 - **密码策略** (2026-07-05): `PasswordPolicy` 类必须包含 `REQUIRE_SPECIAL=True` 属性（此前缺失导致 AttributeError）。`SPECIAL_WHITELIST` 与前端正则一致。
 - **前端 API 调用规则** (2026-07-05): ① 所有 api 文件必须 `import { get, post, apiRequest } from '@/api/request'`（自动解包），禁止 `import request from './request'`（返回原始 AxiosResponse）。② `get()` 第二参数直接是 params：`get(url, { refresh:true })`，不是 `get(url, { params:{ refresh:true } })`。③ Blob 下载：API 函数内部链式 `.then(r=>triggerDownload(r.data,name))`，调用方只 `await`。

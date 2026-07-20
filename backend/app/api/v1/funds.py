@@ -28,7 +28,7 @@ from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.core.transaction import safe_commit
 from app.utils.pagination import keyset_paginate
-from app.core.data_permission import apply_data_scope, is_admin
+from app.core.data_permission import apply_data_scope
 from app.services.work_log_service import write_work_log
 from app.utils.upload_helper import save_upload_file, get_attachment_response, delete_attachment_file
 
