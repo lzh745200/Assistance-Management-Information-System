@@ -123,7 +123,6 @@ import {
 } from '@/api/supportedVillage'
 import type { YearlyDataSummary } from '@/types/analytics'
 import SectionDataForm from './components/SectionDataForm.vue'
-import { unwrapData } from '@/utils/unwrapData'
 
 const route = useRoute()
 const { pushSafe } = useRouterSafe()
@@ -331,10 +330,10 @@ async function loadAllData() {
   loading.value = true
   try {
     const _v = await getSupportedVillage(villageId.value)
-    const village = unwrapData(_v)
+    const village = _v
     villageName.value = village.villageName
     const _raw = await getYearlyData(villageId.value, selectedYear.value)
-    yearlyData.value = unwrapData(_raw)
+    yearlyData.value = _raw
   } catch (e: any) {
     ElMessage.error(e?.message || '加载数据失败')
   } finally {

@@ -236,16 +236,7 @@ const handleDownload = async (row: SyncLog) => {
 
 const handleDownloadByName = async (packageName: string) => {
   try {
-    const response = await downloadExportPackage(packageName)
-    const blob = response.data || new Blob([response as any])
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    // 根据文件名判断扩展名
-    const extension = packageName.includes('.') ? '' : '.rrs'
-    link.download = `${packageName}${extension}`
-    link.click()
-    window.URL.revokeObjectURL(url)
+    await downloadExportPackage(packageName)
   } catch (error: any) {
     ElMessage.error(error.message || '下载失败')
   }

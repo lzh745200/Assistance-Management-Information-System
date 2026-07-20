@@ -169,6 +169,7 @@ export function listOrganizationPassCodes(params?: { page?: number; page_size?: 
 
 /**
  * 导出组织通行码
+ * @deprecated 使用 @/api/organizationPassCode 中的 exportOrganizationPassCodes 替代
  */
 export function exportOrganizationPassCodes() {
   return apiRequest({

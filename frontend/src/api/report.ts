@@ -1,4 +1,6 @@
-import { get, post, put, del, apiRequest } from '@/api/request'
+import { get, post, put, del } from '@/api/request'
+import request from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 export const reportApi = {
   // ── 订阅管理 ──
@@ -13,5 +15,8 @@ export const reportApi = {
   // 后端 /reports 路由: POST /reports/generate, GET /reports/{id}/download
   generate: (d: any) => post('/reports/generate', d),
   download: (id: number) =>
-    apiRequest({ method: 'GET', url: '/reports/' + id + '/download', responseType: 'blob' }),
+    downloadBlobAsFile(
+      () => request.get('/reports/' + id + '/download', { responseType: 'blob' }),
+      { fallbackFileName: `report_${id}.xlsx` }
+    ),
 }

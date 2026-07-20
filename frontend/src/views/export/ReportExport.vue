@@ -229,7 +229,7 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { logger } from '@/utils/logger'
-import { post } from '@/api/request'
+import { post, downloadBlob } from '@/api/request'
 
 import { ref, reactive, onMounted } from 'vue'
 import { Download, Refresh, Document, DocumentChecked } from '@element-plus/icons-vue'
@@ -237,7 +237,6 @@ import { ElMessage } from 'element-plus'
 import {
   getExportHistory,
   downloadExportFile,
-  triggerDownload,
   formatFileSize,
   exportReportWord,
   exportReportPdf,
@@ -404,14 +403,13 @@ async function handleExportOfficial(reportType: string, format: 'word' | 'pdf') 
   officialLoading[loadingKey] = true
   try {
     const yearNum = officialForm.year ? Number(officialForm.year) : undefined
-    const blob =
-      format === 'word'
-        ? await exportReportWord(reportType, yearNum)
-        : await exportReportPdf(reportType, yearNum)
+    if (format === 'word') {
+      await exportReportWord(reportType, yearNum)
+    } else {
+      await exportReportPdf(reportType, yearNum)
+    }
 
     const reportName = officialReportTypes.find((r) => r.type === reportType)?.name || reportType
-    const filename = `${reportName}_${yearNum || new Date().getFullYear()}.${format === 'word' ? 'docx' : 'pdf'}`
-    triggerDownload(blob, filename)
     ElMessage.success(`${reportName} 导出成功`)
   } catch (error: any) {
     ElMessage.error(error.response?.data?.detail || `${format.toUpperCase()} 导出失败`)
@@ -450,7 +448,7 @@ async function handleExport() {
     if (response instanceof Blob) {
       const blob = response
       const filename = getReportFileName(selectedType.value, exportForm.format)
-      triggerDownload(blob, filename)
+      downloadBlob(blob, filename)
       ElMessage.success('报表导出成功')
     } else {
       ElMessage.warning('报表导出中，请稍后在导出历史查看进度')
@@ -491,9 +489,7 @@ async function loadHistory() {
 
 async function downloadExport(record: any) {
   try {
-    const blob = await downloadExportFile(record.task_id)
-    const filename = record.file_name || '导出文件.xlsx'
-    triggerDownload(blob, filename)
+    await downloadExportFile(record.task_id)
   } catch (error) {
     ElMessage.error('下载失败')
   }

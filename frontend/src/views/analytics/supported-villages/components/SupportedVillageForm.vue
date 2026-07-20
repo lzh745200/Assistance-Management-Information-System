@@ -322,7 +322,7 @@ import type { SupportedVillage, SupportedVillageCreate } from '@/types/analytics
 import GuizhouRegionSelector from '@/components/common/GuizhouRegionSelector.vue'
 import type { RegionValue } from '@/components/common/GuizhouRegionSelector.vue'
 import MapPicker from '@/components/MapPicker.vue'
-import { DEFAULT_PROVINCE } from '@/components/common/qiannanRegion'
+import { DEFAULT_PROVINCE } from '@/data/guizhouRegion'
 import { getTransitionFunding, saveTransitionFunding } from '@/api/supportedVillage'
 
 const props = defineProps<{

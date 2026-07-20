@@ -7,8 +7,6 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    AnalyticsEnhancedChart: typeof import('./components/analytics/EnhancedChart.vue')['default']
-    AnalyticsMapVisualization: typeof import('./components/analytics/MapVisualization.vue')['default']
     BusinessBeforeAfterSlider: typeof import('./components/business/BeforeAfterSlider.vue')['default']
     BusinessChartCardChartCard: typeof import('./components/business/ChartCard/ChartCard.vue')['default']
     BusinessConfirmDialogConfirmDialog: typeof import('./components/business/ConfirmDialog/ConfirmDialog.vue')['default']

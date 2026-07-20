@@ -298,8 +298,9 @@ import {
   School,
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { post, apiRequest } from '@/api/request'
-import { triggerDownload } from '@/api/export'
+import { post } from '@/api/request'
+import request from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 const { pushSafe } = useRouterSafe()
 
@@ -469,17 +470,15 @@ const handleTemplateSelect = (row: any) => {
 
 const handleDownloadTemplate = async () => {
   try {
-    const res = await apiRequest({
-      method: 'GET',
-      url: '/import/template',
-      params: {
-        entity_type: selectedTemplate.value,
-      },
-      responseType: 'blob',
-    })
     const tplName = templates.find((t) => t.type === selectedTemplate.value)?.name || '标准'
-    triggerDownload(res, `${tplName}导入模板_${selectedYear.value}.xlsx`)
-    // 模板下载成功 — 浏览器已确认
+    await downloadBlobAsFile(
+      () =>
+        request.get('/import/template', {
+          params: { entity_type: selectedTemplate.value },
+          responseType: 'blob',
+        }),
+      { fallbackFileName: `${tplName}导入模板_${selectedYear.value}.xlsx` }
+    )
   } catch {
     ElMessage.error('下载模板失败')
   }

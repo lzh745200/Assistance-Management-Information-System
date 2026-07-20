@@ -59,7 +59,7 @@
  */
 
 import { ElRow, ElCol, ElFormItem, ElInput, ElSelect, ElOption } from 'element-plus'
-import { QIANNAN_COUNTIES, DEFAULT_PROVINCE, DEFAULT_PREFECTURE } from './qiannanRegion'
+import { QIANNAN_COUNTIES, DEFAULT_PROVINCE, DEFAULT_PREFECTURE } from '@/data/guizhouRegion'
 
 interface Props {
   /** 选中的县/市值 */

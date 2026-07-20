@@ -143,7 +143,6 @@ import {
   downloadExportFile,
   formatExportStatus,
   formatFileSize,
-  triggerDownload,
   type ExportFilterParams,
   type ExportTask,
 } from '@/api/export'
@@ -219,23 +218,10 @@ async function handleExport() {
       }
     })
 
-    const result = await exportVillages(filters, forceAsync.value)
+    const result = await exportVillages(filters)
 
-    // 如果是Blob，直接下载
-    if (result instanceof Blob) {
-      const filename = `帮扶村数据_${new Date().toISOString().slice(0, 10)}.xlsx`
-      triggerDownload(result, filename)
-      // 导出成功 — 浏览器已确认
-      handleClose()
-      return
-    }
-
-    // 异步导出
-    if (result.mode === 'async' && result.task_id) {
-      ElMessage.info('导出任务已创建，正在处理中...')
-      // 开始轮询状态
-      startPolling(result.task_id)
-    }
+    // exportVillages 已通过 downloadBlobAsFile 触发浏览器下载
+    handleClose()
   } catch (error: any) {
     ElMessage.error(error.response?.data?.detail || '导出失败')
   } finally {
@@ -289,10 +275,7 @@ async function handleDownload() {
 
   downloading.value = true
   try {
-    const blob = await downloadExportFile(exportTask.value.task_id)
-    const filename =
-      exportTask.value.file_name || `帮扶村数据_${new Date().toISOString().slice(0, 10)}.xlsx`
-    triggerDownload(blob, filename)
+    await downloadExportFile(exportTask.value.task_id)
     ElMessage.success('下载成功')
   } catch (error: any) {
     ElMessage.error(error.response?.data?.detail || '下载失败')

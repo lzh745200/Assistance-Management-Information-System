@@ -612,7 +612,6 @@ import {
   saveEmploymentData,
   copyYearData,
 } from '@/api/supportedVillage'
-import { unwrapData } from '@/utils/unwrapData'
 
 const props = defineProps<{
   villageId: number
@@ -720,7 +719,7 @@ const formData = reactive({
 const loadYearlyData = async () => {
   try {
     const resp = await getYearlyData(props.villageId, selectedYear.value)
-    const raw: Record<string, any> = unwrapData(resp)
+    const raw: Record<string, any> = resp || {}
     // 后端 _SECTION_MODEL key → formData 属性名映射
     const sectionMap = {
       population: 'population',

@@ -90,7 +90,6 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { reportApi } from '@/api/report'
-import { downloadBlob } from '@/api/request'
 
 const subscriptions = ref<any[]>([])
 const loading = ref(false)
@@ -198,8 +197,7 @@ async function handleGenerate(row: any) {
 async function handleDownload(row: any) {
   if (!row.id) return
   try {
-    const blob = await reportApi.download(row.id)
-    downloadBlob(blob, `report_${row.id}.xlsx`)
+    await reportApi.download(row.id)
   } catch {
     ElMessage.error('下载失败')
   }

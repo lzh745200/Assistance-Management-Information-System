@@ -61,7 +61,6 @@ import {
 } from '@element-plus/icons-vue'
 import { get } from '@/api/request'
 import { useRouterSafe } from '@/composables/useRouterSafe'
-import { unwrapData } from '@/utils/unwrapData'
 import { logger } from '@/utils/logger'
 
 const { pushSafe } = useRouterSafe()
@@ -191,7 +190,7 @@ async function loadStats() {
   error.value = false
   try {
     const res = await get('/dashboard/stats', { refresh: true } as any)
-    const d = unwrapData<Record<string, number>>(res, {} as Record<string, number>)
+    const d = (res || {}) as Record<string, number>
     if (d) {
       stats.value = {
         total_villages: d.total_villages ?? 0,

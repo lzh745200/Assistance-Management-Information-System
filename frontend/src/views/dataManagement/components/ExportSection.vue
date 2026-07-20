@@ -152,7 +152,6 @@ import {
   downloadExportFile,
   formatExportStatus,
   formatFileSize,
-  triggerDownload,
   type ExportTask,
   type ExportFilterParams,
 } from '@/api/export'
@@ -203,17 +202,10 @@ async function handleExport() {
     if (exportForm.filters.is_revitalization_tier)
       filters.is_revitalization_tier = exportForm.filters.is_revitalization_tier
 
-    const result = await exportVillages(filters, false)
+    const result = await exportVillages(filters)
 
-    if (result instanceof Blob) {
-      // 同步导出，直接下载
-      const filename = `帮扶村数据_${new Date().toISOString().slice(0, 10)}.xlsx`
-      triggerDownload(result, filename)
-      // 导出成功 — 浏览器已确认
-    } else {
-      // 异步导出
-      ElMessage.success('导出任务已创建，请在历史记录中查看')
-    }
+    // exportVillages 已通过 downloadBlobAsFile 触发浏览器下载
+    ElMessage.success('导出成功')
 
     emit('export-complete')
     loadHistory()
@@ -227,8 +219,7 @@ async function handleExport() {
 // 下载文件
 async function handleDownload(task: ExportTask) {
   try {
-    const blob = await downloadExportFile(task.task_id)
-    triggerDownload(blob, task.file_name || `export_${task.task_id}.xlsx`)
+    await downloadExportFile(task.task_id)
     ElMessage.success('下载成功')
   } catch (error) {
     ElMessage.error('下载失败')

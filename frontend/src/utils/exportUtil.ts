@@ -4,7 +4,7 @@
  */
 
 import * as XLSX from 'xlsx'
-import { triggerDownload } from '@/api/export'
+import { downloadBlob } from '@/api/request'
 
 /** RFC 4180 兼容 CSV 转义 */
 function escapeCSVField(val: unknown): string {
@@ -29,7 +29,7 @@ function exportToCSV(
 
   const csv = [headerRow, ...rows].join('\n')
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-  triggerDownload(blob, `${filename}.csv`)
+  downloadBlob(blob, `${filename}.csv`)
 }
 
 /** 导出为 Excel（使用 xlsx 库生成真实 .xlsx 文件） */
@@ -51,7 +51,7 @@ function exportToExcel(
   const blob = new Blob([wbout], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   })
-  triggerDownload(blob, `${filename}.xlsx`)
+  downloadBlob(blob, `${filename}.xlsx`)
 }
 
 /** HTML 实体编码（防 XSS） */

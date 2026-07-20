@@ -177,7 +177,6 @@ import { ElMessage } from 'element-plus'
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog.vue'
 import { getChangeHistory } from '@/api/supportedVillage'
 import { logger } from '@/utils/logger'
-import { unwrapData } from '@/utils/unwrapData'
 
 const changeHistoryVisible = ref(false)
 const changeHistoryLoading = ref(false)
@@ -269,7 +268,7 @@ const loadVillage = async () => {
   loading.value = true
   try {
     const _raw = await getSupportedVillage(id)
-    village.value = unwrapData(_raw)
+    village.value = _raw
     if (pageMode.value === 'view') {
       await loadYearlyData()
     }
@@ -287,7 +286,7 @@ const loadYearlyData = async () => {
   yearlyLoading.value = true
   try {
     const _raw = await getYearlyData(village.value.id, selectedYear.value)
-    yearlyData.value = unwrapData(_raw)
+    yearlyData.value = _raw
   } catch (error) {
     logger.error('加载年度数据失败:', error)
     yearlyData.value = null
@@ -340,7 +339,7 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
       ElMessage.success('保存成功')
       // 刷新数据后切换回查看模式
       const _raw = await getSupportedVillage(id)
-      village.value = unwrapData(_raw)
+      village.value = _raw
       pushSafe(`/supported-villages/${id}`)
     }
   } catch (error: any) {

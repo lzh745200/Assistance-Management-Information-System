@@ -1,4 +1,6 @@
-import { get, post, apiRequest } from '@/api/request'
+import { get, post } from '@/api/request'
+import request from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
 // Types
 export interface SyncLog {
@@ -57,11 +59,10 @@ export const exportEncryptedData = (params: ExportEncryptedParams) =>
   post('/data-sync/export-encrypted', params)
 
 export const downloadExportPackage = (packageId: string) =>
-  apiRequest({
-    method: 'GET',
-    url: `/data-sync/export/download/${packageId}`,
-    responseType: 'blob',
-  })
+  downloadBlobAsFile(
+    () => request.get(`/data-sync/export/download/${packageId}`, { responseType: 'blob' }),
+    { fallbackFileName: packageId.includes('.') ? packageId : `${packageId}.rrs` }
+  )
 
 export const getSyncLogs = (params?: any) => get('/data-sync/logs', params)
 

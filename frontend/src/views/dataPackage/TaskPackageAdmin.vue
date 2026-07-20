@@ -168,7 +168,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UploadFilled } from '@element-plus/icons-vue'
-import { get, post, apiRequest, downloadBlob } from '@/api/request'
+import { get, post } from '@/api/request'
+import request from '@/api/request'
+import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 import { AuthStorage } from '@/utils/authStorage'
 import { DATA_TYPES, DATA_TYPE_LABELS } from '@/constants/dataTypes'
 
@@ -355,12 +357,10 @@ function statusLabel(status: string): string {
 
 async function downloadPkg(row: any) {
   try {
-    const blob = await apiRequest({
-      method: 'GET',
-      url: `/data-packages/${row.id}/download`,
-      responseType: 'blob',
-    })
-    downloadBlob(blob, `${row.name || '数据包'}.zip`)
+    await downloadBlobAsFile(
+      () => request.get(`/data-packages/${row.id}/download`, { responseType: 'blob' }),
+      { fallbackFileName: `${row.name || '数据包'}.zip` }
+    )
   } catch {
     ElMessage.error('下载失败')
   }
