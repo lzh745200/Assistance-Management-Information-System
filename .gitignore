@@ -291,3 +291,7 @@ staged_*.txt
 unstaged_*.txt
 run_tests.bat
 add*.txt
+# ===== Build fix: 防止意外提交 =====
+*.db.bak
+logs/app.log.*
+frontend/vitest.config.ts.timestamp-*
