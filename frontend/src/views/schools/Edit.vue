@@ -46,20 +46,12 @@
         </el-row>
 
         <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="省份">
-              <el-input v-model="formData.province" placeholder="请输入省份" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="城市">
-              <el-input v-model="formData.city" placeholder="请输入城市" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="区县">
-              <el-input v-model="formData.district" placeholder="请输入区县" />
-            </el-form-item>
+          <el-col :span="24">
+            <GuizhouRegionSelector
+              :model-value="regionValue"
+              :show-township="false"
+              @update:model-value="onRegionChange"
+            />
           </el-col>
         </el-row>
 
@@ -119,12 +111,12 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="联系电话">
+            <el-form-item label="联系电话" prop="contact_phone">
               <el-input v-model="formData.contact_phone" placeholder="请输入联系电话" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="邮箱">
+            <el-form-item label="邮箱" prop="email">
               <el-input v-model="formData.email" placeholder="请输入邮箱" />
             </el-form-item>
           </el-col>
@@ -215,6 +207,9 @@ import {
 } from '@element-plus/icons-vue'
 import { get, post, put, del } from '@/api/request'
 import MapPicker from '@/components/MapPicker.vue'
+import GuizhouRegionSelector from '@/components/common/GuizhouRegionSelector.vue'
+import type { RegionValue } from '@/components/common/GuizhouRegionSelector.vue'
+import { DEFAULT_PROVINCE } from '@/data/guizhouRegion'
 
 const route = useRoute()
 const { pushSafe } = useRouterSafe()
@@ -238,7 +233,7 @@ const formData = reactive({
   name: '',
   code: '',
   type: 'primary',
-  province: '',
+  province: DEFAULT_PROVINCE,
   city: '',
   district: '',
   address: '',
@@ -256,9 +251,34 @@ const formData = reactive({
   remarks: '',
 })
 
+// 区域选择器双向绑定
+const regionValue = computed<RegionValue>(() => ({
+  city: formData.city || undefined,
+  county: formData.district || undefined,
+}))
+
+function onRegionChange(val: RegionValue) {
+  formData.city = val.city || ''
+  formData.district = val.county || ''
+}
+
 const rules: FormRules = {
-  name: [{ required: true, message: '请输入学校名称', trigger: 'blur' }],
+  name: [
+    { required: true, message: '请输入学校名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '学校名称长度为 2-50 个字符', trigger: 'blur' },
+  ],
   type: [{ required: true, message: '请选择学校类型', trigger: 'change' }],
+  support_status: [{ required: true, message: '请选择帮扶状态', trigger: 'change' }],
+  student_count: [{ type: 'number', min: 0, message: '学生人数不能为负数', trigger: 'change' }],
+  teacher_count: [{ type: 'number', min: 0, message: '教师人数不能为负数', trigger: 'change' }],
+  contact_phone: [
+    {
+      pattern: /^1[3-9]\d{9}$|^0\d{2,3}-?\d{7,8}$/,
+      message: '请输入有效的电话号码',
+      trigger: 'blur',
+    },
+  ],
+  email: [{ type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }],
 }
 
 const loadData = async () => {
@@ -275,7 +295,7 @@ const loadData = async () => {
         name: data.name || '',
         code: data.code || '',
         type: data.type || 'primary',
-        province: data.province || '',
+        province: data.province || DEFAULT_PROVINCE,
         city: data.city || '',
         district: data.district || '',
         address: data.address || '',
