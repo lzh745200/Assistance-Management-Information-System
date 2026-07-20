@@ -202,7 +202,7 @@ async function handleExport() {
     if (exportForm.filters.is_revitalization_tier)
       filters.is_revitalization_tier = exportForm.filters.is_revitalization_tier
 
-    const result = await exportVillages(filters)
+    await exportVillages(filters)
 
     // exportVillages 已通过 downloadBlobAsFile 触发浏览器下载
     ElMessage.success('导出成功')

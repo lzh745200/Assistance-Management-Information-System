@@ -139,7 +139,6 @@ import { ElMessage } from 'element-plus'
 import { Download, Upload, QuestionFilled } from '@element-plus/icons-vue'
 import {
   exportVillages,
-  getExportStatus,
   downloadExportFile,
   formatExportStatus,
   formatFileSize,
@@ -218,7 +217,7 @@ async function handleExport() {
       }
     })
 
-    const result = await exportVillages(filters)
+    await exportVillages(filters)
 
     // exportVillages 已通过 downloadBlobAsFile 触发浏览器下载
     handleClose()
@@ -227,34 +226,6 @@ async function handleExport() {
   } finally {
     exporting.value = false
   }
-}
-
-/**
- * 开始轮询导出状态
- */
-function startPolling(taskId: string) {
-  stopPolling()
-
-  const poll = async () => {
-    try {
-      const task = await getExportStatus(taskId)
-      exportTask.value = task
-
-      if (task.status === 'completed' || task.status === 'failed' || task.status === 'expired') {
-        stopPolling()
-        if (task.status === 'completed') {
-          ElMessage.success('导出完成，可以下载文件了')
-        }
-      }
-    } catch (error) {
-      stopPolling()
-    }
-  }
-
-  // 立即执行一次
-  poll()
-  // 每3秒轮询一次
-  pollTimer = window.setInterval(poll, 3000)
 }
 
 /**

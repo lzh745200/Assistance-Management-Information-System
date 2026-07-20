@@ -67,20 +67,44 @@ class TimestampMixin:
 
 # ── 软删除混入 ──
 class SoftDeleteMixin:
-    """为模型添加软删除支持"""
+    """为模型添加软删除支持。
+
+    提供 ``is_deleted`` / ``deleted_at`` / ``deleted_by`` 三个字段，
+    以及 ``soft_delete()`` / ``restore()`` 便捷方法。
+
+    兼容性说明：
+        - 实际业务模型（``SupportedVillage``、``School`` 等）使用 ``is_active``
+          列（``is_active=False`` 表示已删除），而非本混入的 ``is_deleted``。
+          这是因为历史迁移已使用 ``is_active`` 命名，改为 ``is_deleted`` 需要
+          Alembic 迁移且影响所有查询。
+        - 本混入预留给**新模型**使用；已有模型可逐步迁移到本混入。
+        - ``is_active`` 与 ``is_deleted`` 互为反值：``is_active = not is_deleted``。
+
+    审计追踪（9.5.7 预留）：
+        ``deleted_by`` 字段记录执行软删除的用户 ID，便于审计追踪。
+        通过 ``soft_delete(deleted_by=user.id)`` 传入。
+    """
 
     is_deleted = Column(Boolean, default=False, nullable=False, comment="是否已删除")
     deleted_at = Column(DateTime(timezone=True), nullable=True, comment="删除时间")
+    deleted_by = Column(Integer, nullable=True, comment="删除操作人用户ID（审计追踪）")
 
-    def soft_delete(self):
-        """执行软删除"""
+    def soft_delete(self, deleted_by: int | None = None) -> None:
+        """执行软删除。
+
+        Args:
+            deleted_by: 执行删除的用户 ID（可选，用于审计追踪）。
+        """
         self.is_deleted = True
         self.deleted_at = _utcnow()
+        if deleted_by is not None:
+            self.deleted_by = deleted_by
 
-    def restore(self):
-        """恢复软删除"""
+    def restore(self) -> None:
+        """恢复软删除（清除 deleted_by 审计字段）。"""
         self.is_deleted = False
         self.deleted_at = None
+        self.deleted_by = None
 
 
 # ── 版本号混入（乐观锁） ──

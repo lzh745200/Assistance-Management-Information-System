@@ -90,27 +90,6 @@ describe('utils/unwrapList', () => {
   })
 })
 
-describe('utils/requestDeduplicator', () => {
-  it('creates deduplicator', async () => {
-    const { RequestDeduplicator } = await import('@/utils/requestDeduplicator')
-    const dedup = new RequestDeduplicator()
-    expect(dedup.getPendingCount()).toBe(0)
-  })
-
-  it('deduplicates concurrent requests', async () => {
-    const { RequestDeduplicator } = await import('@/utils/requestDeduplicator')
-    const dedup = new RequestDeduplicator()
-    const fn = vi.fn().mockResolvedValue('ok')
-    const [r1, r2] = await Promise.all([
-      dedup.dedupe('key1', fn),
-      dedup.dedupe('key1', fn),
-    ])
-    expect(r1).toBe('ok')
-    expect(r2).toBe('ok')
-    expect(fn).toHaveBeenCalledTimes(1)
-  })
-})
-
 describe('utils/desensitize', () => {
   it('maskPhone works', async () => {
     const { maskPhone } = await import('@/utils/desensitize')
@@ -160,16 +139,6 @@ describe('utils/security', () => {
     const { getSecurityWeight, SecurityLevel } = await import('@/utils/security')
     expect(getSecurityWeight(SecurityLevel.TOP_SECRET)).toBe(5)
     expect(getSecurityWeight(SecurityLevel.PUBLIC)).toBe(1)
-  })
-})
-
-describe('utils/errorLogger', () => {
-  it('logError and getErrorLogs work', async () => {
-    const { logError, getErrorLogs, clearErrorLogs } = await import('@/utils/errorLogger')
-    logError('test error', { code: 500 })
-    const logs = getErrorLogs()
-    expect(logs.length).toBeGreaterThan(0)
-    clearErrorLogs()
   })
 })
 

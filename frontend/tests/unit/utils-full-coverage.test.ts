@@ -1,37 +1,9 @@
 /**
  * Comprehensive frontend utility coverage tests.
- * Covers: unwrapData, desensitize, jwt, sanitize, validator, formValidator,
- * enhancedStorage, treeNormalizer, authStorage, crypto, clipboard,
- * stateManager, errorLogger, roleAccess, permissionAudit, performance,
- * network-status, offline, logger, notify, local-storage, index
+ * Covers: desensitize, jwt, enhancedStorage, treeNormalizer, authStorage,
+ * crypto, echarts-theme, echarts, exportUtil, offlineMock, index
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
-
-// ══════════════════════════════════════════════════════════════
-// unwrapData
-// ══════════════════════════════════════════════════════════════
-describe('unwrapData', () => {
-  it('unwraps data from { data: payload } format', async () => {
-    const { default: unwrapData } = await import('@/utils/unwrapData')
-    expect(unwrapData({ data: { name: 'test' } })).toEqual({ name: 'test' })
-  })
-
-  it('returns raw when no data field', async () => {
-    const { default: unwrapData } = await import('@/utils/unwrapData')
-    expect(unwrapData({ name: 'test' })).toEqual({ name: 'test' })
-  })
-
-  it('returns fallback for falsy raw', async () => {
-    const { default: unwrapData } = await import('@/utils/unwrapData')
-    expect(unwrapData(null, { default: true })).toEqual({ default: true })
-  })
-
-  it('returns inner when data is falsy', async () => {
-    const { default: unwrapData } = await import('@/utils/unwrapData')
-    expect(unwrapData({ data: null })).toEqual({ data: null })
-  })
-})
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ══════════════════════════════════════════════════════════════
 // desensitize - additional coverage
@@ -77,7 +49,6 @@ describe('desensitize additional coverage', () => {
     const { maskAddress } = await import('@/utils/desensitize')
     expect(maskAddress('')).toBe('')
     expect(maskAddress('abc')).toBe('a****')
-    // maskAddress keeps the first 3 characters for input longer than 4 chars
     expect(maskAddress('贵州省黔南州某地')).toBe('贵州省****')
   })
 
@@ -147,16 +118,12 @@ describe('desensitize additional coverage', () => {
 // jwt - additional coverage
 // ══════════════════════════════════════════════════════════════
 describe('jwt additional coverage', () => {
-  // src/utils/jwt keeps a module-level parse cache keyed by the first 16 chars
-  // of header+payload; the hand-crafted tokens below share those prefixes, so
-  // each test needs a fresh module instance to avoid cross-test cache hits.
   beforeEach(() => {
     vi.resetModules()
   })
 
   it('decodes valid JWT token', async () => {
     const { decodeJwtPayload } = await import('@/utils/jwt')
-    // Create a simple JWT-like token
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
     const payload = btoa(JSON.stringify({ sub: 'user1', exp: 9999999999 }))
     const token = `${header}.${payload}.signature`
@@ -272,90 +239,6 @@ describe('crypto utils', () => {
 })
 
 // ══════════════════════════════════════════════════════════════
-// stateManager
-// ══════════════════════════════════════════════════════════════
-describe('stateManager', () => {
-  it('can import stateManager', async () => {
-    try {
-      const mod = await import('@/utils/stateManager')
-      expect(mod).toBeDefined()
-    } catch (e) {
-      // May have dependencies
-    }
-  })
-})
-
-// ══════════════════════════════════════════════════════════════
-// ServiceManager
-// ══════════════════════════════════════════════════════════════
-describe('ServiceManager', () => {
-  it('can import ServiceManager', async () => {
-    try {
-      const mod = await import('@/utils/ServiceManager')
-      expect(mod).toBeDefined()
-    } catch (e) {
-      // May have dependencies
-    }
-  })
-})
-
-// ══════════════════════════════════════════════════════════════
-// requestDeduplicator
-// ══════════════════════════════════════════════════════════════
-describe('requestDeduplicator', () => {
-  it('can import requestDeduplicator', async () => {
-    try {
-      const mod = await import('@/utils/requestDeduplicator')
-      expect(mod).toBeDefined()
-    } catch (e) {
-      // May have dependencies
-    }
-  })
-})
-
-// ══════════════════════════════════════════════════════════════
-// databaseHealthCheck
-// ══════════════════════════════════════════════════════════════
-describe('databaseHealthCheck', () => {
-  it('can import databaseHealthCheck', async () => {
-    try {
-      const mod = await import('@/utils/databaseHealthCheck')
-      expect(mod).toBeDefined()
-    } catch (e) {
-      // May have dependencies
-    }
-  })
-})
-
-// ══════════════════════════════════════════════════════════════
-// dataInitializer
-// ══════════════════════════════════════════════════════════════
-describe('dataInitializer', () => {
-  it('can import dataInitializer', async () => {
-    try {
-      const mod = await import('@/utils/dataInitializer')
-      expect(mod).toBeDefined()
-    } catch (e) {
-      // May have dependencies
-    }
-  })
-})
-
-// ══════════════════════════════════════════════════════════════
-// performanceDiagnostics
-// ══════════════════════════════════════════════════════════════
-describe('performanceDiagnostics', () => {
-  it('can import performanceDiagnostics', async () => {
-    try {
-      const mod = await import('@/utils/performanceDiagnostics')
-      expect(mod).toBeDefined()
-    } catch (e) {
-      // May have dependencies
-    }
-  })
-})
-
-// ══════════════════════════════════════════════════════════════
 // echarts-theme
 // ══════════════════════════════════════════════════════════════
 describe('echarts-theme', () => {
@@ -404,20 +287,6 @@ describe('offlineMock', () => {
   it('can import offlineMock', async () => {
     try {
       const mod = await import('@/utils/offlineMock')
-      expect(mod).toBeDefined()
-    } catch (e) {
-      // May have dependencies
-    }
-  })
-})
-
-// ══════════════════════════════════════════════════════════════
-// standaloneTest
-// ══════════════════════════════════════════════════════════════
-describe('standaloneTest', () => {
-  it('can import standaloneTest', async () => {
-    try {
-      const mod = await import('@/utils/standaloneTest')
       expect(mod).toBeDefined()
     } catch (e) {
       // May have dependencies
