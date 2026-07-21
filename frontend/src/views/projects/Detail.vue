@@ -242,6 +242,7 @@ import { Edit, Back } from '@element-plus/icons-vue'
 import { logger } from '@/utils/logger'
 import { projectsApi } from '@/api/projects'
 import { safeRouteParam, useRouterSafe } from '@/composables/useRouterSafe'
+import { AuthStorage } from '@/utils/authStorage'
 
 const route = useRoute()
 const { pushSafe } = useRouterSafe()
@@ -433,9 +434,25 @@ async function handleFileUpload(options: any) {
   }
 }
 
-function handleDownload(file: any) {
-  const url = projectsApi.getFileDownloadUrl(projectId, file.id)
-  window.open(url, '_blank')
+async function handleDownload(file: any) {
+  try {
+    const url = projectsApi.getFileDownloadUrl(projectId, file.id)
+    const token = AuthStorage.getToken()
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) throw new Error('Download failed')
+    const blob = await response.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = file.filename || file.name || 'download'
+    link.click()
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+  } catch (e: any) {
+    logger.error('下载文件失败', e)
+    ElMessage.error(e?.message || '下载失败')
+  }
 }
 
 async function handleDeleteFile(fileId: number) {

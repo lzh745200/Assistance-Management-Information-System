@@ -524,7 +524,7 @@
                 <div v-if="cat.value === 'photo'" class="photo-gallery">
                   <div v-for="uf in uploadedFiles[cat.value]" :key="uf.id" class="photo-item">
                     <img
-                      :src="getFileUrl(uf)"
+                      :src="getThumbnailUrl(uf)"
                       :alt="uf.filename"
                       class="photo-thumb"
                       @click="previewImage(uf)"
@@ -650,6 +650,9 @@ const uploadedFiles = reactive<Record<string, any[]>>({
   acceptance: [],
   photo: [],
 })
+
+// 图片缩略图 Blob URL 映射（key = file.id），用于认证模式下 <img :src> 加载
+const thumbnailUrls = reactive<Record<number | string, string>>({})
 
 // 村庄数据（从帮扶村管理模块动态加载）
 const villages = ref<{ id: number | string; name: string; county?: string }[]>([])
@@ -851,12 +854,49 @@ function formatFileSize(bytes: number): string {
   return (bytes / 1048576).toFixed(2) + ' MB'
 }
 
-// 获取文件下载/预览URL
+// 获取文件下载/预览URL（仅用于 fetch 请求，不直接用于 <img :src>，因为需要认证头）
 function getFileUrl(file: any): string {
   if (file.download_url) return file.download_url
   const rawId = route.params.id as string
   const projectId = isNaN(Number(rawId)) ? rawId : Number(rawId)
   return projectApi.getFileDownloadUrl(projectId, file.id)
+}
+
+// 获取缩略图 URL（优先使用已加载的 Blob URL，回退到空字符串）
+function getThumbnailUrl(file: any): string {
+  return thumbnailUrls[file.id] || ''
+}
+
+// 异步加载单个图片缩略图的 Blob URL
+async function loadThumbnail(file: any) {
+  try {
+    const url = getFileUrl(file)
+    const token = AuthStorage.getToken()
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) return
+    const blob = await response.blob()
+    // 如果该文件已有旧的 Blob URL，先释放
+    if (thumbnailUrls[file.id]) URL.revokeObjectURL(thumbnailUrls[file.id])
+    thumbnailUrls[file.id] = URL.createObjectURL(blob)
+  } catch {
+    // 缩略图加载失败不提示错误，静默处理
+  }
+}
+
+// 为所有 photo 分类的文件预加载缩略图
+async function loadAllThumbnails() {
+  const photoFiles = uploadedFiles.photo || []
+  await Promise.all(photoFiles.map((f) => loadThumbnail(f)))
+}
+
+// 释放所有缩略图 Blob URL
+function revokeAllThumbnails() {
+  for (const key of Object.keys(thumbnailUrls)) {
+    URL.revokeObjectURL(thumbnailUrls[key])
+    delete thumbnailUrls[key]
+  }
 }
 
 // 预览图片（使用认证 blob 方式，兼容 Electron）
@@ -901,6 +941,11 @@ async function handleDeleteFile(file: any) {
     // 从列表中移除
     const cat = file.category as string
     uploadedFiles[cat] = uploadedFiles[cat].filter((f: any) => f.id !== file.id)
+    // 释放被删除文件的缩略图 Blob URL
+    if (thumbnailUrls[file.id]) {
+      URL.revokeObjectURL(thumbnailUrls[file.id])
+      delete thumbnailUrls[file.id]
+    }
     ElMessage.success('文件已删除')
   } catch (e: any) {
     if (e !== 'cancel') logger.error('删除文件失败:', e)
@@ -916,8 +961,12 @@ async function uploadAllPendingFiles(projectId: number | string) {
     try {
       const result = await projectApi.uploadFiles(projectId, cat, files)
       if (result?.files) {
-        uploadedFiles[cat] = [...(uploadedFiles[cat] || []), ...result.files]
-        totalUploaded += result.files.length
+uploadedFiles[cat] = [...(uploadedFiles[cat] || []), ...result.files]
+// 如果是 photo 分类，异步加载新上传图片的缩略图
+if (cat === 'photo') {
+  result.files.forEach((f: any) => loadThumbnail(f))
+}
+totalUploaded += result.files.length
       }
       // 清空已上传的待上传队列
       pendingFiles[cat] = []
@@ -942,6 +991,8 @@ async function loadProjectFiles(projectId: number | string) {
         uploadedFiles[cat] = files
       }
     }
+    // 异步预加载 photo 分类的缩略图
+    loadAllThumbnails()
   } catch (e) {
     logger.warn('加载项目附件列表失败:', e)
   }
@@ -1235,6 +1286,8 @@ onUnmounted(() => {
     URL.revokeObjectURL(previewUrl.value)
     previewUrl.value = ''
   }
+  // 清理所有缩略图 Blob URL
+  revokeAllThumbnails()
 })
 </script>
 

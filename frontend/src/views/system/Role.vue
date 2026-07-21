@@ -39,7 +39,7 @@
         <el-table-column prop="description" label="描述" min-width="200" />
         <el-table-column label="用户数" width="100" align="center">
           <template #default="{ row }">
-            <el-button type="text" @click="handleViewUsers(row)">
+            <el-button type="text" @click="handleViewUsers(row as any)">
               {{ row.userCount }} 人
             </el-button>
           </template>
@@ -54,9 +54,9 @@
         </el-table-column>
         <el-table-column label="操作" width="250" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button type="success" size="small" @click="handlePermission(row)">权限</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button type="primary" size="small" @click="handleEdit(row as any)">编辑</el-button>
+            <el-button type="success" size="small" @click="handlePermission(row as any)">权限</el-button>
+            <el-button type="danger" size="small" @click="handleDelete(row as any)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

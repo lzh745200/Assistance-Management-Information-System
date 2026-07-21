@@ -218,7 +218,7 @@ const handleClearLevel = async (level: number) => {
       type: 'warning',
     })
 
-    const response = await clearTiles(level)
+    const response = await clearTiles()
     if (response.success) {
       ElMessage.success(`已清理 ${response.data.deleted_count} 个瓦片`)
       await loadStatus()
