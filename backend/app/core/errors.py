@@ -154,9 +154,22 @@ def get_error_message(code: ErrorCode) -> str:
     return ERROR_MESSAGES.get(code.value, f"错误码 {code}")
 
 
-# ── Re-export canonical exceptions from exceptions.py ──
+# ── Re-export canonical exceptions from exceptions.py (lazy) ──
 # AppError and ValidationError are defined in exceptions.py to avoid duplication.
-# This module re-exports them for backward compatibility.
-from app.core.exceptions import AppError, ValidationError  # noqa: E402
+# 注意：不能在模块顶层 `from app.core.exceptions import ...`，否则与
+# exceptions.py:44 的 `from app.core.errors import ErrorCode` 构成循环导入，
+# 导致后端启动崩溃。改用 PEP 562 模块级 __getattr__ 延迟解析，
+# 既保持 `from app.core.errors import AppError, ValidationError` 的向后兼容，
+# 又避免加载期循环。
+_LAZY_EXCEPTIONS = ("AppError", "ValidationError")
 
-__all__ = ["ErrorCode", "ERROR_MESSAGES", "get_error_message", "AppError", "ValidationError"]
+
+def __getattr__(name: str):
+    if name in _LAZY_EXCEPTIONS:
+        from app.core import exceptions as _exc
+
+        return getattr(_exc, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = ["ErrorCode", "ERROR_MESSAGES", "get_error_message", "AppError", "ValidationError"]  # noqa: F822
