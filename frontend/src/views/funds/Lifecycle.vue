@@ -1,6 +1,6 @@
 <template>
   <div class="lifecycle-container">
-    <el-page-header title="返回" @back="$router.back()">
+    <el-page-header title="返回" @back="pushSafe('/funds')">
       <template #content>
         <span class="page-title">项目经费生命周期管理</span>
       </template>

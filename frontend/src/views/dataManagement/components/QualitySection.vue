@@ -284,8 +284,10 @@ async function handleAutoFix() {
   if (!selectedCheck.value) return
   fixing.value = true
   try {
+    // 从当前问题详情中提取需要修复的记录 ID（去重）
+    const recordIds = [...new Set(issueDetails.value.map((d) => d.record_id))]
     const res = await post('/data-quality/clean', {
-      records: [],
+      records: recordIds,
       cleaning_rules: { trim_whitespace: true, normalize_empty: true },
     })
     const data = res?.data ?? res

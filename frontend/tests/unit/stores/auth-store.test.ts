@@ -5,6 +5,7 @@ vi.mock('@/api/request', () => ({
   default: vi.fn(),
   apiRequest: vi.fn(),
   _setCachedToken: vi.fn(),
+  prefetchCsrfToken: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('@/api/queries/user', () => ({
@@ -28,6 +29,10 @@ vi.mock('@/utils/authStorage', () => {
 
 vi.mock('@/utils/roleAccess', () => ({
   ADMIN_ROLES: ['admin', 'superadmin'],
+}))
+
+vi.mock('@/stores/menu', () => ({
+  useMenuStore: () => ({ fetchMenus: vi.fn().mockResolvedValue(undefined) }),
 }))
 
 import { apiRequest, _setCachedToken } from '@/api/request'
@@ -98,33 +103,33 @@ describe('stores/auth', () => {
   })
 
   describe('login', () => {
-    it('成功: persistAuth + return true', async () => {
+    it('成功: persistAuth + return success', async () => {
       ;(apiRequest as any).mockResolvedValue({
         code: 200,
         data: { access_token: 'A', user: { id: 1, username: 'u' }, refresh_token: 'R' },
       })
       const s = useAuthStore()
       const r = await s.login('u', 'p')
-      expect(r).toBe(true)
+      expect(r.status).toBe('success')
       expect(s.token).toBe('A')
       expect(s.user).toEqual({ id: 1, username: 'u' })
       expect(_setCachedToken).toHaveBeenCalledWith('A')
       expect(AuthStorage.setAuthData).toHaveBeenCalledWith({ token: 'A', user: { id: 1, username: 'u' }, refreshToken: 'R' })
     })
 
-    it('code !== 200: error + return false', async () => {
+    it('code !== 200: error + return error status', async () => {
       ;(apiRequest as any).mockResolvedValue({ code: 401, message: 'bad creds' })
       const s = useAuthStore()
       const r = await s.login('u', 'p')
-      expect(r).toBe(false)
+      expect(r.status).toBe('error')
       expect(s.error).toBe('bad creds')
     })
 
-    it('no data: error + return false', async () => {
+    it('no data: error + return error status', async () => {
       ;(apiRequest as any).mockResolvedValue({ code: 200, data: null })
       const s = useAuthStore()
       const r = await s.login('u', 'p')
-      expect(r).toBe(false)
+      expect(r.status).toBe('error')
       expect(s.error).toBe('登录失败')
     })
 
@@ -132,7 +137,7 @@ describe('stores/auth', () => {
       ;(apiRequest as any).mockRejectedValue({ response: { data: { message: 'Invalid creds' } } })
       const s = useAuthStore()
       const r = await s.login('u', 'p')
-      expect(r).toBe(false)
+      expect(r.status).toBe('error')
       expect(s.error).toBe('Invalid creds')
     })
 
@@ -140,7 +145,7 @@ describe('stores/auth', () => {
       ;(apiRequest as any).mockRejectedValue(new Error('net down'))
       const s = useAuthStore()
       const r = await s.login('u', 'p')
-      expect(r).toBe(false)
+      expect(r.status).toBe('error')
       expect(s.error).toBe('net down')
     })
 
@@ -148,7 +153,7 @@ describe('stores/auth', () => {
       ;(apiRequest as any).mockRejectedValue({})
       const s = useAuthStore()
       const r = await s.login('u', 'p')
-      expect(r).toBe(false)
+      expect(r.status).toBe('error')
       expect(s.error).toBe('登录失败')
     })
   })

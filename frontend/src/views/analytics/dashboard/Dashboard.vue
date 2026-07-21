@@ -81,7 +81,7 @@
               <span class="trend-tag trend-tag--up">
                 <i class="trend-tag__arrow">↗</i> {{ kpiTrends.villages }}%
               </span>
-              <span class="trend-label">较上年</span>
+              <span class="trend-label">较上年（示意数据）</span>
             </div>
           </div>
           <div ref="sparkVillagesRef" class="stat-sparkline"></div>
@@ -105,7 +105,7 @@
               <span class="trend-tag trend-tag--up">
                 <i class="trend-tag__arrow">↗</i> {{ kpiTrends.population }}%
               </span>
-              <span class="trend-label">较上年</span>
+              <span class="trend-label">较上年（示意数据）</span>
             </div>
           </div>
           <div ref="sparkPopulationRef" class="stat-sparkline"></div>
@@ -130,7 +130,7 @@
               <span class="trend-tag trend-tag--up">
                 <i class="trend-tag__arrow">↗</i> {{ kpiTrends.income }}%
               </span>
-              <span class="trend-label">较上年</span>
+              <span class="trend-label">较上年（示意数据）</span>
             </div>
           </div>
           <div ref="sparkIncomeRef" class="stat-sparkline"></div>
@@ -155,7 +155,7 @@
               <span class="trend-tag trend-tag--up">
                 <i class="trend-tag__arrow">↗</i> {{ kpiTrends.investment }}%
               </span>
-              <span class="trend-label">较上年</span>
+              <span class="trend-label">较上年（示意数据）</span>
             </div>
           </div>
           <div ref="sparkInvestmentRef" class="stat-sparkline"></div>
@@ -182,7 +182,7 @@
     <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="24">
         <div class="chart-card">
-          <h3 class="chart-title">年度趋势对比</h3>
+          <h3 class="chart-title">年度趋势对比 <span style="font-size: 12px; color: #909399; font-weight: normal">（示意数据，待接入真实历史数据）</span></h3>
           <div ref="trendChartRef" class="chart-container" style="height: 350px"></div>
         </div>
       </el-col>
@@ -271,7 +271,8 @@ const totalInvestment = computed(() => {
 })
 
 // =========================================================================
-// KPI 环比趋势（基于可用年份模拟，实际项目中应从 API 获取）
+// KPI 环比趋势 — 示意数据（伪随机生成，非真实同比）
+// TODO: 替换为后端 API 返回的真实年度同比数据
 // =========================================================================
 
 interface KpiTrends {
@@ -554,9 +555,12 @@ const updateCharts = () => {
   }
 
   // ── 年度趋势对比（升级为渐变面积图） ──
+  // TODO: 当前使用当前年份数据填充所有年份（平线），属于占位数据。
+  // 待后端提供多年历史统计接口后，应替换为真实的逐年数据。
   if (trendChart) {
     const years = availableYears.slice().reverse()
     const baseVillages = statistics.value.villages.totalVillages || 0
+    // 占位数据：所有年份使用当前值，产生平线效果
     const villagesData = baseVillages > 0 ? years.map(() => baseVillages) : years.map(() => 0)
     const basePop = Math.round((statistics.value.population.totalPopulation || 0) / 100)
     const populationData = basePop > 0 ? years.map(() => basePop) : years.map(() => 0)

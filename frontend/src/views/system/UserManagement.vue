@@ -196,7 +196,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="!isEdit" label="数据范围">
+        <el-form-item label="数据范围">
           <el-select
             v-model="formData.data_scope"
             placeholder="请选择数据范围"
@@ -679,6 +679,10 @@ const handleSubmit = async () => {
           email: formData.email,
           phone: formData.phone,
           department: formData.department,
+          role: formData.role,
+          is_active: formData.is_active,
+          data_scope: formData.data_scope,
+          organization_id: formData.organization_id,
         })
         ElMessage.success('用户更新成功')
       } else {

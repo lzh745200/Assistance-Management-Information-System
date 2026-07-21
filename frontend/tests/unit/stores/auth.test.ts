@@ -12,6 +12,7 @@ const mockAuthStorageClear = vi.fn()
 vi.mock('@/api/request', () => ({
   apiRequest: (...args: any[]) => mockApiRequest(...args),
   _setCachedToken: (...args: any[]) => mockSetCachedToken(...args),
+  prefetchCsrfToken: () => Promise.resolve(),
 }))
 
 vi.mock('@/api/queries/user', () => ({
@@ -30,6 +31,10 @@ vi.mock('@/utils/authStorage', () => ({
 
 vi.mock('@/utils/roleAccess', () => ({
   ADMIN_ROLES: ['admin', 'superuser'],
+}))
+
+vi.mock('@/stores/menu', () => ({
+  useMenuStore: () => ({ fetchMenus: vi.fn().mockResolvedValue(undefined) }),
 }))
 
 import { setActivePinia, createPinia } from 'pinia'
@@ -100,21 +105,21 @@ describe('useAuthStore', () => {
     })
     const store = useAuthStore()
     const result = await store.login('alice', 'pwd')
-    expect(result).toBe(true)
+    expect(result.status).toBe('success')
     expect(store.token).toBe('tok123')
     expect(store.user?.username).toBe('alice')
     expect(mockSetCachedToken).toHaveBeenCalledWith('tok123')
     expect(mockAuthStorageSetAuthData).toHaveBeenCalled()
   })
 
-  it('login 失败时返回 false 并设置 error', async () => {
+  it('login 失败时返回 error 并设置 error', async () => {
     mockApiRequest.mockResolvedValueOnce({
       code: 401,
       message: 'invalid credentials',
     })
     const store = useAuthStore()
     const result = await store.login('alice', 'wrong')
-    expect(result).toBe(false)
+    expect(result.status).toBe('error')
     expect(store.error).toBe('invalid credentials')
   })
 
@@ -122,7 +127,7 @@ describe('useAuthStore', () => {
     mockApiRequest.mockRejectedValueOnce(new Error('timeout'))
     const store = useAuthStore()
     const result = await store.login('alice', 'pwd')
-    expect(result).toBe(false)
+    expect(result.status).toBe('error')
     expect(store.error).toBe('timeout')
   })
 

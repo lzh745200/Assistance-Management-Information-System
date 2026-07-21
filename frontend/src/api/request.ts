@@ -35,6 +35,39 @@ export function unfreezeRequests(): void {
   _requestFrozen = false
 }
 
+// ── Refresh Token 续期机制 ──
+// 401 时尝试用 refresh_token 换取新 access_token，成功后重试原请求。
+// 使用标志位防止并发 401 触发多次 refresh，其余请求排队等待。
+let _isRefreshing = false
+let _refreshSubscribers: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = []
+
+/** 将等待中的请求加入队列，refresh 成功后用新 token 重发 */
+function _subscribeTokenRefresh(resolve: (token: string) => void, reject: (err: any) => void): void {
+  _refreshSubscribers.push({ resolve, reject })
+}
+
+/** refresh 成功后通知所有排队请求 */
+function _onTokenRefreshed(newToken: string): void {
+  _refreshSubscribers.forEach(({ resolve }) => resolve(newToken))
+  _refreshSubscribers = []
+}
+
+/** refresh 失败后拒绝所有排队请求 */
+function _onRefreshFailed(err: any): void {
+  _refreshSubscribers.forEach(({ reject }) => reject(err))
+  _refreshSubscribers = []
+}
+
+/** 判断请求 URL 是否为不应触发 refresh 的端点 */
+function _isAuthEndpoint(url: string | undefined): boolean {
+  if (!url) return false
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/two-factor/verify-login')
+  )
+}
+
 // ── CSRF Token 管理（Double Submit Cookie 模式）──
 // 后端开启 CSRF 保护后，POST/PUT/DELETE/PATCH 需在 X-CSRF-Token 头回填 token。
 // token 来源：优先从 csrftoken Cookie 读取；若无则懒加载 GET /auth/csrf-token 获取
@@ -196,30 +229,133 @@ request.interceptors.response.use(
     }
     return response
   },
-  (error) => {
+  async (error) => {
     // ── 已取消的请求不提示 ──
     if (error.__CANCEL__ || error.code === 'ERR_CANCELED') {
       return Promise.reject(error)
+    }
+
+    // ── 清理 pending 请求追踪（失败请求也需要清理，防止 stale entry 阻塞后续请求）──
+    if (error.config) {
+      const requestKey = _makeRequestKey(
+        error.config.method,
+        error.config.url,
+        error.config.params
+      )
+      pendingRequests.delete(requestKey)
     }
 
     // ── HTTP 状态码分类处理 ──
     if (error.response) {
       const { status, data } = error.response
       if (status === 401) {
-        _cachedToken = null
-        AuthStorage.clear()
-        // 冻结期间不弹"登录已过期"消息（改密成功消息优先级更高）
-        if (!_requestFrozen) {
-          ElMessage.error('登录已过期，请重新登录')
+        const originalRequest = error.config
+
+        // 不对登录/刷新/2FA验证端点本身做 refresh（防无限循环）
+        if (!originalRequest || _isAuthEndpoint(originalRequest.url)) {
+          _cachedToken = null
+          AuthStorage.clear()
+          if (!_requestFrozen) {
+            ElMessage.error('登录已过期，请重新登录')
+          }
+          if (
+            typeof window !== 'undefined' &&
+            !_isTestEnv &&
+            !_requestFrozen &&
+            !window.location.pathname.startsWith('/login')
+          ) {
+            window.location.href = '/login'
+          }
+          return Promise.reject(error)
         }
-        // 跳转登录页：避免在测试环境/已登录页重复跳转
-        if (
-          typeof window !== 'undefined' &&
-          !_isTestEnv &&
-          !_requestFrozen &&
-          !window.location.pathname.startsWith('/login')
-        ) {
-          window.location.href = '/login'
+
+        // 检查是否有 refresh_token 可用
+        const refreshToken = AuthStorage.getRefreshToken()
+        if (!refreshToken) {
+          // 无 refresh_token，直接登出
+          _cachedToken = null
+          AuthStorage.clear()
+          if (!_requestFrozen) {
+            ElMessage.error('登录已过期，请重新登录')
+          }
+          if (
+            typeof window !== 'undefined' &&
+            !_isTestEnv &&
+            !_requestFrozen &&
+            !window.location.pathname.startsWith('/login')
+          ) {
+            window.location.href = '/login'
+          }
+          return Promise.reject(error)
+        }
+
+        // 如果已经在刷新中，将当前请求加入队列等待
+        if (_isRefreshing) {
+          return new Promise((resolve, reject) => {
+            _subscribeTokenRefresh(
+              (newToken: string) => {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`
+                resolve(request.request(originalRequest))
+              },
+              (err: any) => {
+                reject(err)
+              }
+            )
+          })
+        }
+
+        // 标记正在刷新，防止并发 401 重复触发
+        _isRefreshing = true
+        originalRequest._retry = true
+
+        try {
+          // 调用 refresh 端点（用裸 axios 避免触发自身拦截器）
+          const refreshRes = await axios.post(
+            (import.meta.env.VITE_API_BASE_URL || '/api/v1') + '/auth/refresh',
+            { token: refreshToken },
+            { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
+          )
+
+          const refreshData = refreshRes.data
+          const newAccessToken = refreshData?.data?.access_token
+          const newRefreshToken = refreshData?.refresh_token
+
+          if (!newAccessToken) {
+            throw new Error('Refresh response missing access_token')
+          }
+
+          // 更新存储的 token
+          _cachedToken = newAccessToken
+          AuthStorage.setToken(newAccessToken)
+          if (newRefreshToken) {
+            AuthStorage.setRefreshToken(newRefreshToken)
+          }
+
+          // 通知所有排队请求使用新 token 重试
+          _onTokenRefreshed(newAccessToken)
+
+          // 重试原始请求
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+          return request.request(originalRequest)
+        } catch (refreshError) {
+          // Refresh 失败：清除认证状态，拒绝所有排队请求
+          _onRefreshFailed(refreshError)
+          _cachedToken = null
+          AuthStorage.clear()
+          if (!_requestFrozen) {
+            ElMessage.error('登录已过期，请重新登录')
+          }
+          if (
+            typeof window !== 'undefined' &&
+            !_isTestEnv &&
+            !_requestFrozen &&
+            !window.location.pathname.startsWith('/login')
+          ) {
+            window.location.href = '/login'
+          }
+          return Promise.reject(refreshError)
+        } finally {
+          _isRefreshing = false
         }
       } else if (status === 403) {
         // CSRF 校验失败时重置 token 缓存，自动获取新 token 并重试一次
@@ -272,6 +408,13 @@ request.interceptors.response.use(
           console.info('[API] Offline fallback:', method, url)
           return Promise.resolve(mockData)
         }
+      }
+      // 自动重试：后端可能正在短暂重启（Electron 自动重启机制），延迟 2 秒后重试一次
+      if (error.config && !error.config._networkRetried && !_isTestEnv) {
+        error.config._networkRetried = true
+        return new Promise((resolve) => setTimeout(resolve, 2000)).then(() => {
+          return request.request(error.config)
+        })
       }
       ElMessage.error('网络连接失败，请检查服务是否启动')
     } else if (error.code === 'ECONNABORTED') {

@@ -58,6 +58,15 @@ class LoginResponse(BaseModel):
     message: str = Field(default="", description="消息")
     must_change_password: bool = Field(default=False, description="是否必须修改密码")
     refresh_token: Optional[str] = Field(None, description="刷新令牌")
+    two_factor_required: bool = Field(default=False, description="是否需要双因素认证")
+    temp_token: Optional[str] = Field(None, description="2FA临时令牌（用于验证TOTP后换取正式令牌）")
+
+
+class TwoFactorLoginVerifyRequest(BaseModel):
+    """2FA登录验证请求"""
+
+    temp_token: str = Field(..., description="登录时返回的临时令牌")
+    code: str = Field(..., min_length=6, max_length=8, description="TOTP验证码或备用码")
 
 
 class ChangePasswordRequest(BaseModel):

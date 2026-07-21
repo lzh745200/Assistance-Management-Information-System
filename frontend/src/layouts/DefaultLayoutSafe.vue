@@ -97,14 +97,15 @@
               <span class="menu-title-text">经费管理</span>
             </template>
             <el-menu-item index="/funds"><span>经费总览</span></el-menu-item>
-            <el-menu-item index="/funds/analysis"><span>经费分析</span></el-menu-item>
             <el-menu-item index="/funds/budget"><span>预算管理</span></el-menu-item>
+            <el-menu-item index="/funds/user"><span>经费申请</span></el-menu-item>
             <el-menu-item index="/funds/contract"><span>合同管理</span></el-menu-item>
-            <el-menu-item index="/funds/anomaly"><span>异常资金</span></el-menu-item>
+            <el-menu-item index="/funds/transfer"><span>转账凭证</span></el-menu-item>
+            <el-menu-item index="/funds/anomaly"><span>异常监控</span></el-menu-item>
             <el-menu-item index="/funds/lifecycle"><span>资金周期</span></el-menu-item>
-            <el-menu-item index="/funds/apply"><span>经费申请</span></el-menu-item>
+            <el-menu-item index="/funds/settlement"><span>决算结算</span></el-menu-item>
+            <el-menu-item index="/funds/analysis"><span>经费分析</span></el-menu-item>
             <el-menu-item index="/funds/report"><span>经费报表</span></el-menu-item>
-            <el-menu-item index="/funds/settlement"><span>经费结算</span></el-menu-item>
           </el-sub-menu>
 
           <el-menu-item v-if="menuStore.canAccessMenu('policies')" index="/policies">

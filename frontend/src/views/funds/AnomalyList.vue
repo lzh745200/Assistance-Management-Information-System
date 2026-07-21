@@ -1,6 +1,6 @@
 <template>
   <div class="anomaly-container">
-    <el-page-header title="返回" @back="$router.back()">
+    <el-page-header title="返回" @back="pushSafe('/funds')">
       <template #content><span class="page-title">经费异常监控</span></template>
     </el-page-header>
 
@@ -122,8 +122,9 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { fundLifecycleApi } from '@/api/fundLifecycle'
-import { safeRouteParam } from '@/composables/useRouterSafe'
+import { safeRouteParam, useRouterSafe } from '@/composables/useRouterSafe'
 
+const { pushSafe } = useRouterSafe()
 const route = useRoute()
 const projectId = route.query.project_id ? safeRouteParam(route.query.project_id) : undefined
 

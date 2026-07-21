@@ -1,14 +1,21 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { apiRequest, _setCachedToken } from '@/api/request'
+import { apiRequest, _setCachedToken, prefetchCsrfToken } from '@/api/request'
 import { useMenuStore } from '@/stores/menu'
 import { getCurrentUser } from '@/api/queries/user'
 import { AuthStorage } from '@/utils/authStorage'
 import { ADMIN_ROLES } from '@/utils/roleAccess'
+import { verifyLoginTwoFactor } from '@/api/twoFactor'
 import type { AuthData } from '@/utils/authStorage'
 import type { ApiResponse } from '@/types/api'
 
 export type UserInfo = AuthData['user']
+
+/** login() 返回结果 */
+export type LoginResult =
+  | { status: 'success' }
+  | { status: 'two_factor_required'; tempToken: string }
+  | { status: 'error'; message: string }
 
 /** Wire-format login response (snake_case, matches backend JSON) */
 interface LoginPayload {
@@ -17,6 +24,8 @@ interface LoginPayload {
   token_type: string
   user: UserInfo
   must_change_password?: boolean
+  two_factor_required?: boolean
+  temp_token?: string
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -85,6 +94,10 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = u
     _setCachedToken(t)
     AuthStorage.setAuthData({ token: t, user: u, refreshToken })
+    // 预取 CSRF token：避免首次 POST/PUT/DELETE 请求因懒加载失败而返回 403
+    prefetchCsrfToken().catch(() => {
+      // 预取失败不阻断登录流程，后续请求会自动重试获取
+    })
   }
 
   function logout() {
@@ -96,9 +109,12 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * 登录；返回 true 表示登录成功，false 表示失败。
+   * 登录；返回 LoginResult 表示登录结果。
+   * - success: 登录成功
+   * - two_factor_required: 需要 2FA 验证（附带 tempToken）
+   * - error: 登录失败
    */
-  async function login(username: string, password: string): Promise<boolean> {
+  async function login(username: string, password: string): Promise<LoginResult> {
     error.value = ''
 
     try {
@@ -109,17 +125,51 @@ export const useAuthStore = defineStore('auth', () => {
         timeout: 60000, // 登录超时 60s，bcrypt 纯 Python 回退时仍需安全兜底
       })
 
+      if (res.code === 200) {
+        // 2FA 挑战：后端要求双因素认证
+        if (res.two_factor_required && res.temp_token) {
+          return { status: 'two_factor_required', tempToken: res.temp_token as string }
+        }
+
+        // 正常登录成功
+        if (res.data) {
+          persistAuth(res.data.access_token, res.data.user, res.data.refresh_token)
+          // 登录后立即预加载菜单 — 避免侧边栏渲染时 loaded=false 导致闪烁或泄露
+          // 使用 try-catch 防止菜单加载失败影响登录流程
+          try { useMenuStore().fetchMenus().catch(() => {}) } catch { /* ignore */ }
+          return { status: 'success' }
+        }
+      }
+
+      error.value = res.message || '登录失败'
+      return { status: 'error', message: error.value }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || '登录失败'
+      error.value = msg
+      return { status: 'error', message: msg }
+    }
+  }
+
+  /**
+   * 2FA 登录验证：使用 temp_token + TOTP 验证码完成登录。
+   * 返回 true 表示验证成功并完成登录，false 表示失败。
+   */
+  async function verifyTwoFactorLogin(tempToken: string, code: string): Promise<boolean> {
+    error.value = ''
+
+    try {
+      const res = await verifyLoginTwoFactor(tempToken, code)
+
       if (res.code === 200 && res.data) {
-        persistAuth(res.data.access_token, res.data.user, res.data.refresh_token)
-        // 登录后立即预加载菜单 — 避免侧边栏渲染时 loaded=false 导致闪烁或泄露
+        persistAuth(res.data.access_token, res.data.user, res.refresh_token)
         useMenuStore().fetchMenus()
         return true
       }
 
-      error.value = res.message || '登录失败'
+      error.value = res.message || '2FA验证失败'
       return false
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || '登录失败'
+      const msg = err?.response?.data?.detail || err?.response?.data?.message || err?.message || '2FA验证失败'
       error.value = msg
       return false
     }
@@ -153,6 +203,7 @@ export const useAuthStore = defineStore('auth', () => {
     modulePermissions,
     logout,
     login,
+    verifyTwoFactorLogin,
     fetchUser,
   }
 })

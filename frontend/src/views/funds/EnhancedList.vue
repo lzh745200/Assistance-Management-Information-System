@@ -67,6 +67,34 @@
       </div>
     </div>
 
+    <!-- 快速入口 -->
+    <div class="quick-nav-row">
+      <div class="quick-nav-card" @click="pushSafe('/funds/budget')">
+        <el-icon size="22"><Tickets /></el-icon>
+        <span>预算管理</span>
+      </div>
+      <div class="quick-nav-card" @click="pushSafe('/funds/user')">
+        <el-icon size="22"><EditPen /></el-icon>
+        <span>经费申请</span>
+      </div>
+      <div class="quick-nav-card" @click="pushSafe('/funds/contract')">
+        <el-icon size="22"><Document /></el-icon>
+        <span>合同管理</span>
+      </div>
+      <div class="quick-nav-card" @click="pushSafe('/funds/transfer')">
+        <el-icon size="22"><Money /></el-icon>
+        <span>转账凭证</span>
+      </div>
+      <div class="quick-nav-card" @click="pushSafe('/funds/anomaly')">
+        <el-icon size="22"><Warning /></el-icon>
+        <span>异常监控</span>
+      </div>
+      <div class="quick-nav-card" @click="pushSafe('/funds/analysis')">
+        <el-icon size="22"><DataAnalysis /></el-icon>
+        <span>经费分析</span>
+      </div>
+    </div>
+
     <!-- 搜索筛选 -->
     <div class="filter-card">
       <el-form :model="filterForm" inline>
@@ -320,7 +348,7 @@ import { logger } from '@/utils/logger'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Download, Search, Tickets } from '@element-plus/icons-vue'
+import { Plus, Download, Search, Tickets, EditPen, Document, Money, Warning, DataAnalysis } from '@element-plus/icons-vue'
 import { get, del, apiRequest } from '@/api/request'
 import { fundApi } from '@/api/funds'
 import { getSupportedVillages } from '@/api/supportedVillage'
@@ -808,5 +836,37 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+/* 快速入口卡片 */
+.quick-nav-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.quick-nav-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 100px;
+  padding: 14px 18px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-lighter);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.25s;
+  color: var(--color-primary-dark-1);
+}
+.quick-nav-card:hover {
+  border-color: var(--color-primary-light-3);
+  background: var(--color-bg-active);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+.quick-nav-card span {
+  font-size: 13px;
+  font-weight: 500;
 }
 </style>

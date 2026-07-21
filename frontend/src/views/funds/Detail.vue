@@ -291,8 +291,61 @@
               </div>
             </div>
           </el-tab-pane>
+
+          <!-- 附件管理标签页 -->
+          <el-tab-pane label="附件管理" name="attachments">
+            <div class="detail-card" style="margin-bottom: 0">
+              <div class="card-header">
+                <h3>相关附件</h3>
+              </div>
+              <div class="card-body">
+                <el-upload
+                  :show-file-list="false"
+                  :before-upload="handleBeforeUpload"
+                  :http-request="handleUploadAttachment"
+                  multiple
+                >
+                  <el-button type="primary" :loading="uploadingAttachment">
+                    <el-icon><Upload /></el-icon>上传附件
+                  </el-button>
+                  <span style="margin-left: 12px; font-size: 12px; color: #999">
+                    支持格式：pdf、doc、docx、xls、xlsx、jpg、png、gif、bmp、txt、zip、rar
+                  </span>
+                </el-upload>
+
+                <el-table v-if="attachments.length" :data="attachments" stripe style="margin-top: 16px">
+                  <el-table-column prop="file_name" label="文件名" min-width="200" show-overflow-tooltip />
+                  <el-table-column prop="category" label="分类" width="100" align="center">
+                    <template #default="{ row }">
+                      <el-tag size="small">{{ getCategoryLabel(row.category) }}</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="file_size" label="大小" width="100">
+                    <template #default="{ row }">{{ formatFileSize(row.file_size) }}</template>
+                  </el-table-column>
+                  <el-table-column prop="uploaded_by" label="上传人" width="100" />
+                  <el-table-column prop="created_at" label="上传时间" width="160">
+                    <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="180" fixed="right">
+                    <template #default="{ row }">
+                      <el-button link type="primary" @click="previewAttachment(row)">预览</el-button>
+                      <el-button link type="primary" @click="downloadAttachment(row)">下载</el-button>
+                      <el-popconfirm title="确定删除该附件吗？" @confirm="deleteAttachment(row)">
+                        <template #reference>
+                          <el-button link type="danger">删除</el-button>
+                        </template>
+                      </el-popconfirm>
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <el-empty v-else description="暂无附件" />
+              </div>
+            </div>
+          </el-tab-pane>
         </el-tabs>
       </template>
+
       <!-- 编辑/创建模式 -->
       <template v-else>
         <div class="detail-card">
@@ -502,6 +555,22 @@
           </div>
         </div>
       </template>
+
+      <!-- 附件预览对话框 -->
+      <el-dialog
+        v-model="previewVisible"
+        :title="previewTitle"
+        width="80%"
+        top="5vh"
+        destroy-on-close
+        @close="previewUrl = ''"
+      >
+        <iframe
+          v-if="previewUrl"
+          :src="previewUrl"
+          style="width: 100%; height: 70vh; border: none"
+        />
+      </el-dialog>
     </template>
     <!-- 工作流操作对话框 -->
     <el-dialog
@@ -559,7 +628,7 @@ import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Edit, Delete, Loading } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, Delete, Loading, Upload } from '@element-plus/icons-vue'
 import { get, post, put, del } from '@/api/request'
 import { fundApi } from '@/api/funds'
 
@@ -591,6 +660,11 @@ const activeTab = ref('basic')
 const statusHistory = ref<any[]>([])
 const fieldChanges = ref<any[]>([])
 const operationLogs = ref<any[]>([])
+const attachments = ref<any[]>([])
+const uploadingAttachment = ref(false)
+const previewVisible = ref(false)
+const previewUrl = ref('')
+const previewTitle = ref('')
 
 // 加载历史记录
 async function loadStatusHistory() {
@@ -625,7 +699,84 @@ async function loadOperationLogs() {
 
 // 加载所有历史记录（并行执行）
 async function loadAllHistory() {
-  await Promise.all([loadStatusHistory(), loadFieldChanges(), loadOperationLogs()])
+  await Promise.all([loadStatusHistory(), loadFieldChanges(), loadOperationLogs(), loadAttachments()])
+}
+
+async function loadAttachments() {
+  if (!fundData.id) return
+  try {
+    const res = await fundApi.listAttachments(fundData.id)
+    attachments.value = res.items
+  } catch (error) {
+    logger.error('加载附件失败', error)
+  }
+}
+
+function handleBeforeUpload(_file: File) {
+  return true
+}
+
+async function handleUploadAttachment(options: any) {
+  if (!fundData.id) return
+  uploadingAttachment.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', options.file)
+    formData.append('category', 'other')
+    await post(`/funds/${fundData.id}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    ElMessage.success('上传成功')
+    await loadAttachments()
+  } catch {
+    ElMessage.error('上传失败')
+  } finally {
+    uploadingAttachment.value = false
+  }
+}
+
+function previewAttachment(row: any) {
+  // 使用认证请求获取 Blob，避免 Electron window.open 发送到外部浏览器（无 token）
+  fundApi.getAttachmentBlob(row.id).then((blob) => {
+    const url = window.URL.createObjectURL(blob)
+    previewUrl.value = url
+    previewTitle.value = row.file_name || '附件预览'
+    previewVisible.value = true
+  }).catch(() => {
+    ElMessage.error('预览加载失败')
+  })
+}
+
+function downloadAttachment(row: any) {
+  // 使用认证请求下载，兼容 Electron（window.open 会被拦截到外部浏览器）
+  fundApi.downloadAttachment(row.id, row.file_name).catch(() => {
+    ElMessage.error('下载失败')
+  })
+}
+
+async function deleteAttachment(row: any) {
+  try {
+    await fundApi.deleteAttachment(row.id)
+    ElMessage.success('删除成功')
+    await loadAttachments()
+  } catch {
+    ElMessage.error('删除失败')
+  }
+}
+
+function getCategoryLabel(cat: string) {
+  const labels: Record<string, string> = {
+    contract: '合同', invoice: '发票', receipt: '收据',
+    report: '报告', allocation_order: '分配令', other: '其他',
+  }
+  return labels[cat] || cat || '其他'
+}
+
+function formatFileSize(bytes: number) {
+  if (!bytes) return '-'
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB'
 }
 
 const fundData = reactive<any>({

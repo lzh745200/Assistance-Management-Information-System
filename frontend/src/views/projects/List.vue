@@ -317,13 +317,17 @@ const loadStats = async () => {
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await projectApi.list({
+    const params: Record<string, any> = {
       page: pagination.page,
       page_size: pagination.pageSize,
       keyword: filterForm.name || undefined,
       project_type: filterForm.type || undefined,
       status: filterForm.status || undefined,
-    })
+    }
+    if (filterForm.status === 'cancelled') {
+      params.include_cancelled = true
+    }
+    const res = await projectApi.list(params)
     projectList.value = (res as any)?.data?.items || (res as any)?.items || []
     pagination.total = (res as any)?.data?.total || (res as any)?.total || 0
   } catch (e) {
@@ -401,19 +405,12 @@ const handleStatClick = (status: string) => {
 
 const handleExport = async () => {
   try {
-    const res = await projectApi.exportList({
+    await projectApi.exportList({
       keyword: filterForm.name || undefined,
       project_type: filterForm.type || undefined,
       status: filterForm.status || undefined,
     })
-    const blob = res.data || res
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '帮扶项目导出.xlsx'
-    link.click()
-    window.URL.revokeObjectURL(url)
-    // 导出成功 — 浏览器已确认
+    ElMessage.success('导出成功')
   } catch {
     ElMessage.error('导出失败，请稍后重试')
   }
@@ -469,19 +466,12 @@ const handleBatchDelete = async () => {
 const handleBatchExport = async () => {
   try {
     const ids = selectedRows.value.map((r) => r.id)
-    const res = await projectApi.exportList({
+    await projectApi.exportList({
       keyword: filterForm.name || undefined,
       project_type: filterForm.type || undefined,
       status: filterForm.status || undefined,
       ids,
     } as Record<string, unknown>)
-    const blob = res.data || res
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '帮扶项目批量导出.xlsx'
-    link.click()
-    window.URL.revokeObjectURL(url)
     ElMessage.success(`已导出 ${ids.length} 条项目记录`)
   } catch {
     ElMessage.error('导出失败')

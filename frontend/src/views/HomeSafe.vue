@@ -1018,7 +1018,6 @@ const adminNavItems: NavItem[] = [
 // 普通用户专属导航项
 const userNavItems: NavItem[] = [
   { icon: Money, label: '经费申请', path: '/funds/user', roles: [] },
-  { icon: EditPen, label: '经费申请', path: '/funds/apply', roles: [] },
   {
     icon: TrendCharts,
     label: '数据录入',

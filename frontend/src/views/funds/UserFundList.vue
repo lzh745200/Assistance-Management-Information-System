@@ -7,11 +7,11 @@
         <p class="page-desc">查看和管理您的经费申请记录，提交新申请或跟踪审批进度</p>
       </div>
       <div class="header-actions">
-        <el-button type="primary" @click="openCreateDialog">
-          <el-icon><Plus /></el-icon>新增经费记录
+        <el-button type="primary" @click="openApplyDialog">
+          <el-icon><EditPen /></el-icon>提交经费申请
         </el-button>
-        <el-button @click="pushSafe('/funds/apply')">
-          <el-icon><EditPen /></el-icon>经费申请
+        <el-button v-if="isManager" type="success" @click="openCreateDialog">
+          <el-icon><Plus /></el-icon>新增经费记录
         </el-button>
         <el-button @click="pushSafe('/approval/my-applications')">
           <el-icon><Tickets /></el-icon>我的申请
@@ -169,44 +169,117 @@
       </div>
     </div>
 
-    <!-- 新增/编辑经费记录弹窗 -->
+    <!-- 新增/编辑/申请经费弹窗 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="isEditing ? '编辑经费记录' : '新增经费记录'"
-      width="600px"
+      :title="dialogTitle"
+      width="700px"
       :close-on-click-modal="false"
       @close="resetDialogForm"
     >
-      <el-form ref="dialogFormRef" :model="dialogForm" :rules="dialogRules" label-width="100px">
+      <el-form ref="dialogFormRef" :model="dialogForm" :rules="dialogRules" label-width="120px">
         <el-form-item label="经费名称" prop="name">
-          <el-input v-model="dialogForm.name" placeholder="请输入经费名称" maxlength="100" />
-        </el-form-item>
-        <el-form-item label="经费类型" prop="type">
-          <el-select v-model="dialogForm.type" placeholder="请选择类型" style="width: 100%">
-            <el-option label="项目经费" value="project" />
-            <el-option label="运营经费" value="operation" />
-            <el-option label="教育帮扶" value="education" />
-            <el-option label="基础设施" value="infrastructure" />
-            <el-option label="应急经费" value="emergency" />
-            <el-option label="其他" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="金额(万元)" prop="amount">
-          <el-input-number
-            v-model="dialogForm.amount"
-            :min="0"
-            :precision="2"
-            :step="1"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="经费来源" prop="source">
           <el-input
-            v-model="dialogForm.source"
-            placeholder="如：军委拨付、地方配套等"
+            v-model="dialogForm.name"
+            placeholder="请输入经费名称"
             maxlength="100"
+            show-word-limit
           />
         </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="经费类型" prop="type">
+              <el-select v-model="dialogForm.type" placeholder="请选择类型" style="width: 100%">
+                <el-option label="项目经费" value="project" />
+                <el-option label="运营经费" value="operation" />
+                <el-option label="教育帮扶" value="education" />
+                <el-option label="基础设施" value="infrastructure" />
+                <el-option label="应急经费" value="emergency" />
+                <el-option label="其他" value="other" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="经费来源" prop="fund_source">
+              <el-select
+                v-model="dialogForm.fund_source"
+                placeholder="请选择经费来源"
+                clearable
+                style="width: 100%"
+              >
+                <el-option label="军队投资" value="military" />
+                <el-option label="政府拨款" value="government" />
+                <el-option label="社会捐赠" value="donation" />
+                <el-option label="企业投资" value="enterprise" />
+                <el-option label="其他" value="other" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="金额(万元)" prop="amount">
+              <el-input-number
+                v-model="dialogForm.amount"
+                :min="0"
+                :precision="2"
+                :step="1"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="日期" prop="date">
+              <el-date-picker
+                v-model="dialogForm.date"
+                type="date"
+                placeholder="选择日期"
+                value-format="YYYY-MM-DD"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="关联帮扶村">
+              <el-select
+                v-model="dialogForm.village_id"
+                placeholder="选择帮扶村（可选）"
+                clearable
+                filterable
+                style="width: 100%"
+                :loading="villageLoading"
+              >
+                <el-option
+                  v-for="v in villageOptions"
+                  :key="v.id"
+                  :label="v.village_name || v.name"
+                  :value="v.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="关联帮扶学校">
+              <el-select
+                v-model="dialogForm.school_id"
+                placeholder="选择帮扶学校（可选）"
+                clearable
+                filterable
+                style="width: 100%"
+                :loading="schoolLoading"
+              >
+                <el-option
+                  v-for="s in schoolOptions"
+                  :key="s.id"
+                  :label="s.school_name || s.name"
+                  :value="s.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-form-item label="关联项目">
           <el-input
             v-model="dialogForm.project_name"
@@ -214,22 +287,23 @@
             maxlength="200"
           />
         </el-form-item>
-        <el-form-item label="日期" prop="date">
-          <el-date-picker
-            v-model="dialogForm.date"
-            type="date"
-            placeholder="选择日期"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
+        <el-form-item label="用途说明" prop="purpose">
+          <el-input
+            v-model="dialogForm.purpose"
+            type="textarea"
+            :rows="3"
+            placeholder="请详细说明经费用途"
+            maxlength="500"
+            show-word-limit
           />
         </el-form-item>
         <el-form-item label="备注">
           <el-input
-            v-model="dialogForm.description"
+            v-model="dialogForm.remarks"
             type="textarea"
-            :rows="3"
-            placeholder="可选填写备注说明"
-            maxlength="500"
+            :rows="2"
+            placeholder="其他说明（可选）"
+            maxlength="200"
             show-word-limit
           />
         </el-form-item>
@@ -237,7 +311,7 @@
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="handleSubmitDialog">
-          {{ isEditing ? '保存修改' : '确认新增' }}
+          {{ submitButtonText }}
         </el-button>
       </template>
     </el-dialog>
@@ -254,6 +328,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { get, post, put, del, apiRequest } from '@/api/request'
 import { useAuthStore } from '@/stores/auth'
+import { getSupportedVillages } from '@/api/supportedVillage'
+import { schoolsApi } from '@/api/schools'
 
 defineOptions({ name: 'UserFundList' })
 
@@ -287,28 +363,45 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(20)
 
-// 新增/编辑弹窗状态
+// 新增/编辑/申请弹窗状态
+type DialogMode = 'create' | 'edit' | 'apply'
 const dialogVisible = ref(false)
-const isEditing = ref(false)
+const dialogMode = ref<DialogMode>('create')
 const editingId = ref<number | null>(null)
 const submitting = ref(false)
 const dialogFormRef = ref<FormInstance>()
+const villageLoading = ref(false)
+const schoolLoading = ref(false)
+const villageOptions = ref<any[]>([])
+const schoolOptions = ref<any[]>([])
 const dialogForm = reactive({
   name: '',
   type: '',
+  fund_source: '',
   amount: 0,
-  source: '',
+  village_id: undefined as number | undefined,
+  school_id: undefined as number | undefined,
   project_name: '',
+  purpose: '',
+  remarks: '',
   date: '',
-  description: '',
 })
 const dialogRules: FormRules = {
   name: [{ required: true, message: '请输入经费名称', trigger: 'blur' }],
   type: [{ required: true, message: '请选择经费类型', trigger: 'change' }],
   amount: [{ required: true, message: '请输入金额', trigger: 'blur' }],
-  source: [{ required: true, message: '请输入经费来源', trigger: 'blur' }],
-  date: [{ required: true, message: '请选择日期', trigger: 'change' }],
 }
+
+const dialogTitle = computed(() => {
+  if (dialogMode.value === 'apply') return '提交经费申请'
+  if (dialogMode.value === 'edit') return '编辑经费记录'
+  return '新增经费记录'
+})
+const submitButtonText = computed(() => {
+  if (dialogMode.value === 'apply') return '提交申请'
+  if (dialogMode.value === 'edit') return '保存修改'
+  return '确认新增'
+})
 
 const filterForm = reactive({
   keyword: '',
@@ -408,9 +501,17 @@ function handleView(row: any) {
   pushSafe(`/funds/${row.id}`)
 }
 
+// 提交经费申请
+function openApplyDialog() {
+  dialogMode.value = 'apply'
+  editingId.value = null
+  resetDialogForm()
+  dialogVisible.value = true
+}
+
 // 新增经费记录
 function openCreateDialog() {
-  isEditing.value = false
+  dialogMode.value = 'create'
   editingId.value = null
   resetDialogForm()
   dialogVisible.value = true
@@ -418,26 +519,32 @@ function openCreateDialog() {
 
 // 编辑经费记录
 function openEditDialog(row: any) {
-  isEditing.value = true
+  dialogMode.value = 'edit'
   editingId.value = row.id
   dialogForm.name = row.name || ''
   dialogForm.type = row.type || ''
+  dialogForm.fund_source = row.fund_source || ''
   dialogForm.amount = Number(row.amount) || 0
-  dialogForm.source = row.source || ''
+  dialogForm.village_id = row.village_id || undefined
+  dialogForm.school_id = row.school_id || undefined
   dialogForm.project_name = row.project_name || row.project || ''
+  dialogForm.purpose = row.purpose || ''
+  dialogForm.remarks = row.remarks || ''
   dialogForm.date = row.date || (row.created_at ? row.created_at.split('T')[0] : '')
-  dialogForm.description = row.description || ''
   dialogVisible.value = true
 }
 
 function resetDialogForm() {
   dialogForm.name = ''
   dialogForm.type = ''
+  dialogForm.fund_source = ''
   dialogForm.amount = 0
-  dialogForm.source = ''
+  dialogForm.village_id = undefined
+  dialogForm.school_id = undefined
   dialogForm.project_name = ''
+  dialogForm.purpose = ''
+  dialogForm.remarks = ''
   dialogForm.date = ''
-  dialogForm.description = ''
   dialogFormRef.value?.resetFields()
 }
 
@@ -447,8 +554,23 @@ async function handleSubmitDialog() {
     if (!valid) return
     submitting.value = true
     try {
-      const payload = { ...dialogForm }
-      if (isEditing.value && editingId.value) {
+      const payload: Record<string, any> = {
+        name: dialogForm.name,
+        type: dialogForm.type,
+        amount: dialogForm.amount,
+        project_name: dialogForm.project_name || undefined,
+        purpose: dialogForm.purpose || undefined,
+        remarks: dialogForm.remarks || undefined,
+        date: dialogForm.date || undefined,
+      }
+      if (dialogForm.fund_source) payload.fund_source = dialogForm.fund_source
+      if (dialogForm.village_id) payload.village_id = dialogForm.village_id
+      if (dialogForm.school_id) payload.school_id = dialogForm.school_id
+
+      if (dialogMode.value === 'apply') {
+        await post('/funds/apply', { ...payload, status: 'pending' })
+        ElMessage.success('经费申请已提交，等待审批')
+      } else if (dialogMode.value === 'edit' && editingId.value) {
         await put(`/funds/${editingId.value}`, payload)
         ElMessage.success('经费记录已更新')
       } else {
@@ -458,12 +580,41 @@ async function handleSubmitDialog() {
       dialogVisible.value = false
       currentPage.value = 1
       fetchData()
+      loadFundStats()
     } catch (e: any) {
       ElMessage.error(e?.response?.data?.detail || e?.message || '操作失败')
     } finally {
       submitting.value = false
     }
   })
+}
+
+async function loadVillageOptions() {
+  villageLoading.value = true
+  try {
+    const res = await getSupportedVillages({ page: 1, page_size: 9999 })
+    const body: any = res.data || res
+    const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
+    villageOptions.value = items
+  } catch {
+    /* 非关键路径，静默失败 */
+  } finally {
+    villageLoading.value = false
+  }
+}
+
+async function loadSchoolOptions() {
+  schoolLoading.value = true
+  try {
+    const res = await schoolsApi.list({ page: 1, page_size: 9999 })
+    const body: any = res.data || res
+    const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
+    schoolOptions.value = items
+  } catch {
+    /* 非关键路径，静默失败 */
+  } finally {
+    schoolLoading.value = false
+  }
 }
 
 async function handleDelete(row: any) {
@@ -526,6 +677,8 @@ function getStatusText(status: string) {
 onMounted(() => {
   fetchData()
   loadFundStats()
+  loadVillageOptions()
+  loadSchoolOptions()
 })
 </script>
 

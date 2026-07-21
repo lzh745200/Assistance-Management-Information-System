@@ -166,6 +166,18 @@ export const fundApi = {
   getDownloadUrl(attachmentId: number) {
     return `/api/v1${FUNDS_BASE}/attachments/${attachmentId}/download`
   },
+  /** 认证下载附件（通过 axios 携带 token，兼容 Electron） */
+  async downloadAttachment(attachmentId: number, fileName?: string) {
+    await downloadBlobAsFile(
+      () => request.get(`${FUNDS_BASE}/attachments/${attachmentId}/download`, { responseType: 'blob' }),
+      { fallbackFileName: fileName || '附件下载' }
+    )
+  },
+  /** 认证获取附件 Blob（用于预览，兼容 Electron） */
+  async getAttachmentBlob(attachmentId: number): Promise<Blob> {
+    const res = await request.get(`${FUNDS_BASE}/attachments/${attachmentId}/preview`, { responseType: 'blob' })
+    return res.data as Blob
+  },
 
   // ========== 经费状态/字段/操作历史 ==========
   async getStatusHistory(fundId: number) {

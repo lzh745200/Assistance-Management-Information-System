@@ -22,6 +22,10 @@ export interface ExportFilterParams {
   date_to?: string
   type?: string
   format?: string
+  department?: string
+  support_unit?: string
+  region_scope?: string
+  is_revitalization_tier?: boolean
 }
 
 const EXPORT_BASE = '/export'

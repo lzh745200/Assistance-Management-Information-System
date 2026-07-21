@@ -131,7 +131,11 @@ class Settings(BaseSettings):
 
     # CORS配置
     # 生产环境仅允许本机回环地址
-    CORS_ORIGINS: str = "http://127.0.0.1:8000,http://localhost:8000"
+    # 开发环境额外允许 Vite dev server (5173)
+    CORS_ORIGINS: str = (
+        "http://127.0.0.1:8000,http://localhost:8000,"
+        "http://127.0.0.1:5173,http://localhost:5173"
+    )
 
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: str = "GET,POST,PUT,DELETE,OPTIONS,PATCH"

@@ -182,7 +182,9 @@ function analyzeStartupError(stderrCapture) {
 }
 
 // ─── 后端启动 ───
-async function startBackend(stderrCapture = null) {
+// isFirstStart: 首次启动时探测端口；后续重启复用已确定的端口，
+// 避免端口变化导致前端页面（已加载在旧端口）API 请求失败。
+async function startBackend(stderrCapture = null, isFirstStart = false) {
   const exePath = getBackendExePath();
   console.log('[Backend] 启动路径:', exePath);
   writeDiagnosticLog(`后端路径: ${exePath}`);
@@ -202,18 +204,30 @@ async function startBackend(stderrCapture = null) {
     try { fs.chmodSync(exePath, 0o755); } catch (e) {}
   }
 
-  const availablePort = await findAvailablePort(DEFAULT_BACKEND_PORT, MAX_PORT_ATTEMPTS);
-  if (availablePort === null) {
-    const msg = `端口 ${DEFAULT_BACKEND_PORT}-${DEFAULT_BACKEND_PORT + MAX_PORT_ATTEMPTS - 1} 均被占用。`;
-    writeDiagnosticLog(msg);
-    dialog.showErrorBox('端口冲突', msg);
-    app.quit();
-    return null;
-  }
-  backendPort = availablePort;
-  if (backendPort !== DEFAULT_BACKEND_PORT) {
-    console.log(`[Backend] 使用备用端口 ${backendPort}`);
-    writeDiagnosticLog(`备用端口: ${backendPort}`);
+  // 首次启动时探测可用端口；重启时复用已确定的端口（前端页面已加载在该端口）
+  if (isFirstStart || !backendPort) {
+    const availablePort = await findAvailablePort(DEFAULT_BACKEND_PORT, MAX_PORT_ATTEMPTS);
+    if (availablePort === null) {
+      const msg = `端口 ${DEFAULT_BACKEND_PORT}-${DEFAULT_BACKEND_PORT + MAX_PORT_ATTEMPTS - 1} 均被占用。`;
+      writeDiagnosticLog(msg);
+      dialog.showErrorBox('端口冲突', msg);
+      app.quit();
+      return null;
+    }
+    backendPort = availablePort;
+    if (backendPort !== DEFAULT_BACKEND_PORT) {
+      console.log(`[Backend] 使用备用端口 ${backendPort}`);
+      writeDiagnosticLog(`备用端口: ${backendPort}`);
+    }
+  } else {
+    console.log(`[Backend] 重启复用端口 ${backendPort}`);
+    writeDiagnosticLog(`重启复用端口: ${backendPort}`);
+    // 检查复用端口是否仍被占用（旧进程可能未完全释放）
+    const stillInUse = await checkPortInUse(backendPort);
+    if (stillInUse) {
+      // 端口仍被占用（可能是旧进程尚未退出），等待 2 秒后重试
+      await new Promise(r => setTimeout(r, 2000));
+    }
   }
 
   const dbPath = getDatabasePath();
@@ -293,7 +307,8 @@ async function startBackend(stderrCapture = null) {
         console.log(`[Backend] 自动重启 (${backendRestartCount}/${MAX_BACKEND_RESTARTS})...`);
         setTimeout(async () => {
           const restartStderr = [];
-          backendProcess = await startBackend(restartStderr);
+          // 重启时复用已确定的端口（isFirstStart=false），避免前端连接失效
+          backendProcess = await startBackend(restartStderr, false);
         }, 2000);
       } else {
         const logPath = path.join(getUserDataPath(), 'logs', 'app.log');
@@ -442,7 +457,8 @@ function createMainWindow() {
 async function restartBackend() {
   await stopBackend();
   const stderr = [];
-  backendProcess = await startBackend(stderr);
+  // 手动重启也复用端口
+  backendProcess = await startBackend(stderr, false);
 }
 
 // ─── 系统托盘 ───
@@ -601,7 +617,8 @@ app.whenReady().then(async () => {
   setupIpcHandlers();
 
   const stderrCapture = [];
-  backendProcess = await startBackend(stderrCapture);
+  // 首次启动时探测可用端口
+  backendProcess = await startBackend(stderrCapture, true);
 
   let splash = null;
   try {

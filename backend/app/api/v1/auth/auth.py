@@ -25,7 +25,7 @@ from app.core.security import get_current_user as _get_current_user
 from app.core.security import is_local_request
 from app.core.security import verify_password
 from app.core.token_manager import token_manager
-from app.schemas.auth import LoginData, LoginRequest, LoginResponse, UserInfo
+from app.schemas.auth import LoginData, LoginRequest, LoginResponse, TwoFactorLoginVerifyRequest, UserInfo
 from app.schemas.user import UserCreate
 from app.services.user_service import UserService
 from app.utils.audit_logger import AuditLogger
@@ -202,6 +202,25 @@ async def login(
             detail="您的账户未授权在此机器上登录，请联系管理员",
         )
 
+    # ── 双因素认证检查 ──
+    # 密码和机器码均通过后，检查用户是否启用了 2FA
+    from app.services.two_factor_service import TwoFactorService
+
+    if TwoFactorService.is_enabled(db, user):
+        # 签发短期临时令牌（5分钟有效），用于 2FA 验证后换取正式令牌
+        temp_tokens = token_manager.create_token_pair(
+            user.username,
+            extra_claims={"two_factor_pending": True},
+            access_ttl_minutes=5,
+        )
+        return LoginResponse(
+            code=200,
+            data=None,
+            message="需要双因素认证",
+            two_factor_required=True,
+            temp_token=temp_tokens["access_token"],
+        )
+
     # 登录成功：重置失败计数和锁定状态
     if getattr(user, "failed_login_count", 0) or getattr(user, "locked_until", None):
         user.failed_login_count = 0
@@ -254,6 +273,162 @@ async def login(
         msg = "密码已过期，请修改密码" if password_expired else "首次登录请修改密码"
 
     # 记录登录成功审计日志
+    AuditLogger.log_login(
+        user_id=user.id,
+        username=user.username,
+        success=True,
+        ip_address=client_ip,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+    return LoginResponse(
+        code=200,
+        data=LoginData(access_token=access_token, token_type="bearer", user=user_info),
+        message=msg,
+        must_change_password=must_change,
+        refresh_token=refresh_token_str,
+    )
+
+
+@router.post("/two-factor/verify-login", response_model=LoginResponse)
+async def two_factor_verify_login(
+    verify_request: TwoFactorLoginVerifyRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> Any:
+    """双因素认证登录验证
+
+    使用登录时返回的 temp_token 和 TOTP 验证码完成二次验证，
+    验证成功后返回正式的访问令牌。
+
+    Args:
+        verify_request: 包含 temp_token 和 TOTP 验证码
+        request: HTTP 请求对象
+        db: 数据库会话
+
+    Returns:
+        LoginResponse: 正式登录响应（含 access_token）
+    """
+    # 速率限制：复用登录限制
+    client_ip = get_client_ip(request)
+    is_allowed = await check_rate_limit(
+        key=f"login:{client_ip}",
+        limit=_LOGIN_RATE_LIMIT,
+        window=_LOGIN_RATE_WINDOW,
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="验证尝试过于频繁，请稍后再试",
+        )
+
+    # 验证 temp_token
+    try:
+        payload = token_manager.decode_token(verify_request.temp_token, expected_type="access")
+    except Exception:
+        payload = None
+
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="临时令牌无效或已过期，请重新登录",
+        )
+
+    # 确认是 2FA pending token
+    if not payload.get("two_factor_pending"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的临时令牌",
+        )
+
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的临时令牌",
+        )
+
+    # 查找用户
+    user_service = UserService(db)
+    user = user_service.get_user_by_username(username)
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="用户不存在或已被禁用",
+        )
+
+    # 验证 TOTP / 备用码
+    from app.services.two_factor_service import TwoFactorService
+
+    if not TwoFactorService.verify_login(db, user, verify_request.code):
+        AuditLogger.log_login(
+            user_id=user.id,
+            username=username,
+            success=False,
+            ip_address=client_ip,
+            user_agent=request.headers.get("user-agent"),
+            failure_reason="2FA验证码错误",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="验证码错误，请重试",
+        )
+
+    # 2FA 验证通过 — 吊销 temp_token，签发正式令牌
+    token_manager.revoke_token(verify_request.temp_token)
+
+    # 重置失败计数
+    if getattr(user, "failed_login_count", 0) or getattr(user, "locked_until", None):
+        user.failed_login_count = 0
+        user.locked_until = None
+    user.last_login = datetime.now(timezone.utc)
+    safe_commit(db)
+
+    # 创建正式双Token
+    tokens = token_manager.create_token_pair(
+        user.username,
+        extra_claims={"token_version": user.token_version_safe},
+    )
+    access_token = tokens["access_token"]
+    refresh_token_str = tokens["refresh_token"]
+
+    # 构建用户信息
+    user_role = user.role or "user"
+    if user.is_superuser and user_role not in ["admin", "super_admin"]:
+        user_role = "super_admin"
+
+    user_info = UserInfo(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        role=user_role,
+        is_active=user.is_active if user.is_active is not None else True,
+        is_superuser=user.is_superuser or user.role in ("admin", "super_admin"),
+        organization_id=getattr(user, "organization_id", None),
+        organization_name=getattr(user, "organization_name", "") or "",
+        permissions=getattr(user, "permissions_list", []) or [],
+        allowed_menus=getattr(user, "allowed_menus", None),
+        allowed_menus_list=getattr(user, "allowed_menus_list", None),
+    )
+
+    must_change = getattr(user, "must_change_password", False) or False
+
+    # 密码过期检查
+    password_expired = False
+    pw_changed_at = getattr(user, "password_changed_at", None)
+    now = datetime.now(timezone.utc)
+    if pw_changed_at:
+        if pw_changed_at.tzinfo is None:
+            pw_changed_at = pw_changed_at.replace(tzinfo=timezone.utc)
+        if (now - pw_changed_at).days > _PASSWORD_EXPIRE_DAYS:
+            password_expired = True
+            must_change = True
+
+    msg = "登录成功"
+    if must_change:
+        msg = "密码已过期，请修改密码" if password_expired else "首次登录请修改密码"
+
     AuditLogger.log_login(
         user_id=user.id,
         username=user.username,

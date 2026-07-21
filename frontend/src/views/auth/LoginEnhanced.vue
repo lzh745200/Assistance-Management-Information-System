@@ -24,58 +24,91 @@
         </div>
 
         <form class="login-form" @submit.prevent="handleLogin">
-          <div class="form-group">
-            <label>账号</label>
-            <div class="input-wrapper">
-              <el-icon class="input-icon"><User /></el-icon>
-              <input
-                v-model="username"
-                type="text"
-                placeholder="请输入用户名"
-                class="custom-input"
-                autocomplete="username"
-              />
+          <!-- 2FA 验证模式 -->
+          <template v-if="twoFactorRequired">
+            <div class="form-group">
+              <label>双因素认证验证码</label>
+              <div class="input-wrapper">
+                <el-icon class="input-icon"><Key /></el-icon>
+                <input
+                  v-model="totpCode"
+                  type="text"
+                  placeholder="请输入6位TOTP验证码"
+                  class="custom-input"
+                  maxlength="6"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  autofocus
+                />
+              </div>
+              <p class="hint-text">请打开您的认证器应用（如 Google Authenticator）获取验证码</p>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label>密码</label>
-            <div class="input-wrapper">
-              <el-icon class="input-icon"><Lock /></el-icon>
-              <input
-                v-model="password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="请输入密码"
-                class="custom-input"
-                autocomplete="current-password"
-              />
-              <span class="toggle-password" @click="showPassword = !showPassword">
-                <el-icon v-if="showPassword"><View /></el-icon>
-                <el-icon v-else><Hide /></el-icon>
-              </span>
+            <button type="submit" class="login-btn" :disabled="loading">
+              <span v-if="!loading">验证并登录</span>
+              <span v-else>验证中...</span>
+            </button>
+
+            <button type="button" class="back-btn" @click="resetTwoFactor" :disabled="loading">
+              返回重新登录
+            </button>
+          </template>
+
+          <!-- 正常登录模式 -->
+          <template v-else>
+            <div class="form-group">
+              <label>账号</label>
+              <div class="input-wrapper">
+                <el-icon class="input-icon"><User /></el-icon>
+                <input
+                  v-model="username"
+                  type="text"
+                  placeholder="请输入用户名"
+                  class="custom-input"
+                  autocomplete="username"
+                />
+              </div>
             </div>
-          </div>
 
-          <!-- 机器码验证（可选） -->
-          <div v-if="showMachineCodeInput" class="form-group">
-            <label>机器码验证</label>
-            <div class="input-wrapper">
-              <el-icon class="input-icon"><Key /></el-icon>
-              <input
-                v-model="verificationCode"
-                type="text"
-                placeholder="请输入4位校验码"
-                class="custom-input"
-                maxlength="4"
-              />
+            <div class="form-group">
+              <label>密码</label>
+              <div class="input-wrapper">
+                <el-icon class="input-icon"><Lock /></el-icon>
+                <input
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="请输入密码"
+                  class="custom-input"
+                  autocomplete="current-password"
+                />
+                <span class="toggle-password" @click="showPassword = !showPassword">
+                  <el-icon v-if="showPassword"><View /></el-icon>
+                  <el-icon v-else><Hide /></el-icon>
+                </span>
+              </div>
             </div>
-            <p class="hint-text">首次登录需要验证机器码，请联系管理员获取校验码</p>
-          </div>
 
-          <button type="submit" class="login-btn" :disabled="loading">
-            <span v-if="!loading">立即登录</span>
-            <span v-else>登录中...</span>
-          </button>
+            <!-- 机器码验证（可选） -->
+            <div v-if="showMachineCodeInput" class="form-group">
+              <label>机器码验证</label>
+              <div class="input-wrapper">
+                <el-icon class="input-icon"><Key /></el-icon>
+                <input
+                  v-model="verificationCode"
+                  type="text"
+                  placeholder="请输入4位校验码"
+                  class="custom-input"
+                  maxlength="4"
+                />
+              </div>
+              <p class="hint-text">首次登录需要验证机器码，请联系管理员获取校验码</p>
+            </div>
+
+            <button type="submit" class="login-btn" :disabled="loading">
+              <span v-if="!loading">立即登录</span>
+              <span v-else>登录中...</span>
+            </button>
+          </template>
         </form>
 
         <!-- 忘记密码链接 -->
@@ -119,6 +152,11 @@ const showPassword = ref(false)
 const showMachineCodeInput = ref(false)
 const systemVersion = SYSTEM_VERSION
 const copyrightOwner = COPYRIGHT_OWNER
+
+// 2FA 状态
+const twoFactorRequired = ref(false)
+const totpCode = ref('')
+const tempToken = ref('')
 
 // 当前背景图（只加载一张，避免12张同时请求）
 const currentBg = computed(() => backgroundImages[currentBgIndex.value])
@@ -177,6 +215,32 @@ onUnmounted(() => {
 })
 
 const handleLogin = async () => {
+  // 2FA 验证模式
+  if (twoFactorRequired.value) {
+    if (!totpCode.value || totpCode.value.length < 6) {
+      errorMsg.value = '请输入6位TOTP验证码'
+      return
+    }
+
+    loading.value = true
+    errorMsg.value = ''
+
+    try {
+      const success = await authStore.verifyTwoFactorLogin(tempToken.value, totpCode.value)
+      if (success) {
+        navigateAfterLogin()
+        return
+      }
+      errorMsg.value = authStore.error || '2FA验证失败'
+    } catch (err: any) {
+      errorMsg.value = '2FA验证异常: ' + (err.message || '未知错误')
+    } finally {
+      loading.value = false
+    }
+    return
+  }
+
+  // 正常登录模式
   if (!username.value || !password.value) {
     errorMsg.value = '请输入用户名和密码'
     return
@@ -186,36 +250,58 @@ const handleLogin = async () => {
   errorMsg.value = ''
 
   try {
-    const success = await authStore.login(username.value, password.value)
-    if (success) {
-      const redirect = router.currentRoute.value.query.redirect
+    const result = await authStore.login(username.value, password.value)
 
-      // 首次登录 → 跳转修改密码页（保留原始重定向目标）
-      if (authStore.mustChangePassword) {
-        const target =
-          typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
-            ? `/change-password?redirect=${encodeURIComponent(redirect)}`
-            : '/change-password'
-        pushSafe(target)
-        return
-      }
-
-      // 安全校验：仅允许站内相对路径跳转
-      if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
-        pushSafe(redirect)
-        return
-      }
-
-      pushSafe('/dashboard')
+    if (result.status === 'two_factor_required') {
+      // 切换到 2FA 验证模式
+      twoFactorRequired.value = true
+      tempToken.value = result.tempToken
+      totpCode.value = ''
       return
     }
 
-    errorMsg.value = authStore.error || '登录失败'
+    if (result.status === 'success') {
+      navigateAfterLogin()
+      return
+    }
+
+    errorMsg.value = result.message || authStore.error || '登录失败'
   } catch (err: any) {
     errorMsg.value = '登录系统异常: ' + (err.message || '未知错误')
   } finally {
     loading.value = false
   }
+}
+
+/** 登录成功后的导航逻辑 */
+const navigateAfterLogin = () => {
+  const redirect = router.currentRoute.value.query.redirect
+
+  // 首次登录 → 跳转修改密码页（保留原始重定向目标）
+  if (authStore.mustChangePassword) {
+    const target =
+      typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+        ? `/change-password?redirect=${encodeURIComponent(redirect)}`
+        : '/change-password'
+    pushSafe(target)
+    return
+  }
+
+  // 安全校验：仅允许站内相对路径跳转
+  if (typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')) {
+    pushSafe(redirect)
+    return
+  }
+
+  pushSafe('/dashboard')
+}
+
+/** 重置 2FA 状态，返回正常登录 */
+const resetTwoFactor = () => {
+  twoFactorRequired.value = false
+  tempToken.value = ''
+  totpCode.value = ''
+  errorMsg.value = ''
 }
 
 const goToForgotPassword = () => {
@@ -495,6 +581,31 @@ const goToMachineCode = () => {
 
 .login-btn:disabled {
   opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.back-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease;
+  margin-top: 12px;
+}
+
+.back-btn:hover:not(:disabled) {
+  border-color: var(--military-gold);
+  color: var(--military-gold-light);
+}
+
+.back-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

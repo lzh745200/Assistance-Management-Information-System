@@ -6,13 +6,11 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 
 # 缓存策略配置: (路径前缀, Cache-Control 值)
+# 注意：统计/概览类端点不缓存——增删改后必须立即可见，否则用户体验为"数据没更新"。
 CACHE_RULES = [
     # 筛选选项 / 字典数据 — 5 分钟（极少变化）
     ("/api/v1/supported-villages/filter-options", "public, max-age=300"),
     ("/api/v1/organizations/tree", "public, max-age=300"),
-    # 统计卡片 — 30 秒（有一定实时性要求）
-    ("/api/v1/funds/statistics/overview", "public, max-age=30"),
-    ("/api/v1/assessment/village-scores", "public, max-age=30"),
     # 静态资源 — 1 小时
     ("/assets/", "public, max-age=3600, immutable"),
     ("/images/", "public, max-age=3600, immutable"),

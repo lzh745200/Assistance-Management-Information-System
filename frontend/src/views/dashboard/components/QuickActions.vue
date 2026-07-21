@@ -30,7 +30,7 @@
           <button class="action-btn primary" @click="pushSafe('/projects/import')">
             <el-icon class="btn-icon"><Download /></el-icon><span class="btn-text">项目导入</span>
           </button>
-          <button class="action-btn primary" @click="pushSafe('/funds/apply')">
+          <button class="action-btn primary" @click="pushSafe('/funds/user')">
             <el-icon class="btn-icon"><EditPen /></el-icon><span class="btn-text">经费申请</span>
           </button>
           <button class="action-btn primary" @click="pushSafe('/rural-works')">

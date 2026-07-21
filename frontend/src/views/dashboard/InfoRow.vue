@@ -22,12 +22,14 @@
             <template v-else>
               <span class="tl-text">{{ item.action || item.description || '--' }}</span>
               <span v-if="item.target" class="tl-target">— {{ item.target }}</span>
-              <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">
-                <el-icon><EditPen /></el-icon>
-              </button>
-              <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">
-                <el-icon><Close /></el-icon>
-              </button>
+              <template v-if="String(item.id).startsWith('custom_') || item._custom === true">
+                <button class="tl-edit-btn" title="编辑" @click="startEdit(item)">
+                  <el-icon><EditPen /></el-icon>
+                </button>
+                <button class="tl-delete-btn" title="删除" @click="deleteActivity(item.id)">
+                  <el-icon><Close /></el-icon>
+                </button>
+              </template>
             </template>
           </div>
           <div v-if="activities.length === 0" class="tl-empty">暂无动态</div>

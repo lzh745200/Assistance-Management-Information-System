@@ -195,7 +195,10 @@ async function handleExport() {
   exporting.value = true
   try {
     // 构建筛选参数
-    const filters: ExportFilterParams = {}
+    const filters: ExportFilterParams = {
+      type: exportForm.dataType,
+      format: exportForm.format,
+    }
     if (exportForm.filters.department) filters.department = exportForm.filters.department
     if (exportForm.filters.support_unit) filters.support_unit = exportForm.filters.support_unit
     if (exportForm.filters.region_scope) filters.region_scope = exportForm.filters.region_scope

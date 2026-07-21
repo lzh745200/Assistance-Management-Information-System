@@ -129,6 +129,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { get, post, del } from '@/api/request'
+import { AuthStorage } from '@/utils/authStorage'
 
 const loading = ref(false)
 const creating = ref(false)
@@ -263,14 +264,30 @@ async function confirmRestore() {
   }
 }
 
-function handleDownload(row: any) {
-  // 通过隐藏的 iframe 或链接下载
-  const link = document.createElement('a')
-  link.href = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/system/backup/download/${encodeURIComponent(row.file_name)}`
-  link.download = row.file_name
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+async function handleDownload(row: any) {
+  try {
+    const token = AuthStorage.getToken()
+    const url = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/system/backup/download/${encodeURIComponent(row.file_name)}`
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status}`)
+    }
+    const blob = await response.blob()
+    const blobUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.download = row.file_name
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(blobUrl)
+  } catch {
+    ElMessage.error('下载备份失败')
+  }
 }
 
 function formatSize(bytes: number) {

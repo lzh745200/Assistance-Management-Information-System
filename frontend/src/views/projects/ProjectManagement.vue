@@ -376,18 +376,11 @@ const resetForm = () => {
 
 const handleExport = async () => {
   try {
-    const res = await projectApi.exportList({
+    await projectApi.exportList({
       keyword: filterForm.search || undefined,
       status: filterForm.status || undefined,
     })
-    const blob = res.data || res
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = '帮扶项目导出.xlsx'
-    link.click()
-    window.URL.revokeObjectURL(url)
-    // 导出成功 — 浏览器已确认
+    ElMessage.success('导出成功')
   } catch (error) {
     ElMessage.error('导出失败')
   }

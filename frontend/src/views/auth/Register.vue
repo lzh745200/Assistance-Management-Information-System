@@ -27,7 +27,7 @@
           <el-input
             v-model="registerForm.password"
             type="password"
-            placeholder="请输入密码（至少8位）"
+            placeholder="至少12位，含大小写字母、数字和特殊字符"
             show-password
             clearable
           />
@@ -134,6 +134,25 @@ const registerForm = reactive({
   email: '',
 })
 
+// 验证密码强度（与后端 PasswordPolicy 保持一致：≥12位 + 大写 + 小写 + 数字 + 特殊字符）
+const validatePassword = (_rule: any, value: any, callback: any) => {
+  if (!value) {
+    callback(new Error('请输入密码'))
+    return
+  }
+  const errors: string[] = []
+  if (value.length < 12) errors.push('至少12个字符')
+  if (!/[A-Z]/.test(value)) errors.push('包含大写字母')
+  if (!/[a-z]/.test(value)) errors.push('包含小写字母')
+  if (!/\d/.test(value)) errors.push('包含数字')
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(value)) errors.push('包含特殊字符')
+  if (errors.length > 0) {
+    callback(new Error(`密码需要：${errors.join('、')}`))
+  } else {
+    callback()
+  }
+}
+
 // 验证密码一致性
 const validateConfirmPassword = (_rule: any, value: any, callback: any) => {
   if (value === '') {
@@ -156,8 +175,7 @@ const registerRules: FormRules = {
     },
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 8, message: '密码至少8位', trigger: 'blur' },
+    { required: true, validator: validatePassword, trigger: 'blur' },
   ],
   confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
   passCode: [{ required: true, message: '请输入通行码', trigger: 'blur' }],

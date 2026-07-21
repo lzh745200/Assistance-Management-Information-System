@@ -58,7 +58,7 @@ export const MENU_CONFIG: MenuItem[] = [
   {
     key: 'funds-user',
     label: '经费申请',
-    path: '/funds',
+    path: '/funds/user',
     icon: 'Money',
     order: 6,
     roles: ['operator', 'viewer', 'approval_leader'],

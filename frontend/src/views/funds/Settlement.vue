@@ -1,6 +1,6 @@
 <template>
   <div class="settlement-container">
-    <el-page-header title="返回" @back="$router.back()">
+    <el-page-header title="返回" @back="pushSafe('/funds')">
       <template #content><span class="page-title">决算与绩效评估</span></template>
     </el-page-header>
 
@@ -154,7 +154,9 @@ import { useRoute } from 'vue-router'
 import { ElMessage, type FormInstance } from 'element-plus'
 import { fundLifecycleApi } from '@/api/fundLifecycle'
 import { parseError } from '@/utils/errorHandler'
-import { safeRouteParam } from '@/composables/useRouterSafe'
+import { safeRouteParam, useRouterSafe } from '@/composables/useRouterSafe'
+
+const { pushSafe } = useRouterSafe()
 
 interface BudgetSummary {
   total_budget?: number

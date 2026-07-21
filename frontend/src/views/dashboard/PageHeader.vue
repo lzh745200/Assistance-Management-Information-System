@@ -13,7 +13,7 @@
         data-test="btn-new-project"
         type="primary"
         :icon="Plus"
-        @click="pushSafe('/projects')"
+        @click="pushSafe('/projects/create')"
       >
         新建项目
       </el-button>
