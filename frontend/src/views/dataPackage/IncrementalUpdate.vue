@@ -179,6 +179,7 @@ import { ElMessage } from 'element-plus'
 import { get, post } from '@/api/request'
 import { DATA_TYPES, DATA_TYPE_LABELS } from '@/constants/dataTypes'
 import { handleApiError } from '@/utils/errorHandler'
+import { AuthStorage } from '@/utils/authStorage'
 
 interface PackageItem {
   id: number | string
@@ -279,9 +280,24 @@ const handleExport = async () => {
     if (response.success) {
       ElMessage.success('增量包导出成功')
 
-      // 下载文件
+      // 使用认证请求下载文件（兼容 Electron，避免 window.open 无 token 问题）
       if (response.data.download_url) {
-        window.open(response.data.download_url, '_blank')
+        try {
+          const token = AuthStorage.getToken()
+          const dlResponse = await fetch(response.data.download_url, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (!dlResponse.ok) throw new Error('Download failed')
+          const blob = await dlResponse.blob()
+          const blobUrl = URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = blobUrl
+          link.download = response.data.filename || '增量更新包.zip'
+          link.click()
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000)
+        } catch {
+          ElMessage.error('下载增量包失败')
+        }
       }
 
       // 刷新列表

@@ -11,6 +11,9 @@
 6. 修复 list_funds 中 status 参数名覆盖 fastapi.status 模块的致命隐患
 """
 
+# NOTE: 数据权限过滤建议迁移到 app.core.data_scope_adapter.apply_scope_filter()
+# 当前使用: apply_data_scope() (SQLAlchemy 2.0 select 风格)
+
 import logging
 import mimetypes
 from datetime import datetime, timezone

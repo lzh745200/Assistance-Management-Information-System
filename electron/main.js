@@ -428,6 +428,26 @@ function createMainWindow() {
   };
   mainWindow = new BrowserWindow(winOptions);
   if (saved?.isMaximized) mainWindow.maximize();
+
+  // ─── 导航安全限制 ───
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const appOrigin = 'http://127.0.0.1';
+    const appOrigin2 = 'http://localhost';
+    if (!url.startsWith(appOrigin) && !url.startsWith(appOrigin2) && !url.startsWith('file://')) {
+      event.preventDefault();
+      // Open external links in system browser
+      shell.openExternal(url);
+    }
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://127.0.0.1') || url.startsWith('http://localhost')) {
+      return { action: 'allow' };
+    }
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
+
   const url = `http://127.0.0.1:${backendPort}`;
   mainWindow.loadURL(url).catch((err) => {
     const msg = `加载页面失败: ${url}\n${err?.message || err}`;
@@ -447,10 +467,6 @@ function createMainWindow() {
   mainWindow.webContents.on('render-process-gone', (event, details) => {
     console.error('[Renderer] 崩溃:', details.reason);
     dialog.showErrorBox('页面异常', `渲染进程崩溃 (${details.reason})，请重启程序。`);
-  });
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: 'deny' };
   });
 }
 

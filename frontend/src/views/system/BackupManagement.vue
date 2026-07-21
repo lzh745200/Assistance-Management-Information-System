@@ -83,7 +83,11 @@
           <el-switch v-model="scheduleConfig.enabled" active-text="开启" inactive-text="关闭" />
         </el-form-item>
         <el-form-item label="备份频率">
-          <el-select v-model="scheduleConfig.frequency" placeholder="请选择频率" style="width: 200px">
+          <el-select
+            v-model="scheduleConfig.frequency"
+            placeholder="请选择频率"
+            style="width: 200px"
+          >
             <el-option label="每天" value="daily" />
             <el-option label="每周" value="weekly" />
             <el-option label="每月" value="monthly" />

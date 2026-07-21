@@ -77,7 +77,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 

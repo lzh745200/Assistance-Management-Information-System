@@ -1,4 +1,8 @@
 """帮扶村管理 API 路由"""
+
+# NOTE: 数据权限过滤建议迁移到 app.core.data_scope_adapter.apply_scope_filter()
+# 当前使用: filter_by_data_scope() (混合风格)
+
 import io
 import json
 import logging

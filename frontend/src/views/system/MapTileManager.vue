@@ -137,11 +137,15 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getMapStatus, downloadTiles, clearTiles } from '@/api/offlineMap'
-import type { MapCoverage } from '@/api/offlineMap'
+
+interface MapCoverage {
+  total_tiles: number
+  total_size_mb: number
+  zoom_levels: Record<string, number>
+}
 
 const coverage = ref<MapCoverage>({
   total_tiles: 0,

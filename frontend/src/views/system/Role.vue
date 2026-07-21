@@ -173,7 +173,6 @@
 // 通过用户管理页面的"角色/权限"按钮打开 PermissionAssignmentDrawer
 // 本文件保留以供参考，不再独立路由访问（/system/roles → redirect /system/users）
 // ================================================================
-// @ts-nocheck
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, ElTree } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'

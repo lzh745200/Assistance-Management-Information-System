@@ -573,6 +573,23 @@
         </div>
       </el-form>
     </el-card>
+
+    <!-- 图片预览对话框 -->
+    <el-dialog
+      v-model="previewVisible"
+      title="图片预览"
+      width="80%"
+      top="5vh"
+      destroy-on-close
+      @close="handlePreviewClose"
+    >
+      <img
+        v-if="previewUrl"
+        :src="previewUrl"
+        style="width: 100%; max-height: 75vh; object-fit: contain"
+        alt="预览图片"
+      />
+    </el-dialog>
   </div>
 </template>
 
@@ -580,7 +597,7 @@
 // @ts-nocheck
 import { logger } from '@/utils/logger'
 
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useDirtyGuard } from '@/composables/useDirtyGuard'
@@ -589,6 +606,7 @@ import { Upload, ArrowLeft, Check, Wallet } from '@element-plus/icons-vue'
 
 import { projectApi } from '@/api/projects'
 import { get } from '@/api/request'
+import { AuthStorage } from '@/utils/authStorage'
 
 // 文件分类定义
 const fileCategories = [
@@ -841,9 +859,34 @@ function getFileUrl(file: any): string {
   return projectApi.getFileDownloadUrl(projectId, file.id)
 }
 
-// 预览图片
-function previewImage(file: any) {
-  window.open(getFileUrl(file), '_blank')
+// 预览图片（使用认证 blob 方式，兼容 Electron）
+const previewVisible = ref(false)
+const previewUrl = ref('')
+
+async function previewImage(file: any) {
+  try {
+    const url = getFileUrl(file)
+    const token = AuthStorage.getToken()
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) throw new Error('Preview failed')
+    const blob = await response.blob()
+    // Revoke previous blob URL if any
+    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = URL.createObjectURL(blob)
+    previewVisible.value = true
+  } catch (e) {
+    logger.error('预览图片失败:', e)
+    ElMessage.error('预览图片失败')
+  }
+}
+
+function handlePreviewClose() {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = ''
+  }
 }
 
 // 删除已上传文件
@@ -1183,6 +1226,14 @@ onMounted(async () => {
   await loadVillageOptions()
   if (isEditMode.value) {
     await loadProjectData()
+  }
+})
+
+// 组件卸载时清理 blob URL
+onUnmounted(() => {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = ''
   }
 })
 </script>

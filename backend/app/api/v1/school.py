@@ -3,6 +3,9 @@
 支持完整CRUD、导入导出功能
 """
 
+# NOTE: 数据权限过滤建议迁移到 app.core.data_scope_adapter.apply_scope_filter()
+# 当前使用: OrgScopeFilter.filter_by_org_ids() (旧式 query + 组织树风格)
+
 import io
 import logging
 import os

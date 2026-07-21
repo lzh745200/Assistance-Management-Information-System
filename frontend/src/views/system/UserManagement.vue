@@ -273,7 +273,12 @@
         <el-divider content-position="left">活跃会话</el-divider>
         <div v-loading="sessionsLoading">
           <el-table v-if="userSessions.length > 0" :data="userSessions" size="small" border>
-            <el-table-column prop="session_id" label="会话ID" min-width="180" show-overflow-tooltip />
+            <el-table-column
+              prop="session_id"
+              label="会话ID"
+              min-width="180"
+              show-overflow-tooltip
+            />
             <el-table-column prop="ip_address" label="IP 地址" width="140" />
             <el-table-column prop="user_agent" label="设备" min-width="160" show-overflow-tooltip />
             <el-table-column prop="created_at" label="登录时间" width="170">
@@ -297,12 +302,7 @@
           <el-empty v-else-if="!sessionsLoading" description="无活跃会话" :image-size="40" />
         </div>
         <div class="session-actions">
-          <el-button
-            type="warning"
-            size="small"
-            :loading="resetting2fa"
-            @click="handleReset2fa"
-          >
+          <el-button type="warning" size="small" :loading="resetting2fa" @click="handleReset2fa">
             重置 2FA
           </el-button>
         </div>
@@ -821,7 +821,7 @@ async function loadUserSessions(userId: number) {
   try {
     const res = await get(`/system/admin/users/${userId}/sessions`)
     const data = res.data?.data ?? res.data ?? res
-    userSessions.value = Array.isArray(data) ? data : data?.sessions ?? []
+    userSessions.value = Array.isArray(data) ? data : (data?.sessions ?? [])
   } catch {
     // Endpoint may not exist yet – show empty
     userSessions.value = []
@@ -834,13 +834,9 @@ async function revokeSession(session: any) {
   if (!currentUser.value) return
   revokingSession.value = session.session_id
   try {
-    await post(
-      `/system/admin/users/${currentUser.value.id}/sessions/${session.session_id}/revoke`
-    )
+    await post(`/system/admin/users/${currentUser.value.id}/sessions/${session.session_id}/revoke`)
     ElMessage.success('已强制登出该会话')
-    userSessions.value = userSessions.value.filter(
-      (s) => s.session_id !== session.session_id
-    )
+    userSessions.value = userSessions.value.filter((s) => s.session_id !== session.session_id)
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.detail || '强制登出失败，接口可能尚未实现')
   } finally {

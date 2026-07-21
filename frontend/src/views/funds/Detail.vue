@@ -577,7 +577,7 @@
         width="80%"
         top="5vh"
         destroy-on-close
-        @close="previewUrl = ''"
+        @close="handlePreviewClose"
       >
         <iframe
           v-if="previewUrl"
@@ -637,7 +637,7 @@
 import { logger } from '@/utils/logger'
 import { useAuthStore } from '@/stores/auth'
 
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useDesensitize } from '@/composables/useDesensitize'
@@ -767,6 +767,13 @@ function previewAttachment(row: any) {
     .catch(() => {
       ElMessage.error('预览加载失败')
     })
+}
+
+function handlePreviewClose() {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = ''
+  }
 }
 
 function downloadAttachment(row: any) {
@@ -1146,6 +1153,12 @@ watch(
     if (!isCreate.value) loadFundDetail()
   }
 )
+onBeforeUnmount(() => {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = ''
+  }
+})
 onUnmounted(() => {
   // 清理资源
 })

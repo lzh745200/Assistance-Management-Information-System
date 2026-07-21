@@ -1,7 +1,13 @@
 <template>
   <div class="section-data-form">
     <!-- 年份选择 -->
-    <el-form ref="formRef" :model="formData" :rules="formRules" label-width="140px" label-position="left">
+    <el-form
+      ref="formRef"
+      :model="formData"
+      :rules="formRules"
+      label-width="140px"
+      label-position="left"
+    >
       <el-form-item label="数据年份">
         <el-select v-model="selectedYear" style="width: 200px" @change="handleYearChange">
           <el-option
@@ -798,7 +804,11 @@ const formRules = computed(() => {
   }
 
   // Investment validation for sections that have an investment field
-  if (['industry', 'infrastructure', 'party_building', 'medical', 'education'].includes(props.sectionKey)) {
+  if (
+    ['industry', 'infrastructure', 'party_building', 'medical', 'education'].includes(
+      props.sectionKey
+    )
+  ) {
     rules.investment = [
       { required: true, message: '请输入当年投入金额', trigger: ['blur', 'change'] },
       {

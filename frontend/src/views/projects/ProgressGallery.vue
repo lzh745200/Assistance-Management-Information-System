@@ -16,12 +16,20 @@
           <h2>{{ project?.name ?? '项目进度' }}</h2>
           <el-descriptions :column="3" border>
             <el-descriptions-item label="项目编号">{{ project?.code ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="开始时间">{{ project?.start_date ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="开始时间">{{
+              project?.start_date ?? '-'
+            }}</el-descriptions-item>
             <el-descriptions-item label="当前状态">
-              <el-tag :type="getStatusType(project?.status)">{{ getStatusText(project?.status) }}</el-tag>
+              <el-tag :type="getStatusType(project?.status)">{{
+                getStatusText(project?.status)
+              }}</el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="负责单位" :span="2">{{ project?.responsible_unit ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="预算金额">{{ project?.budget != null ? `${project.budget} 万元` : '-' }}</el-descriptions-item>
+            <el-descriptions-item label="负责单位" :span="2">{{
+              project?.responsible_unit ?? '-'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="预算金额">{{
+              project?.budget != null ? `${project.budget} 万元` : '-'
+            }}</el-descriptions-item>
           </el-descriptions>
         </div>
 
@@ -31,12 +39,7 @@
 
         <!-- Upload toolbar -->
         <div class="gallery-toolbar">
-          <el-upload
-            :show-file-list="false"
-            accept="image/*"
-            :http-request="handleUpload"
-            multiple
-          >
+          <el-upload :show-file-list="false" accept="image/*" :http-request="handleUpload" multiple>
             <el-button type="primary">
               <el-icon><Upload /></el-icon> 上传进度照片
             </el-button>
@@ -73,11 +76,15 @@
               </template>
             </el-image>
             <div class="photo-meta">
-              <span class="photo-name" :title="file.filename ?? file.name">{{ file.filename ?? file.name }}</span>
+              <span class="photo-name" :title="file.filename ?? file.name">{{
+                file.filename ?? file.name
+              }}</span>
               <span class="photo-date">{{ file.created_at ?? '' }}</span>
             </div>
             <div class="photo-actions">
-              <el-button link type="danger" size="small" @click="handleDelete(file.id)">删除</el-button>
+              <el-button link type="danger" size="small" @click="handleDelete(file.id)"
+                >删除</el-button
+              >
             </div>
           </el-card>
         </div>
@@ -93,14 +100,24 @@
               <div class="comparison-images">
                 <div class="comparison-side">
                   <el-tag type="info" size="small" class="comparison-label">之前</el-tag>
-                  <el-image :src="pair.beforeUrl" fit="contain" class="comparison-img" :preview-src-list="[pair.beforeUrl]" />
+                  <el-image
+                    :src="pair.beforeUrl"
+                    fit="contain"
+                    class="comparison-img"
+                    :preview-src-list="[pair.beforeUrl]"
+                  />
                 </div>
                 <div class="comparison-arrow">
                   <el-icon :size="24"><Right /></el-icon>
                 </div>
                 <div class="comparison-side">
                   <el-tag type="success" size="small" class="comparison-label">之后</el-tag>
-                  <el-image :src="pair.afterUrl" fit="contain" class="comparison-img" :preview-src-list="[pair.afterUrl]" />
+                  <el-image
+                    :src="pair.afterUrl"
+                    fit="contain"
+                    class="comparison-img"
+                    :preview-src-list="[pair.afterUrl]"
+                  />
                 </div>
               </div>
             </div>
@@ -182,16 +199,28 @@ function getFileUrl(file: any): string {
 
 function getStatusType(status?: string) {
   const map: Record<string, string> = {
-    draft: 'info', pending: 'info', approved: 'primary', planning: 'info',
-    in_progress: 'warning', completed: 'success', cancelled: 'danger', suspended: 'danger',
+    draft: 'info',
+    pending: 'info',
+    approved: 'primary',
+    planning: 'info',
+    in_progress: 'warning',
+    completed: 'success',
+    cancelled: 'danger',
+    suspended: 'danger',
   }
   return map[status ?? ''] ?? 'info'
 }
 
 function getStatusText(status?: string) {
   const map: Record<string, string> = {
-    draft: '草稿', pending: '待审批', approved: '已审批', planning: '规划中',
-    in_progress: '进行中', completed: '已完成', cancelled: '已取消', suspended: '已暂停',
+    draft: '草稿',
+    pending: '待审批',
+    approved: '已审批',
+    planning: '规划中',
+    in_progress: '进行中',
+    completed: '已完成',
+    cancelled: '已取消',
+    suspended: '已暂停',
   }
   return map[status ?? ''] ?? status ?? '-'
 }

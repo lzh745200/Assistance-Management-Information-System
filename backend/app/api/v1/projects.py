@@ -1812,42 +1812,33 @@ async def upload_project_files(
         raise HTTPException(status_code=403, detail="仅管理员或项目创建者可上传文件")
 
     from app.core.config import settings
+    from app.utils.upload_helper import save_upload_file
 
-    upload_dir = os.path.join(settings.UPLOAD_DIR, "projects", str(project_id), category)
-    os.makedirs(upload_dir, exist_ok=True)
+    sub_dir = os.path.join("projects", str(project_id), category)
 
     uploaded = []
     for f in files:
-        # 生成唯一文件名避免冲突
-        ext = os.path.splitext(f.filename or "")[1]
-
-        # 安全检查：文件类型白名单校验
-        ext_lower = ext.lstrip(".").lower()
-        if ext_lower and ext_lower not in settings.allowed_file_types_list:
-            raise HTTPException(
-                status_code=400,
-                detail=f"不支持的文件类型: .{ext_lower}，允许类型: {', '.join(settings.allowed_file_types_list)}",
-            )
-
-        unique_name = f"{_uuid.uuid4().hex}{ext}"
-        save_path = os.path.join(upload_dir, unique_name)
-
-        content = await f.read()
-        if len(content) > settings.MAX_FILE_SIZE:
+        # 预检文件大小（在读取完整内容之前）
+        file_size = f.size
+        if file_size is not None and file_size > settings.MAX_FILE_SIZE:
             raise HTTPException(
                 status_code=400,
                 detail=f"文件 {f.filename} 超过 {settings.MAX_FILE_SIZE // 1048576}MB 限制",
             )
 
-        with open(save_path, "wb") as fp:
-            fp.write(content)
+        # 使用统一上传工具：路径安全校验、扩展名白名单、唯一文件名
+        file_info = await save_upload_file(
+            file=f,
+            sub_dir=sub_dir,
+            max_size=settings.MAX_FILE_SIZE,
+        )
 
         pf = ProjectFile(
             project_id=project.id,
             category=category,
-            filename=f.filename or unique_name,
-            filepath=save_path,
-            file_size=len(content),
+            filename=file_info["file_name"],
+            filepath=file_info["file_path"],
+            file_size=file_info["file_size"],
             uploaded_by=getattr(current_user, "id", None),
         )
         db.add(pf)

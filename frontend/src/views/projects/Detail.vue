@@ -53,12 +53,24 @@
             <el-descriptions-item label="预算金额">
               {{ project.budget != null ? `${project.budget} 万元` : '-' }}
             </el-descriptions-item>
-            <el-descriptions-item label="负责单位">{{ project.responsible_unit ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="所属村庄">{{ project.village ?? project.village_id ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="开始日期">{{ project.start_date ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="结束日期">{{ project.end_date ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="创建时间">{{ project.created_at ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="项目描述" :span="2">{{ project.description ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="负责单位">{{
+              project.responsible_unit ?? '-'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="所属村庄">{{
+              project.village ?? project.village_id ?? '-'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="开始日期">{{
+              project.start_date ?? '-'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="结束日期">{{
+              project.end_date ?? '-'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="创建时间">{{
+              project.created_at ?? '-'
+            }}</el-descriptions-item>
+            <el-descriptions-item label="项目描述" :span="2">{{
+              project.description ?? '-'
+            }}</el-descriptions-item>
           </el-descriptions>
         </el-tab-pane>
 
@@ -67,7 +79,7 @@
           <div class="tab-toolbar">
             <el-button type="primary" size="small" @click="openTaskDialog()">新建任务</el-button>
           </div>
-          <el-table :data="tasks" v-loading="tasksLoading" stripe>
+          <el-table v-loading="tasksLoading" :data="tasks" stripe>
             <el-table-column prop="title" label="任务名称" min-width="180" />
             <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
@@ -76,14 +88,18 @@
             </el-table-column>
             <el-table-column prop="priority" label="优先级" width="90">
               <template #default="{ row }">
-                <el-tag :type="priorityType(row.priority)" size="small" effect="plain">{{ row.priority ?? '普通' }}</el-tag>
+                <el-tag :type="priorityType(row.priority)" size="small" effect="plain">{{
+                  row.priority ?? '普通'
+                }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column prop="assignee" label="负责人" width="120" />
             <el-table-column prop="due_date" label="截止日期" width="120" />
             <el-table-column label="操作" width="140" fixed="right">
               <template #default="{ row }">
-                <el-button link type="primary" size="small" @click="openTaskDialog(row)">编辑</el-button>
+                <el-button link type="primary" size="small" @click="openTaskDialog(row)"
+                  >编辑</el-button
+                >
                 <el-popconfirm title="确定删除该任务？" @confirm="handleDeleteTask(row.id)">
                   <template #reference>
                     <el-button link type="danger" size="small">删除</el-button>
@@ -96,7 +112,7 @@
 
         <!-- 经费 -->
         <el-tab-pane label="经费" name="funds">
-          <el-table :data="funds" v-loading="fundsLoading" stripe>
+          <el-table v-loading="fundsLoading" :data="funds" stripe>
             <el-table-column prop="name" label="经费名称" min-width="200" />
             <el-table-column prop="amount" label="金额（万元）" width="130">
               <template #default="{ row }">{{ row.amount ?? '-' }}</template>
@@ -122,7 +138,7 @@
               <el-button type="primary" size="small">上传附件</el-button>
             </el-upload>
           </div>
-          <el-table :data="files" v-loading="filesLoading" stripe>
+          <el-table v-loading="filesLoading" :data="files" stripe>
             <el-table-column prop="filename" label="文件名" min-width="220">
               <template #default="{ row }">{{ row.filename ?? row.name ?? '-' }}</template>
             </el-table-column>
@@ -133,7 +149,9 @@
             <el-table-column prop="created_at" label="上传时间" width="170" />
             <el-table-column label="操作" width="150" fixed="right">
               <template #default="{ row }">
-                <el-button link type="primary" size="small" @click="handleDownload(row)">下载</el-button>
+                <el-button link type="primary" size="small" @click="handleDownload(row)"
+                  >下载</el-button
+                >
                 <el-popconfirm title="确定删除该附件？" @confirm="handleDeleteFile(row.id)">
                   <template #reference>
                     <el-button link type="danger" size="small">删除</el-button>
@@ -169,7 +187,12 @@
     </template>
 
     <!-- Task Dialog -->
-    <el-dialog v-model="taskDialogVisible" :title="editingTask ? '编辑任务' : '新建任务'" width="500px" destroy-on-close>
+    <el-dialog
+      v-model="taskDialogVisible"
+      :title="editingTask ? '编辑任务' : '新建任务'"
+      width="500px"
+      destroy-on-close
+    >
       <el-form :model="taskForm" label-width="80px">
         <el-form-item label="任务名称" required>
           <el-input v-model="taskForm.title" placeholder="请输入任务名称" />
@@ -193,7 +216,13 @@
           <el-input v-model="taskForm.assignee" placeholder="请输入负责人" />
         </el-form-item>
         <el-form-item label="截止日期">
-          <el-date-picker v-model="taskForm.due_date" type="date" value-format="YYYY-MM-DD" placeholder="请选择日期" style="width: 100%" />
+          <el-date-picker
+            v-model="taskForm.due_date"
+            type="date"
+            value-format="YYYY-MM-DD"
+            placeholder="请选择日期"
+            style="width: 100%"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -238,7 +267,13 @@ const historyLoading = ref(false)
 const taskDialogVisible = ref(false)
 const taskSaving = ref(false)
 const editingTask = ref<any>(null)
-const taskForm = ref({ title: '', status: 'pending', priority: 'normal', assignee: '', due_date: '' })
+const taskForm = ref({
+  title: '',
+  status: 'pending',
+  priority: 'normal',
+  assignee: '',
+  due_date: '',
+})
 
 // --- Computed ---
 const statusMap: Record<string, { type: string; text: string }> = {
@@ -252,7 +287,9 @@ const statusMap: Record<string, { type: string; text: string }> = {
   suspended: { type: 'danger', text: '已暂停' },
 }
 const statusType = computed(() => statusMap[project.value?.status]?.type ?? 'info')
-const statusText = computed(() => statusMap[project.value?.status]?.text ?? project.value?.status ?? '-')
+const statusText = computed(
+  () => statusMap[project.value?.status]?.text ?? project.value?.status ?? '-'
+)
 const progressColor = computed(() => {
   const p = project.value?.progress ?? 0
   if (p >= 80) return '#40916c'
@@ -261,8 +298,10 @@ const progressColor = computed(() => {
 })
 
 // --- Helpers ---
-const taskStatusType = (s: string) => ({ pending: 'info', in_progress: 'warning', completed: 'success' }[s] ?? 'info')
-const priorityType = (p: string) => ({ low: 'info', normal: '', high: 'warning', urgent: 'danger' }[p] ?? 'info')
+const taskStatusType = (s: string) =>
+  ({ pending: 'info', in_progress: 'warning', completed: 'success' })[s] ?? 'info'
+const priorityType = (p: string) =>
+  ({ low: 'info', normal: '', high: 'warning', urgent: 'danger' })[p] ?? 'info'
 const formatSize = (bytes?: number) => {
   if (bytes == null) return '-'
   if (bytes < 1024) return bytes + ' B'
@@ -336,7 +375,13 @@ async function loadHistory() {
 function openTaskDialog(task?: any) {
   editingTask.value = task ?? null
   taskForm.value = task
-    ? { title: task.title, status: task.status, priority: task.priority, assignee: task.assignee ?? '', due_date: task.due_date ?? '' }
+    ? {
+        title: task.title,
+        status: task.status,
+        priority: task.priority,
+        assignee: task.assignee ?? '',
+        due_date: task.due_date ?? '',
+      }
     : { title: '', status: 'pending', priority: 'normal', assignee: '', due_date: '' }
   taskDialogVisible.value = true
 }
