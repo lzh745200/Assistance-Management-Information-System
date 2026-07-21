@@ -288,28 +288,12 @@ class TestRecordFailed:
         ).first()
         assert row[0] is not None
 
-    def test_returns_zero_when_returning_null(self, svc_default, db_session):
-        """RETURNING 子句返回 NULL 时，result.scalar() or 0 兜底为 0。
-
-        通过 Mock db.execute 返回 scalar=None 的结果，覆盖 `or 0` 分支。
-        """
+    def test_increments_from_zero_to_one(self, svc_default, db_session):
+        """读-改-写模式：failed_login_count=0 时递增后返回 1。"""
         u = _make_user(db_session, failed_login_count=0, locked_until=None)
 
-        class FakeResult:
-            def scalar(self):
-                return None
-
-        original_execute = db_session.execute
-
-        def fake_execute(*args, **kwargs):
-            return FakeResult()
-
-        db_session.execute = fake_execute
-        try:
-            count = svc_default.record_failed(u, db_session)
-        finally:
-            db_session.execute = original_execute
-        assert count == 0
+        count = svc_default.record_failed(u, db_session)
+        assert count == 1
 
     def test_username_in_log_for_user_without_username(self, svc_default, db_session):
         """getattr(user, "username", "?") 兜底为 "?"。"""

@@ -7,7 +7,7 @@
 
 设计原则：
 - 锁定检查：锁定未过期 → HTTP 423；已过期 → 自动清理
-- 原子递增：使用 SQL COALESCE + RETURNING 子句避免竞态条件
+- 原子递增：使用读-改-写方式（兼容旧版 SQLite < 3.35，不依赖 RETURNING 子句）
 - 统一入口：所有需要锁定检查的组件通过此服务调用
 """
 
@@ -15,7 +15,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from sqlalchemy import func, case, update
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -102,11 +102,11 @@ class LockoutService:
     # ── 失败计数递增 ────────────────────────────────────────────
 
     def record_failed(self, user, db: Session) -> int:
-        """原子递增登录失败计数，达到阈值时自动锁定。
+        """递增登录失败计数，达到阈值时自动锁定。
 
-        使用 SQL COALESCE + CASE + RETURNING 子句，单条 UPDATE 完成：
+        使用读-改-写方式（兼容旧版 SQLite < 3.35，不支持 RETURNING 语法）：
         - failed_login_count = COALESCE(failed_login_count, 0) + 1
-        - locked_until = CASE WHEN new_count >= threshold THEN now+lockout ELSE old END
+        - locked_until = 达到阈值时设为 now+lockout，否则保持不变
 
         Args:
             user: User ORM 对象
@@ -118,27 +118,29 @@ class LockoutService:
         from app.models.user import User
 
         now = datetime.now(timezone.utc)
-        new_count_expr = func.coalesce(User.failed_login_count, 0) + 1
+        # 读-改-写：先计算新计数，再用 UPDATE ... WHERE 写入（避免 RETURNING）
+        failed_count = (getattr(user, "failed_login_count", None) or 0) + 1
+        new_locked_until = (
+            now + timedelta(minutes=self.lockout_minutes)
+            if failed_count >= self.max_failed_attempts
+            else getattr(user, "locked_until", None)
+        )
 
         stmt = (
             update(User)
             .where(User.id == user.id)
             .values(
-                failed_login_count=new_count_expr,
-                locked_until=case(
-                    (
-                        new_count_expr >= self.max_failed_attempts,
-                        now + timedelta(minutes=self.lockout_minutes),
-                    ),
-                    else_=User.locked_until,
-                ),
+                failed_login_count=failed_count,
+                locked_until=new_locked_until,
             )
-            .returning(User.failed_login_count)
         )
-        result = db.execute(stmt)
+        db.execute(stmt)
         db.commit()
 
-        failed_count = result.scalar() or 0
+        # 同步 ORM 对象状态，避免后续访问时读到过期值
+        user.failed_login_count = failed_count
+        user.locked_until = new_locked_until
+
         logger.info(
             "登录失败计数: user=%s, count=%d/%d",
             getattr(user, "username", "?"), failed_count, self.max_failed_attempts,

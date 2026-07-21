@@ -270,6 +270,7 @@ describe('echarts', () => {
 // exportUtil
 // ══════════════════════════════════════════════════════════════
 describe('exportUtil', () => {
+  // xlsx 体积较大，慢速 CI runner 上导入可能超过默认 60s，放宽到 120s 避免偶发超时
   it('can import exportUtil', async () => {
     try {
       const mod = await import('@/utils/exportUtil')
@@ -277,7 +278,7 @@ describe('exportUtil', () => {
     } catch (e) {
       // May have dependencies
     }
-  })
+  }, 120000)
 })
 
 // ══════════════════════════════════════════════════════════════
