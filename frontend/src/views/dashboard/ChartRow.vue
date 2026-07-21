@@ -53,11 +53,12 @@ async function loadData() {
       apiRequest({ method: 'GET', url: '/projects', params: { summary: true, page_size: 5 } }),
       get('/dashboard/stats', { refresh: true }),
     ])
-    projects.value = projRes?.data?.items || projRes?.data?.data || []
+    projects.value = projRes?.data?.items || projRes?.data?.data || projRes?.items || []
+    // get() 已解包响应，fundRes 直接是数据对象
     funds.value = {
-      allocated: fundRes?.data?.funds_allocated || fundRes?.data?.total_funds || 0,
-      pending: fundRes?.data?.funds_pending || 0,
-      planned: fundRes?.data?.funds_planned || 0,
+      allocated: fundRes?.funds_allocated || fundRes?.total_funds || 0,
+      pending: fundRes?.funds_pending || 0,
+      planned: fundRes?.funds_planned || 0,
     }
   } catch (e) {
     // 接口失败时置零（空数据），不展示编造的假数字；同时记录日志并给出重试入口

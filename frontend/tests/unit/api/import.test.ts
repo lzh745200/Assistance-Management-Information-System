@@ -47,7 +47,7 @@ describe('api/import', () => {
 
   it('importVillages POST /import/entities with FormData (default entity_type=supported_village)', async () => {
     mocks.post.mockResolvedValueOnce({
-      data: { success: true, total_rows: 10, success_rows: 10, failed_rows: 0, skipped_rows: 0 },
+      success: true, total_rows: 10, success_rows: 10, failed_rows: 0, skipped_rows: 0,
     })
     const file = new File(['test'], 'villages.xlsx')
     const result = await importVillages(file)
@@ -65,7 +65,7 @@ describe('api/import', () => {
 
   it('importVillages mode=overwrite', async () => {
     mocks.post.mockResolvedValueOnce({
-      data: { success: true, total_rows: 5, success_rows: 5, failed_rows: 0, skipped_rows: 0 },
+      success: true, total_rows: 5, success_rows: 5, failed_rows: 0, skipped_rows: 0,
     })
     const file = new File(['test'], 'data.xlsx')
     await importVillages(file, 'overwrite')
@@ -74,7 +74,7 @@ describe('api/import', () => {
   })
 
   it('getImportHistory 默认 page=1, pageSize=10', async () => {
-    mocks.apiRequest.mockResolvedValueOnce({ data: { items: [], total: 0 } })
+    mocks.apiRequest.mockResolvedValueOnce({ items: [], total: 0 })
     const result = await getImportHistory()
     expect(mocks.apiRequest).toHaveBeenCalledWith({
       method: 'GET',
@@ -85,7 +85,7 @@ describe('api/import', () => {
   })
 
   it('getImportHistory 自定义 page + pageSize', async () => {
-    mocks.apiRequest.mockResolvedValueOnce({ data: { items: [], total: 0 } })
+    mocks.apiRequest.mockResolvedValueOnce({ items: [], total: 0 })
     const result = await getImportHistory(2, 25)
     expect(mocks.apiRequest).toHaveBeenCalledWith({
       method: 'GET',

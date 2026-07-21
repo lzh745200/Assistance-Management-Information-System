@@ -7,6 +7,8 @@ import { ADMIN_ROLES } from '@/utils/roleAccess'
 import { useMenuStore } from '@/stores/menu'
 
 const whiteList = ['/login', '/register', '/forgot-password']
+// 强制改密期间允许访问的路由
+const changePasswordWhitelist = ['/change-password', '/logout']
 
 router.beforeEach(async (to, _from, next) => {
   document.title = (to.meta?.title as string) || '帮扶管理信息系统'
@@ -24,10 +26,16 @@ router.beforeEach(async (to, _from, next) => {
     return
   }
 
+  // 强制改密检查：must_change_password=true 时只能访问改密页
+  const user = AuthStorage.getUser() as Record<string, any> | null
+  if (user?.must_change_password === true && !changePasswordWhitelist.includes(to.path)) {
+    next('/change-password')
+    return
+  }
+
   // 角色权限检查：meta.roles 非空时校验用户角色
   const requiredRoles = to.meta?.roles as string[] | undefined
   if (requiredRoles && requiredRoles.length > 0) {
-    const user = AuthStorage.getUser() as Record<string, any> | null
     const userRole = user?.role || ''
     const hasAccess = ADMIN_ROLES.includes(userRole) || requiredRoles.includes(userRole)
     if (!hasAccess) {

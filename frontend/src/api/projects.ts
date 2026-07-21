@@ -48,8 +48,9 @@ export const projectsApi = {
   },
 
   // ========== 项目文件 ==========
-  uploadFiles: (id: number, files: File[]) => {
+  uploadFiles: (id: number, category: string, files: File[]) => {
     const formData = new FormData()
+    formData.append('category', category)
     files.forEach((f) => formData.append('files', f))
     return post('/projects/' + id + '/files', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

@@ -151,7 +151,7 @@
             :on-success="handleUploadSuccess"
             :on-remove="handleUploadRemove"
             :before-upload="beforeUpload"
-            :auto-upload="false"
+            :auto-upload="true"
             multiple
           >
             <el-button type="primary">

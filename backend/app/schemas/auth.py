@@ -64,4 +64,4 @@ class ChangePasswordRequest(BaseModel):
     """修改密码请求"""
 
     old_password: str = Field(..., description="旧密码")
-    new_password: str = Field(..., min_length=8, description="新密码，至少8位")
+    new_password: str = Field(..., min_length=12, description="新密码，至少12位")

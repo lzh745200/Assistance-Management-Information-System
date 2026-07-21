@@ -2,7 +2,7 @@
  * exportUtil 单元测试
  * 覆盖: src/utils/exportUtil.ts
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { exportUtil } from '@/utils/exportUtil'
 
 describe('exportUtil', () => {
@@ -15,6 +15,7 @@ describe('exportUtil', () => {
     let clickSpy: ReturnType<typeof vi.fn>
 
     beforeEach(() => {
+      vi.useFakeTimers()
       clickSpy = vi.fn()
       mockCreateElement = vi.spyOn(document, 'createElement').mockReturnValue({
         href: '',
@@ -24,6 +25,12 @@ describe('exportUtil', () => {
       } as any)
       mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation((n) => n)
       mockRemoveChild = vi.spyOn(document.body, 'removeChild').mockImplementation((n) => n)
+    })
+
+    afterEach(() => {
+      vi.runOnlyPendingTimers()
+      vi.useRealTimers()
+      vi.restoreAllMocks()
     })
 
     it('should do nothing for empty data', () => {
@@ -41,6 +48,9 @@ describe('exportUtil', () => {
       expect(mockCreateElement).toHaveBeenCalledWith('a')
       expect(clickSpy).toHaveBeenCalled()
       expect(mockAppendChild).toHaveBeenCalled()
+
+      // downloadBlob uses setTimeout(100ms) to clean up DOM
+      vi.advanceTimersByTime(150)
       expect(mockRemoveChild).toHaveBeenCalled()
     })
 

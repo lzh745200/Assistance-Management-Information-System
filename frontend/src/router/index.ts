@@ -182,7 +182,7 @@ export const routes: RouteRecordRaw[] = [
       {
         path: '/funds',
         name: 'Funds',
-        component: () => retryImport(() => import('@/views/funds/index.vue')),
+        component: () => retryImport(() => import('@/views/funds/EnhancedList.vue')),
         meta: { title: '经费管理' },
       },
       {
@@ -234,6 +234,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '资金周期' },
       },
       {
+        path: '/funds/lifecycle/:projectId',
+        name: 'FundLifecycleDetail',
+        component: () => retryImport(() => import('@/views/funds/Lifecycle.vue')),
+        meta: { title: '资金周期' },
+      },
+      {
         path: '/funds/report',
         name: 'FundReport',
         component: () => retryImport(() => import('@/views/funds/Report.vue')),
@@ -241,8 +247,12 @@ export const routes: RouteRecordRaw[] = [
       },
       {
         path: '/funds/apply',
-        name: 'FundApply',
-        component: () => retryImport(() => import('@/views/funds/FundApply.vue')),
+        redirect: '/funds/user',
+      },
+      {
+        path: '/funds/user',
+        name: 'FundUserList',
+        component: () => retryImport(() => import('@/views/funds/UserFundList.vue')),
         meta: { title: '经费申请' },
       },
       {
@@ -258,10 +268,10 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '结算管理' },
       },
       {
-        path: '/funds/enhanced',
-        name: 'FundsEnhanced',
-        component: () => retryImport(() => import('@/views/funds/EnhancedList.vue')),
-        meta: { title: '资金总览' },
+        path: '/funds/settlement/:projectId',
+        name: 'FundSettlementDetail',
+        component: () => retryImport(() => import('@/views/funds/Settlement.vue')),
+        meta: { title: '结算管理' },
       },
       // ── 帮扶政策 ──
       {

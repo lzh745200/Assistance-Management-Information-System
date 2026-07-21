@@ -397,6 +397,20 @@ def _migrate_missing_columns(engine, model_base):
     - 对 nullable=False 且有默认值的列添加 NOT NULL DEFAULT 约束
     """
     import os
+    import warnings
+
+    # 发出弃用警告，提醒迁移到 Alembic
+    warnings.warn(
+        "_migrate_missing_columns 已弃用，请迁移到 Alembic 数据库迁移。"
+        "设置 DISABLE_AUTO_MIGRATION=1 可禁用此功能。",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    logger.warning(
+        "[DEPRECATED] 自动列补齐功能已弃用，请尽快迁移到 Alembic。"
+        "设置 DISABLE_AUTO_MIGRATION=1 可禁用。"
+    )
+
     if os.getenv("DISABLE_AUTO_MIGRATION", "").strip() == "1":
         logger.info("DISABLE_AUTO_MIGRATION=1，跳过自动列补齐（请使用 Alembic 迁移）")
         return

@@ -3,9 +3,10 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { nextTick } from "vue";
 
 // ── Use vi.hoisted for mock factories to avoid hoisting issues ──
-const { mockGet, mockEchartsInit } = vi.hoisted(() => ({
+const { mockGet, mockEchartsInit, mockApiRequest } = vi.hoisted(() => ({
   mockGet: vi.fn(),
   mockEchartsInit: vi.fn(),
+  mockApiRequest: vi.fn(),
 }));
 
 const mockSetOption = vi.fn();
@@ -62,21 +63,21 @@ const mockHealthData = {
 };
 
 // ── Mock request module ──
-vi.mock("@/utils/request", () => ({
+vi.mock("@/api/request", () => ({
   default: { get: mockGet },
+  get: mockGet,
+  apiRequest: mockApiRequest,
 }));
 
-// ── Mock echarts — must provide both default AND named exports ──
-// Component uses: import * as echarts from "echarts"; echarts.init(...)
+// ── Mock echarts — component imports default from @/utils/echarts ──
 mockEchartsInit.mockReturnValue(echartsInstance);
 
-vi.mock("echarts", () => {
+vi.mock("@/utils/echarts", () => {
   return {
     __esModule: true,
     default: {
       init: mockEchartsInit,
     },
-    init: mockEchartsInit,
   };
 });
 
@@ -121,13 +122,18 @@ function setupDefaultMocks() {
     if (url === "/system/monitor/snapshot") {
       return Promise.resolve({ data: { success: true, data: mockSnapshotData } });
     }
-    if (url === "/system/monitor/api-stats") {
-      return Promise.resolve({ data: { success: true, data: mockApiStatsData } });
-    }
-    if (url === "/system/health/full") {
-      return Promise.resolve({ data: { code: 200, data: mockHealthData } });
+    if (url === "/health/full") {
+      return Promise.resolve({ data: mockHealthData });
     }
     return Promise.reject(new Error("Unknown URL"));
+  });
+
+  mockApiRequest.mockReset();
+  mockApiRequest.mockImplementation((config: any) => {
+    if (config?.url === "/system/monitor/api-stats") {
+      return Promise.resolve({ data: { success: true, data: mockApiStatsData } });
+    }
+    return Promise.reject(new Error("Unknown API request"));
   });
 
   mockEchartsInit.mockReset();
@@ -268,13 +274,18 @@ describe("MonitoringDashboard", () => {
       if (url === "/system/monitor/snapshot") {
         return Promise.reject(new Error("Network error"));
       }
-      if (url === "/system/monitor/api-stats") {
-        return Promise.resolve({ data: { success: true, data: mockApiStatsData } });
-      }
-      if (url === "/system/health/full") {
-        return Promise.resolve({ data: { code: 200, data: mockHealthData } });
+      if (url === "/health/full") {
+        return Promise.resolve({ data: mockHealthData });
       }
       return Promise.reject(new Error("Unknown URL"));
+    });
+
+    mockApiRequest.mockReset();
+    mockApiRequest.mockImplementation((config: any) => {
+      if (config?.url === "/system/monitor/api-stats") {
+        return Promise.resolve({ data: { success: true, data: mockApiStatsData } });
+      }
+      return Promise.reject(new Error("Unknown API request"));
     });
 
     const wrapper = mountComponent();

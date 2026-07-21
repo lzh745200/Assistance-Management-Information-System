@@ -9,12 +9,17 @@ const { mockGet, mockPost, mockPut, mockDel, mockApiRequest } = vi.hoisted(() =>
 }))
 
 // src/api/report.ts 使用命名导出 get/post/put/del/apiRequest（返回已解包的 body）
+// 同时 download 方法还使用了 default export (request.get)
+// blobDownload.ts 还引用了 parseContentDisposition 和 downloadBlob
 vi.mock('@/api/request', () => ({
+  default: { get: mockGet },
   get: mockGet,
   post: mockPost,
   put: mockPut,
   del: mockDel,
   apiRequest: mockApiRequest,
+  parseContentDisposition: vi.fn(() => 'download.xlsx'),
+  downloadBlob: vi.fn(),
 }))
 
 import { reportApi } from '@/api/report'
@@ -78,13 +83,9 @@ describe('api/report', () => {
     })
 
     it('download 调用 GET /reports/{id}/download', async () => {
-      mockApiRequest.mockResolvedValue(new Blob(['test']))
+      mockGet.mockResolvedValue(new Blob(['test']))
       await reportApi.download(1)
-      expect(mockApiRequest).toHaveBeenCalledWith({
-        method: 'GET',
-        url: '/reports/1/download',
-        responseType: 'blob',
-      })
+      expect(mockGet).toHaveBeenCalledWith('/reports/1/download', { responseType: 'blob' })
     })
   })
 })

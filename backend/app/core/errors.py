@@ -154,45 +154,9 @@ def get_error_message(code: ErrorCode) -> str:
     return ERROR_MESSAGES.get(code.value, f"错误码 {code}")
 
 
-class AppError(Exception):
-    """Application error with factory methods (delegates to canonical exceptions.AppError)."""
+# ── Re-export canonical exceptions from exceptions.py ──
+# AppError and ValidationError are defined in exceptions.py to avoid duplication.
+# This module re-exports them for backward compatibility.
+from app.core.exceptions import AppError, ValidationError  # noqa: E402
 
-    def __init__(self, message: str = "", status_code: int = 400, code=None, details=None, **kwargs):
-        self.message = message
-        self.status_code = status_code
-        self.code = code
-        self.details = details or {}
-        super().__init__(message)
-
-    def to_dict(self):
-        return {
-            "error": {
-                "code": self.code,
-                "message": self.message,
-                "details": self.details,
-            }
-        }
-
-    @staticmethod
-    def not_found(resource: str = "资源"):
-        return AppError(f"{resource}不存在", 404)
-
-    @staticmethod
-    def bad_request(message: str = "请求参数错误"):
-        return AppError(message, 400)
-
-    @staticmethod
-    def forbidden(message: str = "无权访问"):
-        return AppError(message, 403)
-
-    @staticmethod
-    def conflict(message: str = "数据冲突"):
-        return AppError(message, 409)
-
-
-class ValidationError(AppError):
-    """Validation error."""
-
-    def __init__(self, message: str = "数据验证失败", field: str = "", **kwargs):
-        super().__init__(message, status_code=422, code=ErrorCode.VALIDATION_ERROR, **kwargs)
-        self.field = field
+__all__ = ["ErrorCode", "ERROR_MESSAGES", "get_error_message", "AppError", "ValidationError"]

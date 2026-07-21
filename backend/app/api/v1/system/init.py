@@ -31,7 +31,7 @@ class InitRequest(BaseModel):
     organization_short_name: Optional[str] = Field(None, description="单位简称")
     organization_code: Optional[str] = Field(None, description="单位编码")
     admin_username: str = Field("admin", description="超级管理员用户名")
-    admin_password: str = Field(..., description="超级管理员密码", min_length=8)
+    admin_password: str = Field(..., description="超级管理员密码", min_length=12)
     admin_email: Optional[str] = Field(None, description="超级管理员邮箱")
     system_name: Optional[str] = Field("帮扶管理信息系统", description="系统名称")
     contact_person: Optional[str] = Field(None, description="联系人")

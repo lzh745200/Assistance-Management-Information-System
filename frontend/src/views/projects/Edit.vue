@@ -1029,7 +1029,6 @@ async function saveProjectData(): Promise<number | string | false> {
         ...commonPayload,
         village_id: projectForm.villageId ? Number(projectForm.villageId) : undefined,
         progress: projectForm.completionRate,
-        responsible_unit: '',
       })
     } else {
       // 新建模式 - 调用创建 API

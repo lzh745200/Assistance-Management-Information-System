@@ -96,11 +96,12 @@ describe('projectsApi', () => {
   it('uploadFiles sends FormData with multiple files', async () => {
     mocks.post.mockResolvedValueOnce({ files: [] })
     const files = [new File(['a'], 'a.txt'), new File(['b'], 'b.txt')]
-    await projectsApi.uploadFiles(1, files)
+    await projectsApi.uploadFiles(1, 'document', files)
     expect(mocks.post).toHaveBeenCalled()
     const callArgs = mocks.post.mock.calls[0]
     expect(callArgs[0]).toBe('/projects/1/files')
     expect(callArgs[1]).toBeInstanceOf(FormData)
+    expect(callArgs[1].get('category')).toBe('document')
   })
 
   it('listFiles calls GET /projects/:id/files', async () => {

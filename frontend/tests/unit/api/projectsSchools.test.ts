@@ -85,10 +85,11 @@ describe('api/projects', () => {
   it('uploadFiles POST FormData with files[]', () => {
     const f1 = new File(['1'], 'a.txt')
     const f2 = new File(['2'], 'b.txt')
-    projectsApi.uploadFiles(5, [f1, f2])
+    projectsApi.uploadFiles(5, 'attachment', [f1, f2])
     const fd = mockPost.mock.calls[0][1]
     expect(mockPost.mock.calls[0][0]).toBe('/projects/5/files')
     expect(fd).toBeInstanceOf(FormData)
+    expect(fd.get('category')).toBe('attachment')
     expect(fd.getAll('files')).toEqual([f1, f2])
   })
 
