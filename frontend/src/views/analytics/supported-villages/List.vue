@@ -70,6 +70,34 @@
       </el-form>
     </el-card>
 
+    <!-- KPI 概览 -->
+    <el-row :gutter="16" class="kpi-row">
+      <el-col :span="6">
+        <div class="kpi-card">
+          <div class="kpi-value">{{ kpiStats.totalVillages }}</div>
+          <div class="kpi-label">帮扶村总数</div>
+        </div>
+      </el-col>
+      <el-col :span="6">
+        <div class="kpi-card">
+          <div class="kpi-value">{{ kpiStats.totalInvestment }}</div>
+          <div class="kpi-label">总投入(万元)</div>
+        </div>
+      </el-col>
+      <el-col :span="6">
+        <div class="kpi-card">
+          <div class="kpi-value">{{ kpiStats.countyCount }}</div>
+          <div class="kpi-label">覆盖县市数</div>
+        </div>
+      </el-col>
+      <el-col :span="6">
+        <div class="kpi-card">
+          <div class="kpi-value">{{ kpiStats.departmentCount }}</div>
+          <div class="kpi-label">参与部门数</div>
+        </div>
+      </el-col>
+    </el-row>
+
     <!-- 操作栏 -->
     <div class="action-bar">
       <div class="action-bar-left">
@@ -307,6 +335,27 @@ const dialogTitle = computed(() => {
     view: '查看帮扶村',
   }
   return titles[dialogMode.value]
+})
+
+// KPI 统计（基于当前已加载数据）
+const kpiStats = computed(() => {
+  const data = tableData.value || []
+  const totalInvestment = data.reduce((sum, row: any) => {
+    const inv =
+      (row.totalInvestment || 0) +
+      (row.industryInvestment || 0) +
+      (row.infrastructureInvestment || 0) +
+      (row.educationInvestment || 0)
+    return sum + inv
+  }, 0)
+  const counties = new Set(data.map((row: any) => row.county || row.regionScope).filter(Boolean))
+  const departments = new Set(data.map((row: any) => row.department).filter(Boolean))
+  return {
+    totalVillages: (pagination as any)?.data?.total || (pagination as any)?.total || data.length,
+    totalInvestment: totalInvestment.toFixed(2),
+    countyCount: counties.size || filterOptions.value.counties.length,
+    departmentCount: departments.size || filterOptions.value.departments.length,
+  }
 })
 
 // 加载数据
@@ -599,6 +648,35 @@ onMounted(() => {
 
 .filter-card {
   margin-bottom: 16px;
+}
+
+.kpi-row {
+  margin-bottom: 16px;
+}
+
+.kpi-card {
+  background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: box-shadow 0.3s;
+}
+
+.kpi-card:hover {
+  box-shadow: 0 4px 12px rgba(64, 145, 108, 0.15);
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.kpi-label {
+  font-size: 13px;
+  color: #606266;
+  margin-top: 6px;
 }
 
 .action-bar {

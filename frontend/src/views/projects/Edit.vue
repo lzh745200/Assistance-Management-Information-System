@@ -580,9 +580,10 @@
 // @ts-nocheck
 import { logger } from '@/utils/logger'
 
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
+import { useDirtyGuard } from '@/composables/useDirtyGuard'
 import { ElMessage, ElMessageBox, ElForm } from 'element-plus'
 import { Upload, ArrowLeft, Check, Wallet } from '@element-plus/icons-vue'
 
@@ -704,6 +705,17 @@ const projectForm = reactive({
   createTime: '',
   updateTime: '',
 })
+
+// Dirty guard: warn before leaving with unsaved changes
+const isDirty = ref(false)
+watch(
+  () => projectForm,
+  () => {
+    isDirty.value = true
+  },
+  { deep: true }
+)
+useDirtyGuard(isDirty)
 
 // 表单验证规则
 const formRules = reactive({

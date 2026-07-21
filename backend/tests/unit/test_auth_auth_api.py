@@ -790,7 +790,7 @@ class TestRegister:
             mock_tm.create_access_token.return_value = "new_at"
             response = client.post(
                 f"{self.prefix}/register",
-                json={"username": "newuser", "password": "Str0ng!Pass", "pass_code": "validcode"},
+                json={"username": "newuser", "password": "Str0ng!Passw0rd", "pass_code": "validcode"},
             )
             assert response.status_code == 200
             assert response.json()["data"]["access_token"] == "new_at"
@@ -819,7 +819,7 @@ class TestRegister:
             mock_tm.create_access_token.return_value = "new_at"
             response = client.post(
                 f"{self.prefix}/register",
-                json={"username": "newuser2", "password": "Str0ng!Pass", "pass_code": "validcode", "full_name": "New User", "email": "new@example.com"},
+                json={"username": "newuser2", "password": "Str0ng!Passw0rd", "pass_code": "validcode", "full_name": "New User", "email": "new@example.com"},
             )
             assert response.status_code == 200
 

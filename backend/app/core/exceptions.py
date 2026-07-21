@@ -59,6 +59,7 @@ class _ValidationError(AppError):
     def __init__(self, message: str = "数据验证失败", field: str = "", **kwargs):
         from app.core.errors import ErrorCode as EC
         super().__init__(message, status_code=400, code=EC.VALIDATION_ERROR, **kwargs)
+        self.field = field
         if field:
             self.details["field"] = field
 

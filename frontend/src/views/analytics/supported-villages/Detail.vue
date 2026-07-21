@@ -157,6 +157,12 @@
           </el-col>
         </el-row>
       </div>
+
+      <!-- 多年趋势图 -->
+      <div class="info-card">
+        <h3 class="card-title">人均收入多年趋势</h3>
+        <div ref="trendChartRef" class="trend-chart"></div>
+      </div>
     </template>
   </div>
 
@@ -169,7 +175,7 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
 import { ArrowLeft, Edit, Calendar } from '@element-plus/icons-vue'
@@ -177,6 +183,7 @@ import { ElMessage } from 'element-plus'
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog.vue'
 import { getChangeHistory } from '@/api/supportedVillage'
 import { logger } from '@/utils/logger'
+import echarts from '@/utils/echarts'
 
 const changeHistoryVisible = ref(false)
 const changeHistoryLoading = ref(false)
@@ -261,6 +268,82 @@ const totalInvestment = computed(() => {
   return total
 })
 
+// ==================== 多年趋势图 ====================
+const trendChartRef = ref<HTMLElement | null>(null)
+let trendChart: ReturnType<typeof echarts.init> | null = null
+const trendData = ref<{ years: number[]; incomes: number[] }>({ years: [], incomes: [] })
+
+async function loadTrendData() {
+  if (!village.value) return
+  const years: number[] = []
+  const incomes: number[] = []
+  for (const year of availableYears) {
+    try {
+      const data = await getYearlyData(village.value.id, year)
+      const income = (data as any)?.income?.perCapitaIncome
+      if (income != null) {
+        years.push(year)
+        incomes.push(Number(income))
+      }
+    } catch {
+      // skip years with no data
+    }
+  }
+  // Sort ascending by year
+  const paired = years.map((y, i) => ({ year: y, income: incomes[i] }))
+  paired.sort((a, b) => a.year - b.year)
+  trendData.value = {
+    years: paired.map((p) => p.year),
+    incomes: paired.map((p) => p.income),
+  }
+  renderTrendChart()
+}
+
+function renderTrendChart() {
+  if (!trendChartRef.value) return
+  if (!trendChart) {
+    trendChart = echarts.init(trendChartRef.value)
+  }
+  trendChart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      formatter: '{b}年<br/>人均纯收入：{c} 万元',
+    },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: trendData.value.years.map((y) => `${y}`),
+      axisLabel: { formatter: '{value}年' },
+    },
+    yAxis: {
+      type: 'value',
+      name: '万元',
+      axisLabel: { formatter: '{value}' },
+    },
+    series: [
+      {
+        name: '人均纯收入',
+        type: 'line',
+        smooth: true,
+        data: trendData.value.incomes,
+        areaStyle: { opacity: 0.15 },
+        itemStyle: { color: '#40916c' },
+        lineStyle: { width: 3 },
+      },
+    ],
+  })
+}
+
+// Debounced resize handler
+let resizeTimer: ReturnType<typeof setTimeout> | null = null
+function handleChartResize() {
+  if (resizeTimer) clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(() => {
+    trendChart?.resize()
+  }, 200)
+}
+
 const loadVillage = async () => {
   const id = safeRouteParam(route.params.id)
   if (!id) return
@@ -271,6 +354,9 @@ const loadVillage = async () => {
     village.value = _raw
     if (pageMode.value === 'view') {
       await loadYearlyData()
+      // Load trend data and render chart after DOM update
+      await nextTick()
+      loadTrendData()
     }
   } catch (error) {
     logger.error('加载帮扶村详情失败:', error)
@@ -372,6 +458,16 @@ watch(
 onMounted(() => {
   if (pageMode.value !== 'create') {
     loadVillage()
+  }
+  window.addEventListener('resize', handleChartResize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleChartResize)
+  if (resizeTimer) clearTimeout(resizeTimer)
+  if (trendChart) {
+    trendChart.dispose()
+    trendChart = null
   }
 })
 </script>
@@ -478,5 +574,10 @@ onMounted(() => {
   font-size: 14px;
   color: #909399;
   margin-top: 8px;
+}
+
+.trend-chart {
+  width: 100%;
+  height: 360px;
 }
 </style>

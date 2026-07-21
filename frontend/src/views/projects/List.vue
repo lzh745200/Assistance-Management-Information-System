@@ -131,8 +131,18 @@
       <!-- 批量操作工具栏 -->
       <div v-if="selectedRows.length > 0" class="batch-toolbar">
         <span class="batch-info">已选择 {{ selectedRows.length }} 项</span>
-        <el-button type="danger" size="small" @click="handleBatchDelete"> 批量删除 </el-button>
-        <el-button size="small" @click="handleBatchExport"> 导出选中 </el-button>
+        <el-button
+          type="danger"
+          size="small"
+          :loading="batchDeleting"
+          :disabled="batchDeleting"
+          @click="handleBatchDelete"
+        >
+          批量删除 ({{ selectedRows.length }})
+        </el-button>
+        <el-button size="small" @click="handleBatchExport">
+          批量导出 ({{ selectedRows.length }})
+        </el-button>
         <el-button size="small" text @click="clearSelection">取消选择</el-button>
       </div>
       <el-table
@@ -211,7 +221,7 @@
 // @ts-nocheck
 import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage, ElMessageBox, ElTable } from 'element-plus'
@@ -221,7 +231,9 @@ import { projectApi, type Project } from '@/api/projects'
 const { pushSafe } = useRouterSafe()
 const { ds } = useDesensitize()
 const loading = ref(false)
+const batchDeleting = ref(false)
 const selectedRows = ref<Project[]>([])
+const selectedIds = computed(() => selectedRows.value.map((r) => r.id))
 const tableRef = ref<InstanceType<typeof ElTable> | null>(null)
 
 // 筛选表单
@@ -436,8 +448,8 @@ const clearSelection = () => {
 }
 
 const handleBatchDelete = async () => {
-  if (!selectedRows.value.length) return
-  const count = selectedRows.value.length
+  if (!selectedIds.value.length || batchDeleting.value) return
+  const count = selectedIds.value.length
   try {
     await ElMessageBox.confirm(
       `确定删除选中的 ${count} 个项目吗？此操作不可撤销。`,
@@ -447,32 +459,27 @@ const handleBatchDelete = async () => {
   } catch {
     return
   }
-  let deleted = 0
-  for (const row of selectedRows.value) {
-    try {
-      await projectApi.delete(row.id)
-      deleted++
-    } catch {
-      /* 跳过单条失败 */
-    }
+  batchDeleting.value = true
+  try {
+    const results = await Promise.allSettled(selectedIds.value.map((id) => projectApi.delete(id)))
+    const deleted = results.filter((r) => r.status === 'fulfilled').length
+    const failed = results.length - deleted
+    if (deleted > 0) ElMessage.success(`成功删除 ${deleted} 个项目`)
+    if (failed > 0) ElMessage.warning(`${failed} 个项目删除失败`)
+    clearSelection()
+    pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
+    await loadData()
+    loadStats()
+  } finally {
+    batchDeleting.value = false
   }
-  ElMessage.success(`成功删除 ${deleted} 个项目`)
-  clearSelection()
-  pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
-  await loadData()
-  loadStats()
 }
 
 const handleBatchExport = async () => {
+  if (!selectedIds.value.length) return
   try {
-    const ids = selectedRows.value.map((r) => r.id)
-    await projectApi.exportList({
-      keyword: filterForm.name || undefined,
-      project_type: filterForm.type || undefined,
-      status: filterForm.status || undefined,
-      ids,
-    } as Record<string, unknown>)
-    ElMessage.success(`已导出 ${ids.length} 条项目记录`)
+    await projectApi.exportList({ ids: selectedIds.value })
+    ElMessage.success(`已导出 ${selectedIds.value.length} 条项目记录`)
   } catch {
     ElMessage.error('导出失败')
   }

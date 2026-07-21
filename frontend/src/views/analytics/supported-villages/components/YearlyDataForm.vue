@@ -1,6 +1,6 @@
 <template>
   <div class="yearly-data-form">
-    <el-form ref="formRef" :model="formData" label-width="100px">
+    <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
       <!-- 年份选择 -->
       <el-form-item label="数据年份">
         <el-select v-model="selectedYear" style="width: 160px" @change="loadYearlyData">
@@ -42,7 +42,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="总人数">
+          <el-form-item label="总人数" prop="population.totalPopulation">
             <el-input-number
               v-model="formData.population.totalPopulation"
               :min="0"
@@ -51,7 +51,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="常住人口数">
+          <el-form-item label="常住人口数" prop="population.residentPopulation">
             <el-input-number
               v-model="formData.population.residentPopulation"
               :min="0"
@@ -149,7 +149,7 @@
       <el-divider content-position="left">收入数据</el-divider>
       <el-row :gutter="12">
         <el-col :span="8">
-          <el-form-item label="村人均纯收入(万元)">
+          <el-form-item label="村人均纯收入(万元)" prop="income.perCapitaIncome">
             <el-input-number
               v-model="formData.income.perCapitaIncome"
               :min="0"
@@ -169,7 +169,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="村集体收入(万元)">
+          <el-form-item label="村集体收入(万元)" prop="income.collectiveIncome">
             <el-input-number
               v-model="formData.income.collectiveIncome"
               :min="0"
@@ -207,7 +207,7 @@
       <el-divider content-position="left">产业帮扶</el-divider>
       <el-row :gutter="12">
         <el-col :span="8">
-          <el-form-item label="当年投入(万元)">
+          <el-form-item label="当年投入(万元)" prop="industry.investment">
             <el-input-number
               v-model="formData.industry.investment"
               :min="0"
@@ -625,6 +625,75 @@ const emit = defineEmits<{
 const formRef = ref()
 defineExpose({ formRef })
 
+// 表单验证规则
+const formRules = {
+  'population.totalPopulation': [
+    { required: true, message: '请输入总人数', trigger: ['blur', 'change'] },
+    {
+      validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+        if (value != null && value <= 0) {
+          callback(new Error('总人数必须大于0'))
+        } else {
+          callback()
+        }
+      },
+      trigger: ['blur', 'change'],
+    },
+  ],
+  'population.residentPopulation': [
+    { required: true, message: '请输入常住人口数', trigger: ['blur', 'change'] },
+    {
+      validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+        if (value != null && value > formData.population.totalPopulation) {
+          callback(new Error('常住人口不能超过总人数'))
+        } else {
+          callback()
+        }
+      },
+      trigger: ['blur', 'change'],
+    },
+  ],
+  'income.perCapitaIncome': [
+    { required: true, message: '请输入村人均纯收入', trigger: ['blur', 'change'] },
+    {
+      validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+        if (value != null && value < 0) {
+          callback(new Error('人均收入不能为负数'))
+        } else {
+          callback()
+        }
+      },
+      trigger: ['blur', 'change'],
+    },
+  ],
+  'income.collectiveIncome': [
+    { required: true, message: '请输入村集体收入', trigger: ['blur', 'change'] },
+    {
+      validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+        if (value != null && value < 0) {
+          callback(new Error('集体收入不能为负数'))
+        } else {
+          callback()
+        }
+      },
+      trigger: ['blur', 'change'],
+    },
+  ],
+  'industry.investment': [
+    { required: true, message: '请输入产业帮扶当年投入', trigger: ['blur', 'change'] },
+    {
+      validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+        if (value != null && value < 0) {
+          callback(new Error('投入金额不能为负数'))
+        } else {
+          callback()
+        }
+      },
+      trigger: ['blur', 'change'],
+    },
+  ],
+}
+
 const saving = ref(false)
 const copying = ref(false)
 const currentYear = new Date().getFullYear()
@@ -773,6 +842,16 @@ const handleCopyFromLastYear = async () => {
 }
 
 const handleSave = async () => {
+  // Validate form before saving
+  if (formRef.value) {
+    try {
+      await formRef.value.validate()
+    } catch {
+      ElMessage.warning('请完善必填信息后再保存')
+      return
+    }
+  }
+
   saving.value = true
   try {
     await Promise.all([

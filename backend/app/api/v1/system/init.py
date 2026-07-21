@@ -231,7 +231,7 @@ async def get_init_checklist():
                 {"item": "确定系统部署单位全称和简称", "required": True},
                 {"item": "准备单位编码（如有军队单位编码体系）", "required": False},
                 {"item": "确定超级管理员账号用户名", "required": True},
-                {"item": "设置安全的超级管理员密码（至少8位）", "required": True},
+                {"item": "设置安全的超级管理员密码（至少12位）", "required": True},
                 {"item": "准备超级管理员联系邮箱", "required": False},
                 {"item": "确认系统安装目录有足够磁盘空间（建议10GB以上）", "required": True},
                 {"item": "确认操作系统时间正确", "required": True},

@@ -68,6 +68,52 @@
       <el-empty v-if="!loading && !backupList.length" description="暂无备份记录" />
     </el-card>
 
+    <!-- 备份计划配置 -->
+    <el-card class="schedule-card">
+      <template #header>
+        <div class="card-header">
+          <span class="title">备份计划</span>
+          <el-tag :type="scheduleConfig.enabled ? 'success' : 'info'" size="small">
+            {{ scheduleConfig.enabled ? '已启用' : '未启用' }}
+          </el-tag>
+        </div>
+      </template>
+      <el-form :model="scheduleConfig" label-width="120px" class="schedule-form">
+        <el-form-item label="启用定时备份">
+          <el-switch v-model="scheduleConfig.enabled" active-text="开启" inactive-text="关闭" />
+        </el-form-item>
+        <el-form-item label="备份频率">
+          <el-select v-model="scheduleConfig.frequency" placeholder="请选择频率" style="width: 200px">
+            <el-option label="每天" value="daily" />
+            <el-option label="每周" value="weekly" />
+            <el-option label="每月" value="monthly" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备份时间">
+          <el-time-picker
+            v-model="scheduleConfig.backupTime"
+            format="HH:mm"
+            value-format="HH:mm"
+            placeholder="选择时间"
+            style="width: 200px"
+          />
+        </el-form-item>
+        <el-form-item label="保留份数">
+          <el-input-number
+            v-model="scheduleConfig.retentionCount"
+            :min="1"
+            :max="99"
+            placeholder="保留最近 N 份备份"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :loading="savingSchedule" @click="saveSchedule">
+            保存计划
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
     <!-- 创建备份对话框 -->
     <el-dialog v-model="createDialogVisible" title="创建备份" width="500px">
       <el-form :model="backupForm" label-width="120px">
@@ -153,6 +199,49 @@ const backupForm = ref({
   password: '',
 })
 const restoreForm = ref({ password: '' })
+
+// ── Backup schedule configuration ──
+const savingSchedule = ref(false)
+const scheduleConfig = ref({
+  enabled: false,
+  frequency: 'daily' as 'daily' | 'weekly' | 'monthly',
+  backupTime: '02:00',
+  retentionCount: 7,
+})
+
+async function loadScheduleConfig() {
+  try {
+    const res = await get('/system/backup/schedule')
+    const data = res.data?.data ?? res.data ?? res
+    if (data) {
+      scheduleConfig.value = {
+        enabled: data.enabled ?? false,
+        frequency: data.frequency ?? 'daily',
+        backupTime: data.backup_time ?? data.backupTime ?? '02:00',
+        retentionCount: data.retention_count ?? data.retentionCount ?? 7,
+      }
+    }
+  } catch {
+    // Endpoint may not exist yet – keep defaults
+  }
+}
+
+async function saveSchedule() {
+  savingSchedule.value = true
+  try {
+    await post('/system/backup/schedule', {
+      enabled: scheduleConfig.value.enabled,
+      frequency: scheduleConfig.value.frequency,
+      backup_time: scheduleConfig.value.backupTime,
+      retention_count: scheduleConfig.value.retentionCount,
+    })
+    ElMessage.success('备份计划已保存')
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.detail || '保存备份计划失败')
+  } finally {
+    savingSchedule.value = false
+  }
+}
 
 async function fetchBackupList() {
   try {
@@ -309,6 +398,7 @@ function formatTime(time: string | number | Date | null) {
 
 onMounted(() => {
   refreshAll()
+  loadScheduleConfig()
 })
 </script>
 
@@ -331,5 +421,11 @@ onMounted(() => {
 }
 .backup-status {
   margin-bottom: 20px;
+}
+.schedule-card {
+  margin-top: 20px;
+}
+.schedule-form {
+  max-width: 500px;
 }
 </style>

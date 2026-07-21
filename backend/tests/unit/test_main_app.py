@@ -279,9 +279,24 @@ class TestFaviconAndVersionJson:
                 tmp.unlink()
 
     def test_version_json_exists(self, client):
-        resp = client.get("/version.json")
-        assert resp.status_code == 200
-        assert resp.headers.get("cache-control") == "no-cache"
+        import app.main as m
+        orig = m._version_json_path
+        tmp = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+                f.write(b'{"version": "test"}')
+                tmp = Path(f.name)
+            m._version_json_path = tmp
+            from app.main import app
+            from fastapi.testclient import TestClient
+            client = TestClient(app)
+            resp = client.get("/version.json")
+            assert resp.status_code == 200
+            assert resp.headers.get("cache-control") == "no-cache"
+        finally:
+            m._version_json_path = orig
+            if tmp is not None and tmp.exists():
+                tmp.unlink()
 
     def test_version_json_not_found(self):
         import app.main as m
@@ -327,7 +342,10 @@ class TestMigrateMissingColumns:
             patch("app.main.logger.warning") as mock_warn,
         ):
             _migrate_missing_columns(MagicMock(), MagicMock())
-            mock_warn.assert_called_once()
+            # 弃用警告与 inspector 失败警告均会触发；仅断言 inspector 失败警告存在
+            assert any(
+                "failed to create inspector" in str(c) for c in mock_warn.call_args_list
+            )
 
     def test_no_tables_in_model(self):
         mock_base = MagicMock()

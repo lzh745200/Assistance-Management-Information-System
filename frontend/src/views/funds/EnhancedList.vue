@@ -220,7 +220,7 @@
         </el-table-column>
         <el-table-column prop="type" label="类型" width="110" align="center">
           <template #default="scope">
-            <el-tag size="small">{{ getTypeName(scope.row.type) }}</el-tag>
+            <el-tag size="small">{{ getFundTypeLabel(scope.row.type) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="amount" label="金额(万元)" width="120" align="right">
@@ -236,7 +236,7 @@
         <el-table-column prop="status" label="状态" width="100" align="center">
           <template #default="scope">
             <el-tag :type="getStatusType(scope.row.status)" size="small">
-              {{ getStatusText(scope.row.status) }}
+              {{ getFundStatusLabel(scope.row.status) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -364,6 +364,7 @@ import { fundApi } from '@/api/funds'
 import { getSupportedVillages } from '@/api/supportedVillage'
 import { schoolsApi } from '@/api/schools'
 import { downloadImportTemplateAndSave } from '@/api/import'
+import { getFundTypeLabel, getFundStatusLabel } from '@/config/enums'
 
 const phaseLabels: Record<number, string> = {
   1: '论证立项',
@@ -589,17 +590,6 @@ async function quickAllocate(row: any) {
   }
 }
 
-function getTypeName(type: string) {
-  const m: Record<string, string> = {
-    project: '项目经费',
-    operation: '运营经费',
-    education: '教育帮扶',
-    infrastructure: '基础设施',
-    emergency: '应急经费',
-    other: '其他',
-  }
-  return m[type] || type || '-'
-}
 function getStatusType(status: string): 'success' | 'info' | 'warning' | 'danger' | 'primary' {
   const m: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'primary'> = {
     pending: 'warning',
@@ -611,18 +601,6 @@ function getStatusType(status: string): 'success' | 'info' | 'warning' | 'danger
     audited: 'success',
   }
   return m[status] || 'info'
-}
-function getStatusText(status: string) {
-  const m: Record<string, string> = {
-    pending: '待审批',
-    planned: '已计划',
-    approved: '已批准',
-    allocated: '已拨付',
-    in_use: '使用中',
-    completed: '已完成',
-    audited: '已审计',
-  }
-  return m[status] || status || '-'
 }
 
 // 批量操作

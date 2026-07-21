@@ -137,7 +137,7 @@ class TestSchemaValidation:
     def test_user_schema_validation(self):
         """测试用户schema验证"""
         from app.schemas.user import UserCreate
-        user = UserCreate(username="test", email="test@example.com", password="password123")
+        user = UserCreate(username="test", email="test@example.com", password="Admin@12345678")
         assert user.username == "test"
         assert user.email == "test@example.com"
 

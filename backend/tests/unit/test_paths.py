@@ -77,10 +77,10 @@ class TestPlatformHelpers:
         monkeypatch.setattr(sys, "_MEIPASS", "/fake/meipass", raising=False)
         assert is_bundled() is True
 
-    def test_is_bundled_false_when_frozen_without_meipass(self, monkeypatch):
+    def test_is_bundled_true_when_frozen_without_meipass(self, monkeypatch):
         monkeypatch.setattr(sys, "frozen", True, raising=False)
-        # _MEIPASS 已被 autouse fixture 删除
-        assert is_bundled() is False
+        # _MEIPASS 已被 autouse fixture 删除；onedir 模式 frozen 但无 _MEIPASS 仍判定为打包环境
+        assert is_bundled() is True
 
     def test_is_linux_true(self, monkeypatch):
         monkeypatch.setattr(platform, "system", lambda: "Linux")

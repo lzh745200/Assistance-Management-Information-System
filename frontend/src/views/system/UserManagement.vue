@@ -267,6 +267,47 @@
           <el-switch v-model="formData.is_active" active-text="启用" inactive-text="禁用" />
         </el-form-item>
       </el-form>
+
+      <!-- 活跃会话管理 (仅编辑模式) -->
+      <div v-if="isEdit" class="session-section">
+        <el-divider content-position="left">活跃会话</el-divider>
+        <div v-loading="sessionsLoading">
+          <el-table v-if="userSessions.length > 0" :data="userSessions" size="small" border>
+            <el-table-column prop="session_id" label="会话ID" min-width="180" show-overflow-tooltip />
+            <el-table-column prop="ip_address" label="IP 地址" width="140" />
+            <el-table-column prop="user_agent" label="设备" min-width="160" show-overflow-tooltip />
+            <el-table-column prop="created_at" label="登录时间" width="170">
+              <template #default="{ row }">
+                {{ formatSessionTime(row.created_at) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100" align="center">
+              <template #default="{ row }">
+                <el-button
+                  type="danger"
+                  size="small"
+                  :loading="revokingSession === row.session_id"
+                  @click="revokeSession(row)"
+                >
+                  强制登出
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-else-if="!sessionsLoading" description="无活跃会话" :image-size="40" />
+        </div>
+        <div class="session-actions">
+          <el-button
+            type="warning"
+            size="small"
+            :loading="resetting2fa"
+            @click="handleReset2fa"
+          >
+            重置 2FA
+          </el-button>
+        </div>
+      </div>
+
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
@@ -658,11 +699,14 @@ const handleAdd = () => {
 const handleEdit = (row: any) => {
   isEdit.value = true
   dialogTitle.value = '编辑用户'
+  currentUser.value = row
   Object.assign(formData, {
     ...row,
     organization_id: row.organization_id ?? null,
   })
   dialogVisible.value = true
+  // Load active sessions for this user
+  loadUserSessions(row.id)
 }
 
 const handleSubmit = async () => {
@@ -763,6 +807,76 @@ const handleRolePermission = (row: any) => {
 const handlePermSaved = async () => {
   pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
   await Promise.all([loadData(), loadPendingCount()])
+}
+
+// ── 用户会话管理 ──
+const userSessions = ref<any[]>([])
+const sessionsLoading = ref(false)
+const revokingSession = ref<string | null>(null)
+const resetting2fa = ref(false)
+
+async function loadUserSessions(userId: number) {
+  sessionsLoading.value = true
+  userSessions.value = []
+  try {
+    const res = await get(`/system/admin/users/${userId}/sessions`)
+    const data = res.data?.data ?? res.data ?? res
+    userSessions.value = Array.isArray(data) ? data : data?.sessions ?? []
+  } catch {
+    // Endpoint may not exist yet – show empty
+    userSessions.value = []
+  } finally {
+    sessionsLoading.value = false
+  }
+}
+
+async function revokeSession(session: any) {
+  if (!currentUser.value) return
+  revokingSession.value = session.session_id
+  try {
+    await post(
+      `/system/admin/users/${currentUser.value.id}/sessions/${session.session_id}/revoke`
+    )
+    ElMessage.success('已强制登出该会话')
+    userSessions.value = userSessions.value.filter(
+      (s) => s.session_id !== session.session_id
+    )
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.detail || '强制登出失败，接口可能尚未实现')
+  } finally {
+    revokingSession.value = null
+  }
+}
+
+async function handleReset2fa() {
+  if (!currentUser.value) return
+  try {
+    await ElMessageBox.confirm(
+      `确定要重置用户「${currentUser.value.username}」的两步验证 (2FA) 吗？`,
+      '重置 2FA',
+      { type: 'warning' }
+    )
+  } catch {
+    return // user cancelled
+  }
+  resetting2fa.value = true
+  try {
+    await post(`/system/admin/users/${currentUser.value.id}/two-factor/reset`)
+    ElMessage.success('2FA 已重置')
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.detail || '重置 2FA 失败，接口可能尚未实现')
+  } finally {
+    resetting2fa.value = false
+  }
+}
+
+function formatSessionTime(time: string | null) {
+  if (!time) return '-'
+  try {
+    return new Date(time).toLocaleString('zh-CN')
+  } catch {
+    return '-'
+  }
 }
 
 // ── 权限包导入/导出 ──
@@ -960,5 +1074,14 @@ onMounted(() => {
   color: #909399;
   line-height: 1.4;
   margin-top: 4px;
+}
+
+.session-section {
+  margin-top: 8px;
+}
+.session-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
 }
 </style>

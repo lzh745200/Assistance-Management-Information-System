@@ -65,7 +65,7 @@ class TestInitializeSystem:
                 json={
                     "organization_name": "测试单位",
                     "admin_username": "admin",
-                    "admin_password": "password123",
+                    "admin_password": "Admin@12345678",
                 },
             )
         assert resp.status_code == 200
@@ -80,7 +80,7 @@ class TestInitializeSystem:
                 json={
                     "organization_name": "测试单位",
                     "admin_username": "admin",
-                    "admin_password": "password123",
+                    "admin_password": "Admin@12345678",
                 },
             )
         assert resp.status_code == 400

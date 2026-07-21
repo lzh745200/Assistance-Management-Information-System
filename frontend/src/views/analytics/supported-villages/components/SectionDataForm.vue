@@ -1,7 +1,7 @@
 <template>
   <div class="section-data-form">
     <!-- 年份选择 -->
-    <el-form ref="formRef" :model="formData" label-width="140px" label-position="left">
+    <el-form ref="formRef" :model="formData" :rules="formRules" label-width="140px" label-position="left">
       <el-form-item label="数据年份">
         <el-select v-model="selectedYear" style="width: 200px" @change="handleYearChange">
           <el-option
@@ -23,12 +23,12 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="总人数">
+            <el-form-item label="总人数" prop="totalPopulation">
               <el-input-number v-model="formData.totalPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="常住人口数">
+            <el-form-item label="常住人口数" prop="residentPopulation">
               <el-input-number v-model="formData.residentPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -144,7 +144,7 @@
         <el-divider content-position="left">收入数据</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="村人均纯收入(万元)">
+            <el-form-item label="村人均纯收入(万元)" prop="perCapitaIncome">
               <el-input-number
                 v-model="formData.perCapitaIncome"
                 :min="0"
@@ -166,7 +166,7 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="村集体收入(万元)">
+            <el-form-item label="村集体收入(万元)" prop="collectiveIncome">
               <el-input-number
                 v-model="formData.collectiveIncome"
                 :min="0"
@@ -200,7 +200,7 @@
         <el-divider content-position="left">产业帮扶</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="当年投入(万元)">
+            <el-form-item label="当年投入(万元)" prop="investment">
               <el-input-number
                 v-model="formData.investment"
                 :min="0"
@@ -734,6 +734,88 @@ const emit = defineEmits<{
 
 const formRef = ref()
 defineExpose({ formRef })
+
+// 动态验证规则 — 根据 sectionKey 返回对应规则
+const formRules = computed(() => {
+  const rules: Record<string, any[]> = {}
+
+  if (props.sectionKey === 'population') {
+    rules.totalPopulation = [
+      { required: true, message: '请输入总人数', trigger: ['blur', 'change'] },
+      {
+        validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+          if (value != null && value <= 0) {
+            callback(new Error('总人数必须大于0'))
+          } else {
+            callback()
+          }
+        },
+        trigger: ['blur', 'change'],
+      },
+    ]
+    rules.residentPopulation = [
+      { required: true, message: '请输入常住人口数', trigger: ['blur', 'change'] },
+      {
+        validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+          if (value != null && value > (formData.totalPopulation || 0)) {
+            callback(new Error('常住人口不能超过总人数'))
+          } else {
+            callback()
+          }
+        },
+        trigger: ['blur', 'change'],
+      },
+    ]
+  }
+
+  if (props.sectionKey === 'income') {
+    rules.perCapitaIncome = [
+      { required: true, message: '请输入村人均纯收入', trigger: ['blur', 'change'] },
+      {
+        validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+          if (value != null && value < 0) {
+            callback(new Error('人均收入不能为负数'))
+          } else {
+            callback()
+          }
+        },
+        trigger: ['blur', 'change'],
+      },
+    ]
+    rules.collectiveIncome = [
+      { required: true, message: '请输入村集体收入', trigger: ['blur', 'change'] },
+      {
+        validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+          if (value != null && value < 0) {
+            callback(new Error('集体收入不能为负数'))
+          } else {
+            callback()
+          }
+        },
+        trigger: ['blur', 'change'],
+      },
+    ]
+  }
+
+  // Investment validation for sections that have an investment field
+  if (['industry', 'infrastructure', 'party_building', 'medical', 'education'].includes(props.sectionKey)) {
+    rules.investment = [
+      { required: true, message: '请输入当年投入金额', trigger: ['blur', 'change'] },
+      {
+        validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+          if (value != null && value < 0) {
+            callback(new Error('投入金额不能为负数'))
+          } else {
+            callback()
+          }
+        },
+        trigger: ['blur', 'change'],
+      },
+    ]
+  }
+
+  return rules
+})
 const saving = ref(false)
 const selectedYear = ref(props.initialYear || new Date().getFullYear())
 const availableYears = (() => {
@@ -954,6 +1036,16 @@ const saveFnMap: Record<string, (villageId: number, year: number, data: any) => 
 }
 
 async function handleSave() {
+  // Validate form before saving
+  if (formRef.value) {
+    try {
+      await formRef.value.validate()
+    } catch {
+      ElMessage.warning('请完善必填信息后再保存')
+      return
+    }
+  }
+
   const saveFn = saveFnMap[props.sectionKey]
   if (!saveFn) {
     ElMessage.error('未知板块类型')
