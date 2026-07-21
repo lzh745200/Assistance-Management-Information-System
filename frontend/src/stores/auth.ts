@@ -136,7 +136,13 @@ export const useAuthStore = defineStore('auth', () => {
           persistAuth(res.data.access_token, res.data.user, res.data.refresh_token)
           // 登录后立即预加载菜单 — 避免侧边栏渲染时 loaded=false 导致闪烁或泄露
           // 使用 try-catch 防止菜单加载失败影响登录流程
-          try { useMenuStore().fetchMenus().catch(() => {}) } catch { /* ignore */ }
+          try {
+            useMenuStore()
+              .fetchMenus()
+              .catch(() => {})
+          } catch {
+            /* ignore */
+          }
           return { status: 'success' }
         }
       }
@@ -169,7 +175,8 @@ export const useAuthStore = defineStore('auth', () => {
       error.value = res.message || '2FA验证失败'
       return false
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.response?.data?.message || err?.message || '2FA验证失败'
+      const msg =
+        err?.response?.data?.detail || err?.response?.data?.message || err?.message || '2FA验证失败'
       error.value = msg
       return false
     }

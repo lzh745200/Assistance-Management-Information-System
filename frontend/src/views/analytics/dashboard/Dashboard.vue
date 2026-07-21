@@ -182,7 +182,12 @@
     <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="24">
         <div class="chart-card">
-          <h3 class="chart-title">年度趋势对比 <span style="font-size: 12px; color: #909399; font-weight: normal">（示意数据，待接入真实历史数据）</span></h3>
+          <h3 class="chart-title">
+            年度趋势对比
+            <span style="font-size: 12px; color: #909399; font-weight: normal"
+              >（示意数据，待接入真实历史数据）</span
+            >
+          </h3>
           <div ref="trendChartRef" class="chart-container" style="height: 350px"></div>
         </div>
       </el-col>

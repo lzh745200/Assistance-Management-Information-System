@@ -313,8 +313,18 @@
                   </span>
                 </el-upload>
 
-                <el-table v-if="attachments.length" :data="attachments" stripe style="margin-top: 16px">
-                  <el-table-column prop="file_name" label="文件名" min-width="200" show-overflow-tooltip />
+                <el-table
+                  v-if="attachments.length"
+                  :data="attachments"
+                  stripe
+                  style="margin-top: 16px"
+                >
+                  <el-table-column
+                    prop="file_name"
+                    label="文件名"
+                    min-width="200"
+                    show-overflow-tooltip
+                  />
                   <el-table-column prop="category" label="分类" width="100" align="center">
                     <template #default="{ row }">
                       <el-tag size="small">{{ getCategoryLabel(row.category) }}</el-tag>
@@ -329,8 +339,12 @@
                   </el-table-column>
                   <el-table-column label="操作" width="180" fixed="right">
                     <template #default="{ row }">
-                      <el-button link type="primary" @click="previewAttachment(row)">预览</el-button>
-                      <el-button link type="primary" @click="downloadAttachment(row)">下载</el-button>
+                      <el-button link type="primary" @click="previewAttachment(row)"
+                        >预览</el-button
+                      >
+                      <el-button link type="primary" @click="downloadAttachment(row)"
+                        >下载</el-button
+                      >
                       <el-popconfirm title="确定删除该附件吗？" @confirm="deleteAttachment(row)">
                         <template #reference>
                           <el-button link type="danger">删除</el-button>
@@ -699,7 +713,12 @@ async function loadOperationLogs() {
 
 // 加载所有历史记录（并行执行）
 async function loadAllHistory() {
-  await Promise.all([loadStatusHistory(), loadFieldChanges(), loadOperationLogs(), loadAttachments()])
+  await Promise.all([
+    loadStatusHistory(),
+    loadFieldChanges(),
+    loadOperationLogs(),
+    loadAttachments(),
+  ])
 }
 
 async function loadAttachments() {
@@ -737,14 +756,17 @@ async function handleUploadAttachment(options: any) {
 
 function previewAttachment(row: any) {
   // 使用认证请求获取 Blob，避免 Electron window.open 发送到外部浏览器（无 token）
-  fundApi.getAttachmentBlob(row.id).then((blob) => {
-    const url = window.URL.createObjectURL(blob)
-    previewUrl.value = url
-    previewTitle.value = row.file_name || '附件预览'
-    previewVisible.value = true
-  }).catch(() => {
-    ElMessage.error('预览加载失败')
-  })
+  fundApi
+    .getAttachmentBlob(row.id)
+    .then((blob) => {
+      const url = window.URL.createObjectURL(blob)
+      previewUrl.value = url
+      previewTitle.value = row.file_name || '附件预览'
+      previewVisible.value = true
+    })
+    .catch(() => {
+      ElMessage.error('预览加载失败')
+    })
 }
 
 function downloadAttachment(row: any) {
@@ -766,8 +788,12 @@ async function deleteAttachment(row: any) {
 
 function getCategoryLabel(cat: string) {
   const labels: Record<string, string> = {
-    contract: '合同', invoice: '发票', receipt: '收据',
-    report: '报告', allocation_order: '分配令', other: '其他',
+    contract: '合同',
+    invoice: '发票',
+    receipt: '收据',
+    report: '报告',
+    allocation_order: '分配令',
+    other: '其他',
   }
   return labels[cat] || cat || '其他'
 }

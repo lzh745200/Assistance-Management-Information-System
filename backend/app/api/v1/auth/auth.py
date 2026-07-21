@@ -73,6 +73,32 @@ def _check_account_lockout(
 router = APIRouter(prefix="/auth", tags=["认证"])
 
 
+def _handle_failed_login(user, username: str, db, now, client_ip: str, user_agent: str | None):
+    """处理登录失败：递增计数、锁定、审计日志。"""
+    failed_count = 0
+    try:
+        db.refresh(user)
+        user.failed_login_count = (user.failed_login_count or 0) + 1
+        failed_count = user.failed_login_count
+        if failed_count >= _MAX_FAILED_ATTEMPTS:
+            user.locked_until = now + timedelta(minutes=_LOCKOUT_MINUTES)
+        safe_commit(db)
+        logger.info(f"登录失败: user={username}, failed_count={failed_count}/{_MAX_FAILED_ATTEMPTS}")
+        if failed_count >= _MAX_FAILED_ATTEMPTS:
+            logger.warning(
+                "账户已锁定: user=%s, 连续失败%d次, 锁定到%s",
+                username, failed_count, now + timedelta(minutes=_LOCKOUT_MINUTES),
+            )
+    except Exception as e:
+        logger.error(f"更新失败计数时出错: {e}", exc_info=True)
+        db.rollback()
+    AuditLogger.log_login(
+        user_id=user.id, username=username, success=False,
+        ip_address=client_ip, user_agent=user_agent,
+        failure_reason=f"密码错误（失败{failed_count}次）",
+    )
+
+
 @router.post("/login", response_model=LoginResponse)
 async def login(
     login_request: LoginRequest,
@@ -146,38 +172,9 @@ async def login(
     _check_account_lockout(user, login_request.username, db, now=now)
 
     if not verify_password(login_request.password, user.hashed_password):
-        # 登录失败：递增失败计数
-        failed_count = 0
-        try:
-            # 使用读-改-写方式替代 RETURNING 子句
-            # （旧版 SQLite < 3.35 不支持 RETURNING 语法）
-            db.refresh(user)  # 确保读取最新值
-            user.failed_login_count = (user.failed_login_count or 0) + 1
-            failed_count = user.failed_login_count
-            if failed_count >= _MAX_FAILED_ATTEMPTS:
-                user.locked_until = now + timedelta(minutes=_LOCKOUT_MINUTES)
-            safe_commit(db)
-            logger.info(f"登录失败: user={login_request.username}, failed_count={failed_count}/{_MAX_FAILED_ATTEMPTS}")
-
-            if failed_count >= _MAX_FAILED_ATTEMPTS:
-                logger.warning(
-                    "账户已锁定: user=%s, 连续失败%d次, 锁定到%s",
-                    login_request.username,
-                    failed_count,
-                    now + timedelta(minutes=_LOCKOUT_MINUTES),
-                )
-        except Exception as e:
-            logger.error(f"更新失败计数时出错: {e}", exc_info=True)
-            db.rollback()
-
-        # 记录登录失败审计日志
-        AuditLogger.log_login(
-            user_id=user.id,
-            username=login_request.username,
-            success=False,
-            ip_address=client_ip,
-            user_agent=request.headers.get("user-agent"),
-            failure_reason=f"密码错误（失败{failed_count}次）",
+        _handle_failed_login(
+            user, login_request.username, db, now, client_ip,
+            request.headers.get("user-agent"),
         )
         raise InvalidCredentialsError()
 

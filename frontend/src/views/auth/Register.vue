@@ -145,7 +145,7 @@ const validatePassword = (_rule: any, value: any, callback: any) => {
   if (!/[A-Z]/.test(value)) errors.push('包含大写字母')
   if (!/[a-z]/.test(value)) errors.push('包含小写字母')
   if (!/\d/.test(value)) errors.push('包含数字')
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(value)) errors.push('包含特殊字符')
+  if (!/[!@#$%^&*()+\-=[\]{};':"\\|,.<>/?`~]/.test(value)) errors.push('包含特殊字符')
   if (errors.length > 0) {
     callback(new Error(`密码需要：${errors.join('、')}`))
   } else {
@@ -174,9 +174,7 @@ const registerRules: FormRules = {
       trigger: 'blur',
     },
   ],
-  password: [
-    { required: true, validator: validatePassword, trigger: 'blur' },
-  ],
+  password: [{ required: true, validator: validatePassword, trigger: 'blur' }],
   confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
   passCode: [{ required: true, message: '请输入通行码', trigger: 'blur' }],
   email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }],

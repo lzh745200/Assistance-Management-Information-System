@@ -39,10 +39,14 @@ export function unfreezeRequests(): void {
 // 401 时尝试用 refresh_token 换取新 access_token，成功后重试原请求。
 // 使用标志位防止并发 401 触发多次 refresh，其余请求排队等待。
 let _isRefreshing = false
-let _refreshSubscribers: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = []
+let _refreshSubscribers: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> =
+  []
 
 /** 将等待中的请求加入队列，refresh 成功后用新 token 重发 */
-function _subscribeTokenRefresh(resolve: (token: string) => void, reject: (err: any) => void): void {
+function _subscribeTokenRefresh(
+  resolve: (token: string) => void,
+  reject: (err: any) => void
+): void {
   _refreshSubscribers.push({ resolve, reject })
 }
 
@@ -237,11 +241,7 @@ request.interceptors.response.use(
 
     // ── 清理 pending 请求追踪（失败请求也需要清理，防止 stale entry 阻塞后续请求）──
     if (error.config) {
-      const requestKey = _makeRequestKey(
-        error.config.method,
-        error.config.url,
-        error.config.params
-      )
+      const requestKey = _makeRequestKey(error.config.method, error.config.url, error.config.params)
       pendingRequests.delete(requestKey)
     }
 

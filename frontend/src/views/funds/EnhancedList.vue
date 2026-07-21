@@ -348,7 +348,17 @@ import { logger } from '@/utils/logger'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Download, Search, Tickets, EditPen, Document, Money, Warning, DataAnalysis } from '@element-plus/icons-vue'
+import {
+  Plus,
+  Download,
+  Search,
+  Tickets,
+  EditPen,
+  Document,
+  Money,
+  Warning,
+  DataAnalysis,
+} from '@element-plus/icons-vue'
 import { get, del, apiRequest } from '@/api/request'
 import { fundApi } from '@/api/funds'
 import { getSupportedVillages } from '@/api/supportedVillage'

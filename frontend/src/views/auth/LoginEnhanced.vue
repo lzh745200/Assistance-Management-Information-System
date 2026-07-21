@@ -49,7 +49,7 @@
               <span v-else>验证中...</span>
             </button>
 
-            <button type="button" class="back-btn" @click="resetTwoFactor" :disabled="loading">
+            <button type="button" class="back-btn" :disabled="loading" @click="resetTwoFactor">
               返回重新登录
             </button>
           </template>
