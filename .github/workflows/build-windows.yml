@@ -28,7 +28,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
 
       # 3. Python x64（x86/32-bit 已放弃：上游科学计算包不再提供 win32 cp311 wheels）
       - name: Setup Python
@@ -50,7 +52,7 @@ jobs:
         shell: bash
         run: |
           cd frontend
-          npm ci --legacy-peer-deps
+          npm ci --legacy-peer-deps --prefer-offline || npm install --legacy-peer-deps
           npm run build
 
       - name: Sync frontend to resources
