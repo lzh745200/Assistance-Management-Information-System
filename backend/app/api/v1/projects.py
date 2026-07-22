@@ -653,6 +653,9 @@ async def list_projects(
     if not include_deleted:
         query = query.filter(Project.is_active == True)  # noqa: E712
 
+    # NOTE: 此处使用 filter_by_data_scope（基于角色，OWN_DEPT 仅本组织）。
+    # school.py 使用 data_scope.filter_by_org_ids（支持 org_children 含下级组织）。
+    # 两套系统行为不一致，待业务确认后统一。
     query = filter_by_data_scope(query, Project, current_user, db=db)
 
     if keyword:

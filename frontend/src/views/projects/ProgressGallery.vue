@@ -16,20 +16,12 @@
           <h2>{{ project?.name ?? '项目进度' }}</h2>
           <el-descriptions :column="3" border>
             <el-descriptions-item label="项目编号">{{ project?.code ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="开始时间">{{
-              project?.start_date ?? '-'
-            }}</el-descriptions-item>
+            <el-descriptions-item label="开始时间">{{ project?.start_date ?? '-' }}</el-descriptions-item>
             <el-descriptions-item label="当前状态">
-              <el-tag :type="getStatusType(project?.status)">{{
-                getStatusText(project?.status)
-              }}</el-tag>
+              <el-tag :type="getStatusType(project?.status)">{{ getStatusText(project?.status) }}</el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="负责单位" :span="2">{{
-              project?.responsible_unit ?? '-'
-            }}</el-descriptions-item>
-            <el-descriptions-item label="预算金额">{{
-              project?.budget != null ? `${project.budget} 万元` : '-'
-            }}</el-descriptions-item>
+            <el-descriptions-item label="负责单位" :span="2">{{ project?.responsible_unit ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="预算金额">{{ project?.budget != null ? `${project.budget} 万元` : '-' }}</el-descriptions-item>
           </el-descriptions>
         </div>
 
@@ -39,7 +31,12 @@
 
         <!-- Upload toolbar -->
         <div class="gallery-toolbar">
-          <el-upload :show-file-list="false" accept="image/*" :http-request="handleUpload" multiple>
+          <el-upload
+            :show-file-list="false"
+            accept="image/*"
+            :http-request="handleUpload"
+            multiple
+          >
             <el-button type="primary">
               <el-icon><Upload /></el-icon> 上传进度照片
             </el-button>
@@ -62,7 +59,7 @@
             :body-style="{ padding: '0' }"
           >
             <el-image
-              :src="getFileUrl(file)"
+              :src="blobUrls[file.id] || ''"
               :preview-src-list="previewList"
               :initial-index="progressFiles.indexOf(file)"
               fit="cover"
@@ -76,15 +73,11 @@
               </template>
             </el-image>
             <div class="photo-meta">
-              <span class="photo-name" :title="file.filename ?? file.name">{{
-                file.filename ?? file.name
-              }}</span>
+              <span class="photo-name" :title="file.filename ?? file.name">{{ file.filename ?? file.name }}</span>
               <span class="photo-date">{{ file.created_at ?? '' }}</span>
             </div>
             <div class="photo-actions">
-              <el-button link type="danger" size="small" @click="handleDelete(file.id)"
-                >删除</el-button
-              >
+              <el-button link type="danger" size="small" @click="handleDelete(file.id)">删除</el-button>
             </div>
           </el-card>
         </div>
@@ -100,24 +93,14 @@
               <div class="comparison-images">
                 <div class="comparison-side">
                   <el-tag type="info" size="small" class="comparison-label">之前</el-tag>
-                  <el-image
-                    :src="pair.beforeUrl"
-                    fit="contain"
-                    class="comparison-img"
-                    :preview-src-list="[pair.beforeUrl]"
-                  />
+                  <el-image :src="pair.beforeUrl" fit="contain" class="comparison-img" :preview-src-list="[pair.beforeUrl]" />
                 </div>
                 <div class="comparison-arrow">
                   <el-icon :size="24"><Right /></el-icon>
                 </div>
                 <div class="comparison-side">
                   <el-tag type="success" size="small" class="comparison-label">之后</el-tag>
-                  <el-image
-                    :src="pair.afterUrl"
-                    fit="contain"
-                    class="comparison-img"
-                    :preview-src-list="[pair.afterUrl]"
-                  />
+                  <el-image :src="pair.afterUrl" fit="contain" class="comparison-img" :preview-src-list="[pair.afterUrl]" />
                 </div>
               </div>
             </div>
@@ -129,14 +112,14 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Upload, Picture, Right } from '@element-plus/icons-vue'
 import { logger } from '@/utils/logger'
 import { projectsApi } from '@/api/projects'
 import { safeRouteParam } from '@/composables/useRouterSafe'
+import { AuthStorage } from '@/utils/authStorage'
 
 const route = useRoute()
 const router = useRouter()
@@ -147,12 +130,15 @@ const loading = ref(true)
 const project = ref<any>(null)
 const allFiles = ref<any[]>([])
 
+// 图片 Blob URL 映射（key = file.id），用于认证模式下 <img :src> / <el-image :src> 加载
+const blobUrls = ref<Record<number | string, string>>({})
+
 // --- Computed ---
 const progressFiles = computed(() =>
   allFiles.value.filter((f) => (f.category ?? '').toLowerCase() === 'progress')
 )
 
-const previewList = computed(() => progressFiles.value.map((f) => getFileUrl(f)))
+const previewList = computed(() => progressFiles.value.map((f) => blobUrls.value[f.id]).filter(Boolean))
 
 /**
  * Pair up progress images for before/after comparison.
@@ -174,8 +160,8 @@ const comparisonPairs = computed(() => {
     for (let i = 0; i < count; i++) {
       pairs.push({
         label: `对比 ${i + 1}`,
-        beforeUrl: getFileUrl(beforeFiles[i]),
-        afterUrl: getFileUrl(afterFiles[i]),
+        beforeUrl: blobUrls.value[beforeFiles[i].id] || '',
+        afterUrl: blobUrls.value[afterFiles[i].id] || '',
       })
     }
   } else if (imgs.length >= 2) {
@@ -183,8 +169,8 @@ const comparisonPairs = computed(() => {
     for (let i = 0; i + 1 < imgs.length; i += 2) {
       pairs.push({
         label: `对比 ${Math.floor(i / 2) + 1}`,
-        beforeUrl: getFileUrl(imgs[i]),
-        afterUrl: getFileUrl(imgs[i + 1]),
+        beforeUrl: blobUrls.value[imgs[i].id] || '',
+        afterUrl: blobUrls.value[imgs[i + 1].id] || '',
       })
     }
   }
@@ -193,34 +179,56 @@ const comparisonPairs = computed(() => {
 })
 
 // --- Helpers ---
-function getFileUrl(file: any): string {
-  return projectsApi.getFileDownloadUrl(projectId, file.id)
+
+/**
+ * 异步加载单个文件的 Blob URL（带认证头）
+ */
+async function loadBlobUrl(file: any): Promise<void> {
+  try {
+    const url = projectsApi.getFileDownloadUrl(projectId, file.id)
+    const token = AuthStorage.getToken()
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) return
+    const blob = await response.blob()
+    // 释放旧的 Blob URL
+    if (blobUrls.value[file.id]) URL.revokeObjectURL(blobUrls.value[file.id])
+    blobUrls.value[file.id] = URL.createObjectURL(blob)
+  } catch {
+    // 静默处理，el-image 会显示 error 占位
+  }
+}
+
+/**
+ * 为所有进度照片加载 Blob URL
+ */
+async function loadAllBlobUrls() {
+  await Promise.all(progressFiles.value.map((f) => loadBlobUrl(f)))
+}
+
+/**
+ * 释放所有 Blob URL
+ */
+function revokeAllBlobUrls() {
+  for (const key of Object.keys(blobUrls.value)) {
+    URL.revokeObjectURL(blobUrls.value[key])
+  }
+  blobUrls.value = {}
 }
 
 function getStatusType(status?: string) {
   const map: Record<string, string> = {
-    draft: 'info',
-    pending: 'info',
-    approved: 'primary',
-    planning: 'info',
-    in_progress: 'warning',
-    completed: 'success',
-    cancelled: 'danger',
-    suspended: 'danger',
+    draft: 'info', pending: 'info', approved: 'primary', planning: 'info',
+    in_progress: 'warning', completed: 'success', cancelled: 'danger', suspended: 'danger',
   }
   return map[status ?? ''] ?? 'info'
 }
 
 function getStatusText(status?: string) {
   const map: Record<string, string> = {
-    draft: '草稿',
-    pending: '待审批',
-    approved: '已审批',
-    planning: '规划中',
-    in_progress: '进行中',
-    completed: '已完成',
-    cancelled: '已取消',
-    suspended: '已暂停',
+    draft: '草稿', pending: '待审批', approved: '已审批', planning: '规划中',
+    in_progress: '进行中', completed: '已完成', cancelled: '已取消', suspended: '已暂停',
   }
   return map[status ?? ''] ?? status ?? '-'
 }
@@ -237,6 +245,8 @@ async function loadData() {
     ])
     project.value = proj
     allFiles.value = filesRes?.items ?? filesRes ?? []
+    // 异步加载所有进度照片的 Blob URL
+    await loadAllBlobUrls()
   } catch (e: any) {
     logger.error('加载进度画廊数据失败', e)
     ElMessage.error('加载数据失败，请返回重试')
@@ -253,6 +263,8 @@ async function handleUpload(options: any) {
     // Refresh file list
     const filesRes = await projectsApi.listFiles(projectId)
     allFiles.value = filesRes?.items ?? filesRes ?? []
+    // 加载新照片的 Blob URL
+    await loadAllBlobUrls()
   } catch (e: any) {
     logger.error('上传进度照片失败', e)
     ElMessage.error(e?.message || '上传失败')
@@ -264,6 +276,11 @@ async function handleDelete(fileId: number) {
   try {
     await ElMessageBox.confirm('确定删除该进度照片？', '提示', { type: 'warning' })
     await projectsApi.deleteFile(projectId, fileId)
+    // 释放被删除文件的 Blob URL
+    if (blobUrls.value[fileId]) {
+      URL.revokeObjectURL(blobUrls.value[fileId])
+      delete blobUrls.value[fileId]
+    }
     ElMessage.success('已删除')
     const filesRes = await projectsApi.listFiles(projectId)
     allFiles.value = filesRes?.items ?? filesRes ?? []
@@ -276,6 +293,11 @@ async function handleDelete(fileId: number) {
 
 // --- Init ---
 onMounted(() => loadData())
+
+// --- Cleanup ---
+onUnmounted(() => {
+  revokeAllBlobUrls()
+})
 </script>
 
 <style scoped lang="scss">

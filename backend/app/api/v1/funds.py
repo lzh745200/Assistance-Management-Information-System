@@ -188,6 +188,9 @@ def list_funds(
     )
 
     # 2. 数据权限隔离
+    # NOTE: 此处使用 apply_data_scope（基于角色，OWN_DEPT 仅本组织）。
+    # school.py 使用 data_scope.filter_by_org_ids（支持 org_children 含下级组织）。
+    # 两套系统行为不一致，待业务确认后统一。
     stmt = apply_data_scope(stmt, Fund, current_user)
 
     # include_deleted 已由 enforce_admin_include_deleted 依赖收敛：非管理员自动降级为 False

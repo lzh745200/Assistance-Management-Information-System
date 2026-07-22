@@ -74,7 +74,7 @@
               v-model="form.admin_password"
               type="password"
               show-password
-              placeholder="至少8位"
+              placeholder="至少12位，含大小写字母、数字和特殊字符"
             />
           </el-form-item>
           <el-form-item label="确认密码" prop="confirmPassword">
@@ -153,12 +153,27 @@ const form = ref({
 const orgRules = {
   organization_name: [{ required: true, message: '请输入单位名称', trigger: 'blur' }],
 }
+// 验证管理员密码强度（与后端 PasswordPolicy 保持一致：≥12位 + 大写 + 小写 + 数字 + 特殊字符）
+const validateAdminPassword = (_rule: any, value: any, callback: any) => {
+  if (!value) {
+    callback(new Error('请输入密码'))
+    return
+  }
+  const errors: string[] = []
+  if (value.length < 12) errors.push('至少12个字符')
+  if (!/[A-Z]/.test(value)) errors.push('包含大写字母')
+  if (!/[a-z]/.test(value)) errors.push('包含小写字母')
+  if (!/\d/.test(value)) errors.push('包含数字')
+  if (!/[!@#$%^&*()+\-=[\]{};':"\\|,.<>/?`~]/.test(value)) errors.push('包含特殊字符')
+  if (errors.length > 0) {
+    callback(new Error(`密码需要：${errors.join('、')}`))
+  } else {
+    callback()
+  }
+}
 const adminRules = {
   admin_username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  admin_password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 8, message: '密码至少8位', trigger: 'blur' },
-  ],
+  admin_password: [{ required: true, validator: validateAdminPassword, trigger: 'blur' }],
   confirmPassword: [
     { required: true, message: '请确认密码', trigger: 'blur' },
     {

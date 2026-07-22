@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.transaction import safe_commit
-from app.core.security import get_current_user
+from app.core.security import get_current_user, PasswordPolicy
 from app.core.config import settings
 from app.services.system_config_service import SystemConfigService
 
@@ -112,6 +112,11 @@ async def initialize_system(
         # 检查是否已初始化
         if svc.is_initialized():
             raise HTTPException(status_code=400, detail="系统已完成初始化，不能重复执行")
+
+        # 校验管理员密码强度（与注册接口统一密码策略，确保最高权限账户不留弱密码）
+        pw_valid, pw_error = PasswordPolicy.validate(request.admin_password, request.admin_username)
+        if not pw_valid:
+            raise HTTPException(status_code=400, detail=pw_error)
 
         steps = []
 

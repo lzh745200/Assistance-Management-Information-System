@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
@@ -770,6 +771,17 @@ async def change_password(
     user.revoke_all_tokens()
     user.must_change_password = False
     safe_commit(db)
+
+    # 清理自动生成的管理员密码临时文件（admin_pwd_*.txt）
+    if user.username == "admin":
+        try:
+            import glob as _glob
+            import tempfile as _tf
+            for _f in _glob.glob(os.path.join(_tf.gettempdir(), "admin_pwd_*.txt")):
+                os.remove(_f)
+                logger.info("已清理管理员密码临时文件: %s", _f)
+        except Exception as _cleanup_err:
+            logger.warning("清理密码临时文件失败: %s", _cleanup_err)
 
     # 审计日志（密码修改已提交，审计失败不影响主流程）
     try:

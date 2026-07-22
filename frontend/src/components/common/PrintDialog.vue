@@ -79,8 +79,16 @@ const handleClose = () => {
 const handlePrint = () => {
   if (!printContent.value) return
 
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) return
+  // 使用隐藏 iframe 打印，兼容 Electron（window.open 被 setWindowOpenHandler 拦截返回 deny）
+  const iframe = document.createElement('iframe')
+  iframe.style.position = 'fixed'
+  iframe.style.right = '0'
+  iframe.style.bottom = '0'
+  iframe.style.width = '0'
+  iframe.style.height = '0'
+  iframe.style.border = '0'
+  iframe.style.visibility = 'hidden'
+  document.body.appendChild(iframe)
 
   // Escape title to prevent XSS
   const safeTitle = escapeHtml(props.title)
@@ -133,7 +141,14 @@ const handlePrint = () => {
 
   const tableHtml = sanitizeHtml(printContent.value.innerHTML)
 
-  printWindow.document.write(`
+  const doc = iframe.contentWindow?.document || iframe.contentDocument
+  if (!doc) {
+    document.body.removeChild(iframe)
+    return
+  }
+
+  doc.open()
+  doc.write(`
     <html>
       <head>
         <title>${safeTitle}</title>
@@ -141,18 +156,36 @@ const handlePrint = () => {
       </head>
       <body>
         ${tableHtml}
-        <script>
-          window.onload = function() {
-            window.print();
-            window.onafterprint = function() {
-              window.close();
-            };
-          };
-        ${'<'}/script>
       </body>
     </html>
   `)
-  printWindow.document.close()
+  doc.close()
+
+  // 等待 iframe 内容渲染后调用打印
+  const win = iframe.contentWindow
+  if (!win) {
+    document.body.removeChild(iframe)
+    return
+  }
+
+  const cleanup = () => {
+    if (iframe.parentNode) document.body.removeChild(iframe)
+  }
+
+  // onafterprint 在打印对话框关闭后触发（包括取消）
+  win.onafterprint = cleanup
+
+  // 延迟调用 print 确保 DOM 已渲染
+  setTimeout(() => {
+    try {
+      win.focus()
+      win.print()
+    } catch {
+      cleanup()
+    }
+    // 兜底：5秒后自动清理（防止 onafterprint 不触发）
+    setTimeout(cleanup, 5000)
+  }, 100)
 }
 </script>
 
