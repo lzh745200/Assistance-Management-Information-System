@@ -605,16 +605,13 @@ class TestProjectsAPI:
         mock_db.query.return_value.filter.return_value.first.return_value = sample_project
         tmpdir = tempfile.mkdtemp()
         try:
-            with patch("app.api.v1.projects.os.makedirs"), \
-                 patch("app.api.v1.projects.os.path.exists", return_value=False), \
-                 patch("app.api.v1.projects.os.path.splitext", return_value=("doc", ".pdf")), \
-                 patch("app.core.config.settings") as mock_settings, \
-                 patch("app.api.v1.projects.open", create=True) as mock_open:
-                mock_settings.UPLOAD_DIR = tmpdir
-                mock_settings.allowed_file_types_list = ["pdf", "doc", "docx"]
-                mock_settings.MAX_FILE_SIZE = 50 * 1024 * 1024
-                mock_settings.CSRF_ENABLED = False
-                mock_open.return_value.__enter__.return_value = MagicMock()
+            mock_settings = MagicMock()
+            mock_settings.UPLOAD_DIR = tmpdir
+            mock_settings.allowed_file_types_list = ["pdf", "doc", "docx"]
+            mock_settings.MAX_FILE_SIZE = 50 * 1024 * 1024
+            mock_settings.CSRF_ENABLED = False
+            with patch("app.core.config.settings", mock_settings), \
+                 patch("app.utils.upload_helper.settings", mock_settings):
                 resp = client.post(
                     "/api/v1/projects/1/files",
                     data={"category": "research"},
@@ -637,10 +634,12 @@ class TestProjectsAPI:
     def test_upload_project_files_type_check(self, client, mock_db, admin_user, sample_project):
         _setup_client(client, mock_db, admin_user)
         mock_db.query.return_value.filter.return_value.first.return_value = sample_project
-        with patch("app.api.v1.projects.os.path.splitext", return_value=("doc", ".exe")), \
-             patch("app.core.config.settings") as mock_settings:
-            mock_settings.allowed_file_types_list = ["pdf", "doc"]
-            mock_settings.CSRF_ENABLED = False
+        mock_settings = MagicMock()
+        mock_settings.allowed_file_types_list = ["pdf", "doc"]
+        mock_settings.MAX_FILE_SIZE = 50 * 1024 * 1024
+        mock_settings.CSRF_ENABLED = False
+        with patch("app.core.config.settings", mock_settings), \
+             patch("app.utils.upload_helper.settings", mock_settings):
             resp = client.post(
                 "/api/v1/projects/1/files",
                 data={"category": "research"},
