@@ -222,8 +222,6 @@ describe('Common component imports', () => {
     ['GuizhouRegionSelector', '@/components/common/GuizhouRegionSelector.vue'],
     ['PageHeader', '@/components/PageHeader.vue'],
     ['GlobalSearch', '@/components/GlobalSearch.vue'],
-    ['ConfirmDialog', '@/components/ConfirmDialog.vue'],
-    ['StatusTag', '@/components/StatusTag.vue'],
     ['SkeletonList', '@/components/SkeletonList.vue'],
     ['FilePreview', '@/components/FilePreview.vue'],
     ['BaseButton', '@/components/common/BaseButton.vue'],
