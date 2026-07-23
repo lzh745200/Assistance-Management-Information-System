@@ -284,6 +284,7 @@ ehthumbs.db
 *.lnk
 
 *.pyc
+*.pyc.*
 *.zip
 cached_stat.txt
 full_status.txt
