@@ -192,7 +192,7 @@ async function loadVillages() {
     const response = await apiRequest({
       method: 'GET',
       url: '/supported-villages',
-      params: { page_size: 1000 },
+      params: { page_size: 200 },
     })
     const data = response?.data ?? response
     const inner = data

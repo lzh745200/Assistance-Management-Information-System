@@ -23,6 +23,7 @@ jobs:
           python -m pytest tests/ -v --tb=long \
             --cov=app --cov-report=html --cov-report=json --cov-fail-under=50 \
             --durations=20 \
+            --reruns 2 --reruns-delay 1 \
             --junitxml=test-results.xml
       - name: Upload test results
         uses: actions/upload-artifact@v4

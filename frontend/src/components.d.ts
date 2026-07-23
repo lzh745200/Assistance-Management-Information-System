@@ -9,7 +9,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     BusinessBeforeAfterSlider: typeof import('./components/business/BeforeAfterSlider.vue')['default']
     BusinessChartCardChartCard: typeof import('./components/business/ChartCard/ChartCard.vue')['default']
-    BusinessConfirmDialogConfirmDialog: typeof import('./components/business/ConfirmDialog/ConfirmDialog.vue')['default']
     BusinessDataStatistics: typeof import('./components/business/DataStatistics.vue')['default']
     BusinessDataTableDataTable: typeof import('./components/business/DataTable/DataTable.vue')['default']
     BusinessEmptyStateEmptyState: typeof import('./components/business/EmptyState/EmptyState.vue')['default']
@@ -36,7 +35,6 @@ declare module 'vue' {
     CommonBatchOperationBar: typeof import('./components/common/BatchOperationBar.vue')['default']
     CommonBreadcrumb: typeof import('./components/common/Breadcrumb.vue')['default']
     CommonChangeHistoryDialog: typeof import('./components/common/ChangeHistoryDialog.vue')['default']
-    CommonConfirmDialog: typeof import('./components/common/ConfirmDialog.vue')['default']
     CommonDataTable: typeof import('./components/common/DataTable.vue')['default']
     CommonErrorBoundary: typeof import('./components/common/ErrorBoundary.vue')['default']
     CommonExportButton: typeof import('./components/common/ExportButton.vue')['default']
@@ -61,7 +59,6 @@ declare module 'vue' {
     CommonStatsCard: typeof import('./components/common/StatsCard.vue')['default']
     CommonVirtualList: typeof import('./components/common/VirtualList.vue')['default']
     CommonVirtualTable: typeof import('./components/common/VirtualTable.vue')['default']
-    ConfirmDialog: typeof import('./components/ConfirmDialog.vue')['default']
     DashboardActivityFeed: typeof import('./components/dashboard/ActivityFeed.vue')['default']
     DashboardBackupRestoreModal: typeof import('./components/dashboard/BackupRestoreModal.vue')['default']
     DashboardDataOverview: typeof import('./components/dashboard/DataOverview.vue')['default']
@@ -174,11 +171,9 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SkeletonList: typeof import('./components/SkeletonList.vue')['default']
-    StatusTag: typeof import('./components/StatusTag.vue')['default']
     TemplatesTemplateDownload: typeof import('./components/templates/TemplateDownload.vue')['default']
     UiMilitaryBadge: typeof import('./components/ui/MilitaryBadge.vue')['default']
     UiSecurityMonitor: typeof import('./components/ui/SecurityMonitor.vue')['default']
-    UiStatusTag: typeof import('./components/ui/StatusTag.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

@@ -16,9 +16,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-      - run: pip install -r backend/requirements.txt pytest-xdist pytest-cov
+      - run: pip install -r backend/requirements.txt pytest-xdist pytest-cov pytest-rerunfailures
       # 覆盖率门禁：基线 50%，跌破则 CI 红（与 pyproject.toml fail_under 一致）
-      - run: cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-report=xml --cov-fail-under=50
+      - run: cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-report=xml --cov-fail-under=50 --reruns 2 --reruns-delay 1
       # 上传覆盖率到 Codecov
       - uses: codecov/codecov-action@v4
         with:

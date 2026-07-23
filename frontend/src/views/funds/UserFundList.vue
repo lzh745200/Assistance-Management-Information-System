@@ -592,7 +592,7 @@ async function handleSubmitDialog() {
 async function loadVillageOptions() {
   villageLoading.value = true
   try {
-    const res = await getSupportedVillages({ page: 1, page_size: 9999 })
+    const res = await getSupportedVillages({ page: 1, page_size: 200 })
     const body: any = res.data || res
     const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
     villageOptions.value = items
@@ -606,7 +606,7 @@ async function loadVillageOptions() {
 async function loadSchoolOptions() {
   schoolLoading.value = true
   try {
-    const res = await schoolsApi.list({ page: 1, page_size: 9999 })
+    const res = await schoolsApi.list({ page: 1, page_size: 200 })
     const body: any = res.data || res
     const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
     schoolOptions.value = items

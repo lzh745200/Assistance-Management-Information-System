@@ -663,7 +663,7 @@ async function handleBatchExport() {
 
 async function loadVillageOptions() {
   try {
-    const res = await getSupportedVillages({ page: 1, page_size: 9999 })
+    const res = await getSupportedVillages({ page: 1, page_size: 200 })
     const body: any = res.data || res
     const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
     villageOptions.value = items.map((v: any) => ({
@@ -677,7 +677,7 @@ async function loadVillageOptions() {
 
 async function loadSchoolOptions() {
   try {
-    const res = await schoolsApi.list({ page: 1, page_size: 9999 })
+    const res = await schoolsApi.list({ page: 1, page_size: 200 })
     const body: any = res.data || res
     const items = body?.items || body?.data?.items || (Array.isArray(body) ? body : [])
     schoolOptions.value = items.map((s: any) => ({

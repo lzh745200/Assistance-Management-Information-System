@@ -131,7 +131,7 @@ const rules: FormRules = {
 
 const loadParentOptions = async () => {
   try {
-    const res = await getOrganizations({ page_size: 1000, is_active: true })
+    const res = await getOrganizations({ page_size: 200, is_active: true })
     const currentId = safeRouteParam(route.params.id)
     // 编辑时排除自身，避免将自己设为上级
     parentOptions.value = ((res as any).items || []).filter(

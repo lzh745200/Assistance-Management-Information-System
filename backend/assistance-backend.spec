@@ -9,7 +9,7 @@ PyInstaller 统一打包配置 - 跨平台 / x64-x86 通用版
   - 前端静态资源不打包进 backend.exe，由 Electron 通过 FRONTEND_DIST_PATH
     环境变量单独提供（resources/frontend/），节省约 15MB 体积。
   - console=False：无控制台窗口，由 Electron 主进程管理生命周期。
-版本: 1.2.0
+版本: 1.4.2
 """
 
 import os
@@ -187,6 +187,8 @@ hiddenimports += [
     'app.api.v1.messages_extended',
     'app.api.v1.encryption',
     'app.api.v1.search',
+    'app.api.v1.menus',
+    'app.api.v1.permission_package',
 ]
 
 # ========== 排除不需要的模块（减少打包体积，避免冲突） ==========

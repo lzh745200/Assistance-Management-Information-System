@@ -19,17 +19,16 @@ test-frontend:
 	@echo ">>> 运行前端测试..."
 	cd frontend && npm run test:coverage
 
-# E2E测试
+# E2E测试（请使用 Docker 模式）
 test-e2e:
-	@echo ">>> 运行 E2E 测试..."
-	cd frontend && npm run test:e2e
+	@echo ">>> E2E 测试请使用: make test-e2e-docker"
 
 # E2E Docker 测试（使用 Docker Compose 启动完整环境运行 E2E）
 test-e2e-docker:
 	@echo ">>> 启动 Docker E2E 测试环境..."
 	docker compose -f docker/docker-compose.e2e.yml up -d --wait
-	@echo ">>> 运行 E2E 测试..."
-	cd frontend && npm run test:e2e || true
+	@echo ">>> 运行 E2E 测试 (Playwright)..."
+	docker compose -f docker/docker-compose.e2e.yml --profile e2e up --abort-on-container-exit || true
 	@echo ">>> 清理 Docker E2E 环境..."
 	docker compose -f docker/docker-compose.e2e.yml down -v
 	@echo "✓ E2E Docker 测试完成"
@@ -52,7 +51,7 @@ deploy-check:
 	cd frontend && \
 		npm run lint && \
 		npm run type-check && \
-		npm run test:run
+		npm run test
 
 	@echo "✓ 部署前检查通过"
 
@@ -94,13 +93,13 @@ build:
 # 打包 Electron
 electron-build:
 	@echo ">>> 打包 Electron 应用..."
-	cd frontend && npm run electron:build
+	npx electron-builder --dir
 	@echo "✓ Electron 打包完成"
 
 # Windows 安装程序
 win-installer: electron-build
 	@echo ">>> 构建 Windows 安装程序..."
-	cd frontend && npm run electron:build:win
+	npx electron-builder --win --x64
 	@echo "✓ Windows 安装程序构建完成"
 
 # ============================================================
@@ -151,7 +150,7 @@ build-win-all: build-win-x64 build-win-x86
 # DEB 包构建（Docker 跨平台构建，推荐方式）
 # ============================================================
 
-VERSION := $(shell node -p "require('./package.json').version" 2>/dev/null || echo "1.2.0")
+VERSION := $(shell node -p "require('./package.json').version" 2>/dev/null || echo "1.4.2")
 APP_NAME := assistance-management-system
 OUTPUT_DIR := dist/deb
 

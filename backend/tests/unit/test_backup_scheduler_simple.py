@@ -31,30 +31,24 @@ class TestSchedulerControlOnly:
 
     def test_get_scheduler_status(self):
         """测试获取调度器状态"""
-        # Mock scheduler - running 是只读属性，patch 整个 scheduler
-        mock_job = MagicMock()
-        mock_job.id = "test_job"
-        mock_job.name = "Test Job"
-        mock_job.next_run_time = datetime.now()
+        import threading
+        mock_timer = MagicMock(spec=threading.Timer)
+        mock_timer.name = "test_job"
+        mock_timer.is_alive.return_value = True
 
-        mock_scheduler = MagicMock()
-        mock_scheduler.running = True
-        mock_scheduler.get_jobs.return_value = [mock_job]
-
-        with patch('app.services.backup_scheduler.scheduler', mock_scheduler):
+        with patch('app.services.backup_scheduler._scheduler_started', True), \
+             patch('app.services.backup_scheduler._timers', [mock_timer]):
             result = get_scheduler_status()
 
         assert isinstance(result, dict)
-        assert "running" in result
-        assert "jobs" in result
+        assert result["running"] is True
+        assert len(result["jobs"]) == 1
+        assert result["jobs"][0]["id"] == "test_job"
 
     def test_get_scheduler_status_no_jobs(self):
         """测试获取调度器状态 - 无任务"""
-        mock_scheduler = MagicMock()
-        mock_scheduler.running = False
-        mock_scheduler.get_jobs.return_value = []
-
-        with patch('app.services.backup_scheduler.scheduler', mock_scheduler):
+        with patch('app.services.backup_scheduler._scheduler_started', False), \
+             patch('app.services.backup_scheduler._timers', []):
             result = get_scheduler_status()
 
         assert result["running"] is False

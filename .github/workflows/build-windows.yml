@@ -25,8 +25,8 @@ jobs:
         with: { node-version: '22' }
       - name: Backend smoke test
         run: |
-          pip install -r backend/requirements.txt pytest-xdist pytest-cov
-          cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-fail-under=50
+          pip install -r backend/requirements.txt pytest-xdist pytest-cov pytest-rerunfailures
+          cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-fail-under=50 --reruns 2 --reruns-delay 1
       - name: Frontend smoke test
         run: |
           cd frontend

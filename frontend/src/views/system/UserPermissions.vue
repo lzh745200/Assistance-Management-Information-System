@@ -528,7 +528,7 @@ const openAddUserDialog = async () => {
   if (allUsers.value.length === 0) {
     allUsersLoading.value = true
     try {
-      const res = await listUsers({ page_size: 9999 })
+      const res = await listUsers({ page_size: 200 })
       if (res.success && res.data?.items) {
         allUsers.value = res.data.items
       }
