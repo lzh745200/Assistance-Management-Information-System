@@ -13,12 +13,13 @@
 - 🐛 **修复 `_ValidationError.field` 缺失** — `core/exceptions.py` 验证错误类增补 `.field` 属性
 - 🐛 **修复 vue-tsc 12 处类型错误** — projects/Detail.vue、Edit.vue、ProgressGallery.vue el-tag `:type` 联合类型注解 + projects.ts id 参数放宽为 `number|string`（兼容离线字符串 ID）+ Edit.vue `unknown`→`any[]`
 - 🧪 **对齐 9 项陈旧测试** — 密码策略 ≥12（5 处）、is_bundled onedir 行为、version.json 测试自给自足、inspector 弃用警告断言
+- 🧪 **修复并行重构遗留的 4 项测试** — metrics 服务无参实例化对齐（`BusinessMetricsService()`+`get_all_metrics`）、sync 状态测试补 `get_db` override、移除 smoke 中不存在的 ConfirmDialog/StatusTag 组件项、项目文件上传 settings patch 修正
 - 📝 **清理误导注释** — `api/v1/__init__.py` supported_village "WIP:501占位" 注释更正为已完整实现
-- 📄 **文档同步** — README/结构说明测试数更新为后端 10045 + 前端 1624，验证日期 2026-07-22
+- 📄 **文档同步** — README/结构说明测试数更新为后端 10045 + 前端 1622，验证日期 2026-07-23
 
-### 测试结果 (2026-07-22)
+### 测试结果 (2026-07-23)
 - ✅ 后端: **10,045 测试通过** (0 失败)
-- ✅ 前端: **1,624 测试通过** (125 文件, 0 失败)
+- ✅ 前端: **1,622 测试通过** (125 文件, 0 失败)
 - ✅ vue-tsc / Flake8 / ESLint: 0 错误
 - ✅ Bandit (-ll): 0 中/高危
 - ✅ 前端生产构建: 成功
