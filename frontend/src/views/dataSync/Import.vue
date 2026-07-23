@@ -154,13 +154,11 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, computed, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage } from 'element-plus'
 import { logger } from '@/utils/logger'
 import { importData, importEncryptedData, getSyncLogs } from '@/api/dataSync'
-import type { ImportDataResponse, SyncLog } from '@/api/dataSync'
 import type { UploadFile } from 'element-plus'
 
 const { pushSafe } = useRouterSafe()
@@ -173,8 +171,8 @@ const importForm = ref({
 const importing = ref(false)
 const selectedFile = ref<File | null>(null)
 const fileList = ref<UploadFile[]>([])
-const importResult = ref<ImportDataResponse | null>(null)
-const importHistory = ref<SyncLog[]>([])
+const importResult = ref<any>(null)
+const importHistory = ref<any[]>([])
 
 const isEncryptedFile = computed(() => {
   if (!selectedFile.value) return false
@@ -206,7 +204,7 @@ const handleImport = async () => {
 
     if (isEncryptedFile.value) {
       // 加密文件导入
-      response = await importEncryptedData({
+      response = await (importEncryptedData as any)({
         file: selectedFile.value,
         password: importForm.value.password,
         strategy: importForm.value.strategy,
@@ -260,7 +258,7 @@ const showConflicts = () => {
 
 const loadImportHistory = async () => {
   try {
-    const response = await getSyncLogs('import', 20)
+    const response = await (getSyncLogs as any)('import', 20)
     if (response.success) {
       importHistory.value = response.data
     }

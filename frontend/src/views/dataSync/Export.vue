@@ -116,7 +116,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { logger } from '@/utils/logger'
@@ -127,7 +126,6 @@ import {
   getSyncLogs,
   type ExportEncryptedParams,
 } from '@/api/dataSync'
-import type { SyncLog } from '@/api/dataSync'
 
 const exportForm = ref({
   exportType: 'full' as 'full' | 'selective' | 'incremental',
@@ -140,7 +138,7 @@ const exportForm = ref({
 })
 
 const exporting = ref(false)
-const exportHistory = ref<SyncLog[]>([])
+const exportHistory = ref<any[]>([])
 
 const allModules = [
   'supported_villages',
@@ -230,7 +228,7 @@ const handleExport = async () => {
   }
 }
 
-const handleDownload = async (row: SyncLog) => {
+const handleDownload = async (row: any) => {
   await handleDownloadByName(row.package_name)
 }
 
@@ -244,7 +242,7 @@ const handleDownloadByName = async (packageName: string) => {
 
 const loadExportHistory = async () => {
   try {
-    const response = await getSyncLogs('export', 20)
+    const response = await (getSyncLogs as any)('export', 20)
     if (response.success) {
       exportHistory.value = response.data
     }

@@ -22,19 +22,43 @@ router = APIRouter(prefix="/sync", tags=["同步状态"])
 @router.get("/status")
 async def get_sync_status(
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """
     获取同步状态
 
-    返回当前用户的同步状态信息
+    返回当前用户的同步状态信息，从 data_sync_logs 表查询真实数据。
     """
+    from app.models.data_sync import DataSyncLog
+
+    # 查询最近一次同步记录
+    last_log = (
+        db.query(DataSyncLog)
+        .order_by(DataSyncLog.started_at.desc())
+        .first()
+    )
+    last_sync = last_log.started_at.isoformat() if last_log and last_log.started_at else None
+
+    # 统计待处理（pending/processing）的同步任务数
+    pending_changes = (
+        db.query(DataSyncLog)
+        .filter(DataSyncLog.status.in_(["pending", "processing"]))
+        .count()
+    )
+
+    # 判断当前同步状态
+    if pending_changes > 0:
+        sync_status = "syncing"
+    else:
+        sync_status = "idle"
+
     return {
         "success": True,
         "data": {
             "sync_enabled": True,
-            "last_sync": None,
-            "pending_changes": 0,
-            "sync_status": "idle",
+            "last_sync": last_sync,
+            "pending_changes": pending_changes,
+            "sync_status": sync_status,
             "message": "同步功能正常",
         },
     }

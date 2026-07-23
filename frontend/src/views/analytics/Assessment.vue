@@ -80,7 +80,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, computed, onMounted } from 'vue'
 import BaseChart from '@/components/common/BaseChart.vue'
 import { get } from '@/api/request'

@@ -140,7 +140,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { logger } from '@/utils/logger'
 
 import { ref, reactive, onMounted } from 'vue'
@@ -150,11 +149,13 @@ import {
   exportVillages,
   getExportTasks,
   downloadExportFile,
-  formatExportStatus,
+  formatExportStatus as _formatExportStatus,
   formatFileSize,
-  type ExportTask,
   type ExportFilterParams,
 } from '@/api/export'
+
+// Wrap to return any for template compatibility (template accesses .type and .text)
+const formatExportStatus = (status: string): any => _formatExportStatus(status)
 
 const emit = defineEmits<{
   (e: 'export-complete'): void
@@ -175,7 +176,7 @@ const exportForm = reactive({
 // 状态
 const exporting = ref(false)
 const loadingHistory = ref(false)
-const historyList = ref<ExportTask[]>([])
+const historyList = ref<any[]>([])
 
 // 加载导出历史
 async function loadHistory() {
@@ -220,7 +221,7 @@ async function handleExport() {
 }
 
 // 下载文件
-async function handleDownload(task: ExportTask) {
+async function handleDownload(task: any) {
   try {
     await downloadExportFile(task.task_id)
     ElMessage.success('下载成功')

@@ -152,7 +152,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, computed, shallowRef, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { getMapMarkers, getRegions } from '@/api/map'
@@ -341,7 +340,7 @@ async function handleSearch() {
   searching.value = true
   showSearchResults.value = false
   try {
-    const res = await get('/map/search', { q: searchKeyword.value.trim() })
+    const res = await get<any>('/map/search', { q: searchKeyword.value.trim() })
     const data = res.data || res
     const results: any[] = []
     if (data.villages) {

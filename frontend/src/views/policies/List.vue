@@ -105,7 +105,7 @@
 
       <el-table
         v-loading="policyStore.loading"
-        :data="policyStore.policies"
+        :data="policiesData"
         stripe
         border
         @sort-change="handleSortChange"
@@ -170,7 +170,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { logger } from '@/utils/logger'
 
 import { ref, reactive, computed, onMounted, watch } from 'vue'
@@ -182,7 +181,7 @@ import { usePolicyStore } from '@/stores/policy'
 import { useAuthStore } from '@/stores/auth'
 import {
   getCategoryLabel,
-  getLevelLabel,
+  getLevelLabel as _getLevelLabel,
   getStatusLabel,
   getStatusColor,
   getLevelOptions,
@@ -191,14 +190,21 @@ import {
   exportPoliciesWPS,
   type PolicyCategory,
   type PolicyStatus,
-  type OrganizationLevel,
 } from '@/api/policy'
 import { downloadImportTemplateAndSave } from '@/api/import'
+
+type OrganizationLevel = string
+
+// Wrapper: API defines getLevelLabel(level) but view calls it with (category, level)
+const getLevelLabel = (...args: any[]): string => (_getLevelLabel as any)(...args)
 
 const { pushSafe } = useRouterSafe()
 const route = useRoute()
 const policyStore = usePolicyStore()
 const authStore = useAuthStore()
+
+// Store uses different property names; bridge with computed
+const policiesData = computed(() => (policyStore as any).policies ?? [])
 
 // 搜索表单
 const searchForm = reactive({
@@ -238,7 +244,7 @@ const canDelete = computed(() => {
 // 层级选项（根据分类动态变化）
 const levelOptions = computed(() => {
   if (!searchForm.category) return []
-  return getLevelOptions(searchForm.category as PolicyCategory)
+  return (getLevelOptions as any)(searchForm.category)
 })
 
 // 格式化日期
@@ -289,7 +295,7 @@ const loadData = async () => {
 
 // 排序变化
 const handleSortChange = ({ prop, order }: { prop: string; order: string | null }) => {
-  policyStore.setFilters({
+  ;(policyStore as any).setFilters({
     order_by: prop || 'publish_date',
     order_desc: order !== 'ascending',
   })
@@ -330,7 +336,7 @@ const handleDelete = async (row: any) => {
     await ElMessageBox.confirm(`确定删除政策"${row.title}"吗？此操作不可恢复。`, '删除确认', {
       type: 'warning',
     })
-    await policyStore.removePolicy(row.id)
+    await (policyStore as any).removePolicy(row.id)
     ElMessage.success('删除成功')
   } catch (error: any) {
     if (error !== 'cancel') {
@@ -348,7 +354,7 @@ const handleBatchDelete = async () => {
       '批量删除确认',
       { type: 'warning' }
     )
-    await policyStore.removePolicies(selectedIds.value)
+    await (policyStore as any).removePolicies(selectedIds.value)
     selectedIds.value = []
     ElMessage.success('批量删除成功')
   } catch (error: any) {

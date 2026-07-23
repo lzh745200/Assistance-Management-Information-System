@@ -217,8 +217,8 @@ def _build_client(user, mock_db):
 
 @pytest.fixture
 def client(admin_user, mock_db):
-    """TestClient with admin privileges. apply_data_scope is patched as no-op."""
-    with patch("app.api.v1.funds.apply_data_scope",
+    """TestClient with admin privileges. apply_scope_filter is patched as no-op."""
+    with patch("app.api.v1.funds.apply_scope_filter",
                side_effect=lambda stmt, *a, **kw: stmt):
         c, app, orig = _build_client(admin_user, mock_db)
         yield c
@@ -228,7 +228,7 @@ def client(admin_user, mock_db):
 @pytest.fixture
 def client_regular(regular_user, mock_db):
     """TestClient with regular user privileges."""
-    with patch("app.api.v1.funds.apply_data_scope",
+    with patch("app.api.v1.funds.apply_scope_filter",
                side_effect=lambda stmt, *a, **kw: stmt):
         c, app, orig = _build_client(regular_user, mock_db)
         yield c
@@ -238,7 +238,7 @@ def client_regular(regular_user, mock_db):
 @pytest.fixture
 def client_manager(manager_user, mock_db):
     """TestClient with manager role."""
-    with patch("app.api.v1.funds.apply_data_scope",
+    with patch("app.api.v1.funds.apply_scope_filter",
                side_effect=lambda stmt, *a, **kw: stmt):
         c, app, orig = _build_client(manager_user, mock_db)
         yield c

@@ -700,10 +700,9 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { logger } from '@/utils/logger'
 
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Upload, Document } from '@element-plus/icons-vue'
 import type { UploadFile, UploadRequestOptions, UploadRawFile } from 'element-plus'

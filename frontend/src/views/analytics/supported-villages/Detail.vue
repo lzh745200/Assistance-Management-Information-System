@@ -174,7 +174,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
@@ -406,7 +405,7 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
     delete (data as any)._transitionFundingItems
 
     if (pageMode.value === 'create') {
-      const created = await createSupportedVillage(data)
+      const created = await createSupportedVillage(data) as any
       const villageId = created?.data?.id || created?.id
       // 创建成功后保存过渡期经费按年度数据
       if (fundingItems?.length && villageId) {

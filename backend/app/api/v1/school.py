@@ -3,8 +3,8 @@
 支持完整CRUD、导入导出功能
 """
 
-# NOTE: 数据权限过滤建议迁移到 app.core.data_scope_adapter.apply_scope_filter()
-# 当前使用: OrgScopeFilter.filter_by_org_ids() (旧式 query + 组织树风格)
+# 数据权限过滤使用 OrgScopeFilter.filter_by_org_ids()（组织树风格，支持 org_children 含下级组织）
+# 其他模块（funds/projects/supported_village）已统一迁移到 data_scope_adapter.apply_scope_filter()
 
 import io
 import logging
@@ -595,9 +595,7 @@ async def list_schools(
         query = query.filter(School.is_active == True)  # noqa: E712
 
     # 数据范围过滤：非管理员只能看到自己组织及下级组织的帮扶学校
-    # NOTE: 此处使用 data_scope.filter_by_org_ids（支持 org_children 含下级组织）。
-    # funds.py / projects.py / supported_village.py 使用 filter_by_data_scope（基于角色，OWN_DEPT 仅本组织）。
-    # 两套系统行为不一致，待业务确认后统一。
+    # 所有模块已统一使用 data_scope_adapter.apply_scope_filter()（支持 org_children 含下级组织）。
     query = data_scope.filter_by_org_ids(query, School.organization_id, created_by_column=School.created_by)
 
     if keyword or name:

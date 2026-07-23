@@ -29,7 +29,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.transaction import safe_commit
-from app.core.data_permission import filter_by_data_scope, require_data_permission, check_record_access
+from app.core.data_permission import require_data_permission, check_record_access
+from app.core.data_scope_adapter import apply_scope_filter
 from app.api.v1.deps import enforce_admin_include_deleted, build_viewable_because
 from app.core.errors import AppError
 from app.core.exceptions import NotFoundException
@@ -653,10 +654,8 @@ async def list_projects(
     if not include_deleted:
         query = query.filter(Project.is_active == True)  # noqa: E712
 
-    # NOTE: 此处使用 filter_by_data_scope（基于角色，OWN_DEPT 仅本组织）。
-    # school.py 使用 data_scope.filter_by_org_ids（支持 org_children 含下级组织）。
-    # 两套系统行为不一致，待业务确认后统一。
-    query = filter_by_data_scope(query, Project, current_user, db=db)
+    # 数据权限过滤（统一使用 data_scope_adapter，支持 org_children 含下级组织）
+    query = apply_scope_filter(query, current_user, Project, db=db)
 
     if keyword:
         query = query.filter((Project.name.contains(keyword)) | (Project.code.contains(keyword)))

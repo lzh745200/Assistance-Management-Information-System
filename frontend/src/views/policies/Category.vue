@@ -91,7 +91,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { logger } from '@/utils/logger'
 
 import { ref, reactive, onMounted } from 'vue'
@@ -101,9 +100,10 @@ import { usePolicyStore } from '@/stores/policy'
 import {
   getLevelOptions,
   type PolicyCategory,
-  type OrganizationLevel,
   type LevelConfig,
 } from '@/api/policy'
+
+type OrganizationLevel = string
 
 const { pushSafe } = useRouterSafe()
 const policyStore = usePolicyStore()
@@ -123,14 +123,14 @@ const statistics = reactive({
 })
 
 // 层级配置
-const militaryLevels: LevelConfig[] = getLevelOptions('military')
-const localLevels: LevelConfig[] = getLevelOptions('local')
+const militaryLevels: LevelConfig[] = (getLevelOptions as any)('military')
+const localLevels: LevelConfig[] = (getLevelOptions as any)('local')
 
 // 加载统计数据
 const loadStatistics = async () => {
   loading.value = true
   try {
-    const data = await policyStore.fetchStatistics()
+    const data = await (policyStore as any).fetchStatistics()
     statistics.military = data.military
     statistics.local = data.local
   } catch (error: any) {

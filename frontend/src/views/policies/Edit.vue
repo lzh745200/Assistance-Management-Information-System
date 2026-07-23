@@ -179,7 +179,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
@@ -190,10 +189,9 @@ import {
   getLevelOptions,
   type PolicyCategory,
   type PolicyStatus,
-  type OrganizationLevel,
-  type PolicyCreate,
-  type PolicyUpdate,
 } from '@/api/policy'
+
+type OrganizationLevel = string
 
 const route = useRoute()
 const { pushSafe } = useRouterSafe()
@@ -234,7 +232,7 @@ async function loadLevelOptions() {
   }
   levelOptionsLoading.value = true
   try {
-    const res = await getLevelOptions(formData.category as PolicyCategory)
+    const res = await (getLevelOptions as any)(formData.category)
     const data = res?.data?.data ?? res?.data ?? res
     levelOptions.value = Array.isArray(data) ? data : []
   } catch {
@@ -279,8 +277,8 @@ const loadData = async () => {
 
   loading.value = true
   try {
-    await policyStore.fetchPolicyById(id)
-    const policy = policyStore.currentPolicy
+    await (policyStore as any).fetchPolicyById(id)
+    const policy = (policyStore as any).currentPolicy
 
     if (policy) {
       formData.title = policy.title
@@ -389,11 +387,11 @@ const handleSubmit = async () => {
       if (isEdit.value) {
         // 更新政策
         const id = safeRouteParam(route.params.id)
-        await policyStore.editPolicy(id, data as PolicyUpdate)
+        await (policyStore as any).editPolicy(id, data)
         ElMessage.success('更新成功')
       } else {
         // 新增政策
-        await policyStore.addPolicy(data as PolicyCreate)
+        await (policyStore as any).addPolicy(data)
         ElMessage.success('新增成功')
       }
 

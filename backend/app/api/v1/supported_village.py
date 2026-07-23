@@ -1,7 +1,7 @@
 """帮扶村管理 API 路由"""
 
-# NOTE: 数据权限过滤建议迁移到 app.core.data_scope_adapter.apply_scope_filter()
-# 当前使用: filter_by_data_scope() (混合风格)
+# 数据权限过滤已迁移到 app.core.data_scope_adapter.apply_scope_filter()
+# 支持组织树展开（org_children 含下级组织），与 school.py 行为一致
 
 import io
 import json
@@ -35,7 +35,8 @@ from app.models.supported_village import (
     VillageCommitteeInfo,
     VillageCommitteeMember,
 )
-from app.core.data_permission import filter_by_data_scope, check_record_access
+from app.core.data_permission import check_record_access
+from app.core.data_scope_adapter import apply_scope_filter
 from app.api.v1.deps import enforce_admin_include_deleted, build_viewable_because
 from app.schemas.supported_village import SupportedVillageCreate, SupportedVillageUpdate
 from app.core.transaction import safe_commit
@@ -296,10 +297,8 @@ async def list_villages(
 
     # include_deleted 已由 enforce_admin_include_deleted 依赖收敛：非管理员自动降级为 False
     query = db.query(SupportedVillage)
-    # NOTE: 此处使用 filter_by_data_scope（基于角色，OWN_DEPT 仅本组织）。
-    # school.py 使用 data_scope.filter_by_org_ids（支持 org_children 含下级组织）。
-    # 两套系统行为不一致，待业务确认后统一。
-    query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
+    # 数据权限过滤（统一使用 data_scope_adapter，支持 org_children 含下级组织）
+    query = apply_scope_filter(query, current_user, SupportedVillage, db=db)
 
     # 默认过滤软删记录（is_active=False），include_deleted=True 时显示全部
     if not include_deleted:
@@ -357,7 +356,7 @@ async def get_filter_options(
     """
     # 基础查询应用数据范围过滤，再投影到 department/county 列
     base_query = db.query(SupportedVillage)
-    base_query = filter_by_data_scope(base_query, SupportedVillage, current_user, db=db)
+    base_query = apply_scope_filter(base_query, current_user, SupportedVillage, db=db)
     base_query = base_query.filter(SupportedVillage.is_active == True)  # noqa: E712
 
     departments = (
@@ -392,7 +391,7 @@ async def get_village_dropdown(
         SupportedVillage.village_name,
         SupportedVillage.county,
     )
-    query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
+    query = apply_scope_filter(query, current_user, SupportedVillage, db=db)
     villages = (
         query.filter(SupportedVillage.is_active == True)  # noqa: E712
         .order_by(SupportedVillage.id)
@@ -425,7 +424,7 @@ async def export_villages(
 ):
     """导出帮扶村数据到 Excel"""
     query = db.query(SupportedVillage).filter(SupportedVillage.is_active == True)  # noqa: E712
-    query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
+    query = apply_scope_filter(query, current_user, SupportedVillage, db=db)
     villages = query.all()
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -503,7 +502,7 @@ async def batch_delete_villages(
         raise HTTPException(status_code=400, detail="请提供要删除的ID列表")
     query = db.query(SupportedVillage).filter(SupportedVillage.id.in_(data.ids))
     # 数据权限过滤：仅允许操作本组织/本人创建的记录，防止跨组织批量删除
-    query = filter_by_data_scope(query, SupportedVillage, current_user, db=db)
+    query = apply_scope_filter(query, current_user, SupportedVillage, db=db)
     deleted_count = query.update({"is_active": False}, synchronize_session=False)
     safe_commit(db)
     await _invalidate_village_cache()

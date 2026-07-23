@@ -11,8 +11,8 @@
 6. 修复 list_funds 中 status 参数名覆盖 fastapi.status 模块的致命隐患
 """
 
-# NOTE: 数据权限过滤建议迁移到 app.core.data_scope_adapter.apply_scope_filter()
-# 当前使用: apply_data_scope() (SQLAlchemy 2.0 select 风格)
+# 数据权限过滤已迁移到 app.core.data_scope_adapter.apply_scope_filter()
+# 支持组织树展开（org_children 含下级组织），与 school.py 行为一致
 
 import logging
 import mimetypes
@@ -31,7 +31,7 @@ from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.core.transaction import safe_commit
 from app.utils.pagination import keyset_paginate
-from app.core.data_permission import apply_data_scope
+from app.core.data_scope_adapter import apply_scope_filter
 from app.services.work_log_service import write_work_log
 from app.utils.upload_helper import save_upload_file, get_attachment_response, delete_attachment_file
 
@@ -149,7 +149,7 @@ def _fund_to_dict(f: Fund) -> Dict[str, Any]:
 def _get_fund_or_404(db: Session, fund_id: int, current_user: User) -> Fund:
     """通用：获取经费并校验权限，不存在则抛出 404"""
     stmt = select(Fund).where(Fund.id == fund_id)
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     fund = db.execute(stmt).scalar_one_or_none()
     if not fund:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="经费记录不存在或无权访问")
@@ -187,11 +187,8 @@ def list_funds(
         selectinload(Fund.school),
     )
 
-    # 2. 数据权限隔离
-    # NOTE: 此处使用 apply_data_scope（基于角色，OWN_DEPT 仅本组织）。
-    # school.py 使用 data_scope.filter_by_org_ids（支持 org_children 含下级组织）。
-    # 两套系统行为不一致，待业务确认后统一。
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    # 2. 数据权限隔离（统一使用 data_scope_adapter，支持 org_children 含下级组织）
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
 
     # include_deleted 已由 enforce_admin_include_deleted 依赖收敛：非管理员自动降级为 False
 
@@ -234,7 +231,7 @@ def list_funds(
             pagination="keyset",
         )
 
-    # 传统 OFFSET 分页 (手动构建以完美兼容 apply_data_scope 和 joinedload)
+    # 传统 OFFSET 分页 (手动构建以完美兼容 apply_scope_filter 和 joinedload)
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = db.execute(count_stmt).scalar_one()
 
@@ -258,7 +255,7 @@ def export_funds(
 ):
     """导出经费数据（带分页上限，防止内存溢出；排除软删记录）"""
     stmt = select(Fund).where(Fund.is_active == True).order_by(Fund.id.desc()).limit(limit)  # noqa: E712
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     funds = db.execute(stmt).scalars().all()
     return {
         "data": [_fund_to_dict(f) for f in funds],
@@ -290,7 +287,7 @@ def get_fund(
             joinedload(Fund.school), selectinload(Fund.organization),
         )
     )
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     fund = db.execute(stmt).scalar_one_or_none()
 
     if not fund:
@@ -393,7 +390,7 @@ def fund_statistics_overview(
         func.sum(case((Fund.status == "pending", 1), else_=0)).label("pending_count"),
         func.sum(case((Fund.status == "approved", 1), else_=0)).label("approved_count"),
     ).where(Fund.is_active == True)  # noqa: E712
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
 
     row = db.execute(stmt).one()
     return {
@@ -417,7 +414,7 @@ def fund_statistics_multi_dimension(
 ):
     """经费多维度统计分析 (利用冗余字段消灭全表扫描，排除软删记录)"""
     stmt = select(Fund).where(Fund.is_active == True)  # noqa: E712
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
 
     try:
         if start_date:
@@ -656,7 +653,7 @@ def fund_stats_by_type(
     if year_end:
         stmt = stmt.where(Fund.year <= year_end)
     stmt = stmt.where(Fund.is_active == True)  # noqa: E712
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     rows = db.execute(stmt).all()
     type_labels = {"project": "项目经费", "operation": "运营经费", "education": "教育帮扶",
                    "infrastructure": "基础设施", "emergency": "应急经费", "other": "其他"}
@@ -690,7 +687,7 @@ def fund_stats_yearly_comparison(
     if year_end:
         stmt = stmt.where(Fund.year <= year_end)
     stmt = stmt.where(Fund.is_active == True)  # noqa: E712
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     rows = db.execute(stmt).all()
     return {"success": True, "data": [
         {"year": r.year or 0, "total_actual": float(r.amount),
@@ -713,7 +710,7 @@ def fund_stats_utilization(
         stmt = stmt.where(Fund.year >= year_start)
     if year_end:
         stmt = stmt.where(Fund.year <= year_end)
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
     planned = float(row.planned)
     actual = float(row.actual)
@@ -739,7 +736,7 @@ def fund_stats_summary(
         stmt = stmt.where(Fund.year >= year_start)
     if year_end:
         stmt = stmt.where(Fund.year <= year_end)
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
     return {"success": True, "data": {
         "total_count": row.total_count, "total_amount": float(row.total_amount),
@@ -764,7 +761,7 @@ def village_fund_summary(
     ).where(Fund.village_id == village_id, Fund.is_active == True)  # noqa: E712
     if year:
         stmt = stmt.where(Fund.year == year)
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
     return {
         "success": True,
@@ -798,7 +795,7 @@ def school_fund_summary(
     ).where(Fund.school_id == school_id, Fund.is_active == True)  # noqa: E712
     if year:
         stmt = stmt.where(Fund.year == year)
-    stmt = apply_data_scope(stmt, Fund, current_user)
+    stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
     return {
         "success": True,

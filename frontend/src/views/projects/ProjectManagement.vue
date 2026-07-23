@@ -182,13 +182,12 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { logger } from '@/utils/logger'
 
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Plus, Download, Upload } from '@element-plus/icons-vue'
-import { projectApi, type Project, type CreateProjectRequest } from '@/api/projects'
+import { projectApi, type Project } from '@/api/projects'
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -213,7 +212,7 @@ const pagination = reactive({
 })
 
 const formRef = ref<FormInstance>()
-const formData = reactive<CreateProjectRequest>({
+const formData = reactive({
   name: '',
   description: '',
   status: 'pending',
@@ -396,7 +395,7 @@ const handleFileChange = async (event: Event) => {
   if (!file) return
 
   try {
-    await projectApi.importData(file, 'incremental', (progress: number) => {
+    await (projectApi.importData as any)(file, 'incremental', (progress: number) => {
       logger.info(`上传进度: ${progress}%`)
     })
     ElMessage.success('导入成功')

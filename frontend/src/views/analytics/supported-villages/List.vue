@@ -243,7 +243,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { logger } from '@/utils/logger'
 
 import { ref, reactive, computed, onMounted } from 'vue'
@@ -514,7 +513,7 @@ async function handleBatchDelete() {
   batchDeleting.value = true
   try {
     const ids = selectedRows.value.map((row) => row.id)
-    const result = await batchDeleteSupportedVillages(ids)
+    const result = await batchDeleteSupportedVillages(ids) as any
     // 乐观更新：立即从表格数据中移除已删除行
     const idSet = new Set(ids)
     tableData.value = tableData.value.filter((item) => !idSet.has(item.id))
@@ -540,7 +539,7 @@ async function handleFormSubmit(data: SupportedVillageCreate) {
       logger.info('创建帮扶村...')
       const fundingItems = (data as any)._transitionFundingItems
       delete (data as any)._transitionFundingItems
-      const created = await createSupportedVillage(data)
+      const created = await createSupportedVillage(data) as any
       const villageId = created?.data?.id || created?.id
       if (fundingItems?.length && villageId) {
         try {
@@ -607,7 +606,7 @@ function handleImport() {
     if (!file) return
 
     try {
-      const result = await importSupportedVillages(file)
+      const result = await importSupportedVillages(file) as any
       ElMessage.success(`导入成功：${result.imported}条，失败：${result.failed}条`)
       if (result.errors && result.errors.length > 0) {
         logger.error('导入错误:', result.errors)

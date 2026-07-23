@@ -281,7 +281,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElForm } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'

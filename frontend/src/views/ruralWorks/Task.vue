@@ -599,7 +599,6 @@
 </template>
 
 <script lang="ts" setup>
-// @ts-nocheck
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Upload, Download, ArrowDown, Document } from '@element-plus/icons-vue'

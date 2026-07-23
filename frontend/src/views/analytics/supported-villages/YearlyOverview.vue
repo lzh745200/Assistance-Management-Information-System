@@ -91,7 +91,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, computed, onMounted, markRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
@@ -371,7 +370,7 @@ async function handleImportSection(sectionKey: string, file: any) {
   }
   sectionImporting.value = sectionKey
   try {
-    const result = await importSectionData(villageId.value, selectedYear.value, sectionKey, rawFile)
+    const result = await importSectionData(villageId.value, selectedYear.value, sectionKey, rawFile) as any
     ElMessage.success(`导入成功 ${result.imported || result.rows || 0} 条`)
     if (result.failed > 0) {
       ElMessage.warning(`${result.failed} 条导入失败`)
@@ -401,7 +400,7 @@ async function handleImportAll(file: any) {
   const rawFile = file.raw || file
   importingAll.value = true
   try {
-    const result = await importAllSectionsData(villageId.value, selectedYear.value, rawFile)
+    const result = await importAllSectionsData(villageId.value, selectedYear.value, rawFile) as any
     const secCount = result.sections?.length || result.sheets || 0
     ElMessage.success(
       `全部导入完成：成功 ${result.imported || result.rows || 0} 条（${secCount} 个板块）`

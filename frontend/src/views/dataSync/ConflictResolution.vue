@@ -66,7 +66,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
@@ -80,6 +79,9 @@ import {
 interface Conflict extends ConflictDetail {
   remote_data: Record<string, any>
   resolution?: 'keep_local' | 'use_import' | 'merge'
+  conflict_type?: string
+  table_name?: string
+  record_id?: string | number
 }
 
 const route = useRoute()
@@ -120,9 +122,9 @@ const loadConflicts = async () => {
       const conflictList = Array.isArray(response.data)
         ? response.data
         : response.data?.items || response.data?.data || []
-      conflicts.value = conflictList.map((c: ConflictDetail) => ({
+      conflicts.value = conflictList.map((c: any) => ({
         ...c,
-        remote_data: c.import_data,
+        remote_data: c.import_data ?? c.remote_data,
         resolution: 'keep_local' as const,
       }))
       // 默认展开第一个冲突
