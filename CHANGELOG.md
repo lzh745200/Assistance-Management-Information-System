@@ -5,6 +5,25 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布] - 2026-07-22
+
+### 全面故障检测与审查修复
+- 🐛 **修复系统初始化密码校验不一致** — `SystemInit.vue` 前端校验 ≥8 位但后端 `InitRequest` 要求 ≥12 位，导致首次初始化设 8–11 位密码被 422 拒绝；前端 placeholder 与校验规则统一为 ≥12 位
+- 🔒 **初始化密码强度加固** — `system/init.py` 复用 `PasswordPolicy` 校验管理员密码（与注册接口统一策略），最高权限账户不再允许弱密码
+- 🐛 **修复 `_ValidationError.field` 缺失** — `core/exceptions.py` 验证错误类增补 `.field` 属性
+- 🐛 **修复 vue-tsc 12 处类型错误** — projects/Detail.vue、Edit.vue、ProgressGallery.vue el-tag `:type` 联合类型注解 + projects.ts id 参数放宽为 `number|string`（兼容离线字符串 ID）+ Edit.vue `unknown`→`any[]`
+- 🧪 **对齐 9 项陈旧测试** — 密码策略 ≥12（5 处）、is_bundled onedir 行为、version.json 测试自给自足、inspector 弃用警告断言
+- 📝 **清理误导注释** — `api/v1/__init__.py` supported_village "WIP:501占位" 注释更正为已完整实现
+- 📄 **文档同步** — README/结构说明测试数更新为后端 10045 + 前端 1624，验证日期 2026-07-22
+
+### 测试结果 (2026-07-22)
+- ✅ 后端: **10,045 测试通过** (0 失败)
+- ✅ 前端: **1,624 测试通过** (125 文件, 0 失败)
+- ✅ vue-tsc / Flake8 / ESLint: 0 错误
+- ✅ Bandit (-ll): 0 中/高危
+- ✅ 前端生产构建: 成功
+- ✅ 路由加载: 42/42 模块
+
 ## [未发布] - 2026-07-08
 
 ### 全面测试修复

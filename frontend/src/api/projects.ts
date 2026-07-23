@@ -31,9 +31,9 @@ export const projectsApi = {
   list: (params?: any) => get('/projects', params),
   get: (id: number) => get('/projects/' + id),
   create: (data: any) => post('/projects', data),
-  update: (id: number, data: any) => put('/projects/' + id, data),
+  update: (id: number | string, data: any) => put('/projects/' + id, data),
   delete: (id: number) => del('/projects/' + id),
-  getById: (id: number) => get('/projects/' + id),
+  getById: (id: number | string) => get('/projects/' + id),
   getStats: () => get('/projects/stats'),
   exportList: (params?: any) =>
     downloadBlobAsFile(() => request.get('/projects/export', { params, responseType: 'blob' }), {
@@ -48,7 +48,7 @@ export const projectsApi = {
   },
 
   // ========== 项目文件 ==========
-  uploadFiles: (id: number, category: string, files: File[]) => {
+  uploadFiles: (id: number | string, category: string, files: File[]) => {
     const formData = new FormData()
     formData.append('category', category)
     files.forEach((f) => formData.append('files', f))
@@ -56,10 +56,10 @@ export const projectsApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
-  listFiles: (id: number) => get('/projects/' + id + '/files'),
-  getFileDownloadUrl: (projectId: number, fileId: number) =>
+  listFiles: (id: number | string) => get('/projects/' + id + '/files'),
+  getFileDownloadUrl: (projectId: number | string, fileId: number) =>
     `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/projects/${projectId}/files/${fileId}/download`,
-  deleteFile: (projectId: number, fileId: number) =>
+  deleteFile: (projectId: number | string, fileId: number) =>
     del('/projects/' + projectId + '/files/' + fileId),
   previewFile: (projectId: number, fileId: number) =>
     get(`/projects/${projectId}/files/${fileId}/preview`),

@@ -950,12 +950,12 @@ async def create_policy(
             try:
                 issue_date = datetime.fromisoformat(data.publish_date)
             except (ValueError, TypeError):
-                pass
+                logger.warning("Invalid publish_date format: %s", data.publish_date)
         if data.effective_date:
             try:
                 effective_date = datetime.fromisoformat(data.effective_date)
             except (ValueError, TypeError):
-                pass
+                logger.warning("Invalid effective_date format: %s", data.effective_date)
 
         policy = Policy(
             title=data.title,

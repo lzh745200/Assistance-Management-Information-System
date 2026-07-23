@@ -1895,7 +1895,7 @@ async def delete_project_file(
         try:
             os.remove(pf.filepath)
         except OSError:
-            pass
+            logger.warning("Failed to delete file from disk: %s", pf.filepath, exc_info=True)
 
     db.delete(pf)
     safe_commit(db)

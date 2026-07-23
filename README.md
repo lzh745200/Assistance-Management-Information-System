@@ -5,15 +5,15 @@
 ![Version](https://img.shields.io/badge/version-1.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20ARM64-orange)
-![Tests](https://img.shields.io/badge/tests-10%2C500%2B-brightgreen)
+![Tests](https://img.shields.io/badge/tests-11%2C600%2B-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-88%25-yellowgreen)
 
 ## 项目状态
 
 | 指标 | 结果 |
 |------|------|
-| 后端测试 | **8,890+ passed**, 0 skipped, 0 errors |
-| 前端测试 | **1,681 passed**, 137 文件, 0 失败 |
+| 后端测试 | **10,045 passed**, 0 skipped, 0 errors |
+| 前端测试 | **1,624 passed**, 125 文件, 0 失败 |
 | Flake8 | 0 错误, 0 警告 |
 | ESLint | 0 错误, 0 警告 |
 | Bandit (安全) | 0 高危 |
@@ -23,7 +23,7 @@
 | CI/CD | PR Checks + Nightly Full Suite + Codecov |
 | Sass | 1.101.0（modern-compiler API） |
 
-> **上次全量验证**: 2026-07-08 — 全部 10,500+ 测试通过，零 lint 错误，零安全告警
+> **上次全量验证**: 2026-07-22 — 全部 11,600+ 测试通过（后端 10,045 + 前端 1,624），零 lint 错误，零安全告警
 
 ## 快速开始
 
@@ -91,10 +91,10 @@ cd frontend && npm install && npm run dev
 
 | 测试类型 | 工具 | 数量 | 覆盖范围 |
 |---------|------|------|---------|
-| 后端单元测试 | pytest | 8,890+ | API/Service/Core/Model/Utils 全覆盖 |
+| 后端单元测试 | pytest | 10,045 | API/Service/Core/Model/Utils 全覆盖 |
 | 后端集成测试 | pytest | 8 套 | Auth/Users/Policies/Search/Audit/API |
 | 后端安全测试 | pytest | 3 套 | Data Isolation/Audit/Retry |
-| 前端单元测试 | Vitest | 1,681 | API/Store/Component/Composable/Utils |
+| 前端单元测试 | Vitest | 1,624 | API/Store/Component/Composable/Utils |
 | E2E 测试 | Playwright | 12 流程 | Login/Dashboard/Projects/Approval/Funds |
 | 性能测试 | Locust | 配置可用 | 负载测试 |
 | 属性测试 | fast-check | 多组 | 组件属性验证 |

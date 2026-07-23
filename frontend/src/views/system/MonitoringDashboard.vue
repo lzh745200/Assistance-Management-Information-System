@@ -345,8 +345,8 @@ const basicChecks = computed<CheckItem[]>(() => {
   const authPassed = hasSnapshot
   // 缓存服务: passed if response time < 500ms
   const cachePassed = rt !== null && rt < 500
-  // 日志系统: always passed (local file system)
-  const logPassed = true
+  // 日志系统: 后端可达即表示日志正常（后端会记录所有请求日志）
+  const logPassed = hasSnapshot || rt !== null
 
   return [
     {
@@ -372,7 +372,7 @@ const basicChecks = computed<CheckItem[]>(() => {
     {
       name: '日志系统',
       passed: logPassed,
-      detail: '本地文件系统',
+      detail: logPassed ? '后端日志正常' : '后端不可达',
     },
   ]
 })

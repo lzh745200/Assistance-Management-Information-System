@@ -987,7 +987,7 @@ async function loadProjectFiles(projectId: number | string) {
     }
     if (result?.grouped) {
       for (const [cat, files] of Object.entries(result.grouped)) {
-        uploadedFiles[cat] = files
+        uploadedFiles[cat] = files as any[]
       }
     }
     // 异步预加载 photo 分类的缩略图

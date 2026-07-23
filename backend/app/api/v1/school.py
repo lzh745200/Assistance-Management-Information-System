@@ -326,7 +326,7 @@ async def import_scholarship_students(
         try:
             os.unlink(tmp_path)
         except FileNotFoundError:
-            pass
+            logger.debug("Temp file already removed: %s", tmp_path)
 
 
 @router.get("/export")
@@ -608,12 +608,12 @@ async def list_schools(
         try:
             query = query.filter(School.type == SchoolType(type_val))
         except ValueError:
-            pass
+            logger.warning("Invalid school type filter value: %s", type_val)
     if status_filter:
         try:
             query = query.filter(School.support_status == SupportStatus(status_filter))
         except ValueError:
-            pass
+            logger.warning("Invalid support status filter value: %s", status_filter)
 
     total = query.count()
     items = query.order_by(School.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
@@ -1193,4 +1193,4 @@ async def import_school_scholarship_students(
         try:
             os.unlink(tmp_path)
         except FileNotFoundError:
-            pass
+            logger.debug("Temp file already removed: %s", tmp_path)

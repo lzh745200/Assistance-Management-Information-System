@@ -276,7 +276,8 @@ const taskForm = ref({
 })
 
 // --- Computed ---
-const statusMap: Record<string, { type: string; text: string }> = {
+type ElTagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
+const statusMap: Record<string, { type: ElTagType; text: string }> = {
   draft: { type: 'info', text: '草稿' },
   pending: { type: 'info', text: '待审批' },
   approved: { type: 'primary', text: '已审批' },
@@ -286,7 +287,7 @@ const statusMap: Record<string, { type: string; text: string }> = {
   cancelled: { type: 'danger', text: '已取消' },
   suspended: { type: 'danger', text: '已暂停' },
 }
-const statusType = computed(() => statusMap[project.value?.status]?.type ?? 'info')
+const statusType = computed((): ElTagType => statusMap[project.value?.status]?.type ?? 'info')
 const statusText = computed(
   () => statusMap[project.value?.status]?.text ?? project.value?.status ?? '-'
 )
@@ -298,10 +299,10 @@ const progressColor = computed(() => {
 })
 
 // --- Helpers ---
-const taskStatusType = (s: string) =>
-  ({ pending: 'info', in_progress: 'warning', completed: 'success' })[s] ?? 'info'
-const priorityType = (p: string) =>
-  ({ low: 'info', normal: '', high: 'warning', urgent: 'danger' })[p] ?? 'info'
+const taskStatusType = (s: string): ElTagType =>
+  ((({ pending: 'info', in_progress: 'warning', completed: 'success' }) as Record<string, string>)[s] ?? 'info') as ElTagType
+const priorityType = (p: string): ElTagType =>
+  ((({ low: 'info', normal: '', high: 'warning', urgent: 'danger' }) as Record<string, string>)[p] ?? 'info') as ElTagType
 const formatSize = (bytes?: number) => {
   if (bytes == null) return '-'
   if (bytes < 1024) return bytes + ' B'

@@ -252,12 +252,12 @@ async def transition_status(
         try:
             project.actual_start_date = date.fromisoformat(data.actual_start_date)
         except ValueError:
-            pass
+            logger.warning("Invalid actual_start_date format: %s", data.actual_start_date)
     if data.actual_end_date:
         try:
             project.actual_end_date = date.fromisoformat(data.actual_end_date)
         except ValueError:
-            pass
+            logger.warning("Invalid actual_end_date format: %s", data.actual_end_date)
     if data.achievements:
         project.achievements = data.achievements
 

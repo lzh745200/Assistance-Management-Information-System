@@ -62,6 +62,15 @@
     </div>
 
     <!-- 统计卡片 KPI -->
+    <!-- TODO: KPI 环比趋势当前为示意数据，需后端提供 GET /analytics/kpi-summary?period=year
+         返回各指标的年度同比增长率（villages/population/income/investment） -->
+    <el-alert
+      title="KPI 趋势为示意数据，尚未接入真实年度同比数据"
+      type="warning"
+      :closable="true"
+      show-icon
+      style="margin-bottom: 16px"
+    />
     <el-row v-loading="loading" :gutter="20" class="stat-row">
       <!-- 卡片1：帮扶村总数 -->
       <el-col :span="6">
@@ -182,12 +191,17 @@
     <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="24">
         <div class="chart-card">
-          <h3 class="chart-title">
-            年度趋势对比
-            <span style="font-size: 12px; color: #909399; font-weight: normal"
-              >（示意数据，待接入真实历史数据）</span
-            >
-          </h3>
+          <h3 class="chart-title">年度趋势对比</h3>
+          <!-- TODO: 年度趋势当前使用当前年份数据填充所有年份（平线占位），
+               需后端提供 GET /reports/analytics/summary?year=YYYY 多年数据
+               或新增 GET /analytics/yearly-trends 返回逐年统计 -->
+          <el-alert
+            title="示意数据：当前以当年数据平铺展示，待接入真实历史数据"
+            type="info"
+            :closable="true"
+            show-icon
+            style="margin-bottom: 12px"
+          />
           <div ref="trendChartRef" class="chart-container" style="height: 350px"></div>
         </div>
       </el-col>
@@ -278,6 +292,9 @@ const totalInvestment = computed(() => {
 // =========================================================================
 // KPI 环比趋势 — 示意数据（伪随机生成，非真实同比）
 // TODO: 替换为后端 API 返回的真实年度同比数据
+//   需要接口: GET /analytics/kpi-summary?period=year
+//   返回格式: { villages: number, population: number, income: number, investment: number }
+//   各字段为同比增长百分比（如 5.2 表示 +5.2%）
 // =========================================================================
 
 interface KpiTrends {
@@ -561,6 +578,8 @@ const updateCharts = () => {
 
   // ── 年度趋势对比（升级为渐变面积图） ──
   // TODO: 当前使用当前年份数据填充所有年份（平线），属于占位数据。
+  // 需要接口: GET /analytics/yearly-trends 或多次调用 GET /reports/analytics/summary?year=YYYY
+  // 返回格式: { years: number[], villages: number[], population: number[], income: number[] }
   // 待后端提供多年历史统计接口后，应替换为真实的逐年数据。
   if (trendChart) {
     const years = availableYears.slice().reverse()

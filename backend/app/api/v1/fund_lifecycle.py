@@ -586,7 +586,6 @@ async def allocation_plan(
     fund_ids = [f.id for f in funds]
     baselines = {}
     if fund_ids:
-        pass
         # 子查询：每个 fund_id 的最新 baseline
         baseline_rows = (
             db.query(BudgetBaseline)

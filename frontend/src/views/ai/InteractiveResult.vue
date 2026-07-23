@@ -455,7 +455,9 @@ async function runAnomalyDetection() {
         return
       }
     } else {
-      // 生成示例数据
+      // ⚠️ 演示数据：用户未输入数据时，生成随机示例数据用于功能演示
+      // TODO: 考虑从后端获取真实历史数据作为默认输入，或提示用户必须输入数据
+      ElMessage.info('未输入数据，已使用随机示例数据进行演示')
       for (let i = 0; i < 20; i++) {
         dataInput.push({ index: i, value: Math.random() * 100 })
       }

@@ -217,12 +217,13 @@ function revokeAllBlobUrls() {
   blobUrls.value = {}
 }
 
-function getStatusType(status?: string) {
+type ElTagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
+function getStatusType(status?: string): ElTagType {
   const map: Record<string, string> = {
     draft: 'info', pending: 'info', approved: 'primary', planning: 'info',
     in_progress: 'warning', completed: 'success', cancelled: 'danger', suspended: 'danger',
   }
-  return map[status ?? ''] ?? 'info'
+  return (map[status ?? ''] ?? 'info') as ElTagType
 }
 
 function getStatusText(status?: string) {
