@@ -381,6 +381,7 @@ function downloadAttachment(att: any) {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      URL.revokeObjectURL(link.href)
     })
     .catch((err: any) => {
       logger.error('[Schools/Edit] 下载附件失败', err)

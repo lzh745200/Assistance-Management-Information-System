@@ -43,7 +43,7 @@ _DATA_START_YEAR = 2021
 try:
     import diskcache
 
-    _cache_dir = getattr(settings, "CACHE_DIR", None) or "./data/cache"
+    _cache_dir = settings.CACHE_DIR
     os.makedirs(_cache_dir, exist_ok=True)
     _cache = diskcache.Cache(
         os.path.join(_cache_dir, "dashboard"),

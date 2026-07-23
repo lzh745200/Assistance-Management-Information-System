@@ -30,7 +30,6 @@
       "@components/*": ["src/components/*"],
       "@views/*": ["src/views/*"],
       "@utils/*": ["src/utils/*"],
-      "@store/*": ["src/store/*"],
       "@assets/*": ["src/assets/*"]
     },
     "types": ["vite/client", "node"],

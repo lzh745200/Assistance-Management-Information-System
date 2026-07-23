@@ -14,7 +14,28 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '22' }
+      - name: Backend smoke test
+        run: |
+          pip install -r backend/requirements.txt pytest-xdist pytest-cov
+          cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-fail-under=50
+      - name: Frontend smoke test
+        run: |
+          cd frontend
+          npm ci --legacy-peer-deps --prefer-offline || npm install --legacy-peer-deps
+          npx vue-tsc --noEmit
+          npx vitest run
+
   build-windows:
+    needs: smoke-test
     runs-on: windows-2022
     timeout-minutes: 90
 
@@ -74,6 +95,11 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: python scripts/sync_version.py ${{ github.ref_name }}
+
+      # 5b. 生成构建元数据
+      - name: Generate build info
+        shell: bash
+        run: python scripts/generate_build_info.py ${{ github.ref_name || 'dev' }}
 
       # 6. 安装 Python 依赖 + PyInstaller
       - name: Install Python deps

@@ -54,7 +54,7 @@ python-magic==0.4.27; sys_platform != 'win32'
 Pillow==12.2.0
 
 # 任务调度（定时备份）
-APScheduler==3.10.4
+# APScheduler 已移除（使用 threading.Timer 替代，见 backup_scheduler.py）
 
 # Redis支持（可选，用于性能优化）
 redis==5.0.3

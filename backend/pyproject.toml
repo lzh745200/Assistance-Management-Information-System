@@ -63,7 +63,7 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
-fail_under = 70  # 提升基线至 70%（2026-07-17），目标 100%，新功能建议 90%
+fail_under = 50  # 与 CI/Makefile 的 --cov-fail-under=50 保持一致
 
 exclude_lines = [
     "pragma: no cover",

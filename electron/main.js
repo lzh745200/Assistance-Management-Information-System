@@ -32,9 +32,9 @@ const appVersion = (() => {
     const pkgPath = app.isPackaged
       ? path.join(process.resourcesPath, '..', 'package.json')
       : path.join(__dirname, '..', 'package.json');
-    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version || '1.2.0';
+    return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version || '1.4.2';
   } catch (_) {
-    return '1.2.0';
+    return '1.4.2';
   }
 })();
 
@@ -422,6 +422,7 @@ function createMainWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
+      sandbox: true,
     },
     show: false,
     autoHideMenuBar: true,
@@ -430,13 +431,20 @@ function createMainWindow() {
   if (saved?.isMaximized) mainWindow.maximize();
 
   // ─── 导航安全限制 ───
+  const ALLOWED_EXTERNAL_PROTOCOLS = ['https:', 'http:', 'mailto:'];
   mainWindow.webContents.on('will-navigate', (event, url) => {
     const appOrigin = 'http://127.0.0.1';
     const appOrigin2 = 'http://localhost';
     if (!url.startsWith(appOrigin) && !url.startsWith(appOrigin2) && !url.startsWith('file://')) {
       event.preventDefault();
-      // Open external links in system browser
-      shell.openExternal(url);
+      try {
+        const proto = new URL(url).protocol;
+        if (ALLOWED_EXTERNAL_PROTOCOLS.includes(proto)) {
+          shell.openExternal(url);
+        } else {
+          console.warn('[Security] 拒绝非白名单协议导航:', url);
+        }
+      } catch (_) { /* malformed URL, ignore */ }
     }
   });
 
@@ -444,7 +452,14 @@ function createMainWindow() {
     if (url.startsWith('http://127.0.0.1') || url.startsWith('http://localhost')) {
       return { action: 'allow' };
     }
-    shell.openExternal(url);
+    try {
+      const proto = new URL(url).protocol;
+      if (ALLOWED_EXTERNAL_PROTOCOLS.includes(proto)) {
+        shell.openExternal(url);
+      } else {
+        console.warn('[Security] 拒绝非白名单协议窗口:', url);
+      }
+    } catch (_) { /* malformed URL, ignore */ }
     return { action: 'deny' };
   });
 
@@ -587,7 +602,22 @@ function setupIpcHandlers() {
     return dialog.showOpenDialog(mainWindow, opts || { title: '选择文件', properties: ['openFile'] });
   });
   ipcMain.handle('send-notification', (_, title, body) => { showTrayNotification(title, body); });
-  ipcMain.handle('open-path', async (_, p) => { shell.openPath(p); });
+  ipcMain.handle('open-path', async (_, p) => {
+    const os = require('os');
+    const resolved = path.resolve(String(p || ''));
+    const allowedRoots = [app.getPath('userData'), app.getAppPath(), os.tmpdir()]
+      .map((r) => path.resolve(r));
+    const inScope = allowedRoots.some(
+      (root) => resolved === root || resolved.startsWith(root + path.sep)
+    );
+    const lower = resolved.toLowerCase();
+    const isSecrets = lower.includes('runtime_secrets.json') || lower.includes('secrets.json') || lower.includes('master.key');
+    if (!inScope || isSecrets) {
+      console.warn(`[IPC] open-path 拒绝越界路径: ${resolved}`);
+      return { error: 'forbidden-path' };
+    }
+    return shell.openPath(resolved);
+  });
   // worker-pool 如果不存在，可忽略或提供占位
   try {
     const { workerPool } = require('./worker-pool');

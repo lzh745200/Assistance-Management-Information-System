@@ -23,14 +23,26 @@ class SecretsManager:
         self._init_default_key()
 
     def _init_default_key(self):
-        """初始化默认密钥"""
+        """初始化默认密钥（持久化到文件，避免重启后数据不可恢复）"""
         default_key = os.getenv("ENCRYPTION_KEY")
         if not default_key:
+            key_file = os.path.join(
+                os.getenv("LOCALAPPDATA", os.path.expanduser("~")),
+                "bumofu-assistance", "data", ".secrets_manager_key",
+            )
             try:
-                from cryptography.fernet import Fernet
-
-                default_key = Fernet.generate_key().decode()
+                os.makedirs(os.path.dirname(key_file), exist_ok=True)
+                if os.path.exists(key_file):
+                    with open(key_file, "r", encoding="utf-8") as f:
+                        default_key = f.read().strip()
+                else:
+                    from cryptography.fernet import Fernet
+                    default_key = Fernet.generate_key().decode()
+                    with open(key_file, "w", encoding="utf-8") as f:
+                        f.write(default_key)
             except ImportError:
+                default_key = secrets.token_urlsafe(32)
+            except Exception:
                 default_key = secrets.token_urlsafe(32)
         self._secrets["default"] = default_key
         self._key_versions.append(

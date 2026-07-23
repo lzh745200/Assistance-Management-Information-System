@@ -101,6 +101,9 @@ jobs:
         with: { python-version: '3.11' }
       - uses: actions/setup-node@v5
         with: { node-version: '22' }
+      # 版本一致性门禁：sync-version.js --check 检测 13 处版本号漂移
+      - name: Version consistency check
+        run: node scripts/sync-version.js --check
       # 后端静态分析：检查裸 db.commit()、缺 safe_commit 导入等模式
       - name: Backend safe_commit audit
         run: |

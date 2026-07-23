@@ -1,20 +1,21 @@
 """
 定时任务调度服务
 
-提供基于 APScheduler 的后台定时任务：
+提供后台定时任务（基于 threading.Timer 实现）：
 - 自动数据库备份（每日 02:00）
 - KPI 预计算缓存（每日 00:30）
 - 资金异常检测（每日 01:00）
 - 待办事项到期提醒（每日 08:00）
 - 工作周报生成（每周一 06:30）
 - 数据库维护（每日 03:00）
+
+注意：APScheduler 已移除，使用 threading.Timer 替代。
 """
 
 import logging
 import os
+import threading
 from datetime import datetime, timedelta
-
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.core.transaction import get_db_context
 from app.services.backup_service import BackupService
@@ -22,7 +23,8 @@ from app.services.system_config_service import get_config
 
 logger = logging.getLogger(__name__)
 
-scheduler = AsyncIOScheduler()
+_scheduler_started = False
+_timers: list[threading.Timer] = []
 
 
 async def auto_backup_job():
@@ -234,37 +236,89 @@ async def database_maintenance_job():
 
 
 def start_backup_scheduler():
-    """启动后台调度器（仅轻量任务，不含自动备份和 VACUUM）"""
-    # 仅保留轻量定时任务：KPI缓存、异常检测、待办提醒、周报
-    # 自动备份已禁用以避免生成大文件占用磁盘空间，备份请通过管理界面手动执行
-    scheduler.add_job(kpi_precalculate_job, "cron", hour=0, minute=30, id="kpi_precalculate", replace_existing=True)
-    scheduler.add_job(anomaly_detection_job, "cron", hour=1, minute=0, id="anomaly_detection", replace_existing=True)
-    scheduler.add_job(todo_reminder_job, "cron", hour=8, minute=0, id="todo_reminder", replace_existing=True)
-    scheduler.add_job(
-        weekly_report_job, "cron", day_of_week="mon", hour=6, minute=30, id="weekly_report", replace_existing=True
-    )
+    """启动后台调度器（仅轻量任务，不含自动备份和 VACUUM）
 
-    scheduler.start()
+    使用 threading.Timer 实现简易定时调度，替代已移除的 APScheduler。
+    """
+    global _scheduler_started
+    if _scheduler_started:
+        logger.info("调度器已在运行，跳过重复启动")
+        return
+
+    import asyncio
+
+    def _run_async_job(coro_func):
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(coro_func())
+            loop.close()
+        except Exception as e:
+            logger.error("定时任务执行失败: %s", e)
+
+    def _schedule_daily(coro_func, hour, minute, task_name):
+        now = datetime.now()
+        target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if target <= now:
+            target += timedelta(days=1)
+        delay = (target - now).total_seconds()
+
+        def _job():
+            _run_async_job(coro_func)
+            _schedule_daily(coro_func, hour, minute, task_name)
+
+        t = threading.Timer(delay, _job)
+        t.daemon = True
+        t.name = f"scheduler-{task_name}"
+        t.start()
+        _timers.append(t)
+
+    def _schedule_weekly(coro_func, weekday, hour, minute, task_name):
+        now = datetime.now()
+        days_ahead = weekday - now.weekday()
+        if days_ahead < 0:
+            days_ahead += 7
+        target = (now + timedelta(days=days_ahead)).replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if target <= now:
+            target += timedelta(weeks=1)
+        delay = (target - now).total_seconds()
+
+        def _job():
+            _run_async_job(coro_func)
+            _schedule_weekly(coro_func, weekday, hour, minute, task_name)
+
+        t = threading.Timer(delay, _job)
+        t.daemon = True
+        t.name = f"scheduler-{task_name}"
+        t.start()
+        _timers.append(t)
+
+    _schedule_daily(kpi_precalculate_job, 0, 30, "kpi_precalculate")
+    _schedule_daily(anomaly_detection_job, 1, 0, "anomaly_detection")
+    _schedule_daily(todo_reminder_job, 8, 0, "todo_reminder")
+    _schedule_weekly(weekly_report_job, 0, 6, 30, "weekly_report")
+
+    _scheduler_started = True
     logger.info("调度器已启动（KPI预计算 + 异常检测 + 待办提醒 + 周报，自动备份和VACUUM已禁用）")
 
 
 def stop_backup_scheduler():
     """停止备份调度器"""
-    if scheduler.running:
-        scheduler.shutdown()
-        logger.info("调度器已停止")
+    global _scheduler_started
+    for t in _timers:
+        t.cancel()
+    _timers.clear()
+    _scheduler_started = False
+    logger.info("调度器已停止")
 
 
 def get_scheduler_status():
     """获取调度器状态"""
     return {
-        "running": scheduler.running,
+        "running": _scheduler_started,
         "jobs": [
-            {
-                "id": job.id,
-                "name": job.name,
-                "next_run_time": (job.next_run_time.isoformat() if job.next_run_time else None),
-            }
-            for job in scheduler.get_jobs()
+            {"id": t.name, "name": t.name, "next_run_time": None}
+            for t in _timers
+            if t.is_alive()
         ],
     }

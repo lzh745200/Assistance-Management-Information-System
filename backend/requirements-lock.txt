@@ -6,7 +6,7 @@ altgraph==0.17.5
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
-APScheduler==3.10.4
+# APScheduler 已移除（使用 threading.Timer 替代，见 backup_scheduler.py）
 asgiref==3.11.1
 astroid==3.0.3
 async-timeout==5.0.1

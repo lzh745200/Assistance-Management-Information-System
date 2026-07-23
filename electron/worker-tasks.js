@@ -10,8 +10,31 @@ const crypto = require('crypto');
 const fs = require('fs');
 const zlib = require('zlib');
 const path = require('path');
+const os = require('os');
 
 const { task, payload } = workerData;
+
+/**
+ * 路径安全校验 — 仅允许应用数据目录/安装目录/系统临时目录
+ */
+function validatePath(filePath) {
+  const resolved = path.resolve(String(filePath || ''));
+  const appData = process.env.LOCALAPPDATA || process.env.XDG_DATA_HOME || os.homedir();
+  const allowedRoots = [
+    path.join(appData, 'bumofu-assistance'),
+    path.resolve(__dirname, '..'),
+    os.tmpdir(),
+  ].map((p) => path.resolve(p));
+  const inScope = allowedRoots.some(
+    (root) => resolved === root || resolved.startsWith(root + path.sep)
+  );
+  const lower = resolved.toLowerCase();
+  const isSecrets = lower.includes('runtime_secrets.json') || lower.includes('secrets.json') || lower.includes('master.key');
+  if (!inScope || isSecrets) {
+    throw new Error(`forbidden-path: ${resolved}`);
+  }
+  return resolved;
+}
 
 /**
  * 分块读取文件 → 处理 → 写入（避免大文件撑爆内存）
@@ -35,6 +58,8 @@ async function run() {
 
       // ── AES-256-GCM 文件加密 ──
       case 'encrypt-file': {
+        payload.inputPath = validatePath(payload.inputPath);
+        payload.outputPath = validatePath(payload.outputPath);
         const key = crypto.scryptSync(payload.password, payload.salt || 'mrrms', 32);
         const iv = crypto.randomBytes(16);
         const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
@@ -60,6 +85,8 @@ async function run() {
 
       // ── AES-256-GCM 文件解密 ──
       case 'decrypt-file': {
+        payload.inputPath = validatePath(payload.inputPath);
+        payload.outputPath = validatePath(payload.outputPath);
         const key = crypto.scryptSync(payload.password, payload.salt || 'mrrms', 32);
         const fd = fs.openSync(payload.inputPath, 'r');
         const iv = Buffer.alloc(16);

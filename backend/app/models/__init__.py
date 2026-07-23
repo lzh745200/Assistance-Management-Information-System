@@ -72,6 +72,7 @@ _MODULE_MAP = {
     "APIMetric": ".monitoring", "AlertHistory": ".monitoring", "AlertRule": ".monitoring",
     "TokenBlacklist": ".token_blacklist", "TwoFactorAuth": ".two_factor_auth",
     "UserOrganization": ".user_organization",
+    "ErrorReport": ".error_report",
 }
 
 import sys as _sys

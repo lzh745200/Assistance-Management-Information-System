@@ -80,11 +80,16 @@ async def health_readiness():
 async def health_full():
     """Comprehensive health report with DB stats, backup status, and performance metrics."""
     import sqlite3
+    from app.core.build_info import get_build_info
+    from app.core.config import settings
     from app.utils.paths import get_database_path, get_backup_path
 
+    build = get_build_info()
     result: dict = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "app_version": os.environ.get("PROJECT_VERSION", "1.2.0"),
+        "app_version": settings.PROJECT_VERSION,
+        "build_git_hash": build.get("git_hash", "unknown"),
+        "build_time": build.get("build_time"),
         "python_version": platform.python_version(),
         "platform": platform.platform(),
         "process_pid": os.getpid(),

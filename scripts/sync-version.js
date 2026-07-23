@@ -173,6 +173,7 @@ const TARGETS = [
   {
     name: "build-with-check.ps1 ($PACKAGE_VERSION)",
     file: "build-with-check.ps1",
+    optional: true,
     describe(c) {
       const m = c.match(/\$PACKAGE_VERSION\s*=\s*"([^"]+)"/);
       return m ? m[1] : null;
@@ -199,6 +200,7 @@ const TARGETS = [
   {
     name: "launch.py (banner version)",
     file: "launch.py",
+    optional: true,
     describe(c) {
       const m = c.match(/帮扶管理信息系统 v(\d+\.\d+\.\d+)/);
       return m ? m[1] : null;

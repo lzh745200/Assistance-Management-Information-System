@@ -33,7 +33,7 @@ def get_version():
 
 def update_config_py(version: str):
     path = PROJECT_ROOT / "backend" / "app" / "core" / "config.py"
-    content = path.read_text()
+    content = path.read_text(encoding="utf-8")
     # 匹配带或不带类型注解（str / Optional[str]）的 PROJECT_VERSION 行
     pattern = r'PROJECT_VERSION\s*:\s*(?:str\s*)?=\s*"[^"]*"'
     new_content, n = re.subn(
@@ -46,7 +46,7 @@ def update_config_py(version: str):
     elif n > 1:
         print(f"  WARN: {path.relative_to(PROJECT_ROOT)} — matched {n} PROJECT_VERSION lines (ambiguous)")
     else:
-        path.write_text(new_content)
+        path.write_text(new_content, encoding="utf-8")
         print(f"  UPD: {path.relative_to(PROJECT_ROOT)}")
 
 
@@ -59,23 +59,23 @@ def update_package_json(version: str):
     ]:
         if not path.exists():
             continue
-        pkg = json.loads(path.read_text())
+        pkg = json.loads(path.read_text(encoding="utf-8"))
         if pkg.get("version") != version:
             pkg["version"] = version
-            path.write_text(json.dumps(pkg, indent=2, ensure_ascii=False) + "\n")
+            path.write_text(json.dumps(pkg, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             print(f"  UPD: {path.relative_to(PROJECT_ROOT)}")
 
 
 def update_nsis_scripts(version: str):
     for nsi in (PROJECT_ROOT / "build-scripts").glob("*.nsi"):
-        content = nsi.read_text()
+        content = nsi.read_text(encoding="utf-8")
         new_content = re.sub(
             r'!define PRODUCT_VERSION\s+"[^"]*"',
             f'!define PRODUCT_VERSION "{version}"',
             content,
         )
         if new_content != content:
-            nsi.write_text(new_content)
+            nsi.write_text(new_content, encoding="utf-8")
             print(f"  UPD: {nsi.relative_to(PROJECT_ROOT)}")
 
 
@@ -86,14 +86,14 @@ def update_env_example(version: str):
     ]:
         if not env_path.exists():
             continue
-        content = env_path.read_text()
+        content = env_path.read_text(encoding="utf-8")
         new_content = re.sub(
             r'VITE_APP_VERSION=\S+',
             f'VITE_APP_VERSION={version}',
             content,
         )
         if new_content != content:
-            env_path.write_text(new_content)
+            env_path.write_text(new_content, encoding="utf-8")
             print(f"  UPD: {env_path.relative_to(PROJECT_ROOT)}")
 
 

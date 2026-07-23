@@ -33,9 +33,10 @@ class TestSchedulerFunctionsExist:
         assert callable(stop_backup_scheduler)
         assert callable(get_scheduler_status)
 
-    def test_scheduler_instance(self):
-        from app.services.backup_scheduler import scheduler
-        assert scheduler is not None
+    def test_scheduler_state_variables(self):
+        from app.services.backup_scheduler import _scheduler_started, _timers
+        assert isinstance(_scheduler_started, bool)
+        assert isinstance(_timers, list)
 
 
 class TestAutoBackupJob:
@@ -389,73 +390,39 @@ class TestDatabaseMaintenanceJob:
 class TestSchedulerControl:
     def test_start_backup_scheduler(self):
         import app.services.backup_scheduler as bm
-        with patch.object(bm, "scheduler") as mock_scheduler:
-            bm.start_backup_scheduler()
-            # 4 lightweight jobs: kpi, anomaly, todo, weekly
-            # (auto_backup and db_maintenance disabled to save disk space)
-            assert mock_scheduler.add_job.call_count == 4, \
-                f"Expected 4 jobs, got {mock_scheduler.add_job.call_count}"
-            mock_scheduler.start.assert_called_once()
+        bm._scheduler_started = False
+        bm._timers.clear()
+        bm.start_backup_scheduler()
+        assert bm._scheduler_started is True
+        assert len(bm._timers) == 4
+        bm.stop_backup_scheduler()
 
     def test_stop_backup_scheduler_running(self):
-        mock_scheduler = MagicMock()
-        mock_scheduler.running = True
-        with patch("app.services.backup_scheduler.scheduler", mock_scheduler):
-            from app.services.backup_scheduler import stop_backup_scheduler
-            stop_backup_scheduler()
-            mock_scheduler.shutdown.assert_called_once()
+        import app.services.backup_scheduler as bm
+        bm._scheduler_started = True
+        bm.stop_backup_scheduler()
+        assert bm._scheduler_started is False
+        assert len(bm._timers) == 0
 
     def test_stop_backup_scheduler_not_running(self):
-        mock_scheduler = MagicMock()
-        mock_scheduler.running = False
-        with patch("app.services.backup_scheduler.scheduler", mock_scheduler):
-            from app.services.backup_scheduler import stop_backup_scheduler
-            stop_backup_scheduler()
-            mock_scheduler.shutdown.assert_not_called()
+        import app.services.backup_scheduler as bm
+        bm._scheduler_started = False
+        bm._timers.clear()
+        bm.stop_backup_scheduler()
+        assert bm._scheduler_started is False
 
-    def test_get_scheduler_status_with_jobs(self):
-        mock_job = MagicMock()
-        mock_job.id = "test_job"
-        mock_job.name = "Test Job"
-        mock_job.next_run_time = datetime(2025, 6, 1, 2, 0, 0)
-
-        mock_scheduler = MagicMock()
-        mock_scheduler.running = True
-        mock_scheduler.get_jobs.return_value = [mock_job]
-
-        with patch("app.services.backup_scheduler.scheduler", mock_scheduler):
-            from app.services.backup_scheduler import get_scheduler_status
-            result = get_scheduler_status()
-
+    def test_get_scheduler_status_running(self):
+        import app.services.backup_scheduler as bm
+        bm._scheduler_started = True
+        result = bm.get_scheduler_status()
         assert result["running"] is True
-        assert len(result["jobs"]) == 1
-        assert result["jobs"][0]["id"] == "test_job"
-        assert result["jobs"][0]["next_run_time"] == "2025-06-01T02:00:00"
+        assert isinstance(result["jobs"], list)
+        bm._scheduler_started = False
 
-    def test_get_scheduler_status_no_jobs(self):
-        mock_scheduler = MagicMock()
-        mock_scheduler.running = False
-        mock_scheduler.get_jobs.return_value = []
-
-        with patch("app.services.backup_scheduler.scheduler", mock_scheduler):
-            from app.services.backup_scheduler import get_scheduler_status
-            result = get_scheduler_status()
-
+    def test_get_scheduler_status_not_running(self):
+        import app.services.backup_scheduler as bm
+        bm._scheduler_started = False
+        bm._timers.clear()
+        result = bm.get_scheduler_status()
         assert result["running"] is False
         assert result["jobs"] == []
-
-    def test_get_scheduler_status_job_no_next_run(self):
-        mock_job = MagicMock()
-        mock_job.id = "paused_job"
-        mock_job.name = "Paused"
-        mock_job.next_run_time = None
-
-        mock_scheduler = MagicMock()
-        mock_scheduler.running = True
-        mock_scheduler.get_jobs.return_value = [mock_job]
-
-        with patch("app.services.backup_scheduler.scheduler", mock_scheduler):
-            from app.services.backup_scheduler import get_scheduler_status
-            result = get_scheduler_status()
-
-        assert result["jobs"][0]["next_run_time"] is None

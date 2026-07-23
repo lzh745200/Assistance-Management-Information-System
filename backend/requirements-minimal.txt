@@ -16,7 +16,7 @@ bleach==6.3.0
 pillow==12.2.0
 qrcode==7.4.2
 jieba==0.42.1
-APScheduler==3.10.4
+# APScheduler 已移除（使用 threading.Timer 替代，见 backup_scheduler.py）
 structlog==25.5.0
 slowapi==0.1.9
 diskcache==5.6.3

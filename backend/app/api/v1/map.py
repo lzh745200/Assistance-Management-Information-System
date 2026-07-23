@@ -36,7 +36,9 @@ router = APIRouter(prefix="/map", tags=["地图可视化"])
 try:
     import diskcache as _dc
 
-    _map_cache_dir = os.environ.get("CACHE_DIR", "./data/cache")
+    from app.core.config import settings as _settings
+
+    _map_cache_dir = _settings.CACHE_DIR
     os.makedirs(_map_cache_dir, exist_ok=True)
     _map_cache = _dc.Cache(
         os.path.join(_map_cache_dir, "map"),
@@ -50,7 +52,7 @@ except Exception as e:
     logger.warning("diskcache 初始化失败: %s，使用内存缓存", e)
     # 删除损坏的缓存文件
     import shutil
-    _bad_dir = os.path.join(os.environ.get("CACHE_DIR", "./data/cache"), "map")
+    _bad_dir = os.path.join(_settings.CACHE_DIR, "map")
     try:
         shutil.rmtree(_bad_dir, ignore_errors=True)
     except Exception as e:

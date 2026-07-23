@@ -1,6 +1,6 @@
 {
   "name": "Assistance-Management-Information-System",
-  "version": "1.2.0",
+  "version": "1.4.2",
   "private": true,
   "description": "帮扶管理系统 - 贵州省版 Standalone桌面应用",
   "main": "electron/main.js",
@@ -55,13 +55,6 @@
         "to": "frontend",
         "filter": [
           "**/*"
-        ]
-      },
-      {
-        "from": "resources/database",
-        "to": "database",
-        "filter": [
-          "rural_revitalization.db"
         ]
       },
       {

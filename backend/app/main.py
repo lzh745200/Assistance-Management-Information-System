@@ -137,6 +137,10 @@ app.add_middleware(
 # 6. 安全响应头中间件（在 CORS 之后，确保所有响应都有安全头）
 app.add_middleware(SecurityHeadersMiddleware)
 
+# 6.5 全局请求体大小限制（文件上传端点通过 MAX_FILE_SIZE 单独控制）
+from app.middleware.body_size_limit import BodySizeLimitMiddleware  # noqa: E402
+app.add_middleware(BodySizeLimitMiddleware, max_body_size=10 * 1024 * 1024)
+
 # 7. 请求ID链路追踪中间件（最外层，最先执行）
 app.add_middleware(RequestIDMiddleware)
 
@@ -212,7 +216,14 @@ REQUIRED_PACKAGES = [
 @app.get("/health", summary="健康检查", tags=["系统"])
 def health():
     """健康检查端点"""
-    return {"status": "ok"}
+    from app.core.build_info import get_build_info
+
+    info = get_build_info()
+    return {
+        "status": "ok",
+        "version": info.get("version", "unknown"),
+        "git_hash": info.get("git_hash", "unknown"),
+    }
 
 
 @app.post("/api/v1/shutdown", include_in_schema=False)
@@ -372,7 +383,9 @@ def _init_database_tables():
     from app.models.base import Base as ModelBase
 
     ModelBase.metadata.create_all(bind=engine)
-    # SQLite: create_all 不会给已有表添加新列，需手动 ALTER TABLE
+    # P2-1: 编程式 Alembic 升级（正式 schema 变更），失败时回退到自动补列
+    _run_alembic_upgrade()
+    # SQLite: create_all 不会给已有表添加新列，需手动 ALTER TABLE（兜底）
     if settings.ENABLE_AUTO_MIGRATION:
         _migrate_missing_columns(engine, ModelBase)
     else:
@@ -382,6 +395,25 @@ def _init_database_tables():
 
     create_indexes(engine)
     logger.info("数据库表初始化完成")
+
+
+def _run_alembic_upgrade():
+    """编程式执行 alembic upgrade head，失败时仅记录警告（自动补列兜底）。"""
+    try:
+        from alembic import command as alembic_command
+        from alembic.config import Config as AlembicConfig
+
+        alembic_ini = Path(__file__).resolve().parent.parent / "alembic.ini"
+        if not alembic_ini.exists():
+            logger.info("alembic.ini 不存在，跳过编程式迁移")
+            return
+        cfg = AlembicConfig(str(alembic_ini))
+        cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+        cfg.set_main_option("script_location", str(alembic_ini.parent / "alembic"))
+        alembic_command.upgrade(cfg, "head")
+        logger.info("Alembic upgrade head 完成")
+    except Exception as e:
+        logger.warning("Alembic upgrade 失败（将由自动补列兜底）: %s", e)
 
 
 def _migrate_missing_columns(engine, model_base):
