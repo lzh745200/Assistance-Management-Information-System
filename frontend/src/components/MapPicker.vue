@@ -57,7 +57,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 import { ref, watch, computed, nextTick } from 'vue'
 import { Location } from '@element-plus/icons-vue'
 import OfflineMap from '@/components/map/OfflineMap.vue'

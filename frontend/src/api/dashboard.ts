@@ -51,3 +51,13 @@ export function updateActivity(
 export function deleteActivity(activityId: string): Promise<any> {
   return del(`${BASE_URL}/recent-activities/${activityId}`)
 }
+
+/** KPI 年度同比趋势 */
+export function getKpiTrends(): Promise<any> {
+  return get(`${BASE_URL}/kpi-trends`)
+}
+
+/** 年度趋势对比数据 */
+export function getYearlyTrends(years?: number): Promise<any> {
+  return get(`${BASE_URL}/yearly-trends`, { params: { years: years ?? 5 } })
+}

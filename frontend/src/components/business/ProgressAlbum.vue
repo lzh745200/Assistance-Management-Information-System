@@ -48,7 +48,6 @@
 </template>
 
 <script setup lang="ts">
-// @ts-nocheck
 interface AlbumItem {
   id?: number
   title?: string

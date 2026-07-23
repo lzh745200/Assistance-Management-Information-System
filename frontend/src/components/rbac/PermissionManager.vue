@@ -8,7 +8,6 @@
   >
 </template>
 <script setup lang="ts">
-// @ts-nocheck
 defineProps<{
   modelValue?: string[]
   permissions: { key: string; label: string }[]

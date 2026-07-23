@@ -62,15 +62,6 @@
     </div>
 
     <!-- 统计卡片 KPI -->
-    <!-- TODO: KPI 环比趋势当前为示意数据，需后端提供 GET /analytics/kpi-summary?period=year
-         返回各指标的年度同比增长率（villages/population/income/investment） -->
-    <el-alert
-      title="KPI 趋势为示意数据，尚未接入真实年度同比数据"
-      type="warning"
-      :closable="true"
-      show-icon
-      style="margin-bottom: 16px"
-    />
     <el-row v-loading="loading" :gutter="20" class="stat-row">
       <!-- 卡片1：帮扶村总数 -->
       <el-col :span="6">
@@ -90,7 +81,7 @@
               <span class="trend-tag trend-tag--up">
                 <i class="trend-tag__arrow">↗</i> {{ kpiTrends.villages }}%
               </span>
-              <span class="trend-label">较上年（示意数据）</span>
+              <span class="trend-label">较上年</span>
             </div>
           </div>
           <div ref="sparkVillagesRef" class="stat-sparkline"></div>
@@ -114,7 +105,7 @@
               <span class="trend-tag trend-tag--up">
                 <i class="trend-tag__arrow">↗</i> {{ kpiTrends.population }}%
               </span>
-              <span class="trend-label">较上年（示意数据）</span>
+              <span class="trend-label">较上年</span>
             </div>
           </div>
           <div ref="sparkPopulationRef" class="stat-sparkline"></div>
@@ -139,7 +130,7 @@
               <span class="trend-tag trend-tag--up">
                 <i class="trend-tag__arrow">↗</i> {{ kpiTrends.income }}%
               </span>
-              <span class="trend-label">较上年（示意数据）</span>
+              <span class="trend-label">较上年</span>
             </div>
           </div>
           <div ref="sparkIncomeRef" class="stat-sparkline"></div>
@@ -164,7 +155,7 @@
               <span class="trend-tag trend-tag--up">
                 <i class="trend-tag__arrow">↗</i> {{ kpiTrends.investment }}%
               </span>
-              <span class="trend-label">较上年（示意数据）</span>
+              <span class="trend-label">较上年</span>
             </div>
           </div>
           <div ref="sparkInvestmentRef" class="stat-sparkline"></div>
@@ -192,16 +183,6 @@
       <el-col :span="24">
         <div class="chart-card">
           <h3 class="chart-title">年度趋势对比</h3>
-          <!-- TODO: 年度趋势当前使用当前年份数据填充所有年份（平线占位），
-               需后端提供 GET /reports/analytics/summary?year=YYYY 多年数据
-               或新增 GET /analytics/yearly-trends 返回逐年统计 -->
-          <el-alert
-            title="示意数据：当前以当年数据平铺展示，待接入真实历史数据"
-            type="info"
-            :closable="true"
-            show-icon
-            style="margin-bottom: 12px"
-          />
           <div ref="trendChartRef" class="chart-container" style="height: 350px"></div>
         </div>
       </el-col>
@@ -233,6 +214,7 @@ import echarts from '@/utils/echarts'
 import { getCurrentTheme } from '@/utils/echarts-theme'
 import SystemStatus from '@/components/business/SystemStatus.vue'
 import { getSummaryStatistics, getFilterOptions, drillDown } from '@/api/analytics'
+import { getKpiTrends, getYearlyTrends } from '@/api/dashboard'
 import type { SummaryStatistics, FilterOptions, DrillDownResult } from '@/types/analytics'
 
 // =========================================================================
@@ -290,11 +272,7 @@ const totalInvestment = computed(() => {
 })
 
 // =========================================================================
-// KPI 环比趋势 — 示意数据（伪随机生成，非真实同比）
-// TODO: 替换为后端 API 返回的真实年度同比数据
-//   需要接口: GET /analytics/kpi-summary?period=year
-//   返回格式: { villages: number, population: number, income: number, investment: number }
-//   各字段为同比增长百分比（如 5.2 表示 +5.2%）
+// KPI 环比趋势 — 从后端 API 获取真实年度同比数据
 // =========================================================================
 
 interface KpiTrends {
@@ -304,19 +282,21 @@ interface KpiTrends {
   investment: number
 }
 
-const kpiTrends = computed<KpiTrends>(() => {
-  // 生成稳定的伪随机趋势值（基于当前选中年份）
-  const seed = selectedYear.value * 7 + 13
-  const pseudoRandom = (offset: number) =>
-    Math.abs(Math.round(((seed * (offset + 1) * 17) % 180) / 10 + 2))
+const kpiTrends = ref<KpiTrends>({ villages: 0, population: 0, income: 0, investment: 0 })
 
-  return {
-    villages: pseudoRandom(1),
-    population: pseudoRandom(2),
-    income: pseudoRandom(3),
-    investment: pseudoRandom(4),
+async function fetchKpiTrends() {
+  try {
+    const data = await getKpiTrends() as any
+    kpiTrends.value = {
+      villages: data.villages ?? 0,
+      population: data.population ?? 0,
+      income: data.income ?? 0,
+      investment: data.investment ?? 0,
+    }
+  } catch (e) {
+    logger.warn('KPI趋势获取失败，使用默认值', e)
   }
-})
+}
 
 // =========================================================================
 // Sparkline 微型趋势图数据（模拟历史数据）
@@ -576,20 +556,24 @@ const updateCharts = () => {
     })
   }
 
-  // ── 年度趋势对比（升级为渐变面积图） ──
-  // TODO: 当前使用当前年份数据填充所有年份（平线），属于占位数据。
-  // 需要接口: GET /analytics/yearly-trends 或多次调用 GET /reports/analytics/summary?year=YYYY
-  // 返回格式: { years: number[], villages: number[], population: number[], income: number[] }
-  // 待后端提供多年历史统计接口后，应替换为真实的逐年数据。
+  // ── 年度趋势对比（从后端 API 获取真实历史数据） ──
   if (trendChart) {
-    const years = availableYears.slice().reverse()
-    const baseVillages = statistics.value.villages.totalVillages || 0
-    // 占位数据：所有年份使用当前值，产生平线效果
-    const villagesData = baseVillages > 0 ? years.map(() => baseVillages) : years.map(() => 0)
-    const basePop = Math.round((statistics.value.population.totalPopulation || 0) / 100)
-    const populationData = basePop > 0 ? years.map(() => basePop) : years.map(() => 0)
-    const baseIncome = statistics.value.income.avgPerCapitaIncome || 0
-    const incomeData = baseIncome > 0 ? years.map(() => baseIncome) : years.map(() => 0)
+    let years: number[] = availableYears.slice().reverse()
+    let villagesData: number[] = years.map(() => 0)
+    let populationData: number[] = years.map(() => 0)
+    let incomeData: number[] = years.map(() => 0)
+
+    try {
+      const trendData = await getYearlyTrends(years.length) as any
+      if (trendData && trendData.years) {
+        years = trendData.years
+        villagesData = trendData.villages ?? villagesData
+        populationData = trendData.population ?? populationData
+        incomeData = trendData.income ?? incomeData
+      }
+    } catch (e) {
+      logger.warn('年度趋势数据获取失败，使用默认值', e)
+    }
 
     trendChart.setOption({
       color: ['#1e4d8c', '#2d6a4f', '#f59e0b'],
@@ -923,6 +907,7 @@ onMounted(async () => {
   await nextTick()
   initCharts()
   await loadData()
+  await fetchKpiTrends()
   window.addEventListener('resize', handleResize)
 })
 

@@ -28,7 +28,6 @@
 </template>
 
 <script lang="ts" setup>
-// @ts-nocheck
 import { ref, onMounted, onUnmounted } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { SecurityLevel } from '@/utils/security'
