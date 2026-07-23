@@ -167,7 +167,7 @@
   </div>
 
   <ChangeHistoryDialog
-    v-model="changeHistoryVisible"
+    v-model:visible="changeHistoryVisible"
     :history="changeHistory"
     :loading="changeHistoryLoading"
   />
@@ -261,9 +261,9 @@ const hasRevitalizationTags = computed(() => {
 const totalInvestment = computed(() => {
   if (!yearlyData.value) return 0
   let total = 0
-  if (yearlyData.value.industry) total += yearlyData.value.industry.investment || 0
+  if (yearlyData.value.industrySupport) total += yearlyData.value.industrySupport.investment || 0
   if (yearlyData.value.infrastructure) total += yearlyData.value.infrastructure.investment || 0
-  if (yearlyData.value.education) total += yearlyData.value.education.investment || 0
+  if (yearlyData.value.educationSupport) total += yearlyData.value.educationSupport.investment || 0
   return total
 })
 
@@ -405,7 +405,7 @@ const handleFormSubmit = async (data: SupportedVillageCreate) => {
     delete (data as any)._transitionFundingItems
 
     if (pageMode.value === 'create') {
-      const created = await createSupportedVillage(data) as any
+      const created = (await createSupportedVillage(data)) as any
       const villageId = created?.data?.id || created?.id
       // 创建成功后保存过渡期经费按年度数据
       if (fundingItems?.length && villageId) {

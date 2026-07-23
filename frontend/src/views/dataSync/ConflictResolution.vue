@@ -21,8 +21,8 @@
           <el-collapse-item v-for="(conflict, index) in conflicts" :key="conflict.id" :name="index">
             <template #title>
               <div class="conflict-title">
-                <el-tag :type="getConflictTypeTag(conflict.conflict_type)">
-                  {{ getConflictTypeLabel(conflict.conflict_type) }}
+                <el-tag :type="getConflictTypeTag(conflict.conflict_type || '')">
+                  {{ getConflictTypeLabel(conflict.conflict_type || '') }}
                 </el-tag>
                 <span class="table-name">{{ conflict.table_name }}</span>
                 <span class="record-id">记录ID: {{ conflict.record_id }}</span>
@@ -147,7 +147,7 @@ const resolveConflict = async (conflict: Conflict) => {
 
   try {
     await resolveConflictApi({
-      conflict_id: conflict.id,
+      conflict_id: Number(conflict.id),
       resolution: conflict.resolution,
     })
     ElMessage.success('冲突已解决')
@@ -173,7 +173,7 @@ const resolveAll = async () => {
 
     for (const conflict of conflicts.value) {
       await resolveConflictApi({
-        conflict_id: conflict.id,
+        conflict_id: Number(conflict.id),
         resolution: conflict.resolution || 'keep_local',
       })
     }

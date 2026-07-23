@@ -55,7 +55,9 @@
         <el-table-column label="操作" width="250" align="center" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row as any)">编辑</el-button>
-            <el-button type="success" size="small" @click="handlePermission(row as any)">权限</el-button>
+            <el-button type="success" size="small" @click="handlePermission(row as any)"
+              >权限</el-button
+            >
             <el-button type="danger" size="small" @click="handleDelete(row as any)">删除</el-button>
           </template>
         </el-table-column>

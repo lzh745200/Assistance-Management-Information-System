@@ -960,12 +960,12 @@ async function uploadAllPendingFiles(projectId: number | string) {
     try {
       const result = await projectApi.uploadFiles(projectId, cat, files)
       if (result?.files) {
-uploadedFiles[cat] = [...(uploadedFiles[cat] || []), ...result.files]
-// 如果是 photo 分类，异步加载新上传图片的缩略图
-if (cat === 'photo') {
-  result.files.forEach((f: any) => loadThumbnail(f))
-}
-totalUploaded += result.files.length
+        uploadedFiles[cat] = [...(uploadedFiles[cat] || []), ...result.files]
+        // 如果是 photo 分类，异步加载新上传图片的缩略图
+        if (cat === 'photo') {
+          result.files.forEach((f: any) => loadThumbnail(f))
+        }
+        totalUploaded += result.files.length
       }
       // 清空已上传的待上传队列
       pendingFiles[cat] = []

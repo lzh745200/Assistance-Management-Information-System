@@ -58,7 +58,7 @@ export async function listTasks(params?: {
   page?: number
   page_size?: number
 }): Promise<{ success: boolean; data: TaskListResponse }> {
-  return get('/tasks', params)
+  return get('/system/tasks', params)
 }
 
 /** 获取任务统计 */
@@ -66,12 +66,12 @@ export async function getTaskStats(): Promise<{
   success: boolean
   data: TaskStats
 }> {
-  return get('/tasks/stats')
+  return get('/system/tasks/stats')
 }
 
 /** 获取任务详情 */
 export async function getTask(taskId: string): Promise<{ success: boolean; data: TaskInfo }> {
-  return get(`/tasks/${taskId}`)
+  return get(`/system/tasks/${taskId}`)
 }
 
 /** 创建后台任务 */
@@ -84,17 +84,17 @@ export async function createTask(data: {
   message: string
   data: { task_id: string }
 }> {
-  return post('/tasks', data)
+  return post('/system/tasks', data)
 }
 
 /** 取消任务 */
 export async function cancelTask(taskId: string): Promise<{ success: boolean; message: string }> {
-  return post(`/tasks/${taskId}/cancel`)
+  return post(`/system/tasks/${taskId}/cancel`)
 }
 
 /** 删除任务记录 */
 export async function deleteTask(taskId: string): Promise<{ success: boolean; message: string }> {
-  return del(`/tasks/${taskId}`)
+  return del(`/system/tasks/${taskId}`)
 }
 
 /** 获取运行中任务数 */
@@ -102,7 +102,7 @@ export async function getRunningTaskCount(): Promise<{
   success: boolean
   data: RunningTaskCount
 }> {
-  return get('/tasks/running/count')
+  return get('/system/tasks/running/count')
 }
 
 // ==================== 分组导出 ====================

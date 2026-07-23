@@ -346,11 +346,11 @@ const handleChangePassword = async () => {
       if (passwordFormRef.value) {
         passwordFormRef.value.clearValidate(['newPassword', 'confirmPassword'])
       }
-      ElMessage.error('当前密码错误，请重新输入', { duration: 5000 })
+      ElMessage.error({ message: '当前密码错误，请重新输入', duration: 5000 })
     } else if (field === 'new_password') {
       // 新密码策略错误：高亮 newPassword 并显示后端具体消息
       newPasswordError.value = String(detailMsg)
-      ElMessage.error(String(detailMsg), { duration: 5000 })
+      ElMessage.error({ message: String(detailMsg), duration: 5000 })
     } else {
       // 其它错误（如 403/500）
       ElMessage.error(typeof detailMsg === 'string' ? detailMsg : '密码修改失败')

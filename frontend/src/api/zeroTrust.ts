@@ -95,7 +95,7 @@ export async function getTrustAssessment(): Promise<{
   success: boolean
   data: TrustAssessment
 }> {
-  return get('/zero-trust/assessment')
+  return get('/system/zero-trust/assessment')
 }
 
 /** 获取安全策略列表 */
@@ -103,21 +103,21 @@ export async function listSecurityPolicies(params?: {
   category?: string
   enabled_only?: boolean
 }): Promise<{ success: boolean; data: SecurityPolicyList }> {
-  return get('/zero-trust/policies', params)
+  return get('/system/zero-trust/policies', params)
 }
 
 /** 获取安全策略详情 */
 export async function getSecurityPolicy(
   policyId: string
 ): Promise<{ success: boolean; data: SecurityPolicy }> {
-  return get(`/zero-trust/policies/${policyId}`)
+  return get(`/system/zero-trust/policies/${policyId}`)
 }
 
 /** 评估访问请求 */
 export async function evaluateAccessRequest(
   data: AccessEvaluationRequest
 ): Promise<{ success: boolean; data: AccessEvaluationResult }> {
-  return post('/zero-trust/evaluate', data)
+  return post('/system/zero-trust/evaluate', data)
 }
 
 /** 获取安全事件列表 */
@@ -127,7 +127,7 @@ export async function listSecurityEvents(params?: {
   page?: number
   page_size?: number
 }): Promise<{ success: boolean; data: SecurityEventList }> {
-  return get('/zero-trust/events', params)
+  return get('/system/zero-trust/events', params)
 }
 
 /** 记录安全事件 */
@@ -142,7 +142,7 @@ export async function reportSecurityEvent(data: {
   message: string
   data: { event_id: number }
 }> {
-  return post('/zero-trust/events', data)
+  return post('/system/zero-trust/events', data)
 }
 
 /** 获取安全事件统计 */
@@ -150,7 +150,7 @@ export async function getSecurityEventStats(): Promise<{
   success: boolean
   data: SecurityEventStats
 }> {
-  return get('/zero-trust/events/stats')
+  return get('/system/zero-trust/events/stats')
 }
 
 // ==================== 分组导出 ====================

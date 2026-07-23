@@ -117,6 +117,17 @@ class UpdateQuietHoursRequest(BaseModel):
     end_time: Optional[str] = None
 
 
+class UpdateNotificationPreferencesRequest(BaseModel):
+    """统一更新通知偏好请求（前端扁平结构）"""
+
+    email_approval: Optional[bool] = None
+    email_task: Optional[bool] = None
+    email_system: Optional[bool] = None
+    site_approval: Optional[bool] = None
+    site_task: Optional[bool] = None
+    site_system: Optional[bool] = None
+
+
 # ==================== 依赖注入 ====================
 
 
@@ -400,7 +411,7 @@ async def get_message(
 notifications_router = APIRouter(prefix="/notifications", tags=["通知设置"])
 
 
-@notifications_router.get("/preferences", response_model=NotificationPreferenceResponse)
+@notifications_router.get("/preferences")
 async def get_notification_preferences(
     current_user=Depends(get_current_user),
     service: NotificationPreferenceService = Depends(get_preference_service),
@@ -409,9 +420,69 @@ async def get_notification_preferences(
     获取通知偏好设置
 
     需求: 6.2 - 用户可配置接收哪些类型的通知
+    返回嵌套结构 + 前端扁平字段，确保两端对齐
     """
     preference = service.get_preference(current_user.id)
-    return service.preference_to_dict(preference)
+    result = service.preference_to_dict(preference)
+
+    site = result.get("site_message", {})
+    email = result.get("email", {})
+    result["site_system"] = site.get("system", True)
+    result["site_approval"] = site.get("approval", True)
+    result["site_task"] = site.get("task", True)
+    result["email_system"] = email.get("system", True)
+    result["email_approval"] = email.get("approval", True)
+    result["email_task"] = email.get("task", True)
+
+    return result
+
+
+@notifications_router.put("/preferences")
+async def update_notification_preferences(
+    data: UpdateNotificationPreferencesRequest,
+    current_user=Depends(get_current_user),
+    service: NotificationPreferenceService = Depends(get_preference_service),
+):
+    """统一更新通知偏好（前端扁平结构）"""
+    preference = service.get_preference(current_user.id)
+    pref_dict = service.preference_to_dict(preference)
+
+    site = pref_dict.get("site_message", {})
+    email = pref_dict.get("email", {})
+
+    if data.site_system is not None:
+        site["system"] = data.site_system
+    if data.site_approval is not None:
+        site["approval"] = data.site_approval
+    if data.site_task is not None:
+        site["task"] = data.site_task
+
+    if data.email_system is not None:
+        email["system"] = data.email_system
+    if data.email_approval is not None:
+        email["approval"] = data.email_approval
+    if data.email_task is not None:
+        email["task"] = data.email_task
+
+    service.update_site_message_settings(
+        user_id=current_user.id,
+        enabled=site.get("enabled", True),
+        system=site.get("system", True),
+        approval=site.get("approval", True),
+        task=site.get("task", True),
+        report=site.get("report", True),
+    )
+    service.update_email_settings(
+        user_id=current_user.id,
+        enabled=email.get("enabled", True),
+        system=email.get("system", True),
+        approval=email.get("approval", True),
+        task=email.get("task", True),
+        report=email.get("report", False),
+    )
+
+    updated = service.get_preference(current_user.id)
+    return service.preference_to_dict(updated)
 
 
 @notifications_router.put("/preferences/site-message")

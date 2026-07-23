@@ -52,7 +52,7 @@ export async function listUpdateLogs(params?: {
   page_size?: number
   version?: string
 }): Promise<{ success: boolean; data: UpdateLogListResponse }> {
-  return get('/update-logs', params)
+  return get('/system/update-logs', params)
 }
 
 /** 获取最新更新日志 */
@@ -60,14 +60,14 @@ export async function getLatestUpdateLog(): Promise<{
   success: boolean
   data: UpdateLog | LatestVersionInfo
 }> {
-  return get('/update-logs/latest')
+  return get('/system/update-logs/latest')
 }
 
 /** 获取更新日志详情 */
 export async function getUpdateLog(
   updateId: string
 ): Promise<{ success: boolean; data: UpdateLog }> {
-  return get(`/update-logs/${updateId}`)
+  return get(`/system/update-logs/${updateId}`)
 }
 
 /** 创建更新日志 */
@@ -80,7 +80,7 @@ export async function createUpdateLog(data: {
   message: string
   data: UpdateLog
 }> {
-  return post('/update-logs', data)
+  return post('/system/update-logs', data)
 }
 
 /** 初始化版本历史 */
@@ -89,7 +89,7 @@ export async function initializeVersionHistory(params?: VersionInitParams): Prom
   message: string
   data: Record<string, any>
 }> {
-  return post('/update-logs/initialize', params || {})
+  return post('/system/update-logs/initialize', params || {})
 }
 
 /** 同步版本历史 */
@@ -98,14 +98,14 @@ export async function syncVersionHistory(): Promise<{
   message: string
   data: Record<string, any>
 }> {
-  return post('/update-logs/sync')
+  return post('/system/update-logs/sync')
 }
 
 /** 删除更新日志 */
 export async function deleteUpdateLog(
   updateId: string
 ): Promise<{ success: boolean; message: string }> {
-  return del(`/update-logs/${updateId}`)
+  return del(`/system/update-logs/${updateId}`)
 }
 
 /** 检查版本变更 */
@@ -114,7 +114,7 @@ export async function checkVersionChange(): Promise<{
   message: string
   data: VersionCheckResult | Record<string, any>
 }> {
-  return get('/update-logs/check/version')
+  return get('/system/update-logs/check/version')
 }
 
 // ==================== 分组导出 ====================

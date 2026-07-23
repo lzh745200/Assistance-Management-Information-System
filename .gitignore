@@ -57,6 +57,7 @@ nodejs/
 # ===== Build artifacts =====
 dist/
 /build/
+resources/frontend-old/
 # 保留 build/linux/（DEB 安装脚本需版本控制）
 !/build/linux/
 !/build/linux/**

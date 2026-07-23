@@ -167,10 +167,12 @@ const pieOpt = computed(() => {
   }
 })
 
-function levelTag(level: string) {
-  const map: Record<string, string> = {
+function levelTag(
+  level: string
+): 'success' | 'warning' | 'danger' | 'info' | 'primary' | undefined {
+  const map: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'primary' | undefined> = {
     优秀: 'success',
-    良好: '',
+    良好: 'primary',
     合格: 'warning',
     待改进: 'danger',
   }

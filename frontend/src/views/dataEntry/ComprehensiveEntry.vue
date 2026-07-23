@@ -68,7 +68,12 @@
                   style="width: 100%"
                   @change="onRegionChange"
                 >
-                  <el-option v-for="p in provinces" :key="p" :label="p" :value="p" />
+                  <el-option
+                    v-for="p in provinces"
+                    :key="p.value"
+                    :label="p.label"
+                    :value="p.value"
+                  />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -424,9 +429,9 @@
                       placeholder="请选择项目类型"
                       ><el-option
                         v-for="t in industryTypes"
-                        :key="t"
-                        :label="t"
-                        :value="t" /></el-select></el-form-item
+                        :key="t.value"
+                        :label="t.label"
+                        :value="t.value" /></el-select></el-form-item
                 ></el-col>
                 <el-col :span="6"
                   ><el-form-item label="项目数量"
@@ -470,9 +475,9 @@
                       placeholder="请选择项目类型"
                       ><el-option
                         v-for="t in infraTypes"
-                        :key="t"
-                        :label="t"
-                        :value="t" /></el-select></el-form-item
+                        :key="t.value"
+                        :label="t.label"
+                        :value="t.value" /></el-select></el-form-item
                 ></el-col>
                 <el-col :span="6"
                   ><el-form-item label="项目数量"
@@ -516,9 +521,9 @@
                       placeholder="请选择活动类型"
                       ><el-option
                         v-for="t in partyTypes"
-                        :key="t"
-                        :label="t"
-                        :value="t" /></el-select></el-form-item
+                        :key="t.value"
+                        :label="t.label"
+                        :value="t.value" /></el-select></el-form-item
                 ></el-col>
                 <el-col :span="6"
                   ><el-form-item label="活动数量"
@@ -552,9 +557,9 @@
                       placeholder="请选择活动类型"
                       ><el-option
                         v-for="t in medicalTypes"
-                        :key="t"
-                        :label="t"
-                        :value="t" /></el-select></el-form-item
+                        :key="t.value"
+                        :label="t.label"
+                        :value="t.value" /></el-select></el-form-item
                 ></el-col>
                 <el-col :span="6"
                   ><el-form-item label="活动数量"
@@ -660,9 +665,9 @@
                       placeholder="请选择活动类型"
                       ><el-option
                         v-for="t in educationTypes"
-                        :key="t"
-                        :label="t"
-                        :value="t" /></el-select></el-form-item
+                        :key="t.value"
+                        :label="t.label"
+                        :value="t.value" /></el-select></el-form-item
                 ></el-col>
                 <el-col :span="6"
                   ><el-form-item label="活动数量"

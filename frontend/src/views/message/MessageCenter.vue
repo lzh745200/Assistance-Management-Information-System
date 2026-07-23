@@ -97,17 +97,21 @@
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button-group>
-              <el-button size="small" :disabled="row.is_read" @click.stop="handleMarkRead(row)">
+              <el-button
+                size="small"
+                :disabled="row.is_read"
+                @click.stop="handleMarkRead(row as Message)"
+              >
                 <el-icon><Check /></el-icon>
               </el-button>
-              <el-button size="small" type="danger" @click.stop="handleDelete(row)">
+              <el-button size="small" type="danger" @click.stop="handleDelete(row as Message)">
                 <el-icon><Delete /></el-icon>
               </el-button>
               <el-button
                 v-if="row.link"
                 size="small"
                 type="primary"
-                @click.stop="handleGoToLink(row)"
+                @click.stop="handleGoToLink(row as Message)"
               >
                 <el-icon><Link /></el-icon>
               </el-button>

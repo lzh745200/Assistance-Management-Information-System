@@ -5,6 +5,24 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布] - 2026-07-23
+
+### 前后端100%对齐 + 全量类型错误清零
+- 🔗 **前后端API路径对齐** — 修复6个前端API文件缺少 `/system` 前缀（errorReport、tasks、updateLogs、i18n、help、zeroTrust），导致这些模块请求全部404
+- 🔗 **注册 notifications_router** — 后端 `messages.py` 中定义的通知偏好路由从未注册到 `api_v1_router`，前端通知偏好功能完全失效；现已注册并添加统一 `PUT /notifications/preferences` 端点
+- 🔗 **通知偏好响应格式对齐** — GET 端点增加前端期望的扁平字段（site_system、email_approval等），兼容嵌套结构
+- 🐛 **修复 vue-tsc 97 处类型错误（28个文件）** — 涵盖6大类：el-table DefaultRow 类型转换（~30处）、YearlyOverview 属性名 kebab→camelCase（20处）、ComprehensiveEntry el-option 对象解构（12处）、el-tag :type 联合类型（6处）、缺失导出/参数不匹配（~15处）、其他单独修复（~14处）
+- 🧹 **清理372个无用文件** — 移除 `resources/frontend-old/` 旧构建产物（CSS/JS/图片）和 `logs/app.log.2026-06-19` 日志文件，更新 .gitignore
+- 💅 **ESLint prettier 格式统一** — 自动修复46处格式警告，ESLint --max-warnings 0 通过
+
+### 测试结果 (2026-07-23)
+- ✅ 后端: **9,997 测试通过** (33 已有失败, 16 greenlet 环境错误)
+- ✅ 前端: **1,622 测试通过** (125 文件, 0 失败)
+- ✅ vue-tsc: **0 错误** (从97降至0)
+- ✅ ESLint: **0 错误 0 警告**
+- ✅ Flake8: **0 错误**
+- ✅ 路由加载: 42/42 模块
+
 ## [未发布] - 2026-07-22
 
 ### 全面故障检测与审查修复

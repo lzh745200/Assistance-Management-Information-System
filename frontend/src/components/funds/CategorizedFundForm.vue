@@ -91,11 +91,11 @@ const yearOptions = computed(() => {
   return years
 })
 
-const formData = reactive({
+const formData = reactive<Record<string, any>>({
   year: props.initialData?.year ?? currentYear,
   totalAmount: props.initialData?.totalAmount ?? 0,
   usedAmount: props.initialData?.usedAmount ?? 0,
-  remainingAmount: computed(() => formData.totalAmount - formData.usedAmount) as unknown as number,
+  remainingAmount: (props.initialData?.totalAmount ?? 0) - (props.initialData?.usedAmount ?? 0),
   remark: props.initialData?.remark ?? '',
 })
 

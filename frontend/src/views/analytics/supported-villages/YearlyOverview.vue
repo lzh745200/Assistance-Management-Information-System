@@ -185,15 +185,15 @@ const sections = computed(() => {
       key: 'force_investment',
       title: '力量投入',
       icon: markRaw(Medal),
-      stats: d?.['force-investment']
+      stats: d?.forceInvestment
         ? [
             {
               label: '领导到村(人次)',
-              value: d['force-investment'].seniorLeaderVisits ?? 0,
+              value: d.forceInvestment.seniorLeaderVisits ?? 0,
             },
             {
               label: '官兵到村(人次)',
-              value: d['force-investment'].unitSoldierVisits ?? 0,
+              value: d.forceInvestment.unitSoldierVisits ?? 0,
             },
           ]
         : [],
@@ -202,11 +202,11 @@ const sections = computed(() => {
       key: 'industry',
       title: '产业帮扶',
       icon: markRaw(OfficeBuilding),
-      stats: d?.industry
+      stats: d?.industrySupport
         ? [
             {
               label: '当年投入(万)',
-              value: (d.industry.investment ?? 0).toFixed(2),
+              value: (d.industrySupport.investment ?? 0).toFixed(2),
             },
           ]
         : [],
@@ -228,15 +228,15 @@ const sections = computed(() => {
       key: 'party_building',
       title: '党建帮扶',
       icon: markRaw(Stamp),
-      stats: d?.['party-building']
+      stats: d?.partyBuilding
         ? [
             {
               label: '投入(万)',
-              value: (d['party-building'].investment ?? 0).toFixed(2),
+              value: (d.partyBuilding.investment ?? 0).toFixed(2),
             },
             {
               label: '联建活动(次)',
-              value: d['party-building'].jointActivities ?? 0,
+              value: d.partyBuilding.jointActivities ?? 0,
             },
           ]
         : [],
@@ -245,15 +245,15 @@ const sections = computed(() => {
       key: 'medical',
       title: '医疗帮扶',
       icon: markRaw(FirstAidKit),
-      stats: d?.medical
+      stats: d?.medicalSupport
         ? [
             {
               label: '投入(万)',
-              value: (d.medical.investment ?? 0).toFixed(2),
+              value: (d.medicalSupport.investment ?? 0).toFixed(2),
             },
             {
               label: '巡诊(人次)',
-              value: d.medical.patientsServed ?? 0,
+              value: d.medicalSupport.patientsServed ?? 0,
             },
           ]
         : [],
@@ -262,11 +262,11 @@ const sections = computed(() => {
       key: 'consumption',
       title: '消费帮扶',
       icon: markRaw(ShoppingCart),
-      stats: d?.consumption
+      stats: d?.consumptionSupport
         ? [
             {
               label: '采购产品(万)',
-              value: (d.consumption.villageProductsPurchase ?? 0).toFixed(2),
+              value: (d.consumptionSupport.villageProductsPurchase ?? 0).toFixed(2),
             },
           ]
         : [],
@@ -275,15 +275,15 @@ const sections = computed(() => {
       key: 'employment',
       title: '就业帮扶',
       icon: markRaw(Briefcase),
-      stats: d?.employment
+      stats: d?.employmentSupport
         ? [
             {
               label: '聘用(人)',
-              value: d.employment.hiredPopulation ?? 0,
+              value: d.employmentSupport.hiredPopulation ?? 0,
             },
             {
               label: '培训(人次)',
-              value: d.employment.trainedPopulation ?? 0,
+              value: d.employmentSupport.trainedPopulation ?? 0,
             },
           ]
         : [],
@@ -292,15 +292,15 @@ const sections = computed(() => {
       key: 'education',
       title: '教育帮扶',
       icon: markRaw(Reading),
-      stats: d?.education
+      stats: d?.educationSupport
         ? [
             {
               label: '投入(万)',
-              value: (d.education.investment ?? 0).toFixed(2),
+              value: (d.educationSupport.investment ?? 0).toFixed(2),
             },
             {
               label: '资助学生(人)',
-              value: d.education.aidedStudents ?? 0,
+              value: d.educationSupport.aidedStudents ?? 0,
             },
           ]
         : [],
@@ -346,9 +346,9 @@ function openEditDialog(key: string) {
   editDialogVisible.value = true
 }
 
-async function handleDownloadTemplate(sectionKey: string) {
+async function handleDownloadTemplate(_sectionKey: string) {
   try {
-    await downloadTemplate(sectionKey, selectedYear.value)
+    await downloadTemplate()
     // 模板下载成功 — 浏览器已确认
   } catch {
     ElMessage.error('模板下载失败')
@@ -370,7 +370,12 @@ async function handleImportSection(sectionKey: string, file: any) {
   }
   sectionImporting.value = sectionKey
   try {
-    const result = await importSectionData(villageId.value, selectedYear.value, sectionKey, rawFile) as any
+    const result = (await importSectionData(
+      villageId.value,
+      selectedYear.value,
+      sectionKey,
+      rawFile
+    )) as any
     ElMessage.success(`导入成功 ${result.imported || result.rows || 0} 条`)
     if (result.failed > 0) {
       ElMessage.warning(`${result.failed} 条导入失败`)
@@ -400,7 +405,11 @@ async function handleImportAll(file: any) {
   const rawFile = file.raw || file
   importingAll.value = true
   try {
-    const result = await importAllSectionsData(villageId.value, selectedYear.value, rawFile) as any
+    const result = (await importAllSectionsData(
+      villageId.value,
+      selectedYear.value,
+      rawFile
+    )) as any
     const secCount = result.sections?.length || result.sheets || 0
     ElMessage.success(
       `全部导入完成：成功 ${result.imported || result.rows || 0} 条（${secCount} 个板块）`

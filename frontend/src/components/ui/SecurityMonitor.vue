@@ -19,7 +19,7 @@
         <el-table-column prop="message" label="详细信息" />
         <el-table-column label="操作" width="120">
           <template #default="{ row }">
-            <el-button size="small" @click="handleDetail(row)">详情</el-button>
+            <el-button size="small" @click="handleDetail(row as SecurityEvent)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>

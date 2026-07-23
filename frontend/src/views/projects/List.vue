@@ -233,7 +233,7 @@ const loading = ref(false)
 const batchDeleting = ref(false)
 const selectedRows = ref<Project[]>([])
 const selectedIds = computed(() => selectedRows.value.map((r) => r.id))
-const tableRef = ref<InstanceType<typeof ElTable> | null>(null)
+const tableRef = ref<any>(null)
 
 // 筛选表单
 const filterForm = reactive({

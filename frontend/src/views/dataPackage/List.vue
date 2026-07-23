@@ -59,7 +59,7 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="handlePreview(row)">
+            <el-button link type="primary" size="small" @click="handlePreview(row as DataPackage)">
               预览
             </el-button>
             <el-button
@@ -67,14 +67,16 @@
               link
               type="success"
               size="small"
-              @click="handleConfirmImport(row)"
+              @click="handleConfirmImport(row as DataPackage)"
             >
               确认导入
             </el-button>
-            <el-button link type="primary" size="small" @click="handleDownload(row)">
+            <el-button link type="primary" size="small" @click="handleDownload(row as DataPackage)">
               下载
             </el-button>
-            <el-button link type="danger" size="small" @click="handleDelete(row)"> 删除 </el-button>
+            <el-button link type="danger" size="small" @click="handleDelete(row as DataPackage)">
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -165,7 +167,7 @@ const pagination = reactive({
 const packages = computed(() => packageStore.packages)
 const loading = computed(() => packageStore.loading)
 const total = computed(() => packageStore.total)
-const currentOrgId = computed(() => orgStore.myOrganization?.id)
+const currentOrgId = computed(() => orgStore.current?.id)
 
 const statusLabels: Record<string, string> = {
   pending: '待处理',

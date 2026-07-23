@@ -43,7 +43,7 @@
       />
       <div v-if="pickedLng != null" class="picked-info">
         <el-tag type="warning" size="large"
-          >已选坐标: {{ pickedLng.toFixed(6) }}, {{ pickedLat.toFixed(6) }}</el-tag
+          >已选坐标: {{ pickedLng.toFixed(6) }}, {{ pickedLat!.toFixed(6) }}</el-tag
         >
       </div>
       <template #footer>
@@ -140,7 +140,7 @@ function onDialogOpened() {
 }
 
 // 点击地图任意位置 → 选中坐标
-function onMapClick(marker: { name?: string; lng?: number; lat?: number }) {
+function onMapClick(marker: { name?: string; lng?: number | null; lat?: number | null }) {
   if (marker.lng != null && marker.lat != null) {
     pickedLng.value = marker.lng
     pickedLat.value = marker.lat

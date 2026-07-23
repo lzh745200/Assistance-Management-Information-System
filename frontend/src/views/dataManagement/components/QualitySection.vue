@@ -82,7 +82,7 @@
               type="primary"
               link
               size="small"
-              @click="handleViewIssues(row)"
+              @click="handleViewIssues(row as CheckItem)"
             >
               查看详情
             </el-button>

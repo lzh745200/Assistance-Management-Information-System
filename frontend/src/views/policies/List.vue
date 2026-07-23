@@ -134,7 +134,7 @@
         <el-table-column prop="department" label="发布部门" min-width="150" show-overflow-tooltip />
         <el-table-column prop="status" label="状态" width="80" align="center">
           <template #default="{ row }">
-            <el-tag :type="getStatusColor(row.status)">
+            <el-tag :type="getStatusTagType(row.status)">
               {{ row.status_name || getStatusLabel(row.status) }}
             </el-tag>
           </template>
@@ -197,6 +197,11 @@ type OrganizationLevel = string
 
 // Wrapper: API defines getLevelLabel(level) but view calls it with (category, level)
 const getLevelLabel = (...args: any[]): string => (_getLevelLabel as any)(...args)
+
+// Typed wrapper for el-tag :type (getStatusColor returns `string`, el-tag expects a union)
+type ElTagType = 'success' | 'warning' | 'danger' | 'info' | 'primary' | undefined
+const getStatusTagType = (status: string): ElTagType =>
+  (getStatusColor(status) || undefined) as ElTagType
 
 const { pushSafe } = useRouterSafe()
 const route = useRoute()
@@ -294,7 +299,7 @@ const loadData = async () => {
 }
 
 // 排序变化
-const handleSortChange = ({ prop, order }: { prop: string; order: string | null }) => {
+const handleSortChange = ({ prop, order }: { prop: string | null; order: string | null }) => {
   ;(policyStore as any).setFilters({
     order_by: prop || 'publish_date',
     order_desc: order !== 'ascending',

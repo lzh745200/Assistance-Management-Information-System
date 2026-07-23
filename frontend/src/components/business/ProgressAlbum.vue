@@ -72,8 +72,10 @@ withDefaults(
   }
 )
 
-function getStatusType(status: string): 'success' | 'warning' | 'danger' | 'info' | 'primary' | '' {
-  const map: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'primary' | ''> = {
+function getStatusType(
+  status: string
+): 'success' | 'warning' | 'danger' | 'info' | 'primary' | undefined {
+  const map: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'primary'> = {
     completed: 'success',
     in_progress: 'warning',
     进行中: 'warning',
@@ -83,7 +85,7 @@ function getStatusType(status: string): 'success' | 'warning' | 'danger' | 'info
     cancelled: 'info',
     已取消: 'info',
   }
-  return map[status] || ''
+  return map[status] || undefined
 }
 </script>
 

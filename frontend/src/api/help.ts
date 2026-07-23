@@ -81,7 +81,7 @@ export async function getHelpCategories(): Promise<{
   success: boolean
   data: HelpCategoryList
 }> {
-  return get('/help/categories')
+  return get('/system/help/categories')
 }
 
 /** 获取帮助文档列表 */
@@ -91,14 +91,14 @@ export async function getHelpArticles(params?: {
   page?: number
   page_size?: number
 }): Promise<{ success: boolean; data: HelpArticleListResponse }> {
-  return get('/help/articles', params)
+  return get('/system/help/articles', params)
 }
 
 /** 获取帮助文档详情 */
 export async function getHelpArticle(
   articleId: number
 ): Promise<{ success: boolean; data: HelpArticle }> {
-  return get(`/help/articles/${articleId}`)
+  return get(`/system/help/articles/${articleId}`)
 }
 
 /** 搜索帮助文档 */
@@ -106,7 +106,7 @@ export async function searchHelp(
   q: string,
   limit?: number
 ): Promise<{ success: boolean; data: HelpSearchResponse }> {
-  return get('/help/search', { q, limit: limit || 10 })
+  return get('/system/help/search', { q, limit: limit || 10 })
 }
 
 /** 获取系统简介 */
@@ -114,7 +114,7 @@ export async function getHelpSystemInfo(): Promise<{
   success: boolean
   data: SystemInfo
 }> {
-  return get('/help/system-info')
+  return get('/system/help/system-info')
 }
 
 // ==================== 分组导出 ====================

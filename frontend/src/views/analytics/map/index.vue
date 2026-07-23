@@ -50,7 +50,7 @@
             :visible="showSearchResults"
             placement="bottom"
             :width="300"
-            trigger="manual"
+            trigger="click"
           >
             <div class="search-results">
               <div
@@ -156,6 +156,10 @@ import { ref, computed, shallowRef, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { getMapMarkers, getRegions } from '@/api/map'
 import { parseCoordinate, calculateRoute, type LatLng, type RouteResult } from '@/utils/geo'
+
+interface RouteResultWithName extends RouteResult {
+  destinationName?: string
+}
 import OfflineMap from '@/components/map/OfflineMap.vue'
 import MapVisualization from './MapVisualization.vue'
 import { Van, Search } from '@element-plus/icons-vue'
@@ -194,7 +198,7 @@ const searchResults = ref<
 const showSearchResults = ref(false)
 const routeLoading = ref(false)
 const originCoord = ref<LatLng | null>(null)
-const routeResults = shallowRef<RouteResult[]>([])
+const routeResults = shallowRef<RouteResultWithName[]>([])
 
 /** Route lines to render on map: [[lng1,lat1], [lng2,lat2], ...] */
 const routeLines = computed(() => {
@@ -389,10 +393,10 @@ function handleCalcRoutes() {
       })),
   ]
 
-  const results: RouteResult[] = allTargets.map((t) => {
+  const results: RouteResultWithName[] = allTargets.map((t) => {
     const r = calculateRoute(originCoord.value!, { lat: t.lat, lng: t.lng })
-    return { ...r, destinationName: t.name } as RouteResult
-  }) as RouteResult[]
+    return { ...r, destinationName: t.name }
+  })
 
   // Sort by distance
   results.sort((a, b) => a.straightDistanceKm - b.straightDistanceKm)

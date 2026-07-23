@@ -55,7 +55,7 @@ export async function submitErrorReport(data: {
   message: string
   data: { report_id: number }
 }> {
-  return post('/error-reports', data)
+  return post('/system/error-reports', data)
 }
 
 /** 获取错误报告列表 */
@@ -66,7 +66,7 @@ export async function listErrorReports(params?: {
   page?: number
   page_size?: number
 }): Promise<{ success: boolean; data: ErrorReportListResponse }> {
-  return get('/error-reports', params)
+  return get('/system/error-reports', params)
 }
 
 /** 获取错误统计 */
@@ -74,14 +74,14 @@ export async function getErrorStats(): Promise<{
   success: boolean
   data: ErrorStats
 }> {
-  return get('/error-reports/stats')
+  return get('/system/error-reports/stats')
 }
 
 /** 获取错误报告详情 */
 export async function getErrorReport(
   reportId: number
 ): Promise<{ success: boolean; data: ErrorReport }> {
-  return get(`/error-reports/${reportId}`)
+  return get(`/system/error-reports/${reportId}`)
 }
 
 /** 更新错误报告状态 */
@@ -89,7 +89,7 @@ export async function updateErrorReport(
   reportId: number,
   data: { status: string; resolution_note?: string }
 ): Promise<{ success: boolean; message: string }> {
-  return put(`/error-reports/${reportId}`, data)
+  return put(`/system/error-reports/${reportId}`, data)
 }
 
 /** 简化版异常上报 */
@@ -102,7 +102,7 @@ export async function reportException(
   data: { report_id: number }
 }> {
   return post(
-    `/error-reports/report-exception?source=${encodeURIComponent(source)}&message=${encodeURIComponent(message)}`
+    `/system/error-reports/report-exception?source=${encodeURIComponent(source)}&message=${encodeURIComponent(message)}`
   )
 }
 

@@ -55,7 +55,7 @@ export async function getLanguages(): Promise<{
   success: boolean
   data: Language[]
 }> {
-  return get('/i18n/languages')
+  return get('/system/i18n/languages')
 }
 
 /** 获取指定语言的翻译资源 */
@@ -63,7 +63,7 @@ export async function getTranslations(
   lang: string,
   namespace?: string
 ): Promise<{ success: boolean; data: TranslationResource }> {
-  return get(`/i18n/translations/${lang}`, namespace ? { namespace } : undefined)
+  return get(`/system/i18n/translations/${lang}`, namespace ? { namespace } : undefined)
 }
 
 /** 翻译单个键值 */
@@ -71,7 +71,7 @@ export async function translateKey(
   key: string,
   language?: string
 ): Promise<{ success: boolean; data: TranslateResult }> {
-  return get('/i18n/translate', { key, language: language || 'zh-CN' })
+  return get('/system/i18n/translate', { key, language: language || 'zh-CN' })
 }
 
 /** 检查缺失的翻译键 */
@@ -79,7 +79,7 @@ export async function getMissingKeys(
   sourceLang?: string,
   targetLang?: string
 ): Promise<{ success: boolean; data: MissingKeysReport }> {
-  return get('/i18n/missing-keys', {
+  return get('/system/i18n/missing-keys', {
     source_lang: sourceLang || 'zh-CN',
     target_lang: targetLang || 'en',
   })
@@ -90,7 +90,7 @@ export async function getCurrentLanguage(): Promise<{
   success: boolean
   data: CurrentLanguage
 }> {
-  return get('/i18n/current')
+  return get('/system/i18n/current')
 }
 
 // ==================== 分组导出 ====================

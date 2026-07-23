@@ -324,8 +324,8 @@ async function loadHistory() {
   }
 }
 
-function statusTagType(status: string): string {
-  return formatImportStatus(status).type
+function statusTagType(status: string): 'success' | 'warning' | 'danger' | 'info' | 'primary' {
+  return formatImportStatus(status).type as 'success' | 'warning' | 'danger' | 'info' | 'primary'
 }
 
 function statusLabel(status: string): string {

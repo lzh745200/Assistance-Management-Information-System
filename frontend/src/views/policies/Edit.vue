@@ -185,11 +185,7 @@ import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
 import { ElMessage, type FormInstance, type FormRules, type UploadFile } from 'element-plus'
 import { Back, Upload, Check } from '@element-plus/icons-vue'
 import { usePolicyStore } from '@/stores/policy'
-import {
-  getLevelOptions,
-  type PolicyCategory,
-  type PolicyStatus,
-} from '@/api/policy'
+import { getLevelOptions, type PolicyCategory, type PolicyStatus } from '@/api/policy'
 
 type OrganizationLevel = string
 
@@ -296,7 +292,7 @@ const loadData = async () => {
 
       // 处理附件列表
       if (policy.attachment_urls && policy.attachment_urls.length > 0) {
-        fileList.value = policy.attachment_urls.map((url, index) => ({
+        fileList.value = policy.attachment_urls.map((url: string, index: number) => ({
           name: url.split('/').pop() || `附件${index + 1}`,
           url: url,
           uid: index,

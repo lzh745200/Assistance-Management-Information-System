@@ -723,7 +723,13 @@ import {
   getSectionAttachments,
   deleteSectionAttachment,
 } from '@/api/supportedVillage'
-import type { SectionAttachment } from '@/api/supportedVillage'
+interface SectionAttachment {
+  id: number
+  fileName: string
+  fileSize: number
+  fileType: string
+  [key: string]: any
+}
 
 const props = defineProps<{
   villageId: number
@@ -1009,11 +1015,7 @@ async function loadSectionData() {
 // 加载附件列表
 async function loadAttachments() {
   try {
-    attachments.value = await getSectionAttachments(
-      props.villageId,
-      props.sectionKey,
-      selectedYear.value
-    )
+    attachments.value = await getSectionAttachments(props.villageId, props.sectionKey)
   } catch {
     attachments.value = []
   }

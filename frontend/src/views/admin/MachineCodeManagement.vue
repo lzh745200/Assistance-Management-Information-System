@@ -87,7 +87,7 @@
                 link
                 type="danger"
                 size="small"
-                @click="handleRevoke(row)"
+                @click="handleRevoke(row as MachineCodeRecord)"
               >
                 撤销
               </el-button>

@@ -133,9 +133,11 @@
         <el-table-column prop="deadline" label="截止日期" width="110" align="center">
           <template #default="scope">
             <div>
-              <span :class="getDeadlineClass(scope.row)">{{ formatDate(scope.row.deadline) }}</span>
+              <span :class="getDeadlineClass(scope.row as Task)">{{
+                formatDate(scope.row.deadline)
+              }}</span>
               <el-tag
-                v-if="isOverdue(scope.row)"
+                v-if="isOverdue(scope.row as Task)"
                 type="danger"
                 size="small"
                 effect="dark"
@@ -148,7 +150,7 @@
         <el-table-column label="操作" width="160" fixed="right" align="center">
           <template #default="scope">
             <div class="action-cell">
-              <el-button link type="primary" size="small" @click="editTask(scope.row)"
+              <el-button link type="primary" size="small" @click="editTask(scope.row as Task)"
                 >编辑</el-button
               >
               <el-button
@@ -156,12 +158,12 @@
                 link
                 type="success"
                 size="small"
-                @click="assignTask(scope.row)"
+                @click="assignTask(scope.row as Task)"
                 >分配</el-button
               >
               <el-dropdown
                 trigger="click"
-                @command="(cmd: string) => handleActionCommand(cmd, scope.row)"
+                @command="(cmd: string) => handleActionCommand(cmd, scope.row as Task)"
               >
                 <el-button link type="info" size="small"
                   >更多<el-icon class="el-icon--right"><ArrowDown /></el-icon

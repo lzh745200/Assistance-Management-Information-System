@@ -40,12 +40,12 @@
         </el-table-column>
         <el-table-column label="操作" width="250">
           <template #default="{ row }">
-            <el-button size="small" @click="handleViewDetail(row)"> 详情 </el-button>
+            <el-button size="small" @click="handleViewDetail(row as VersionItem)"> 详情 </el-button>
             <el-button
               size="small"
               type="primary"
               :disabled="versionList.length < 2"
-              @click="handleCompare(row)"
+              @click="handleCompare(row as VersionItem)"
             >
               对比
             </el-button>
@@ -96,7 +96,7 @@
         <el-tab-pane
           v-for="(changes, dataType) in currentVersion.changes"
           :key="dataType"
-          :label="dataType"
+          :label="String(dataType)"
           :name="dataType"
         >
           <el-descriptions :column="3" border>

@@ -97,11 +97,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { Aim, OfficeBuilding, Flag, Location, ArrowRight, List } from '@element-plus/icons-vue'
 import { usePolicyStore } from '@/stores/policy'
-import {
-  getLevelOptions,
-  type PolicyCategory,
-  type LevelConfig,
-} from '@/api/policy'
+import { getLevelOptions, type PolicyCategory, type LevelConfig } from '@/api/policy'
 
 type OrganizationLevel = string
 

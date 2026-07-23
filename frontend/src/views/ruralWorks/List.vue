@@ -361,8 +361,8 @@ const statsCards = computed(() => {
 
 async function loadServerStats() {
   try {
-    const { getRuralWorkStatistics } = await import('@/api/ruralWork')
-    const stats = await getRuralWorkStatistics()
+    const { ruralWorkApi } = await import('@/api/ruralWork')
+    const stats = await ruralWorkApi.getStatistics()
     if (stats) serverStats.value = stats
   } catch {
     /* 统计加载失败不阻塞主流程 */
@@ -585,8 +585,8 @@ function handleExport() {
 
 async function loadYears() {
   try {
-    const { getAvailableYears } = await import('@/api/ruralWork')
-    const years = await getAvailableYears()
+    const { ruralWorkApi } = await import('@/api/ruralWork')
+    const years = await ruralWorkApi.getAvailableYears()
     yearOptions.value = years.length > 0 ? years : generateDefaultYears()
     // 确保当前年度在选项中
     const curYear = new Date().getFullYear()
@@ -605,8 +605,8 @@ function generateDefaultYears(): number[] {
 
 async function loadVillages() {
   try {
-    const { getVillagesForSelect } = await import('@/api/ruralWork')
-    villageOptions.value = await getVillagesForSelect()
+    const { ruralWorkApi } = await import('@/api/ruralWork')
+    villageOptions.value = await ruralWorkApi.getVillagesForSelect()
   } catch (error) {
     logger.error('加载村庄列表失败', error)
     villageOptions.value = []

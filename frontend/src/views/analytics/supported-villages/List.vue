@@ -165,7 +165,7 @@
         <el-table-column prop="supportUnit" label="帮扶单位" min-width="120" />
         <el-table-column prop="villageName" label="帮扶村名称" min-width="120">
           <template #default="{ row }">
-            <el-link type="primary" @click="handleViewDetail(row)">
+            <el-link type="primary" @click="handleViewDetail(row as SupportedVillage)">
               {{ row.villageName }}
             </el-link>
           </template>
@@ -190,12 +190,31 @@
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
             <div class="operation-buttons">
-              <el-button type="primary" link size="small" @click="handleView(row)">查看</el-button>
-              <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
-              <el-button type="primary" link size="small" @click="handleYearlyData(row)"
+              <el-button
+                type="primary"
+                link
+                size="small"
+                @click="handleView(row as SupportedVillage)"
+                >查看</el-button
+              >
+              <el-button
+                type="primary"
+                link
+                size="small"
+                @click="handleEdit(row as SupportedVillage)"
+                >编辑</el-button
+              >
+              <el-button
+                type="primary"
+                link
+                size="small"
+                @click="handleYearlyData(row as SupportedVillage)"
                 >年度数据</el-button
               >
-              <el-popconfirm title="确定删除该帮扶村记录吗？" @confirm="handleDelete(row)">
+              <el-popconfirm
+                title="确定删除该帮扶村记录吗？"
+                @confirm="handleDelete(row as SupportedVillage)"
+              >
                 <template #reference>
                   <el-button type="danger" link size="small">删除</el-button>
                 </template>
@@ -435,9 +454,9 @@ function handleReset() {
 }
 
 // 排序变化
-function handleSortChange({ prop, order }: { prop: string; order: string }) {
-  sortParams.prop = prop
-  sortParams.order = order
+function handleSortChange({ prop, order }: { prop: string | null; order: string | null }) {
+  sortParams.prop = prop || ''
+  sortParams.order = order || ''
   loadData()
 }
 
@@ -513,7 +532,7 @@ async function handleBatchDelete() {
   batchDeleting.value = true
   try {
     const ids = selectedRows.value.map((row) => row.id)
-    const result = await batchDeleteSupportedVillages(ids) as any
+    const result = (await batchDeleteSupportedVillages(ids)) as any
     // 乐观更新：立即从表格数据中移除已删除行
     const idSet = new Set(ids)
     tableData.value = tableData.value.filter((item) => !idSet.has(item.id))
@@ -539,7 +558,7 @@ async function handleFormSubmit(data: SupportedVillageCreate) {
       logger.info('创建帮扶村...')
       const fundingItems = (data as any)._transitionFundingItems
       delete (data as any)._transitionFundingItems
-      const created = await createSupportedVillage(data) as any
+      const created = (await createSupportedVillage(data)) as any
       const villageId = created?.data?.id || created?.id
       if (fundingItems?.length && villageId) {
         try {
@@ -567,7 +586,7 @@ async function handleFormSubmit(data: SupportedVillageCreate) {
 async function handleExport() {
   exporting.value = true
   try {
-    const blob = await exportSupportedVillages({
+    await exportSupportedVillages({
       year: new Date().getFullYear(),
       filters: {
         keyword: filters.keyword || undefined,
@@ -579,13 +598,6 @@ async function handleExport() {
         isKeyCounty: filters.isKeyCounty,
       },
     })
-
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `帮扶村数据_${new Date().getFullYear()}.xlsx`
-    link.click()
-    window.URL.revokeObjectURL(url)
 
     // 导出成功 — 浏览器已确认
   } catch (error: any) {
@@ -606,7 +618,7 @@ function handleImport() {
     if (!file) return
 
     try {
-      const result = await importSupportedVillages(file) as any
+      const result = (await importSupportedVillages(file)) as any
       ElMessage.success(`导入成功：${result.imported}条，失败：${result.failed}条`)
       if (result.errors && result.errors.length > 0) {
         logger.error('导入错误:', result.errors)

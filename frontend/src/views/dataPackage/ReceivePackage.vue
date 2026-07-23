@@ -161,18 +161,18 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="handlePreview(row)">
+            <el-button link type="primary" size="small" @click="handlePreview(row as DataReport)">
               预览
             </el-button>
             <template v-if="row.status === 'pending' || row.status === 'submitted'">
-              <el-button link type="success" size="small" @click="handleReceive(row)">
+              <el-button link type="success" size="small" @click="handleReceive(row as DataReport)">
                 接收
               </el-button>
-              <el-button link type="danger" size="small" @click="handleReject(row)">
+              <el-button link type="danger" size="small" @click="handleReject(row as DataReport)">
                 拒绝
               </el-button>
             </template>
-            <el-button link type="primary" size="small" @click="handleDownload(row)">
+            <el-button link type="primary" size="small" @click="handleDownload(row as DataReport)">
               下载
             </el-button>
           </template>

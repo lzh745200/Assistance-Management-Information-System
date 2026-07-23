@@ -107,6 +107,13 @@ try:
 except Exception as e:
     logger.warning("加载 monitoring.data_tier 路由失败: %s", e, exc_info=True)
 
+try:
+    from app.api.v1.messages import notifications_router
+    api_v1_router.include_router(notifications_router)
+    logger.debug("已加载路由: notifications")
+except Exception as e:
+    logger.warning("加载 notifications 路由失败: %s", e, exc_info=True)
+
 # ---- 业务模块 ----
 # 使用列表而非 dict（key==value 无需 dict 映射）
 _BUSINESS_MODULES = [

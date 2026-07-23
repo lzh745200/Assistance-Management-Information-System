@@ -300,9 +300,13 @@ const progressColor = computed(() => {
 
 // --- Helpers ---
 const taskStatusType = (s: string): ElTagType =>
-  ((({ pending: 'info', in_progress: 'warning', completed: 'success' }) as Record<string, string>)[s] ?? 'info') as ElTagType
+  ((({ pending: 'info', in_progress: 'warning', completed: 'success' }) as Record<string, string>)[
+    s
+  ] ?? 'info') as ElTagType
 const priorityType = (p: string): ElTagType =>
-  ((({ low: 'info', normal: '', high: 'warning', urgent: 'danger' }) as Record<string, string>)[p] ?? 'info') as ElTagType
+  ((({ low: 'info', normal: '', high: 'warning', urgent: 'danger' }) as Record<string, string>)[
+    p
+  ] ?? 'info') as ElTagType
 const formatSize = (bytes?: number) => {
   if (bytes == null) return '-'
   if (bytes < 1024) return bytes + ' B'

@@ -286,7 +286,7 @@ const kpiTrends = ref<KpiTrends>({ villages: 0, population: 0, income: 0, invest
 
 async function fetchKpiTrends() {
   try {
-    const data = await getKpiTrends() as any
+    const data = (await getKpiTrends()) as any
     kpiTrends.value = {
       villages: data.villages ?? 0,
       population: data.population ?? 0,
@@ -434,7 +434,7 @@ const createSparkOption = (data: number[], config: SparkConfig): echarts.ECharts
 // 主图表配置生成（升级版——渐变面积 + 平滑曲线）
 // =========================================================================
 
-const updateCharts = () => {
+const updateCharts = async () => {
   // ── 地域分布饼图（升级版） ──
   if (regionChart) {
     const v = statistics.value.villages
@@ -564,7 +564,7 @@ const updateCharts = () => {
     let incomeData: number[] = years.map(() => 0)
 
     try {
-      const trendData = await getYearlyTrends(years.length) as any
+      const trendData = (await getYearlyTrends(years.length)) as any
       if (trendData && trendData.years) {
         years = trendData.years
         villagesData = trendData.villages ?? villagesData
