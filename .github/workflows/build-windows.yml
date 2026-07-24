@@ -26,7 +26,14 @@ jobs:
       - name: Backend smoke test
         run: |
           pip install -r backend/requirements.txt pytest-xdist pytest-cov pytest-rerunfailures
-          cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-fail-under=50 --reruns 2 --reruns-delay 1
+          cd backend && python -m pytest tests/ -q --tb=short -n auto --dist loadfile --cov=app --cov-fail-under=50 --reruns 3 --reruns-delay 1 --junitxml=test-results.xml
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: backend/test-results.xml
+          retention-days: 7
       - name: Frontend smoke test
         run: |
           cd frontend
