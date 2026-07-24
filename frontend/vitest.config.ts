@@ -47,6 +47,16 @@ export default defineConfig({
         'src/auto-imports.d.ts',
         'src/components.d.ts',
         'src/env.d.ts',
+        // 纯类型定义文件（仅 interface/type，无可执行语句，v8 计数为测量噪音）
+        'src/types/analytics.ts',
+        'src/types/api.ts',
+        'src/types/components.ts',
+        'src/types/entities.ts',
+        'src/types/helpProject.ts',
+        'src/types/index.ts',
+        'src/types/models.ts',
+        'src/types/organization.ts',
+        'src/types/policy.ts',
       ],
       thresholds: {
         'src/utils/**/*.ts': { statements: 80, branches: 70, functions: 75, lines: 80 },

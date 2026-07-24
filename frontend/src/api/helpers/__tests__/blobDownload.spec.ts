@@ -151,6 +151,7 @@ describe('downloadBlobAsFile', () => {
     const onStart = vi.fn()
     const onEnd = vi.fn()
 
+    vi.useFakeTimers()
     await downloadBlobAsFile(async () => mockResponse as AxiosResponse<Blob>, {
       fallbackFileName: 'default.txt',
       onStart,
@@ -159,6 +160,7 @@ describe('downloadBlobAsFile', () => {
 
     expect(onStart).toHaveBeenCalledTimes(1)
     expect(onEnd).toHaveBeenCalledTimes(1)
+    vi.advanceTimersByTime(100) // 冲刷 downloadBlob 内部 100ms 清理定时器，避免拆除后泄漏触发
   })
 
   it('onStart 和 onEnd 回调正确调用', async () => {
@@ -166,10 +168,12 @@ describe('downloadBlobAsFile', () => {
     const onStart = vi.fn()
     const onEnd = vi.fn()
 
+    vi.useFakeTimers()
     await downloadBlobAsFile(async () => mockBlob, { onStart, onEnd })
 
     expect(onStart).toHaveBeenCalledTimes(1)
     expect(onEnd).toHaveBeenCalledTimes(1)
+    vi.advanceTimersByTime(100) // 同上：防止真实定时器在 document 解除 stub 后触发 removeChild
   })
 
   it('onError 在请求失败时被调用', async () => {

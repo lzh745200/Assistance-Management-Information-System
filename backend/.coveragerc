@@ -1,0 +1,17 @@
+# coverage.py 配置 — 报告口径（source 由 CI/命令行 --cov=app 指定，此处不设 [run] 避免路径过滤失真）
+# 目的：将"100% 覆盖率"定义为"可覆盖集 100%"，豁免真正不可执行的行
+
+[report]
+exclude_lines =
+    # 标准豁免（coverage 默认已含 pragma: no cover）
+    pragma: no cover
+    # 仅类型检查期执行的导入
+    if TYPE_CHECKING:
+    # 脚本入口守卫
+    if __name__ == .__main__.:
+    # 抽象方法体
+    @(abc\.)?abstractmethod
+    # 调试表示方法
+    def __repr__
+    # 接口契约占位
+    raise NotImplementedError
