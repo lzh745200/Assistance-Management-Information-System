@@ -82,7 +82,6 @@ def _client(_engine, _db):
             yield c
     finally:
         app.dependency_overrides.clear()
-        app.dependency_overrides.update(_original_overrides)
 
 
 @pytest.fixture

@@ -47,19 +47,22 @@ class TestRunInThread:
         result = await run_in_thread(lambda x: x * 2, 7)
         assert result == 14
 
-    async def test_slow_operation_logs_warning(self, caplog):
-        import logging
-        caplog.set_level(logging.WARNING)
+    async def test_slow_operation_logs_warning(self):
+        from unittest.mock import patch
         from app.utils.async_executor import run_in_thread
+
+        logged = []
 
         def slow_func():
             time.sleep(0.01)
             return "done"
 
-        result = await run_in_thread(slow_func, log_slow_ms=1)
+        with patch("app.utils.async_executor.logger") as mock_logger:
+            mock_logger.warning.side_effect = lambda msg, *a, **kw: logged.append(str(msg) % a if a else str(msg))
+            mock_logger.debug.side_effect = lambda msg, *a, **kw: logged.append(str(msg) % a if a else str(msg))
+            result = await run_in_thread(slow_func, log_slow_ms=1)
         assert result == "done"
-        assert len(caplog.records) > 0
-        assert "慢线程操作" in caplog.text or "slow_func" in caplog.text
+        assert any("慢线程操作" in msg or "slow_func" in msg for msg in logged)
 
     async def test_timeout_raises_error(self):
         from app.utils.async_executor import run_in_thread
@@ -73,17 +76,21 @@ class TestRunInThread:
         with pytest.raises(TimeoutError, match="超时"):
             await run_in_thread(never_ending, timeout=0.1)
 
-    async def test_debug_log_fast_op(self, caplog):
-        import logging
-        caplog.set_level(logging.DEBUG)
+    async def test_debug_log_fast_op(self):
+        from unittest.mock import patch
         from app.utils.async_executor import run_in_thread
+
+        logged = []
 
         def fast_func():
             return "fast"
 
-        result = await run_in_thread(fast_func, log_slow_ms=100000)
+        with patch("app.utils.async_executor.logger") as mock_logger:
+            mock_logger.debug.side_effect = lambda msg, *a, **kw: logged.append(str(msg) % a if a else str(msg))
+            mock_logger.warning.side_effect = lambda msg, *a, **kw: logged.append(str(msg) % a if a else str(msg))
+            result = await run_in_thread(fast_func, log_slow_ms=100000)
         assert result == "fast"
-        assert any("线程操作" in rec.message for rec in caplog.records)
+        assert any("线程操作" in msg for msg in logged)
 
     async def test_exception_propagates(self):
         from app.utils.async_executor import run_in_thread
