@@ -186,7 +186,7 @@ const adminRules = {
 
 onMounted(async () => {
   try {
-    const res: any = await get('/init/status')
+    const res: any = await get('/system/init/status')
     const data = res?.data || res
     if (data?.initialized) {
       alreadyInit.value = true
@@ -214,7 +214,7 @@ async function executeInit() {
   try {
     const payload: any = { ...form.value }
     delete payload.confirmPassword
-    await post('/init/initialize', payload)
+    await post('/system/init/initialize', payload)
     ElMessage.success('系统初始化成功！即将跳转登录页...')
     setTimeout(() => pushSafe('/login'), 1500)
   } catch (e: any) {

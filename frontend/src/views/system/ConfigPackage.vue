@@ -95,7 +95,7 @@
 import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download, Upload, RefreshRight, Refresh } from '@element-plus/icons-vue'
-import { get, post } from '@/api/request'
+import { get, post, put } from '@/api/request'
 
 interface ConfigItem {
   key: string
@@ -139,7 +139,7 @@ function editConfig(row: ConfigItem) {
 async function saveConfig() {
   if (editRow.value) {
     try {
-      await post('/system/config', {
+      await put('/system/config', {
         key: editRow.value.key,
         value: editRow.value.value,
       })
@@ -178,7 +178,7 @@ async function handleFileImport(e: Event) {
   try {
     const text = await file.text()
     const data = JSON.parse(text)
-    await post('/system/config/import', data)
+    await post('/system/config/import/json', data)
     ElMessage.success('配置已导入')
     loadConfig()
   } catch {
@@ -191,7 +191,12 @@ async function resetConfig() {
     await ElMessageBox.confirm('确认恢复为默认配置？此操作不可撤销。', '警告', {
       type: 'warning',
     })
-    await post('/system/config/reset')
+    const defaults: any = await get('/system/config/defaults')
+    const items = defaults?.data || defaults || {}
+    const entries = Object.entries(items).map(([key, value]) => ({ key, value: String(value) }))
+    if (entries.length > 0) {
+      await put('/system/config', { items: entries })
+    }
     ElMessage.success('已恢复默认配置')
     loadConfig()
   } catch {

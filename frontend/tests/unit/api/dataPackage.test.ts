@@ -36,7 +36,7 @@ describe('api/dataPackage', () => {
   it('getDataPackages GET /data-packages', async () => {
     mockGet.mockResolvedValueOnce({ data: { items: [], total: 0 } })
     await getDataPackages({ page: 1, page_size: 10 })
-    expect(mockGet).toHaveBeenCalledWith('/data-packages', { params: { page: 1, page_size: 10 } })
+    expect(mockGet).toHaveBeenCalledWith('/data-packages', { page: 1, page_size: 10 })
   })
 
   it('getDataPackage GET /data-packages/{id}', async () => {
@@ -128,7 +128,7 @@ describe('api/dataPackage', () => {
   it('getPackageHistory GET /data-packages/{id}/history', async () => {
     mockGet.mockResolvedValueOnce({ data: { package_id: 1, items: [] } })
     await getPackageHistory(1, { page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/data-packages/1/history', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/data-packages/1/history', { page: 1 })
   })
 
   it('getDownloadUrl 返回 URL 字符串', () => {

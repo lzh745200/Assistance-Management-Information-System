@@ -263,7 +263,7 @@ async function handleExport() {
       params.start_date = filters.dateRange[0]
       params.end_date = filters.dateRange[1]
     }
-    const res = await get('/system/audit/logs/export', { params })
+    const res = await get('/system/audit/logs/export', params)
     const data = res.data
     // 生成CSV并下载
     let csv = '\uFEFFID,时间,用户,操作类型,资源类型,状态,IP,备注\n'

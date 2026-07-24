@@ -17,7 +17,7 @@ import type {
   SupportedVillage,
 } from '@/types/analytics'
 
-const BASE_URL = '/reports/analytics'
+const BASE_URL = '/analytics'
 
 // ==================== 筛选查询 ====================
 

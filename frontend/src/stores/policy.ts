@@ -11,7 +11,7 @@ export const usePolicyStore = defineStore('policy', () => {
   async function fetchPolicies(params?: any) {
     loading.value = true
     try {
-      const res = await get<{ code: number; data: any[]; total?: number }>('/policies', { params })
+      const res = await get<{ code: number; data: any[]; total?: number }>('/policies', params)
       if (res.code === 200 && res.data) {
         policyList.value = res.data
         total.value = res.total || res.data.length

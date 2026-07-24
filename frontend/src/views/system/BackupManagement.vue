@@ -178,7 +178,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { get, post, del } from '@/api/request'
+import { get, post, put, del } from '@/api/request'
 import { AuthStorage } from '@/utils/authStorage'
 
 const loading = ref(false)
@@ -233,7 +233,7 @@ async function loadScheduleConfig() {
 async function saveSchedule() {
   savingSchedule.value = true
   try {
-    await post('/system/backup/schedule', {
+    await put('/system/backup/schedule', {
       enabled: scheduleConfig.value.enabled,
       frequency: scheduleConfig.value.frequency,
       backup_time: scheduleConfig.value.backupTime,

@@ -59,5 +59,5 @@ export function getKpiTrends(): Promise<any> {
 
 /** 年度趋势对比数据 */
 export function getYearlyTrends(years?: number): Promise<any> {
-  return get(`${BASE_URL}/yearly-trends`, { params: { years: years ?? 5 } })
+  return get(`${BASE_URL}/yearly-trends`, { years: years ?? 5 })
 }

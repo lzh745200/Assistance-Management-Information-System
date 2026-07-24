@@ -96,7 +96,7 @@ export async function getWorkflows(params?: {
   skip?: number
   limit?: number
 }): Promise<ApprovalWorkflow[]> {
-  const response = await get<any>('/approval/workflows', { params })
+  const response = await get<any>('/approval/workflows', params)
   return response
 }
 
@@ -207,7 +207,7 @@ export async function getAllTasks(params?: {
   skip?: number
   limit?: number
 }): Promise<ApprovalTask[]> {
-  const response = await get<any>('/approval/tasks/all', { params })
+  const response = await get<any>('/approval/tasks/all', params)
   return Array.isArray(response) ? response : []
 }
 
@@ -218,7 +218,7 @@ export async function getPendingTasks(params?: {
   skip?: number
   limit?: number
 }): Promise<ApprovalTask[]> {
-  const response = await get<any>('/approval/tasks/pending', { params })
+  const response = await get<any>('/approval/tasks/pending', params)
   return Array.isArray(response) ? response : []
 }
 
@@ -255,7 +255,7 @@ export async function getApprovalHistory(params?: {
   skip?: number
   limit?: number
 }): Promise<ApprovalTask[]> {
-  const response = await get<any>('/approval/history', { params })
+  const response = await get<any>('/approval/history', params)
   return Array.isArray(response) ? response : []
 }
 

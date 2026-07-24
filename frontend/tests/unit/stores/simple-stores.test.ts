@@ -104,7 +104,7 @@ describe('usePolicyStore', () => {
       total: 2,
     })
     await store.fetchPolicies({ page: 1 })
-    expect(mockGet).toHaveBeenCalledWith('/policies', { params: { page: 1 } })
+    expect(mockGet).toHaveBeenCalledWith('/policies', { page: 1 })
     expect(store.policyList).toHaveLength(2)
     expect(store.total).toBe(2)
   })

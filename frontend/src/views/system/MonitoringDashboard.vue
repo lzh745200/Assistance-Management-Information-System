@@ -644,7 +644,7 @@ async function fetchHealth() {
 async function fetchHealthChecks() {
   const start = performance.now()
   try {
-    const res = await get('/system/health/checks')
+    const res = await get('/system/health/full')
     const elapsed = Math.round(performance.now() - start)
     responseTime.value = elapsed
     const data = (res as any)?.data?.data ?? (res as any)?.data ?? {}

@@ -27,7 +27,7 @@ export async function getDataPackages(params?: {
   org_id?: number
   status?: string
 }): Promise<DataPackageListResponse> {
-  const response = await get(BASE_URL, { params })
+  const response = await get(BASE_URL, params)
   return response
 }
 
@@ -135,7 +135,7 @@ export async function getPackageHistory(
   package_id: number
   items: ImportExportHistory[]
 }> {
-  const response = await get(`${BASE_URL}/${id}/history`, { params })
+  const response = await get(`${BASE_URL}/${id}/history`, params)
   return response
 }
 

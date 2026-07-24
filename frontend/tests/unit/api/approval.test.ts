@@ -68,14 +68,14 @@ describe('api/approval', () => {
       mockGet.mockResolvedValueOnce([])
       await getWorkflows({ entity_type: 'project', skip: 0, limit: 20 })
       expect(mockGet).toHaveBeenCalledWith('/approval/workflows', {
-        params: { entity_type: 'project', skip: 0, limit: 20 },
+        entity_type: 'project', skip: 0, limit: 20,
       })
     })
 
     it('getWorkflows 无参时 params=undefined', async () => {
       mockGet.mockResolvedValueOnce([])
       await getWorkflows()
-      expect(mockGet).toHaveBeenCalledWith('/approval/workflows', { params: undefined })
+      expect(mockGet).toHaveBeenCalledWith('/approval/workflows', undefined)
     })
 
     it('getWorkflow GET /approval/workflows/{id}', async () => {
@@ -161,7 +161,7 @@ describe('api/approval', () => {
     it('getPendingTasks GET /approval/tasks/pending', async () => {
       mockGet.mockResolvedValueOnce([])
       await getPendingTasks({ skip: 0 })
-      expect(mockGet).toHaveBeenCalledWith('/approval/tasks/pending', { params: { skip: 0 } })
+      expect(mockGet).toHaveBeenCalledWith('/approval/tasks/pending', { skip: 0 })
     })
 
     it('batchApprove POST /approval/tasks/batch with task_ids array', async () => {
@@ -183,7 +183,7 @@ describe('api/approval', () => {
       mockGet.mockResolvedValueOnce([{ id: 1 }])
       await getApprovalHistory({ entity_type: 'project' })
       expect(mockGet).toHaveBeenCalledWith('/approval/history', {
-        params: { entity_type: 'project' },
+        entity_type: 'project',
       })
     })
   })
