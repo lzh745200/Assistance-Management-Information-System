@@ -1,6 +1,7 @@
 """Tests for app.middleware.audit_middleware — 100% coverage target."""
 
 import logging
+from unittest.mock import patch
 
 import anyio
 import pytest
@@ -13,30 +14,33 @@ _AUDIT_LOGGER_NAME = "app.middleware.audit_middleware"
 
 @pytest.fixture()
 def audit_messages():
-    """Capture audit-middleware log messages via a dedicated handler.
+    """Capture audit-middleware log messages by patching the module logger.
 
-    Attaching the handler directly to the audit logger (instead of relying
-    on ``caplog`` which hooks into the root logger) makes capture immune to
-    root-logger reconfiguration by ``init_logging()`` / ``configure_logging()``
-    that other test files trigger in parallel xdist workers.
+    Using mock.patch on the logger object itself (instead of caplog or a
+    handler attached to the real logger) makes capture fully immune to
+    init_logging() / configure_logging() reconfiguration that other test
+    files trigger in parallel xdist workers.
     """
     messages: list[str] = []
 
-    class _Capture(logging.Handler):
-        def emit(self, record):
-            messages.append(record.getMessage())
+    class _FakeLogger:
+        def info(self, msg, *args, **kwargs):
+            messages.append(str(msg) % args if args else str(msg))
 
-    logger = logging.getLogger(_AUDIT_LOGGER_NAME)
-    handler = _Capture()
-    saved_level = logger.level
-    saved_propagate = logger.propagate
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = True
-    logger.addHandler(handler)
-    yield messages
-    logger.removeHandler(handler)
-    logger.setLevel(saved_level)
-    logger.propagate = saved_propagate
+        def warning(self, msg, *args, **kwargs):
+            messages.append(str(msg) % args if args else str(msg))
+
+        def error(self, msg, *args, **kwargs):
+            messages.append(str(msg) % args if args else str(msg))
+
+        def debug(self, msg, *args, **kwargs):
+            messages.append(str(msg) % args if args else str(msg))
+
+        def __getattr__(self, name):
+            return lambda *a, **kw: None
+
+    with patch("app.middleware.audit_middleware.logger", _FakeLogger()):
+        yield messages
 
 
 def _make_app(exclude_paths=None):

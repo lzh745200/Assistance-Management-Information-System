@@ -56,14 +56,16 @@ class TestQueryCounterMiddleware:
         client.get("/ok")
         assert not any("慢查询警告" in msg for msg in caplog.messages)
 
-    def test_warning_above_threshold(self, caplog):
-        import logging
-        caplog.set_level(logging.WARNING)
+    def test_warning_above_threshold(self):
+        from unittest.mock import patch
+        logged = []
         app = _make_app()
         client = TestClient(app)
-        client.get("/many")
-        assert any("慢查询警告" in msg for msg in caplog.messages)
-        assert any("55" in msg for msg in caplog.messages)
+        with patch("app.middleware.query_counter.logger") as mock_logger:
+            mock_logger.warning.side_effect = lambda msg, *a, **kw: logged.append(str(msg) % a if a else str(msg))
+            client.get("/many")
+        assert any("慢查询警告" in msg for msg in logged)
+        assert any("55" in msg for msg in logged)
 
 
 class TestIncrementQueryCount:
