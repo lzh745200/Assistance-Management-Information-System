@@ -1,0 +1,329 @@
+"""app.api.v1.data.data.statistics 覆盖率攻坚测试（补充既有测试未覆盖分支）
+
+覆盖点：
+- _get_cached_stats / _cache_stats：缓存禁用/命中/未命中/读写异常
+- _calc_village_completeness：0村回退 + 全维度计分
+- _get_overview_impl：全查询序列 + AuditLog 三处异常降级
+- _get_analysis_data_impl：有数据全路径（趋势/分类/占比/地区）+ 无数据空路径
+- 各端点 500 异常分支与缓存命中直达
+"""
+
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from fastapi.testclient import TestClient
+
+import app.api.v1.data.data.statistics as st
+from app.core.database import get_db
+from app.core.security import get_current_user
+
+BASE = "/api/v1/statistics"
+
+
+# ==================== 公共设施 ====================
+
+
+def _q(**kw):
+    q = MagicMock()
+    for attr in ("filter", "order_by", "offset", "limit", "group_by", "with_entities"):
+        getattr(q, attr).return_value = q
+    q.count.return_value = kw.get("count", 0)
+    q.scalar.return_value = kw.get("scalar")
+    q.first.return_value = kw.get("first")
+    q.all.return_value = kw.get("all", [])
+    return q
+
+
+def _db_with(queries):
+    db = MagicMock()
+    db.query = MagicMock(side_effect=list(queries))
+    return db
+
+
+@pytest.fixture
+def st_client():
+    from app.main import app
+
+    original = app.dependency_overrides.copy()
+    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1, username="root")
+    yield TestClient(app, raise_server_exceptions=False)
+    app.dependency_overrides = original
+
+
+def _use_db(client, db):
+    client.app.dependency_overrides[get_db] = lambda: db
+
+
+# ==================== 缓存辅助函数 ====================
+
+
+class TestCacheHelpers:
+    async def test_get_cached_disabled(self, monkeypatch):
+        monkeypatch.setattr(st.settings, "CACHE_ENABLED", False)
+        assert await st._get_cached_stats("k") is None
+
+    async def test_get_cached_hit(self, monkeypatch):
+        monkeypatch.setattr(st.settings, "CACHE_ENABLED", True)
+        cache = MagicMock()
+        cache.get = AsyncMock(return_value='{"a": 1}')
+        with patch("app.core.cache.get_cache_service", AsyncMock(return_value=cache)):
+            assert await st._get_cached_stats("summary") == {"a": 1}
+
+    async def test_get_cached_miss_returns_none(self, monkeypatch):
+        monkeypatch.setattr(st.settings, "CACHE_ENABLED", True)
+        cache = MagicMock()
+        cache.get = AsyncMock(return_value=None)
+        with patch("app.core.cache.get_cache_service", AsyncMock(return_value=cache)):
+            assert await st._get_cached_stats("k") is None
+
+    async def test_get_cached_exception_degrades(self, monkeypatch):
+        monkeypatch.setattr(st.settings, "CACHE_ENABLED", True)
+        with patch("app.core.cache.get_cache_service", AsyncMock(side_effect=Exception("cache down"))):
+            assert await st._get_cached_stats("k") is None
+
+    async def test_cache_stats_disabled_noop(self, monkeypatch):
+        monkeypatch.setattr(st.settings, "CACHE_ENABLED", False)
+        await st._cache_stats("k", {"a": 1})  # 直接返回，不抛异常
+
+    async def test_cache_stats_write(self, monkeypatch):
+        monkeypatch.setattr(st.settings, "CACHE_ENABLED", True)
+        cache = MagicMock()
+        cache.set = AsyncMock()
+        with patch("app.core.cache.get_cache_service", AsyncMock(return_value=cache)):
+            await st._cache_stats("k", {"a": 1})
+        cache.set.assert_awaited_once()
+
+    async def test_cache_stats_write_exception_degrades(self, monkeypatch):
+        monkeypatch.setattr(st.settings, "CACHE_ENABLED", True)
+        with patch("app.core.cache.get_cache_service", AsyncMock(side_effect=Exception("x"))):
+            await st._cache_stats("k", {"a": 1})  # 异常被吞
+
+
+# ==================== _calc_village_completeness ====================
+
+
+class TestCalcVillageCompleteness:
+    def test_zero_villages(self):
+        from app.models.supported_village import SupportedVillage, VillageIncome, VillagePopulation
+
+        assert st._calc_village_completeness(MagicMock(), SupportedVillage, VillagePopulation, VillageIncome, 0) == 0
+
+    def test_full_scoring(self):
+        from app.models.supported_village import SupportedVillage as SV
+        from app.models.supported_village import VillageIncome as VI
+        from app.models.supported_village import VillagePopulation as VP
+
+        db = _db_with([
+            _q(scalar=1), _q(scalar=1), _q(scalar=1), _q(scalar=1),  # 4 个基本字段
+            _q(scalar=1),   # 坐标
+            _q(scalar=5),   # 人口（min(5,2)=2）
+            _q(scalar=0),   # 收入
+        ])
+        # passed=1+1+1+1+1+2+0=7, total=2*6=12 → round(58.33)=58
+        assert st._calc_village_completeness(db, SV, VP, VI, 2) == 58
+
+
+# ==================== _get_overview_impl ====================
+
+
+class TestOverviewImpl:
+    async def test_full_path(self):
+        logs = [SimpleNamespace(id=1, action="创建", resource_type="项目", username="root", user_id=1, created_at="2026-07-25 01:00:00")]
+        db = _db_with([
+            _q(count=2),                 # villages
+            _q(count=3),                 # projects
+            _q(count=4),                 # schools
+            _q(count=5),                 # funds
+            _q(count=6),                 # users
+            _q(scalar=100.0),            # funds_total
+            _q(scalar="2026-07-24"),     # last_update Village
+            _q(scalar=None),             # last_update Project → None
+            _q(scalar="2026-07-23"),     # Fund
+            _q(scalar="2026-07-22"),     # School
+            _q(scalar="2026-07-21"),     # User
+            _q(count=0),                 # sv_count=0 → completeness=0 跳过计算
+            _q(count=7),                 # today_ops
+            _q(all=[SimpleNamespace(day="2026-07-24", cnt=3)]),  # trend
+            _q(all=logs),                # recent_logs
+        ])
+        result = await st._get_overview_impl(db)
+        assert result["villages"] == 2
+        assert result["funds_amount"] == 100.0
+        assert result["completeness"] == 0
+        assert result["today_operations"] == 7
+        assert len(result["trend"]) == 7
+        assert any(t["operations"] == 3 for t in result["trend"] if t["date"] == "07-24")
+        assert result["recent_logs"][0]["user"] == "root"
+        assert result["recent_logs"][0]["action"] == "创建 项目"
+        assert result["modules"][0]["healthy"] is True
+        assert result["modules"][1]["lastUpdate"] is None
+
+    async def test_audit_failures_degrade(self):
+        """AuditLog 三处查询均异常 → 降级默认值（覆盖 233-234/247-249/270-271）"""
+        call = {"n": 0}
+
+        def _query(*args):
+            call["n"] += 1
+            if call["n"] >= 13:  # today_ops / trend / recent_logs
+                raise Exception("audit table gone")
+            return _q(count=0, scalar=None, all=[])
+
+        db = MagicMock()
+        db.query = MagicMock(side_effect=_query)
+        result = await st._get_overview_impl(db)
+        assert result["today_operations"] == 0
+        assert all(t["operations"] == 0 for t in result["trend"])
+        assert result["recent_logs"] == []
+
+
+# ==================== _get_analysis_data_impl ====================
+
+
+class TestAnalysisDataImpl:
+    async def test_full_path_with_data(self):
+        db = _db_with([
+            _q(count=2),                 # total_villages
+            _q(count=3),                 # active_projects
+            _q(scalar=100.0),            # mil_total
+            _q(scalar=50.0),             # loc_total
+            # _calc_village_completeness（7 个查询：4字段+坐标+人口+收入）
+            _q(scalar=2), _q(scalar=2), _q(scalar=2), _q(scalar=2),
+            _q(scalar=2), _q(scalar=2), _q(scalar=2),
+            _q(count=1),                 # has_funding_data
+            _q(all=[                     # yearly_data
+                SimpleNamespace(yr=2021, mil=10.0, loc=5.0),
+                SimpleNamespace(yr=2022, mil=20.0, loc=10.0),
+            ]),
+            # 5 个帮扶分类 count+sum
+            _q(first=SimpleNamespace(cnt=1, inv=100.0)),
+            _q(first=SimpleNamespace(cnt=2, inv=200.0)),
+            _q(first=SimpleNamespace(cnt=0, inv=0.0)),
+            _q(first=None),              # result 为 None 的回退
+            _q(first=SimpleNamespace(cnt=1, inv=300.0)),
+            _q(first=SimpleNamespace(cnt=1, inv=400.0)),   # 消费帮扶
+            _q(first=SimpleNamespace(cnt=1, ben=80.0)),    # 就业帮扶
+            _q(all=[("甲县", 2, 100.0, 50.0)]),            # county_data
+        ])
+        result = await st._get_analysis_data_impl(db)
+        ov = result["overview"]
+        assert ov["total_villages"] == 2
+        assert ov["total_investment"] == 150.0
+        # passed=2*4(字段)+2(坐标)+min(2,2)(人口)+min(2,2)(收入)=14，total=2*6=12 → round(116.67)=117
+        assert ov["completeness"] == 117
+        # 投入趋势
+        trend = result["investment_trend"]
+        assert len(trend) == 5
+        assert trend[0]["total"] == 15.0
+        assert trend[0]["growth"] == 0       # prev_total=0 → 无基期
+        assert trend[1]["total"] == 30.0
+        assert trend[1]["growth"] == 100.0   # (30-15)/15*100
+        assert trend[2]["growth"] == -100.0  # 2023 无数据但 prev_total 保持 30
+        # 分类统计
+        cats = {c["category"]: c for c in result["category_stats"]}
+        assert cats["产业帮扶"]["investment"] == 100.0
+        assert cats["医疗帮扶"]["count"] == 0  # first=None 回退
+        assert cats["就业帮扶"]["beneficiaries"] == 80
+        assert cats["产业帮扶"]["ratio"] == 10  # 100/1000*100
+        # 地区分布
+        assert result["region_stats"] == [
+            {"region": "甲县", "villages": 2, "investment": 150.0, "avgIncome": 0}
+        ]
+
+    async def test_empty_villages_path(self):
+        """无帮扶村 → 趋势为空、完整率为 0（覆盖 460-463 的 False 分支）"""
+        db = _db_with([
+            _q(count=0),                 # total_villages=0
+            _q(count=0),                 # active_projects
+            _q(scalar=0),                # mil_total
+            _q(scalar=0),                # loc_total
+            _q(count=0),                 # has_funding_data
+            # 5 个帮扶分类
+            _q(first=SimpleNamespace(cnt=0, inv=0.0)),
+            _q(first=SimpleNamespace(cnt=0, inv=0.0)),
+            _q(first=SimpleNamespace(cnt=0, inv=0.0)),
+            _q(first=SimpleNamespace(cnt=0, inv=0.0)),
+            _q(first=SimpleNamespace(cnt=0, inv=0.0)),
+            _q(first=SimpleNamespace(cnt=0, inv=0.0)),   # 消费
+            _q(first=SimpleNamespace(cnt=0, ben=0.0)),   # 就业
+            _q(all=[]),                  # county_data
+        ])
+        result = await st._get_analysis_data_impl(db)
+        assert result["overview"]["completeness"] == 0
+        assert result["investment_trend"] == []
+        assert all(c["ratio"] == 0 for c in result["category_stats"])  # total_cat_inv=0 跳过占比
+        assert result["region_stats"] == []
+
+
+# ==================== 端点 500 与缓存命中 ====================
+
+
+class TestEndpointBranches:
+    def test_summary_cache_hit(self, st_client):
+        with patch.object(st, "_get_cached_stats", AsyncMock(return_value={"cached": True})):
+            resp = st_client.get(f"{BASE}/summary")
+        assert resp.status_code == 200
+        assert resp.json() == {"cached": True}
+
+    def test_summary_500(self, st_client):
+        db = MagicMock()
+        db.query = MagicMock(side_effect=Exception("db boom"))
+        _use_db(st_client, db)
+        with patch.object(st, "_get_cached_stats", AsyncMock(return_value=None)):
+            resp = st_client.get(f"{BASE}/summary")
+        assert resp.status_code == 500
+
+    def test_dashboard_cache_hit(self, st_client):
+        with patch.object(st, "_get_cached_stats", AsyncMock(return_value={"dash": 1})):
+            resp = st_client.get(f"{BASE}/dashboard")
+        assert resp.json() == {"dash": 1}
+
+    def test_dashboard_500(self, st_client):
+        db = MagicMock()
+        db.query = MagicMock(side_effect=Exception("x"))
+        _use_db(st_client, db)
+        with patch.object(st, "_get_cached_stats", AsyncMock(return_value=None)):
+            resp = st_client.get(f"{BASE}/dashboard")
+        assert resp.status_code == 500
+
+    def test_overview_500(self, st_client):
+        db = MagicMock()
+        db.query = MagicMock(side_effect=Exception("x"))
+        _use_db(st_client, db)
+        resp = st_client.get(f"{BASE}/overview")
+        assert resp.status_code == 500
+
+    def test_analysis_500(self, st_client):
+        db = MagicMock()
+        db.query = MagicMock(side_effect=Exception("x"))
+        _use_db(st_client, db)
+        resp = st_client.get(f"{BASE}/analysis")
+        assert resp.status_code == 500
+
+    def test_villages_distribution_500(self, st_client):
+        db = MagicMock()
+        db.query = MagicMock(side_effect=Exception("x"))
+        _use_db(st_client, db)
+        resp = st_client.get(f"{BASE}/villages/distribution")
+        assert resp.status_code == 500
+
+    def test_projects_statistics_500(self, st_client):
+        db = MagicMock()
+        db.query = MagicMock(side_effect=Exception("x"))
+        _use_db(st_client, db)
+        resp = st_client.get(f"{BASE}/projects/statistics")
+        assert resp.status_code == 500
+
+    def test_funds_statistics_500(self, st_client):
+        db = MagicMock()
+        db.query = MagicMock(side_effect=Exception("x"))
+        _use_db(st_client, db)
+        resp = st_client.get(f"{BASE}/funds/statistics")
+        assert resp.status_code == 500
+
+    def test_schools_statistics_500(self, st_client):
+        db = MagicMock()
+        db.query = MagicMock(side_effect=Exception("x"))
+        _use_db(st_client, db)
+        resp = st_client.get(f"{BASE}/schools/statistics")
+        assert resp.status_code == 500

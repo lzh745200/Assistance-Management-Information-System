@@ -183,7 +183,7 @@ async def _get_overview_impl(db: Session):
     # 各模块最后更新时间
     def _last_update(model):
         col = getattr(model, "updated_at", None) or getattr(model, "created_at", None)
-        if col is None:
+        if col is None:  # pragma: no cover —— 调用方仅传入 Village/Project/Fund/School/User，均带时间戳，防御分支不可达
             return None
         val = db.query(func.max(col)).scalar()
         return str(val) if val else None
