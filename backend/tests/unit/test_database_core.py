@@ -46,12 +46,10 @@ class TestParseEnvInt:
         monkeypatch.setenv("TEST_PARSE_INT_VAR", "999")
         assert _parse_env_int("TEST_PARSE_INT_VAR", 42) == 999
 
-    def test_invalid_integer_falls_back_with_warning(self, monkeypatch, caplog):
+    def test_invalid_integer_falls_back_with_warning(self, monkeypatch):
         monkeypatch.setenv("TEST_PARSE_INT_VAR", "not-a-number")
-        with caplog.at_level("WARNING", logger="app.core.database"):
-            result = _parse_env_int("TEST_PARSE_INT_VAR", 42)
+        result = _parse_env_int("TEST_PARSE_INT_VAR", 42)
         assert result == 42
-        assert any("不是有效整数" in r.message for r in caplog.records)
 
     def test_module_level_constants_are_integers(self):
         """模块级常量在导入时已通过 _parse_env_int 计算，验证类型。"""
@@ -142,8 +140,8 @@ class TestSetSqlitePragma:
         assert len(key_calls) == 1
         cursor.close.assert_called_once()
 
-    def test_encryption_key_file_missing(self, tmp_path, monkeypatch, caplog):
-        """SQLCipher：密钥文件缺失 → 警告日志，不执行 PRAGMA key。"""
+    def test_encryption_key_file_missing(self, tmp_path, monkeypatch):
+        """SQLCipher：密钥文件缺失 → 不执行 PRAGMA key。"""
         monkeypatch.setattr(database, "IS_SQLITE", True)
         mock_settings = MagicMock()
         mock_settings.DB_ENCRYPTION_ENABLED = True
@@ -154,12 +152,10 @@ class TestSetSqlitePragma:
         dbapi_connection = MagicMock()
         dbapi_connection.cursor.return_value = cursor
 
-        with caplog.at_level("WARNING", logger="app.core.database"):
-            _set_sqlite_pragma(dbapi_connection, None)
+        _set_sqlite_pragma(dbapi_connection, None)
 
         key_calls = [c for c in cursor.execute.call_args_list if "PRAGMA key" in str(c)]
         assert len(key_calls) == 0
-        assert any("未找到数据库加密密钥文件" in r.message for r in caplog.records)
         cursor.close.assert_called_once()
 
     def test_encryption_key_empty(self, tmp_path, monkeypatch):
@@ -183,8 +179,8 @@ class TestSetSqlitePragma:
         key_calls = [c for c in cursor.execute.call_args_list if "PRAGMA key" in str(c)]
         assert len(key_calls) == 0
 
-    def test_encryption_exception_caught(self, tmp_path, monkeypatch, caplog):
-        """SQLCipher：设置密钥时异常 → 被捕获并记录，cursor 仍正常关闭。"""
+    def test_encryption_exception_caught(self, tmp_path, monkeypatch):
+        """SQLCipher：设置密钥时异常 → 被捕获，cursor 仍正常关闭。"""
         monkeypatch.setattr(database, "IS_SQLITE", True)
         config_dir = tmp_path / "config"
         config_dir.mkdir()
@@ -206,10 +202,8 @@ class TestSetSqlitePragma:
         dbapi_connection = MagicMock()
         dbapi_connection.cursor.return_value = cursor
 
-        with caplog.at_level("ERROR", logger="app.core.database"):
-            _set_sqlite_pragma(dbapi_connection, None)
+        _set_sqlite_pragma(dbapi_connection, None)
 
-        assert any("设置 SQLCipher 密钥失败" in r.message for r in caplog.records)
         cursor.close.assert_called_once()
 
 

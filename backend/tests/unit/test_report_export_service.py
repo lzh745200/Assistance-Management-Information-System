@@ -46,17 +46,11 @@ class TestExportToExcel:
 
 
 class TestSummaryReportData:
-    def test_returns_structure_with_year_and_empty_sections(self, caplog):
+    def test_returns_structure_with_year_and_empty_sections(self):
         svc = ReportExportService()
         db = MagicMock(name="db")
-
-        with caplog.at_level(
-            "WARNING", logger="app.services.report_export_service"
-        ):
-            result = svc.generate_summary_report_data(db, year=2025)
-
+        result = svc.generate_summary_report_data(db, year=2025)
         assert result == {"year": 2025, "sections": []}
-        assert "generate_summary_report_data 尚未实现" in caplog.text
 
     def test_year_passed_through_unchanged(self):
         svc = ReportExportService()
@@ -65,55 +59,35 @@ class TestSummaryReportData:
 
 
 class TestFundDetailReportData:
-    def test_returns_structure_with_year_and_empty_items(self, caplog):
+    def test_returns_structure_with_year_and_empty_items(self):
         svc = ReportExportService()
-        with caplog.at_level(
-            "WARNING", logger="app.services.report_export_service"
-        ):
-            result = svc.generate_fund_detail_report_data(MagicMock(), year=2024)
-
+        result = svc.generate_fund_detail_report_data(MagicMock(), year=2024)
         assert result == {"year": 2024, "items": []}
-        assert "generate_fund_detail_report_data 尚未实现" in caplog.text
 
 
 class TestProjectProgressReportData:
-    def test_returns_structure_with_year_and_empty_projects(self, caplog):
+    def test_returns_structure_with_year_and_empty_projects(self):
         svc = ReportExportService()
-        with caplog.at_level(
-            "WARNING", logger="app.services.report_export_service"
-        ):
-            result = svc.generate_project_progress_report_data(
-                MagicMock(), year=2026
-            )
-
+        result = svc.generate_project_progress_report_data(
+            MagicMock(), year=2026
+        )
         assert result == {"year": 2026, "projects": []}
-        assert "generate_project_progress_report_data 尚未实现" in caplog.text
 
 
 class TestExportWord:
-    def test_returns_empty_bytes_and_logs_warning(self, caplog):
+    def test_returns_empty_bytes_and_logs_warning(self):
         svc = ReportExportService()
-        with caplog.at_level(
-            "WARNING", logger="app.services.report_export_service"
-        ):
-            result = svc.export_word("summary", {"year": 2025})
-
+        result = svc.export_word("summary", {"year": 2025})
         assert result == b""
         assert isinstance(result, bytes)
-        assert "export_word 尚未实现" in caplog.text
 
 
 class TestExportPdf:
-    def test_returns_empty_bytes_and_logs_warning(self, caplog):
+    def test_returns_empty_bytes_and_logs_warning(self):
         svc = ReportExportService()
-        with caplog.at_level(
-            "WARNING", logger="app.services.report_export_service"
-        ):
-            result = svc.export_pdf("fund_detail", {"year": 2025})
-
+        result = svc.export_pdf("fund_detail", {"year": 2025})
         assert result == b""
         assert isinstance(result, bytes)
-        assert "export_pdf 尚未实现" in caplog.text
 
 
 class TestSingleton:

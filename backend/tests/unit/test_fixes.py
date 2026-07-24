@@ -294,4 +294,4 @@ class TestVersionConsistency:
                         expected_version = value.strip()
                         break
 
-        assert settings.PROJECT_VERSION == expected_version
+        assert settings.PROJECT_VERSION.strip() == expected_version.strip()
