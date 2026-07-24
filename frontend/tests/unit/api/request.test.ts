@@ -1,16 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 const mockAxiosRequest = vi.hoisted(() => vi.fn())
-const mockAxiosCreate = vi.hoisted(() => vi.fn(() => ({
-  get: mockAxiosRequest,
-  post: mockAxiosRequest,
-  put: mockAxiosRequest,
-  delete: mockAxiosRequest,
-  patch: mockAxiosRequest,
-  request: mockAxiosRequest,
-  interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
-  defaults: {},
-})))
+const mockAxiosCreate = vi.hoisted(() =>
+  vi.fn(() => ({
+    get: mockAxiosRequest,
+    post: mockAxiosRequest,
+    put: mockAxiosRequest,
+    delete: mockAxiosRequest,
+    patch: mockAxiosRequest,
+    request: mockAxiosRequest,
+    interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
+    defaults: {},
+  }))
+)
 
 vi.mock('axios', () => ({
   default: {

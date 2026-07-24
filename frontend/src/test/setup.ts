@@ -220,6 +220,73 @@ console.warn = (...args: any[]) => {
   originalWarn(...args)
 }
 
+// Mock HTMLCanvasElement 2d context
+// jsdom 未实现 canvas;echarts/zrender 在 dispose 时调用 clearRect 等方法会抛
+// TypeError(clearRect of null)。这里提供最小 2d 上下文桩:常用方法为空函数,
+// 其余任意方法由 Proxy 兜底。writable+configurable 保证个别测试可自行覆盖。
+const canvasNoop = () => {}
+const base2dContext: Record<string, unknown> = {
+  clearRect: canvasNoop,
+  fillRect: canvasNoop,
+  strokeRect: canvasNoop,
+  beginPath: canvasNoop,
+  closePath: canvasNoop,
+  moveTo: canvasNoop,
+  lineTo: canvasNoop,
+  bezierCurveTo: canvasNoop,
+  quadraticCurveTo: canvasNoop,
+  arc: canvasNoop,
+  arcTo: canvasNoop,
+  ellipse: canvasNoop,
+  rect: canvasNoop,
+  fill: canvasNoop,
+  stroke: canvasNoop,
+  save: canvasNoop,
+  restore: canvasNoop,
+  translate: canvasNoop,
+  scale: canvasNoop,
+  rotate: canvasNoop,
+  transform: canvasNoop,
+  setTransform: canvasNoop,
+  resetTransform: canvasNoop,
+  clip: canvasNoop,
+  drawImage: canvasNoop,
+  fillText: canvasNoop,
+  strokeText: canvasNoop,
+  setLineDash: canvasNoop,
+  putImageData: canvasNoop,
+  measureText: () => ({ width: 0 }),
+  getLineDash: () => [],
+  getImageData: () => ({ data: [] }),
+  createImageData: () => ({ data: [] }),
+  createLinearGradient: () => ({ addColorStop: canvasNoop }),
+  createRadialGradient: () => ({ addColorStop: canvasNoop }),
+  createPattern: () => ({}),
+}
+const canvas2dContextStub = new Proxy(base2dContext, {
+  get(target, prop) {
+    if (prop in target) return target[prop as string]
+    // symbol 属性(如 Symbol.toPrimitive)返回 undefined,避免隐式类型转换抛错
+    if (typeof prop === 'symbol') return undefined
+    return canvasNoop
+  },
+})
+
+if (typeof HTMLCanvasElement !== 'undefined') {
+  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+    value: function getContext(this: HTMLCanvasElement, contextType: string) {
+      return contextType === '2d' ? canvas2dContextStub : null
+    },
+    writable: true,
+    configurable: true,
+  })
+  Object.defineProperty(HTMLCanvasElement.prototype, 'toDataURL', {
+    value: () => 'data:image/png;base64,mock',
+    writable: true,
+    configurable: true,
+  })
+}
+
 // Mock window.open for print tests
 if (typeof window !== 'undefined') {
   if (!('open' in window)) {

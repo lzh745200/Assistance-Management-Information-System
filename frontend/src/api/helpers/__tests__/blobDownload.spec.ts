@@ -52,6 +52,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.useRealTimers()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
 })
@@ -97,7 +98,7 @@ describe('parseFileName', () => {
 
   it('RFC 5987 格式无分隔符返回 null', () => {
     const cd = 'attachment; filename*=UTF-8data.xlsx'
-    expect(parseFileName(cd)).toBe('data.xlsx') // 回退到 ASCII 解析
+    expect(parseFileName(cd)).toBeNull() // 畸形头解析失败返回 null，调用方回退兜底文件名
   })
 
   it('URL 编码解析失败时回退到 ASCII', () => {
@@ -119,20 +120,24 @@ describe('downloadBlobAsFile', () => {
       },
     }
 
+    vi.useFakeTimers()
     await downloadBlobAsFile(async () => mockResponse as AxiosResponse<Blob>)
 
     expect(createdObjectURLs).toHaveLength(1)
+    vi.advanceTimersByTime(100) // downloadBlob 在 setTimeout(100ms) 后才 revokeObjectURL
     expect(revokedURLs).toHaveLength(1)
   })
 
   it('处理纯 Blob 返回（来自 apiRequest）', async () => {
     const mockBlob = new Blob(['data'], { type: 'application/pdf' })
 
+    vi.useFakeTimers()
     await downloadBlobAsFile(async () => mockBlob, {
       fallbackFileName: 'export.pdf',
     })
 
     expect(createdObjectURLs).toHaveLength(1)
+    vi.advanceTimersByTime(100) // downloadBlob 在 setTimeout(100ms) 后才 revokeObjectURL
     expect(revokedURLs).toHaveLength(1)
   })
 

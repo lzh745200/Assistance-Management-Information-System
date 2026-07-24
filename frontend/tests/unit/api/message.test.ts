@@ -35,6 +35,9 @@ import {
   markAsRead,
   markAllAsRead,
   deleteMessages,
+  getMessage,
+  getStats,
+  getRecentActivities,
   getNotificationPreferences,
   updateNotificationPreferences,
   formatMessageType,
@@ -92,6 +95,37 @@ describe('api/message', () => {
     mockPut.mockResolvedValueOnce({ email_approval: false })
     await updateNotificationPreferences({ email_approval: false })
     expect(mockPut).toHaveBeenCalledWith('/notifications/preferences', { email_approval: false })
+  })
+
+  it('getMessage GET /messages/{id} 透传返回值', async () => {
+    const body = { id: 9, title: 't' }
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getMessage(9)
+    expect(mockGet).toHaveBeenCalledWith('/messages/9')
+    expect(r).toBe(body)
+  })
+
+  it('getStats GET /messages/stats/summary', async () => {
+    const body = { total: 10, unread: 2, read: 8, by_type: { system: 10 } }
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getStats()
+    expect(mockGet).toHaveBeenCalledWith('/messages/stats/summary')
+    expect(r).toBe(body)
+  })
+
+  it('getRecentActivities GET 数组透传', async () => {
+    const body = [{ id: 1 }, { id: 2 }]
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getRecentActivities({ limit: 5 })
+    expect(mockGet).toHaveBeenCalledWith('/messages/recent-activities', { limit: 5 })
+    expect(r).toBe(body)
+  })
+
+  it('getRecentActivities 非数组回退 []', async () => {
+    mockGet.mockResolvedValueOnce({ items: [] })
+    const r = await getRecentActivities()
+    expect(mockGet).toHaveBeenCalledWith('/messages/recent-activities', undefined)
+    expect(r).toEqual([])
   })
 
   it('formatMessageType system -> 系统通知 / info', () => {

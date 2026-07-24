@@ -18,6 +18,9 @@ import {
   getCountyCoords,
   getRegions,
   updateMarkerCoordinates,
+  getMapConfig,
+  getDistances,
+  getTileInfo,
 } from '@/api/map'
 
 describe('api/map', () => {
@@ -72,5 +75,35 @@ describe('api/map', () => {
       latitude: 40.0,
       longitude: 116.0,
     })
+  })
+
+  it('getMapConfig GET /map/config 透传返回值', async () => {
+    const body = { center: [116, 40], zoom: 8 }
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getMapConfig()
+    expect(mockGet).toHaveBeenCalledWith('/map/config')
+    expect(r).toBe(body)
+  })
+
+  it('getDistances 无参', async () => {
+    mockGet.mockResolvedValueOnce({})
+    await getDistances()
+    expect(mockGet).toHaveBeenCalledWith('/map/distances', undefined)
+  })
+
+  it('getDistances 带 from_id/to_id', async () => {
+    const body = { distance_km: 12.3 }
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getDistances({ from_id: 1, to_id: 2 })
+    expect(mockGet).toHaveBeenCalledWith('/map/distances', { from_id: 1, to_id: 2 })
+    expect(r).toBe(body)
+  })
+
+  it('getTileInfo GET /map/tile-info', async () => {
+    const body = { version: 'v1' }
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getTileInfo()
+    expect(mockGet).toHaveBeenCalledWith('/map/tile-info')
+    expect(r).toBe(body)
   })
 })

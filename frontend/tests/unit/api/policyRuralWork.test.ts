@@ -11,15 +11,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // - default.get 是 axios 实例签名 get(url, { params, ...config })。
 // default.get 的返回值会被 downloadBlobAsFile 当 AxiosResponse 检查 'data' in result，
 // 因此统一默认 resolve { data: {} }；导出测试里再改为 { data: Blob }。
-const { mockGet, mockPost, mockPut, mockDelete, mockApiRequest, mockDownloadBlob } =
-  vi.hoisted(() => ({
+const { mockGet, mockPost, mockPut, mockDelete, mockApiRequest, mockDownloadBlob } = vi.hoisted(
+  () => ({
     mockGet: vi.fn().mockResolvedValue({ data: {} }),
     mockPost: vi.fn().mockResolvedValue({ data: {} }),
     mockPut: vi.fn().mockResolvedValue({ data: {} }),
     mockDelete: vi.fn().mockResolvedValue({ data: {} }),
     mockApiRequest: vi.fn().mockResolvedValue({ data: {} }),
     mockDownloadBlob: vi.fn(),
-  }))
+  })
+)
 
 vi.mock('@/api/request', () => ({
   default: {
@@ -56,6 +57,21 @@ import {
   getLevelLabel,
   getStatusLabel,
   getStatusColor,
+  getStatusOptions,
+  getCategoryTree,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  publishPolicy,
+  archivePolicy,
+  uploadPolicyFile,
+  previewPolicyFile,
+  downloadPolicyFile,
+  addPolicyFavorite,
+  removePolicyFavorite,
+  getPolicyFavorites,
+  getPolicyRelated,
+  batchDeletePolicies,
 } from '@/api/policy'
 
 import {
@@ -131,15 +147,24 @@ describe('api/policy', () => {
 
     it('exportPolicies -> xlsx', async () => {
       await exportPolicies({ page: 1 })
-      expect(mockGet).toHaveBeenCalledWith('/policies/export/excel', { params: { page: 1 }, responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/policies/export/excel', {
+        params: { page: 1 },
+        responseType: 'blob',
+      })
     })
     it('exportPoliciesPDF -> pdf', async () => {
       await exportPoliciesPDF()
-      expect(mockGet).toHaveBeenCalledWith('/policies/export/pdf', { params: undefined, responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/policies/export/pdf', {
+        params: undefined,
+        responseType: 'blob',
+      })
     })
     it('exportPoliciesWPS -> wps', async () => {
       await exportPoliciesWPS()
-      expect(mockGet).toHaveBeenCalledWith('/policies/export/wps', { params: undefined, responseType: 'blob' })
+      expect(mockGet).toHaveBeenCalledWith('/policies/export/wps', {
+        params: undefined,
+        responseType: 'blob',
+      })
     })
     // downloadImportTemplate removed — consolidated to downloadImportTemplateAndSave in @/api/import
   })
@@ -195,5 +220,118 @@ describe('api/ruralWork', () => {
     expect(mockPost).toHaveBeenCalledTimes(1)
     expect(mockPut).toHaveBeenCalledTimes(1)
     expect(mockDelete).toHaveBeenCalledTimes(1)
+  })
+
+  it('ruralWorkApi.getById GET /rural-works/{id}', () => {
+    ruralWorkApi.getById(2)
+    expect(mockGet).toHaveBeenCalledWith('/rural-works/2')
+  })
+
+  it('ruralWorkApi.getStatistics GET /rural-works/statistics/summary', () => {
+    ruralWorkApi.getStatistics()
+    expect(mockGet).toHaveBeenCalledWith('/rural-works/statistics/summary')
+  })
+
+  it('ruralWorkApi.getVillagesForSelect GET /rural-works/villages', () => {
+    ruralWorkApi.getVillagesForSelect()
+    expect(mockGet).toHaveBeenCalledWith('/rural-works/villages')
+  })
+
+  it('ruralWorkApi.getAvailableYears GET /rural-works/years', () => {
+    ruralWorkApi.getAvailableYears()
+    expect(mockGet).toHaveBeenCalledWith('/rural-works/years')
+  })
+
+  it('ruralWorkApi.batchDelete POST /rural-works/batch-delete', () => {
+    ruralWorkApi.batchDelete([1, 2])
+    expect(mockPost).toHaveBeenCalledWith('/rural-works/batch-delete', { ids: [1, 2] })
+  })
+})
+
+describe('api/policy 补充（此前未覆盖函数）', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('getStatusOptions GET /policies/options/statuses', () => {
+    getStatusOptions()
+    expect(mockGet).toHaveBeenCalledWith('/policies/options/statuses')
+  })
+
+  it('getCategoryTree GET /policies/categories/tree', () => {
+    getCategoryTree()
+    expect(mockGet).toHaveBeenCalledWith('/policies/categories/tree')
+  })
+
+  it('createCategory POST /policies/categories', () => {
+    createCategory({ name: '农业' })
+    expect(mockPost).toHaveBeenCalledWith('/policies/categories', { name: '农业' })
+  })
+
+  it('updateCategory PUT /policies/categories/{id}', () => {
+    updateCategory(2, { name: '教育' })
+    expect(mockPut).toHaveBeenCalledWith('/policies/categories/2', { name: '教育' })
+  })
+
+  it('deleteCategory DELETE /policies/categories/{id}', () => {
+    deleteCategory(2)
+    expect(mockDelete).toHaveBeenCalledWith('/policies/categories/2')
+  })
+
+  it('publishPolicy POST /policies/{id}/publish', () => {
+    publishPolicy(3)
+    expect(mockPost).toHaveBeenCalledWith('/policies/3/publish')
+  })
+
+  it('archivePolicy POST /policies/{id}/archive', () => {
+    archivePolicy(3)
+    expect(mockPost).toHaveBeenCalledWith('/policies/3/archive')
+  })
+
+  it('uploadPolicyFile POST FormData', () => {
+    const file = new File(['x'], 'p.pdf')
+    uploadPolicyFile(4, file)
+    const [url, fd, config] = mockPost.mock.calls[0]
+    expect(url).toBe('/policies/4/upload')
+    expect(fd).toBeInstanceOf(FormData)
+    expect(fd.get('file')).toBe(file)
+    expect(config.headers['Content-Type']).toBe('multipart/form-data')
+  })
+
+  it('previewPolicyFile GET /policies/{id}/preview', () => {
+    previewPolicyFile(4)
+    expect(mockGet).toHaveBeenCalledWith('/policies/4/preview')
+  })
+
+  it('downloadPolicyFile apiRequest blob', () => {
+    downloadPolicyFile(4)
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/policies/4/download',
+      responseType: 'blob',
+    })
+  })
+
+  it('addPolicyFavorite POST /policies/{id}/favorite', () => {
+    addPolicyFavorite(5)
+    expect(mockPost).toHaveBeenCalledWith('/policies/5/favorite')
+  })
+
+  it('removePolicyFavorite DELETE /policies/{id}/favorite', () => {
+    removePolicyFavorite(5)
+    expect(mockDelete).toHaveBeenCalledWith('/policies/5/favorite')
+  })
+
+  it('getPolicyFavorites GET /policies/user/{userId}/favorites', () => {
+    getPolicyFavorites(7)
+    expect(mockGet).toHaveBeenCalledWith('/policies/user/7/favorites')
+  })
+
+  it('getPolicyRelated GET /policies/{id}/related', () => {
+    getPolicyRelated(5)
+    expect(mockGet).toHaveBeenCalledWith('/policies/5/related')
+  })
+
+  it('batchDeletePolicies POST /policies/batch-delete', () => {
+    batchDeletePolicies([1, 2, 3])
+    expect(mockPost).toHaveBeenCalledWith('/policies/batch-delete', { ids: [1, 2, 3] })
   })
 })
