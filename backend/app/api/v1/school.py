@@ -178,7 +178,9 @@ TYPE_DISPLAY = {
 
 def _parse_scholarship_status(row):
     """安全解析奖学金状态。"""
-    from app.models.scholarship import ScholarshipStatus
+    # 使用模块级导入的 ScholarshipStatus（app.models.school）。
+    # 此前函数内 from app.models.scholarship import ... 的模块不存在，
+    # 每次调用必抛 ModuleNotFoundError，导致导入的每行数据都被记为失败。
     status_map = {"pending": "pending", "approved": "approved", "rejected": "rejected"}
     if len(row) > 8 and row[8]:
         return ScholarshipStatus(status_map.get(str(row[8]), "pending"))
