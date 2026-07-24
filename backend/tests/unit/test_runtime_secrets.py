@@ -18,15 +18,25 @@ from app.utils.runtime_secrets import (
 _RS_LOGGER = "app.utils.runtime_secrets"
 
 
-class _LogCapture(logging.Handler):
-    """Capture handler attached directly to the target logger (not root)."""
+class _FakeLogger:
+    """Drop-in logger replacement that captures all messages in-process.
+
+    Immune to init_logging() / configure_logging() reconfiguration because
+    mock.patch replaces the module-level ``logger`` object entirely.
+    """
 
     def __init__(self):
-        super().__init__(level=logging.DEBUG)
         self.messages: list[str] = []
 
-    def emit(self, record: logging.LogRecord):
-        self.messages.append(record.getMessage())
+    def _fmt(self, msg, *args):
+        self.messages.append(str(msg) % args if args else str(msg))
+
+    def debug(self, msg, *a, **kw): self._fmt(msg, *a)
+    def info(self, msg, *a, **kw): self._fmt(msg, *a)
+    def warning(self, msg, *a, **kw): self._fmt(msg, *a)
+    def error(self, msg, *a, **kw): self._fmt(msg, *a)
+    def critical(self, msg, *a, **kw): self._fmt(msg, *a)
+    def __getattr__(self, name): return lambda *a, **kw: None
 
     @property
     def text(self) -> str:
@@ -35,19 +45,11 @@ class _LogCapture(logging.Handler):
 
 @pytest.fixture()
 def rs_log():
-    """Attach a capture handler directly to the runtime_secrets logger,
-    bypassing root-logger pollution from configure_logging()."""
-    logger = logging.getLogger(_RS_LOGGER)
-    handler = _LogCapture()
-    saved_level = logger.level
-    saved_propagate = logger.propagate
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = True
-    logger.addHandler(handler)
-    yield handler
-    logger.removeHandler(handler)
-    logger.setLevel(saved_level)
-    logger.propagate = saved_propagate
+    """Replace the runtime_secrets module logger with a fake that captures
+    messages in-process. Fully immune to xdist parallel log reconfiguration."""
+    fake = _FakeLogger()
+    with patch("app.utils.runtime_secrets._logger", fake):
+        yield fake
 
 
 def _selective_open(target_path, exc):
