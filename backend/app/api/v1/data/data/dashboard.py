@@ -50,7 +50,7 @@ try:
         size_limit=50 * 1024 * 1024,  # 50MB
     )
     _CACHE_TTL = 120  # 2 分钟
-except ImportError:
+except ImportError:  # pragma: no cover —— diskcache 为项目已安装依赖，导入失败分支在当前环境不可执行
     _cache = None
     _CACHE_TTL = 0
     logger.warning("diskcache 未安装，仪表盘缓存已禁用")
