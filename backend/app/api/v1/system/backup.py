@@ -531,6 +531,13 @@ async def upload_and_restore(
             "data": result,
         }
     except ValueError as e:
+        # 与通用异常一致：清理已保存的临时文件，避免磁盘泄漏
+        if file_path:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except OSError:
+                pass
         raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
         raise
