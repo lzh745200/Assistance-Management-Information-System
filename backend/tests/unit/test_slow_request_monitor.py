@@ -79,13 +79,17 @@ class TestMiddlewareCall:
         client.get("/fast")
         assert not any("慢API" in msg for msg in caplog.messages)
 
-    def test_slow_request_logs_warning(self, caplog):
-        import logging
-        caplog.set_level(logging.WARNING)
+    def test_slow_request_logs_warning(self):
+        # 直接 patch 模块级 logger，避免全量运行时其他测试重配全局 logging
+        # 导致 caplog 捕获不到（隔离性修复，生产行为不变）。
         app = _make_app(slow_api_ms=1)
         client = TestClient(app)
-        client.get("/slowish")
-        assert any("慢API" in msg for msg in caplog.messages)
+        with patch.object(srm, "logger") as mock_logger:
+            client.get("/slowish")
+        assert any(
+            "慢API" in str(call.args)
+            for call in mock_logger.warning.call_args_list
+        )
 
     def test_counters_incremented(self):
         app = _make_app(slow_api_ms=1)

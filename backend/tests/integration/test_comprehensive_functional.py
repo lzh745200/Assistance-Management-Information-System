@@ -524,7 +524,7 @@ class TestWorkLogsComprehensive:
         data = resp.json()
         assert data["year"] == 2025
         assert data["month"] == 3
-        assert "items" in data
+        assert "items" in data["data"]
 
     def test_filter_by_date_range(self, client, admin_headers):
         """按日期范围过滤日志"""

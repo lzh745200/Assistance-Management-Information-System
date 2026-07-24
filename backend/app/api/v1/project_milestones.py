@@ -10,8 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.core.response import ok_list
 from app.models.project import Project
 from app.core.transaction import safe_commit
+from app.core.data_permission import filter_by_data_scope
 from app.models.project_milestone import (
     TRANSITION_REQUIREMENTS,
     VALID_TRANSITIONS,
@@ -305,7 +307,16 @@ async def get_change_logs(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取项目变更记录"""
+    """获取项目变更记录
+
+    数据隔离：验证用户是否有权访问该项目。
+    """
+    # 验证项目存在且用户有访问权限
+    project_query = db.query(Project).filter(Project.id == project_id)
+    project_query = filter_by_data_scope(project_query, Project, current_user, db=db)
+    if not project_query.first():
+        raise HTTPException(status_code=404, detail="项目不存在或无权访问")
+
     query = db.query(ProjectChangeLog).filter(ProjectChangeLog.project_id == project_id)
     if change_type:
         query = query.filter(ProjectChangeLog.change_type == change_type)
@@ -323,13 +334,16 @@ async def get_upcoming_milestones(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取即将到期的里程碑（首页仪表板用）"""
+    """获取即将到期的里程碑（首页仪表板用）
+
+    数据隔离：仅返回当前用户数据范围内的项目里程碑。
+    """
     from datetime import timedelta
 
     today = date.today()
     deadline = today + timedelta(days=days)
 
-    milestones = (
+    query = (
         db.query(ProjectMilestone)
         .join(Project, Project.id == ProjectMilestone.project_id)
         .filter(
@@ -338,6 +352,12 @@ async def get_upcoming_milestones(
             ProjectMilestone.planned_date >= today,
             Project.status.notin_(["completed", "cancelled"]),
         )
+    )
+    # 应用数据范围过滤，确保非管理员只能看到自己组织范围内的项目里程碑
+    query = filter_by_data_scope(query, Project, current_user, db=db)
+
+    milestones = (
+        query
         .order_by(ProjectMilestone.planned_date)
         .limit(20)
         .all()
@@ -364,7 +384,7 @@ async def get_upcoming_milestones(
             }
         )
 
-    return {"items": result, "total": len(result)}
+    return ok_list(result, len(result))
 
 
 # ==================== 逾期里程碑检测 ====================
@@ -375,10 +395,13 @@ async def get_overdue_milestones(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """获取已逾期的里程碑"""
+    """获取已逾期的里程碑
+
+    数据隔离：仅返回当前用户数据范围内的项目里程碑。
+    """
     today = date.today()
 
-    milestones = (
+    query = (
         db.query(ProjectMilestone)
         .join(Project, Project.id == ProjectMilestone.project_id)
         .filter(
@@ -386,6 +409,12 @@ async def get_overdue_milestones(
             ProjectMilestone.planned_date < today,
             Project.status.notin_(["completed", "cancelled"]),
         )
+    )
+    # 应用数据范围过滤
+    query = filter_by_data_scope(query, Project, current_user, db=db)
+
+    milestones = (
+        query
         .order_by(ProjectMilestone.planned_date)
         .all()
     )
@@ -409,7 +438,7 @@ async def get_overdue_milestones(
             }
         )
 
-    return {"items": result, "total": len(result)}
+    return ok_list(result, len(result))
 
 
 # ==================== 内部工具函数 ====================

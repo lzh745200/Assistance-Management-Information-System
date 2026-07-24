@@ -841,11 +841,12 @@ def fund_history_fields(fund_id: int, current_user: User = Depends(get_current_u
         .order_by(FundFieldChange.changed_at.desc())
         .limit(100).all()
     )
-    return {"data": [{
+    items = [{
         "id": r.id, "field_name": r.field_name, "old_value": r.old_value,
         "new_value": r.new_value, "changed_by": r.changed_by,
         "changed_at": r.changed_at.isoformat() if r.changed_at else None,
-    } for r in rows]}
+    } for r in rows]
+    return ok_list(items, len(items))
 
 
 @router.get("/{fund_id}/history/operations")
@@ -862,10 +863,11 @@ def fund_history_operations(
         .order_by(FundOperationLog.created_at.desc())
         .limit(100).all()
     )
-    return {"data": [{
+    items = [{
         "id": r.id, "operation": r.operation, "operator": r.operator,
         "detail": r.detail, "created_at": r.created_at.isoformat() if r.created_at else None,
-    } for r in rows]}
+    } for r in rows]
+    return ok_list(items, len(items))
 
 
 # ============================================================================
@@ -989,7 +991,8 @@ async def list_fund_attachments(
         .order_by(FundAttachment.created_at.desc())
         .all()
     )
-    return {"items": [a.to_dict() for a in attachments], "total": len(attachments)}
+    items = [a.to_dict() for a in attachments]
+    return ok_list(items, len(items))
 
 
 @router.post("/{fund_id}/attachments")

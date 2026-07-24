@@ -385,7 +385,7 @@ class TestProjectsAPI:
                    return_value=[{"field": "name"}]):
             mock_db.query.return_value.filter.return_value.first.return_value = sample_project
             resp = client.get("/api/v1/projects/1/history/changes")
-        assert resp.status_code == 200 and len(resp.json()["items"]) == 1
+        assert resp.status_code == 200 and len(resp.json()["data"]["items"]) == 1
 
     def test_get_project_funds(self, client, mock_db, admin_user, sample_project, sample_fund):
         _setup_client(client, mock_db, admin_user)

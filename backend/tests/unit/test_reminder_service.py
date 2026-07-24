@@ -24,12 +24,15 @@ class TestApprovalReminderService:
         svc = ApprovalReminderService(check_interval_minutes=10)
         assert svc._check_interval == 600
 
-    def test_start_already_running(self, caplog):
-        from app.services.reminder_service import ApprovalReminderService
-        svc = ApprovalReminderService()
+    def test_start_already_running(self):
+        # 直接 patch 模块 logger，避免全量运行时全局 logging 被其他测试重配
+        # 导致 caplog 捕获不到（隔离性修复，生产行为不变）。
+        import app.services.reminder_service as mod
+        svc = mod.ApprovalReminderService()
         svc._running = True
-        svc.start()
-        assert "已在运行" in caplog.text
+        with patch.object(mod, "logger") as mock_logger:
+            svc.start()
+        assert any("已在运行" in str(call.args) for call in mock_logger.warning.call_args_list)
 
     def test_start_success(self):
         from app.services.reminder_service import ApprovalReminderService
@@ -205,15 +208,18 @@ class TestGlobalFunctions:
         finally:
             mod._reminder_service = old
 
-    def test_start_already_exists(self, caplog):
+    def test_start_already_exists(self):
+        # 直接 patch 模块 logger，避免全量运行时全局 logging 被其他测试重配
+        # 导致 caplog 捕获不到（隔离性修复，生产行为不变）。
         import app.services.reminder_service as mod
         old = mod._reminder_service
         try:
             existing = MagicMock()
             mod._reminder_service = existing
-            result = mod.start_approval_reminder(1)
+            with patch.object(mod, "logger") as mock_logger:
+                result = mod.start_approval_reminder(1)
             assert result is existing
-            assert "已存在" in caplog.text
+            assert any("已存在" in str(call.args) for call in mock_logger.warning.call_args_list)
         finally:
             mod._reminder_service = old
 

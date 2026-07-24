@@ -1093,7 +1093,7 @@ async def get_project_change_history(
     """获取项目关键字段的变更历史（Diff 留痕）"""
     _get_project_or_404(db, project_id, current_user)
     history = AuditEnhancementService.get_change_history(db, "project", str(project_id), limit=100)
-    return {"items": history}
+    return ok_list(history, len(history))
 
 
 # ==================== 项目经费 ====================

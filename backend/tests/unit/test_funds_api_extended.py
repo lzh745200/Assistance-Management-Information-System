@@ -1320,7 +1320,7 @@ class TestFundHistoryFields:
 
         resp = client.get("/api/v1/funds/1/history/fields")
         assert resp.status_code == 200
-        data = resp.json()["data"]
+        data = resp.json()["data"]["items"]
         assert len(data) == 1
         assert data[0]["field_name"] == "amount"
 
@@ -1355,7 +1355,7 @@ class TestFundHistoryOperations:
 
         resp = client.get("/api/v1/funds/1/history/operations")
         assert resp.status_code == 200
-        data = resp.json()["data"]
+        data = resp.json()["data"]["items"]
         assert len(data) == 1
         assert data[0]["operation"] == "approve"
 
@@ -1416,7 +1416,7 @@ class TestListFundAttachments:
 
         resp = client.get("/api/v1/funds/1/attachments")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total"] == 2
         assert len(data["items"]) == 2
 
@@ -1435,7 +1435,7 @@ class TestListFundAttachments:
 
         resp = client.get("/api/v1/funds/1/attachments")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
     def test_list_attachments_fund_not_found(self, client, mock_db):
         """Attachments for non-existent fund returns 404."""

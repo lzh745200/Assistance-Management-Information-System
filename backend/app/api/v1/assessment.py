@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.cache import get_cache_service
 from app.core.data_permission import filter_by_data_scope
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.fund import Fund
 from app.models.project import Project
@@ -56,12 +57,7 @@ async def get_village_scores(
     villages = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user).limit(5000).all()
 
     if not villages:
-        return {
-            "items": [],
-            "total": 0,
-            "year": target_year,
-            "weights": SCORE_WEIGHTS,
-        }
+        return ok_list([], 0, year=target_year, weights=SCORE_WEIGHTS)
 
     village_ids = [v.id for v in villages]
 
@@ -126,12 +122,7 @@ async def get_village_scores(
         r["rank"] = i + 1
 
     # 写入缓存并返回
-    result = {
-        "items": results,
-        "total": len(results),
-        "year": target_year,
-        "weights": SCORE_WEIGHTS,
-    }
+    result = ok_list(results, len(results), year=target_year, weights=SCORE_WEIGHTS)
     await cache.set(cache_key, result, ttl=300)
     return result
 
@@ -238,7 +229,7 @@ async def detect_anomalies(
                 }
             )
 
-        return {"items": anomalies, "total": len(anomalies)}
+        return ok_list(anomalies, len(anomalies))
     except Exception:
         logger.exception("Failed to detect anomalies")
         raise HTTPException(status_code=500, detail="异常检测失败")
@@ -319,7 +310,7 @@ async def compare_villages(
     """多村横向对比（雷达图数据）"""
     ids = [int(x.strip()) for x in village_ids.split(",") if x.strip().isdigit()][:5]
     if not ids:
-        return {"items": [], "total": 0}
+        return ok_list([], 0)
 
     # 批量查询村庄信息，避免 N+1，且仅查询用户有权访问的村庄
     villages = (
@@ -328,7 +319,7 @@ async def compare_villages(
         .all()
     )
     if not villages:
-        return {"items": [], "total": 0}
+        return ok_list([], 0)
     villages_dict = {v.id: v for v in villages}
     allowed_ids = [v.id for v in villages]
 
@@ -406,7 +397,7 @@ async def compare_villages(
             }
         )
 
-    return {"items": results, "total": len(results)}
+    return ok_list(results, len(results))
 
 
 # ==================== 内部工具函数 ====================

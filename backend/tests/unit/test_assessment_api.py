@@ -138,8 +138,8 @@ class TestGetVillageScores:
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["items"] == []
-        assert data["total"] == 0
+        assert data["data"]["items"] == []
+        assert data["data"]["total"] == 0
         assert data["year"] == _CURRENT_YEAR
         assert data["weights"] == SCORE_WEIGHTS
 
@@ -155,7 +155,7 @@ class TestGetVillageScores:
         db.commit()
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total"] == 1
         item = data["items"][0]
         assert item["village_name"] == "测试村"
@@ -187,7 +187,7 @@ class TestGetVillageScores:
 
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total"] == 2, f"Expected 2, got {data}"
         first, second = data["items"]
         assert first["rank"] == 1
@@ -212,7 +212,7 @@ class TestGetVillageScores:
         db.commit()
 
         resp = client.get("/api/v1/assessment/village-scores")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["scores"]["economic"] == 0.0
 
     def test_income_growth_economic_cap(self, client_and_db):
@@ -224,7 +224,7 @@ class TestGetVillageScores:
         db.commit()
 
         resp = client.get("/api/v1/assessment/village-scores")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["scores"]["economic"] == 100.0
 
     @patch("app.api.v1.assessment.get_cache_service")
@@ -232,16 +232,20 @@ class TestGetVillageScores:
         client, db = client_and_db
         mc = AsyncMock()
         mc.get.return_value = {
-            "items": [{"village_id": 99, "village_name": "缓存村", "rank": 1}],
-            "total": 1, "year": _CURRENT_YEAR, "weights": SCORE_WEIGHTS,
+            "code": 200, "message": "成功", "success": True,
+            "data": {
+                "items": [{"village_id": 99, "village_name": "缓存村", "rank": 1}],
+                "total": 1, "page": 1, "page_size": 20,
+            },
+            "year": _CURRENT_YEAR, "weights": SCORE_WEIGHTS,
         }
         mock_get_cache.return_value = mc
         mkv(db); db.commit()
 
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
-        assert resp.json()["items"][0]["village_id"] == 99
-        assert resp.json()["items"][0]["village_name"] == "缓存村"
+        assert resp.json()["data"]["items"][0]["village_id"] == 99
+        assert resp.json()["data"]["items"][0]["village_name"] == "缓存村"
         mc.get.assert_called()
 
     @patch("app.api.v1.assessment.get_cache_service")
@@ -284,7 +288,7 @@ class TestGetVillageScores:
 
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
-        items = resp.json()["items"]
+        items = resp.json()["data"]["items"]
         assert len(items) == 2, f"Expected 2, got {items}"
         levels = {it["village_name"]: it["level"] for it in items}
         assert levels.get("优村") == "优秀", f"levels={levels}"
@@ -298,7 +302,7 @@ class TestGetVillageScores:
 
         resp = client.get("/api/v1/assessment/village-scores")
         assert resp.status_code == 200
-        items = resp.json()["items"]
+        items = resp.json()["data"]["items"]
         assert len(items) == 5, f"Expected 5, got {items}"
         ranks = [it["rank"] for it in items]
         assert ranks == list(range(1, 6))
@@ -309,7 +313,7 @@ class TestGetVillageScores:
         db.commit()
 
         resp = client.get("/api/v1/assessment/village-scores")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["support_unit"] == "火箭军某部"
         assert item["village_name"] == "某村"
 
@@ -319,7 +323,7 @@ class TestGetVillageScores:
         db.commit()
 
         resp = client.get("/api/v1/assessment/village-scores")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["support_unit"] == ""
 
 
@@ -333,8 +337,8 @@ class TestDetectAnomalies:
         client, db = client_and_db
         resp = client.get("/api/v1/assessment/anomalies")
         assert resp.status_code == 200
-        assert resp.json()["items"] == []
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["items"] == []
+        assert resp.json()["data"]["total"] == 0
 
     def test_income_drop_detected(self, client_and_db):
         client, db = client_and_db
@@ -344,7 +348,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
+        drops = [a for a in resp.json()["data"]["items"] if a["type"] == "income_drop"]
         assert len(drops) == 1
         assert drops[0]["level"] == "danger"
         assert drops[0]["village_name"] == "下降村"
@@ -359,7 +363,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
+        drops = [a for a in resp.json()["data"]["items"] if a["type"] == "income_drop"]
         assert len(drops) == 0, f"unexpected drops: {drops}"
 
     def test_income_drop_just_over_30_percent_triggered(self, client_and_db):
@@ -370,7 +374,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
+        drops = [a for a in resp.json()["data"]["items"] if a["type"] == "income_drop"]
         assert len(drops) == 1
 
     def test_income_increase_no_anomaly(self, client_and_db):
@@ -381,7 +385,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
+        drops = [a for a in resp.json()["data"]["items"] if a["type"] == "income_drop"]
         assert len(drops) == 0
 
     def test_no_previous_year_no_anomaly(self, client_and_db):
@@ -390,7 +394,7 @@ class TestDetectAnomalies:
         mki(db, v.id, _CURRENT_YEAR, per_capita=0.5, collective=5)
         db.commit()
         resp = client.get("/api/v1/assessment/anomalies")
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["total"] == 0
 
     def test_previous_income_zero_no_anomaly(self, client_and_db):
         client, db = client_and_db
@@ -400,7 +404,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
+        drops = [a for a in resp.json()["data"]["items"] if a["type"] == "income_drop"]
         assert len(drops) == 0
 
     def test_previous_income_none_no_anomaly(self, client_and_db):
@@ -411,7 +415,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
+        drops = [a for a in resp.json()["data"]["items"] if a["type"] == "income_drop"]
         assert len(drops) == 0
 
     def test_project_overdue_detected(self, client_and_db):
@@ -422,7 +426,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
+        overdues = [a for a in resp.json()["data"]["items"] if a["type"] == "project_overdue"]
         assert len(overdues) == 1
         assert overdues[0]["level"] == "warning"
         assert overdues[0]["project_name"] == "逾期项目"
@@ -435,7 +439,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
+        overdues = [a for a in resp.json()["data"]["items"] if a["type"] == "project_overdue"]
         assert len(overdues) == 0
 
     def test_completed_project_no_overdue(self, client_and_db):
@@ -446,7 +450,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
+        overdues = [a for a in resp.json()["data"]["items"] if a["type"] == "project_overdue"]
         assert len(overdues) == 0
 
     def test_cancelled_project_no_overdue(self, client_and_db):
@@ -457,7 +461,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
+        overdues = [a for a in resp.json()["data"]["items"] if a["type"] == "project_overdue"]
         assert len(overdues) == 0
 
     def test_budget_overrun_detected(self, client_and_db):
@@ -467,7 +471,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        overruns = [a for a in resp.json()["items"] if a["type"] == "budget_overrun"]
+        overruns = [a for a in resp.json()["data"]["items"] if a["type"] == "budget_overrun"]
         assert len(overruns) == 1
         assert overruns[0]["project_name"] == "超支项目"
         assert "50.0%" in overruns[0]["message"]
@@ -479,7 +483,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        overruns = [a for a in resp.json()["items"] if a["type"] == "budget_overrun"]
+        overruns = [a for a in resp.json()["data"]["items"] if a["type"] == "budget_overrun"]
         assert len(overruns) == 0
 
     def test_budget_equal_cost_no_overrun(self, client_and_db):
@@ -489,7 +493,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        overruns = [a for a in resp.json()["items"] if a["type"] == "budget_overrun"]
+        overruns = [a for a in resp.json()["data"]["items"] if a["type"] == "budget_overrun"]
         assert len(overruns) == 0
 
     def test_multiple_anomaly_types(self, client_and_db):
@@ -506,7 +510,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        types = {a["type"] for a in resp.json()["items"]}
+        types = {a["type"] for a in resp.json()["data"]["items"]}
         assert "income_drop" in types
         assert "project_overdue" in types
         assert "budget_overrun" in types
@@ -520,7 +524,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        overdues = [a for a in resp.json()["items"] if a["type"] == "project_overdue"]
+        overdues = [a for a in resp.json()["data"]["items"] if a["type"] == "project_overdue"]
         assert len(overdues) == 0
 
     def test_current_per_capita_none_triggers_drop(self, client_and_db):
@@ -531,7 +535,7 @@ class TestDetectAnomalies:
         db.commit()
 
         resp = client.get("/api/v1/assessment/anomalies")
-        drops = [a for a in resp.json()["items"] if a["type"] == "income_drop"]
+        drops = [a for a in resp.json()["data"]["items"] if a["type"] == "income_drop"]
         assert len(drops) == 1
 
 
@@ -709,20 +713,20 @@ class TestVillageComparison:
         client, db = client_and_db
         resp = client.get("/api/v1/assessment/village-comparison?village_ids=")
         assert resp.status_code == 200
-        assert resp.json()["items"] == []
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["items"] == []
+        assert resp.json()["data"]["total"] == 0
 
     def test_non_numeric_ids(self, client_and_db):
         client, db = client_and_db
         resp = client.get("/api/v1/assessment/village-comparison?village_ids=abc,def")
         assert resp.status_code == 200
-        assert resp.json()["items"] == []
+        assert resp.json()["data"]["items"] == []
 
     def test_mixed_valid_and_invalid_ids(self, client_and_db):
         client, db = client_and_db
         v = mkv(db, name="A村"); db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id},abc,xyz")
-        assert resp.json()["total"] == 1
+        assert resp.json()["data"]["total"] == 1
 
     def test_single_village_full_data(self, client_and_db):
         client, db = client_and_db
@@ -734,7 +738,7 @@ class TestVillageComparison:
         db.commit()
 
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["village_name"] == "完整村"
         assert item["per_capita_income"] == 2.5
         assert item["collective_income"] == 35.0
@@ -753,7 +757,7 @@ class TestVillageComparison:
         db.commit()
 
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v1.id},{v2.id}")
-        names = {it["village_name"] for it in resp.json()["items"]}
+        names = {it["village_name"] for it in resp.json()["data"]["items"]}
         assert names == {"A村", "B村"}
 
     def test_five_villages_max(self, client_and_db):
@@ -762,7 +766,7 @@ class TestVillageComparison:
         db.commit()  # commit first, so v.id is auto-populated
         ids = [v.id for v in villages]
         resp = client.get("/api/v1/assessment/village-comparison?village_ids=" + ",".join(map(str, ids)))
-        assert resp.json()["total"] == 5
+        assert resp.json()["data"]["total"] == 5
 
     def test_more_than_five_ids_truncated(self, client_and_db):
         client, db = client_and_db
@@ -770,7 +774,7 @@ class TestVillageComparison:
         db.commit()  # commit first, so v.id is auto-populated
         ids = [v.id for v in villages]
         resp = client.get("/api/v1/assessment/village-comparison?village_ids=" + ",".join(map(str, ids)))
-        ids_returned = {it["village_id"] for it in resp.json()["items"]}
+        ids_returned = {it["village_id"] for it in resp.json()["data"]["items"]}
         assert len(ids_returned) == 5, f"Expected 5 unique IDs, got {ids_returned}"
         assert ids_returned == set(ids[:5])
 
@@ -778,14 +782,14 @@ class TestVillageComparison:
         client, db = client_and_db
         v = mkv(db, name="A村"); db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id},99999")
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total"] == 1
 
     def test_village_no_income_data(self, client_and_db):
         client, db = client_and_db
         v = mkv(db, name="无收村"); db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["per_capita_income"] == 0
         assert item["collective_income"] == 0
 
@@ -795,7 +799,7 @@ class TestVillageComparison:
         mki(db, v.id, _CURRENT_YEAR, per_capita=1.5, collective=20)
         db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["total_projects"] == 0
         assert item["completed_projects"] == 0
         assert item["project_completion_rate"] == 0
@@ -806,7 +810,7 @@ class TestVillageComparison:
         mki(db, v.id, _CURRENT_YEAR, per_capita=1.5, collective=20)
         db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["total_funds"] == 0
 
     def test_village_only_one_income_year(self, client_and_db):
@@ -815,7 +819,7 @@ class TestVillageComparison:
         mki(db, v.id, 2023, per_capita=1.8, collective=25)
         db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["per_capita_income"] == 1.8
 
     def test_village_multiple_income_years_picks_latest(self, client_and_db):
@@ -826,7 +830,7 @@ class TestVillageComparison:
         mki(db, v.id, 2025, per_capita=3.0, collective=45)
         db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["per_capita_income"] == 3.0
         assert item["collective_income"] == 45.0
 
@@ -836,7 +840,7 @@ class TestVillageComparison:
         v2 = mkv(db, name="B村")
         db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v1.id},{v1.id},{v2.id},{v2.id},{v2.id}")
-        assert resp.json()["total"] == 2
+        assert resp.json()["data"]["total"] == 2
 
     def test_per_capita_none_defaults_zero(self, client_and_db):
         client, db = client_and_db
@@ -844,7 +848,7 @@ class TestVillageComparison:
         mki(db, v.id, _CURRENT_YEAR, per_capita=None, collective=None)
         db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["per_capita_income"] == 0
         assert item["collective_income"] == 0
 
@@ -854,7 +858,7 @@ class TestVillageComparison:
         mki(db, v.id, _CURRENT_YEAR, per_capita=1.0, collective=10)
         db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id}")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["total_projects"] == 0
         assert item["completed_projects"] == 0
         assert item["project_completion_rate"] == 0
@@ -863,14 +867,14 @@ class TestVillageComparison:
         client, db = client_and_db
         v = mkv(db, name="A村"); db.commit()
         resp = client.get("/api/v1/assessment/village-comparison?village_ids=99999,88888")
-        assert resp.json()["items"] == []
-        assert resp.json()["total"] == 0
+        assert resp.json()["data"]["items"] == []
+        assert resp.json()["data"]["total"] == 0
 
     def test_mixed_valid_and_invalid_village_id(self, client_and_db):
         client, db = client_and_db
         v = mkv(db, name="存在的村"); db.commit()
         resp = client.get(f"/api/v1/assessment/village-comparison?village_ids={v.id},40499")
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total"] == 1
 
 

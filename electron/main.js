@@ -558,21 +558,23 @@ function cleanupOldBackups() {
     res.on('data', (chunk) => { body += chunk; });
     res.on('end', () => {
       try {
-        const backups = JSON.parse(body);
+        const parsed = JSON.parse(body);
+        // API 返回 envelope 格式: {code:200, data:{items:[...], total:N}}
+        const backups = (parsed && parsed.data && parsed.data.items) ? parsed.data.items : [];
         const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
         for (const backup of backups) {
           const createdAt = new Date(backup.created_at).getTime();
-          if (createdAt < sevenDaysAgo && backup.filename.startsWith('backup_')) {
+          if (createdAt < sevenDaysAgo && backup.file_name && backup.file_name.startsWith('backup_')) {
             const delReq = http.request({
               hostname: '127.0.0.1',
               port: backendPort,
-              path: `/api/v1/system/backup/${backup.filename}`,
+              path: `/api/v1/system/backup/${encodeURIComponent(backup.file_name)}`,
               method: 'DELETE',
               timeout: 10000,
-            }, (res) => { if (res.statusCode >= 400) console.warn(`删除 ${backup.filename} 失败`); });
-            delReq.on('error', (err) => { console.warn(`删除 ${backup.filename} 错误:`, err.message); });
+            }, (res) => { if (res.statusCode >= 400) console.warn(`删除 ${backup.file_name} 失败`); });
+            delReq.on('error', (err) => { console.warn(`删除 ${backup.file_name} 错误:`, err.message); });
             delReq.end();
-            console.log(`[AutoBackup] 删除旧备份: ${backup.filename}`);
+            console.log(`[AutoBackup] 删除旧备份: ${backup.file_name}`);
           }
         }
       } catch (e) { console.warn('[AutoBackup] 清理失败:', e.message); }

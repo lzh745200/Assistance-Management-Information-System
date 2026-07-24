@@ -847,7 +847,7 @@ class TestGetCalendarEvents:
         data = resp.json()
         assert data["year"] == 2026
         assert data["month"] == 6
-        assert "items" in data
+        assert "items" in data["data"]
 
     def test_calendar_empty_month(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -856,7 +856,7 @@ class TestGetCalendarEvents:
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=2")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["items"] == []
+        assert data["data"]["items"] == []
 
     def test_calendar_missing_year(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -922,7 +922,7 @@ class TestGetCalendarEvents:
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
         data = resp.json()
-        item = data["items"][0]
+        item = data["data"]["items"][0]
         assert "id" in item
         assert "title" in item
         assert "content" in item
@@ -976,7 +976,7 @@ class TestGetCalendarEvents:
         q = _build_query_chain(all_return=[auto_work_log])
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["is_auto"] is True
 
     def test_calendar_none_content_title(self, client, mock_db, admin_user):
@@ -989,7 +989,7 @@ class TestGetCalendarEvents:
         q = _build_query_chain(all_return=[log])
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["title"] == ""
 
     def test_calendar_long_content_title(self, client, mock_db, admin_user):
@@ -1002,7 +1002,7 @@ class TestGetCalendarEvents:
         q = _build_query_chain(all_return=[log])
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert len(item["title"]) == 100
 
     def test_calendar_none_category_log_type(self, client, mock_db, admin_user):
@@ -1015,7 +1015,7 @@ class TestGetCalendarEvents:
         q = _build_query_chain(all_return=[log])
         mock_db.query.return_value = q
         resp = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
-        item = resp.json()["items"][0]
+        item = resp.json()["data"]["items"][0]
         assert item["log_type"] == "daily"
 
 
@@ -1230,4 +1230,4 @@ class TestWorkLogWorkflow:
         mock_db.query.return_value = q
         resp2 = client.get("/api/v1/work-logs/calendar?year=2026&month=6")
         assert resp2.status_code == 200
-        assert len(resp2.json()["items"]) == 1
+        assert len(resp2.json()["data"]["items"]) == 1

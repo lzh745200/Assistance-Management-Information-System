@@ -186,11 +186,13 @@ class TestTransitionStatus:
 
 class TestGetChangeLogs:
     def test_empty(self, client, mock_db):
+        mock_db.first.return_value = _make_project()
         mock_db.all.return_value = []
         resp = client.get("/projects/1/change-logs")
         assert resp.status_code == 200
 
     def test_with_data(self, client, mock_db):
+        mock_db.first.return_value = _make_project()
         log = MagicMock()
         log.id = 1; log.project_id = 1; log.field_name = "status"
         log.old_value = "pending"; log.new_value = "completed"

@@ -354,4 +354,4 @@ async def get_calendar_events(
             }
         )
 
-    return {"year": year, "month": month, "items": items}
+    return ok_list(items, len(items), year=year, month=month)
