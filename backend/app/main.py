@@ -398,10 +398,15 @@ def _init_database_tables():
 
 
 def _run_alembic_upgrade():
-    """编程式执行 alembic upgrade head，失败时仅记录警告（自动补列兜底）。"""
+    """编程式执行 alembic upgrade head，失败时仅记录警告（自动补列兜底）。
+
+    优化：如果数据库表已存在但 alembic_version 表不存在（如 create_all 新建），
+    直接 stamp 到 head，避免重放全部 28 个迁移文件。
+    """
     try:
         from alembic import command as alembic_command
         from alembic.config import Config as AlembicConfig
+        from sqlalchemy import inspect as sa_inspect
 
         alembic_ini = Path(__file__).resolve().parent.parent / "alembic.ini"
         if not alembic_ini.exists():
@@ -410,8 +415,22 @@ def _run_alembic_upgrade():
         cfg = AlembicConfig(str(alembic_ini))
         cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
         cfg.set_main_option("script_location", str(alembic_ini.parent / "alembic"))
-        alembic_command.upgrade(cfg, "head")
-        logger.info("Alembic upgrade head 完成")
+
+        # 检查是否需要 stamp（表已存在但无 alembic_version 表）
+        from app.core.database import engine
+        insp = sa_inspect(engine)
+        all_tables = set(insp.get_table_names())
+        has_alembic_version = "alembic_version" in all_tables
+        has_business_tables = "users" in all_tables and "supported_villages" in all_tables
+
+        if not has_alembic_version and has_business_tables:
+            # create_all 已建表但未记录版本 → stamp 到 head，跳过全部历史迁移
+            logger.info("数据库已有业务表但无 alembic_version，直接 stamp 到 head")
+            alembic_command.stamp(cfg, "head")
+            logger.info("Alembic stamp head 完成（跳过历史迁移重放）")
+        else:
+            alembic_command.upgrade(cfg, "head")
+            logger.info("Alembic upgrade head 完成")
     except Exception as e:
         logger.warning("Alembic upgrade 失败（将由自动补列兜底）: %s", e)
 
@@ -580,7 +599,7 @@ DEFAULT_ADMIN_USERNAME = os.getenv("DEFAULT_ADMIN_USERNAME", "admin").strip() or
 def _seed_default_admin():
     """确保默认管理员账户存在，并在启动时解锁所有被锁定的用户账户。
 
-    未设置 DEFAULT_ADMIN_PASSWORD 环境变量时，将自动生成符合密码策略的随机强密码。
+    首次启动时使用 DEFAULT_ADMIN_PASSWORD 环境变量或默认密码 admin123 创建管理员。
     must_change_password=True 强制首次登录修改密码。
 
     离线单机系统没有远程管理员可以手动解锁账户，因此每次启动时
