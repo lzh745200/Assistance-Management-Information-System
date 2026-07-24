@@ -18,18 +18,34 @@ from app.utils.runtime_secrets import (
 _RS_LOGGER = "app.utils.runtime_secrets"
 
 
-@pytest.fixture(autouse=True)
-def _isolate_rs_logger():
-    """Reset the runtime_secrets logger before every test so that caplog
-    works regardless of pollution from other test files (e.g.
-    ``configure_logging()`` in ``app.main`` removing root handlers or
-    changing levels when the ``client`` fixture is used)."""
+class _LogCapture(logging.Handler):
+    """Capture handler attached directly to the target logger (not root)."""
+
+    def __init__(self):
+        super().__init__(level=logging.DEBUG)
+        self.messages: list[str] = []
+
+    def emit(self, record: logging.LogRecord):
+        self.messages.append(record.getMessage())
+
+    @property
+    def text(self) -> str:
+        return "\n".join(self.messages)
+
+
+@pytest.fixture()
+def rs_log():
+    """Attach a capture handler directly to the runtime_secrets logger,
+    bypassing root-logger pollution from configure_logging()."""
     logger = logging.getLogger(_RS_LOGGER)
+    handler = _LogCapture()
     saved_level = logger.level
     saved_propagate = logger.propagate
-    logger.setLevel(logging.NOTSET)
+    logger.setLevel(logging.DEBUG)
     logger.propagate = True
-    yield
+    logger.addHandler(handler)
+    yield handler
+    logger.removeHandler(handler)
     logger.setLevel(saved_level)
     logger.propagate = saved_propagate
 
@@ -99,47 +115,42 @@ class TestEnsureRuntimeSecretsFromFile:
             assert os.environ["SECRET_KEY"] != ""
             assert os.environ["CSRF_SECRET_KEY"] != ""
 
-    def test_json_decode_error_logs_warning(self, tmp_path, caplog):
+    def test_json_decode_error_logs_warning(self, tmp_path, rs_log):
         secrets_file = tmp_path / "corrupt.json"
         secrets_file.write_text("{bad json", encoding="utf-8")
-        caplog.set_level(logging.WARNING, logger=_RS_LOGGER)
         with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
             ensure_runtime_secrets()
-            assert "JSON 格式损坏" in caplog.text
+            assert "JSON 格式损坏" in rs_log.text
             assert os.environ["SECRET_KEY"] != ""
 
-    def test_permission_error_reading(self, tmp_path, caplog):
+    def test_permission_error_reading(self, tmp_path, rs_log):
         secrets_file = tmp_path / "noperm.json"
         secrets_file.write_text(json.dumps({"SECRET_KEY": "sk", "CSRF_SECRET_KEY": "csr"}), encoding="utf-8")
-        caplog.set_level(logging.WARNING, logger=_RS_LOGGER)
         with patch("builtins.open", _selective_open(secrets_file, PermissionError("access denied"))):
             with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 ensure_runtime_secrets()
-                assert "无读取权限" in caplog.text
+                assert "无读取权限" in rs_log.text
 
-    def test_generic_exception_reading(self, tmp_path, caplog):
+    def test_generic_exception_reading(self, tmp_path, rs_log):
         secrets_file = tmp_path / "runtime_secrets.json"
-        caplog.set_level(logging.WARNING, logger=_RS_LOGGER)
         with patch("builtins.open", _selective_open(secrets_file, OSError("disk error"))):
             with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 ensure_runtime_secrets()
-                assert "读取运行时密钥文件失败" in caplog.text
+                assert "读取运行时密钥文件失败" in rs_log.text
 
-    def test_write_permission_error_logs_warning(self, tmp_path, caplog):
+    def test_write_permission_error_logs_warning(self, tmp_path, rs_log):
         secrets_file = tmp_path / "runtime_secrets.json"
-        caplog.set_level(logging.WARNING, logger=_RS_LOGGER)
         with patch("app.utils.runtime_secrets._atomic_write_json", side_effect=PermissionError("no write")):
             with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 ensure_runtime_secrets()
-                assert "无写入权限" in caplog.text
+                assert "无写入权限" in rs_log.text
 
-    def test_write_generic_exception_logs_warning(self, tmp_path, caplog):
+    def test_write_generic_exception_logs_warning(self, tmp_path, rs_log):
         secrets_file = tmp_path / "runtime_secrets.json"
-        caplog.set_level(logging.WARNING, logger=_RS_LOGGER)
         with patch("app.utils.runtime_secrets._atomic_write_json", side_effect=OSError("write fail")):
             with patch.dict(os.environ, {"SECRET_KEY": "", "CSRF_SECRET_KEY": "", "RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 ensure_runtime_secrets()
-                assert "落盘失败" in caplog.text
+                assert "落盘失败" in rs_log.text
 
 
 # ---------------------------------------------------------------------------
@@ -181,14 +192,13 @@ class TestGetOrCreateSecret:
             data = json.loads(secrets_file.read_text(encoding="utf-8"))
             assert data["FALLBACK"] == val
 
-    def test_json_decode_error_logs_and_generates(self, tmp_path, caplog):
+    def test_json_decode_error_logs_and_generates(self, tmp_path, rs_log):
         secrets_file = tmp_path / "runtime_secrets.json"
         secrets_file.write_text("{bad", encoding="utf-8")
-        caplog.set_level(logging.WARNING, logger=_RS_LOGGER)
         with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}):
             val = get_or_create_secret("RECOVER")
             assert val != ""
-            assert "读取运行时密钥文件失败" in caplog.text
+            assert "读取运行时密钥文件失败" in rs_log.text
 
     def test_permission_error_logs_and_generates(self, tmp_path, caplog):
         secrets_file = tmp_path / "runtime_secrets.json"
@@ -198,15 +208,14 @@ class TestGetOrCreateSecret:
                 val = get_or_create_secret("PERM")
                 assert val != ""
 
-    def test_write_exception_still_returns_value(self, tmp_path, caplog):
+    def test_write_exception_still_returns_value(self, tmp_path, rs_log):
         secrets_file = tmp_path / "runtime_secrets.json"
         secrets_file.write_text(json.dumps({}), encoding="utf-8")
-        caplog.set_level(logging.WARNING, logger=_RS_LOGGER)
         with patch("app.utils.runtime_secrets._atomic_write_json", side_effect=OSError("write fail")):
             with patch.dict(os.environ, {"RUNTIME_SECRETS_FILE": str(secrets_file)}):
                 val = get_or_create_secret("NO_PERSIST")
                 assert val != ""
-                assert "无法持久化" in caplog.text
+                assert "无法持久化" in rs_log.text
 
     def test_default_generate_is_token_urlsafe(self):
         import inspect
