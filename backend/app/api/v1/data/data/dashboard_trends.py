@@ -14,7 +14,7 @@ from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.fund import Fund
-from app.models.supported_village import SupportedVillage, VillagePopulation
+from app.models.supported_village import SupportedVillage, VillageIncome, VillagePopulation
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -79,16 +79,18 @@ def get_kpi_trends(
         invest_prev = _fund_sum(prev_year)
 
         # --- 人均收入同比 ---
+        # 收入字段在 VillageIncome 模型上（此前误判为 VillagePopulation，
+        # 导致 hasattr 恒为 False、收入同比恒为 0 的死代码缺陷）
         income_cur = 0.0
         income_prev = 0.0
-        if hasattr(VillagePopulation, "per_capita_income"):
+        if hasattr(VillageIncome, "per_capita_income"):
             income_cur = float(
-                db.query(func.coalesce(func.avg(VillagePopulation.per_capita_income), 0))
-                .filter(VillagePopulation.year == cur_year).scalar() or 0
+                db.query(func.coalesce(func.avg(VillageIncome.per_capita_income), 0))
+                .filter(VillageIncome.year == cur_year).scalar() or 0
             )
             income_prev = float(
-                db.query(func.coalesce(func.avg(VillagePopulation.per_capita_income), 0))
-                .filter(VillagePopulation.year == prev_year).scalar() or 0
+                db.query(func.coalesce(func.avg(VillageIncome.per_capita_income), 0))
+                .filter(VillageIncome.year == prev_year).scalar() or 0
             )
 
         return {
@@ -147,10 +149,10 @@ def get_yearly_trends(
 
             # 人均收入
             inc = 0.0
-            if hasattr(VillagePopulation, "per_capita_income"):
+            if hasattr(VillageIncome, "per_capita_income"):
                 inc = float(
-                    db.query(func.coalesce(func.avg(VillagePopulation.per_capita_income), 0))
-                    .filter(VillagePopulation.year == y).scalar() or 0
+                    db.query(func.coalesce(func.avg(VillageIncome.per_capita_income), 0))
+                    .filter(VillageIncome.year == y).scalar() or 0
                 )
             income_data.append(round(inc, 1))
 
