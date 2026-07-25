@@ -28,7 +28,18 @@ def _reload():
     return v1_pkg
 
 
-def test_explicit_import_failures_degrade(caplog):
+def test_explicit_import_failures_degrade(caplog, monkeypatch):
+    import app.api.v1.monitoring as monitoring_pkg
+    import app.api.v1.system as system_pkg
+
+    # “from 父包 import 子模块”形式的导入在父包属性已存在时会绕过
+    # sys.modules 中的 None 注入（_handle_fromlist 先查 hasattr），
+    # 导致 ImportError 不触发。删除父包属性，强制走子模块导入。
+    for _name in ("metrics", "secrets", "data_tier"):
+        monkeypatch.delattr(monitoring_pkg, _name, raising=False)
+    for _name in ("health", "env", "config_package"):
+        monkeypatch.delattr(system_pkg, _name, raising=False)
+
     injected = {f"{PKG}.{name}": None for name in EXPLICIT_SUBMODULES}
     with patch.dict(sys.modules, injected):
         with caplog.at_level(logging.WARNING, logger=PKG):

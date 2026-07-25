@@ -3,6 +3,7 @@
 
 import importlib
 import os
+import sys
 import tempfile
 from unittest.mock import MagicMock, patch
 
@@ -108,6 +109,9 @@ def test_wal_checkpoint_stop_failure():
 # ---------- 模块导入期：审计事件钩子失败兜底（152-153） ----------
 
 def test_reload_main_with_audit_hook_failure():
+    # test_main_app.py 的用例会重新 import app.main，使 sys.modules["app.main"]
+    # 指向新模块对象；Python 3.11 的 reload 要求与 sys.modules 中对象同一，先还原。
+    sys.modules["app.main"] = main_mod
     with patch(
         "app.services.audit_event_handler.setup_audit_events",
         side_effect=RuntimeError("hook fail"),

@@ -105,12 +105,13 @@ class TestSyncDashboard:
             _log(id=3, action=None, created_at=None, username=None, resource_type=None, status=None, user_ip=None),
         ]
         _use_db(client, _db(sync_logs=logs))
-        for p in self._patch_extras():
+        patchers = self._patch_extras()
+        for p in patchers:
             p.start()
         try:
             resp = client.get(f"{BASE}/dashboard?days=30")
         finally:
-            for p in self._patch_extras():
+            for p in patchers:
                 p.stop()
         assert resp.status_code == 200
         data = resp.json()["data"]
@@ -136,12 +137,13 @@ class TestSyncDashboard:
 
     def test_dashboard_empty_logs(self, client):
         _use_db(client, _db(sync_logs=[]))
-        for p in self._patch_extras(uploads_exists=False):
+        patchers = self._patch_extras(uploads_exists=False)
+        for p in patchers:
             p.start()
         try:
             resp = client.get(f"{BASE}/dashboard")
         finally:
-            for p in self._patch_extras(uploads_exists=False):
+            for p in patchers:
                 p.stop()
         data = resp.json()["data"]
         assert data["summary"]["total_syncs"] == 0
@@ -150,12 +152,13 @@ class TestSyncDashboard:
 
     def test_dashboard_glob_error_degrades(self, client):
         _use_db(client, _db(sync_logs=[]))
-        for p in self._patch_extras(glob_error=True):
+        patchers = self._patch_extras(glob_error=True)
+        for p in patchers:
             p.start()
         try:
             resp = client.get(f"{BASE}/dashboard")
         finally:
-            for p in self._patch_extras(glob_error=True):
+            for p in patchers:
                 p.stop()
         assert resp.status_code == 200
         assert resp.json()["data"]["package_stats"]["total_packages"] == 0
@@ -163,11 +166,12 @@ class TestSyncDashboard:
     def test_dashboard_recent_truncated_at_20(self, client):
         logs = [_log(id=i, created_at=datetime(2026, 7, 20, 10, i % 60, 0)) for i in range(25)]
         _use_db(client, _db(sync_logs=logs))
-        for p in self._patch_extras(uploads_exists=False):
+        patchers = self._patch_extras(uploads_exists=False)
+        for p in patchers:
             p.start()
         try:
             resp = client.get(f"{BASE}/dashboard")
         finally:
-            for p in self._patch_extras(uploads_exists=False):
+            for p in patchers:
                 p.stop()
         assert len(resp.json()["data"]["recent_activities"]) == 20

@@ -6,6 +6,7 @@ Alembic 迁移环境配置
 - _migrate_missing_columns 用于简单的列新增（向后兼容旧版本数据库）
 """
 
+import logging
 import sys
 import os
 from logging.config import fileConfig
@@ -29,8 +30,13 @@ config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # 配置日志
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+# 仅当 root 尚未配置 handler 时才走 fileConfig（即 alembic CLI 独立运行场景）。
+# 应用启动时通过 main._run_alembic_upgrade 程序化调用本模块，此时应用日志已由
+# init_logging() 配置完毕，若再执行 fileConfig 会重置 root handler 配置；
+# 且 fileConfig 默认 disable_existing_loggers=True，会把应用全部 logger 置为
+# disabled，导致迁移后应用日志完全静默（生产 Bug #15，曾致测试套件 caplog 失灵）。
+if config.config_file_name is not None and not logging.getLogger().handlers:
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # 目标元数据
 target_metadata = Base.metadata

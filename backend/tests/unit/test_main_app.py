@@ -221,6 +221,7 @@ class TestInitDatabaseTables:
             patch("app.core.database.engine") as mock_engine,
             patch("app.models.base.Base") as mock_base,
             patch("app.core.database_indexes.create_indexes") as mock_idx,
+            patch("app.main._run_alembic_upgrade"),  # 单测不跑真实迁移（避免副作用+alembic fileConfig 污染 logging）
             patch("app.main.logger.info"),
         ):
             _init_database_tables()
@@ -233,6 +234,7 @@ class TestInitDatabaseTables:
             patch("app.main.settings.ENABLE_AUTO_MIGRATION", True),
             patch("app.main._migrate_missing_columns") as mock_migrate,
             patch("app.core.database_indexes.create_indexes"),
+            patch("app.main._run_alembic_upgrade"),  # 单测不跑真实迁移
         ):
             _init_database_tables()
             mock_migrate.assert_called_once()
@@ -244,6 +246,7 @@ class TestInitDatabaseTables:
             patch("app.main.settings.ENABLE_AUTO_MIGRATION", False),
             patch("app.main._migrate_missing_columns") as mock_migrate,
             patch("app.core.database_indexes.create_indexes"),
+            patch("app.main._run_alembic_upgrade"),  # 单测不跑真实迁移
             patch("app.main.logger.info") as mock_info,
         ):
             _init_database_tables()
