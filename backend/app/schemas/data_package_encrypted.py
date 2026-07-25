@@ -65,7 +65,7 @@ class ConflictInfo(BaseModel):
 
     data_type: str = Field(..., description="数据类型")
     business_key: dict = Field(..., description="业务唯一键")
-    differences: List[str] = Field(..., description="差异字段���表")
+    differences: List[str] = Field(..., description="差异字段列表")
     local_data: dict = Field(..., description="本地数据")
     import_data: dict = Field(..., description="导入数据")
 

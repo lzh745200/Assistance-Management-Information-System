@@ -124,6 +124,45 @@ async def get_pending_reports(
     )
 
 
+@router.get("/received")
+async def list_received_reports(
+    status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user=Depends(get_current_user),
+    service: DataReportService = Depends(get_report_service),
+):
+    """
+    获取接收的数据上报列表
+
+    返回下级单位上报给当前用户所在组织的数据
+    """
+    from app.models.data_report import DataReport
+
+    org_id = get_user_org_id(current_user)
+    if not org_id:
+        from app.core.response import ok_list
+        return ok_list(items=[], total=0)
+
+    query = service.db.query(DataReport).filter(DataReport.target_org_id == org_id)
+
+    if status:
+        query = query.filter(DataReport.status == status)
+
+    total = query.count()
+    reports = query.order_by(DataReport.submitted_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+
+    from app.core.response import ok_list
+
+    return ok_list(
+        items=[DataReportResponse.model_validate(r) for r in reports],
+        total=total,
+        page=page,
+        page_size=page_size,
+        message="成功获取待审批上报列表"
+    )
+
+
 @router.get("/{report_id}", response_model=DataReportResponse)
 async def get_data_report(
     report_id: int,
@@ -318,45 +357,6 @@ async def approve_data_report(
     service.db.refresh(report)
 
     return DataReportResponse.model_validate(report)
-
-
-@router.get("/received")
-async def list_received_reports(
-    status: Optional[str] = None,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
-    current_user=Depends(get_current_user),
-    service: DataReportService = Depends(get_report_service),
-):
-    """
-    获取接收的数据上报列表
-
-    返回下级单位上报给当前用户所在组织的数据
-    """
-    from app.models.data_report import DataReport
-
-    org_id = get_user_org_id(current_user)
-    if not org_id:
-        from app.core.response import ok_list
-        return ok_list(items=[], total=0)
-
-    query = service.db.query(DataReport).filter(DataReport.target_org_id == org_id)
-
-    if status:
-        query = query.filter(DataReport.status == status)
-
-    total = query.count()
-    reports = query.order_by(DataReport.submitted_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
-
-    from app.core.response import ok_list
-
-    return ok_list(
-        items=[DataReportResponse.model_validate(r) for r in reports],
-        total=total,
-        page=page,
-        page_size=page_size,
-        message="成功获取待审批上报列表"
-    )
 
 
 @router.get("/{report_id}/package")

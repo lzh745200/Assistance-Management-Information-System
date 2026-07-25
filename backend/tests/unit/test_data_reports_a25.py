@@ -50,3 +50,14 @@ class TestListReceivedReports:
             )
         assert resp["success"] is True
         assert q.filter.call_count >= 2
+
+
+class TestReceivedRouteOrder:
+    """bug#14 回归：/received 必须先于 /{report_id} 注册，否则 HTTP 层 422。"""
+
+    def test_received_registered_before_report_id(self):
+        paths = [r.path for r in dr.router.routes]
+        received = "/data-reports/received"
+        by_id = "/data-reports/{report_id}"
+        assert received in paths and by_id in paths
+        assert paths.index(received) < paths.index(by_id)

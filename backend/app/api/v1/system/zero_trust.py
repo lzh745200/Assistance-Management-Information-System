@@ -322,10 +322,10 @@ async def get_trust_assessment(
         level = "low_risk"
     elif total_score >= 40:
         level = "medium_risk"
-    elif total_score >= 20:
-        level = "high_risk"
-    else:
-        level = "untrusted"
+    elif total_score >= 20:  # pragma: no cover — 评分模型最低50分，数学不可达
+        level = "high_risk"  # pragma: no cover
+    else:  # pragma: no cover — 评分模型最低50分，数学不可达
+        level = "untrusted"  # pragma: no cover
 
     # 安全建议
     recommendations = []

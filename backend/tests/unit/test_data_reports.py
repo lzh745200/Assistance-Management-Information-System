@@ -618,17 +618,39 @@ class TestListReceivedReports:
         resp = client.get(f"{BASE}/received")
         assert resp.status_code == 401
 
-    def test_route_shadowed_by_report_id(self, client_with_mocked_auth):
-        """NOTE: @router.get('/received') (line 318) is defined AFTER
-        @router.get('/{report_id}') (line 122), so FastAPI/Starlette resolves
-        'received' as a report_id path param and fails int parsing → 422.
-        This is a source-code route-ordering defect."""
+    def test_received_accessible_after_route_fix(self, client_with_mocked_auth):
+        """bug#14 修复回归：/received 已前移到 /{report_id} 之前注册，
+        不再被路径参数遮蔽，认证+服务就位时应返回 200。"""
+        _setup_user_override(client_with_mocked_auth, org_id=1)
+        mock_svc = Mock()
+        mock_svc.db = Mock()
+        q = Mock()
+        q.filter.return_value = q
+        q.order_by.return_value = q
+        q.offset.return_value = q
+        q.limit.return_value = q
+        q.count.return_value = 0
+        q.all.return_value = []
+        mock_svc.db.query.return_value = q
+        _setup_service_override(client_with_mocked_auth, mock_svc)
         resp = client_with_mocked_auth.get(f"{BASE}/received")
-        assert resp.status_code == 422
+        assert resp.status_code == 200
 
-    def test_route_shadowed_with_status_filter(self, client_with_mocked_auth):
+    def test_received_with_status_filter(self, client_with_mocked_auth):
+        _setup_user_override(client_with_mocked_auth, org_id=1)
+        mock_svc = Mock()
+        mock_svc.db = Mock()
+        q = Mock()
+        q.filter.return_value = q
+        q.order_by.return_value = q
+        q.offset.return_value = q
+        q.limit.return_value = q
+        q.count.return_value = 0
+        q.all.return_value = []
+        mock_svc.db.query.return_value = q
+        _setup_service_override(client_with_mocked_auth, mock_svc)
         resp = client_with_mocked_auth.get(f"{BASE}/received", params={"status": "approved"})
-        assert resp.status_code == 422
+        assert resp.status_code == 200
 
 
 # ──────────────────────────────────────────────────────

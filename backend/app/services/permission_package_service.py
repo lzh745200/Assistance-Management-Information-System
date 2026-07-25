@@ -455,7 +455,10 @@ class PermissionPackageService:
     def _import_user_menus(self, user_menus_data, stats, errors):
         """导入用户菜单覆盖。"""
         for menu_data in user_menus_data:
+            username = ""
             try:
+                if not isinstance(menu_data, dict):
+                    raise ValueError(f"菜单数据格式错误（应为对象，实际 {type(menu_data).__name__}）")
                 username = menu_data.get("username", "")
                 user = self.db.query(User).filter(User.username == username).first()
                 if not user:
@@ -471,7 +474,10 @@ class PermissionPackageService:
     def _import_user_legacy(self, user_legacy_data, stats, errors):
         """导入遗留权限字段。"""
         for legacy_data in user_legacy_data:
+            username = ""
             try:
+                if not isinstance(legacy_data, dict):
+                    raise ValueError(f"遗留权限数据格式错误（应为对象，实际 {type(legacy_data).__name__}）")
                 username = legacy_data.get("username", "")
                 user = self.db.query(User).filter(User.username == username).first()
                 if not user:

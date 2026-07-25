@@ -119,3 +119,30 @@ class TestImportUserLegacyError:
         assert stats["user_legacy_updated"] == 0
         assert len(errors) == 1
         assert "用户遗留权限「u1」导入失败" in errors[0]
+
+
+class TestImportNonDictItems:
+    """bug#13 回归：非 dict 数据项不得引发 NameError，应逐行记录错误。"""
+
+    def test_user_menus_non_dict_item_recorded(self):
+        svc = PermissionPackageService(MagicMock())
+        stats, errors = {"user_menus_updated": 0}, []
+        svc._import_user_menus(["not-a-dict"], stats, errors)
+        assert stats["user_menus_updated"] == 0
+        assert len(errors) == 1
+        assert "格式错误" in errors[0]
+
+    def test_user_menus_first_item_non_dict_does_not_leak_username(self):
+        svc = PermissionPackageService(MagicMock())
+        stats, errors = {"user_menus_updated": 0}, []
+        # 首元素非 dict 时旧实现会在 except 引用未绑定 username → NameError
+        svc._import_user_menus([123, {"username": "u1"}], stats, errors)
+        assert len(errors) == 1
+
+    def test_user_legacy_non_dict_item_recorded(self):
+        svc = PermissionPackageService(MagicMock())
+        stats, errors = {"user_legacy_updated": 0}, []
+        svc._import_user_legacy([["role"]], stats, errors)
+        assert stats["user_legacy_updated"] == 0
+        assert len(errors) == 1
+        assert "格式错误" in errors[0]
