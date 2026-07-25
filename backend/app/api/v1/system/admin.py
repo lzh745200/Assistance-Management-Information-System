@@ -343,9 +343,10 @@ async def get_system_logs(
 
 @router.post("/db-optimize", summary="一键数据库优化")
 async def optimize_database(
-    current_user=Depends(require_admin()),
+    current_user=Depends(get_current_user),
 ):
     """执行 WAL checkpoint + PRAGMA optimize，返回优化前后空间对比"""
+    require_admin(current_user, error_message="仅管理员可执行数据库优化")
     import os
     import sqlite3
     from urllib.parse import unquote
