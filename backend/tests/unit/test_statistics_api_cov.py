@@ -8,6 +8,7 @@
 - 各端点 500 异常分支与缓存命中直达
 """
 
+from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -144,7 +145,7 @@ class TestOverviewImpl:
             _q(scalar="2026-07-21"),     # User
             _q(count=0),                 # sv_count=0 → completeness=0 跳过计算
             _q(count=7),                 # today_ops
-            _q(all=[SimpleNamespace(day="2026-07-24", cnt=3)]),  # trend
+            _q(all=[SimpleNamespace(day=datetime.now().strftime("%Y-%m-%d"), cnt=3)]),  # trend（须落在近7天窗口内，动态取今天）
             _q(all=logs),                # recent_logs
         ])
         result = await st._get_overview_impl(db)
@@ -153,7 +154,7 @@ class TestOverviewImpl:
         assert result["completeness"] == 0
         assert result["today_operations"] == 7
         assert len(result["trend"]) == 7
-        assert any(t["operations"] == 3 for t in result["trend"] if t["date"] == "07-24")
+        assert any(t["operations"] == 3 for t in result["trend"] if t["date"] == datetime.now().strftime("%m-%d"))
         assert result["recent_logs"][0]["user"] == "root"
         assert result["recent_logs"][0]["action"] == "创建 项目"
         assert result["modules"][0]["healthy"] is True
