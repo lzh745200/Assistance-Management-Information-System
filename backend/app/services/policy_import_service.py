@@ -22,12 +22,9 @@ async def import_policies_from_excel(
 
     返回格式: { imported: int, errors: list, errorRows: list, total: int }
     """
-    try:
-        content = await validate_excel_upload(file)
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"文件校验失败: {str(e)}")
+    if not validate_excel_upload(file):
+        raise HTTPException(status_code=400, detail="文件校验失败: 不是有效的 Excel 文件")
+    content = await file.read()
 
     try:
         wb = load_workbook(BytesIO(content))

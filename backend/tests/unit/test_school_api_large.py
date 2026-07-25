@@ -5,7 +5,7 @@ import io
 import pytest
 pytestmark = pytest.mark.xdist_group("school")
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -184,8 +184,7 @@ class TestImportTemplate:
 
 
 class TestImportExcel:
-    @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
-    def test_import_success(self, mock_validate, auth_setup, db_session):
+    def test_import_success(self, auth_setup, db_session):
         from openpyxl import Workbook
         wb = Workbook()
         ws = wb.active
@@ -197,7 +196,6 @@ class TestImportExcel:
         buf = io.BytesIO()
         wb.save(buf)
         xlsx_bytes = buf.getvalue()
-        mock_validate.return_value = xlsx_bytes
 
         resp = auth_setup.post(
             P("/schools/import/excel"),
@@ -208,8 +206,7 @@ class TestImportExcel:
         assert data["success"] is True
         assert data["imported"] >= 1
 
-    @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
-    def test_import_empty_skip(self, mock_validate, auth_setup, school):
+    def test_import_empty_skip(self, auth_setup, school):
         from openpyxl import Workbook
         wb = Workbook()
         ws = wb.active
@@ -218,7 +215,6 @@ class TestImportExcel:
         buf = io.BytesIO()
         wb.save(buf)
         xlsx_bytes = buf.getvalue()
-        mock_validate.return_value = xlsx_bytes
 
         resp = auth_setup.post(
             P(f"/schools/{school.id}/scholarship-students/import"),
@@ -227,8 +223,7 @@ class TestImportExcel:
         assert resp.status_code == 200
         assert resp.json()["imported"] == 0
 
-    @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
-    def test_import_parse_error(self, mock_validate, auth_setup):
+    def test_import_parse_error(self, auth_setup):
         from openpyxl import Workbook
         wb = Workbook()
         ws = wb.active
@@ -239,7 +234,6 @@ class TestImportExcel:
         buf = io.BytesIO()
         wb.save(buf)
         xlsx_bytes = buf.getvalue()
-        mock_validate.return_value = xlsx_bytes
 
         resp = auth_setup.post(
             P("/schools/import/excel"),
@@ -250,9 +244,8 @@ class TestImportExcel:
         assert data["failed"] >= 1
         assert len(data["errors"]) >= 1
 
-    @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
     @patch("app.api.v1.school.os.unlink")
-    def test_import_unlink_filenotfound(self, mock_unlink, mock_validate, auth_setup):
+    def test_import_unlink_filenotfound(self, mock_unlink, auth_setup):
         mock_unlink.side_effect = FileNotFoundError("not found")
         from openpyxl import Workbook
         wb = Workbook()
@@ -262,7 +255,6 @@ class TestImportExcel:
         buf = io.BytesIO()
         wb.save(buf)
         xlsx_bytes = buf.getvalue()
-        mock_validate.return_value = xlsx_bytes
 
         resp = auth_setup.post(
             P("/schools/import/excel"),
@@ -910,8 +902,7 @@ class TestScholarshipStudents:
 
 
 class TestImportScholarshipStudents:
-    @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
-    def test_import_success(self, mock_validate, auth_setup, school, db_session):
+    def test_import_success(self, auth_setup, school, db_session):
         from openpyxl import Workbook
         wb = Workbook()
         ws = wb.active
@@ -920,7 +911,6 @@ class TestImportScholarshipStudents:
         buf = io.BytesIO()
         wb.save(buf)
         xlsx_bytes = buf.getvalue()
-        mock_validate.return_value = xlsx_bytes
 
         resp = auth_setup.post(
             P(f"/schools/{school.id}/scholarship-students/import"),
@@ -929,8 +919,7 @@ class TestImportScholarshipStudents:
         assert resp.status_code == 200
         assert resp.json()["imported"] >= 1
 
-    @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
-    def test_import_bad_year_triggers_exception(self, mock_validate, auth_setup, school):
+    def test_import_bad_year_triggers_exception(self, auth_setup, school):
         from openpyxl import Workbook
         wb = Workbook()
         ws = wb.active
@@ -939,7 +928,6 @@ class TestImportScholarshipStudents:
         buf = io.BytesIO()
         wb.save(buf)
         xlsx_bytes = buf.getvalue()
-        mock_validate.return_value = xlsx_bytes
 
         resp = auth_setup.post(
             P(f"/schools/{school.id}/scholarship-students/import"),
@@ -950,9 +938,8 @@ class TestImportScholarshipStudents:
         assert data["imported"] == 0
         assert len(data["errors"]) >= 1
 
-    @patch("app.api.v1.school.validate_excel_upload", new_callable=AsyncMock)
     @patch("app.api.v1.school.os.unlink")
-    def test_import_unlink_error(self, mock_unlink_inner, mock_validate, auth_setup, school):
+    def test_import_unlink_error(self, mock_unlink_inner, auth_setup, school):
         mock_unlink_inner.side_effect = FileNotFoundError("gone")
         from openpyxl import Workbook
         wb = Workbook()
@@ -962,7 +949,6 @@ class TestImportScholarshipStudents:
         buf = io.BytesIO()
         wb.save(buf)
         xlsx_bytes = buf.getvalue()
-        mock_validate.return_value = xlsx_bytes
 
         resp = auth_setup.post(
             P(f"/schools/{school.id}/scholarship-students/import"),

@@ -563,6 +563,15 @@ def _safe_int(val, default=0):
         return default
 
 
+def _safe_float(val, default=None):
+    if val is None:
+        return default
+    try:
+        return float(str(val))
+    except (ValueError, TypeError):
+        return default
+
+
 def _safe_decimal(val, default="0"):
     if val is None:
         return Decimal(default)
@@ -665,17 +674,19 @@ def _village_process_rows(
             record = SupportedVillage(
                 village_name=name,
                 province=_safe_str(data.get("province")) or "贵州省",
-                prefecture=_safe_str(data.get("prefecture")) or "黔南布依族苗族自治州",
+                city=(
+                    _safe_str(data.get("prefecture"))
+                    or _safe_str(data.get("city"))
+                    or "黔南布依族苗族自治州"
+                ),
                 county=_safe_str(data.get("county")),
                 region_scope=_safe_str(data.get("region_scope")),
                 is_three_regions=_to_bool(data.get("is_three_regions")),
                 is_key_county=_to_bool(data.get("is_key_county")),
                 support_unit=_safe_str(data.get("support_unit")),
                 department=_safe_str(data.get("department")),
-                longitude=_safe_str(data.get("longitude")),
-                latitude=_safe_str(data.get("latitude")),
-                total_households=_safe_int(data.get("total_households")),
-                registered_population=_safe_int(data.get("registered_population")),
+                longitude=_safe_float(data.get("longitude")),
+                latitude=_safe_float(data.get("latitude")),
                 created_by=user_id,
             )
             if village_obj:

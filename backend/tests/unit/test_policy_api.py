@@ -305,24 +305,21 @@ class TestPolicyAPI:
                     "2026-01-01", "2026-02-01", "有效", "乡村", "内容"])
         buf = io.BytesIO(); wb.save(buf); buf.seek(0)
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        with patch("app.core.upload_security.validate_excel_upload",
-                    new_callable=AsyncMock, return_value=buf.getvalue()):
-            resp = client.post(
-                "/api/v1/policies/import",
-                files={"file": ("test.xlsx", buf.getvalue(),
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
-            )
+        resp = client.post(
+            "/api/v1/policies/import",
+            files={"file": ("test.xlsx", buf.getvalue(),
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        )
         assert resp.status_code == 200
         assert resp.json()["imported"] == 1
 
     def test_import_policies_invalid_file(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
-        with patch("app.services.policy_import_service.validate_excel_upload",
-                    new_callable=AsyncMock, side_effect=Exception("invalid")):
-            resp = client.post(
-                "/api/v1/policies/import",
-                files={"file": ("test.xlsx", b"data", "")},
-            )
+        # b"data" 无有效 Excel 魔数，真实校验即拒绝（无需 mock）
+        resp = client.post(
+            "/api/v1/policies/import",
+            files={"file": ("test.xlsx", b"data", "")},
+        )
         assert resp.status_code == 400
 
     def test_import_policies_duplicate_code(self, client, mock_db, admin_user):
@@ -336,12 +333,10 @@ class TestPolicyAPI:
         buf = io.BytesIO(); wb.save(buf); buf.seek(0)
         q = MagicMock(); q.filter.return_value.first.return_value = existing
         mock_db.query.return_value = q
-        with patch("app.core.upload_security.validate_excel_upload",
-                    new_callable=AsyncMock, return_value=buf.getvalue()):
-            resp = client.post(
-                "/api/v1/policies/import",
-                files={"file": ("test.xlsx", buf.getvalue(), "")},
-            )
+        resp = client.post(
+            "/api/v1/policies/import",
+            files={"file": ("test.xlsx", buf.getvalue(), "")},
+        )
         assert resp.status_code == 200
         assert len(resp.json()["errors"]) == 1
 
@@ -354,12 +349,10 @@ class TestPolicyAPI:
         ws.append(["测试", ""])
         buf = io.BytesIO(); wb.save(buf); buf.seek(0)
         mock_db.query.return_value.filter.return_value.first.return_value = None
-        with patch("app.core.upload_security.validate_excel_upload",
-                    new_callable=AsyncMock, return_value=buf.getvalue()):
-            resp = client.post(
-                "/api/v1/policies/import/excel",
-                files={"file": ("test.xlsx", buf.getvalue(), "")},
-            )
+        resp = client.post(
+            "/api/v1/policies/import/excel",
+            files={"file": ("test.xlsx", buf.getvalue(), "")},
+        )
         assert resp.status_code == 200
 
     def test_export_policies_excel(self, client, mock_db, admin_user, sample_policy):

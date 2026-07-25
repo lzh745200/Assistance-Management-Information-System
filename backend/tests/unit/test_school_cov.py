@@ -14,7 +14,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from openpyxl import Workbook
 
 import app.api.v1.school as sch
@@ -75,6 +75,32 @@ class TestParseScholarshipStatus:
         assert sch._parse_scholarship_status((1, "张三")) == ScholarshipStatus.PENDING
 
 
+# ==================== 非法文件魔数 → 400 ====================
+
+
+class TestImportInvalidFile:
+    async def test_import_schools_invalid(self):
+        with pytest.raises(HTTPException) as exc_info:
+            await sch.import_schools_excel(
+                UploadFile(file=BytesIO(b"garbage"), filename="t.xlsx"), _user(), MagicMock())
+        assert exc_info.value.status_code == 400
+
+    async def test_import_scholarship_invalid(self):
+        with pytest.raises(HTTPException) as exc_info:
+            await sch.import_scholarship_students(
+                UploadFile(file=BytesIO(b"garbage"), filename="t.xlsx"), MagicMock(), _user())
+        assert exc_info.value.status_code == 400
+
+    async def test_import_school_scholarship_invalid(self):
+        with (
+            patch.object(sch, "_get_school_and_check_permission"),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await sch.import_school_scholarship_students(
+                1, UploadFile(file=BytesIO(b"garbage"), filename="t.xlsx"), _user(), MagicMock())
+        assert exc_info.value.status_code == 400
+
+
 # ==================== import_schools_excel ====================
 
 
@@ -85,11 +111,11 @@ class TestImportSchoolsExcel:
         bad = (0, "学校乙",) + (None,) * 13
         content = _xlsx_bytes([["h"] * 14, good, bad])
         with (
-            patch.object(sch, "validate_excel_upload", new_callable=AsyncMock, return_value=content),
             patch.object(sch, "safe_commit"),
             patch.object(sch, "School", side_effect=[SimpleNamespace(), RuntimeError("boom")]),
         ):
-            result = await sch.import_schools_excel(MagicMock(), _user(), MagicMock())
+            result = await sch.import_schools_excel(
+                UploadFile(file=BytesIO(content), filename="t.xlsx"), _user(), MagicMock())
         assert result["imported"] == 1
         assert result["failed"] == 1
         assert "boom" in result["errors"][0]
@@ -97,11 +123,11 @@ class TestImportSchoolsExcel:
     async def test_commit_failure_500(self):
         content = _xlsx_bytes([["h"], (0, "学校甲")])
         with (
-            patch.object(sch, "validate_excel_upload", new_callable=AsyncMock, return_value=content),
             patch.object(sch, "safe_commit", side_effect=RuntimeError("db err")),
             pytest.raises(HTTPException) as exc_info,
         ):
-            await sch.import_schools_excel(MagicMock(), _user(), MagicMock())
+            await sch.import_schools_excel(
+                UploadFile(file=BytesIO(content), filename="t.xlsx"), _user(), MagicMock())
         assert exc_info.value.status_code == 500
         assert "导入失败" in exc_info.value.detail
 
@@ -120,12 +146,12 @@ class TestImportScholarshipStudents:
         ]
         content = _xlsx_bytes(rows)
         with (
-            patch.object(sch, "validate_excel_upload", new_callable=AsyncMock, return_value=content),
             patch.object(sch, "safe_commit"),
             patch.object(sch, "ScholarshipStudent", side_effect=[SimpleNamespace(), RuntimeError("boom")]),
             patch.object(sch.os, "unlink", side_effect=FileNotFoundError("gone")),
         ):
-            result = await sch.import_scholarship_students(MagicMock(), MagicMock(), _user())
+            result = await sch.import_scholarship_students(
+                UploadFile(file=BytesIO(content), filename="t.xlsx"), MagicMock(), _user())
         assert result["imported"] == 1
         assert result["failed"] == 2
         assert any("数据格式错误" in e for e in result["errors"])
@@ -141,11 +167,11 @@ class TestImportSchoolScholarshipStudents:
         content = _xlsx_bytes(rows)
         with (
             patch.object(sch, "_get_school_and_check_permission"),
-            patch.object(sch, "validate_excel_upload", new_callable=AsyncMock, return_value=content),
             patch.object(sch, "safe_commit"),
             patch.object(sch, "ScholarshipStudent", side_effect=RuntimeError("boom")),
         ):
-            result = await sch.import_school_scholarship_students(1, MagicMock(), _user(), MagicMock())
+            result = await sch.import_school_scholarship_students(
+                1, UploadFile(file=BytesIO(content), filename="t.xlsx"), _user(), MagicMock())
         assert result["imported"] == 0
         assert any("boom" in e for e in result["errors"])
 

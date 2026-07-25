@@ -211,7 +211,9 @@ async def import_schools_excel(
 ):
     """从 Excel 导入学校"""
     # 安全校验：文件类型 + 大小
-    content = await validate_excel_upload(file)
+    if not validate_excel_upload(file):
+        raise HTTPException(status_code=400, detail="文件校验失败: 不是有效的 Excel 文件")
+    content = await file.read()
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
         tmp.write(content)
@@ -284,7 +286,9 @@ async def import_scholarship_students(
     current_user=Depends(get_current_user),
 ):
     """从 Excel 导入奖学金资助学生"""
-    content = await validate_excel_upload(file)
+    if not validate_excel_upload(file):
+        raise HTTPException(status_code=400, detail="文件校验失败: 不是有效的 Excel 文件")
+    content = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
         tmp.write(content)
         tmp_path = tmp.name
@@ -1140,7 +1144,9 @@ async def import_school_scholarship_students(
     """从 Excel 导入资助学生"""
     _get_school_and_check_permission(school_id, current_user, db, "导入资助学生")
 
-    content = await validate_excel_upload(file)
+    if not validate_excel_upload(file):
+        raise HTTPException(status_code=400, detail="文件校验失败: 不是有效的 Excel 文件")
+    content = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
         tmp.write(content)
         tmp_path = tmp.name
