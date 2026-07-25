@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.permission_utils import require_admin
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.user import User
 from app.utils.paths import get_backup_directory, get_database_path
@@ -131,7 +132,7 @@ async def list_backups(current_user=Depends(get_current_user)):
     backup_dir = get_backup_directory()
 
     if not backup_dir.exists():
-        return {"success": True, "data": {"items": [], "total": 0}}
+        return ok_list([], 0)
 
     backups = []
     for backup_file in backup_dir.glob("backup_*.db"):
@@ -147,7 +148,7 @@ async def list_backups(current_user=Depends(get_current_user)):
     # 按创建时间倒序排序
     backups.sort(key=lambda x: x["created_at"], reverse=True)
 
-    return {"success": True, "data": {"items": backups, "total": len(backups)}}
+    return ok_list(backups, len(backups))
 
 
 @router.post("/restore")
@@ -306,7 +307,7 @@ async def get_system_logs(
 
     log_file = Path(settings.LOG_FILE)
     if not log_file.exists():
-        return {"success": True, "data": {"items": [], "total": 0}}
+        return ok_list([], 0)
 
     try:
         from collections import deque
@@ -330,15 +331,12 @@ async def get_system_logs(
         with open(log_file, "r", encoding="utf-8") as f:
             total_lines = sum(1 for _ in f)
 
-        return {
-            "success": True,
-            "data": {
-                "items": [{"line": line.strip()} for line in page_lines],
-                "total": total_lines,
-                "page": page,
-                "page_size": page_size,
-            },
-        }
+        return ok_list(
+            [{"line": line.strip()} for line in page_lines],
+            total_lines,
+            page=page,
+            page_size=page_size,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"读取日志失败: {str(e)}")
 

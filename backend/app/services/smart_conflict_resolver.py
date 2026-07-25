@@ -379,7 +379,7 @@ class SmartConflictResolver:
                             record[field] = None
 
             records = data_dict[data_type]
-            if not records:
+            if not records:  # pragma: no cover — 与上方 369 行同为 data_dict[data_type] 的重复判空，369 行非空此处必非空，不可达
                 continue
 
             # 检测冲突

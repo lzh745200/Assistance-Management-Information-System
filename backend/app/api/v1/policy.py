@@ -1171,4 +1171,4 @@ async def search_policies(
     """全文检索帮扶政策（FTS5 + 关键词高亮）"""
     from app.services.policy_fts_service import search_policies_fts
     results = search_policies_fts(db, q, limit=limit, offset=offset)
-    return {"data": results, "total": len(results), "query": q}
+    return ok_list(results, len(results), query=q)

@@ -401,7 +401,7 @@ async def get_village_dropdown(
         {"id": v[0], "name": v[1], "county": v[2] or ""}
         for v in villages
     ]
-    return {"data": {"items": items}}
+    return ok_list(items, len(items))
 
 
 @router.get("/import-template")
@@ -1017,7 +1017,7 @@ async def save_transition_funding(
     } for item in data.items]
     village.transition_fund_items = json.dumps(items_json, ensure_ascii=False)
     safe_commit(db)
-    return {"success": True, "message": "转移支付资金已保存", "items": items_json}
+    return ok_list(items_json, len(items_json), message="转移支付资金已保存")
 
 
 # ── 模板下载 ──

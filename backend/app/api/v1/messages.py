@@ -22,6 +22,7 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.services.message_service import MessageService
 from app.services.message_template_service import MessageTemplateService
@@ -374,14 +375,14 @@ async def get_recent_activities(
                 }
             )
 
-        return {"items": items, "total": len(items)}
+        return ok_list(items, len(items))
 
     except OperationalError as e:
         logger.warning("获取近期动态失败 (DB operational): %s", e)
-        return {"items": [], "total": 0}
+        return ok_list([], 0)
     except ProgrammingError as e:
         logger.warning("获取近期动态失败 (schema): %s", e)
-        return {"items": [], "total": 0}
+        return ok_list([], 0)
     except Exception as e:
         logger.error("获取近期动态时发生未预期错误: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=f"获取近期动态失败: {type(e).__name__}")

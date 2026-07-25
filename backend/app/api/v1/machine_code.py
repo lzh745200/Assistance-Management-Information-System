@@ -730,7 +730,7 @@ async def get_machine_code_permissions(
             for p in permissions
         ]
 
-        return {"code": 200, "data": {"items": items}, "message": "查询成功"}
+        return ok_list(items, len(items), message="查询成功")
     except Exception:
         logger.error("获取机器码权限失败", exc_info=True)
         raise HTTPException(status_code=500, detail="获取机器码权限失败")
