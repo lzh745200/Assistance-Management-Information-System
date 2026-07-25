@@ -261,8 +261,8 @@ async def preview_data_for_export(
         model = DATA_TYPE_MODELS.get(dt)
         if model:
             query = service.db.query(model)
-            if org_id and hasattr(model, "org_id"):
-                query = query.filter(model.org_id == org_id)
+            if org_id and hasattr(model, "organization_id"):
+                query = query.filter(model.organization_id == org_id)
             counts[dt] = query.count()
         else:
             counts[dt] = 0
@@ -446,7 +446,10 @@ async def import_data_package(
         )
 
     finally:
-        # 清理临时文件
+        # 清理临时文件（先关闭句柄——Windows 不允许删除打开中的文件，
+        # 否则早期 raise 路径会以 PermissionError 掩盖原始错误）
+        if not temp_file.closed:
+            temp_file.close()
         if os.path.exists(temp_file.name):
             os.unlink(temp_file.name)
 
