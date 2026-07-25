@@ -118,7 +118,10 @@ except Exception as e:
 # 使用列表而非 dict（key==value 无需 dict 映射）
 _BUSINESS_MODULES = [
     'organization', 'policy', 'projects', 'school',
-    'supported_village', 'supported_village_export',  # 帮扶村核心模块：CRUD+10板块年度数据+导入导出，已完整实现
+    # supported_village_export 必须先于 supported_village 注册：
+    # 后者的 /{village_id} 动态路由会把 "export" 当 int 解析（422），
+    # 静态导出路由需先匹配（FastAPI 按注册顺序匹配）
+    'supported_village_export', 'supported_village',  # 帮扶村核心模块：CRUD+10板块年度数据+导入导出，已完整实现
     'rural_works', 'rural_tasks',
     'villages', 'village_templates', 'validation', 'report_templates', 'approval',
     'messages', 'feedback', 'todos', 'ai', 'map', 'project_milestones',

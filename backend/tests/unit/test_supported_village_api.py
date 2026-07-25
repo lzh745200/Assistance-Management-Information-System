@@ -222,18 +222,28 @@ class TestDownloadImportTemplate:
 # ---------------------------------------------------------------------------
 
 class TestExportVillages:
+    """导出端点已迁移至 supported_village_export.py 模块化实现（路由冲突修复后新版生效）"""
+
+    def _mk_svc(self, content=b"XLSX", filename="export.xlsx"):
+        svc = MagicMock()
+        svc.export.return_value = (content, filename, {"rows": 1})
+        return svc
+
     def test_success(self, client, mock_db):
-        q = mock_db.query.return_value
-        v = _make_mock_village(1, is_three_regions=True, is_key_county=False)
-        q.all.return_value = [v]
-        resp = client.get("/api/v1/supported-villages/export")
+        with patch(
+            "app.services.supported_village_export_service.SupportedVillageExportService",
+            return_value=self._mk_svc(),
+        ):
+            resp = client.get("/api/v1/supported-villages/export")
         assert resp.status_code == 200
         assert "application/vnd.openxmlformats" in resp.headers.get("content-type", "")
 
     def test_empty(self, client, mock_db):
-        q = mock_db.query.return_value
-        q.all.return_value = []
-        resp = client.get("/api/v1/supported-villages/export")
+        with patch(
+            "app.services.supported_village_export_service.SupportedVillageExportService",
+            return_value=self._mk_svc(content=b"", filename="empty.xlsx"),
+        ):
+            resp = client.get("/api/v1/supported-villages/export")
         assert resp.status_code == 200
 
 

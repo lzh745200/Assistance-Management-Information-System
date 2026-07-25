@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 try:  # pragma: no cover -
     from app.models.fund import FundSource, FundStatus, FundType
-except Exception:  # noqa: BLE001
+except Exception:  # noqa: BLE001  # pragma: no cover —— app.models.fund 为项目内模块必然可导入，防御回退不可达
 
     class FundType(str, Enum):  # type: ignore[override]
         PROJECT = "project"

@@ -417,39 +417,6 @@ async def download_import_template():
     )
 
 
-@router.get("/export")
-async def export_villages(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """导出帮扶村数据到 Excel"""
-    query = db.query(SupportedVillage).filter(SupportedVillage.is_active == True)  # noqa: E712
-    query = apply_scope_filter(query, current_user, SupportedVillage, db=db)
-    villages = query.all()
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "帮扶村数据"
-    field_names = _FIELD_NAMES
-    headers = _HEADER_NAMES
-    ws.append(headers)
-    for v in villages:
-        row = []
-        for fn in field_names:
-            val = getattr(v, fn, None)
-            if fn in ("is_three_regions", "is_key_county", "is_revitalization_tier"):
-                val = "是" if val else "否"
-            row.append(val or "")
-        ws.append(row)
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-    return StreamingResponse(
-        output,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=supported_villages_export.xlsx"},
-    )
-
-
 @router.post("/import")
 async def import_villages(
     file: UploadFile = File(...),
