@@ -434,13 +434,7 @@ async function runForecastFunds() {
 }
 
 async function runAnomalyDetection() {
-  if (!anomalyInput.value.trim()) {
-    try {
-      // 尝试使用空数据或默认
-    } catch {
-      // ignore
-    }
-  }
+  // 空输入场景在下方 else 分支统一处理（生成演示数据）
   anomalyLoading.value = true
   anomalyResult.value = null
   try {

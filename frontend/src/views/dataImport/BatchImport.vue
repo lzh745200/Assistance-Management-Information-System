@@ -508,11 +508,14 @@ const handleValidate = async () => {
       }))
     }
     previewCount.value = data.total_rows || 0
-  } catch {
+    step.value = 2
+  } catch (e: any) {
+    // Bug#16 修复：校验请求失败时停留在当前步骤并明确报错，
+    // 不得推进到步骤2（空 validationErrors 会渲染绿色"校验通过"成功页误导用户）
     previewCount.value = 0
+    ElMessage.error(e?.response?.data?.detail || '校验请求失败，请检查网络后重试')
   } finally {
     validating.value = false
-    step.value = 2
   }
 }
 
@@ -545,12 +548,11 @@ const handleImport = async () => {
       step.value = 5
     }, 500)
   } catch (e: any) {
-    importProgress.value = 100
-    importResult.value = { success: 0, failed: 1, errors: [] }
+    // Bug#17 修复：导入失败时返回预览确认页(step 3)并明确报错，
+    // 不得进入步骤5（该页固定渲染 icon="success" 的"导入完成"成功结果页）
+    importProgress.value = 0
     ElMessage.error(e?.response?.data?.detail || '导入失败')
-    setTimeout(() => {
-      step.value = 5
-    }, 500)
+    step.value = 3
   }
 }
 
