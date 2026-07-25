@@ -131,6 +131,12 @@ async def get_rankings(
                 "village_name": village_name,
                 "total_score": eval.total_score,
                 "grade": eval.grade,
+                # 前端 Rankings.vue 分项得分列（economic/social/...）
+                "scores": {
+                    "economic": eval.economic_score,
+                    "social": eval.social_score,
+                    "ecological": eval.ecological_score,
+                },
             }
             for eval, village_name in evaluations
         ],
