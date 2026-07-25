@@ -765,9 +765,14 @@ class TestAuditLogService:
         mock_audit_log_instance = MagicMock()
         mock_audit_log_cls.return_value = mock_audit_log_instance
 
-        with patch.dict("sys.modules", {"app.models.audit": MagicMock()}):
-            import app.models.audit as audit_mod
-            audit_mod.AuditLog = mock_audit_log_cls
+        # 直接 patch 真模块属性（patch.object 自动恢复）。
+        # 注意：不可在此用 patch.dict(sys.modules, {"app.models.audit": MagicMock()})——
+        # `import app.models.audit as audit_mod` 会经父包属性链拿到真模块，
+        # audit_mod.AuditLog = mock 将永久改写真模块属性，污染后续所有
+        # 函数内 `from app.models.audit import AuditLog`（如 statistics overview）。
+        import app.models.audit as audit_mod
+
+        with patch.object(audit_mod, "AuditLog", mock_audit_log_cls):
             await AuditLogService.log(
                 db=mock_db,
                 user_id=1,
