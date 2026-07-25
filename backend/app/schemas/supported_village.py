@@ -66,6 +66,12 @@ class SupportedVillageUpdate(BaseModel):
     sequence_no: Optional[int] = Field(None, ge=0, description="序号")
     latitude: Optional[float] = Field(None, ge=-90, le=90, description="纬度")
     longitude: Optional[float] = Field(None, ge=-180, le=180, description="经度")
+    # 过渡状态变更走 update_village 的管理员审批+审计分支（此前 schema 缺失该字段，
+    # pydantic 静默丢弃导致分支不可达——bug#12）
+    transition_status: Optional[str] = Field(
+        None,
+        description="过渡状态: none/entering/in_transition/exiting/completed",
+    )
 
 
 class VillagePopulationCreate(BaseModel):
