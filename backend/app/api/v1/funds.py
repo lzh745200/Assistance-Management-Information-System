@@ -348,7 +348,7 @@ def update_fund(
     for key, value in data.model_dump(exclude_unset=True).items():
         if hasattr(fund, key):
             setattr(fund, key, value)
-        else:
+        else:  # pragma: no cover —— FundUpdate schema 字段在 Fund 模型上全部存在，防御分支不可达
             logger.warning("update_fund: skipping unknown field '%s' on Fund(id=%d)", key, fund_id)
 
     safe_commit(db)
@@ -468,7 +468,7 @@ def fund_statistics_multi_dimension(
     result = []
     for r in rows:
         key = r.group_key or "未知"
-        if not key:
+        if not key:  # pragma: no cover —— 上行 or "未知" 保证 key 永非空，防御分支不可达
             continue
 
         label = str(key) if group_by == "period" else current_map.get(key, key)
@@ -542,7 +542,7 @@ def _transition_status(
     for k, v in kwargs.items():
         if hasattr(fund, k):
             setattr(fund, k, v)
-        else:
+        else:  # pragma: no cover —— 全部调用方仅传 Fund 已有字段（approved_by/allocation_date/start_date/end_date/audit_date），防御分支不可达
             logger.warning("_transition_status: skipping unknown field '%s' on Fund(id=%d)", k, fund.id)
     safe_commit(db)
 
