@@ -1,130 +1,150 @@
-"""app.services.effectiveness_service 静态方法覆盖率测试
+# -*- coding: utf-8 -*-
+"""effectiveness_service 覆盖率补测：静态方法组 + 实例方法组 + 模块级函数"""
 
-覆盖新增的 3 个 API 静态方法（修复前不存在导致端点必 500）：
-- evaluate_village：村不存在 error / 无评估 error / 有评估返回
-- get_evaluation_report：无记录 None / 有记录 dict
-- compare_evaluations：缺 year1 / 缺 year2 / 成功 delta（含 None 分数回退）
-"""
+from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
 
-from datetime import datetime
-from types import SimpleNamespace
-from unittest.mock import MagicMock
-
-from app.services.effectiveness_service import EffectivenessService
-
-
-def _ev(**kw):
-    defaults = dict(
-        village_id=1, year=2026, economic_score=80.0, social_score=85.0,
-        ecological_score=75.0, total_score=80.0, rank=1, grade="B",
-        indicators={"income": 80}, evaluated_at=datetime(2026, 7, 1, 12, 0, 0),
-    )
-    defaults.update(kw)
-    return SimpleNamespace(**defaults)
+from app.services.effectiveness_service import (
+    EffectivenessService,
+    calculate_effectiveness_score,
+    compare_effectiveness,
+    generate_effectiveness_report,
+)
 
 
-def _db(village=None, eval_first=None):
-    """db.query 返回带 filter/order_by/first 的 mock；village 与评估共用 first 调用序"""
-    db = MagicMock()
+def _ev(total=80.0, **kw):
+    ev = MagicMock()
+    ev.village_id = kw.get("village_id", 1)
+    ev.year = kw.get("year", 2024)
+    ev.economic_score = kw.get("economic_score", 80.0)
+    ev.social_score = kw.get("social_score", 75.0)
+    ev.ecological_score = kw.get("ecological_score", 70.0)
+    ev.total_score = total
+    ev.rank = 1
+    ev.grade = "A"
+    ev.indicators = {}
+    ev.evaluated_at = kw.get("evaluated_at", datetime(2024, 6, 1, tzinfo=timezone.utc))
+    return ev
+
+
+def _chain(first=None):
     q = MagicMock()
     q.filter.return_value = q
     q.order_by.return_value = q
-    db.query.return_value = q
-    # evaluate_village 先查村再查评估：first 调两次
-    q.first.side_effect = [village, eval_first] if eval_first is not ... else [village]
-    return db, q
+    q.first.return_value = first
+    return q
 
 
-class TestEvaluateVillage:
-    def test_village_not_found(self):
-        db, q = _db(village=None)
-        q.first.side_effect = [None]
-        result = EffectivenessService.evaluate_village(db, 999, 2026, user_id=1)
-        assert "不存在" in result["error"]
+# ---------- 静态方法组 ----------
 
-    def test_no_evaluation(self):
-        db, q = _db()
-        q.first.side_effect = [SimpleNamespace(id=1, name="幸福村"), None]
-        result = EffectivenessService.evaluate_village(db, 1, 2026, user_id=1)
-        assert "暂无评估数据" in result["error"]
-
-    def test_success_with_village_name(self):
-        db, q = _db()
-        q.first.side_effect = [SimpleNamespace(id=1, name="幸福村"), _ev()]
-        result = EffectivenessService.evaluate_village(db, 1, 2026, user_id=1)
-        assert result["total_score"] == 80.0
-        assert result["village_name"] == "幸福村"
-        assert result["grade"] == "B"
-        assert result["evaluated_at"] == "2026-07-01T12:00:00"
-
-    def test_evaluated_at_none(self):
-        db, q = _db()
-        q.first.side_effect = [SimpleNamespace(id=1, name="幸福村"), _ev(evaluated_at=None)]
-        result = EffectivenessService.evaluate_village(db, 1, 2026, user_id=1)
-        assert result["evaluated_at"] is None
+def test_eval_to_dict_with_and_without_timestamp():
+    d1 = EffectivenessService._eval_to_dict(_ev())
+    assert d1["evaluated_at"] == "2024-06-01T00:00:00+00:00"
+    d2 = EffectivenessService._eval_to_dict(_ev(evaluated_at=None))
+    assert d2["evaluated_at"] is None
 
 
-class TestGetEvaluationReport:
-    def test_none_when_missing(self):
-        db = MagicMock()
-        q = MagicMock()
-        q.filter.return_value = q
-        q.order_by.return_value = q
-        q.first.return_value = None
-        db.query.return_value = q
-        assert EffectivenessService.get_evaluation_report(db, 1, 2026) is None
-
-    def test_dict_when_found(self):
-        db = MagicMock()
-        q = MagicMock()
-        q.filter.return_value = q
-        q.order_by.return_value = q
-        q.first.return_value = _ev()
-        db.query.return_value = q
-        result = EffectivenessService.get_evaluation_report(db, 1, 2026)
-        assert result["indicators"] == {"income": 80}
-        assert result["rank"] == 1
+def test_find_evaluation_queries_latest():
+    ev = _ev()
+    db = MagicMock()
+    db.query.return_value = _chain(ev)
+    assert EffectivenessService._find_evaluation(db, 1, 2024) is ev
 
 
-class TestCompareEvaluations:
-    def _db2(self, ev1, ev2):
-        """compare 内部两次 _find_evaluation（各 filter→order_by→first）"""
-        db = MagicMock()
-        q = MagicMock()
-        q.filter.return_value = q
-        q.order_by.return_value = q
-        q.first.side_effect = [ev1, ev2]
-        db.query.return_value = q
-        return db
-
-    def test_missing_year1(self):
-        result = EffectivenessService.compare_evaluations(self._db2(None, _ev()), 1, 2025, 2026)
-        assert "2025" in result["error"]
-
-    def test_missing_year2(self):
-        result = EffectivenessService.compare_evaluations(self._db2(_ev(), None), 1, 2025, 2026)
-        assert "2026" in result["error"]
-
-    def test_success_delta(self):
-        ev1 = _ev(year=2025, total_score=70.0, economic_score=70.0)
-        ev2 = _ev(year=2026, total_score=85.5, economic_score=80.0)
-        result = EffectivenessService.compare_evaluations(self._db2(ev1, ev2), 1, 2025, 2026)
-        assert result["delta"]["total_score"] == 15.5
-        assert result["delta"]["economic_score"] == 10.0
-        assert result["year1_data"]["total_score"] == 70.0
-        assert result["year2_data"]["total_score"] == 85.5
-
-    def test_none_scores_fallback(self):
-        ev1 = _ev(year=2025, total_score=None, economic_score=None, social_score=None, ecological_score=None)
-        ev2 = _ev(year=2026, total_score=None, economic_score=None, social_score=None, ecological_score=None)
-        result = EffectivenessService.compare_evaluations(self._db2(ev1, ev2), 1, 2025, 2026)
-        assert result["delta"]["total_score"] == 0
+def test_evaluate_village_not_found():
+    db = MagicMock()
+    db.query.return_value = _chain(None)
+    r = EffectivenessService.evaluate_village(db, 99, 2024, 1)
+    assert r == {"error": "村庄 99 不存在"}
 
 
-def test_compare_effectiveness_periods_two_periods():
-    """compare_effectiveness_periods 两时期分支（line 247）"""
+def test_evaluate_village_no_evaluation():
+    village = MagicMock()
+    db = MagicMock()
+    db.query.side_effect = [_chain(village), _chain(None)]
+    r = EffectivenessService.evaluate_village(db, 1, 2024, 1)
+    assert r == {"error": "村庄在 2024 年暂无评估数据"}
+
+
+def test_evaluate_village_success():
+    village = MagicMock()
+    ev = _ev()
+    db = MagicMock()
+    db.query.side_effect = [_chain(village), _chain(ev)]
+    r = EffectivenessService.evaluate_village(db, 1, 2024, 1)
+    assert r["total_score"] == 80.0
+    assert "village_name" in r
+
+
+def test_get_evaluation_report_none_and_found():
+    db = MagicMock()
+    db.query.return_value = _chain(None)
+    assert EffectivenessService.get_evaluation_report(db, 1, 2024) is None
+    db2 = MagicMock()
+    db2.query.return_value = _chain(_ev())
+    assert EffectivenessService.get_evaluation_report(db2, 1, 2024)["year"] == 2024
+
+
+def test_compare_evaluations_missing_year1():
+    with patch.object(EffectivenessService, "_find_evaluation", side_effect=[None, _ev()]):
+        r = EffectivenessService.compare_evaluations(MagicMock(), 1, 2023, 2024)
+    assert "缺少 2023 年" in r["error"]
+
+
+def test_compare_evaluations_missing_year2():
+    with patch.object(EffectivenessService, "_find_evaluation", side_effect=[_ev(), None]):
+        r = EffectivenessService.compare_evaluations(MagicMock(), 1, 2023, 2024)
+    assert "缺少 2024 年" in r["error"]
+
+
+def test_compare_evaluations_delta():
+    ev1 = _ev(total=70.0, economic_score=None)
+    ev2 = _ev(total=85.5)
+    with patch.object(EffectivenessService, "_find_evaluation", side_effect=[ev1, ev2]):
+        r = EffectivenessService.compare_evaluations(MagicMock(), 1, 2023, 2024)
+    assert r["delta"]["total_score"] == 15.5
+    assert r["delta"]["economic_score"] == 80.0
+    assert r["year1_data"]["total_score"] == 70.0
+
+
+# ---------- 实例方法组 ----------
+
+def test_instance_evaluators():
     svc = EffectivenessService()
-    result = svc.compare_effectiveness_periods(1, "2025-01", "2025-12")
-    assert result["period1"] == "2025-01"
-    assert result["period2"] == "2025-12"
-    assert "improvement" in result
+    m1 = svc.evaluate_village_effectiveness(1)
+    assert m1.overall_score == 0.82
+    m2 = svc.evaluate_project_effectiveness(2)
+    assert m2.project_completion_rate == 0.95
+    m3 = svc.evaluate_fund_effectiveness(3)
+    assert m3.fund_usage_rate == 0.92
+
+
+def test_trends_and_export():
+    svc = EffectivenessService()
+    t = svc.get_effectiveness_trends(1, "village")
+    assert len(t["income_growth"]) == 5
+    assert svc.export_effectiveness_report(1, format="excel") == b"Mock report content"
+
+
+def test_compare_periods_four_and_two_args():
+    svc = EffectivenessService()
+    r4 = svc.compare_effectiveness_periods(1, "2024-01", "2024-06", "2024-07", "2024-12")
+    assert r4["period1"] == "2024-01 to 2024-06"
+    assert r4["improvement"] == 0.07
+    r2 = svc.compare_effectiveness_periods(1, "2024-01", "2024-12")
+    assert r2["period1"] == "2024-01"
+
+
+# ---------- 模块级函数 ----------
+
+def test_module_level_functions():
+    assert calculate_effectiveness_score({}, {}) == 0.80
+    r = compare_effectiveness([], [])
+    assert r["improvement"] == 0.15
+    rep = generate_effectiveness_report({"entity_id": 5, "entity_type": "project"})
+    assert rep.entity_id == 5
+    assert rep.entity_type == "project"
+    assert len(rep.recommendations) == 2
+    rep2 = generate_effectiveness_report({})
+    assert rep2.entity_id == 0
+    assert rep2.entity_type == "village"
