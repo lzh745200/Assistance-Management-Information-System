@@ -53,8 +53,6 @@ def _safe_isoformat(val) -> Optional[str]:
     if val is None:
         return None
     try:
-        if val is None:
-            return None
         if hasattr(val, "isoformat"):
             return val.isoformat()
         return str(val)
