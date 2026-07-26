@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.models.policy import Policy
 from app.core.upload_security import validate_excel_upload
 from app.core.logging import logger
+from app.core.transaction import safe_commit
 
 
 async def import_policies_from_excel(
@@ -76,7 +77,7 @@ async def import_policies_from_excel(
                 errors.append(_make_row_error(row, row_idx, str(e)))
                 error_rows.append(row_idx)
 
-        db.commit()
+        safe_commit(db)
 
         return {
             "imported": imported,

@@ -67,6 +67,10 @@
       {
         "from": "resources/icons/app-circle-256.png",
         "to": "icon.png"
+      },
+      {
+        "from": "resources/icons/app-circle.ico",
+        "to": "app-circle.ico"
       }
     ],
     "win": {

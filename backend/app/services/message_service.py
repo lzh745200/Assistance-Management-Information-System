@@ -18,6 +18,7 @@ from sqlalchemy import and_, desc, func
 from sqlalchemy.orm import Session
 
 from app.models.message import Message, MessageType
+from app.core.transaction import safe_commit
 
 
 class MessageService:
@@ -85,7 +86,7 @@ class MessageService:
         )
 
         self.db.add(message)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(message)
         return message
 
@@ -276,7 +277,7 @@ class MessageService:
             )
             .update({"is_read": True, "read_at": now}, synchronize_session=False)
         )
-        self.db.commit()
+        safe_commit(self.db)
         return result
 
     def mark_single_as_read(self, user_id: int, message_id: int) -> bool:
@@ -311,7 +312,7 @@ class MessageService:
             query = query.filter(Message.message_type == message_type)
 
         result = query.update({"is_read": True, "read_at": now}, synchronize_session=False)
-        self.db.commit()
+        safe_commit(self.db)
         return result
 
     # ==================== 删除消息 ====================
@@ -334,7 +335,7 @@ class MessageService:
             .filter(and_(Message.id.in_(message_ids), Message.user_id == user_id))
             .delete(synchronize_session=False)
         )
-        self.db.commit()
+        safe_commit(self.db)
         return result
 
     def delete_single_message(self, user_id: int, message_id: int) -> bool:
@@ -366,7 +367,7 @@ class MessageService:
             .filter(and_(Message.user_id == user_id, Message.is_read == True))  # noqa: E712
             .delete(synchronize_session=False)
         )
-        self.db.commit()
+        safe_commit(self.db)
         return result
 
     # ==================== 消息清理 ====================
@@ -387,7 +388,7 @@ class MessageService:
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=retention_days)
 
         result = self.db.query(Message).filter(Message.created_at < cutoff_date).delete(synchronize_session=False)
-        self.db.commit()
+        safe_commit(self.db)
         return result
 
     # ==================== 统计信息 ====================

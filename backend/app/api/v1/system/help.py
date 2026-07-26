@@ -10,6 +10,8 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from app.core.response import ok_list
+
 
 logger = logging.getLogger(__name__)
 
@@ -243,7 +245,7 @@ async def search_help_articles(
 ):
     """全文搜索帮助文档"""
     if not q.strip():
-        return {"success": True, "data": {"items": [], "total": 0}}
+        return ok_list(items=[], total=0)
 
     q_lower = q.lower()
     results = []

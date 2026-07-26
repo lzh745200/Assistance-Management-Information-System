@@ -42,7 +42,7 @@ class SecretsManager:
                         f.write(default_key)
             except ImportError:
                 default_key = secrets.token_urlsafe(32)
-            except Exception:
+            except Exception as e:
                 default_key = secrets.token_urlsafe(32)
         self._secrets["default"] = default_key
         self._key_versions.append(

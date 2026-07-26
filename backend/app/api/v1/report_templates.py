@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from ...core.database import get_db
+from ...core.data_permission import filter_by_data_scope
 from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.report_template import ReportTemplate
@@ -609,15 +610,19 @@ def _safe_datetime(val):
 
 
 def _village_prepare_import(
-    db: Session, parsed_data: List[Dict[str, Any]], mode: str
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str, current_user=None
 ) -> Tuple[int, set, dict]:
-    """Prepare village import: handle overwrite, find existing names, preload village map."""
+    """Prepare village import: handle overwrite, find existing names, preload village map.
+
+    安全修复：覆盖模式下仅删除当前用户数据范围内的记录，而非全表删除。
+    """
     from app.models.supported_village import SupportedVillage
     from app.models.village import Village
 
     deleted = 0
     if mode == "overwrite":
-        deleted = db.query(SupportedVillage).delete()
+        query = filter_by_data_scope(db.query(SupportedVillage), SupportedVillage, current_user, db=db)
+        deleted = query.delete(synchronize_session=False)
         safe_commit(db)
 
     existing_names = set()
@@ -701,14 +706,14 @@ def _village_process_rows(
 
 
 def _import_village_data(
-    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
+    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str, current_user=None
 ) -> Dict[str, Any]:
     """导入帮扶村数据
 
     Args:
         mode: "incremental"=跳过重复, "overwrite"=清空后全量导入
     """
-    deleted, existing_names, village_map = _village_prepare_import(db, parsed_data, mode)
+    deleted, existing_names, village_map = _village_prepare_import(db, parsed_data, mode, current_user)
     created, skipped, errors = _village_process_rows(
         db, parsed_data, mode, existing_names, village_map, user_id,
     )
@@ -745,9 +750,12 @@ def _import_village_data(
 
 
 def _import_school_data(
-    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
+    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str, current_user=None
 ) -> Dict[str, Any]:
-    """导入帮扶学校数据"""
+    """导入帮扶学校数据
+
+    安全修复：覆盖模式下仅删除当前用户数据范围内的记录。
+    """
     from app.models.school import School, SchoolType, SupportStatus
 
     TYPE_MAP = {
@@ -765,9 +773,10 @@ def _import_school_data(
     deleted = 0
     errors = []
 
-    # overwrite 模式：清空现有记录
+    # overwrite 模式：仅删除当前用户数据范围内的记录
     if mode == "overwrite":
-        deleted = db.query(School).delete()
+        query = filter_by_data_scope(db.query(School), School, current_user, db=db)
+        deleted = query.delete(synchronize_session=False)
         safe_commit(db)
 
     existing_names = set()
@@ -870,14 +879,18 @@ _PROJECT_URGENCY_MAP = {"紧急": "urgent", "重要": "important", "一般": "no
 
 
 def _project_prepare_import(
-    db: Session, parsed_data: List[Dict[str, Any]], mode: str
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str, current_user=None
 ) -> Tuple[int, set]:
-    """Prepare project import: handle overwrite, find existing names."""
+    """Prepare project import: handle overwrite, find existing names.
+
+    安全修复：覆盖模式下仅删除当前用户数据范围内的记录。
+    """
     from app.models.project import Project
 
     deleted = 0
     if mode == "overwrite":
-        deleted = db.query(Project).delete()
+        query = filter_by_data_scope(db.query(Project), Project, current_user, db=db)
+        deleted = query.delete(synchronize_session=False)
         safe_commit(db)
 
     existing_names = set()
@@ -982,10 +995,10 @@ def _project_process_rows(
 
 
 def _import_project_data(
-    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
+    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str, current_user=None
 ) -> Dict[str, Any]:
     """导入帮扶项目数据"""
-    deleted, existing_names = _project_prepare_import(db, parsed_data, mode)
+    deleted, existing_names = _project_prepare_import(db, parsed_data, mode, current_user)
     created, skipped, errors = _project_process_rows(
         db, parsed_data, mode, existing_names, user_id,
     )
@@ -1039,14 +1052,19 @@ _RURAL_WORK_STATUS_MAP = {
 
 
 def _rural_work_prepare_import(
-    db: Session, parsed_data: List[Dict[str, Any]], mode: str
+    db: Session, parsed_data: List[Dict[str, Any]], mode: str, current_user=None
 ) -> Tuple[int, set]:
-    """Prepare rural work import: handle overwrite, find existing names."""
+    """Prepare rural work import: handle overwrite, find existing names.
+
+    安全修复：覆盖模式下仅删除当前用户数据范围内的记录（RuralWork 无 organization_id，
+    使用 created_by 过滤）。
+    """
     from app.models.rural_work import RuralWork
 
     deleted = 0
     if mode == "overwrite":
-        deleted = db.query(RuralWork).delete()
+        query = filter_by_data_scope(db.query(RuralWork), RuralWork, current_user, db=db)
+        deleted = query.delete(synchronize_session=False)
         safe_commit(db)
 
     existing_names = set()
@@ -1124,10 +1142,10 @@ def _rural_work_process_rows(
 
 
 def _import_rural_work_data(
-    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str
+    db: Session, parsed_data: List[Dict[str, Any]], user_id: Optional[int], mode: str, current_user=None
 ) -> Dict[str, Any]:
     """导入乡村工作数据"""
-    deleted, existing_names = _rural_work_prepare_import(db, parsed_data, mode)
+    deleted, existing_names = _rural_work_prepare_import(db, parsed_data, mode, current_user)
     created, skipped, errors = _rural_work_process_rows(
         db, parsed_data, mode, existing_names, user_id,
     )
@@ -1216,13 +1234,13 @@ async def upload_filled_template(
     user_id = getattr(current_user, "id", None)
 
     if t.module == "village":
-        result = _import_village_data(db, parsed_data, user_id, import_mode)
+        result = _import_village_data(db, parsed_data, user_id, import_mode, current_user)
     elif t.module == "school":
-        result = _import_school_data(db, parsed_data, user_id, import_mode)
+        result = _import_school_data(db, parsed_data, user_id, import_mode, current_user)
     elif t.module == "project":
-        result = _import_project_data(db, parsed_data, user_id, import_mode)
+        result = _import_project_data(db, parsed_data, user_id, import_mode, current_user)
     elif t.module == "rural_work":
-        result = _import_rural_work_data(db, parsed_data, user_id, import_mode)
+        result = _import_rural_work_data(db, parsed_data, user_id, import_mode, current_user)
     elif t.module == "fund":
         raise HTTPException(
             status_code=400,

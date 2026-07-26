@@ -15,6 +15,7 @@ from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.core.transaction import safe_commit
 from app.models.system_config import SystemUpdateLog
 
 logger = logging.getLogger(__name__)
@@ -291,7 +292,7 @@ class UpdateLogService:
             updated_by=updated_by,
         )
         self.db.add(log_entry)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(log_entry)
 
         logger.info("系统更新已记录: %s", version)
@@ -399,9 +400,9 @@ class UpdateLogService:
             初始化结果统计
         """
         if force:
-            # 强制重新初始化：清空所有记录
+            # 强制重新初始化：清空所有记录（系统级操作，不受组织隔离限制）
             deleted = self.db.query(SystemUpdateLog).delete()
-            self.db.commit()
+            safe_commit(self.db)
             logger.info("强制重新初始化：已删除 %s 条旧记录", deleted)
 
         # 检查是否已有记录
@@ -423,7 +424,7 @@ class UpdateLogService:
             initialized_count += 1
 
         if initialized_count > 0:
-            self.db.commit()
+            safe_commit(self.db)
             logger.info("版本历史初始化完成，共创建 %s 条记录", initialized_count)
         else:
             logger.info("所有版本历史记录已存在，无需初始化")
@@ -453,7 +454,7 @@ class UpdateLogService:
                 synced_count += 1
 
         if synced_count > 0:
-            self.db.commit()
+            safe_commit(self.db)
             logger.info("版本历史同步完成，共补充 %s 条记录", synced_count)
         else:
             logger.info("版本历史已是最新，无需同步")

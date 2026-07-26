@@ -14,6 +14,7 @@ import logging
 import threading
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ class ApprovalReminderService:
                 logger.info(
                     f"审批提醒扫描完成: {len(overdue)}条超时, {len(approaching)}条预警"
                 )
-                db.commit()
+                safe_commit(db)
 
         finally:
             db.close()

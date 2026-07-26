@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.error_handler import app_logger, BusinessLogicError
+from app.core.transaction import safe_commit
 from app.models.data_sync import DataSyncLog, DataConflict
 from app.services.encrypted_package import create_encrypted_package, extract_encrypted_package
 import hashlib as _hashlib
@@ -132,7 +133,7 @@ class DataSyncService:
                     started_at=export_time,
                 )
                 db.add(sync_log)
-                db.commit()
+                safe_commit(db, self.logger)
                 db.refresh(sync_log)
 
                 # 准备导出数据
@@ -175,7 +176,7 @@ class DataSyncService:
                 sync_log.success_records = total_records
                 sync_log.completed_at = datetime.now(timezone.utc)
                 sync_log.details = {"tables": {k: len(v) for k, v in export_data["data"].items()}}
-                db.commit()
+                safe_commit(db, self.logger)
 
                 result = {
                     "success": True,
@@ -298,7 +299,7 @@ class DataSyncService:
                     started_at=datetime.now(timezone.utc),
                 )
                 db.add(sync_log)
-                db.commit()
+                safe_commit(db, self.logger)
                 db.refresh(sync_log)
 
                 # 导入数据
@@ -338,7 +339,7 @@ class DataSyncService:
                 sync_log.conflicts_count = len(result["conflicts"])
                 sync_log.completed_at = datetime.now(timezone.utc)
                 sync_log.details = result
-                db.commit()
+                safe_commit(db, self.logger)
 
                 result["success"] = True
                 result["sync_log_id"] = sync_log.id
@@ -425,7 +426,7 @@ class DataSyncService:
                 self.logger.error(f"导入记录失败: {str(e)}")
                 result["failed"] += 1
 
-        db.commit()
+        safe_commit(db, self.logger)
         return result
 
     @staticmethod
@@ -526,7 +527,7 @@ class DataSyncService:
             conflict.resolved = True
             conflict.resolved_at = datetime.now(timezone.utc)
             conflict.resolved_by = user_id
-            db.commit()
+            safe_commit(db, self.logger)
 
             return {"success": True, "message": "冲突已解决"}
 
@@ -640,7 +641,7 @@ class DataSyncService:
                     },
                 )
                 db.add(sync_log)
-                db.commit()
+                safe_commit(db, self.logger)
 
                 result = {
                     "success": True,
@@ -710,7 +711,7 @@ class DataSyncService:
                     started_at=datetime.now(timezone.utc),
                 )
                 db.add(sync_log)
-                db.commit()
+                safe_commit(db, self.logger)
                 db.refresh(sync_log)
 
                 # 导入数据
@@ -757,7 +758,7 @@ class DataSyncService:
                 sync_log.conflicts_count = len(result["conflicts"])
                 sync_log.completed_at = datetime.now(timezone.utc)
                 sync_log.details = result
-                db.commit()
+                safe_commit(db, self.logger)
 
                 result["success"] = True
                 result["sync_log_id"] = sync_log.id
@@ -847,7 +848,7 @@ class DataSyncService:
                 self.logger.error(f"导入记录失败: {str(e)}")
                 result["failed"] += 1
 
-        db.commit()
+        safe_commit(db, self.logger)
         return result
 
     def _should_update_record(self, existing: Dict[str, Any], imported: Dict[str, Any]) -> bool:
@@ -875,7 +876,7 @@ class DataSyncService:
 
                 # 如果导入的记录更新，则更新
                 return imported_time > existing_time
-            except Exception:
+            except Exception as e:
                 logger.debug("数据同步更新比较失败")
 
         # 默认不更新

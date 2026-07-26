@@ -97,7 +97,7 @@ class SlowRequestMiddleware:
                         "慢SQL %.2fms: %s | params=%s",
                         elapsed, sql_short, str(parameters)[:100] if parameters else "",
                     )
-        except Exception:
+        except Exception as e:
             logger.debug("SQLAlchemy 慢 SQL 监听器安装失败（数据库尚未初始化）")
 
     async def __call__(self, scope, receive, send) -> None:

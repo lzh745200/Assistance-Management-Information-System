@@ -12,6 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.response import ok_list
 from app.core.security import generate_password, get_current_user, get_password_hash
 from app.core.constants import UserRole
 from app.core.permission_utils import is_superuser
@@ -137,7 +138,7 @@ async def list_roles(db: Session = Depends(get_db), current_user=Depends(get_cur
         },
     ]
 
-    return {"success": True, "data": {"items": items, "total": len(items)}}
+    return ok_list(items=items, total=len(items))
 
 
 # ==================== CRUD路由 ====================

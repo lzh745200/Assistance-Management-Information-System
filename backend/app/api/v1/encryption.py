@@ -13,6 +13,7 @@ from app.core.security import get_current_user
 from app.models.system_config import SystemConfig
 from app.services.password_encryption_service import PasswordEncryptionService
 from app.services.system_config_service import SystemConfigService
+from app.services.work_log_service import write_work_log
 from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
@@ -98,6 +99,11 @@ async def initialize_encryption(
     svc.set(_CONFIG_KEY_VERIFY_HASH, verify_hash, "加密验证哈希")
 
     logger.info("数据库加密已初始化")
+    try:
+        write_work_log(db, "encryption", "initialize", 0, "数据库加密初始化",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        logger.debug("记录工作日志失败")
     return {"success": True, "message": "数据库加密已启用"}
 
 
@@ -133,6 +139,11 @@ async def change_encryption_password(
     svc.set(_CONFIG_KEY_VERIFY_HASH, verify_hash, "加密验证哈希")
 
     logger.info("加密密码参数已更新")
+    try:
+        write_work_log(db, "encryption", "change_password", 0, "修改加密密码",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        logger.debug("记录工作日志失败")
     return {"success": True, "message": "加密密码已更新"}
 
 
@@ -175,4 +186,9 @@ async def disable_encryption(
     safe_commit(db)
 
     logger.info("数据库加密已禁用")
+    try:
+        write_work_log(db, "encryption", "disable", 0, "禁用数据库加密",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        logger.debug("记录工作日志失败")
     return {"success": True, "message": "数据库加密已禁用"}

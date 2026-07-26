@@ -8,6 +8,7 @@ import logging
 from typing import List
 
 from sqlalchemy.orm import Session
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,7 @@ class UserService:
             is_active=True,
         )
         self.db.add(user)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(user)
         return user
 
@@ -106,7 +107,7 @@ class UserService:
             if hasattr(user, key) and value is not None:
                 setattr(user, key, value)
         if self.db:
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(user)
         return user
 
@@ -117,7 +118,7 @@ class UserService:
             return False
         if self.db:
             self.db.delete(user)
-            self.db.commit()
+            safe_commit(self.db)
         return True
 
     @staticmethod

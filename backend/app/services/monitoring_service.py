@@ -18,6 +18,7 @@ from app.core.async_utils import create_background_task
 from app.core.config import settings
 from app.models.monitoring import AlertHistory, AlertRule, APIMetric
 from app.services.alert_service import AlertService
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -266,7 +267,7 @@ class MonitoringService:
             status="triggered",
         )
         db.add(alert)
-        db.commit()
+        safe_commit(db)
 
         logger.warning(f"告警触发: {rule.name} - {message}")
 

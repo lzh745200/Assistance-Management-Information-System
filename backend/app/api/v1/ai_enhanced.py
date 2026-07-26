@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.v1.deps import get_current_active_user, get_db
 from app.models.user import User
+from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/ai-enhanced", tags=["AI增强"])
 

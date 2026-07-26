@@ -15,6 +15,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.approval import (
+from app.core.transaction import safe_commit
     ApprovalAction,
     ApprovalNode,
     ApprovalRecord,
@@ -82,7 +83,7 @@ class ApprovalWorkflowService:
             )
             self.db.add(node)
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(workflow)
         return workflow
 
@@ -127,7 +128,7 @@ class ApprovalWorkflowService:
             workflow.description = description
         if is_active is not None:
             workflow.is_active = is_active
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(workflow)
         return workflow
 
@@ -137,7 +138,7 @@ class ApprovalWorkflowService:
         if not workflow:
             return False
         self.db.delete(workflow)
-        self.db.commit()
+        safe_commit(self.db)
         return True
 
     def ensure_default_workflow(self, entity_type: str, user_id: Optional[int] = None) -> ApprovalWorkflow:
@@ -203,7 +204,7 @@ class ApprovalWorkflowService:
             title=title,
         )
         self.db.add(task)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(task)
 
         # ── 审批消息推送 ──
@@ -217,10 +218,10 @@ class ApprovalWorkflowService:
                 is_read=False,
             )
             self.db.add(msg)
-            self.db.commit()
+            safe_commit(self.db)
         except ImportError:
             logger.warning("消息模块不可用，跳过审批推送")
-        except Exception:
+        except Exception as e:
             self.db.rollback()
             logger.warning("审批消息推送失败（非致命）", exc_info=True)
 
@@ -318,7 +319,7 @@ class ApprovalWorkflowService:
             task.status = ApprovalStatus.APPROVED.value
             task.completed_at = datetime.now(timezone.utc)
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(task)
         return task
 
@@ -349,7 +350,7 @@ class ApprovalWorkflowService:
         task.status = ApprovalStatus.REJECTED.value
         task.completed_at = datetime.now(timezone.utc)
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(task)
         return task
 
@@ -363,7 +364,7 @@ class ApprovalWorkflowService:
 
         task.status = ApprovalStatus.WITHDRAWN.value
         task.completed_at = datetime.now(timezone.utc)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(task)
         return task
 
@@ -393,7 +394,7 @@ class ApprovalWorkflowService:
         if workflow_nodes:
             task.current_approver_id = workflow_nodes[0].approver_id
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(task)
         return task
 
@@ -468,7 +469,7 @@ class ApprovalWorkflowService:
         self.db.add(record)
 
         task.current_approver_id = transfer_to_id
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(task)
         return task
 

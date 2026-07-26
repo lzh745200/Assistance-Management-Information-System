@@ -230,7 +230,7 @@ a = Analysis(
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 # ========== EXE 阶段 ==========
-icon_path = os.path.join(resources_dir, 'icons', 'app.ico')
+icon_path = os.path.join(resources_dir, 'icons', 'app-circle.ico')
 exe = EXE(
     pyz,
     a.scripts,

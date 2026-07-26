@@ -17,6 +17,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.machine_code import MachineCode
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class MachineCodeService:
                         _,
                     )
                 )
-            except Exception:
+            except Exception as e:
                 procs.append((None, _))
 
         info = []
@@ -77,10 +78,10 @@ class MachineCodeService:
                 val = stdout.strip().split("\n")[-1].strip()
                 if val and val != skip_val:
                     info.append(val)
-            except Exception:
+            except Exception as e:
                 try:
                     proc.kill()
-                except Exception:
+                except Exception as e:
                     logger.debug("终止机器信息采集进程失败")
         return info
 
@@ -90,7 +91,7 @@ class MachineCodeService:
             return ":".join(
                 ["{:02x}".format((uuid.getnode() >> elements) & 0xFF) for elements in range(0, 2 * 6, 2)][::-1]
             )
-        except Exception:
+        except Exception as e:
             logger.debug("获取 MAC 地址失败")
             return None
 
@@ -99,7 +100,7 @@ class MachineCodeService:
         try:
             name = platform.node()
             return name if name else None
-        except Exception:
+        except Exception as e:
             logger.debug("获取计算机名失败")
             return None
 
@@ -228,7 +229,7 @@ class MachineCodeService:
                 )
                 cpu_name = result.stdout.strip().split("\n")[-1].strip()
                 info["cpu_name"] = cpu_name
-            except Exception:
+            except Exception as e:
                 logger.debug("获取 CPU 信息失败")
 
             try:
@@ -245,7 +246,7 @@ class MachineCodeService:
                 if memory:
                     memory_gb = int(memory) / (1024**3)
                     info["memory_gb"] = round(memory_gb, 2)
-            except Exception:
+            except Exception as e:
                 logger.debug("获取内存信息失败")
 
         return info
@@ -316,7 +317,7 @@ class MachineCodeService:
         )
 
         self.db.add(record)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(record)
 
         logger.info(
@@ -379,7 +380,7 @@ class MachineCodeService:
         record.user_id = user_id
         record.activated_at = datetime.now(timezone.utc)
 
-        self.db.commit()
+        safe_commit(self.db)
 
         logger.info(f"机器码已激活: machine_code={record.machine_code[:16]}..., " f"user_id={user_id}")
 
@@ -405,7 +406,7 @@ class MachineCodeService:
         record.status = "revoked"
         record.revoked_at = datetime.now(timezone.utc)
 
-        self.db.commit()
+        safe_commit(self.db)
 
         logger.info(f"机器码已撤销: id={machine_code_id}, machine_code={record.machine_code[:16]}...")
         return True
@@ -613,7 +614,7 @@ class MachineCodeService:
         )
 
         self.db.add(record)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(record)
 
         logger.info(

@@ -26,6 +26,7 @@ from ...models.school import School
 from ...models.supported_village import SupportedVillage
 from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from app.core.transaction import safe_commit
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -373,6 +374,11 @@ async def update_marker_coordinates(
         raise HTTPException(status_code=400, detail="marker_type 必须为 'village' 或 'school'")
 
     safe_commit(db)
+    try:
+        write_work_log(db, "map", "update_coordinates", marker_id, f"更新{marker_type}坐标",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        logger.debug("记录工作日志失败")
     if _map_cache is not None:
         try:
             _map_cache.clear()

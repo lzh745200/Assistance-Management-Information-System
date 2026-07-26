@@ -15,6 +15,7 @@ from app.models.user_organization import UserOrganization
 from app.models.rbac import RbacRole, UserRole, RolePermission, UserPermission
 from app.core.error_handler import BusinessLogicError
 from app.core.permission_utils import is_superuser
+from app.core.transaction import safe_commit
 
 
 class UserPermissionService:
@@ -78,7 +79,7 @@ class UserPermissionService:
             # 更新现有关联
             existing.role = role
             existing.updated_at = datetime.now(timezone.utc)
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(existing)
             return existing
 
@@ -90,7 +91,7 @@ class UserPermissionService:
         if is_primary:
             user.organization_id = organization_id
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(user_org)
         return user_org
 
@@ -123,7 +124,7 @@ class UserPermissionService:
         if user and user.organization_id == organization_id:
             user.organization_id = None
 
-        self.db.commit()
+        safe_commit(self.db)
         return True
 
     def get_user_organizations(self, user_id: int) -> List[Dict[str, Any]]:
@@ -254,7 +255,7 @@ class UserPermissionService:
             existing.granted_by = granted_by
             existing.expires_at = expires_at
             existing.updated_at = datetime.now(timezone.utc)
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(existing)
             return existing
 
@@ -266,7 +267,7 @@ class UserPermissionService:
             expires_at=expires_at,
         )
         self.db.add(user_role)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(user_role)
         return user_role
 
@@ -286,7 +287,7 @@ class UserPermissionService:
             return False
 
         self.db.delete(user_role)
-        self.db.commit()
+        safe_commit(self.db)
         return True
 
     def get_user_roles(self, user_id: int) -> List[Dict[str, Any]]:
@@ -356,7 +357,7 @@ class UserPermissionService:
             existing.granted_by = granted_by
             existing.expires_at = expires_at
             existing.updated_at = datetime.now(timezone.utc)
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(existing)
             return existing
 
@@ -368,7 +369,7 @@ class UserPermissionService:
             expires_at=expires_at,
         )
         self.db.add(user_perm)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(user_perm)
         return user_perm
 
@@ -395,7 +396,7 @@ class UserPermissionService:
             return False
 
         self.db.delete(user_perm)
-        self.db.commit()
+        safe_commit(self.db)
         return True
 
     def get_user_permissions(self, user_id: int) -> List[str]:

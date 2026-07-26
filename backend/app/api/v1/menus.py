@@ -29,6 +29,7 @@ from app.core.security import (
 )
 from app.models.user import User
 from app.core.transaction import safe_commit
+from app.services.work_log_service import write_work_log
 
 
 def _is_admin(user) -> bool:
@@ -578,6 +579,11 @@ async def set_user_menu_config(
         message = f"已设置用户菜单权限（共 {len(data.menu_keys)} 个菜单）"
 
     safe_commit(db)
+    try:
+        write_work_log(db, "menu", "update_menus", user.id, f"设置用户菜单权限: {user.username}",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        logger.debug("记录工作日志失败")
     logger.info(f"管理员 {current_user.username} 设置用户 {user.username} 菜单权限: {mode}")
 
     return {

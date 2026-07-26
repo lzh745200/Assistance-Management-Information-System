@@ -23,6 +23,7 @@ from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.system_config import SystemConfig
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +165,7 @@ class BackupService:
         fernet = Fernet(key)
         try:
             plaintext = fernet.decrypt(encrypted)
-        except Exception:
+        except Exception as e:
             raise ValueError("密码错误或备份文件已损坏") from None
 
         # 写入临时文件（保留原始加密备份不受影响）
@@ -252,7 +253,7 @@ class BackupService:
         config_service = SystemConfigService(self.db)
         config_service.set("last_backup_time", datetime.now().isoformat())
 
-        self.db.commit()
+        safe_commit(self.db)
 
         return BackupRecord(
             backup_id=config.id,
@@ -478,7 +479,7 @@ class BackupService:
 
         # 删除数据库记录
         self.db.delete(config)
-        self.db.commit()
+        safe_commit(self.db)
 
         return True
 
@@ -512,7 +513,7 @@ class BackupService:
             deleted_count += 1
 
         if deleted_count > 0:
-            self.db.commit()
+            safe_commit(self.db)
 
         return deleted_count
 
@@ -686,7 +687,7 @@ class BackupService:
                 existing.value = datetime.now().isoformat()
                 existing.updated_at = datetime.now()
 
-        self.db.commit()
+        safe_commit(self.db)
         return config, file_size
 
     def create_incremental_backup(self, description: str = "增量备份", include_uploads: bool = True) -> Dict:
@@ -801,7 +802,7 @@ class BackupService:
                 try:
                     backup_info_data = zipf.read("backup_info.json")
                     backup_info = json.loads(backup_info_data)
-                except Exception:
+                except Exception as e:
                     backup_info = None
 
                 # 获取文件列表

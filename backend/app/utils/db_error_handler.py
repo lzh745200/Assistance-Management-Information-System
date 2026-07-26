@@ -17,6 +17,7 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import BusinessError
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class DBTransaction:
     with DBTransaction(db):
         # 数据库操作
         db.add(obj)
-        db.commit()
+        safe_commit(db)
     ```
     """
 
@@ -121,7 +122,7 @@ class DBTransaction:
 
         if self.auto_commit:
             try:
-                self.db.commit()
+                safe_commit(self.db)
             except Exception as e:
                 self.db.rollback()
                 logger.error(f"Commit failed: {e}")

@@ -27,6 +27,7 @@ from app.core.security import get_current_user
 from app.services.message_service import MessageService
 from app.services.message_template_service import MessageTemplateService
 from app.services.notification_preference_service import NotificationPreferenceService
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -228,6 +229,11 @@ async def mark_messages_as_read(
     需求: 5.4, 5.5 - 标记消息为已读，支持批量操作
     """
     count = service.mark_as_read(current_user.id, data.message_ids)
+    try:
+        write_work_log(service.db, "message", "mark_read", 0, f"标记{count}条消息已读",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     return {"message": f"已标记 {count} 条消息为已读", "count": count}
 
 
@@ -239,6 +245,11 @@ async def mark_all_as_read(
 ):
     """标记所有消息为已读"""
     count = service.mark_all_as_read(current_user.id, message_type)
+    try:
+        write_work_log(service.db, "message", "mark_all_read", 0, f"标记全部已读",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     return {"message": f"已标记 {count} 条消息为已读", "count": count}
 
 
@@ -254,6 +265,11 @@ async def delete_messages(
     需求: 5.5 - 支持批量删除
     """
     count = service.delete_messages(current_user.id, data.message_ids)
+    try:
+        write_work_log(service.db, "message", "delete", 0, f"删除{count}条消息",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     return {"message": f"已删除 {count} 条消息", "count": count}
 
 
@@ -264,6 +280,11 @@ async def delete_all_read_messages(
 ):
     """删除所有已读消息"""
     count = service.delete_all_read_messages(current_user.id)
+    try:
+        write_work_log(service.db, "message", "delete_read", 0, f"删除{count}条已读消息",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     return {"message": f"已删除 {count} 条已读消息", "count": count}
 
 

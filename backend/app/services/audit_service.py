@@ -6,6 +6,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.models.audit import (
+from app.core.transaction import safe_commit
     APIAccessLog,
     AuditAction,
     AuditLevel,
@@ -96,7 +97,7 @@ class AuditService:
         )
 
         self.db.add(audit)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(audit)
 
         logger.info(
@@ -223,7 +224,7 @@ class AuditService:
             session_id=session_id,
         )
         self.db.add(access_log)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(access_log)
         return access_log
 
@@ -249,7 +250,7 @@ class AuditService:
             error_message=error_message,
         )
         self.db.add(export_log)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(export_log)
 
         self.log(
@@ -377,7 +378,7 @@ class SecurityEventService:
             affected_resources=affected_resources,
         )
         self.db.add(event)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(event)
 
         logger.warning(f"Security event: {event_type} - {description}")
@@ -423,7 +424,7 @@ class SecurityEventService:
             event.resolved_at = datetime.now()
             event.resolved_by = resolved_by
             event.resolution_notes = resolution_notes
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(event)
         return event
 

@@ -75,7 +75,7 @@ class EventBus:
                         asyncio.run(handler(*args, **kwargs))
                 else:
                     handler(*args, **kwargs)
-            except Exception:
+            except Exception as e:
                 logger.exception(
                     "Error handling event '%s' with handler %s", event, handler
                 )
@@ -95,7 +95,7 @@ class EventBus:
                     await handler(*args, **kwargs)
                 else:
                     await asyncio.to_thread(handler, *args, **kwargs)
-            except Exception:
+            except Exception as e:
                 logger.exception(
                     "Error handling event '%s' with handler %s", event, handler
                 )

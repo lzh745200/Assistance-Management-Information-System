@@ -17,6 +17,7 @@ from typing import Optional
 
 from sqlalchemy import update
 from sqlalchemy.orm import Session
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +136,7 @@ class LockoutService:
             )
         )
         db.execute(stmt)
-        db.commit()
+        safe_commit(db)
 
         # 同步 ORM 对象状态，避免后续访问时读到过期值
         user.failed_login_count = failed_count
@@ -153,7 +154,7 @@ class LockoutService:
         """清除账户锁定状态（failed_login_count=0, locked_until=None）。"""
         user.failed_login_count = 0
         user.locked_until = None
-        db.commit()
+        safe_commit(db)
 
     # ── 批量解锁过期账户 ────────────────────────────────────────
 
@@ -202,7 +203,7 @@ class LockoutService:
             logger.info("admin 账户强制解锁（单机版误锁保护）")
 
         if unlocked_count > 0:
-            db.commit()
+            safe_commit(db)
             logger.info("共解锁 %d 个账户", unlocked_count)
 
         return unlocked_count

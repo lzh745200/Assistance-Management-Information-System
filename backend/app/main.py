@@ -149,13 +149,14 @@ try:
     from app.services.audit_event_handler import setup_audit_events
 
     setup_audit_events()
-except Exception:
+except Exception as e:
     logger.exception("审计事件钩子启动失败")  # 不影响主应用启动，但必须记录错误
 
 # ── 加载路由（懒模型已提速，模块级加载安全可靠）──
 print("  加载路由模块...", flush=True)
 _rt0 = _time.time()
 from app.api.v1 import api_v1_router  # noqa: E402
+from app.core.transaction import safe_commit
 app.include_router(api_v1_router)
 print(f"  路由加载完成 ({_time.time() - _rt0:.1f}s)", flush=True)
 
@@ -665,7 +666,7 @@ def _seed_default_admin():
                 must_change_password=True,
             )
             db.add(admin)
-            db.commit()
+            safe_commit(db)
             logger.info(
                 "默认管理员账户已创建 (用户名: admin, 请通过 DEFAULT_ADMIN_PASSWORD 环境变量设置强密码，首次登录须修改密码)",
             )

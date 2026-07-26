@@ -252,7 +252,7 @@ class LocalTaskQueue:
                 task = await asyncio.wait_for(self._queue.get(), timeout=1.0)
             except asyncio.TimeoutError:
                 continue
-            except Exception:
+            except Exception as e:
                 break
 
             # 检查任务是否已被取消

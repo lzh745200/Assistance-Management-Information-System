@@ -41,6 +41,7 @@ from app.schemas.data_package import (
     PackageStatusEnum,
 )
 from app.services.organization_service import OrganizationService
+from app.core.transaction import safe_commit
 
 # 支持的数据包版本
 SUPPORTED_VERSIONS = ["1.0", "1.1"]
@@ -158,7 +159,7 @@ class DataPackageService:
             record_count=sum(record_counts.values()), created_by=export_by,
         )
         self.db.add(package)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(package)
 
         return DataPackageExportResult(
@@ -242,7 +243,7 @@ class DataPackageService:
             record_count=sum(validation.manifest.record_counts.values()), created_by=imported_by,
         )
         self.db.add(package)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(package)
 
         return DataPackageImportResult(
@@ -400,7 +401,7 @@ class DataPackageService:
                 package.status = PackageStatus.imported.value
                 package.imported_at = datetime.now(timezone.utc)
                 package.imported_by = confirmed_by
-                self.db.commit()
+                safe_commit(self.db)
 
             return DataPackageConfirmResult(
                 success=True, package_id=package_id, imported_counts=imported_counts,
@@ -410,7 +411,7 @@ class DataPackageService:
             self.db.rollback()
             package.status = PackageStatus.failed.value
             package.error_message = str(e)
-            self.db.commit()
+            safe_commit(self.db)
             return DataPackageConfirmResult(
                 success=False, package_id=package_id, imported_counts=imported_counts,
                 skipped_counts=skipped_counts, error_counts=error_counts,
@@ -529,7 +530,7 @@ class DataPackageService:
                 package.file_name = os.path.basename(encrypted_file_path)
                 package.file_size = os.path.getsize(encrypted_file_path)
                 package.manifest = manifest_serialized
-                self.db.commit()
+                safe_commit(self.db)
 
             if os.path.exists(original_file_path):
                 os.remove(original_file_path)
@@ -670,7 +671,7 @@ class DataPackageService:
 
                 package.status = PackageStatus.imported.value
                 package.imported_at = datetime.now(timezone.utc)
-                self.db.commit()
+                safe_commit(self.db)
 
             return {"success": True, "message": "导入并解决冲突完成"}
 
@@ -678,7 +679,7 @@ class DataPackageService:
             self.db.rollback()
             package.status = PackageStatus.failed.value
             package.error_message = str(e)
-            self.db.commit()
+            safe_commit(self.db)
             return {"success": False, "message": str(e)}
         finally:
             if temp_decrypted_path and os.path.exists(temp_decrypted_path):
@@ -716,7 +717,7 @@ class DataPackageService:
             error_message=error_message, created_by=created_by,
         )
         self.db.add(package)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(package)
         return package
 

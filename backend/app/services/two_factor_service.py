@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.models.two_factor_auth import TwoFactorAuth
 from app.models.user import User
 from app.services.encryption_service import decrypt_field, encrypt_field
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +139,7 @@ class TwoFactorService:
             )
             db.add(two_factor)
 
-        db.commit()
+        safe_commit(db)
         db.refresh(two_factor)
 
         # 生成二维码
@@ -170,7 +171,7 @@ class TwoFactorService:
         if TwoFactorService.verify_totp(secret, token):
             two_factor.enabled = True
             two_factor.verified_at = datetime.now(timezone.utc)
-            db.commit()
+            safe_commit(db)
             return True
 
         return False
@@ -207,7 +208,7 @@ class TwoFactorService:
         if token in two_factor.backup_codes:
             # 使用后移除备用码
             two_factor.backup_codes.remove(token)
-            db.commit()
+            safe_commit(db)
             logger.info(f"用户 {user.username} 使用备用码登录")
             return True
 
@@ -225,7 +226,7 @@ class TwoFactorService:
         two_factor = db.query(TwoFactorAuth).filter(TwoFactorAuth.user_id == user.id).first()
         if two_factor:
             db.delete(two_factor)
-            db.commit()
+            safe_commit(db)
             logger.info(f"用户 {user.username} 已禁用双因素认证")
 
     @staticmethod

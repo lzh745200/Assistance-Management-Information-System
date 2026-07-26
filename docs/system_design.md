@@ -466,8 +466,8 @@ C:\Program Files\帮扶管理系统\          (x64) 或 C:\Program Files (x86)\�
   "oneClick": false,                          // 非一键安装，显示安装向导
   "perMachine": true,                         // 安装到所有用户 (Program Files)
   "allowToChangeInstallationDirectory": true, // 允许用户选择安装路径
-  "installerIcon": "resources/icons/app.ico",
-  "uninstallerIcon": "resources/icons/app.ico",
+  "installerIcon": "resources/icons/app-circle.ico",
+  "uninstallerIcon": "resources/icons/app-circle.ico",
   "include": "build-scripts/electron-builder-nsis-hook.nsh",  // 自定义钩子
   "shortcutName": "帮扶管理系统",
   "createDesktopShortcut": true,

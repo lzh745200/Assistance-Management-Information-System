@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from app.models.import_export_history import ImportExportHistory, OperationResult
+from app.core.transaction import safe_commit
 
 
 class ImportExportHistoryService:
@@ -53,9 +54,9 @@ class ImportExportHistoryService:
         )
         self.db.add(record)
         try:
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(record)
-        except Exception:
+        except Exception as e:
             self.db.rollback()
             raise
         return record
@@ -248,6 +249,6 @@ class ImportExportHistoryService:
     async def record(self, **kwargs) -> ImportExportHistory:
         record = ImportExportHistory(**kwargs)
         self.db.add(record)
-        await self.db.commit()
+        await safe_commit(self.db)
         await self.db.refresh(record)
         return record

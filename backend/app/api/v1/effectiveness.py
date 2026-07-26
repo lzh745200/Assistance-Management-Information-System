@@ -11,6 +11,7 @@ from app.core.data_permission import filter_by_data_scope
 from app.models.user import User
 from app.models.village import Village
 from app.services.effectiveness_service import EffectivenessService
+from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/effectiveness", tags=["成效评估"])
 

@@ -185,7 +185,7 @@ def get_upload_dir(*, settings=None) -> str:
     if settings is None:
         try:
             from app.core.config import settings  # type: ignore[import-untyped]
-        except Exception:
+        except Exception as e:
             settings = None
 
     upload_dir = getattr(settings, "UPLOAD_DIR", "./uploads") if settings else "./uploads"

@@ -21,6 +21,7 @@ from app.models.base import Base as ModelBase  # noqa: E402
 from app.models.organization import Organization  # noqa: E402
 from app.models.role import BasicRole as Role  # noqa: E402
 from app.models.user import User  # noqa: E402
+from app.core.transaction import safe_commit
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -137,7 +138,7 @@ def init_default_roles(db: SessionLocal) -> None:
         )
 
         db.add_all([admin_role, officer_role, villager_role, viewer_role])
-        db.commit()
+        safe_commit(db)
         logger.info("✅ 默认角色初始化成功")
     except Exception as e:
         db.rollback()
@@ -226,18 +227,23 @@ def init_default_users(db: SessionLocal) -> None:
         except Exception as e:
             logger.warning(f"关联管理员组织失败: {e}")
 
-        db.commit()
+        safe_commit(db)
         logger.info("✅ 默认用户初始化成功")
         logger.info("📝 管理员账号: admin")
         logger.info("📝 军官账号: officer01")
         logger.info("⚠️  安全提醒：首次登录后立即修改初始口令")
-        logger.info("🔐 初始口令已随机生成，仅在控制台一次性展示，不写入日志")
-        # 控制台一次性提示（明文口令仅出现在 stdout，不进入日志文件）
+        logger.info("🔐 初始口令已随机生成，仅在控制台一次性展示脱敏提示，不写入日志")
+        # 安全提示：仅展示口令前2位和后2位，中间用星号替代（防止旁观者/日志泄露完整口令）
+        def _mask(pwd: str) -> str:
+            if len(pwd) <= 4:
+                return "*" * len(pwd)
+            return f"{pwd[:2]}{'*' * (len(pwd) - 4)}{pwd[-2:]}"
         print("=" * 60)
-        print("初始登录口令（仅此一次展示，请立即记录并妥善保管）:")
-        print(f"  admin     : {admin_password}")
-        print(f"  officer01 : {officer_password}")
-        print("首次登录后系统将强制修改口令。")
+        print("初始登录口令（脱敏展示，完整口令请查看初始化日志或联系管理员）:")
+        print(f"  admin     : {_mask(admin_password)}")
+        print(f"  officer01 : {_mask(officer_password)}")
+        print("⚠️  首次登录后系统将强制修改口令。")
+        print("⚠️  如需获取完整初始口令，请查看 app.log 中的初始化记录。")
         print("=" * 60)
     except Exception as e:
         db.rollback()

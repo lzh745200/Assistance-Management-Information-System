@@ -18,6 +18,7 @@ from sqlalchemy import func
 from app.core.database import SessionLocal
 from app.core.security import get_current_user
 from app.models.error_report import ErrorReport
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ async def report_error(
             reporter=getattr(current_user, "username", "anonymous"),
         )
         db.add(record)
-        db.commit()
+        safe_commit(db)
         db.refresh(record)
 
         logger.warning(
@@ -196,7 +197,7 @@ async def update_error_report(
         record.resolution_note = update.resolution_note
         if update.status == "resolved":
             record.resolved_at = datetime.now(timezone.utc)
-        db.commit()
+        safe_commit(db)
 
         return {
             "success": True,
@@ -230,7 +231,7 @@ async def report_current_exception(
             reporter=getattr(current_user, "username", "anonymous"),
         )
         db.add(record)
-        db.commit()
+        safe_commit(db)
         db.refresh(record)
 
         logger.error("异常上报 #%d [%s]: %s", record.id, source, message)

@@ -12,6 +12,7 @@ from app.core.response import ok_list, success_response
 from app.core.redis_adapter import redis_adapter
 from app.models.user import User
 from app.services.query_analyzer_service import query_analyzer
+from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/performance")
 

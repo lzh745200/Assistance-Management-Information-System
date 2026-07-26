@@ -29,7 +29,7 @@ def _resolve_actor_id():
         from app.middleware.audit_context import get_current_user as _get_ctx_user_id
 
         ctx_user_id = _get_ctx_user_id()
-    except Exception:
+    except Exception as e:
         ctx_user_id = None
 
     if ctx_user_id is not None:
@@ -112,7 +112,7 @@ def _write_audit_from_event(mapper, connection, target, action: str):
                 user_id=user_id,  # 来自 ContextVar 的操作人 ID（审计归因）
             )
         )
-    except Exception:
+    except Exception as e:
         logger.debug("审计日志写入失败 (non-critical): %s %s", action, type(target).__name__, exc_info=True)
 
 

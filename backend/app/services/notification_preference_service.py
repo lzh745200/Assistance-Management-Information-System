@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy.orm import Session
 
 from app.models.notification_preference import NotificationPreference
+from app.core.transaction import safe_commit
 
 
 class NotificationPreferenceService:
@@ -72,7 +73,7 @@ class NotificationPreferenceService:
         )
 
         self.db.add(preference)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(preference)
 
         return preference
@@ -114,7 +115,7 @@ class NotificationPreferenceService:
                 setattr(preference, field, value)
 
         preference.updated_at = datetime.now(timezone.utc)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(preference)
 
         return preference

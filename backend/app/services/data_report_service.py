@@ -21,6 +21,7 @@ from app.schemas.data_report import (
     SubordinateReportSummary,
 )
 from app.services.organization_service import OrganizationService
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +164,7 @@ class DataReportService:
         )
 
         self.db.add(report)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(report)
 
         return report
@@ -192,7 +193,7 @@ class DataReportService:
         if comment:
             report.comment = comment
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(report)
 
         # 发送通知给上级单位
@@ -234,7 +235,7 @@ class DataReportService:
         if review.action == ReviewActionEnum.REJECT and review.rejection_reason:
             report.rejection_reason = review.rejection_reason
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(report)
 
         # 发送通知给下级单位

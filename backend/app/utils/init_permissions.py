@@ -2,6 +2,7 @@
 
 import json
 import logging
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +151,7 @@ def init_permissions(db) -> int:
             created_count += 1
             logger.info(f"创建权限: {perm_data['name']}")
 
-    db.commit()
+    safe_commit(db)
     logger.info(f"权限初始化完成: 创建 {created_count} 条")
     return created_count
 
@@ -201,7 +202,7 @@ def init_roles(db) -> int:
             created_count += 1
             logger.info(f"创建角色: {role_data['name']}")
 
-    db.commit()
+    safe_commit(db)
     logger.info(f"角色初始化完成: 创建 {created_count} 条")
     return created_count
 

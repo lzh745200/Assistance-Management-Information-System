@@ -6,6 +6,7 @@
 import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,7 @@ class VillageCascadeDeleteService:
                 return {"success": False, "message": "村庄不存在", "deleted_records": 0}
 
             # 3. 提交事务
-            self.db.commit()
+            safe_commit(self.db)
 
             logger.info(f"级联删除完成: 村庄 ID={village_id}, 总计删除 {total_deleted + 1} 条记录")
 
@@ -132,7 +133,7 @@ class VillageCascadeDeleteService:
                 if count > 0:
                     reference_stats[table_name] = count
                     total_refs += count
-            except Exception:
+            except Exception as e:
                 # 表可能不存在,忽略
                 pass
 

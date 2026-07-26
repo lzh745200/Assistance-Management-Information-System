@@ -139,7 +139,7 @@ def analyze_table_stats(engine=None):
                     count_result = conn.execute(text(f"SELECT COUNT(*) FROM [{table_name}]"))  # nosec B608
                     row_count = count_result.scalar()
                     stats[table_name] = {"row_count": row_count}
-                except Exception:
+                except Exception as e:
                     stats[table_name] = {"row_count": 0}
             logger.info("表统计信息分析完成")
         except Exception as e:

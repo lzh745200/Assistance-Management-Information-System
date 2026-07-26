@@ -7,6 +7,7 @@ import logging
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ def migrate_database(db: Session):
             if needs_migration:
                 # 执行迁移
                 db.execute(text(migration["sql"]))
-                db.commit()
+                safe_commit(db)
                 success_count += 1
                 logger.info(f"迁移成功: {migration['name']}")
             else:

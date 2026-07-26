@@ -8,6 +8,7 @@ from typing import Any, Callable, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.orm import Query, Session
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ class BatchOperator:
                 batch = data_list[i: i + batch_size]
                 db.bulk_insert_mappings(model_class, batch)
                 if commit:
-                    db.commit()
+                    safe_commit(db)
                 inserted += len(batch)
                 logger.info(f"批量插入进度: {inserted}/{total}")
 
@@ -136,7 +137,7 @@ class BatchOperator:
                 batch = data_list[i: i + batch_size]
                 db.bulk_update_mappings(model_class, batch)
                 if commit:
-                    db.commit()
+                    safe_commit(db)
                 updated += len(batch)
                 logger.info(f"批量更新进度: {updated}/{total}")
 
@@ -276,7 +277,7 @@ def optimize_sqlite_connection(db: Session) -> None:
         # 设置页面大小
         db.execute(text("PRAGMA page_size = 4096"))
 
-        db.commit()
+        safe_commit(db)
         logger.info("SQLite连接优化完成")
 
     except Exception as e:

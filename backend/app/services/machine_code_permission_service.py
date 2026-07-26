@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.models.machine_code import MachineCode
 from app.models.rbac import MachineCodePermission
 from app.models.base import _utcnow
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +127,7 @@ class MachineCodePermissionService:
             existing.granted_by = granted_by
             existing.expires_at = expires_at
             existing.updated_at = _utcnow()
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(existing)
             return existing
 
@@ -138,7 +139,7 @@ class MachineCodePermissionService:
             expires_at=expires_at,
         )
         self.db.add(record)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(record)
 
         logger.info(
@@ -172,7 +173,7 @@ class MachineCodePermissionService:
             return False
 
         self.db.delete(record)
-        self.db.commit()
+        safe_commit(self.db)
 
         logger.info(f"机器码权限已撤销: machine_code_id={machine_code_id}, " f"permission={permission}")
         return True
@@ -223,7 +224,7 @@ class MachineCodePermissionService:
                     )
                     self.db.add(record)
                 count += 1
-            self.db.commit()
+            safe_commit(self.db)
         except Exception as e:
             self.db.rollback()
             logger.warning(f"批量授予权限失败: machine_code_id={machine_code_id}, error={e}")
@@ -256,7 +257,7 @@ class MachineCodePermissionService:
                 if record:
                     self.db.delete(record)
                     count += 1
-            self.db.commit()
+            safe_commit(self.db)
             logger.info(f"批量撤销机器码权限: machine_code_id={machine_code_id}, count={count}")
         except Exception as e:
             self.db.rollback()
@@ -280,7 +281,7 @@ class MachineCodePermissionService:
             .filter(MachineCodePermission.machine_code_id == machine_code_id)
             .delete()
         )
-        self.db.commit()
+        safe_commit(self.db)
 
         logger.info(f"机器码所有权限已删除: machine_code_id={machine_code_id}, count={count}")
         return count

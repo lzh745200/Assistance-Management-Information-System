@@ -3,6 +3,7 @@ import logging
 import time
 
 from starlette.middleware.base import BaseHTTPMiddleware
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
                         user_agent=user_agent,
                     )
                 )
-                db.commit()
+                safe_commit(db)
             finally:
                 db.close()
         except Exception as e:

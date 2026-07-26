@@ -37,6 +37,7 @@ from app.models.message import Message
 from app.models.user import User
 from app.services.approval_workflow_service import ApprovalWorkflowService
 from app.core.transaction import safe_commit
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 

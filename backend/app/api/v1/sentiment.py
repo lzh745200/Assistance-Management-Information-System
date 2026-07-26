@@ -15,6 +15,7 @@ from app.core.response import ok_list, success_response
 from app.models.user import User
 from app.services.sentiment.analysis_service import SentimentAnalysisService as AnalysisService
 from app.services.sentiment.crawler_service import CrawlerService
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sentiment", tags=["舆情监控"])

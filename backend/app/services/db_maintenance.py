@@ -26,7 +26,7 @@ def _run_maintenance():
     while not _stop_event.is_set():
         try:
             _do_maintenance()
-        except Exception:
+        except Exception as e:
             logger.warning("数据库维护失败", exc_info=True)
         _stop_event.wait(_INTERVAL)
 
@@ -97,7 +97,7 @@ def _run_wal_checkpoint():
     while not _wal_stop_event.is_set():
         try:
             _do_wal_checkpoint()
-        except Exception:
+        except Exception as e:
             logger.warning("WAL checkpoint 调度执行失败", exc_info=True)
         # 等待到下一个 3 点（约 24 小时后）
         if _wal_stop_event.wait(_seconds_until_next_3am()):

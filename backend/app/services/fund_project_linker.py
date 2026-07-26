@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.fund import Fund
 from app.models.project import Project
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -48,5 +49,5 @@ def update_project_budget(
     if current is None:
         current = 0.0
     project.approved_funds = current + additional_fund
-    db.commit()
+    safe_commit(db)
     return project

@@ -11,6 +11,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import timezone, datetime
 from typing import List, Optional, Dict, Any
+from app.core.transaction import safe_commit
 
 # 离线单机版默认禁用爬虫；联网部署时设置环境变量 ENABLE_CRAWLER=true 启用
 _CRAWLER_ENABLED = os.getenv("ENABLE_CRAWLER", "").strip().lower() in ("true", "1", "yes")
@@ -187,7 +188,7 @@ class CrawlerService:
                 db.add(db_news)
                 saved_count += 1
 
-            db.commit()
+            safe_commit(db)
             return saved_count
         except Exception as e:
             db.rollback()

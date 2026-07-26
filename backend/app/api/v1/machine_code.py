@@ -22,6 +22,7 @@ from app.models.user import User
 from app.services.machine_code_service import MachineCodeService
 from app.services.machine_code_permission_service import MachineCodePermissionService
 from app.services.rbac_service import Permission, rbac_service
+from app.services.work_log_service import write_work_log
 from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
@@ -183,6 +184,11 @@ async def admin_create_machine_code(
             pass_code=request.pass_code,
         )
 
+        try:
+            write_work_log(db, "machine_code", "create", record.id, f"录入机器码: {request.machine_code}",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
         return {
             "code": 200,
             "data": {
@@ -269,6 +275,11 @@ async def admin_revoke_machine_code(
         if not success:
             raise HTTPException(status_code=404, detail="机器码记录不存在")
 
+        try:
+            write_work_log(db, "machine_code", "revoke", machine_code_id, f"撤销机器码: id={machine_code_id}",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
         return {"code": 200, "message": "机器码已撤销"}
     except HTTPException:
         raise
@@ -323,6 +334,11 @@ async def generate_initial_password(
         user.must_change_password = True  # 要求首次登录修改密码
         safe_commit(db)
 
+        try:
+            write_work_log(db, "machine_code", "generate_password", user.id, f"生成初始密码: {request.username}",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
         return {
             "code": 200,
             "data": {
@@ -508,6 +524,11 @@ async def create_organization_pass_code(
             description=request.description,
         )
 
+        try:
+            write_work_log(db, "machine_code", "create_org_pass_code", record.id, f"创建组织通行证码: org={org.name}",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
         return {
             "code": 200,
             "data": {
@@ -758,6 +779,11 @@ async def grant_machine_code_permissions(
             expires_at=request.expires_at,
         )
 
+        try:
+            write_work_log(db, "machine_code", "grant_permissions", machine_code_id, f"授予机器码权限: {count}个",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
         return {
             "code": 200,
             "data": {"granted_count": count},
@@ -788,6 +814,11 @@ async def revoke_machine_code_permissions(
             permissions=request.permissions,
         )
 
+        try:
+            write_work_log(db, "machine_code", "revoke_permissions", machine_code_id, f"撤销机器码权限: {count}个",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
         return {
             "code": 200,
             "data": {"revoked_count": count},

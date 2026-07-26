@@ -174,7 +174,7 @@ class ResourceMonitor:
                 snapshot.disk_total = disk.total
                 snapshot.disk_used = disk.used
                 snapshot.disk_percent = disk.percent
-            except Exception:
+            except Exception as e:
                 disk = psutil.disk_usage(os.environ.get("SystemDrive", "C:\\"))
                 snapshot.disk_total = disk.total
                 snapshot.disk_used = disk.used

@@ -2,6 +2,7 @@
 import logging
 from contextlib import contextmanager
 from typing import Any, Dict, List
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +155,7 @@ class BatchService:
                         if hasattr(inst, k):
                             setattr(inst, k, v)
                     count += 1
-            self.db.commit()
+            safe_commit(self.db)
         return {"success": True, "success_count": count}
 
     async def batch_delete(self, table_name: str, ids: List[int],
@@ -172,7 +173,7 @@ class BatchService:
                     else:
                         self.db.delete(inst)
                     count += 1
-            self.db.commit()
+            safe_commit(self.db)
         return {"success": True, "success_count": count}
 
     async def batch_export(self, table_name: str, ids: List[int],

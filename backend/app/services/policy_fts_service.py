@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def ensure_fts_table(db: Session) -> None:
         INSERT INTO {FTS_TABLE}(rowid, title, content, summary, keywords)
         SELECT id, title, content, summary, keywords FROM policies
     """))  # nosec B608
-    db.commit()
+    safe_commit(db)
     logger.info("FTS5 表 %s 已创建并同步", FTS_TABLE)
 
 

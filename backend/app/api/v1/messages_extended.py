@@ -46,8 +46,14 @@ async def send_message(
         title=request.title,
         content=request.content,
     )
+    try:
+        write_work_log(db, "message", "send", message.id, f"发送消息: {request.title}",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
 
     return {"message_id": message.id, "created_at": message.created_at.isoformat()}
+
 
 
 @router.get("/unread-count")
@@ -111,6 +117,11 @@ async def mark_as_read(
     if not count:
         raise HTTPException(status_code=404, detail="消息不存在")
 
+    try:
+        write_work_log(db, "message", "mark_read", message_id, f"标记消息已读",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     return {"message": "已标记为已读"}
 
 
@@ -119,6 +130,11 @@ async def mark_all_as_read(current_user: User = Depends(get_current_active_user)
     """标记所有消息为已读"""
     service = MessageService(db)
     count = service.mark_all_as_read(user_id=current_user.id)
+    try:
+        write_work_log(db, "message", "mark_all_read", 0, f"标记全部已读",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     return {"marked_count": count}
 
 
@@ -135,4 +151,9 @@ async def delete_message(
     if not count:
         raise HTTPException(status_code=404, detail="消息不存在")
 
+    try:
+        write_work_log(db, "message", "delete", message_id, f"删除消息",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     return {"message": "消息已删除"}

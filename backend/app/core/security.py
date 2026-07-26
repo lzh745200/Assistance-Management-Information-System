@@ -18,10 +18,11 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# ── passlib + bcrypt 5.x 兼容性补丁 ──
+# ── passlib + bcrypt 兼容性补丁 ──
 # bcrypt 4.1+ 对 >72 字节密码抛出 ValueError，passlib 1.7.4 的 bug 检测代码未适配
 # bcrypt 5.x 移除了 __about__ 模块，导致 passlib 无法读取版本号而回退到纯 Python
 # 实现（验证密码耗时 20-60 秒），见: https://github.com/pyca/bcrypt/issues/684
+# 注意：bcrypt>=4.2.0 已在 requirements.txt 中声明，以下补丁在 4.1+ 上为活代码。
 try:
     import bcrypt as _bcrypt
 
@@ -531,6 +532,7 @@ def validate_session_token(token: str) -> bool:
 # ── 内存速率限制器（slowapi 回退） ──
 import time  # noqa: E402
 import threading  # noqa: E402
+from app.core.transaction import safe_commit
 
 _rate_limit_store: dict[str, list[float]] = {}
 _rate_limit_lock = threading.Lock()
@@ -772,7 +774,7 @@ class AuditLogService:
                 user_ip=ip_address or None,
             )
             db.add(log_entry)
-            db.commit()
+            safe_commit(db)
         except Exception as e:
             logger.warning(f"审计日志写入失败: {e}")
             try:

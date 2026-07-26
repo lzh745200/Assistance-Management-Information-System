@@ -15,6 +15,7 @@ from openpyxl import load_workbook
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.core.data_permission import filter_by_data_scope
 from app.models.fund import Fund
 from app.models.import_history import ImportHistory, ImportMode, ImportStatus
 from app.models.organization import Organization
@@ -26,6 +27,7 @@ from app.services.data_validator_service import (
     ValidationErrorCode,
 )
 from app.services.entity_import_validator import EntityImportValidator
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -104,8 +106,9 @@ class ExcelImporterService:
     # 示例数据行的标识（绿色背景行）
     EXAMPLE_ROW_INDEX = 2  # Excel中的第2行是示例数据
 
-    def __init__(self, db: Session):
-        self.db = db
+def __init__(self, db: Session, current_user=None):
+self.db = db
+self.current_user = current_user
         self.validator = DataValidatorService()
 
     def parse_excel(
@@ -232,7 +235,7 @@ class ExcelImporterService:
                     )
                 )
                 self._update_import_history(import_history, result, ImportStatus.FAILED)
-                self.db.commit()
+                safe_commit(self.db)
                 return result
 
             # 根据实体类型选择验证器和导入逻辑
@@ -260,7 +263,7 @@ class ExcelImporterService:
                     )
                 result.failed_rows = len(rows)
                 self._update_import_history(import_history, result, ImportStatus.FAILED)
-                self.db.commit()
+                safe_commit(self.db)
                 return result
 
             # 检查重复数据
@@ -277,7 +280,7 @@ class ExcelImporterService:
                     )
                 result.failed_rows = len(rows)
                 self._update_import_history(import_history, result, ImportStatus.FAILED)
-                self.db.commit()
+                safe_commit(self.db)
                 return result
 
             # 执行导入
@@ -297,7 +300,7 @@ class ExcelImporterService:
             status = ImportStatus.COMPLETED if result.success else ImportStatus.FAILED
             self._update_import_history(import_history, result, status)
 
-            self.db.commit()
+            safe_commit(self.db)
             return result
 
         except SQLAlchemyError as e:
@@ -329,7 +332,7 @@ class ExcelImporterService:
                 error_details=[e.to_dict() for e in result.errors],
             )
             self.db.add(import_history)
-            self.db.commit()
+            safe_commit(self.db)
             result.import_history_id = import_history.id
 
             return result
@@ -418,8 +421,9 @@ class ExcelImporterService:
         全量覆盖模式
         删除现有所有记录后导入新数据
         """
-        # 删除现有所有记录
-        self.db.query(SupportedVillage).delete()
+        # 删除现有记录（仅当前用户数据范围）
+        query = filter_by_data_scope(self.db.query(SupportedVillage), SupportedVillage, self.current_user, db=self.db) if self.current_user else self.db.query(SupportedVillage)
+        query.delete(synchronize_session=False)
 
         for row_idx, row in enumerate(rows, 1):
             # 转换数据类型
@@ -526,7 +530,8 @@ class ExcelImporterService:
         if mode == ImportMode.INCREMENTAL:
             existing_names = set(name[0].strip().lower() for name in self.db.query(Project.name).all() if name[0])
         else:
-            self.db.query(Project).delete()
+            query = filter_by_data_scope(self.db.query(Project), Project, self.current_user, db=self.db) if self.current_user else self.db.query(Project)
+            query.delete(synchronize_session=False)
 
         # 预加载组织编码映射
         org_map = {o.code: o.id for o in self.db.query(Organization).all() if o.code}
@@ -591,7 +596,8 @@ class ExcelImporterService:
         if mode == ImportMode.INCREMENTAL:
             existing_names = set(name[0].strip().lower() for name in self.db.query(Fund.name).all() if name[0])
         else:
-            self.db.query(Fund).delete()
+            query = filter_by_data_scope(self.db.query(Fund), Fund, self.current_user, db=self.db) if self.current_user else self.db.query(Fund)
+            query.delete(synchronize_session=False)
 
         # 预加载项目编号映射
         project_map = {p.code: p.id for p in self.db.query(Project).all() if p.code}
@@ -656,7 +662,8 @@ class ExcelImporterService:
         if mode == ImportMode.INCREMENTAL:
             existing_names = set(name[0].strip().lower() for name in self.db.query(School.name).all() if name[0])
         else:
-            self.db.query(School).delete()
+            query = filter_by_data_scope(self.db.query(School), School, self.current_user, db=self.db) if self.current_user else self.db.query(School)
+            query.delete(synchronize_session=False)
 
         for row_idx, row in enumerate(rows, 1):
             converted = validator.convert_row_types(row)

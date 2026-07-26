@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.models.user import User
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +127,7 @@ class UserCascadeDeleteService:
                     deleted_records += result.rowcount or 0
 
         db.delete(user)
-        db.commit()
+        safe_commit(db)
         deleted_records += 1
 
         logger.info(

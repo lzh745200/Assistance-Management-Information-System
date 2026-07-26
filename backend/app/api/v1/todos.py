@@ -16,6 +16,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.todo import Todo
 from app.core.transaction import safe_commit
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +174,12 @@ async def create_todo(
         safe_commit(db)
         db.refresh(todo)
 
+        try:
+            write_work_log(db, "todo", "create", todo.id, f"创建待办: {todo.title}",
+                          user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
+
         return TodoResponse(
             id=todo.id,
             title=todo.title,
@@ -223,6 +230,12 @@ async def update_todo(
         safe_commit(db)
         db.refresh(todo)
 
+        try:
+            write_work_log(db, "todo", "update", todo.id, f"更新待办: {todo.title}",
+                          user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
+
         return TodoResponse(
             id=todo.id,
             title=todo.title,
@@ -267,6 +280,12 @@ async def delete_todo(
 
         db.delete(todo)
         safe_commit(db)
+
+        try:
+            write_work_log(db, "todo", "delete", todo_id, f"删除待办: {todo.title}",
+                          user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
 
         return {"message": "待办事项已删除", "id": todo_id}
     except HTTPException:

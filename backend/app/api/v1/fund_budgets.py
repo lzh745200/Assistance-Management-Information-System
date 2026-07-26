@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.data_permission import apply_data_scope
+from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.models.fund import Fund
 from app.models.fund_budget import FundBudget, FundTransaction, check_budget_alerts
@@ -131,7 +132,7 @@ async def get_budgets(
         data["budget"] = float(b.budget_amount or 0)
         data["used"] = float(b.executed_amount or 0)
         result.append(data)
-    return {"items": result, "total": len(result)}
+    return ok_list(items=result, total=len(result))
 
 
 @router.post("", response_model=BudgetResponse)
@@ -216,7 +217,7 @@ async def get_budget_alerts(
 
     budgets = query.all()
     alerts = check_budget_alerts(budgets)
-    return {"items": alerts, "total": len(alerts)}
+    return ok_list(items=alerts, total=len(alerts))
 
 
 # ==================== 预算汇总 ====================

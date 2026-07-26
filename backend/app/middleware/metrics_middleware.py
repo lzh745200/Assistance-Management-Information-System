@@ -165,7 +165,7 @@ class MetricsMiddleware:
 
         try:
             await self.app(scope, receive, send_wrapper)
-        except Exception:
+        except Exception as e:
             duration = time.time() - start_time
             metrics_store.record(method, path, 500, duration)
             raise

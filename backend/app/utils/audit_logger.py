@@ -16,6 +16,7 @@ import logging
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +167,7 @@ class AuditLogger:
                 )
                 db.add(login_attempt)
 
-            db.commit()
+            safe_commit(db)
         except Exception as exc:
             # 审计写入失败不应影响主业务流程，仅记录错误日志
             logger.error("审计日志持久化到数据库失败: %s", exc, exc_info=True)

@@ -101,7 +101,7 @@ class SensitiveDataFilter(logging.Filter):
                 # 用脱敏后的内容覆盖 record.args/msg，确保 format() 输出脱敏结果
                 record.msg = redacted
                 record.args = None
-        except Exception:
+        except Exception as e:
             # 脱敏失败不应阻断日志输出
             pass
         return True
@@ -267,5 +267,5 @@ def init_logging() -> None:
             backup_count=getattr(settings, "LOG_BACKUP_COUNT", 5),
             log_rotation=getattr(settings, "LOG_ROTATION", None) or None,
         )
-    except Exception:
+    except Exception as e:
         configure_logging(level="INFO", log_format="text")

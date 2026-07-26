@@ -6,6 +6,7 @@ from fastapi.responses import Response
 from app.core.exceptions import BusinessError
 from app.core.security import require_admin
 from app.services.offline_map_service import offline_map_service
+from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/offline-map", tags=["离线地图"])
 

@@ -21,6 +21,7 @@ from ...core.security import get_current_user
 from ...models.organization import Organization, OrganizationLevel, OrganizationType
 from ...services.organization_service import OrganizationService
 from app.core.transaction import safe_commit
+from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/organizations", tags=["组织管理"])
 
@@ -405,6 +406,11 @@ async def create_organization(
     db.add(org)
     safe_commit(db)
     db.refresh(org)
+    try:
+        write_work_log(db, "organization", "create", org.id, f"创建组织: {org.name}",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     await cache_manager.delete("orgs:list")
     return org
 
@@ -451,6 +457,11 @@ async def update_organization(
 
     safe_commit(db)
     db.refresh(org)
+    try:
+        write_work_log(db, "organization", "update", org.id, f"更新组织: {org.name}",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     await cache_manager.delete("orgs:list")
     return org
 
@@ -502,6 +513,11 @@ async def delete_organization(
     logger.info(f"执行逻辑删除: org_id={org_id}")
     org.is_active = False
     safe_commit(db)
+    try:
+        write_work_log(db, "organization", "delete", org_id, f"删除组织: {org.name}",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        pass
     logger.info(f"删除成功: org_id={org_id}")
     await cache_manager.delete("orgs:list")
 

@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.logging import logger
 from app.core.database import SessionLocal
+from app.core.transaction import safe_commit
 
 
 class DataTier(str, Enum):
@@ -204,7 +205,7 @@ class DataTierService:
                 record.is_archived = True
             archived += 1
 
-        db.commit()
+        safe_commit(db)
         logger.info(f"归档 {archived} 条记录到温存储")
         return archived
 
@@ -245,7 +246,7 @@ class DataTierService:
 
         # 删除已归档的记录
         query.filter(model_class.id.in_(record_ids)).delete(synchronize_session=False)
-        db.commit()
+        safe_commit(db)
 
         logger.info(f"归档 {len(records)} 条记录到冷存储: {archive_file}")
         return len(records)
@@ -306,7 +307,7 @@ class DataTierService:
                 except Exception as e:
                     logger.warning(f"恢复记录失败: {e}")
 
-            db.commit()
+            safe_commit(db)
             return restored, f"成功恢复 {restored} 条记录"
 
         except Exception as e:

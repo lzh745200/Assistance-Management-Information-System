@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.models.organization import Organization
 from app.models.user import User
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +232,7 @@ class ConfigPackageService:
             # 导入用户
             user_result = self._import_users(users_data, org_result["id_mapping"])
 
-            self.db.commit()
+            safe_commit(self.db)
 
             result = {
                 "success": True,

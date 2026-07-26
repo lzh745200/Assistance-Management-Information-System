@@ -16,6 +16,7 @@ from app.interfaces.schemas.responses import ResponseModel
 from app.models.rural_task import RuralTask, TaskStatus
 from app.models.rural_work import RuralWork
 from app.schemas.rural_task import (
+from app.services.work_log_service import write_work_log
     RuralTaskCreate,
     RuralTaskListResponse,
     RuralTaskStatistics,

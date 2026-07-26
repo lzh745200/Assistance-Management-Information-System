@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.models.export_task import ExportTask
 from app.services.export_service import ExcelExportService
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ class AsyncExportService:
             expires_at=datetime.now() + timedelta(hours=24),
         )
         self.db.add(export_task)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(export_task)
         return export_task
 

@@ -50,7 +50,7 @@ class DataPackageEncryption:
             from app.utils.runtime_secrets import get_or_create_secret
             salt_hex = get_or_create_secret("ENCRYPTION_SALT", generate=lambda: os.urandom(32).hex())
             cls._deployment_salt = bytes.fromhex(salt_hex)
-        except Exception:
+        except Exception as e:
             import secrets as _sec
             cls._deployment_salt = _sec.token_bytes(32)
             logger.warning("无法加载持久化盐值，使用临时随机盐值（重启后可能无法解密旧数据）")

@@ -106,28 +106,9 @@ jobs:
       # 版本一致性门禁：sync-version.js --check 检测 13 处版本号漂移
       - name: Version consistency check
         run: node scripts/sync-version.js --check
-      # 后端静态分析：检查裸 db.commit()、缺 safe_commit 导入等模式
-      - name: Backend safe_commit audit
-        run: |
-          cd backend && python -c "
-          import os, re, sys
-          violations = []
-          for root, dirs, files in os.walk('app/api'):
-              for f in files:
-                  if not f.endswith('.py'): continue
-                  fp = os.path.join(root, f)
-                  with open(fp, encoding='utf-8') as fh:
-                      content = fh.read()
-                  # 检查裸 db.commit()
-                  if re.search(r'^\s+db\.commit\(\)$', content, re.MULTILINE):
-                      violations.append(f'  {fp}: bare db.commit() found')
-          if violations:
-              print('BARE db.commit() VIOLATIONS:')
-              print('\n'.join(violations))
-              sys.exit(1)
-          else:
-              print('No bare db.commit() found — all commits use safe_commit()')
-          "
+      # 后端综合安全审计：裸 db.commit()、跨组织删除、缺 ok_list/write_work_log/filter_by_data_scope
+      - name: Backend comprehensive security audit
+        run: python scripts/security_audit.py --verbose
       # 前端静态分析：检查 Pattern A（import request from './request'）残留
       - name: Frontend API pattern audit
         run: |

@@ -21,7 +21,9 @@ const DEFAULT_BACKEND_PORT = 8000;
 const MAX_PORT_ATTEMPTS = 11;
 let backendPort = DEFAULT_BACKEND_PORT;
 const APP_TITLE = '帮扶管理系统';
-const BACKEND_READY_TIMEOUT = 60000;
+const BACKEND_READY_TIMEOUT = 180000; // 3分钟——PyInstaller打包exe首次启动需提取文件+初始化数据库
+const MAX_URL_LOAD_RETRIES = 5;     // 页面加载失败最大重试次数
+const URL_LOAD_RETRY_DELAY = 3000;  // 页面加载重试间隔（毫秒）
 const AUTO_BACKUP_INTERVAL = 24 * 60 * 60 * 1000;
 const WINDOW_STATE_FILE = path.join(getUserDataPath(), 'window-state.json');
 const SECRETS_FILE = path.join(getUserDataPath(), 'secrets.json');
@@ -305,10 +307,26 @@ async function startBackend(stderrCapture = null, isFirstStart = false) {
       if (backendRestartCount < MAX_BACKEND_RESTARTS) {
         backendRestartCount++;
         console.log(`[Backend] 自动重启 (${backendRestartCount}/${MAX_BACKEND_RESTARTS})...`);
+        writeDiagnosticLog(`自动重启 ${backendRestartCount}/${MAX_BACKEND_RESTARTS}`);
         setTimeout(async () => {
           const restartStderr = [];
           // 重启时复用已确定的端口（isFirstStart=false），避免前端连接失效
           backendProcess = await startBackend(restartStderr, false);
+          // 等待重启的后端就绪后重新加载页面
+          try {
+            await waitForBackend(restartStderr);
+            console.log('[Backend] 重启后端已就绪，重新加载页面');
+            writeDiagnosticLog('重启后端已就绪，重新加载页面');
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.loadURL(`http://127.0.0.1:${backendPort}`).catch((err) => {
+                console.error('[Window] 重启后重新加载失败:', err?.message || err);
+                writeDiagnosticLog(`重启后重新加载失败: ${err?.message || err}`);
+              });
+            }
+          } catch (restartErr) {
+            console.error('[Backend] 重启后端等待就绪失败:', restartErr.message);
+            writeDiagnosticLog(`重启后端等待就绪失败: ${restartErr.message}`);
+          }
         }, 2000);
       } else {
         const logPath = path.join(getUserDataPath(), 'logs', 'app.log');
@@ -358,11 +376,14 @@ function waitForBackend(stderrCapture = []) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
     let checkCount = 0;
+    let lastLogTime = 0;
     function check() {
       const elapsed = Date.now() - startTime;
       checkCount++;
-      if (elapsed % 5000 < 200 && elapsed > 0) {
+      // 每5秒打印一次进度日志
+      if (elapsed - lastLogTime > 5000) {
         console.log(`[Backend] 等待就绪... ${(elapsed / 1000).toFixed(1)}s`);
+        lastLogTime = elapsed;
       }
       if (elapsed > BACKEND_READY_TIMEOUT) {
         const recent = stderrCapture.slice(-10).join('\n');
@@ -372,16 +393,49 @@ function waitForBackend(stderrCapture = []) {
       const req = http.get(`http://127.0.0.1:${backendPort}/health`, (res) => {
         if (res.statusCode === 200) {
           console.log(`[Backend] 就绪，耗时 ${(elapsed / 1000).toFixed(1)}s`);
+          writeDiagnosticLog(`后端就绪，耗时 ${(elapsed / 1000).toFixed(1)}s`);
           resolve();
-        } else setTimeout(check, 300);
+        } else setTimeout(check, 500);
       });
       req.on('error', () => {
-        if (checkCount <= 3 || elapsed > 10000) console.log(`[Backend] 健康检查失败 (${(elapsed / 1000).toFixed(1)}s)`);
-        setTimeout(check, 300);
+        // 前3次和10秒后打印错误日志
+        if (checkCount <= 3 || elapsed > 10000) {
+          console.log(`[Backend] 健康检查失败 (${(elapsed / 1000).toFixed(1)}s)`);
+        }
+        setTimeout(check, 500);
       });
-      req.setTimeout(3000, () => { req.destroy(); setTimeout(check, 300); });
+      req.setTimeout(3000, () => { req.destroy(); setTimeout(check, 500); });
     }
-    setTimeout(check, 1000);
+    // 首次检查延迟500ms（比原来1s更快开始探测）
+    setTimeout(check, 500);
+  });
+}
+
+// ─── 页面加载（带重试） ───
+function loadURLWithRetry(win, url, retryCount) {
+  if (retryCount >= MAX_URL_LOAD_RETRIES) {
+    const msg = `加载页面失败（已重试 ${MAX_URL_LOAD_RETRIES} 次）: ${url}`;
+    console.error('[Window]', msg);
+    writeDiagnosticLog(msg);
+    dialog.showErrorBox('页面加载失败', `${msg}\n\n请检查后端服务是否正常运行，或重启应用。`);
+    return;
+  }
+  if (retryCount > 0) {
+    console.log(`[Window] 页面加载重试 ${retryCount}/${MAX_URL_LOAD_RETRIES}: ${url}`);
+    writeDiagnosticLog(`页面加载重试 ${retryCount}/${MAX_URL_LOAD_RETRIES}`);
+  }
+  win.loadURL(url).then(() => {
+    console.log('[Window] 页面加载成功');
+  }).catch((err) => {
+    const errMsg = err?.message || String(err);
+    console.error(`[Window] 加载失败 (重试 ${retryCount + 1}/${MAX_URL_LOAD_RETRIES}):`, errMsg);
+    writeDiagnosticLog(`页面加载失败 (${retryCount + 1}/${MAX_URL_LOAD_RETRIES}): ${errMsg}`);
+    // 等待后重试——后端可能还在启动中
+    setTimeout(() => {
+      if (win && !win.isDestroyed()) {
+        loadURLWithRetry(win, url, retryCount + 1);
+      }
+    }, URL_LOAD_RETRY_DELAY);
   });
 }
 
@@ -464,12 +518,7 @@ function createMainWindow() {
   });
 
   const url = `http://127.0.0.1:${backendPort}`;
-  mainWindow.loadURL(url).catch((err) => {
-    const msg = `加载页面失败: ${url}\n${err?.message || err}`;
-    console.error('[Window]', msg);
-    writeDiagnosticLog(msg);
-    dialog.showErrorBox('页面加载失败', msg);
-  });
+  loadURLWithRetry(mainWindow, url, 0);
   mainWindow.once('ready-to-show', () => { mainWindow.show(); mainWindow.focus(); });
   let timer = null;
   mainWindow.on('resize', () => { clearTimeout(timer); timer = setTimeout(saveWindowState, 500); });
@@ -672,7 +721,7 @@ app.whenReady().then(async () => {
   try {
     const splashPath = path.join(__dirname, 'splash.html');
     if (fs.existsSync(splashPath)) {
-      splash = new BrowserWindow({ width: 400, height: 300, frame: false, transparent: true, alwaysOnTop: true, resizable: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
+      splash = new BrowserWindow({ width: 400, height: 300, frame: false, transparent: true, alwaysOnTop: true, resizable: false, icon: getIconPath(), webPreferences: { nodeIntegration: false, contextIsolation: true } });
       splash.loadFile(splashPath);
       splash.center();
     }
@@ -685,14 +734,15 @@ app.whenReady().then(async () => {
     backendRestartCount = 0;
   } catch (err) {
     console.error('[App] 后端启动失败:', err.message);
+    writeDiagnosticLog(`后端启动失败: ${err.message}`);
     const analysis = analyzeStartupError(stderrCapture);
     const logPath = path.join(getUserDataPath(), 'logs', 'app.log');
     const choice = dialog.showMessageBoxSync({
       type: 'error',
       title: '后端启动失败',
-      message: `后端启动失败。\n${analysis}\n诊断日志: ${CRASH_LOG_FILE}\n应用日志: ${logPath}\n查看详细日志？`,
-      buttons: ['退出', '查看日志', '继续'],
-      defaultId: 0,
+      message: `后端启动失败。\n${analysis}\n诊断日志: ${CRASH_LOG_FILE}\n应用日志: ${logPath}`,
+      buttons: ['退出', '查看日志', '重试等待', '继续启动'],
+      defaultId: 2,
     });
     if (choice === 0) { isQuitting = true; stopBackend(); app.quit(); return; }
     if (choice === 1) {
@@ -700,6 +750,21 @@ app.whenReady().then(async () => {
       dialog.showMessageBoxSync({ type: 'info', title: '后端日志', message: '后端输出：', detail: logs.substring(0, 2000) });
       isQuitting = true; stopBackend(); app.quit(); return;
     }
+    if (choice === 2) {
+      // 重试等待后端就绪
+      try {
+        console.log('[App] 重试等待后端就绪...');
+        writeDiagnosticLog('重试等待后端就绪');
+        await waitForBackend(stderrCapture);
+        console.log('[App] 重试后端已就绪');
+        backendRestartCount = 0;
+      } catch (retryErr) {
+        console.error('[App] 重试后端启动仍然失败:', retryErr.message);
+        writeDiagnosticLog(`重试后端启动仍然失败: ${retryErr.message}`);
+        // 仍然继续启动，loadURLWithRetry 会处理重试
+      }
+    }
+    // choice === 3: 继续启动，loadURLWithRetry 会自动重试页面加载
   }
 
   createMainWindow();

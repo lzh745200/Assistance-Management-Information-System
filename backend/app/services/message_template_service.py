@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.message_template import MessageTemplate, TemplateCode
+from app.core.transaction import safe_commit
 
 
 class TemplateHistoryEntry:
@@ -142,7 +143,7 @@ class MessageTemplateService:
         )
 
         self.db.add(template)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(template)
         return template
 
@@ -280,7 +281,7 @@ class MessageTemplateService:
             self._record_history(template_id, "is_active", template.is_active, is_active, modified_by)
             template.is_active = is_active
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(template)
         return template
 
@@ -303,7 +304,7 @@ class MessageTemplateService:
             return False
 
         self.db.delete(template)
-        self.db.commit()
+        safe_commit(self.db)
         return True
 
     def enable_template(self, template_id: int, modified_by: Optional[int] = None) -> Optional[MessageTemplate]:

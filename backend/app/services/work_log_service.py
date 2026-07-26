@@ -1,6 +1,7 @@
 """Work log service -- CRUD operations for work logs."""
 
 from app.models.work_log import WorkLog
+from app.core.transaction import safe_commit
 
 _WORKLOG_COLS = {c.name for c in WorkLog.__table__.columns}
 
@@ -29,7 +30,7 @@ class WorkLogService:
 
         log = WorkLog(**data)
         self.db.add(log)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(log)
         return log
 
@@ -41,7 +42,7 @@ class WorkLogService:
             for key, value in data.items():
                 if hasattr(log, key):
                     setattr(log, key, value)
-            self.db.commit()
+            safe_commit(self.db)
         return log
 
     def delete_work_log(self, log_id: int):
@@ -50,7 +51,7 @@ class WorkLogService:
         log = self.db.query(WorkLog).filter(WorkLog.id == log_id).first()
         if log:
             self.db.delete(log)
-            self.db.commit()
+            safe_commit(self.db)
         return log
 
 
@@ -94,5 +95,5 @@ def write_work_log(db, log_type, action, entity_id, entity_name, **kwargs):
         **{k: v for k, v in kwargs.items() if k in _WORKLOG_COLS},
     )
     db.add(log)
-    db.commit()
+    safe_commit(db)
     return log

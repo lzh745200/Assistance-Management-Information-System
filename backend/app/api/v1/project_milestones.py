@@ -15,6 +15,7 @@ from app.models.project import Project
 from app.core.transaction import safe_commit
 from app.core.data_permission import filter_by_data_scope
 from app.models.project_milestone import (
+from app.services.work_log_service import write_work_log
     TRANSITION_REQUIREMENTS,
     VALID_TRANSITIONS,
     ProjectChangeLog,

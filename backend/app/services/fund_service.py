@@ -20,6 +20,7 @@ from sqlalchemy import select, func, update
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.fund import Fund
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ class FundService:
         fund = Fund(**kwargs)
         self.db.add(fund)
         if auto_commit:
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(fund)
             # NOTE: 用 %s 而非 %d —— fund.id 在 refresh 未填值(测试 mock / 驱动延迟)
             # 时可能为 None，%d 会抛 TypeError 导致经费创建失败。%s 对 None 安全。
@@ -175,7 +176,7 @@ class FundService:
             fund.applicant = applicant
         self.db.add(fund)
         if auto_commit:
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(fund)
             logger.info("Fund %s created by user %d", fund.id, created_by)
         else:
@@ -194,7 +195,7 @@ class FundService:
                 setattr(fund, key, value)
 
         if auto_commit:
-            self.db.commit()
+            safe_commit(self.db)
             self.db.refresh(fund)
         else:
             self.db.flush()
@@ -208,7 +209,7 @@ class FundService:
 
         self.db.delete(fund)
         if auto_commit:
-            self.db.commit()
+            safe_commit(self.db)
         else:
             self.db.flush()
         return True
@@ -229,7 +230,7 @@ class FundService:
         result = self.db.execute(stmt)
 
         if auto_commit:
-            self.db.commit()
+            safe_commit(self.db)
         else:
             self.db.flush()
 

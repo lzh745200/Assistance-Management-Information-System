@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.system_config import SystemConfig
+from app.core.transaction import safe_commit
 
 # 配置键类型
 ConfigKey = str
@@ -171,7 +172,7 @@ class SystemConfigService:
             )
             self.db.add(config)
 
-        self.db.commit()
+        safe_commit(self.db)
 
     def get_all(self) -> Dict[str, str]:
         """
@@ -200,7 +201,7 @@ class SystemConfigService:
                 )
                 self.db.add(config)
 
-        self.db.commit()
+        safe_commit(self.db)
 
     def is_initialized(self) -> bool:
         """检查系统是否已初始化"""
@@ -224,7 +225,7 @@ class SystemConfigService:
         config = self.db.query(SystemConfig).filter(SystemConfig.key == key).first()
         if config:
             self.db.delete(config)
-            self.db.commit()
+            safe_commit(self.db)
             return True
         return False
 

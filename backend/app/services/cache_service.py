@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from app.core.cache import cache_manager
 from app.core.config import settings
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -372,7 +373,7 @@ def cache_invalidate(resource_type: str, resource_id_arg: Optional[str] = None):
             user = db.query(User).filter(User.id == user_id).first()
             for key, value in data.items():
                 setattr(user, key, value)
-            db.commit()
+            safe_commit(db)
             return user
     """
 

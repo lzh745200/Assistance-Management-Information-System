@@ -12,6 +12,7 @@ from app.core.permission_utils import is_admin
 from app.models.rural_work import RuralWork, WorkStatus, WorkType
 from app.schemas.rural_work import RuralWorkStatistics
 from app.services.work_log_service import write_work_log
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +171,7 @@ class RuralWorkService:
             return False
         work_name = work.name
         self.db.delete(work)
-        self.db.commit()
+        safe_commit(self.db)
         if user_id is not None:
             try:
                 write_work_log(
@@ -211,7 +212,7 @@ class RuralWorkService:
             updated_by=user_id,
         )
         self.db.add(work)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(work)
 
         if user_id is not None:
@@ -265,7 +266,7 @@ class RuralWorkService:
         if user_id is not None:
             work.updated_by = user_id
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(work)
 
         if user_id is not None:
@@ -376,7 +377,7 @@ class RuralWorkService:
             .filter(RuralWork.id.in_(list(ids)))
             .delete(synchronize_session=False)
         )
-        self.db.commit()
+        safe_commit(self.db)
         return int(deleted or 0)
 
     @staticmethod

@@ -8,6 +8,7 @@ import heapq
 import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+from app.core.transaction import safe_commit
 
 # 情感词典（模块级常量，避免每次调用重建）
 _POSITIVE_WORDS = ["好", "优秀", "棒", "喜欢", "满意", "成功", "提升", "增长"]
@@ -134,7 +135,7 @@ class SentimentAnalysisService:
             news.is_alert = result.sentiment == "negative" and result.score <= cls.ALERT_SCORE_THRESHOLD
             news.processed = True
         if news_list:
-            db.commit()
+            safe_commit(db)
         return len(news_list)
 
     @classmethod

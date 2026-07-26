@@ -7,6 +7,7 @@ recording security-relevant events (login, CRUD operations, etc.).
 import logging
 from datetime import datetime, timezone
 from typing import Optional
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ def _persist_to_db(db, entry: dict) -> None:
             level="info",
         )
         db.add(log_entry)
-        db.commit()
+        safe_commit(db)
     except Exception as e:
         logger.exception("Failed to persist audit entry to database: %s", e)
         try:

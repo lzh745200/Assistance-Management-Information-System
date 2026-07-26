@@ -16,6 +16,7 @@ from app.core.response import ok_list, success_response
 from app.core.security import get_current_user
 from app.models.issue_tracking import Feedback
 from app.core.transaction import safe_commit
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -132,4 +133,11 @@ async def submit_feedback(
         db.rollback()
         logger.error("保存反馈失败: %s", e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="保存反馈失败")
+
+    try:
+        write_work_log(db, "feedback", "submit", feedback.id, f"提交反馈: {category}",
+                      user_name=username or "匿名")
+    except Exception:
+        logger.debug("记录工作日志失败")
+
     return success_response(message="感谢您的反馈")

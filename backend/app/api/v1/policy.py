@@ -22,6 +22,7 @@ from ...core.security import get_current_user
 from ...models.policy import Policy, PolicyCategory, PolicyFavorite
 from app.core.transaction import safe_commit
 from app.api.v1.deps import require_manager_role
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 

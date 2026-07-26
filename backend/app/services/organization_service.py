@@ -19,6 +19,7 @@ from app.schemas.organization import (
     OrganizationUpdate,
 )
 from app.services.organization_code_service import OrganizationCodeService
+from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,7 @@ class OrganizationService:
         else:
             org.path = f"/{org.id}/"
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(org)
 
         return org
@@ -324,7 +325,7 @@ class OrganizationService:
         org.updated_by = updated_by
         org.updated_at = datetime.now(timezone.utc)
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(org)
 
         return org
@@ -357,7 +358,7 @@ class OrganizationService:
             raise OrganizationHasSubordinatesError(org_id, subordinate_count)
 
         self.db.delete(org)
-        self.db.commit()
+        safe_commit(self.db)
 
         return True
 
@@ -475,7 +476,7 @@ class OrganizationService:
                     org.sort_order = sort_order
                     updated_count += 1
 
-            self.db.commit()
+            safe_commit(self.db)
             return True, updated_count
 
         except Exception as e:

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.models.policy import Policy
 from app.schemas.policy import (
+from app.core.transaction import safe_commit
     CATEGORY_NAMES,
     LOCAL_LEVEL_NAMES,
     MILITARY_LEVEL_NAMES,
@@ -86,7 +87,7 @@ class PolicyService:
         )
 
         self.db.add(policy)
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(policy)
 
         logger.info(f"Created policy: id={policy.id}, title={policy.title}")
@@ -122,7 +123,7 @@ class PolicyService:
 
         policy.updated_by = user_id
 
-        self.db.commit()
+        safe_commit(self.db)
         self.db.refresh(policy)
 
         logger.info(f"Updated policy: id={policy.id}, title={policy.title}")
@@ -138,7 +139,7 @@ class PolicyService:
         logger.info(f"Deleting policy: id={policy.id}, title={policy.title}")
 
         self.db.delete(policy)
-        self.db.commit()
+        safe_commit(self.db)
         return True
 
     def get_policies(
@@ -246,7 +247,7 @@ class PolicyService:
             return False
 
         policy.view_count = (policy.view_count or 0) + 1
-        self.db.commit()
+        safe_commit(self.db)
         return True
 
     def get_categories(self) -> CategoriesResponse:
@@ -309,7 +310,7 @@ class PolicyService:
     def batch_delete(self, policy_ids: List[int]) -> int:
         """批量删除政策"""
         deleted = self.db.query(Policy).filter(Policy.id.in_(policy_ids)).delete(synchronize_session=False)
-        self.db.commit()
+        safe_commit(self.db)
 
         logger.info(f"Batch deleted {deleted} policies")
 

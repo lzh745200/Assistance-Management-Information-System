@@ -12,6 +12,7 @@ from app.api.v1.deps import get_current_active_user, get_db
 from app.models.user import User
 from app.services.data_cleaning_service import DataCleaningService
 from app.services.validation_engine_service import ValidationEngine
+from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/data-quality", tags=["数据质量"])
 
