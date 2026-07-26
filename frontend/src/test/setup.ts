@@ -194,6 +194,12 @@ config.global.stubs = {
   'el-image': true,
   'el-timeline': true,
   'el-timeline-item': true,
+  'el-steps': true,
+  'el-step': true,
+  'el-result': true,
+  'el-collapse': true,
+  'el-collapse-item': true,
+  'el-popover': true,
   'router-link': true,
   'router-view': true,
 }

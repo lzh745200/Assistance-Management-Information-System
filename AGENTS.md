@@ -122,9 +122,9 @@ All routes use lazy loading: `component: () => import('@/views/xxx/List.vue')`
 
 ### Backend Coverage
 
-- Minimum: 50% (CI gate via `--cov-fail-under=50`)
-- Local target: 50% (Makefile)
-- Nightly: 50% (`.github/workflows/nightly-full.yml`)
+- Minimum: 90% (CI gate via `--cov-fail-under=90`)
+- Local target: 90% (Makefile)
+- Nightly: 90% (`.github/workflows/nightly-full.yml`)
 - Test env vars: `ENVIRONMENT=test`, `SECRET_KEY=test-secret-key-for-ci`
 
 ### Frontend Coverage
@@ -399,7 +399,7 @@ Every new feature must verify:
 
 | Purpose | Path |
 |---------|------|
-| Version number | `backend/app/core/config.py` → `Settings.PROJECT_VERSION` (v1.2.0) |
+| Version number | `backend/app/core/config.py` → `Settings.PROJECT_VERSION` (v1.4.2) |
 | DB schema source | `backend/app/models/` + `backend/alembic/versions/` |
 | Baseline migration | `backend/alembic/versions/012_consolidate_baseline.py` |
 | API router registry | `backend/app/api/v1/__init__.py` → `_BUSINESS_MODULES` |

@@ -195,7 +195,7 @@ class ChartGenerator:
         image_base64 = base64.b64encode(buffer.read()).decode()
         buffer.close()
 
-        return f"data:image / png;base64,{image_base64}"
+        return f"data:image/png;base64,{image_base64}"
 
 
 def generate_analysis_charts(data: Dict[str, Any], export_dir: Path, filename_prefix: str = "chart") -> List[Path]:

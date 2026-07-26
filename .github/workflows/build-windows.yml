@@ -26,7 +26,7 @@ jobs:
       - name: Backend smoke test
         continue-on-error: true
         run: |
-          pip install -r backend/requirements.txt pytest-xdist pytest-cov pytest-rerunfailures
+          pip install -r backend/requirements.txt -r backend/requirements-dev.txt
           cd backend && python -m pytest tests/ -q --tb=short -n auto --dist loadfile --cov=app --cov-report=term --cov-fail-under=45 --reruns 3 --reruns-delay 1 --junitxml=test-results.xml
       - name: Upload test results
         if: always()

@@ -143,11 +143,35 @@ debug-*.html
 
 # ===== Temp scratch scripts & test outputs (automated sessions) =====
 backend/run_*.py
+backend/run_*.bat
 backend/simple_run.py
 backend/final_verify*.py
 backend/final_verify_output.txt
 backend/*_result*.txt
+backend/_*.py
+backend/_*.bat
 logs/*.log.*
+
+# ===== Frontend temp scripts & outputs =====
+frontend/*_output.txt
+frontend/*_output2.txt
+frontend/run_*.bat
+frontend/run_*.ps1
+frontend/cov_gap.cjs
+frontend/all_batch_output.txt
+frontend/comp_output*.txt
+frontend/vitest_output.txt
+frontend/test_status.txt
+
+# ===== Root-level temp files =====
+/_*.py
+/_*.bat
+/_*.txt
+/_git_*.txt
+/_do_git*.bat
+/_test_*.txt
+/_env_check.txt
+/test_status.txt
 
 # ===== Backend temp scripts & artifacts =====
 backend/test_full_results.txt

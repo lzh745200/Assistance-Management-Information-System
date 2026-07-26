@@ -1,0 +1,1148 @@
+/**
+ * views/system/UserManagement.vue 覆盖率攻坚
+ * 覆盖：Tab 切换、组织树/角色加载三分支、字典映射函数、密码生成与复制、
+ * 用户 CRUD 全路径、待审核用户、会话管理、2FA 重置、权限包导入导出、删除全分支，
+ * 以及模板中 v-if/v-else（machine_code、is_active、isAdmin、activeTab、会话空态）两侧渲染。
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
+import { nextTick } from 'vue'
+
+// vi.mock 工厂会被提升到模块顶部注册，直接引用下方 const 会触发 TDZ；
+// 所有被工厂引用的对象放入 vi.hoisted 中先行初始化。
+const {
+  authState,
+  ElMessage,
+  confirmMock,
+  alertMock,
+  mockGet,
+  mockPost,
+  mockPut,
+  mockDel,
+  mockApiRequest,
+  dsMock,
+  logError,
+  genPwdMock,
+  normalizeMock,
+  clipWrite,
+} = vi.hoisted(() => {
+  return {
+    authState: { isAdmin: true },
+    ElMessage: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
+    confirmMock: vi.fn(),
+    alertMock: vi.fn(),
+    mockGet: vi.fn(),
+    mockPost: vi.fn(),
+    mockPut: vi.fn(),
+    mockDel: vi.fn(),
+    mockApiRequest: vi.fn(),
+    dsMock: vi.fn(),
+    logError: vi.fn(),
+    genPwdMock: vi.fn(),
+    normalizeMock: vi.fn(),
+    clipWrite: vi.fn(),
+  }
+})
+
+vi.mock('element-plus', () => ({
+  ElMessage,
+  ElMessageBox: { confirm: confirmMock, alert: alertMock },
+}))
+
+vi.mock('@/api/request', () => ({
+  get: mockGet,
+  post: mockPost,
+  put: mockPut,
+  del: mockDel,
+  apiRequest: mockApiRequest,
+}))
+
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: () => authState,
+}))
+
+vi.mock('@/composables/useDesensitize', () => ({
+  useDesensitize: () => ({ ds: dsMock }),
+}))
+
+vi.mock('@/utils/logger', () => ({
+  logger: { error: logError, warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
+}))
+
+vi.mock('@/utils/clipboard', () => ({
+  generateRandomPassword: genPwdMock,
+}))
+
+vi.mock('@/utils/treeNormalizer', () => ({
+  normalizeTreeNodes: normalizeMock,
+}))
+
+vi.mock('@/views/system/Role.vue', () => ({
+  default: { name: 'RoleManagement', template: '<div class="role-management-mock" />' },
+}))
+
+vi.mock('@/components/permission/PermissionAssignmentDrawer.vue', () => ({
+  default: { name: 'PermissionAssignmentDrawer', template: '<div class="perm-drawer-mock" />', emits: ['saved'] },
+}))
+
+import UserManagement from '@/views/system/UserManagement.vue'
+
+const sampleUser = {
+  id: 1,
+  username: 'admin',
+  full_name: '管理员',
+  role: 'admin',
+  data_scope: 'all',
+  department: '信息科',
+  phone: '13800000000',
+  email: 'a@b.c',
+  is_active: true,
+  organization_id: 3,
+  organization_name: '总部',
+}
+
+function defaultGetImpl(url: string) {
+  if (url === '/organizations/tree') {
+    return Promise.resolve({ data: [{ id: 1, name: '总部', children: [] }] })
+  }
+  if (url === '/users/pending/list') {
+    return Promise.resolve({ data: [{ id: 9, username: 'pending1' }] })
+  }
+  if (url === '/rbac/roles') {
+    return Promise.resolve({ data: { items: [{ id: 'custom', name: '自定义角色' }] } })
+  }
+  if (url.includes('/sessions')) {
+    return Promise.resolve({
+      data: {
+        data: [
+          { session_id: 's1', ip_address: '1.1.1.1', user_agent: 'Chrome', created_at: '2024-01-01T10:00:00' },
+        ],
+      },
+    })
+  }
+  return Promise.resolve({ data: {} })
+}
+
+function mountComp() {
+  // setup.ts 的全局 el-* stub 默认不渲染插槽，需 renderStubDefaultSlot；
+  // 具名插槽（header/footer/dropdown/append）与作用域插槽（表格行）需自定义 stub。
+  return mount(UserManagement, {
+    global: {
+      renderStubDefaultSlot: true,
+      stubs: {
+        'el-card': { template: '<div class="el-card-stub"><slot name="header" /><slot /></div>' },
+        'el-dialog': { template: '<div class="el-dialog-stub"><slot /><slot name="footer" /></div>' },
+        'el-dropdown': { template: '<div class="el-dropdown-stub"><slot /><slot name="dropdown" /></div>' },
+        'el-input': { template: '<div class="el-input-stub"><slot /><slot name="append" /></div>' },
+        // 注入两行样本数据，覆盖 machine_code 有/无、is_active 真/假、organization_name 空值等模板两侧分支
+        'el-table-column': {
+          name: 'ElTableColumn',
+          template: '<div class="el-table-column-stub"><slot :row="rowA" /><slot :row="rowB" /></div>',
+          data() {
+            return {
+              rowA: {
+                id: 1,
+                username: 'admin',
+                full_name: '张三',
+                role: 'admin',
+                data_scope: 'all',
+                organization_name: '总部',
+                department: '信息科',
+                phone: '13800000000',
+                machine_code: 'MC-001',
+                last_login: '2024-01-01',
+                is_active: true,
+                session_id: 's1',
+                ip_address: '1.1.1.1',
+                user_agent: 'Chrome',
+                created_at: '2024-01-01T10:00:00',
+              },
+              rowB: {
+                id: 2,
+                username: 'op',
+                full_name: '李四',
+                role: 'viewer',
+                data_scope: 'self',
+                organization_name: '',
+                department: '',
+                phone: '',
+                machine_code: '',
+                last_login: '',
+                is_active: false,
+                session_id: 's2',
+                ip_address: '2.2.2.2',
+                user_agent: 'Firefox',
+                created_at: null,
+              },
+            }
+          },
+        },
+      },
+    },
+  })
+}
+
+beforeEach(() => {
+  vi.resetAllMocks()
+  authState.isAdmin = true
+  mockGet.mockImplementation(defaultGetImpl)
+  mockApiRequest.mockResolvedValue({ items: [sampleUser], total: 1 })
+  mockPost.mockResolvedValue({ data: {} })
+  mockPut.mockResolvedValue({ data: {} })
+  mockDel.mockResolvedValue({ data: {} })
+  confirmMock.mockResolvedValue(undefined)
+  alertMock.mockResolvedValue(undefined)
+  clipWrite.mockResolvedValue(undefined)
+  genPwdMock.mockReturnValue('Gen#Pass1')
+  normalizeMock.mockImplementation((nodes: any) => nodes)
+  dsMock.mockImplementation((v: any) => v)
+  Object.defineProperty(window.navigator, 'clipboard', {
+    value: { writeText: clipWrite },
+    configurable: true,
+  })
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+describe('挂载与初始化', () => {
+  it('onMounted 并行加载用户/组织树/待审核数/角色列表', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'GET', url: '/users' })
+    )
+    expect(vm.tableData).toHaveLength(1)
+    expect(vm.pagination.total).toBe(1)
+    expect(mockGet).toHaveBeenCalledWith('/organizations/tree')
+    expect(normalizeMock).toHaveBeenCalled()
+    expect(vm.orgTreeOptions).toHaveLength(1)
+    expect(mockGet).toHaveBeenCalledWith('/users/pending/list')
+    expect(vm.pendingCount).toBe(1) // 数组 → length
+    expect(mockGet).toHaveBeenCalledWith('/rbac/roles', { limit: 100 })
+    expect(vm.roleOptions).toEqual([{ value: 'custom', label: '自定义角色' }])
+  })
+
+  it('loadOrgTree：返回非数组 → 置空', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/organizations/tree') return Promise.resolve({ data: { not: 'array' } })
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).orgTreeOptions).toEqual([])
+  })
+
+  it('loadOrgTree：请求异常 → 置空', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/organizations/tree') return Promise.reject(new Error('net'))
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).orgTreeOptions).toEqual([])
+  })
+
+  it('loadOrgTree：falsy 原始值（0）→ 走 || [] 兜底', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/organizations/tree') return Promise.resolve(0)
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).orgTreeOptions).toEqual([])
+  })
+
+  it('fetchRoles：items 为空 → 保留硬编码默认角色', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/roles') return Promise.resolve({ data: { items: [] } })
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).roleOptions).toHaveLength(6)
+  })
+
+  it('fetchRoles：异常 → 保留硬编码默认角色', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/roles') return Promise.reject(new Error('net'))
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).roleOptions).toHaveLength(6)
+  })
+
+  it('fetchRoles：字段多级兜底（id/name/role_id 与 name/label/role_name）', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/roles') {
+        return Promise.resolve({
+          data: [
+            { id: 7 },
+            { name: 'n2', label: 'L2' },
+            { role_id: 'r3', role_name: 'R3' },
+          ],
+        })
+      }
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).roleOptions).toEqual([
+      { value: 7, label: '7' },
+      { value: 'n2', label: 'n2' },
+      { value: 'r3', label: 'R3' },
+    ])
+  })
+
+  it('loadData：响应缺 total → 以 items 长度兜底', async () => {
+    mockApiRequest.mockResolvedValue({ items: [sampleUser, { ...sampleUser, id: 2 }] })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.tableData).toHaveLength(2)
+    expect(vm.pagination.total).toBe(2)
+  })
+
+  it('loadData：请求失败 → 记录日志并提示', async () => {
+    mockApiRequest.mockRejectedValue(new Error('boom'))
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(logError).toHaveBeenCalled()
+    expect(ElMessage.error).toHaveBeenCalledWith('加载用户数据失败')
+    expect(vm.loading).toBe(false)
+  })
+})
+
+describe('Tab 切换与角色管理面板', () => {
+  it('切换到 roles 页签渲染 RoleManagement，users 搜索卡消失', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(wrapper.find('.role-management-mock').exists()).toBe(false)
+    vm.handleTabChange('roles')
+    vm.activeTab = 'roles'
+    await nextTick()
+    expect(wrapper.find('.role-management-mock').exists()).toBe(true)
+    expect(wrapper.find('.search-card').exists()).toBe(false)
+  })
+})
+
+describe('待审核用户', () => {
+  it('非管理员：loadPendingCount 直接返回，不请求', async () => {
+    authState.isAdmin = false
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(mockGet.mock.calls.some((c) => c[0] === '/users/pending/list')).toBe(false)
+    expect(vm.pendingCount).toBe(0)
+  })
+
+  it('管理员：对象响应 → 取 data.total', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') return Promise.resolve({ data: { total: 5 } })
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).pendingCount).toBe(5)
+  })
+
+  it('请求异常 → pendingCount 归零', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') return Promise.reject(new Error('net'))
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).pendingCount).toBe(0)
+  })
+
+  it('showPendingUsers：数组响应 → 填充列表并打开弹窗', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.showPendingUsers()
+    expect(vm.pendingUsers).toHaveLength(1)
+    expect(vm.pendingCount).toBe(1)
+    expect(vm.pendingDialogVisible).toBe(true)
+  })
+
+  it('showPendingUsers：对象响应 → 取 data.items', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') {
+        return Promise.resolve({ data: { items: [{ id: 8 }, { id: 9 }] } })
+      }
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.showPendingUsers()
+    expect(vm.pendingUsers).toHaveLength(2)
+    expect(vm.pendingCount).toBe(2)
+  })
+
+  it('showPendingUsers：异常 → 错误提示', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') return Promise.reject(new Error('net'))
+      return defaultGetImpl(url)
+    })
+    await vm.showPendingUsers()
+    expect(ElMessage.error).toHaveBeenCalledWith('加载待审核用户失败')
+  })
+})
+
+describe('搜索 / 重置 / 分页', () => {
+  it('handleSearch 携带查询参数并回到第 1 页', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.searchForm.username = 'u1'
+    vm.searchForm.name = 'n1'
+    vm.searchForm.role = 'admin'
+    vm.searchForm.is_active = true
+    vm.pagination.page = 3
+    mockApiRequest.mockClear()
+    vm.handleSearch()
+    await flushPromises()
+    expect(vm.pagination.page).toBe(1)
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/users',
+      params: { page: 1, page_size: 10, username: 'u1', keyword: 'n1', role: 'admin', is_active: true },
+    })
+  })
+
+  it('handleReset 清空搜索条件并重新查询', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.searchForm.username = 'u1'
+    vm.searchForm.name = 'n1'
+    vm.searchForm.role = 'admin'
+    vm.searchForm.is_active = false
+    mockApiRequest.mockClear()
+    vm.handleReset()
+    await flushPromises()
+    expect(vm.searchForm).toEqual({ username: '', name: '', role: '', is_active: undefined })
+    expect(mockApiRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({ username: undefined, keyword: undefined, role: undefined }),
+      })
+    )
+  })
+
+  it('handleSizeChange 回第 1 页并刷新；handlePageChange 刷新', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockApiRequest.mockClear()
+    vm.pagination.page = 4
+    vm.handleSizeChange()
+    await flushPromises()
+    expect(vm.pagination.page).toBe(1)
+    expect(mockApiRequest).toHaveBeenCalledTimes(1)
+    vm.handlePageChange()
+    await flushPromises()
+    expect(mockApiRequest).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('字典映射函数', () => {
+  it('getRoleTagType 全映射与未知兜底', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.getRoleTagType('super_admin')).toBe('danger')
+    expect(vm.getRoleTagType('admin')).toBe('danger')
+    expect(vm.getRoleTagType('approval_leader')).toBe('warning')
+    expect(vm.getRoleTagType('manager')).toBe('warning')
+    expect(vm.getRoleTagType('operator')).toBe('success')
+    expect(vm.getRoleTagType('viewer')).toBe('info')
+    expect(vm.getRoleTagType('whatever')).toBe('info')
+  })
+
+  it('getRoleName 全映射与未知透传', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.getRoleName('super_admin')).toBe('超级管理员')
+    expect(vm.getRoleName('admin')).toBe('系统管理员')
+    expect(vm.getRoleName('approval_leader')).toBe('审批领导')
+    expect(vm.getRoleName('manager')).toBe('管理人员')
+    expect(vm.getRoleName('operator')).toBe('操作员')
+    expect(vm.getRoleName('viewer')).toBe('查看者')
+    expect(vm.getRoleName('custom_role')).toBe('custom_role')
+  })
+
+  it('getDataScopeName 全映射、未知透传与空值兜底', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.getDataScopeName('all')).toBe('全部')
+    expect(vm.getDataScopeName('org_children')).toBe('本组织及下级')
+    expect(vm.getDataScopeName('org')).toBe('仅本组织')
+    expect(vm.getDataScopeName('self')).toBe('仅自己')
+    expect(vm.getDataScopeName('other')).toBe('other')
+    expect(vm.getDataScopeName('')).toBe('-')
+  })
+})
+
+describe('密码生成与复制', () => {
+  it('generatePassword / generateResetPassword 调用生成器', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.generatePassword()
+    expect(vm.formData.password).toBe('Gen#Pass1')
+    vm.generateResetPassword()
+    expect(vm.resetPwdForm.newPassword).toBe('Gen#Pass1')
+    await nextTick() // 触发“生成的密码”v-if 区块渲染
+  })
+
+  it('copyPassword 成功 → 成功提示', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.resetPwdForm.newPassword = 'abc123'
+    await vm.copyPassword()
+    expect(clipWrite).toHaveBeenCalledWith('abc123')
+    expect(ElMessage.success).toHaveBeenCalledWith('密码已复制到剪贴板')
+  })
+
+  it('copyPassword 剪贴板失败 → 错误提示', async () => {
+    clipWrite.mockRejectedValue(new Error('denied'))
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.resetPwdForm.newPassword = 'abc123'
+    await vm.copyPassword()
+    expect(ElMessage.error).toHaveBeenCalledWith('复制失败，请手动复制')
+  })
+})
+
+describe('新增 / 编辑 / 提交', () => {
+  it('handleAdd 重置表单并打开弹窗', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.isEdit = true
+    vm.formData.username = 'dirty'
+    vm.handleAdd()
+    expect(vm.isEdit).toBe(false)
+    expect(vm.dialogTitle).toBe('新增用户')
+    expect(vm.dialogVisible).toBe(true)
+    expect(vm.formData).toMatchObject({
+      id: 0,
+      username: '',
+      role: 'operator',
+      data_scope: 'org',
+      is_active: true,
+      organization_id: null,
+      permissions: [],
+    })
+  })
+
+  it('handleEdit 填充表单并加载会话（organization_id 缺省 → null）', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    const row = { ...sampleUser }
+    delete (row as any).organization_id
+    vm.handleEdit(row)
+    await flushPromises()
+    expect(vm.isEdit).toBe(true)
+    expect(vm.dialogTitle).toBe('编辑用户')
+    expect(vm.currentUser).toEqual(row)
+    expect(vm.formData.username).toBe('admin')
+    expect(vm.formData.organization_id).toBeNull()
+    expect(mockGet).toHaveBeenCalledWith('/system/admin/users/1/sessions')
+    expect(vm.userSessions).toHaveLength(1)
+    await nextTick() // 渲染会话表格（userSessions.length > 0 分支）
+  })
+
+  it('handleEdit 保留已有 organization_id', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleEdit({ ...sampleUser, organization_id: 42 })
+    expect(vm.formData.organization_id).toBe(42)
+  })
+
+  it('handleSubmit：formRef 为空 → 直接返回', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.formRef = undefined
+    await vm.handleSubmit()
+    expect(mockPost).not.toHaveBeenCalled()
+    expect(mockPut).not.toHaveBeenCalled()
+  })
+
+  it('handleSubmit：校验未通过 → 不发请求', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.formRef = { validate: (cb: any) => cb(false) }
+    await vm.handleSubmit()
+    await flushPromises()
+    expect(mockPost).not.toHaveBeenCalled()
+  })
+
+  it('handleSubmit 新建：返回初始密码 → 密码提示', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleAdd()
+    vm.formData.username = 'newbie'
+    vm.formData.full_name = '新人'
+    vm.formData.permissions = ['data:view', 'data:edit']
+    vm.formRef = { validate: (cb: any) => cb(true) }
+    mockPost.mockResolvedValueOnce({ data: { data: { password: 'Init!234' } } })
+    mockApiRequest.mockClear()
+    await vm.handleSubmit()
+    await flushPromises()
+    expect(mockPost).toHaveBeenCalledWith(
+      '/users',
+      expect.objectContaining({
+        username: 'newbie',
+        password: undefined,
+        permissions: 'data:view,data:edit',
+      })
+    )
+    expect(ElMessage.success).toHaveBeenCalledWith(expect.stringContaining('初始密码: Init!234'))
+    expect(vm.dialogVisible).toBe(false)
+    expect(mockApiRequest).toHaveBeenCalled() // 提交后刷新列表
+    expect(vm.submitting).toBe(false)
+  })
+
+  it('handleSubmit 新建：无初始密码 → 普通成功提示', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleAdd()
+    vm.formRef = { validate: (cb: any) => cb(true) }
+    mockPost.mockResolvedValueOnce({ data: { data: {} } })
+    await vm.handleSubmit()
+    await flushPromises()
+    expect(ElMessage.success).toHaveBeenCalledWith('用户创建成功')
+  })
+
+  it('handleSubmit 编辑：走 PUT 并提示更新成功', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleEdit({ ...sampleUser })
+    vm.formRef = { validate: (cb: any) => cb(true) }
+    await vm.handleSubmit()
+    await flushPromises()
+    expect(mockPut).toHaveBeenCalledWith(
+      '/users/1',
+      expect.objectContaining({ full_name: '管理员', role: 'admin', organization_id: 3 })
+    )
+    expect(ElMessage.success).toHaveBeenCalledWith('用户更新成功')
+  })
+
+  it('handleSubmit 失败：展示后端 detail', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleAdd()
+    vm.formRef = { validate: (cb: any) => cb(true) }
+    mockPost.mockRejectedValueOnce({ response: { data: { detail: '用户名已存在' } } })
+    await vm.handleSubmit()
+    await flushPromises()
+    expect(ElMessage.error).toHaveBeenCalledWith('用户名已存在')
+    expect(vm.submitting).toBe(false)
+  })
+
+  it('handleSubmit 失败：无 detail → 兜底文案', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleAdd()
+    vm.formRef = { validate: (cb: any) => cb(true) }
+    mockPost.mockRejectedValueOnce(new Error('net'))
+    await vm.handleSubmit()
+    await flushPromises()
+    expect(ElMessage.error).toHaveBeenCalledWith('操作失败')
+  })
+})
+
+describe('重置密码', () => {
+  it('handleResetPassword 打开弹窗并清空密码', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.resetPwdForm.newPassword = 'dirty'
+    vm.handleResetPassword(sampleUser)
+    expect(vm.currentUser).toEqual(sampleUser)
+    expect(vm.resetPwdForm.newPassword).toBe('')
+    expect(vm.resetPwdDialogVisible).toBe(true)
+  })
+
+  it('confirmResetPassword：空密码 → 警告并返回', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleResetPassword(sampleUser)
+    await vm.confirmResetPassword()
+    expect(ElMessage.warning).toHaveBeenCalledWith('请输入或生成新密码')
+    expect(mockPost).not.toHaveBeenCalled()
+  })
+
+  it('confirmResetPassword 成功：复制密码 + 弹窗提示 + 状态复位', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleResetPassword(sampleUser)
+    vm.resetPwdForm.newPassword = 'New!2345'
+    await vm.confirmResetPassword()
+    await flushPromises()
+    expect(mockPost).toHaveBeenCalledWith('/users/1/admin-reset-password', {
+      new_password: 'New!2345',
+    })
+    expect(clipWrite).toHaveBeenCalledWith('New!2345')
+    expect(alertMock).toHaveBeenCalledWith(
+      expect.stringContaining('New!2345'),
+      expect.stringContaining('admin'),
+      expect.objectContaining({ type: 'success' })
+    )
+    expect(vm.resetPwdDialogVisible).toBe(false)
+    expect(vm.resetPwdForm.newPassword).toBe('')
+  })
+
+  it('confirmResetPassword：剪贴板失败仍走完整流程（内层 catch）', async () => {
+    clipWrite.mockRejectedValue(new Error('denied'))
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleResetPassword(sampleUser)
+    vm.resetPwdForm.newPassword = 'New!2345'
+    await vm.confirmResetPassword()
+    expect(alertMock).toHaveBeenCalled()
+    expect(vm.resetPwdDialogVisible).toBe(false)
+  })
+
+  it('confirmResetPassword 失败：detail 与兜底文案', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleResetPassword(sampleUser)
+    vm.resetPwdForm.newPassword = 'New!2345'
+    mockPost.mockRejectedValueOnce({ response: { data: { detail: '密码强度不足' } } })
+    await vm.confirmResetPassword()
+    expect(ElMessage.error).toHaveBeenCalledWith('密码强度不足')
+    mockPost.mockRejectedValueOnce(new Error('net'))
+    vm.resetPwdForm.newPassword = 'New!2345'
+    await vm.confirmResetPassword()
+    expect(ElMessage.error).toHaveBeenCalledWith('重置密码失败')
+  })
+})
+
+describe('角色/权限抽屉', () => {
+  it('handleRolePermission 打开抽屉；handlePermSaved 刷新列表', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleRolePermission(sampleUser)
+    expect(vm.permDrawerUser).toEqual(sampleUser)
+    expect(vm.permDrawerVisible).toBe(true)
+    mockApiRequest.mockClear()
+    await vm.handlePermSaved()
+    expect(vm.pagination.page).toBe(1)
+    expect(mockApiRequest).toHaveBeenCalled()
+  })
+})
+
+describe('会话管理', () => {
+  it('loadUserSessions：res.data 为数组 / data.sessions / 原始数组 三种形态', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockGet.mockResolvedValueOnce({ data: [{ session_id: 'a' }] })
+    await vm.loadUserSessions(1)
+    expect(vm.userSessions).toEqual([{ session_id: 'a' }])
+    mockGet.mockResolvedValueOnce({ data: { sessions: [{ session_id: 'b' }] } })
+    await vm.loadUserSessions(1)
+    expect(vm.userSessions).toEqual([{ session_id: 'b' }])
+    mockGet.mockResolvedValueOnce([{ session_id: 'c' }])
+    await vm.loadUserSessions(1)
+    expect(vm.userSessions).toEqual([{ session_id: 'c' }])
+  })
+
+  it('loadUserSessions：异常 → 空列表；空态渲染（el-empty 分支）', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/sessions')) return Promise.reject(new Error('404'))
+      return defaultGetImpl(url)
+    })
+    vm.handleEdit({ ...sampleUser })
+    await flushPromises()
+    expect(vm.userSessions).toEqual([])
+    expect(vm.sessionsLoading).toBe(false)
+    await nextTick() // 渲染“无活跃会话”空态
+  })
+
+  it('revokeSession：currentUser 为空 → 直接返回', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.revokeSession({ session_id: 'x' })
+    expect(mockPost).not.toHaveBeenCalled()
+  })
+
+  it('revokeSession 成功 → 列表过滤该会话', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleEdit({ ...sampleUser })
+    await flushPromises()
+    expect(vm.userSessions).toHaveLength(1)
+    await vm.revokeSession({ session_id: 's1' })
+    expect(mockPost).toHaveBeenCalledWith('/system/admin/users/1/sessions/s1/revoke')
+    expect(ElMessage.success).toHaveBeenCalledWith('已强制登出该会话')
+    expect(vm.userSessions).toEqual([])
+    expect(vm.revokingSession).toBeNull()
+  })
+
+  it('revokeSession 失败：detail 与兜底文案', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleEdit({ ...sampleUser })
+    await flushPromises()
+    mockPost.mockRejectedValueOnce({ response: { data: { detail: '会话不存在' } } })
+    await vm.revokeSession({ session_id: 's1' })
+    expect(ElMessage.error).toHaveBeenCalledWith('会话不存在')
+    mockPost.mockRejectedValueOnce(new Error('net'))
+    await vm.revokeSession({ session_id: 's1' })
+    expect(ElMessage.error).toHaveBeenCalledWith('强制登出失败，接口可能尚未实现')
+    expect(vm.revokingSession).toBeNull()
+  })
+
+  it('handleReset2fa：currentUser 为空 → 返回', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.handleReset2fa()
+    expect(confirmMock).not.toHaveBeenCalled()
+  })
+
+  it('handleReset2fa：用户取消确认 → 不发请求', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.currentUser = { ...sampleUser }
+    confirmMock.mockRejectedValueOnce('cancel')
+    await vm.handleReset2fa()
+    expect(mockPost).not.toHaveBeenCalled()
+  })
+
+  it('handleReset2fa 成功与失败两分支', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.currentUser = { ...sampleUser }
+    await vm.handleReset2fa()
+    expect(mockPost).toHaveBeenCalledWith('/system/admin/users/1/two-factor/reset')
+    expect(ElMessage.success).toHaveBeenCalledWith('2FA 已重置')
+    expect(vm.resetting2fa).toBe(false)
+    mockPost.mockRejectedValueOnce({ response: { data: { detail: '未开启2FA' } } })
+    await vm.handleReset2fa()
+    expect(ElMessage.error).toHaveBeenCalledWith('未开启2FA')
+    mockPost.mockRejectedValueOnce(new Error('net'))
+    await vm.handleReset2fa()
+    expect(ElMessage.error).toHaveBeenCalledWith('重置 2FA 失败，接口可能尚未实现')
+  })
+
+  it('formatSessionTime：空值 / 正常时间 / 异常输入', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.formatSessionTime(null)).toBe('-')
+    expect(vm.formatSessionTime('2024-01-01T10:00:00')).not.toBe('-')
+    expect(vm.formatSessionTime(Symbol('bad'))).toBe('-')
+  })
+})
+
+describe('权限包导入导出', () => {
+  it('handlePermPackageCommand 分发 export / import / 其他', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handlePermPackageCommand('export')
+    await flushPromises()
+    expect(mockPost).toHaveBeenCalledWith('/permission-packages/export', {})
+    const createSpy = vi.spyOn(document, 'createElement')
+    vm.handlePermPackageCommand('import')
+    expect(createSpy).toHaveBeenCalledWith('input')
+    createSpy.mockRestore()
+    vm.handlePermPackageCommand('unknown') // 无分支 → 不报错
+  })
+
+  it('导出成功：创建 a 标签触发下载并提示统计', async () => {
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockPost.mockResolvedValueOnce({
+      data: { file_name: 'pkg.zip', role_count: 2, user_count: 3 },
+    })
+    await vm.handleExportPermissionPackage()
+    expect(clickSpy).toHaveBeenCalled()
+    expect(ElMessage.success).toHaveBeenCalledWith('权限包导出成功 (2 个角色, 3 个用户)')
+    expect(vm.exportingPermPackage).toBe(false)
+    clickSpy.mockRestore()
+  })
+
+  it('导出：无 file_name → 不下载不提示；失败 → detail 与兜底', async () => {
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockPost.mockResolvedValueOnce({ data: {} })
+    await vm.handleExportPermissionPackage()
+    expect(clickSpy).not.toHaveBeenCalled()
+    mockPost.mockRejectedValueOnce({ response: { data: { detail: '无权限' } } })
+    await vm.handleExportPermissionPackage()
+    expect(ElMessage.error).toHaveBeenCalledWith('无权限')
+    mockPost.mockRejectedValueOnce(new Error('net'))
+    await vm.handleExportPermissionPackage()
+    expect(ElMessage.error).toHaveBeenCalledWith('导出失败')
+    clickSpy.mockRestore()
+  })
+
+  /** 捕获组件创建的 file input 元素 */
+  function captureInputs() {
+    const inputs: HTMLInputElement[] = []
+    const orig = document.createElement.bind(document)
+    const spy = vi.spyOn(document, 'createElement').mockImplementation((tag: any, opts?: any) => {
+      const el = orig(tag, opts)
+      if (String(tag).toLowerCase() === 'input') inputs.push(el as HTMLInputElement)
+      return el
+    })
+    return { inputs, spy }
+  }
+
+  it('导入：window focus 触发清理（用户取消文件选择）', async () => {
+    const { inputs, spy } = captureInputs()
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleImportPermissionPackage()
+    expect(inputs).toHaveLength(1)
+    window.dispatchEvent(new Event('focus'))
+    expect(vm.importingPermPackage).toBe(false)
+    expect(mockPost.mock.calls.some((c) => c[0] === '/permission-packages/import')).toBe(false)
+    spy.mockRestore()
+  })
+
+  it('导入：change 事件无文件 → 清理并返回', async () => {
+    const { inputs, spy } = captureInputs()
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.handleImportPermissionPackage()
+    const input = inputs[0]
+    Object.defineProperty(input, 'files', { value: [], configurable: true })
+    input.dispatchEvent(new Event('change'))
+    await flushPromises()
+    expect(mockPost.mock.calls.some((c) => c[0] === '/permission-packages/import')).toBe(false)
+    expect(vm.importingPermPackage).toBe(false)
+    spy.mockRestore()
+  })
+
+  it('导入成功：含警告的预览 → 确认 → confirm 接口 → 刷新列表', async () => {
+    const { inputs, spy } = captureInputs()
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') {
+        return Promise.resolve({
+          data: {
+            success: true,
+            preview: { role_count: 2, user_legacy_count: 3, warnings: ['角色X已存在'] },
+          },
+        })
+      }
+      if (url.startsWith('/permission-packages/confirm/')) {
+        return Promise.resolve({ data: { message: '导入完成，共 2 角色' } })
+      }
+      return Promise.resolve({ data: {} })
+    })
+    vm.handleImportPermissionPackage()
+    const input = inputs[0]
+    const file = new File(['zip'], '我的权限包.zip', { type: 'application/zip' })
+    Object.defineProperty(input, 'files', { value: [file], configurable: true })
+    input.dispatchEvent(new Event('change'))
+    await flushPromises()
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.stringContaining('警告: 角色X已存在'),
+      '确认导入权限包',
+      expect.objectContaining({ confirmButtonText: '确认导入' })
+    )
+    expect(mockPost).toHaveBeenCalledWith(
+      `/permission-packages/confirm/${encodeURIComponent('我的权限包.zip')}`,
+      { overwrite_existing: true }
+    )
+    expect(ElMessage.success).toHaveBeenCalledWith('导入完成，共 2 角色')
+    expect(vm.importingPermPackage).toBe(false)
+    spy.mockRestore()
+  })
+
+  it('导入：preview 缺省 + confirm 响应兜底文案', async () => {
+    const { inputs, spy } = captureInputs()
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') {
+        return Promise.resolve({ data: { success: true } })
+      }
+      if (url.startsWith('/permission-packages/confirm/')) return Promise.resolve({})
+      return Promise.resolve({ data: {} })
+    })
+    vm.handleImportPermissionPackage()
+    const file = new File(['zip'], 'p.zip')
+    Object.defineProperty(inputs[0], 'files', { value: [file], configurable: true })
+    inputs[0].dispatchEvent(new Event('change'))
+    await flushPromises()
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.stringContaining('将导入 0 个角色, 0 个用户权限'),
+      '确认导入权限包',
+      expect.any(Object)
+    )
+    expect(ElMessage.success).toHaveBeenCalledWith('导入完成')
+    spy.mockRestore()
+  })
+
+  it('导入：success=false → 展示失败原因（含 message 兜底）', async () => {
+    const { inputs, spy } = captureInputs()
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') {
+        return Promise.resolve({ data: { success: false, message: '文件损坏' } })
+      }
+      return Promise.resolve({ data: {} })
+    })
+    vm.handleImportPermissionPackage()
+    const file = new File(['zip'], 'bad.zip')
+    Object.defineProperty(inputs[0], 'files', { value: [file], configurable: true })
+    inputs[0].dispatchEvent(new Event('change'))
+    await flushPromises()
+    expect(ElMessage.error).toHaveBeenCalledWith('文件损坏')
+    spy.mockRestore()
+  })
+
+  it('导入：确认框取消 → 静默返回；导入接口异常 → 错误提示', async () => {
+    const { inputs, spy } = captureInputs()
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    // 第一次：confirm 拒绝 'cancel' → 静默
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') {
+        return Promise.resolve({ data: { success: true, preview: {} } })
+      }
+      return Promise.resolve({ data: {} })
+    })
+    confirmMock.mockRejectedValueOnce('cancel')
+    vm.handleImportPermissionPackage()
+    const file = new File(['zip'], 'p.zip')
+    Object.defineProperty(inputs[0], 'files', { value: [file], configurable: true })
+    inputs[0].dispatchEvent(new Event('change'))
+    await flushPromises()
+    expect(ElMessage.error).not.toHaveBeenCalled()
+    // 第二次：import 接口抛 detail
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') {
+        return Promise.reject({ response: { data: { detail: '格式不支持' } } })
+      }
+      return Promise.resolve({ data: {} })
+    })
+    vm.handleImportPermissionPackage()
+    Object.defineProperty(inputs[1], 'files', { value: [file], configurable: true })
+    inputs[1].dispatchEvent(new Event('change'))
+    await flushPromises()
+    expect(ElMessage.error).toHaveBeenCalledWith('格式不支持')
+    // 第三次：非 cancel 普通错误 → err.message 兜底
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') return Promise.reject(new Error('网络中断'))
+      return Promise.resolve({ data: {} })
+    })
+    vm.handleImportPermissionPackage()
+    Object.defineProperty(inputs[2], 'files', { value: [file], configurable: true })
+    inputs[2].dispatchEvent(new Event('change'))
+    await flushPromises()
+    expect(ElMessage.error).toHaveBeenCalledWith('网络中断')
+    spy.mockRestore()
+  })
+})
+
+describe('删除用户', () => {
+  it('确认删除 → 调用接口并刷新，关闭待审核弹窗', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.pendingDialogVisible = true
+    mockApiRequest.mockClear()
+    await vm.handleDelete(sampleUser)
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.stringContaining('管理员'),
+      '提示',
+      expect.objectContaining({ type: 'warning' })
+    )
+    expect(mockDel).toHaveBeenCalledWith('/users/1')
+    expect(ElMessage.success).toHaveBeenCalledWith('删除成功')
+    expect(mockApiRequest).toHaveBeenCalled()
+    expect(vm.pendingDialogVisible).toBe(false)
+  })
+
+  it('取消删除 → 不请求不报错', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    confirmMock.mockRejectedValueOnce('cancel')
+    await vm.handleDelete(sampleUser)
+    expect(mockDel).not.toHaveBeenCalled()
+    expect(ElMessage.error).not.toHaveBeenCalled()
+  })
+
+  it('删除失败：detail 与兜底文案', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockDel.mockRejectedValueOnce({ response: { data: { detail: '存在关联数据' } } })
+    await vm.handleDelete(sampleUser)
+    expect(ElMessage.error).toHaveBeenCalledWith('存在关联数据')
+    mockDel.mockRejectedValueOnce(new Error('net'))
+    await vm.handleDelete({ ...sampleUser, full_name: '' })
+    expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
+  })
+})
+
+describe('模板条件渲染（非管理员视角）', () => {
+  it('非管理员：不渲染操作列与头部动作区', async () => {
+    authState.isAdmin = false
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.isAdmin).toBe(false)
+    await nextTick()
+    // 非管理员分支渲染不崩溃即可（v-if false 路径）
+    expect(wrapper.find('.user-management').exists()).toBe(true)
+  })
+})

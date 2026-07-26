@@ -21,7 +21,7 @@ jobs:
         run: |
           cd backend
           python -m pytest tests/ -v --tb=long \
-            --cov=app --cov-report=html --cov-report=json --cov-fail-under=50 \
+            --cov=app --cov-report=html --cov-report=json --cov-fail-under=90 \
             --durations=20 \
             --reruns 2 --reruns-delay 1 \
             --junitxml=test-results.xml
