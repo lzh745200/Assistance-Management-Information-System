@@ -58,7 +58,7 @@ class OfflineMapService:
         try:
             async with aiofiles.open(tile_path, "rb") as f:
                 return await f.read()
-        except Exception as e:
+        except Exception:
             logger.warning("离线地图瓦片读取失败: %s", tile_path, exc_info=True)
             return None
 

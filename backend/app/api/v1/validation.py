@@ -14,7 +14,6 @@ from ...core.database import get_db
 from ...core.security import get_current_user
 from ...models.validation_rule import RuleType, ValidationRule
 from app.core.transaction import safe_commit
-from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/validation", tags=["数据校验"])
 

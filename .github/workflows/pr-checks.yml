@@ -19,8 +19,8 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
       - run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
-      # 覆盖率门禁：基线 90%，跌破则 CI 红（与 pyproject.toml fail_under 一致）
-      - run: cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-report=xml --cov-fail-under=90 --reruns 2 --reruns-delay 1
+      # 覆盖率门禁：基线 98%，跌破则 CI 红（与 pyproject.toml fail_under 一致）
+      - run: cd backend && python -m pytest tests/ -q --tb=line -n auto --dist loadfile --cov=app --cov-report=xml --cov-fail-under=98 --reruns 2 --reruns-delay 1
       # 上传覆盖率到 Codecov
       - uses: codecov/codecov-action@v4
         with:

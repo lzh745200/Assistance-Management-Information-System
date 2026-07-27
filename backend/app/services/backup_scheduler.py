@@ -188,7 +188,7 @@ async def weekly_report_job():
                 f"上周（{week_start} ~ {today}）工作汇总：\n"
                 f"• 工作日志记录 {log_count} 条\n"
                 f"• 完成待办事项 {completed_todos} 项\n"
-                f"新的一周祝工作顺利！"
+                "新的一周祝工作顺利！"
             )
 
             user_ids = [row[0] for row in db.query(User.id).filter(User.is_active == True).all()]  # noqa: E712

@@ -254,7 +254,7 @@ class QueryOptimizer:
             slow_queries = []
             logger.info("慢查询分析功能仅支持PostgreSQL和MySQL")
             return slow_queries
-        except Exception as e:
+        except Exception:
             logger.error("分析慢查询失败", exc_info=True)
             return []
 
@@ -296,10 +296,9 @@ class QueryOptimizer:
 
                     if not exists:
                         # 创建索引（使用验证过的安全名称）
-                        columns_str = ", ".join(columns)
                         create_sql = text(f"""
                             CREATE INDEX {index_name}
-                            ON {table_name} ({columns_str})
+                            ON {table_name} ({', '.join(columns)})
                             """)
                         db.execute(create_sql)
                         logger.info("创建索引成功: %s", index_name)
@@ -311,7 +310,7 @@ class QueryOptimizer:
 
             db.commit()  # noqa — DDL 操作，safe_commit 不适用于 PRAGMA/CREATE INDEX
 
-        except Exception as e:
+        except Exception:
             db.rollback()
             logger.error("索引创建失败", exc_info=True)
         finally:
@@ -336,7 +335,7 @@ class QueryOptimizer:
 
             db.commit()  # noqa — PRAGMA 操作，safe_commit 不适用于 SQLite PRAGMA
 
-        except Exception as e:
+        except Exception:
             logger.error("查询缓存优化失败", exc_info=True)
         finally:
             db.close()
@@ -348,7 +347,7 @@ class QueryOptimizer:
         try:
             db.execute(text("VACUUM"))
             db.commit()  # noqa — VACUUM 操作，safe_commit 不适用于 DDL
-        except Exception as e:
+        except Exception:
             logger.error("❌ 数据库清理失败", exc_info=True)
         finally:
             db.close()
@@ -361,7 +360,7 @@ class QueryOptimizer:
             db.execute(text("ANALYZE"))
             db.commit()  # noqa — ANALYZE 操作，safe_commit 不适用于 DDL
             logger.info("✅ 表统计信息分析完成")
-        except Exception as e:
+        except Exception:
             logger.error("❌ 表统计信息分析失败", exc_info=True)
         finally:
             db.close()
@@ -400,7 +399,7 @@ class QueryOptimizer:
                 )
 
             return indexes
-        except Exception as e:
+        except Exception:
             logger.error("获取索引统计失败", exc_info=True)
             return []
 
@@ -449,7 +448,7 @@ class QueryOptimizer:
                     )
 
             return missing
-        except Exception as e:
+        except Exception:
             logger.error("检查缺失索引失败", exc_info=True)
             return []
         finally:
@@ -493,7 +492,7 @@ class QueryOptimizer:
                     count_result = db.execute(
                         text(f"SELECT COUNT(*) FROM [{table_name}]"))  # nosec B608
                     row_count = count_result.scalar()
-                except Exception as e:
+                except Exception:
                     row_count = 0
 
                 tables.append(
@@ -505,7 +504,7 @@ class QueryOptimizer:
                 )
 
             return tables
-        except Exception as e:
+        except Exception:
             logger.error("获取表大小失败", exc_info=True)
             return []
         finally:
@@ -537,7 +536,7 @@ class QueryOptimizer:
             db.execute(text(f"REINDEX {table_name}"))
             db.commit()  # noqa — REINDEX 操作，safe_commit 不适用于 DDL
             return True
-        except Exception as e:
+        except Exception:
             logger.error("表 %s 优化失败", table_name, exc_info=True)
             return False
         finally:

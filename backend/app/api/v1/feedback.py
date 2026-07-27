@@ -136,7 +136,7 @@ async def submit_feedback(
 
     try:
         write_work_log(db, "feedback", "submit", feedback.id, f"提交反馈: {category}",
-                      user_name=username or "匿名")
+                         user_name=username or "匿名")
     except Exception:
         logger.debug("记录工作日志失败")
 

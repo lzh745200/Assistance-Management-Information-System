@@ -542,7 +542,7 @@ def _transition_status(
     for k, v in kwargs.items():
         if hasattr(fund, k):
             setattr(fund, k, v)
-        else:  # pragma: no cover —— 全部调用方仅传 Fund 已有字段（approved_by/allocation_date/start_date/end_date/audit_date），防御分支不可达
+        else:  # noqa: E501 —— 全部调用方仅传 Fund 已有字段（approved_by/allocation_date/start_date/end_date/audit_date），防御分支不可达
             logger.warning("_transition_status: skipping unknown field '%s' on Fund(id=%d)", k, fund.id)
     safe_commit(db)
 
@@ -917,7 +917,7 @@ async def preview_fund_attachment(
 
     # 图片、PDF、文本等可内联预览的类型使用 inline 模式
     inline_types = (
-        "image/", "application/pdf", "text/",
+        "image/", "application/pd", "text/",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )

@@ -246,7 +246,7 @@ async def mark_all_as_read(
     """标记所有消息为已读"""
     count = service.mark_all_as_read(current_user.id, message_type)
     try:
-        write_work_log(service.db, "message", "mark_all_read", 0, f"标记全部已读",
+        write_work_log(service.db, "message", "mark_all_read", 0, "标记全部已读",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
         pass

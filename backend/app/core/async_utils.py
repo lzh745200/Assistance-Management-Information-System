@@ -106,7 +106,7 @@ def fire_and_forget(coro: Coroutine) -> None:
     async def _wrapper() -> None:
         try:
             await coro
-        except Exception as e:
+        except Exception:
             logger.warning("Background task failed", exc_info=True)
 
     try:
@@ -116,7 +116,7 @@ def fire_and_forget(coro: Coroutine) -> None:
         # No running event loop – fall back to asyncio.run()
         try:
             asyncio.run(_wrapper())
-        except Exception as e:
+        except Exception:
             logger.warning("Background task (sync fallback) failed", exc_info=True)
 
 

@@ -10,8 +10,8 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.models.policy import Policy
-from app.schemas.policy import (
 from app.core.transaction import safe_commit
+from app.schemas.policy import (
     CATEGORY_NAMES,
     LOCAL_LEVEL_NAMES,
     MILITARY_LEVEL_NAMES,

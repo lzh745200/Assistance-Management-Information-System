@@ -14,8 +14,8 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.approval import (
 from app.core.transaction import safe_commit
+from app.models.approval import (
     ApprovalAction,
     ApprovalNode,
     ApprovalRecord,
@@ -221,7 +221,7 @@ class ApprovalWorkflowService:
             safe_commit(self.db)
         except ImportError:
             logger.warning("消息模块不可用，跳过审批推送")
-        except Exception as e:
+        except Exception:
             self.db.rollback()
             logger.warning("审批消息推送失败（非致命）", exc_info=True)
 

@@ -10,7 +10,7 @@
     file_info = await save_upload_file(
         file=upload_file,
         sub_dir="funds/123",
-        allowed_extensions=["pdf", "doc", "docx"],
+        allowed_extensions=["pd", "doc", "docx"],
     )
     # file_info = {"file_name": ..., "file_path": ..., "file_size": ..., "file_type": ...}
 
@@ -34,8 +34,8 @@ logger = logging.getLogger(__name__)
 
 # ── 默认允许的文件扩展名 ──
 DEFAULT_ALLOWED_EXTENSIONS: Set[str] = {
-    "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx",
-    "txt", "zip", "rar", "jpg", "jpeg", "png", "gif", "bmp",
+    "pd", "doc", "docx", "ppt", "pptx", "xls", "xlsx",
+    "txt", "zip", "rar", "jpg", "jpeg", "png", "gi", "bmp",
 }
 
 

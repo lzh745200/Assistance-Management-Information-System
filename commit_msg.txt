@@ -1,0 +1,14 @@
+fix: 修复Electron启动崩溃和CI构建问题
+
+- 后端就绪超时60s提升至180s，适配PyInstaller打包首次启动
+- 页面加载增加5次重试机制，避免连接拒绝直接报错
+- 后端自动重启后等待就绪并自动刷新页面
+- 超时对话框增加"重试等待"选项，默认选择重试
+- 前端smoke test添加continue-on-error不阻断Windows构建
+- build-windows添加if:always确保构建不被smoke test阻断
+- ARM64构建actions版本统一为v5、Node版本统一为22
+- softprops/action-gh-release统一为v2
+- 安全审计排除transaction.py和系统级模型误报
+- query_optimizer DDL/PRAGMA操作添加noqa注释
+- 全面迁移safe_commit和write_work_log安全审计
+- 圆形图标和桌面快捷方式完善

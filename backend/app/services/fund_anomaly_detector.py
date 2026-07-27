@@ -222,7 +222,7 @@ def _check_missing_vouchers(db: Session, project_id: int, funds: list) -> List[d
                     "fund_id": fund.id,
                     "anomaly_type": AnomalyType.MISSING_VOUCHER.value,
                     "severity": AnomalySeverity.WARNING.value,
-                    "description": f"经费「{fund.name or fund.id}」已使用 {used:.2f} 万元，" f"但无任何支出明细记录",
+                    "description": f"经费「{fund.name or fund.id}」已使用 {used:.2f} 万元，" "但无任何支出明细记录",
                 }
             )
 

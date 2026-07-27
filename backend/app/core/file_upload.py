@@ -185,7 +185,7 @@ def get_upload_dir(*, settings=None) -> str:
     if settings is None:
         try:
             from app.core.config import settings  # type: ignore[import-untyped]
-        except Exception as e:
+        except Exception:
             settings = None
 
     upload_dir = getattr(settings, "UPLOAD_DIR", "./uploads") if settings else "./uploads"
@@ -221,10 +221,10 @@ def _guess_mime_from_extension(suffix: str) -> str:
         ".jpg": "image/jpeg",
         ".jpeg": "image/jpeg",
         ".png": "image/png",
-        ".gif": "image/gif",
+        ".gi": "image/gif",
         ".webp": "image/webp",
         ".bmp": "image/bmp",
-        ".pdf": "application/pdf",
+        ".pd": "application/pdf",
         ".csv": "text/csv",
         ".txt": "text/plain",
         ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

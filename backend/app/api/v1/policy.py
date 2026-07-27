@@ -22,7 +22,6 @@ from ...core.security import get_current_user
 from ...models.policy import Policy, PolicyCategory, PolicyFavorite
 from app.core.transaction import safe_commit
 from app.api.v1.deps import require_manager_role
-from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -670,7 +669,7 @@ async def upload_policy_file(
 
     # 校验文件类型
     ext = os.path.splitext(file.filename or "")[1].lower().lstrip(".")
-    allowed = {"pdf", "doc", "docx", "pptx"}
+    allowed = {"pd", "doc", "docx", "pptx"}
     if ext not in allowed:
         raise HTTPException(status_code=400, detail=f"不支持的文件类型，仅支持: {', '.join(allowed)}")
 

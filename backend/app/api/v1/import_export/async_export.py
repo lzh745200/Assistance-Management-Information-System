@@ -87,7 +87,7 @@ class ReportExportRequest(BaseModel):
 
     report_type: str = Field(..., description="报表类型")
     format: str = Field("xlsx", description="导出格式")
-    scope: str = Field("self", description="数据范围")
+    scope: str = Field("sel", description="数据范围")
     include_charts: bool = Field(False, description="是否包含图表")
     start_date: Optional[str] = Field(None, description="开始日期")
     end_date: Optional[str] = Field(None, description="结束日期")

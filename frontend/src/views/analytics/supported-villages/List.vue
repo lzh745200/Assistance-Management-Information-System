@@ -405,6 +405,8 @@ async function loadData() {
     pagination.total =
       (response as any)?.data?.total || (response as any)?.total || tableData.value.length
   } catch (error) {
+    tableData.value = []
+    pagination.total = 0
     ElMessage.error('加载数据失败')
   } finally {
     loading.value = false

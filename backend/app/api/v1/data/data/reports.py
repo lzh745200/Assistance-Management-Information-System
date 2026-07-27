@@ -490,7 +490,7 @@ async def update_subscription(
         update_dict = update_data.model_dump(exclude_unset=True)
 
         # 处理JSON字段
-        if "village_ids" in update_dict:  # pragma: no cover —— ReportSubscriptionUpdate schema 未暴露该字段，model_dump 永不包含，分支不可达（模型列保留供未来扩展）
+        if "village_ids" in update_dict:  # noqa: E501 —— ReportSubscriptionUpdate schema 未暴露该字段，model_dump 永不包含，分支不可达（模型列保留供未来扩展）
             update_dict["village_ids"] = json.dumps(update_dict["village_ids"]) if update_dict["village_ids"] else None
         if "include_sections" in update_dict:  # pragma: no cover —— 同上，schema 未暴露该字段
             update_dict["include_sections"] = (

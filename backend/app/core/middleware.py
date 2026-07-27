@@ -29,7 +29,7 @@ class TimingMiddleware(BaseHTTPMiddleware):
             try:
                 from app.core.config import settings
                 self._slow_threshold = getattr(settings, "SLOW_QUERY_THRESHOLD_MS", 200.0)
-            except Exception as e:
+            except Exception:
                 self._slow_threshold = 200.0
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
@@ -89,7 +89,7 @@ def setup_cors(app: FastAPI, settings=None) -> None:
     if settings is None:
         try:
             from app.core.config import settings
-        except Exception as e:
+        except Exception:
             logger.warning("无法加载 CORS 配置，使用默认值")
             settings = None
 

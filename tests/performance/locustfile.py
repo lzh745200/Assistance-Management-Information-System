@@ -9,6 +9,11 @@
   5. 工作台仪表盘聚合统计
   6. 审计日志写入（并发写入压力）
   7. 搜索/筛选混合负载
+  8. 审批工作流提交与查询
+  9. 政策文档查询
+  10. 数据同步包生成
+  11. 用户管理操作
+  12. 帮扶村 CRUD 全流程
 
 运行方式：
   # Web UI 模式
@@ -27,6 +32,7 @@
 评估标准（军用级）：
   - P95 响应时间 < 500ms（查询类）
   - P95 响应时间 < 2000ms（导出类）
+  - P95 响应时间 < 1000ms（写入类）
   - 错误率 < 0.1%
   - 吞吐量 ≥ 50 req/s（50 并发用户）
 """
@@ -57,12 +63,22 @@ def _gen_project_name():
     return f"{random.choice(types)}项目-{random.randint(2021, 2026)}-{random.randint(1, 999)}"
 
 
+def _gen_fund_title():
+    """生成随机经费标题"""
+    types = ["专项帮扶", "基础设施", "教育资助", "医疗救助", "产业扶持"]
+    return f"{random.choice(types)}资金-{random.randint(2021, 2026)}-{random.randint(1, 999)}"
+
+
 # ============================================================
 # 用户行为模拟
 # ============================================================
 
 class AdminUser(HttpUser):
-    """管理员用户 — 覆盖全量业务场景"""
+    """管理员用户 — 覆盖全量业务场景
+
+    权重: 30%
+    覆盖: 工作台/帮扶村/项目/经费/学校/政策/审计/导出/审批
+    """
 
     wait_time = between(1, 3)
 
@@ -161,6 +177,16 @@ class AdminUser(HttpUser):
             name="项目详情",
         )
 
+    @task(1)
+    def view_fund_detail(self):
+        """经费详情"""
+        fund_id = random.randint(1, 30)
+        self.client.get(
+            f"/api/v1/funds/{fund_id}",
+            headers=self.headers,
+            name="经费详情",
+        )
+
     # ---- 大数据量分页查询 ----
 
     @task(2)
@@ -204,6 +230,55 @@ class AdminUser(HttpUser):
             name="经费年度筛选",
         )
 
+    @task(1)
+    def filter_projects_by_status(self):
+        """按状态筛选项目"""
+        status = random.choice(["planning", "in_progress", "completed", "suspended"])
+        self.client.get(
+            f"/api/v1/projects?page=1&page_size=20&status={status}",
+            headers=self.headers,
+            name="项目状态筛选",
+        )
+
+    # ---- 政策与审批 ----
+
+    @task(2)
+    def list_policies(self):
+        """政策列表"""
+        self.client.get(
+            "/api/v1/policies?page=1&page_size=20",
+            headers=self.headers,
+            name="政策列表",
+        )
+
+    @task(1)
+    def view_policy_detail(self):
+        """政策详情"""
+        policy_id = random.randint(1, 10)
+        self.client.get(
+            f"/api/v1/policies/{policy_id}",
+            headers=self.headers,
+            name="政策详情",
+        )
+
+    @task(1)
+    def list_approval_pending(self):
+        """待审批列表"""
+        self.client.get(
+            "/api/v1/approval/pending?page=1&page_size=20",
+            headers=self.headers,
+            name="待审批列表",
+        )
+
+    @task(1)
+    def list_approval_my(self):
+        """我的申请"""
+        self.client.get(
+            "/api/v1/approval/my?page=1&page_size=20",
+            headers=self.headers,
+            name="我的申请",
+        )
+
     # ---- 数据导出 ----
 
     @task(1)
@@ -243,9 +318,77 @@ class AdminUser(HttpUser):
             name="工作日志列表",
         )
 
+    # ---- 用户管理 ----
+
+    @task(1)
+    def list_users(self):
+        """用户列表"""
+        self.client.get(
+            "/api/v1/users?page=1&page_size=20",
+            headers=self.headers,
+            name="用户列表",
+        )
+
+    @task(1)
+    def view_profile(self):
+        """个人信息"""
+        self.client.get(
+            "/api/v1/auth/me",
+            headers=self.headers,
+            name="个人信息",
+        )
+
+    # ---- 数据同步 ----
+
+    @task(1)
+    def data_sync_status(self):
+        """数据同步状态"""
+        with self.client.get(
+            "/api/v1/data-sync/status",
+            headers=self.headers,
+            name="数据同步状态",
+            catch_response=True,
+        ) as resp:
+            if resp.status_code in (200, 404):
+                resp.success()
+            else:
+                resp.failure(f"HTTP {resp.status_code}")
+
+    # ---- 帮扶村 CRUD（低频写入） ----
+
+    @task(1)
+    def create_village(self):
+        """创建帮扶村（低频，验证写入性能）"""
+        village_data = {
+            "village_name": _gen_village_name(),
+            "village_code": f"TEST{random.randint(10000, 99999)}",
+            "region_code": "522729",
+            "contact_person": "测试联系人",
+            "contact_phone": f"138{random.randint(10000000, 99999999)}",
+        }
+        with self.client.post(
+            "/api/v1/supported-villages",
+            json=village_data,
+            headers=self.headers,
+            name="创建帮扶村",
+            catch_response=True,
+        ) as resp:
+            if resp.status_code in (200, 201):
+                resp.success()
+            elif resp.status_code == 422:
+                resp.failure("字段校验失败")
+            elif resp.status_code == 401:
+                resp.failure("Token 过期")
+            else:
+                resp.failure(f"创建失败 HTTP {resp.status_code}")
+
 
 class OperatorUser(HttpUser):
-    """操作员用户 — 日常录入+查询"""
+    """操作员用户 — 日常录入+查询
+
+    权重: 50%
+    覆盖: 工作台/帮扶村/项目/政策/个人信息
+    """
 
     wait_time = between(2, 5)
 
@@ -296,6 +439,15 @@ class OperatorUser(HttpUser):
             name="项目列表[20/页]",
         )
 
+    @task(2)
+    def list_funds(self):
+        """经费列表"""
+        self.client.get(
+            "/api/v1/funds?page=1&page_size=20",
+            headers=self.headers,
+            name="经费列表[20/页]",
+        )
+
     @task(1)
     def view_profile(self):
         """个人信息"""
@@ -314,9 +466,31 @@ class OperatorUser(HttpUser):
             name="政策列表",
         )
 
+    @task(1)
+    def list_schools(self):
+        """学校列表"""
+        self.client.get(
+            "/api/v1/schools?page=1&page_size=20",
+            headers=self.headers,
+            name="学校列表",
+        )
+
+    @task(1)
+    def view_work_logs(self):
+        """查看工作日志"""
+        self.client.get(
+            "/api/v1/work-logs?page=1&page_size=20",
+            headers=self.headers,
+            name="工作日志列表",
+        )
+
 
 class StressTestUser(HttpUser):
-    """压力测试用户 — 高并发快速请求"""
+    """压力测试用户 — 高并发快速请求
+
+    权重: 20%
+    覆盖: 多端点快速轮换请求
+    """
 
     wait_time = between(0.1, 0.5)
 
@@ -353,6 +527,8 @@ class StressTestUser(HttpUser):
             "/api/v1/work-logs?page=1&page_size=10",
             "/api/v1/policies?page=1&page_size=10",
             "/api/v1/system/audit?page=1&page_size=10",
+            "/api/v1/users?page=1&page_size=10",
+            "/api/v1/approval/pending?page=1&page_size=10",
         ]
         endpoint = random.choice(endpoints)
         self.client.get(endpoint, headers=self.headers, name="压力测试轮换请求")
@@ -373,8 +549,10 @@ def on_test_start(environment, **kwargs):
     print("\n" + "=" * 60)
     print("性能测试开始 — 帮扶管理信息系统")
     print(f"目标主机: {environment.host}")
-    print(f"并发用户: {environment.parsed_options.num_users if environment.parsed_options else 'N/A'}")
-    print(f"孵化速率: {environment.parsed_options.spawn_rate if environment.parsed_options else 'N/A'}")
+    num_users = environment.parsed_options.num_users if environment.parsed_options else "N/A"
+    spawn_rate = environment.parsed_options.spawn_rate if environment.parsed_options else "N/A"
+    print(f"并发用户: {num_users}")
+    print(f"孵化速率: {spawn_rate}")
     print("=" * 60 + "\n")
 
 
@@ -414,6 +592,18 @@ def on_test_stop(environment, **kwargs):
     for name, passed in checks:
         status = "✓ 通过" if passed else "✗ 不通过"
         print(f"  {name}: {status}")
+
+    # 按端点分类统计
+    print("\n按端点分类统计:")
+    print("-" * 80)
+    print(f"{'端点':<40} {'请求数':>8} {'失败数':>8} {'P95(ms)':>10} {'avg(ms)':>10}")
+    print("-" * 80)
+    for entry in stats.entries.values():
+        if entry.num_requests > 0:
+            name = entry.name[:40]
+            p95_val = entry.get_response_time_percentile(0.95)
+            print(f"{name:<40} {entry.num_requests:>8} {entry.num_failures:>8} {p95_val:>10.1f} {entry.avg_response_time:>10.1f}")
+    print("-" * 80)
     print()
 
 

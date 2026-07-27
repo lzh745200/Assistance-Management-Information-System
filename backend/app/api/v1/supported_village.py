@@ -40,7 +40,6 @@ from app.core.data_scope_adapter import apply_scope_filter
 from app.api.v1.deps import enforce_admin_include_deleted, build_viewable_because
 from app.schemas.supported_village import SupportedVillageCreate, SupportedVillageUpdate
 from app.core.transaction import safe_commit
-from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 

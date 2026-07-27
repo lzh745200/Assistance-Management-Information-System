@@ -379,6 +379,8 @@ async function fetchData() {
     total.value = inner.total || tableData.value.length
   } catch (e) {
     logger.error('加载数据失败:', e)
+    tableData.value = []  // 防御：确保表格数据始终为数组，避免 Element Plus TypeError: e is not iterable
+    total.value = 0
     loadError.value = true
     ElMessage.error('数据加载失败，请稍后重试')
   } finally {

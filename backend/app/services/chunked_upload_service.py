@@ -154,7 +154,7 @@ class ChunkedUploadService:
                 from app.utils.paths import get_uploads_path
 
                 temp_dir = str(get_uploads_path("chunks"))
-            except Exception as e:
+            except Exception:
                 from app.utils.paths import get_uploads_path
 
                 temp_dir = str(get_uploads_path("chunks"))
@@ -163,7 +163,7 @@ class ChunkedUploadService:
                 from app.utils.paths import get_uploads_path
 
                 final_dir = str(get_uploads_path("files"))
-            except Exception as e:
+            except Exception:
                 from app.utils.paths import get_uploads_path
 
                 final_dir = str(get_uploads_path("files"))

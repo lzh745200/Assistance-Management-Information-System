@@ -131,7 +131,7 @@ def _on_connection_close(dbapi_connection: Any, connection_record: Any) -> None:
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA optimize")
         cursor.close()
-    except Exception as e:
+    except Exception:
         # 连接关闭时的优化失败不应影响正常流程
         pass
 
@@ -144,7 +144,7 @@ def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
-    except Exception as e:
+    except Exception:
         db.rollback()
         raise
     finally:

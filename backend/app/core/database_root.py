@@ -32,7 +32,7 @@ def init_database() -> None:
         _db_session_factory = SessionLocal
         _db_url = DATABASE_URL
         logger.info("数据库会话工厂已初始化 (type=%s)", "sqlite" if "sqlite" in (DATABASE_URL or "") else "other")
-    except Exception as e:
+    except Exception:
         logger.exception("数据库初始化失败")
 
 

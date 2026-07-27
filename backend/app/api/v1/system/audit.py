@@ -298,7 +298,7 @@ async def export_audit_logs(  # noqa: C901
                     try:
                         if len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
-                    except Exception as e:  # pragma: no cover — openpyxl 在 append 时已将单元格值规范化为合法类型，str() 不可能再抛异常，此降级分支不可达
+                    except Exception as e:  # noqa: E501 — openpyxl 在 append 时已将单元格值规范化为合法类型，str() 不可能再抛异常，此降级分支不可达
                         logger.debug("Excel 列宽计算跳过单元格: %s", e)
                 adjusted_width = min(max_length + 2, 50)
                 ws.column_dimensions[col_letter].width = adjusted_width

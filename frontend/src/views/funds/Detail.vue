@@ -1111,7 +1111,10 @@ const handleSubmit = async () => {
       await loadFundDetail()
     }
   } catch (error: any) {
-    if (!error?.fields) ElMessage.error('保存失败，请检查输入')
+    if (!error?.fields) {
+      const detail = error?.response?.data?.detail || error?.response?.data?.message || ''
+      ElMessage.error(detail ? `保存失败: ${detail}` : '保存失败，请检查输入')
+    }
   } finally {
     submitting.value = false
   }

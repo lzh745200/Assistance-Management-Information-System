@@ -126,6 +126,8 @@ async function loadData() {
       pagination.total = data.data.total || 0
     }
   } catch (e: any) {
+    tableData.value = []
+    pagination.total = 0
     ElMessage.error('加载反馈列表失败')
   } finally {
     loading.value = false

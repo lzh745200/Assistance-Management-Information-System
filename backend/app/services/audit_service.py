@@ -5,8 +5,8 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
-from app.models.audit import (
 from app.core.transaction import safe_commit
+from app.models.audit import (
     APIAccessLog,
     AuditAction,
     AuditLevel,

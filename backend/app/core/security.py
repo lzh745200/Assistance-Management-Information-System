@@ -273,7 +273,7 @@ def decode_token_with_machine_code(
         token_mc = payload.get("machine_code")
         if token_mc and token_mc != expected_machine_code:
             raise ValueError(
-                f"Token 设备绑定校验失败: "
+                "Token 设备绑定校验失败: "
                 f"期望 {expected_machine_code[:12]}..., "
                 f"实际 {token_mc[:12]}..."
             )

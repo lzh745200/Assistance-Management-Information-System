@@ -20,7 +20,6 @@ from app.core.permission_utils import is_superuser
 from app.services.user_permission_service import UserPermissionService
 from app.core.error_handler import BusinessLogicError
 from app.core.cache import cache_result
-from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 

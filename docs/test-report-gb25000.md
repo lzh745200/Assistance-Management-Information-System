@@ -390,7 +390,7 @@ python tests/stability/run_stability_test.py --duration 7d --interval 60s
 cd backend && python -m pytest tests/../tests/stability/test_wal_recovery.py -v
 
 # 代码覆盖率
-cd backend && python -m pytest tests/ --cov=app --cov-report=html --cov-fail-under=90
+cd backend && python -m pytest tests/ --cov=app --cov-report=html --cov-fail-under=98
 
 # 安全扫描
 cd backend && python -m bandit -r app/ -ll

@@ -133,7 +133,7 @@ class VillageCascadeDeleteService:
                 if count > 0:
                     reference_stats[table_name] = count
                     total_refs += count
-            except Exception as e:
+            except Exception:
                 # 表可能不存在,忽略
                 pass
 

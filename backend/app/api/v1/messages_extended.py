@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.api.v1.deps import get_current_active_user, get_db
 from app.models.user import User
 from app.services.message_service import MessageService
+from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/messages-extended", tags=["消息系统"])
 
@@ -53,7 +54,6 @@ async def send_message(
         pass
 
     return {"message_id": message.id, "created_at": message.created_at.isoformat()}
-
 
 
 @router.get("/unread-count")
@@ -118,7 +118,7 @@ async def mark_as_read(
         raise HTTPException(status_code=404, detail="消息不存在")
 
     try:
-        write_work_log(db, "message", "mark_read", message_id, f"标记消息已读",
+        write_work_log(db, "message", "mark_read", message_id, "标记消息已读",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
         pass
@@ -131,7 +131,7 @@ async def mark_all_as_read(current_user: User = Depends(get_current_active_user)
     service = MessageService(db)
     count = service.mark_all_as_read(user_id=current_user.id)
     try:
-        write_work_log(db, "message", "mark_all_read", 0, f"标记全部已读",
+        write_work_log(db, "message", "mark_all_read", 0, "标记全部已读",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
         pass
@@ -152,7 +152,7 @@ async def delete_message(
         raise HTTPException(status_code=404, detail="消息不存在")
 
     try:
-        write_work_log(db, "message", "delete", message_id, f"删除消息",
+        write_work_log(db, "message", "delete", message_id, "删除消息",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
         pass

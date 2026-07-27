@@ -66,7 +66,7 @@ class MachineCodeService:
                         _,
                     )
                 )
-            except Exception as e:
+            except Exception:
                 procs.append((None, _))
 
         info = []
@@ -78,10 +78,10 @@ class MachineCodeService:
                 val = stdout.strip().split("\n")[-1].strip()
                 if val and val != skip_val:
                     info.append(val)
-            except Exception as e:
+            except Exception:
                 try:
                     proc.kill()
-                except Exception as e:
+                except Exception:
                     logger.debug("终止机器信息采集进程失败")
         return info
 
@@ -91,7 +91,7 @@ class MachineCodeService:
             return ":".join(
                 ["{:02x}".format((uuid.getnode() >> elements) & 0xFF) for elements in range(0, 2 * 6, 2)][::-1]
             )
-        except Exception as e:
+        except Exception:
             logger.debug("获取 MAC 地址失败")
             return None
 
@@ -100,7 +100,7 @@ class MachineCodeService:
         try:
             name = platform.node()
             return name if name else None
-        except Exception as e:
+        except Exception:
             logger.debug("获取计算机名失败")
             return None
 
@@ -229,7 +229,7 @@ class MachineCodeService:
                 )
                 cpu_name = result.stdout.strip().split("\n")[-1].strip()
                 info["cpu_name"] = cpu_name
-            except Exception as e:
+            except Exception:
                 logger.debug("获取 CPU 信息失败")
 
             try:
@@ -246,7 +246,7 @@ class MachineCodeService:
                 if memory:
                     memory_gb = int(memory) / (1024**3)
                     info["memory_gb"] = round(memory_gb, 2)
-            except Exception as e:
+            except Exception:
                 logger.debug("获取内存信息失败")
 
         return info

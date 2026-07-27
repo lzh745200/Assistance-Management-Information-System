@@ -22,14 +22,14 @@ def ensure_fts_table(db: Session) -> None:
     )).fetchone()
     if result:
         return
-    db.execute(text(f"""
+    db.execute(text("""
         CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE}
         USING fts5(title, content, summary, keywords,
                    content='policies', content_rowid='id',
                    tokenize='unicode61')
     """))  # nosec B608
     # 同步已有数据
-    db.execute(text(f"""
+    db.execute(text("""
         INSERT INTO {FTS_TABLE}(rowid, title, content, summary, keywords)
         SELECT id, title, content, summary, keywords FROM policies
     """))  # nosec B608
@@ -63,7 +63,7 @@ def search_policies_fts(
     sanitized = query.strip().replace('"', '""')
     fts_query = f'"{sanitized}"' if " " in sanitized else sanitized
 
-    sql = f"""
+    sql = """
         SELECT p.id, p.title, p.summary, p.keywords, p.level, p.category,
                snippet({FTS_TABLE}, 1, '<mark>', '</mark>', '...', 32) AS snippet,
                bm25({FTS_TABLE}, 0.0, 10.0, 5.0) AS rank

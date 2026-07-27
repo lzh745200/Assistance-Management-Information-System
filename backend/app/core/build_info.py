@@ -15,7 +15,7 @@ def _load() -> dict:
 
         try:
             return json.loads(_BUILD_INFO_FILE.read_text(encoding="utf-8"))
-        except Exception as e:
+        except Exception:
             pass
     return {}
 
@@ -42,7 +42,7 @@ def get_build_info() -> dict:
                 .decode()
                 .strip()
             )
-        except Exception as e:
+        except Exception:
             pass
         info = {
             "git_hash": git_hash,

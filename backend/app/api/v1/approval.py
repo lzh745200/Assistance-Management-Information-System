@@ -37,7 +37,6 @@ from app.models.message import Message
 from app.models.user import User
 from app.services.approval_workflow_service import ApprovalWorkflowService
 from app.core.transaction import safe_commit
-from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -652,7 +651,7 @@ def batch_approve(
     }
 
 
-@router.get("/tasks/{task_id}/diff", summary="变更对比")
+@router.get("/tasks/{task_id}/dif", summary="变更对比")
 def get_task_diff(
     task_id: int,
     db: Session = Depends(get_db),

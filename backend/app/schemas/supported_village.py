@@ -157,7 +157,7 @@ class ReportSubscriptionCreate(BaseModel):
     send_time: Optional[str] = Field(None, max_length=10, description="发送时间")
     email: Optional[str] = Field(None, max_length=100, description="接收邮箱（单机版保留兼容）")
     output_dir: Optional[str] = Field(None, max_length=500, description="本地输出目录（单机版）")
-    output_format: str = Field("pdf", description="输出格式: pdf/excel")
+    output_format: str = Field("pd", description="输出格式: pdf/excel")
 
 
 class ReportSubscriptionUpdate(BaseModel):

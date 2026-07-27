@@ -22,7 +22,6 @@ from app.schemas.permission_package import (
     PermissionPackageImportResult,
 )
 from app.services.permission_package_service import PermissionPackageService
-from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 

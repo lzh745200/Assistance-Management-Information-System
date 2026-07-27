@@ -63,7 +63,7 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
-fail_under = 90  # 提升至 90% 覆盖率门禁（与 CI --cov-fail-under=90 保持一致）
+fail_under = 98  # 提升至 98% 覆盖率门禁（与 CI --cov-fail-under=98 保持一致）
 
 exclude_lines = [
     "pragma: no cover",

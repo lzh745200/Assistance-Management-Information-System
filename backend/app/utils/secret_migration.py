@@ -151,7 +151,7 @@ class SecretMigration:
 
             return True
 
-        except Exception as e:
+        except Exception:
             logger = logging.getLogger(__name__)
             logger.error("密钥迁移验证失败", exc_info=True)
             return False

@@ -122,9 +122,9 @@ All routes use lazy loading: `component: () => import('@/views/xxx/List.vue')`
 
 ### Backend Coverage
 
-- Minimum: 90% (CI gate via `--cov-fail-under=90`)
-- Local target: 90% (Makefile)
-- Nightly: 90% (`.github/workflows/nightly-full.yml`)
+- Minimum: 98% (CI gate via `--cov-fail-under=98`)
+- Local target: 98% (Makefile)
+- Nightly: 98% (`.github/workflows/nightly-full.yml`)
 - Test env vars: `ENVIRONMENT=test`, `SECRET_KEY=test-secret-key-for-ci`
 
 ### Frontend Coverage

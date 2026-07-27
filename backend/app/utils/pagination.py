@@ -126,7 +126,7 @@ def keyset_paginate(
     # 兼容 ORM 对象和标量查询
     try:
         items = result.scalars().unique().all()
-    except Exception as e:
+    except Exception:
         items = result.all()
 
     # 5. 判断是否有下一页并截断

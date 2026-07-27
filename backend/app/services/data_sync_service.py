@@ -203,7 +203,7 @@ class DataSyncService:
             # 构建查询（表名已在调用处通过 syncable_tables 白名单验证）
             safe_table = self._validate_table_name(table_name)
             if since:
-                query = text(f"""
+                query = text("""
                     SELECT * FROM {safe_table}
                     WHERE updated_at > :since OR created_at > :since
                     ORDER BY id
@@ -876,7 +876,7 @@ class DataSyncService:
 
                 # 如果导入的记录更新，则更新
                 return imported_time > existing_time
-            except Exception as e:
+            except Exception:
                 logger.debug("数据同步更新比较失败")
 
         # 默认不更新

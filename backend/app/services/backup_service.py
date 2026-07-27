@@ -165,7 +165,7 @@ class BackupService:
         fernet = Fernet(key)
         try:
             plaintext = fernet.decrypt(encrypted)
-        except Exception as e:
+        except Exception:
             raise ValueError("密码错误或备份文件已损坏") from None
 
         # 写入临时文件（保留原始加密备份不受影响）
@@ -802,7 +802,7 @@ class BackupService:
                 try:
                     backup_info_data = zipf.read("backup_info.json")
                     backup_info = json.loads(backup_info_data)
-                except Exception as e:
+                except Exception:
                     backup_info = None
 
                 # 获取文件列表

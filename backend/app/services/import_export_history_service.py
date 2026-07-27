@@ -56,7 +56,7 @@ class ImportExportHistoryService:
         try:
             safe_commit(self.db)
             self.db.refresh(record)
-        except Exception as e:
+        except Exception:
             self.db.rollback()
             raise
         return record

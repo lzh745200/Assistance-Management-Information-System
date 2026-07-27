@@ -45,7 +45,7 @@ class VersionService:
                 )
             finally:
                 db.close()
-        except Exception as e:
+        except Exception:
             logger.warning("记录更新日志到数据库失败", exc_info=True)
 
     def _load_current_version(self) -> Dict:

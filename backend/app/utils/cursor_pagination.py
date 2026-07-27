@@ -74,7 +74,7 @@ class CursorData:
                 sort_field=data["sf"],
                 direction=data.get("d", "next"),
             )
-        except Exception as e:
+        except Exception:
             logger.warning("游标解析失败", exc_info=True)
             return None
 

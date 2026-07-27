@@ -14,7 +14,6 @@ from app.core.database import get_db
 from app.core.response import success_response
 from app.core.security import get_current_user
 from app.services.ai_service import ai_service_manager
-from app.services.work_log_service import write_work_log
 
 router = APIRouter(prefix="/ai", tags=["AI智能分析"])
 

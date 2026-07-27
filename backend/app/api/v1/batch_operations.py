@@ -10,7 +10,6 @@ from app.core.permission_utils import require_admin
 from app.core.security import get_current_user
 from app.models.user import User
 from app.services.batch_service import batch_service, TABLE_MODEL_MAP
-from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
