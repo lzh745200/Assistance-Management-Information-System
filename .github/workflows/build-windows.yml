@@ -40,8 +40,8 @@ jobs:
         run: |
           cd frontend
           npm ci --legacy-peer-deps --prefer-offline || npm install --legacy-peer-deps
-          npx vue-tsc --noEmit
-          npx vitest run
+          npx vue-tsc --noEmit 2>&1
+          npx vitest run 2>&1
 
   build-windows:
     needs: smoke-test
@@ -84,7 +84,9 @@ jobs:
         run: |
           cd frontend
           npm ci --legacy-peer-deps --prefer-offline || npm install --legacy-peer-deps
-          npm run build
+          # 2>&1 将 stderr 重定向到 stdout，避免 GitHub Actions 在 Windows 上
+          # 将 Vite/Rollup 的进度输出误判为错误并产生 false annotation
+          npm run build 2>&1
 
       - name: Sync frontend to resources
         shell: pwsh

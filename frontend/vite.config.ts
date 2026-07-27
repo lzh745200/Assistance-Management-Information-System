@@ -244,6 +244,17 @@ export default defineConfig(({ mode }) => {
         }
       },
       rollupOptions: {
+        // 抑制 @vueuse/core 中 /* #__PURE__ */ 注释位置导致的 Rollup 警告
+        // 该警告不影响功能，注释会被自动移除
+        onwarn(warning, defaultHandler) {
+          if (
+            warning.code === 'INVALID_ANNOTATION' ||
+            (warning.message && warning.message.includes('annotation that Rollup cannot interpret'))
+          ) {
+            return  // 跳过此警告
+          }
+          defaultHandler(warning)
+        },
         output: {
           // 代码分割策略 - 优化后的分割逻辑
           manualChunks: (id) => {

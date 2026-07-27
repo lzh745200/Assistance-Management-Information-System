@@ -38,10 +38,10 @@ jobs:
       - run: |
           cd frontend
           npm install --legacy-peer-deps
-      - run: cd frontend && npx vue-tsc --noEmit
-      - run: cd frontend && npm run lint
-      # 前端测试带覆盖率报告（vitest run --coverage）
-      - run: cd frontend && npx vitest run --coverage
+- run: cd frontend && npx vue-tsc --noEmit 2>&1
+- run: cd frontend && npm run lint 2>&1
+# 前端测试带覆盖率报告（vitest run --coverage）
+- run: cd frontend && npx vitest run --coverage 2>&1
       # 上传覆盖率到 Codecov
       - uses: codecov/codecov-action@v4
         with:
@@ -112,7 +112,7 @@ jobs:
       # 前端静态分析：检查 Pattern A（import request from './request'）残留
       - name: Frontend API pattern audit
         run: |
-          cd frontend && npx vue-tsc --noEmit && echo 'TypeScript check passed'
+          cd frontend && npx vue-tsc --noEmit 2>&1 && echo 'TypeScript check passed'
       # 检查前端 API 调用是否使用具名导入
       - name: Frontend import pattern audit
         run: |

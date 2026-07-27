@@ -61,9 +61,9 @@ jobs:
         run: |
           npm install --legacy-peer-deps --no-fund --no-audit
 
-      - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
+- name: Build frontend
+  working-directory: ./frontend
+  run: npm run build 2>&1  # 重定向 stderr 避免 GitHub Actions false annotation
 
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
