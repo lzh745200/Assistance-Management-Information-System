@@ -338,8 +338,10 @@ class TestCreateOrganization:
             "name": "新组织", "org_type": "department", "level": "level_2",
         })
         assert resp.status_code == 200
-        mock_db.add.assert_called_once()
-        mock_db.commit.assert_called_once()
+        # write_work_log 成功时会额外 add WorkLog
+        assert mock_db.add.call_count >= 1
+        # safe_commit + write_work_log 可能导致多次 commit
+        assert mock_db.commit.call_count >= 1
 
     def test_duplicate_code(self, client_admin, mock_db):
         mock_db.query.return_value.first.return_value = _make_mock_org(1)
