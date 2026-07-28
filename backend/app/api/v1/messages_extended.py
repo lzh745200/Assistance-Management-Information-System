@@ -2,6 +2,7 @@
 消息系统API
 """
 
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,6 +13,8 @@ from app.api.v1.deps import get_current_active_user, get_db
 from app.models.user import User
 from app.services.message_service import MessageService
 from app.services.work_log_service import write_work_log
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/messages-extended", tags=["消息系统"])
 
@@ -51,7 +54,7 @@ async def send_message(
         write_work_log(db, "message", "send", message.id, f"发送消息: {request.title}",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
-        pass
+        logger.debug("记录工作日志失败", exc_info=True)
 
     return {"message_id": message.id, "created_at": message.created_at.isoformat()}
 
@@ -121,7 +124,7 @@ async def mark_as_read(
         write_work_log(db, "message", "mark_read", message_id, "标记消息已读",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
-        pass
+        logger.debug("记录工作日志失败", exc_info=True)
     return {"message": "已标记为已读"}
 
 
@@ -134,7 +137,7 @@ async def mark_all_as_read(current_user: User = Depends(get_current_active_user)
         write_work_log(db, "message", "mark_all_read", 0, "标记全部已读",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
-        pass
+        logger.debug("记录工作日志失败", exc_info=True)
     return {"marked_count": count}
 
 
@@ -155,5 +158,5 @@ async def delete_message(
         write_work_log(db, "message", "delete", message_id, "删除消息",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
-        pass
+        logger.debug("记录工作日志失败", exc_info=True)
     return {"message": "消息已删除"}

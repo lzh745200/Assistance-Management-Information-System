@@ -3,8 +3,11 @@
 开发环境下使用默认值（dev），CI 构建时由 generate_build_info.py 脚本覆写。
 """
 
+import logging
 import subprocess
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 _BUILD_INFO_FILE = Path(__file__).with_name("_build_info.json")
 
@@ -16,7 +19,7 @@ def _load() -> dict:
         try:
             return json.loads(_BUILD_INFO_FILE.read_text(encoding="utf-8"))
         except Exception:
-            pass
+            logger.debug("读取构建信息文件失败", exc_info=True)
     return {}
 
 
@@ -43,7 +46,7 @@ def get_build_info() -> dict:
                 .strip()
             )
         except Exception:
-            pass
+            logger.debug("获取git hash失败", exc_info=True)
         info = {
             "git_hash": git_hash,
             "build_time": None,

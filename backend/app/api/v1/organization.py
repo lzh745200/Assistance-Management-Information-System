@@ -410,7 +410,7 @@ async def create_organization(
         write_work_log(db, "organization", "create", org.id, f"创建组织: {org.name}",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
-        pass
+        logger.debug("记录工作日志失败", exc_info=True)
     await cache_manager.delete("orgs:list")
     return org
 
@@ -461,7 +461,7 @@ async def update_organization(
         write_work_log(db, "organization", "update", org.id, f"更新组织: {org.name}",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
-        pass
+        logger.debug("记录工作日志失败", exc_info=True)
     await cache_manager.delete("orgs:list")
     return org
 
@@ -517,7 +517,7 @@ async def delete_organization(
         write_work_log(db, "organization", "delete", org_id, f"删除组织: {org.name}",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
-        pass
+        logger.debug("记录工作日志失败", exc_info=True)
     logger.info(f"删除成功: org_id={org_id}")
     await cache_manager.delete("orgs:list")
 
