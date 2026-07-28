@@ -85,7 +85,8 @@ class TestCreateTodo:
         resp = client.post("/todos", json={"title": "新待办", "priority": "high"})
         # In test environment, response may be 200 if model validates
         assert resp.status_code in (200, 500)
-        mock_db.add.assert_called_once()
+        # db.add 至少调用一次（Todo），write_work_log 成功时会额外 add WorkLog
+        assert mock_db.add.call_count >= 1
 
     def test_error_rolls_back(self, client, mock_db):
         mock_db.commit.side_effect = Exception("commit error")
