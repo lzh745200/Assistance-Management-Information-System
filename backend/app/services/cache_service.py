@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from app.core.cache import cache_manager
 from app.core.config import settings
-from app.core.transaction import safe_commit
+from app.core.transaction import safe_commit  # noqa: F401
 
 logger = logging.getLogger(__name__)
 

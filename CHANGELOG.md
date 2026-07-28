@@ -5,6 +5,15 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布] - 2026-07-28
+
+### 安装包与用户体验修复
+- 🐛 **修复密码重置假失败** — 后端 `machine_code.py` 重置密码后仅返回 `password_file` 路径，前端检查 `new_password` 字段不存在导致提示失败；现已在响应中返回 `new_password`
+- 🎨 **修复图标不圆形** — 原 ICO/PNG 图标四角为不透明深绿色背景（alpha=255），导致安装后图标显示为方形；已用圆形蒙版重新生成透明背景多尺寸 ICO（16/24/32/48/64/128/256）
+- 🖥️ **修复桌面快捷方式** — `createDesktopShortcut` 从 `true` 改为 `"always"`，确保非一键安装模式下也强制创建桌面快捷方式
+- 🔧 **修复 flake8 4 处错误** — E402 导入位置（security.py、main.py）、F401 未使用导入（cache_service.py）、E501 行过长（excel_importer_service.py）
+- 💅 **修复 ESLint prettier 警告** — MyApplications.vue 格式修复
+
 ## [未发布] - 2026-07-23
 
 ### 前后端100%对齐 + 全量类型错误清零

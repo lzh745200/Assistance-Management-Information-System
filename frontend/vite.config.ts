@@ -23,7 +23,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 /**
  * SPA 回退插件 - 确保所有非文件请求都返回 index.html
- * 解决 Vite 7 中 SPA history fallback 不生效的问题
+ * 解决 Vite 5 中 SPA history fallback 不生效的问题
  */
 function spaFallbackPlugin(): PluginOption {
   return {
@@ -295,11 +295,6 @@ export default defineConfig(({ mode }) => {
               return 'chartjs'
             }
 
-            // Leaflet - 地图库，仅在地图页面使用，单独分包
-            if (id.includes('node_modules/leaflet')) {
-              return 'leaflet'
-            }
-
             // SortableJS - 拖拽库，单独分包
             if (id.includes('node_modules/sortablejs')) {
               return 'sortable'
@@ -312,12 +307,6 @@ export default defineConfig(({ mode }) => {
 
             // 日期处理 - 合并到vendor避免空chunk
             // dayjs 如果未被直接使用会产生空chunk，合并到vendor
-
-            // Lodash 工具函数
-            if (id.includes('node_modules/lodash-es')) {
-              return 'lodash'
-            }
-
 
             // 安全相关
             if (id.includes('node_modules/dompurify')) {
@@ -393,7 +382,6 @@ export default defineConfig(({ mode }) => {
         'pinia',
         'axios',
         'dayjs',
-        'lodash-es',
       ],
       // 排除不需要预构建的依赖
       exclude: [

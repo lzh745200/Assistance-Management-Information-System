@@ -60,7 +60,7 @@ security:
 	@echo ">>> 运行安全扫描..."
 	cd backend && \
 		python -m bandit -r app/ -f json -o bandit-report.json && \
-		safety check
+		pip-audit -r requirements.txt
 
 # 清理测试产物
 clean:

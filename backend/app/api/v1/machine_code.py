@@ -412,8 +412,8 @@ async def reset_password_with_machine_code(
         logger.info("用户 %s 密码已通过机器码验证重置，新密码已写入临时文件: %s", username, tmp_path)
         return {
             "code": 200,
-            "data": {"username": username, "password_file": tmp_path},
-            "message": "密码已重置，新密码已写入临时文件（仅管理员可读），请首次登录后立即修改",
+            "data": {"username": username, "new_password": new_password, "password_file": tmp_path},
+            "message": "密码已重置，请首次登录后立即修改",
         }
     except HTTPException:
         raise

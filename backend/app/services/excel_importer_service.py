@@ -677,7 +677,11 @@ class ExcelImporterService:
                 for name in self.db.query(School.name).all() if name[0]
             )
         else:
-            query = filter_by_data_scope(self.db.query(School), School, self.current_user, db=self.db) if self.current_user else self.db.query(School)
+            query = (
+                filter_by_data_scope(self.db.query(School), School, self.current_user, db=self.db)
+                if self.current_user
+                else self.db.query(School)
+            )
             query.delete(synchronize_session=False)
 
         for row_idx, row in enumerate(rows, 1):

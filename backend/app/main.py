@@ -156,7 +156,7 @@ except Exception:
 print("  加载路由模块...", flush=True)
 _rt0 = _time.time()
 from app.api.v1 import api_v1_router  # noqa: E402
-from app.core.transaction import safe_commit
+from app.core.transaction import safe_commit  # noqa: E402
 app.include_router(api_v1_router)
 print(f"  路由加载完成 ({_time.time() - _rt0:.1f}s)", flush=True)
 

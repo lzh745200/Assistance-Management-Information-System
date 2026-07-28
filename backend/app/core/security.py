@@ -532,7 +532,7 @@ def validate_session_token(token: str) -> bool:
 # ── 内存速率限制器（slowapi 回退） ──
 import time  # noqa: E402
 import threading  # noqa: E402
-from app.core.transaction import safe_commit
+from app.core.transaction import safe_commit  # noqa: E402
 
 _rate_limit_store: dict[str, list[float]] = {}
 _rate_limit_lock = threading.Lock()

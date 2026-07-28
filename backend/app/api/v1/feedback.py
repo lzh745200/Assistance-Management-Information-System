@@ -135,8 +135,9 @@ async def submit_feedback(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="保存反馈失败")
 
     try:
-        write_work_log(db, "feedback", "submit", feedback.id, f"提交反馈: {category}",
-                         user_name=username or "匿名")
+        write_work_log(
+            db, "feedback", "submit", feedback.id, f"提交反馈: {category}",
+            user_name=username or "匿名")
     except Exception:
         logger.debug("记录工作日志失败")
 

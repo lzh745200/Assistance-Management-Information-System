@@ -175,8 +175,9 @@ async def create_todo(
         db.refresh(todo)
 
         try:
-            write_work_log(db, "todo", "create", todo.id, f"创建待办: {todo.title}",
-                             user_id=current_user.id, username=getattr(current_user, "username", ""))
+            write_work_log(
+                db, "todo", "create", todo.id, f"创建待办: {todo.title}",
+                user_id=current_user.id, username=getattr(current_user, "username", ""))
         except Exception:
             logger.debug("记录工作日志失败")
 
@@ -231,8 +232,9 @@ async def update_todo(
         db.refresh(todo)
 
         try:
-            write_work_log(db, "todo", "update", todo.id, f"更新待办: {todo.title}",
-                             user_id=current_user.id, username=getattr(current_user, "username", ""))
+            write_work_log(
+                db, "todo", "update", todo.id, f"更新待办: {todo.title}",
+                user_id=current_user.id, username=getattr(current_user, "username", ""))
         except Exception:
             logger.debug("记录工作日志失败")
 
@@ -282,8 +284,9 @@ async def delete_todo(
         safe_commit(db)
 
         try:
-            write_work_log(db, "todo", "delete", todo_id, f"删除待办: {todo.title}",
-                             user_id=current_user.id, username=getattr(current_user, "username", ""))
+            write_work_log(
+                db, "todo", "delete", todo_id, f"删除待办: {todo.title}",
+                user_id=current_user.id, username=getattr(current_user, "username", ""))
         except Exception:
             logger.debug("记录工作日志失败")
 

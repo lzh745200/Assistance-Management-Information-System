@@ -321,3 +321,4 @@ add*.txt
 *.db.bak
 logs/app.log.*
 frontend/vitest.config.ts.timestamp-*
+*.bak  

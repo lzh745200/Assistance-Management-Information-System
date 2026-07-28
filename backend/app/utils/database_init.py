@@ -21,7 +21,7 @@ from app.models.base import Base as ModelBase  # noqa: E402
 from app.models.organization import Organization  # noqa: E402
 from app.models.role import BasicRole as Role  # noqa: E402
 from app.models.user import User  # noqa: E402
-from app.core.transaction import safe_commit
+from app.core.transaction import safe_commit  # noqa: E402
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -234,6 +234,7 @@ def init_default_users(db: SessionLocal) -> None:
         logger.info("⚠️  安全提醒：首次登录后立即修改初始口令")
         logger.info("🔐 初始口令已随机生成，仅在控制台一次性展示脱敏提示，不写入日志")
         # 安全提示：仅展示口令前2位和后2位，中间用星号替代（防止旁观者/日志泄露完整口令）
+
         def _mask(pwd: str) -> str:
             if len(pwd) <= 4:
                 return "*" * len(pwd)

@@ -333,6 +333,8 @@ async function loadTableData() {
       tableTotal.value = res.data.total || 0
     }
   } catch (e: any) {
+    tableData.value = []
+    tableTotal.value = 0
     ElMessage.error('加载错误报告列表失败')
   } finally {
     tableLoading.value = false

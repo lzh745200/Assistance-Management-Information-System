@@ -4,9 +4,9 @@
 # ============================================================
 
 # ============================================================
-# 阶段 1: 构建前端 (Node.js 18)
+# 阶段 1: 构建前端 (Node.js 22)
 # ============================================================
-FROM node:18-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
@@ -69,7 +69,7 @@ RUN pyinstaller --name=assistance-backend \
 # ============================================================
 # 阶段 3: 构建 Electron (ARM64 DEB 包)
 # ============================================================
-FROM node:18-alpine AS electron-builder
+FROM node:22-alpine AS electron-builder
 
 # 安装 Electron 构建依赖（Alpine 需要额外包）
 RUN apk add --no-cache \
@@ -160,6 +160,9 @@ RUN pip install --upgrade pip && \
 # 安装 serve（用于托管前端静态文件）
 RUN npm install -g serve
 
+# 创建非 root 用户（安全加固）
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 # 复制后端二进制
 COPY --from=backend-builder /app/backend/dist/assistance-backend /app/backend/
 RUN chmod +x /app/backend/assistance-backend
@@ -168,7 +171,9 @@ RUN chmod +x /app/backend/assistance-backend
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/
 
 # 复制 Electron 构建产物（deb 包）到 /app/electron-dist/（如果存在）
-COPY --from=electron-builder /app/electron/dist/*.deb /app/electron-dist/ 2>/dev/null || true
+RUN mkdir -p /app/electron-dist
+COPY --from=electron-builder /app/electron/dist/ /tmp/electron-dist/
+RUN cp /tmp/electron-dist/*.deb /app/electron-dist/ 2>/dev/null || true && rm -rf /tmp/electron-dist
 
 # 创建启动脚本
 RUN cat > /app/start-services.sh << 'EOF'
@@ -177,7 +182,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "=========================================="
-echo "  帮扶管理信息系统 v1.4.1"
+echo "  帮扶管理信息系统 v1.4.2"
 echo "  正在启动服务..."
 echo "=========================================="
 
@@ -199,7 +204,6 @@ echo "服务已启动！"
 echo "前端地址: http://localhost:3000"
 echo "后端地址: http://localhost:8000"
 echo "API 文档: http://localhost:8000/docs"
-echo "默认账号: admin / admin123"
 echo "=========================================="
 echo "按 Ctrl+C 停止所有服务"
 
@@ -207,6 +211,12 @@ wait $BACKEND_PID $FRONTEND_PID
 EOF
 
 RUN chmod +x /app/start-services.sh
+
+# 设置文件所有权（安全加固）
+RUN chown -R appuser:appgroup /app
+
+# 切换到非 root 用户
+USER appuser
 
 # 暴露端口
 EXPOSE 8000 3000

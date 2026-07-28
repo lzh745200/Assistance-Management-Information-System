@@ -178,7 +178,7 @@ async function handleResubmit(row: any) {
     await ElMessageBox.confirm(`确认重新提交「${row.title || '该申请'}」？`, '重新提交')
     await post(`/approval/tasks/${row.id}/resubmit`)
     ElMessage.success('已重新提交')
-    loadData()
+    loadData() // 重新加载数据
   } catch {
     // 用户取消
   }

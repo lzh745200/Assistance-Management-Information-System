@@ -5,7 +5,7 @@ import { ElMessage } from 'element-plus'
 export const MICRO_APPS = [
   {
     name: 'user-center',
-    entry: '//localhost:3001',
+    entry: import.meta.env.VITE_MICRO_USER_CENTER_URL || '//localhost:3001',
     container: '#subapp-viewport',
     activeRule: '/user-center',
     // 添加超时配置
@@ -16,7 +16,7 @@ export const MICRO_APPS = [
   },
   {
     name: 'data-analysis',
-    entry: '//localhost:3002',
+    entry: import.meta.env.VITE_MICRO_DATA_ANALYSIS_URL || '//localhost:3002',
     container: '#subapp-viewport',
     activeRule: '/data-analysis',
     // 添加超时配置

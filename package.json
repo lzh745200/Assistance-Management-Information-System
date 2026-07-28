@@ -87,7 +87,7 @@
       "uninstallerIcon": "resources/icons/app-circle.ico",
       "include": "build-scripts/electron-builder-nsis-hook.nsh",
       "shortcutName": "帮扶管理系统",
-      "createDesktopShortcut": true,
+      "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "deleteAppDataOnUninstall": false,
       "warningsAsErrors": false

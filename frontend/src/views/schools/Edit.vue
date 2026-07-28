@@ -222,7 +222,7 @@ const isEdit = computed(() => !!route.params.id)
 const attachments = ref<any[]>([])
 
 // 上传配置
-const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || '/api/v1'
+const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 const attachmentUploadUrl = computed(() => `${baseUrl}/schools/${route.params.id}/attachments`)
 const uploadHeaders = computed(() => {
   const token = AuthStorage.getToken() || ''

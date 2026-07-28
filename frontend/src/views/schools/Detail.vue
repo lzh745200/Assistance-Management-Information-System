@@ -291,7 +291,7 @@ function phaseTagType(p: string) {
 }
 
 const attachments = ref<any[]>([])
-const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL || '/api/v1'
+const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 const teacherStudentRatio = computed(() => {
   const s = school.value.student_count || 0
