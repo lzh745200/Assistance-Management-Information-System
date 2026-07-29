@@ -614,6 +614,18 @@ export const routes: RouteRecordRaw[] = [
         component: () => retryImport(() => import('@/views/admin/MachineCodeManagement.vue')),
         meta: { title: '机器码设置', roles: ['admin', 'super_admin'] },
       },
+      {
+        path: '/admin/subordinates',
+        name: 'AdminSubordinates',
+        component: () => retryImport(() => import('@/views/admin/SubordinateManagement.vue')),
+        meta: { title: '下级单位管理', roles: ['admin', 'super_admin'] },
+      },
+      {
+        path: '/admin/module-policy',
+        name: 'AdminModulePolicy',
+        component: () => retryImport(() => import('@/views/admin/OrgModulePolicy.vue')),
+        meta: { title: '模块策略配置', roles: ['admin', 'super_admin'] },
+      },
       // ── 系统安全 ──
       {
         path: '/system/zero-trust',
