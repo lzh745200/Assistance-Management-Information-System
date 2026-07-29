@@ -134,6 +134,23 @@ class PermissionPackageService:
                 "permissions": user.permissions or "",
                 "data_scope": user.data_scope or "org",
                 "is_superuser": user.is_superuser or False,
+                "organization_id": user.organization_id,
+            })
+
+        # 5. 收集组织信息（用于跨机器迁移时恢复用户-组织关联）
+        from app.models.organization import Organization
+        orgs = self.db.query(Organization).filter(Organization.is_active == True).all()  # noqa: E712
+        organizations_data = []
+        for org in orgs:
+            organizations_data.append({
+                "id": org.id,
+                "name": org.name,
+                "code": org.code,
+                "org_type": getattr(org, "org_type", None),
+                "level": getattr(org, "level", None),
+                "parent_id": getattr(org, "parent_id", None),
+                "is_active": org.is_active,
+                "sort_order": getattr(org, "sort_order", 0),
             })
 
         # 构建清单
@@ -142,6 +159,7 @@ class PermissionPackageService:
             "export_time": datetime.now(timezone.utc).isoformat(),
             "user_count": len(user_legacy_data),
             "role_count": len(roles_data),
+            "organization_count": len(organizations_data),
             "description": description,
         }
 
@@ -162,6 +180,7 @@ class PermissionPackageService:
             zf.writestr("data/user_permissions.json", json.dumps(user_permissions_data, ensure_ascii=False, indent=2))
             zf.writestr("data/user_menus.json", json.dumps(user_menus_data, ensure_ascii=False, indent=2))
             zf.writestr("data/user_legacy.json", json.dumps(user_legacy_data, ensure_ascii=False, indent=2))
+            zf.writestr("data/organizations.json", json.dumps(organizations_data, ensure_ascii=False, indent=2))
 
         # 计算校验和
         checksum = self._calculate_checksum(file_path)
@@ -182,7 +201,7 @@ class PermissionPackageService:
             "checksum": checksum,
             "user_count": len(user_legacy_data),
             "role_count": len(roles_data),
-            "message": f"导出完成: {len(roles_data)} 个角色, {len(user_legacy_data)} 个用户",
+            "message": f"导出完成: {len(roles_data)} 个角色, {len(user_legacy_data)} 个用户, {len(organizations_data)} 个组织",
         }
 
     # ================================================================
@@ -296,7 +315,7 @@ class PermissionPackageService:
         if not parsed:
             return {"success": False, "errors": ["解析 ZIP 失败"], "message": "解析失败"}
 
-        roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data = parsed
+        roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data, organizations_data = parsed
 
         errors = []
         stats = self._init_import_stats()
@@ -306,6 +325,10 @@ class PermissionPackageService:
                 self._clear_existing_data()
 
             role_id_map, stats, errors = self._import_roles(roles_data, stats, errors)
+            self.db.flush()
+
+            # 先导入组织信息（用户导入时需要匹配组织）
+            stats, errors = self._import_organizations(organizations_data, stats, errors)
             self.db.flush()
 
             stats, errors = self._import_user_roles(user_roles_data, role_id_map, stats, errors)
@@ -339,7 +362,11 @@ class PermissionPackageService:
                     if "data/user_menus.json" in zf.namelist() else []
                 )
                 user_legacy_data = json.loads(zf.read("data/user_legacy.json").decode("utf-8"))
-            return roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data
+                organizations_data = (
+                    json.loads(zf.read("data/organizations.json").decode("utf-8"))
+                    if "data/organizations.json" in zf.namelist() else []
+                )
+            return roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data, organizations_data
         except Exception as e:
             logger.error("解析权限配置包 JSON 数据失败: %s", e)
             return None
@@ -349,6 +376,7 @@ class PermissionPackageService:
             "roles_created": 0, "roles_updated": 0,
             "user_roles_assigned": 0, "user_permissions_assigned": 0,
             "user_menus_updated": 0, "user_legacy_updated": 0,
+            "organizations_created": 0, "organizations_updated": 0,
         }
 
     def _clear_existing_data(self):
@@ -372,6 +400,58 @@ class PermissionPackageService:
         self.db.execute(delete(UserRole))
         self.db.execute(delete(UserPermission))
         self.db.flush()
+
+    def _import_organizations(self, organizations_data, stats, errors):
+        """导入组织信息。按 code 匹配，不存在则创建。"""
+        from app.models.organization import Organization
+
+        for org_data in organizations_data:
+            try:
+                code = org_data.get("code")
+                name = org_data.get("name", "")
+                if not name:
+                    continue
+
+                # 优先按 code 匹配，其次按 name 匹配
+                existing = None
+                if code:
+                    existing = (
+                        self.db.query(Organization)
+                        .filter(Organization.code == code)
+                        .first()
+                    )
+                if not existing:
+                    existing = (
+                        self.db.query(Organization)
+                        .filter(Organization.name == name)
+                        .first()
+                    )
+
+                if existing:
+                    # 更新现有组织
+                    if code:
+                        existing.code = code
+                    existing.org_type = org_data.get("org_type", existing.org_type)
+                    existing.level = org_data.get("level", existing.level)
+                    existing.is_active = org_data.get("is_active", True)
+                    existing.sort_order = org_data.get("sort_order", existing.sort_order or 0)
+                    stats["organizations_updated"] += 1
+                else:
+                    # 创建新组织
+                    new_org = Organization(
+                        name=name,
+                        code=code,
+                        org_type=org_data.get("org_type"),
+                        level=org_data.get("level"),
+                        is_active=org_data.get("is_active", True),
+                        sort_order=org_data.get("sort_order", 0),
+                    )
+                    self.db.add(new_org)
+                    self.db.flush()
+                    stats["organizations_created"] += 1
+            except Exception as e:
+                errors.append(f"组织「{org_data.get('name', '未知')}」导入失败: {e}")
+        return stats, errors
 
     def _import_roles(self, roles_data, stats, errors):
         """导入角色及角色权限。"""
@@ -485,6 +565,16 @@ class PermissionPackageService:
                 user.role = legacy_data.get("role", "operator")
                 user.permissions = legacy_data.get("permissions", "")
                 user.data_scope = legacy_data.get("data_scope", "org")
+                # 恢复组织关联（按 ID 直接匹配，不存在则尝试按名称匹配）
+                org_id = legacy_data.get("organization_id")
+                if org_id:
+                    from app.models.organization import Organization
+                    org = self.db.query(Organization).filter(Organization.id == org_id).first()
+                    if org:
+                        user.organization_id = org.id
+                    else:
+                        # 组织 ID 不匹配，置空（用户可通过界面重新指定）
+                        user.organization_id = None
                 stats["user_legacy_updated"] += 1
             except Exception as e:
                 errors.append(f"用户遗留权限「{username}」导入失败: {e}")
@@ -492,8 +582,10 @@ class PermissionPackageService:
 
     def _log_import_result(self, stats):
         logger.info(
-            "权限配置包导入完成: 角色创建%d/更新%d, 用户角色%d, 用户权限%d, 菜单%d, 遗留%d",
+            "权限配置包导入完成: 角色创建%d/更新%d, 组织创建%d/更新%d, "
+            "用户角色%d, 用户权限%d, 菜单%d, 遗留%d",
             stats["roles_created"], stats["roles_updated"],
+            stats["organizations_created"], stats["organizations_updated"],
             stats["user_roles_assigned"], stats["user_permissions_assigned"],
             stats["user_menus_updated"], stats["user_legacy_updated"],
         )
@@ -503,6 +595,8 @@ class PermissionPackageService:
             "success": True,
             "roles_created": stats["roles_created"],
             "roles_updated": stats["roles_updated"],
+            "organizations_created": stats["organizations_created"],
+            "organizations_updated": stats["organizations_updated"],
             "user_roles_assigned": stats["user_roles_assigned"],
             "user_permissions_assigned": stats["user_permissions_assigned"],
             "user_menus_updated": stats["user_menus_updated"],
@@ -510,6 +604,7 @@ class PermissionPackageService:
             "errors": errors,
             "message": (
                 f"导入完成: 角色 {stats['roles_created']}新建/{stats['roles_updated']}更新, "
+                f"组织 {stats['organizations_created']}新建/{stats['organizations_updated']}更新, "
                 f"用户角色关联 {stats['user_roles_assigned']}, "
                 f"用户权限 {stats['user_permissions_assigned']}, "
                 f"菜单覆盖 {stats['user_menus_updated']}, "

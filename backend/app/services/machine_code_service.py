@@ -284,6 +284,10 @@ class MachineCodeService:
     ) -> MachineCode:
         """管理员录入机器码并生成通行码
 
+        如果该机器码已有记录（pending/active/revoked），复用同一记录——
+        生成新通行码、重置为 pending、清除旧的用户绑定。
+        这允许管理员为同一台机器多次生成通行码，解决了“通行码已过期”问题。
+
         Args:
             machine_code: 用户提供的机器码
             created_by: 创建人ID（管理员）
@@ -291,23 +295,50 @@ class MachineCodeService:
             pass_code: 手动设置的4位数字通行码（留空则自动生成32位通行码）
 
         Returns:
-            MachineCode: 创建的机器码记录
+            MachineCode: 创建或重置后的机器码记录
 
         Raises:
-            ValueError: 机器码已存在或数据库会话未初始化
+            ValueError: 数据库会话未初始化
         """
         if not self.db:
             raise ValueError("数据库会话未初始化")
 
-        # 检查机器码是否已存在
-        existing = self.db.query(MachineCode).filter(MachineCode.machine_code == machine_code).first()
-        if existing:
-            raise ValueError("该机器码已存在")
-
-        # 如果提供了4位通行码则使用，否则自动生成32位通行码
+        # 生成新通行码
         final_pass_code = pass_code if pass_code else self.generate_pass_code(machine_code)
 
-        # 创建记录
+        # 检查机器码是否已有记录（unique 约束：同一 machine_code 只有一条记录）
+        existing = self.db.query(MachineCode).filter(MachineCode.machine_code == machine_code).first()
+
+        if existing:
+            # 复用已有记录：重置通行码和状态，清除旧的用户绑定
+            old_status = existing.status
+            old_user_id = existing.user_id
+
+            existing.pass_code = final_pass_code
+            existing.status = "pending"
+            existing.user_id = None
+            existing.activated_at = None
+            existing.revoked_at = None
+            existing.created_by = created_by
+            existing.description = description or existing.description
+
+            safe_commit(self.db)
+            self.db.refresh(existing)
+
+            logger.info(
+                "管理员重新生成通行码: machine_code=%s..., "
+                "old_status=%s, old_user_id=%s, "
+                "new_pass_code=%s..., created_by=%s",
+                machine_code[:16],
+                old_status,
+                old_user_id,
+                final_pass_code[:16] if final_pass_code else "None",
+                created_by,
+            )
+
+            return existing
+
+        # 机器码不存在，创建新记录
         record = MachineCode(
             machine_code=machine_code,
             pass_code=final_pass_code,
@@ -321,14 +352,20 @@ class MachineCodeService:
         self.db.refresh(record)
 
         logger.info(
-            f"管理员创建机器码记录: machine_code={machine_code[:16]}..., "
-            f"pass_code={final_pass_code[:16] if final_pass_code else 'None'}..., created_by={created_by}"
+            "管理员创建机器码记录: machine_code=%s..., "
+            "pass_code=%s..., created_by=%s",
+            machine_code[:16],
+            final_pass_code[:16] if final_pass_code else "None",
+            created_by,
         )
 
         return record
 
     def verify_pass_code(self, pass_code: str, machine_code: str) -> Optional[MachineCode]:
         """验证通行码是否有效
+
+        匹配条件：pass_code + machine_code + status 为 pending 或 active(但未绑定用户)。
+        兼容激活中断的边界场景：通行码已标记 active 但 user_id 为空（未完成注册绑定）。
 
         Args:
             pass_code: 用户输入的通行码
@@ -343,24 +380,42 @@ class MachineCodeService:
         if not self.db:
             raise ValueError("数据库会话未初始化")
 
-        # 查询通行码记录
+        from sqlalchemy import or_
+
+        # 查询通行码记录：pending 状态，或 active 但未绑定用户（激活中断恢复）
         record = (
             self.db.query(MachineCode)
             .filter(
                 and_(
                     MachineCode.pass_code == pass_code,
                     MachineCode.machine_code == machine_code,
-                    MachineCode.status == "pending",
+                    or_(
+                        MachineCode.status == "pending",
+                        and_(
+                            MachineCode.status == "active",
+                            MachineCode.user_id.is_(None),
+                        ),
+                    ),
                 )
             )
             .first()
         )
 
         if not record:
-            logger.warning(f"通行码验证失败: pass_code={pass_code[:16]}..., " f"machine_code={machine_code[:16]}...")
+            logger.warning(
+                "通行码验证失败: pass_code=%s..., machine_code=%s...",
+                pass_code[:16],
+                machine_code[:16],
+            )
             return None
 
-        logger.info(f"通行码验证成功: pass_code={pass_code[:16]}...")
+        # 如果是 active 但未绑定用户，重置为 pending 以便正常走注册流程
+        if record.status == "active" and record.user_id is None:
+            record.status = "pending"
+            safe_commit(self.db)
+            logger.info("通行码从 active(未绑定) 重置为 pending: pass_code=%s...", pass_code[:16])
+
+        logger.info("通行码验证成功: pass_code=%s...", pass_code[:16])
         return record
 
     def activate_machine_code(self, record: MachineCode, user_id: int) -> None:

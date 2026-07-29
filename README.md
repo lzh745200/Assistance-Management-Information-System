@@ -5,14 +5,14 @@
 ![Version](https://img.shields.io/badge/version-1.4.2-blue)
 ![License](https://img.shields.io/badge/license-UNLICENSED-lightgrey)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20ARM64-orange)
-![Tests](https://img.shields.io/badge/tests-11%2C600%2B-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)
+![Tests](https://img.shields.io/badge/tests-11%2C700%2B-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-50%25%2B-brightgreen)
 
 ## 项目状态
 
 | 指标 | 结果 |
 |------|------|
-| 后端测试 | **10,045 passed**, 0 skipped, 0 errors |
+| 后端测试 | **10,056 passed**, 9 skipped |
 | 前端测试 | **1,622 passed**, 125 文件, 0 失败 |
 | Flake8 | 0 错误, 0 警告 |
 | ESLint | 0 错误, 0 警告 |
@@ -23,7 +23,7 @@
 | CI/CD | PR Checks + Nightly Full Suite + Codecov |
 | Sass | 1.101.0（modern-compiler API） |
 
-> **上次全量验证**: 2026-07-23 — 全部 11,600+ 测试通过（后端 10,045 + 前端 1,622），零 lint 错误，零安全告警
+> **上次全量验证**: 2026-07-29 — 全部 11,700+ 测试通过（后端 10,056 + 前端 1,622），零 lint 错误，零安全告警
 
 ## 快速开始
 
