@@ -323,6 +323,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => retryImport(() => import('@/views/approval/History.vue')),
         meta: { title: '审批历史' },
       },
+      {
+        path: '/approval/center',
+        name: 'ApprovalCenter',
+        component: () => retryImport(() => import('@/views/approval/ApprovalCenter.vue')),
+        meta: { title: '审批中心' },
+      },
       // ── 乡村振兴工作 ──
       {
         path: '/rural-works',
