@@ -29,8 +29,10 @@
                 v-model="formData.parent_id"
                 placeholder="请选择上级组织（可选）"
                 clearable
+                filterable
                 style="width: 100%"
               >
+                <el-option label="无（顶级组织）" :value="null as any" />
                 <el-option
                   v-for="item in parentOptions"
                   :key="item.id"
@@ -41,8 +43,15 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="状态">
-              <el-switch v-model="formData.is_active" active-text="正常" inactive-text="停用" />
+            <el-form-item label="组织类型" prop="org_type">
+              <el-select
+                v-model="formData.org_type"
+                placeholder="请选择组织类型"
+                style="width: 100%"
+              >
+                <el-option label="部门单位" value="department" />
+                <el-option label="帮扶单位" value="support_unit" />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -54,8 +63,21 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="联系电话">
+            <el-form-item label="联系电话" prop="contact_phone">
               <el-input v-model="formData.contact_phone" placeholder="请输入联系电话" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="联系邮箱" prop="contact_email">
+              <el-input v-model="formData.contact_email" placeholder="请输入联系邮箱" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态">
+              <el-switch v-model="formData.is_active" active-text="正常" inactive-text="停用" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -111,19 +133,29 @@ const formData = reactive({
   name: '',
   code: '',
   parent_id: null as number | null,
+  org_type: 'department',
   is_active: true,
   contact_person: '',
   contact_phone: '',
+  contact_email: '',
   address: '',
   description: '',
 })
 
 const rules: FormRules = {
   name: [{ required: true, message: '请输入组织名称', trigger: 'blur' }],
+  org_type: [{ required: true, message: '请选择组织类型', trigger: 'change' }],
   contact_phone: [
     {
       pattern: /^1[3-9]\d{9}$/,
       message: '请输入正确的手机号',
+      trigger: 'blur',
+    },
+  ],
+  contact_email: [
+    {
+      pattern: /^[\w.-]+@[\w.-]+\.\w+$/,
+      message: '请输入正确的邮箱地址',
       trigger: 'blur',
     },
   ],
@@ -133,7 +165,6 @@ const loadParentOptions = async () => {
   try {
     const res = await getOrganizations({ page_size: 200, is_active: true })
     const currentId = safeRouteParam(route.params.id)
-    // 编辑时排除自身，避免将自己设为上级
     parentOptions.value = ((res as any).items || []).filter(
       (item: Organization) => item.id !== currentId
     )
@@ -149,14 +180,16 @@ const loadData = async () => {
 
   loading.value = true
   try {
-    const data = await getOrganization(id)
+    const data = await getOrganization(id as number)
     Object.assign(formData, {
       name: data.name || '',
       code: data.code || '',
       parent_id: data.parent_id ?? null,
+      org_type: data.org_type || 'department',
       is_active: data.is_active !== false,
       contact_person: data.contact_person || '',
       contact_phone: data.contact_phone || '',
+      contact_email: data.contact_email || '',
       address: data.address || '',
       description: data.description || '',
     })
@@ -182,11 +215,13 @@ const handleSubmit = async () => {
     submitLoading.value = true
     try {
       if (isEdit.value) {
-        await updateOrganization(safeRouteParam(route.params.id), {
+        await updateOrganization(safeRouteParam(route.params.id) as number, {
           name: formData.name,
+          org_type: formData.org_type,
           description: formData.description || undefined,
           contact_person: formData.contact_person || undefined,
           contact_phone: formData.contact_phone || undefined,
+          contact_email: formData.contact_email || undefined,
           address: formData.address || undefined,
           is_active: formData.is_active,
         })
@@ -196,9 +231,11 @@ const handleSubmit = async () => {
           name: formData.name,
           code: formData.code || undefined,
           parent_id: formData.parent_id,
+          org_type: formData.org_type,
           description: formData.description || undefined,
           contact_person: formData.contact_person || undefined,
           contact_phone: formData.contact_phone || undefined,
+          contact_email: formData.contact_email || undefined,
           address: formData.address || undefined,
         })
         ElMessage.success('创建成功')

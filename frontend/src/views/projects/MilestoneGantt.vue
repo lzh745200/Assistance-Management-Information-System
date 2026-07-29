@@ -31,7 +31,7 @@ function renderChart() {
     chart = echarts.init(chartRef.value)
   }
 
-  const names = milestones.value.map(m => m.name)
+  const names = milestones.value.map((m) => m.name)
   const baseTime = new Date('2026-01-01').getTime()
 
   const plannedData = milestones.value.map((m, i) => {
@@ -40,16 +40,18 @@ function renderChart() {
     return { value: [i, start, end, '计划'], itemStyle: { color: '#B3D8FF' } }
   })
 
-  const actualData = milestones.value.map((m, i) => {
-    if (!m.actualDate) return null
-    const start = baseTime
-    const end = new Date(m.actualDate).getTime()
-    const isOverdue = m.plannedDate && end > new Date(m.plannedDate).getTime()
-    return {
-      value: [i, start, end, '实际'],
-      itemStyle: { color: isOverdue ? '#F56C6C' : '#67C23A' },
-    }
-  }).filter(Boolean)
+  const actualData = milestones.value
+    .map((m, i) => {
+      if (!m.actualDate) return null
+      const start = baseTime
+      const end = new Date(m.actualDate).getTime()
+      const isOverdue = m.plannedDate && end > new Date(m.plannedDate).getTime()
+      return {
+        value: [i, start, end, '实际'],
+        itemStyle: { color: isOverdue ? '#F56C6C' : '#67C23A' },
+      }
+    })
+    .filter(Boolean)
 
   chart.setOption({
     tooltip: {
@@ -89,8 +91,14 @@ function renderChart() {
 
 function renderGanttItem(_params: Record<string, unknown>, api: Record<string, Function>) {
   const yIndex = (api as { value: (idx: number) => number }).value(0)
-  const start = (api as { coord: (val: [number, number]) => number[] }).coord([(api as { value: (idx: number) => number }).value(1), yIndex])
-  const end = (api as { coord: (val: [number, number]) => number[] }).coord([(api as { value: (idx: number) => number }).value(2), yIndex])
+  const start = (api as { coord: (val: [number, number]) => number[] }).coord([
+    (api as { value: (idx: number) => number }).value(1),
+    yIndex,
+  ])
+  const end = (api as { coord: (val: [number, number]) => number[] }).coord([
+    (api as { value: (idx: number) => number }).value(2),
+    yIndex,
+  ])
   const height = 12
 
   return {
@@ -105,7 +113,7 @@ async function loadMilestones() {
   try {
     const res = await get(`/projects/${props.projectId}/milestones`)
     const data = res.data || res
-    milestones.value = Array.isArray(data) ? data : (data.items || [])
+    milestones.value = Array.isArray(data) ? data : data.items || []
     renderChart()
   } catch {
     milestones.value = []
@@ -114,7 +122,9 @@ async function loadMilestones() {
 
 watch(() => props.projectId, loadMilestones)
 onMounted(loadMilestones)
-onBeforeUnmount(() => { chart?.dispose() })
+onBeforeUnmount(() => {
+  chart?.dispose()
+})
 </script>
 
 <style scoped>

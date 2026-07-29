@@ -364,15 +364,17 @@ class MachineCodeService:
     def verify_pass_code(self, pass_code: str, machine_code: str) -> Optional[MachineCode]:
         """验证通行码是否有效
 
-        匹配条件：pass_code + machine_code + status 为 pending 或 active(但未绑定用户)。
-        兼容激活中断的边界场景：通行码已标记 active 但 user_id 为空（未完成注册绑定）。
+        匹配优先级：
+        1. 机器特定通行码：pass_code + machine_code + status=pending
+        2. 组织通行码：pass_code + organization_id 非空 + status=pending（不绑定特定机器）
+        兼容激活中断的边界场景：active 但 user_id 为空。
 
         Args:
             pass_code: 用户输入的通行码
             machine_code: 当前机器的机器码
 
         Returns:
-            Optional[MachineCode]: 验证通过返回机器码记录，否则返回None
+            Optional[MachineCode]: 验证通过返回记录，否则返回None
 
         Raises:
             ValueError: 数据库会话未初始化
@@ -382,7 +384,7 @@ class MachineCodeService:
 
         from sqlalchemy import or_
 
-        # 查询通行码记录：pending 状态，或 active 但未绑定用户（激活中断恢复）
+        # 1. 优先匹配机器特定通行码
         record = (
             self.db.query(MachineCode)
             .filter(
@@ -401,22 +403,46 @@ class MachineCodeService:
             .first()
         )
 
-        if not record:
-            logger.warning(
-                "通行码验证失败: pass_code=%s..., machine_code=%s...",
-                pass_code[:16],
-                machine_code[:16],
+        if record:
+            # 重置 active(未绑定) 为 pending
+            if record.status == "active" and record.user_id is None:
+                record.status = "pending"
+                safe_commit(self.db)
+            logger.info("机器通行码验证成功: pass_code=%s...", pass_code[:16])
+            return record
+
+        # 2. 回退：匹配组织通行码（不绑定特定机器码）
+        record = (
+            self.db.query(MachineCode)
+            .filter(
+                and_(
+                    MachineCode.pass_code == pass_code,
+                    MachineCode.organization_id.isnot(None),
+                    or_(
+                        MachineCode.status == "pending",
+                        and_(
+                            MachineCode.status == "active",
+                            MachineCode.user_id.is_(None),
+                        ),
+                    ),
+                )
             )
-            return None
+            .first()
+        )
 
-        # 如果是 active 但未绑定用户，重置为 pending 以便正常走注册流程
-        if record.status == "active" and record.user_id is None:
-            record.status = "pending"
-            safe_commit(self.db)
-            logger.info("通行码从 active(未绑定) 重置为 pending: pass_code=%s...", pass_code[:16])
+        if record:
+            if record.status == "active" and record.user_id is None:
+                record.status = "pending"
+                safe_commit(self.db)
+            logger.info("组织通行码验证成功: pass_code=%s...", pass_code[:16])
+            return record
 
-        logger.info("通行码验证成功: pass_code=%s...", pass_code[:16])
-        return record
+        logger.warning(
+            "通行码验证失败: pass_code=%s..., machine_code=%s...",
+            pass_code[:16],
+            machine_code[:16],
+        )
+        return None
 
     def activate_machine_code(self, record: MachineCode, user_id: int) -> None:
         """激活机器码（绑定到用户）
@@ -633,17 +659,20 @@ class MachineCodeService:
         created_by: int,
         description: Optional[str] = None,
     ) -> MachineCode:
-        """创建组织通行码记录
+        """管理员输入校验码+选择组织→生成通行码
+
+        管理员在下级单位提供机器校验码后，选择对应组织并输入校验码，
+        系统生成通行码。通行码关联到组织，不绑定特定机器。
 
         Args:
-            organization_id: 组织ID
-            verification_code: 校验码
+            organization_id: 管理员选择的下级组织ID
+            verification_code: 下级单位提供的机器校验码
             allow_subordinate: 是否允许下级组织生成通行码
-            created_by: 创建人ID
+            created_by: 创建人ID（管理员）
             description: 备注说明
 
         Returns:
-            MachineCode: 创建的通行码记录
+            MachineCode: 包含通行码的记录
 
         Raises:
             ValueError: 数据库会话未初始化
@@ -651,10 +680,10 @@ class MachineCodeService:
         if not self.db:
             raise ValueError("数据库会话未初始化")
 
-        # 生成通行码
-        pass_code = self.generate_organization_pass_code(organization_id, verification_code)
+        # 生成通行码（随机，不绑定特定机器码）
+        pass_code = self.generate_pass_code(secrets.token_hex(16))
 
-        # 生成一个虚拟的机器码（用于标识这是组织通行码）
+        # 生成唯一标识符
         machine_code = f"ORG-{organization_id}-{secrets.token_hex(8)}"
 
         # 创建记录
@@ -664,7 +693,7 @@ class MachineCodeService:
             status="pending",
             organization_id=organization_id,
             allow_subordinate_generation=allow_subordinate,
-            description=description,
+            description=description or f"校验码: {verification_code}",
             created_by=created_by,
         )
 
@@ -673,11 +702,41 @@ class MachineCodeService:
         self.db.refresh(record)
 
         logger.info(
-            f"组织通行码已创建: organization_id={organization_id}, "
-            f"pass_code={pass_code}, allow_subordinate={allow_subordinate}"
+            "管理员为组织生成通行码: organization_id=%s, "
+            "verification_code=%s, pass_code=%s...",
+            organization_id,
+            verification_code,
+            pass_code[:16],
         )
 
         return record
+
+    def delete_organization_pass_code(self, pass_code_id: int) -> bool:
+        """删除通行码记录
+
+        管理员可删除通行码记录。已激活的记录也可删除。
+
+        Args:
+            pass_code_id: 通行码记录ID
+
+        Returns:
+            bool: 是否删除成功
+
+        Raises:
+            ValueError: 数据库会话未初始化
+        """
+        if not self.db:
+            raise ValueError("数据库会话未初始化")
+
+        record = self.db.query(MachineCode).filter(MachineCode.id == pass_code_id).first()
+        if not record:
+            return False
+
+        self.db.delete(record)
+        safe_commit(self.db)
+
+        logger.info("通行码记录已删除: id=%s", pass_code_id)
+        return True
 
     def get_organization_pass_codes(
         self,

@@ -809,6 +809,16 @@ async def register_user(
         # 激活机器码（绑定到用户）
         machine_service.activate_machine_code(machine_record, user.id)
 
+        # 如果通行码关联了组织，自动绑定用户到该组织
+        if machine_record.organization_id:
+            user.organization_id = machine_record.organization_id
+            safe_commit(db)
+            logger.info(
+                "用户 %s 已自动绑定到组织 id=%s",
+                user.username,
+                machine_record.organization_id,
+            )
+
         # 创建访问令牌
         access_token = token_manager.create_access_token(user.username)
 

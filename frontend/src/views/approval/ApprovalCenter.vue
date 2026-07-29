@@ -25,30 +25,33 @@
       <!-- 批量操作栏 -->
       <div v-if="activeTab === 'pending' && selectedIds.length > 0" class="batch-bar">
         <span>已选 {{ selectedIds.length }} 项</span>
-        <el-button size="small" type="success" :loading="batchLoading" @click="handleBatchApprove">批量通过</el-button>
+        <el-button size="small" type="success" :loading="batchLoading" @click="handleBatchApprove"
+          >批量通过</el-button
+        >
         <el-button size="small" type="danger" @click="handleBatchReject">批量驳回</el-button>
       </div>
 
-      <el-table
-        :data="tasks"
-        v-loading="loading"
-        stripe
-        @selection-change="handleSelectionChange"
-      >
+      <el-table v-loading="loading" :data="tasks" stripe @selection-change="handleSelectionChange">
         <el-table-column v-if="activeTab === 'pending'" type="selection" width="45" />
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="title" label="审批标题" min-width="200" show-overflow-tooltip />
         <el-table-column prop="workflow_name" label="流程" width="140" show-overflow-tooltip />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="statusType(row.status)" size="small">{{ statusLabel(row.status) }}</el-tag>
+            <el-tag :type="statusType(row.status)" size="small">{{
+              statusLabel(row.status)
+            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="提交时间" width="160" show-overflow-tooltip />
         <el-table-column v-if="activeTab === 'pending'" label="操作" width="160" fixed="right">
           <template #default="{ row }">
-            <el-button link size="small" type="success" @click="handleApprove(row as ApprovalTask)">通过</el-button>
-            <el-button link size="small" type="danger" @click="handleReject(row as ApprovalTask)">驳回</el-button>
+            <el-button link size="small" type="success" @click="handleApprove(row as ApprovalTask)"
+              >通过</el-button
+            >
+            <el-button link size="small" type="danger" @click="handleReject(row as ApprovalTask)"
+              >驳回</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -91,14 +94,21 @@ const selectedIds = ref<number[]>([])
 
 function statusType(status: string): 'success' | 'warning' | 'danger' | 'info' | 'primary' {
   const map: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'primary'> = {
-    pending: 'warning', approved: 'success', rejected: 'danger', completed: 'info',
+    pending: 'warning',
+    approved: 'success',
+    rejected: 'danger',
+    completed: 'info',
   }
   return map[status] || 'primary'
 }
 
 function statusLabel(status: string) {
   const map: Record<string, string> = {
-    pending: '待审批', approved: '已通过', rejected: '已驳回', completed: '已完成', withdrawn: '已撤回',
+    pending: '待审批',
+    approved: '已通过',
+    rejected: '已驳回',
+    completed: '已完成',
+    withdrawn: '已撤回',
   }
   return map[status] || status
 }
@@ -146,7 +156,7 @@ function handlePageChange(p: number) {
 }
 
 function handleSelectionChange(rows: ApprovalTask[]) {
-  selectedIds.value = rows.map(r => r.id)
+  selectedIds.value = rows.map((r) => r.id)
 }
 
 async function handleApprove(row: ApprovalTask) {
@@ -178,9 +188,14 @@ async function handleReject(row: ApprovalTask) {
 
 async function handleBatchApprove() {
   try {
-    await ElMessageBox.confirm(`确认批量通过 ${selectedIds.value.length} 项审批？`, '批量审批', { type: 'success' })
+    await ElMessageBox.confirm(`确认批量通过 ${selectedIds.value.length} 项审批？`, '批量审批', {
+      type: 'success',
+    })
     batchLoading.value = true
-    await post('/approval/tasks/batch-approve', { task_ids: selectedIds.value, comment: '批量通过' })
+    await post('/approval/tasks/batch-approve', {
+      task_ids: selectedIds.value,
+      comment: '批量通过',
+    })
     ElMessage.success('批量审批通过')
     selectedIds.value = []
     await loadTasks()

@@ -24,3 +24,15 @@ export const moveOrganization = (orgId: number, data: any) =>
 export const activateOrganization = (orgId: number) => post(`/organizations/${orgId}/activate`)
 
 export const deactivateOrganization = (orgId: number) => post(`/organizations/${orgId}/deactivate`)
+
+// ==================== 新增接口 ====================
+
+/** 获取组织统计信息 */
+export const getOrganizationStatistics = () => get('/organizations/statistics/summary')
+
+/** 获取组织成员列表 */
+export const getOrganizationMembers = (orgId: number, params?: any) =>
+  get(`/organizations/${orgId}/members`, params)
+
+/** 获取组织详情（含子组织和成员数） */
+export const getOrganizationDetail = (orgId: number) => get(`/organizations/${orgId}/detail`)

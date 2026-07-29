@@ -10,8 +10,21 @@
 
       <!-- 过滤栏 -->
       <div class="filter-bar">
-        <el-input v-model="filters.keyword" placeholder="搜索操作内容" clearable style="width: 200px" @clear="loadLogs" @keyup.enter="loadLogs" />
-        <el-select v-model="filters.module" placeholder="模块" clearable style="width: 140px" @change="loadLogs">
+        <el-input
+          v-model="filters.keyword"
+          placeholder="搜索操作内容"
+          clearable
+          style="width: 200px"
+          @clear="loadLogs"
+          @keyup.enter="loadLogs"
+        />
+        <el-select
+          v-model="filters.module"
+          placeholder="模块"
+          clearable
+          style="width: 140px"
+          @change="loadLogs"
+        >
           <el-option label="帮扶村" value="supported_village" />
           <el-option label="项目" value="project" />
           <el-option label="资金" value="fund" />
@@ -20,15 +33,30 @@
           <el-option label="用户" value="user" />
           <el-option label="审批" value="approval" />
         </el-select>
-        <el-date-picker v-model="filters.dateRange" type="daterange" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 240px" @change="loadLogs" />
+        <el-date-picker
+          v-model="filters.dateRange"
+          type="daterange"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD"
+          style="width: 240px"
+          @change="loadLogs"
+        />
         <el-button type="primary" @click="loadLogs">查询</el-button>
       </div>
 
       <!-- 时间线 -->
       <el-timeline v-if="groupedLogs.length > 0" v-loading="loading">
-        <el-timeline-item v-for="group in groupedLogs" :key="group.date" :timestamp="group.date" placement="top">
+        <el-timeline-item
+          v-for="group in groupedLogs"
+          :key="group.date"
+          :timestamp="group.date"
+          placement="top"
+        >
           <div v-for="log in group.items" :key="log.id" class="log-item">
-            <el-tag size="small" :type="actionType(log.action)" class="log-action">{{ log.action }}</el-tag>
+            <el-tag size="small" :type="actionType(log.action)" class="log-action">{{
+              log.action
+            }}</el-tag>
             <span class="log-module">{{ log.module }}</span>
             <span class="log-content">{{ log.content }}</span>
             <span class="log-user">{{ log.username || '系统' }}</span>
@@ -171,11 +199,11 @@ onMounted(loadLogs)
   color: #303133;
 }
 .log-user {
-  color: #409EFF;
+  color: #409eff;
   min-width: 60px;
 }
 .log-time {
-  color: #C0C4CC;
+  color: #c0c4cc;
   font-size: 12px;
 }
 </style>

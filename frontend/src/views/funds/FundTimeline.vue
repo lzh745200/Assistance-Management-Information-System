@@ -10,8 +10,12 @@
       >
         <el-card shadow="never" class="timeline-card">
           <div class="timeline-header">
-            <el-tag :type="timelineType(item.newStatus)" size="small">{{ statusLabel(item.newStatus) }}</el-tag>
-            <span v-if="item.changedBy" class="timeline-operator">操作人: {{ item.changedBy }}</span>
+            <el-tag :type="timelineType(item.newStatus)" size="small">{{
+              statusLabel(item.newStatus)
+            }}</el-tag>
+            <span v-if="item.changedBy" class="timeline-operator"
+              >操作人: {{ item.changedBy }}</span
+            >
           </div>
           <p v-if="item.reason" class="timeline-reason">{{ item.reason }}</p>
         </el-card>
@@ -41,16 +45,26 @@ const history = ref<StatusHistory[]>([])
 
 function timelineType(status: string): 'primary' | 'success' | 'warning' | 'danger' | 'info' {
   const map: Record<string, 'primary' | 'success' | 'warning' | 'danger' | 'info'> = {
-    planned: 'info', pending: 'warning', approved: 'primary',
-    allocated: 'success', completed: 'success', rejected: 'danger', audited: 'primary',
+    planned: 'info',
+    pending: 'warning',
+    approved: 'primary',
+    allocated: 'success',
+    completed: 'success',
+    rejected: 'danger',
+    audited: 'primary',
   }
   return map[status] || 'primary'
 }
 
 function statusLabel(status: string) {
   const map: Record<string, string> = {
-    planned: '已规划', pending: '待审批', approved: '已批准',
-    allocated: '已拨付', completed: '已完成', rejected: '已驳回', audited: '已审计',
+    planned: '已规划',
+    pending: '待审批',
+    approved: '已批准',
+    allocated: '已拨付',
+    completed: '已完成',
+    rejected: '已驳回',
+    audited: '已审计',
   }
   return map[status] || status
 }
@@ -60,7 +74,7 @@ async function loadHistory() {
   try {
     const res = await get(`/funds/${props.fundId}/status-history`)
     const data = res.data || res
-    history.value = Array.isArray(data) ? data : (data.items || [])
+    history.value = Array.isArray(data) ? data : data.items || []
   } catch {
     history.value = []
   }

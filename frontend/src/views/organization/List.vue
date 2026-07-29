@@ -1,5 +1,53 @@
 <template>
   <div class="organization-list-page">
+    <!-- 统计卡片 -->
+    <div class="stats-row">
+      <el-card v-loading="statsLoading" shadow="hover" class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon" style="background: var(--color-primary-light-8)">
+            <el-icon :size="24" color="var(--color-primary)"><OfficeBuilding /></el-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.total || 0 }}</div>
+            <div class="stat-label">组织总数</div>
+          </div>
+        </div>
+      </el-card>
+      <el-card shadow="hover" class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon" style="background: #e8f5e9">
+            <el-icon :size="24" color="#4caf50"><CircleCheck /></el-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.active || 0 }}</div>
+            <div class="stat-label">正常运作</div>
+          </div>
+        </div>
+      </el-card>
+      <el-card shadow="hover" class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon" style="background: #e3f2fd">
+            <el-icon :size="24" color="#2196f3"><User /></el-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.total_members || 0 }}</div>
+            <div class="stat-label">总成员数</div>
+          </div>
+        </div>
+      </el-card>
+      <el-card shadow="hover" class="stat-card">
+        <div class="stat-content">
+          <div class="stat-icon" style="background: #fff3e0">
+            <el-icon :size="24" color="#ff9800"><Share /></el-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.orgs_with_members || 0 }}</div>
+            <div class="stat-label">已分配成员</div>
+          </div>
+        </div>
+      </el-card>
+    </div>
+
     <el-card>
       <template #header>
         <div class="page-header">
@@ -7,18 +55,35 @@
           <div class="header-actions">
             <el-input
               v-model="searchText"
-              placeholder="搜索..."
+              placeholder="搜索组织名称/编码..."
               clearable
-              style="width: 200px; margin-right: 10px"
+              style="width: 220px; margin-right: 10px"
               @clear="handleSearch"
               @keyup.enter="handleSearch"
             />
-            <el-button v-if="isAdmin" type="primary" @click="handleCreate">新增组织</el-button>
+            <el-select
+              v-model="filterType"
+              placeholder="全部类型"
+              clearable
+              style="width: 140px; margin-right: 10px"
+              @change="handleSearch"
+            >
+              <el-option label="部门单位" value="department" />
+              <el-option label="帮扶单位" value="support_unit" />
+            </el-select>
+            <el-button v-if="isAdmin" :loading="exporting" @click="handleExport">
+              <el-icon><Download /></el-icon>
+              <span>导出</span>
+            </el-button>
+            <el-button v-if="isAdmin" type="primary" @click="handleCreate">
+              <el-icon><Plus /></el-icon>
+              <span>新增组织</span>
+            </el-button>
           </div>
         </div>
       </template>
 
-      <div v-if="isAdmin && !searchText" class="drag-tip">
+      <div v-if="isAdmin && !searchText && !filterType" class="drag-tip">
         <el-alert title="拖拽提示" type="info" :closable="false" show-icon>
           <template #default> 可以通过拖拽表格行来调整组织排序，松开鼠标后自动保存 </template>
         </el-alert>
@@ -26,8 +91,13 @@
 
       <el-table ref="tableRef" v-loading="loading" :data="tableData" border stripe row-key="id">
         <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="sort_order" label="排序" width="80" align="center" />
-        <el-table-column prop="name" label="名称" min-width="150" />
+        <el-table-column prop="name" label="组织名称" min-width="180">
+          <template #default="scope">
+            <span class="org-name-link" @click="handleViewDetail(scope.row)">{{
+              scope.row.name
+            }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="code" label="编码" width="120" />
         <el-table-column prop="org_type" label="类型" width="120">
           <template #default="scope">
@@ -35,14 +105,34 @@
             <el-tag v-else-if="scope.row.org_type === 'support_unit'" type="success"
               >帮扶单位</el-tag
             >
-            <el-tag v-else>{{ scope.row.org_type }}</el-tag>
+            <el-tag v-else type="info">{{ scope.row.org_type || '未设置' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="created_at" label="创建时间" width="180" />
-        <el-table-column v-if="isAdmin" label="操作" width="200" fixed="right">
+        <el-table-column prop="level" label="层级" width="100">
           <template #default="scope">
+            <el-tag size="small" type="info">{{ formatLevel(scope.row.level) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="contact_person" label="联系人" width="100" show-overflow-tooltip />
+        <el-table-column prop="contact_phone" label="联系电话" width="130" show-overflow-tooltip />
+        <el-table-column prop="is_active" label="状态" width="80" align="center">
+          <template #default="scope">
+            <el-tag :type="scope.row.is_active ? 'success' : 'info'" size="small">
+              {{ scope.row.is_active ? '正常' : '停用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="sort_order" label="排序" width="70" align="center" />
+        <el-table-column v-if="isAdmin" label="操作" width="260" fixed="right">
+          <template #default="scope">
+            <el-button size="small" @click="handleViewDetail(scope.row)">详情</el-button>
             <el-button size="small" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
             <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column v-else label="操作" width="100" fixed="right">
+          <template #default="scope">
+            <el-button size="small" @click="handleViewDetail(scope.row)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -62,37 +152,58 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="600px"
+      width="640px"
       @close="handleDialogClose"
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
         <el-form-item label="组织名称" prop="name">
           <el-input v-model="formData.name" placeholder="请输入组织名称" />
         </el-form-item>
-        <el-form-item label="上级组织" prop="parent_id">
-          <el-select
-            v-model="formData.parent_id"
-            placeholder="选择上级组织"
-            clearable
-            filterable
-            style="width: 100%"
-          >
-            <el-option label="无" :value="null as any" />
-            <el-option
-              v-for="org in parentOrgOptions"
-              :key="org.id"
-              :label="org.name"
-              :value="org.id"
-            />
-          </el-select>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="上级组织" prop="parent_id">
+              <el-select
+                v-model="formData.parent_id"
+                placeholder="选择上级组织"
+                clearable
+                filterable
+                style="width: 100%"
+              >
+                <el-option label="无（顶级组织）" :value="null as any" />
+                <el-option
+                  v-for="org in parentOrgOptions"
+                  :key="org.id"
+                  :label="org.name"
+                  :value="org.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="组织类型" prop="org_type">
+              <el-select v-model="formData.org_type" placeholder="选择组织类型" style="width: 100%">
+                <el-option label="部门单位" value="department" />
+                <el-option label="帮扶单位" value="support_unit" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="联系人">
+              <el-input v-model="formData.contact_person" placeholder="请输入联系人" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="联系电话">
+              <el-input v-model="formData.contact_phone" placeholder="请输入联系电话" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="地址">
+          <el-input v-model="formData.address" placeholder="请输入地址" />
         </el-form-item>
-        <el-form-item label="组织类型" prop="org_type">
-          <el-select v-model="formData.org_type" placeholder="选择组织类型" style="width: 100%">
-            <el-option label="部门单位" value="department" />
-            <el-option label="帮扶单位" value="support_unit" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
+        <el-form-item label="描述">
           <el-input
             v-model="formData.description"
             type="textarea"
@@ -100,7 +211,7 @@
             placeholder="请输入组织描述"
           />
         </el-form-item>
-        <el-form-item label="状态" prop="is_active">
+        <el-form-item label="状态">
           <el-switch v-model="formData.is_active" active-text="正常" inactive-text="停用" />
         </el-form-item>
       </el-form>
@@ -117,11 +228,15 @@ import { logger } from '@/utils/logger'
 
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { OfficeBuilding, CircleCheck, User, Share, Download, Plus } from '@element-plus/icons-vue'
 import { post, put, del, apiRequest } from '@/api/request'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import Sortable from 'sortablejs'
 import { batchUpdateSortOrders } from '@/api/organization'
+
+const { pushSafe } = useRouterSafe()
 
 // 获取认证状态
 const authStore = useAuthStore()
@@ -131,10 +246,22 @@ const tableRef = ref()
 const tableData = ref<any[]>([])
 const loading = ref(false)
 const searchText = ref('')
+const filterType = ref('')
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(20)
 let sortableInstance: Sortable | null = null
+
+// 统计数据
+const stats = ref({
+  total: 0,
+  active: 0,
+  inactive: 0,
+  total_members: 0,
+  orgs_with_members: 0,
+})
+const statsLoading = ref(false)
+const exporting = ref(false)
 
 // 对话框相关
 const dialogVisible = ref(false)
@@ -147,12 +274,24 @@ const formData = ref({
   parent_id: null as number | null,
   org_type: 'department',
   description: '',
+  contact_person: '',
+  contact_phone: '',
+  address: '',
   is_active: true,
 })
 
 const formRules: FormRules = {
   name: [{ required: true, message: '请输入组织名称', trigger: 'blur' }],
   org_type: [{ required: true, message: '请选择组织类型', trigger: 'change' }],
+}
+
+// 格式化层级显示
+function formatLevel(level: any): string {
+  if (!level) return '未设置'
+  const levelStr = String(level)
+  const match = levelStr.match(/level_(\d+)/)
+  if (match) return `第${match[1]}级`
+  return levelStr
 }
 
 // 收集某组织及其所有后代的 id（当前页内），用于父级选项过滤
@@ -178,6 +317,28 @@ const parentOrgOptions = computed(() => {
   return tableData.value.filter((org) => !excluded.has(org.id))
 })
 
+async function fetchStats() {
+  statsLoading.value = true
+  try {
+    const res = await apiRequest({
+      method: 'GET',
+      url: '/organizations/statistics/summary',
+    })
+    const data = res.data?.data || res.data
+    stats.value = {
+      total: data?.total || 0,
+      active: data?.active || 0,
+      inactive: data?.inactive || 0,
+      total_members: data?.total_members || 0,
+      orgs_with_members: data?.orgs_with_members || 0,
+    }
+  } catch {
+    // 静默失败
+  } finally {
+    statsLoading.value = false
+  }
+}
+
 async function fetchData() {
   loading.value = true
   try {
@@ -188,7 +349,8 @@ async function fetchData() {
         page: currentPage.value,
         page_size: pageSize.value,
         search: searchText.value || undefined,
-        is_active: true, // 只显示活跃的组织，过滤掉已删除的
+        org_type: filterType.value || undefined,
+        is_active: true,
       },
     })
     const resData = response.data
@@ -218,6 +380,9 @@ function handleCreate() {
     parent_id: null,
     org_type: 'department',
     description: '',
+    contact_person: '',
+    contact_phone: '',
+    address: '',
     is_active: true,
   }
   dialogVisible.value = true
@@ -230,9 +395,16 @@ function handleEdit(row: any) {
     parent_id: row.parent_id || null,
     org_type: row.org_type || row.type || 'department',
     description: row.description || '',
+    contact_person: row.contact_person || '',
+    contact_phone: row.contact_phone || '',
+    address: row.address || '',
     is_active: row.is_active !== false,
   }
   dialogVisible.value = true
+}
+
+function handleViewDetail(row: any) {
+  pushSafe(`/organizations/${row.id}`)
 }
 
 function handleDialogClose() {
@@ -254,11 +426,9 @@ async function handleSubmit() {
     delete payload.id
 
     if (formData.value.id) {
-      // 编辑
       await put(`/organizations/${formData.value.id}`, payload)
       ElMessage.success('已保存')
     } else {
-      // 新增
       await post('/organizations', payload)
       ElMessage.success('已创建')
     }
@@ -266,6 +436,7 @@ async function handleSubmit() {
     dialogVisible.value = false
     currentPage.value = 1
     fetchDataWithSort()
+    fetchStats()
   } catch (err: any) {
     ElMessage.error(err.message || '操作失败')
   } finally {
@@ -287,15 +458,11 @@ async function handleDelete(row: any) {
       }
     )
 
-    // 执行物理删除
     const response = await del(`/organizations/${row.id}`)
-
-    // 显示后端返回的消息
     ElMessage.success(response.data?.message || '组织已删除')
-
-    // 刷新列表（重置到第1页，确保删除后数据可见）
     currentPage.value = 1
     await fetchDataWithSort()
+    fetchStats()
   } catch (err: any) {
     if (err !== 'cancel' && err?.toString() !== 'cancel') {
       const detail = err?.response?.data?.detail || err?.message || '删除失败'
@@ -304,16 +471,44 @@ async function handleDelete(row: any) {
   }
 }
 
+async function handleExport() {
+  exporting.value = true
+  try {
+    const response = await apiRequest({
+      method: 'GET',
+      url: '/organizations/export/list',
+      responseType: 'blob',
+      params: {
+        org_type: filterType.value || undefined,
+      },
+    })
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = '组织机构列表.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (err: any) {
+    ElMessage.error('导出失败')
+  } finally {
+    exporting.value = false
+  }
+}
+
 // 初始化拖拽排序
 function initSortable() {
-  // 销毁旧实例
   if (sortableInstance) {
     sortableInstance.destroy()
     sortableInstance = null
   }
 
-  // 只在管理员模式且无搜索条件时启用拖拽
-  if (!isAdmin.value || searchText.value) {
+  if (!isAdmin.value || searchText.value || filterType.value) {
     return
   }
 
@@ -328,26 +523,20 @@ function initSortable() {
         const { oldIndex, newIndex } = evt
         if (oldIndex === newIndex) return
 
-        // 更新本地数据
         const movedItem = tableData.value.splice(oldIndex, 1)[0]
         tableData.value.splice(newIndex, 0, movedItem)
 
-        // 重新计算排序号
         const sortItems = tableData.value.map((item, index) => ({
           id: item.id,
           sort_order: index + 1,
         }))
 
         try {
-          // 调用批量更新 API
           await batchUpdateSortOrders(sortItems)
           ElMessage.success('排序已保存')
-          // 本地状态已更新，无需重新获取数据
         } catch (error: any) {
           logger.error('保存排序失败', error)
           ElMessage.error(error.response?.data?.detail || '保存排序失败')
-
-          // 恢复原始顺序
           await fetchData()
         }
       },
@@ -355,19 +544,62 @@ function initSortable() {
   })
 }
 
-// 修改 fetchData，在数据加载后初始化拖拽
 async function fetchDataWithSort() {
   await fetchData()
   initSortable()
 }
 
-onMounted(() => fetchDataWithSort())
+onMounted(() => {
+  fetchDataWithSort()
+  fetchStats()
+})
 </script>
 
 <style scoped>
 .organization-list-page {
   padding: 20px;
 }
+
+/* 统计卡片 */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  cursor: default;
+}
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.stat-info {
+  flex: 1;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1b4332;
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 13px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+/* 表格 */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -384,12 +616,33 @@ onMounted(() => fetchDataWithSort())
 .drag-tip {
   margin-bottom: 16px;
 }
-/* 拖拽时的样式 */
+.org-name-link {
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 500;
+}
+.org-name-link:hover {
+  text-decoration: underline;
+}
+
+/* 拖拽样式 */
 :deep(.sortable-ghost) {
   opacity: 0.4;
   background: var(--color-primary-light-8);
 }
 :deep(.el-table__body-wrapper tbody tr) {
   cursor: move;
+}
+
+/* 响应式 */
+@media (max-width: 992px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 576px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -93,10 +93,10 @@ class VerifyMachineCodeRequest(BaseModel):
 
 
 class OrganizationPassCodeCreateRequest(BaseModel):
-    """创建组织通行证码请求"""
+    """管理员生成组织通行码请求"""
 
-    organization_id: int = Field(..., description="组织ID")
-    verification_code: str = Field(..., description="校验码")
+    organization_id: int = Field(..., description="管理员选择的下级组织ID")
+    verification_code: str = Field(..., description="下级单位提供的机器校验码")
     allow_subordinate_generation: bool = Field(False, description="是否允许下级组织生成通行码")
     description: Optional[str] = Field(None, description="备注说明")
 
@@ -490,12 +490,13 @@ async def create_organization_pass_code(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """创建组织通行证码
+    """管理员输入校验码+选择组织→生成通行码
 
-    管理员接口，为指定组织生成通行证码。
+    管理员接口。下级单位提供机器校验码，管理员选择对应组织并输入校验码，
+    系统生成通行码。管理员将通行码告知下级单位用于注册。
 
     Args:
-        request: 创建请求
+        request: 创建请求（包含组织ID和校验码）
     """
     # 权限检查
     if not is_admin(current_user):
@@ -509,13 +510,13 @@ async def create_organization_pass_code(
         if not org:
             raise HTTPException(status_code=404, detail="组织不存在")
 
-        # 验证校验码
+        # 生成组织校验码（用于验证管理员输入的校验码是否匹配组织）
         service = MachineCodeService(db)
         expected_code = service.generate_organization_verification_code(org.id, org.name)
         if expected_code != request.verification_code:
-            raise HTTPException(status_code=400, detail="校验码不正确")
+            raise HTTPException(status_code=400, detail="校验码不正确，请确认下级单位提供的校验码")
 
-        # 创建通行证码
+        # 生成通行码
         record = service.create_organization_pass_code(
             organization_id=request.organization_id,
             verification_code=request.verification_code,
@@ -525,7 +526,7 @@ async def create_organization_pass_code(
         )
 
         try:
-            write_work_log(db, "machine_code", "create_org_pass_code", record.id, f"创建组织通行证码: org={org.name}",
+            write_work_log(db, "machine_code", "create_org_pass_code", record.id, f"生成组织通行码: org={org.name}",
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
         except Exception:
             logger.debug("记录工作日志失败")
@@ -540,14 +541,14 @@ async def create_organization_pass_code(
                 "allow_subordinate_generation": record.allow_subordinate_generation,
                 "created_at": (record.created_at.isoformat() if record.created_at else None),
             },
-            "message": "组织通行证码创建成功",
+            "message": f"通行码已生成，请将通行码告知「{org.name}」用于注册账号",
         }
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"创建组织通行证码失败: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="创建组织通行证码失败，请稍后重试或联系管理员")
+        logger.error(f"生成组织通行码失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="生成通行码失败，请稍后重试或联系管理员")
 
 
 @router.get("/organization/list")
@@ -691,6 +692,45 @@ async def export_organization_pass_codes(
     except Exception as e:
         logger.error(f"导出组织通行证码列表失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="导出组织通行证码列表失败，请稍后重试或联系管理员")
+
+
+@router.delete("/organization/{pass_code_id}", summary="删除通行码记录")
+async def delete_organization_pass_code(
+    pass_code_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """删除通行码记录
+
+    管理员可删除任意通行码记录（包括已激活和未激活的）。
+    删除后该通行码将无法用于注册。
+
+    Args:
+        pass_code_id: 通行码记录ID
+    """
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
+
+    try:
+        service = MachineCodeService(db)
+        success = service.delete_organization_pass_code(pass_code_id)
+
+        if not success:
+            raise HTTPException(status_code=404, detail="通行码记录不存在")
+
+        try:
+            write_work_log(db, "machine_code", "delete_org_pass_code", pass_code_id, f"删除通行码记录: id={pass_code_id}",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败")
+
+        return {"code": 200, "message": "通行码记录已删除"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"删除通行码记录失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="删除失败，请稍后重试或联系管理员")
 
 
 # 机器码权限管理 API

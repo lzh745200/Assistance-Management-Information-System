@@ -84,6 +84,22 @@ class ExcelExportService:
         wb = self._create_workbook("经费列表", headers, data)
         return self._to_bytes(wb)
 
+    def export_organizations(
+        self, organizations: list[dict], filename: str = "组织机构列表"
+    ) -> bytes:
+        """导出组织机构列表为 Excel。
+
+        Args:
+            organizations: 组织记录列表，每项为 dict。
+            filename: 工作表名称。
+        """
+        headers = [
+            "名称", "编码", "类型", "层级", "联系人", "联系电话",
+            "地址", "描述", "成员数", "状态", "创建时间",
+        ]
+        wb = self._create_workbook(filename, headers, organizations)
+        return self._to_bytes(wb)
+
     def export_organization_pass_codes(
         self, pass_codes: list[dict], filename: str = "组织通行证码列表"
     ) -> bytes:
