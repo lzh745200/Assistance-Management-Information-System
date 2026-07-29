@@ -287,6 +287,18 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '添加政策' },
       },
       {
+        path: '/policies/search',
+        name: 'PolicySearch',
+        component: () => retryImport(() => import('@/views/policies/Search.vue')),
+        meta: { title: '政策高级搜索' },
+      },
+      {
+        path: '/policies/categories',
+        name: 'PolicyCategories',
+        component: () => retryImport(() => import('@/views/policies/Category.vue')),
+        meta: { title: '政策分类总览' },
+      },
+      {
         path: '/policies/:id',
         name: 'PolicyDetail',
         component: () => retryImport(() => import('@/views/policies/Detail.vue')),
@@ -495,6 +507,24 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '数据录入' },
       },
       // ── 系统管理 ──
+      {
+        path: '/system/overview',
+        name: 'SystemOverview',
+        component: () => retryImport(() => import('@/views/system/SettingsOverview.vue')),
+        meta: { title: '系统总览', roles: ['admin', 'super_admin'] },
+      },
+      {
+        path: '/system/health-check',
+        name: 'SystemHealthCheck',
+        component: () => retryImport(() => import('@/views/system/HealthCheck.vue')),
+        meta: { title: '系统体检', roles: ['admin', 'super_admin'] },
+      },
+      {
+        path: '/system/about',
+        name: 'SystemAbout',
+        component: () => retryImport(() => import('@/views/system/About.vue')),
+        meta: { title: '关于系统' },
+      },
       {
         path: '/system/users',
         name: 'SystemUsers',

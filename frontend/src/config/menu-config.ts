@@ -92,6 +92,18 @@ export const MENU_CONFIG: MenuItem[] = [
     roles: ['admin', 'super_admin'],
     children: [
       {
+        key: 'system-overview',
+        label: '系统总览',
+        path: '/system/overview',
+        icon: 'Grid',
+      },
+      {
+        key: 'health-check',
+        label: '系统体检',
+        path: '/system/health-check',
+        icon: 'FirstAidKit',
+      },
+      {
         key: 'admin-dashboard',
         label: '管理面板',
         path: '/admin/dashboard',
@@ -186,6 +198,12 @@ export const MENU_CONFIG: MenuItem[] = [
         label: '用户反馈',
         path: '/system/feedback',
         icon: 'ChatDotSquare',
+      },
+      {
+        key: 'about',
+        label: '关于系统',
+        path: '/system/about',
+        icon: 'InfoFilled',
       },
     ],
   },

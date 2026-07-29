@@ -10,7 +10,13 @@
         <span v-if="lastUpdated" class="last-updated">
           <el-icon><Clock /></el-icon> 更新于 {{ lastUpdated }}
         </span>
-        <el-button :icon="Refresh" :loading="loading" size="small" type="primary" @click="refreshAll">
+        <el-button
+          :icon="Refresh"
+          :loading="loading"
+          size="small"
+          type="primary"
+          @click="refreshAll"
+        >
           刷新
         </el-button>
       </div>
@@ -324,7 +330,13 @@ const healthCards = computed<HealthCard[]>(() => {
   // 数据库状态
   let dbCard: HealthCard
   if (!health.value) {
-    dbCard = { key: 'db', label: '数据库状态', level: 'gray', value: '未知', detail: '健康检查获取失败' }
+    dbCard = {
+      key: 'db',
+      label: '数据库状态',
+      level: 'gray',
+      value: '未知',
+      detail: '健康检查获取失败',
+    }
   } else {
     const ok = (health.value.status || 'healthy') === 'healthy'
     const sizeMb = healthFull.value?.db_size_mb
@@ -345,7 +357,13 @@ const healthCards = computed<HealthCard[]>(() => {
   const disk = snapshot.value?.disk_usage
   let diskCard: HealthCard
   if (disk == null) {
-    diskCard = { key: 'disk', label: '磁盘空间', level: 'gray', value: '--', detail: '监控数据获取失败' }
+    diskCard = {
+      key: 'disk',
+      label: '磁盘空间',
+      level: 'gray',
+      value: '--',
+      detail: '监控数据获取失败',
+    }
   } else {
     const used = snapshot.value?.disk_used_gb
     const total = snapshot.value?.disk_total_gb
@@ -354,7 +372,10 @@ const healthCards = computed<HealthCard[]>(() => {
       label: '磁盘空间',
       level: usageLevel(disk),
       value: `${disk.toFixed(1)}%`,
-      detail: used != null && total != null ? `已用 ${used.toFixed(1)} / ${total.toFixed(1)} GB` : '磁盘使用率',
+      detail:
+        used != null && total != null
+          ? `已用 ${used.toFixed(1)} / ${total.toFixed(1)} GB`
+          : '磁盘使用率',
     }
   }
 
@@ -362,7 +383,13 @@ const healthCards = computed<HealthCard[]>(() => {
   const mem = snapshot.value?.memory_usage
   let memCard: HealthCard
   if (mem == null) {
-    memCard = { key: 'memory', label: '内存使用', level: 'gray', value: '--', detail: '监控数据获取失败' }
+    memCard = {
+      key: 'memory',
+      label: '内存使用',
+      level: 'gray',
+      value: '--',
+      detail: '监控数据获取失败',
+    }
   } else {
     const used = snapshot.value?.memory_used_mb
     const total = snapshot.value?.memory_total_mb
@@ -381,7 +408,13 @@ const healthCards = computed<HealthCard[]>(() => {
   // 备份状态
   let backupCard: HealthCard
   if (backupUnknown.value) {
-    backupCard = { key: 'backup', label: '备份状态', level: 'gray', value: '未知', detail: '备份信息获取失败' }
+    backupCard = {
+      key: 'backup',
+      label: '备份状态',
+      level: 'gray',
+      value: '未知',
+      detail: '备份信息获取失败',
+    }
   } else if (backupDays.value != null) {
     const recent = backupDays.value <= 7
     backupCard = {
@@ -400,19 +433,49 @@ const healthCards = computed<HealthCard[]>(() => {
       detail: '未获取到最近备份时间',
     }
   } else {
-    backupCard = { key: 'backup', label: '备份状态', level: 'red', value: '暂无备份', detail: '建议尽快创建数据备份' }
+    backupCard = {
+      key: 'backup',
+      label: '备份状态',
+      level: 'red',
+      value: '暂无备份',
+      detail: '建议尽快创建数据备份',
+    }
   }
 
   // 安全状态
   let secCard: HealthCard
   if (secretsUnknown.value) {
-    secCard = { key: 'security', label: '安全状态', level: 'gray', value: '未知', detail: '密钥状态获取失败' }
+    secCard = {
+      key: 'security',
+      label: '安全状态',
+      level: 'gray',
+      value: '未知',
+      detail: '密钥状态获取失败',
+    }
   } else if (secretsNeedRotation.value) {
-    secCard = { key: 'security', label: '安全状态', level: 'yellow', value: '待轮换', detail: '加密密钥即将或已经过期' }
+    secCard = {
+      key: 'security',
+      label: '安全状态',
+      level: 'yellow',
+      value: '待轮换',
+      detail: '加密密钥即将或已经过期',
+    }
   } else if (secretsOk.value) {
-    secCard = { key: 'security', label: '安全状态', level: 'green', value: '加密已启用', detail: '字段加密与零信任防护就绪' }
+    secCard = {
+      key: 'security',
+      label: '安全状态',
+      level: 'green',
+      value: '加密已启用',
+      detail: '字段加密与零信任防护就绪',
+    }
   } else {
-    secCard = { key: 'security', label: '安全状态', level: 'red', value: '未启用', detail: '请前往密钥管理配置加密密钥' }
+    secCard = {
+      key: 'security',
+      label: '安全状态',
+      level: 'red',
+      value: '未启用',
+      detail: '请前往密钥管理配置加密密钥',
+    }
   }
 
   return [dbCard, diskCard, memCard, backupCard, secCard]
@@ -427,7 +490,12 @@ const overallTagType = computed<'success' | 'warning' | 'danger' | 'info'>(() =>
 })
 
 const overallText = computed(() => {
-  const map = { success: '整体正常', warning: '部分告警', danger: '存在异常', info: '加载中' } as const
+  const map = {
+    success: '整体正常',
+    warning: '部分告警',
+    danger: '存在异常',
+    info: '加载中',
+  } as const
   return map[overallTagType.value]
 })
 
@@ -468,7 +536,8 @@ async function fetchHealthFull(): Promise<void> {
 async function fetchBackup(): Promise<void> {
   try {
     const stats = await getBackupStats()
-    backupCount.value = stats?.total_backups ?? stats?.totalBackups ?? healthFull.value?.total_backups ?? 0
+    backupCount.value =
+      stats?.total_backups ?? stats?.totalBackups ?? healthFull.value?.total_backups ?? 0
     backupLast.value = stats?.lastBackup ?? ''
     backupUnknown.value = false
   } catch {
@@ -581,7 +650,9 @@ onMounted(() => {
   border: 1px solid #e4e7ed;
   border-radius: 8px;
   overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
   margin-bottom: 4px;
 }
 .status-card::before {
@@ -711,7 +782,10 @@ onMounted(() => {
   cursor: pointer;
   border: 1px solid #e4e7ed;
   border-radius: 6px;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .nav-item:hover {
   border-color: #40916c;
@@ -737,7 +811,9 @@ onMounted(() => {
   flex: none;
   font-size: 12px;
   color: #c0c4cc;
-  transition: transform 0.2s ease, color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
 }
 .nav-item:hover .nav-arrow {
   transform: translateX(3px);

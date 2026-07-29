@@ -14,11 +14,15 @@
       <!-- 系统信息 -->
       <el-card class="about-card">
         <template #header>
-          <span class="card-title"><el-icon><InfoFilled /></el-icon> 系统信息</span>
+          <span class="card-title"
+            ><el-icon><InfoFilled /></el-icon> 系统信息</span
+          >
         </template>
         <el-descriptions :column="1" border>
           <el-descriptions-item label="系统名称">帮扶管理信息系统</el-descriptions-item>
-          <el-descriptions-item label="英文名">Assistance Management Information System</el-descriptions-item>
+          <el-descriptions-item label="英文名"
+            >Assistance Management Information System</el-descriptions-item
+          >
           <el-descriptions-item label="版本">
             <el-tag type="success" size="small">v1.4.2</el-tag>
           </el-descriptions-item>
@@ -35,10 +39,14 @@
       <!-- 系统要求 -->
       <el-card class="about-card">
         <template #header>
-          <span class="card-title"><el-icon><Monitor /></el-icon> 系统要求</span>
+          <span class="card-title"
+            ><el-icon><Monitor /></el-icon> 系统要求</span
+          >
         </template>
         <el-descriptions :column="1" border>
-          <el-descriptions-item label="操作系统">Windows 10/11 64-bit / 麒麟 V10 ARM64</el-descriptions-item>
+          <el-descriptions-item label="操作系统"
+            >Windows 10/11 64-bit / 麒麟 V10 ARM64</el-descriptions-item
+          >
           <el-descriptions-item label="内存">4GB 最低 / 8GB 推荐</el-descriptions-item>
           <el-descriptions-item label="硬盘">2GB 最低 / 5GB 推荐</el-descriptions-item>
         </el-descriptions>
@@ -47,7 +55,9 @@
       <!-- 许可与致谢 -->
       <el-card class="about-card">
         <template #header>
-          <span class="card-title"><el-icon><Stamp /></el-icon> 许可与致谢</span>
+          <span class="card-title"
+            ><el-icon><Stamp /></el-icon> 许可与致谢</span
+          >
         </template>
         <el-descriptions :column="1" border>
           <el-descriptions-item label="许可">
@@ -57,7 +67,13 @@
           <el-descriptions-item label="开发单位">（待补充）</el-descriptions-item>
           <el-descriptions-item label="主要开源组件">
             <div class="tag-list">
-              <el-tag v-for="lib in openSourceLibs" :key="lib" size="small" type="info" effect="plain">
+              <el-tag
+                v-for="lib in openSourceLibs"
+                :key="lib"
+                size="small"
+                type="info"
+                effect="plain"
+              >
                 {{ lib }}
               </el-tag>
             </div>
@@ -69,7 +85,9 @@
       <el-card v-loading="envLoading" class="about-card">
         <template #header>
           <div class="card-header">
-            <span class="card-title"><el-icon><Cpu /></el-icon> 运行时信息</span>
+            <span class="card-title"
+              ><el-icon><Cpu /></el-icon> 运行时信息</span
+            >
             <el-button :icon="Refresh" size="small" :loading="envLoading" @click="fetchEnv">
               重新检测
             </el-button>
@@ -94,17 +112,14 @@
             {{ envData?.system?.platform || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="运行模式">
-            <el-tag :type="envModeTagType" size="small">{{ envData?.system?.env_mode || '-' }}</el-tag>
+            <el-tag :type="envModeTagType" size="small">{{
+              envData?.system?.env_mode || '-'
+            }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="依赖完整性">
             <template v-if="envData">
               <el-tag type="success" size="small">已安装 {{ installedCount }}</el-tag>
-              <el-tag
-                v-if="missingCount > 0"
-                type="danger"
-                size="small"
-                style="margin-left: 8px"
-              >
+              <el-tag v-if="missingCount > 0" type="danger" size="small" style="margin-left: 8px">
                 缺失 {{ missingCount }}
               </el-tag>
               <el-tag v-else type="success" size="small" effect="plain" style="margin-left: 8px">

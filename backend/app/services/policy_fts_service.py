@@ -66,7 +66,7 @@ def search_policies_fts(
     sql = """
         SELECT p.id, p.title, p.summary, p.keywords, p.level, p.category,
                snippet({FTS_TABLE}, 1, '<mark>', '</mark>', '...', 32) AS snippet,
-               bm25({FTS_TABLE}, 0.0, 10.0, 5.0) AS rank
+               bm25({FTS_TABLE}, 8.0, 10.0, 5.0) AS rank
         FROM {FTS_TABLE} f
         JOIN policies p ON p.id = f.rowid
         WHERE {FTS_TABLE} MATCH :query
@@ -125,3 +125,32 @@ def highlight_keywords(text: str, keyword: str) -> str:
         text,
         flags=re.IGNORECASE,
     )
+
+
+def sync_policy_to_fts(db: Session, policy_id: int) -> None:
+    """将单条政策同步到 FTS 索引（创建/更新后调用）."""
+    try:
+        row = db.execute(
+            text("SELECT id, title, content, summary, keywords FROM policies WHERE id = :id"),
+            {"id": policy_id},
+        ).fetchone()
+        if not row:
+            return
+        # 先删除旧记录再插入（INSERT OR REPLACE 在 FTS5 中不支持）
+        db.execute(text(f"DELETE FROM {FTS_TABLE} WHERE rowid = :id"), {"id": policy_id})  # nosec B608
+        db.execute(
+            text(f"INSERT INTO {FTS_TABLE}(rowid, title, content, summary, keywords) VALUES (:id, :title, :content, :summary, :keywords)"),  # nosec B608
+            {"id": row[0], "title": row[1] or "", "content": row[2] or "", "summary": row[3] or "", "keywords": row[4] or ""},
+        )
+        safe_commit(db)
+    except Exception:
+        logger.debug("FTS同步失败 policy_id=%s", policy_id, exc_info=True)
+
+
+def remove_policy_from_fts(db: Session, policy_id: int) -> None:
+    """从 FTS 索引中删除政策（删除后调用）."""
+    try:
+        db.execute(text(f"DELETE FROM {FTS_TABLE} WHERE rowid = :id"), {"id": policy_id})  # nosec B608
+        safe_commit(db)
+    except Exception:
+        logger.debug("FTS删除失败 policy_id=%s", policy_id, exc_info=True)
