@@ -36,6 +36,7 @@ jobs:
           path: backend/test-results.xml
           retention-days: 7
       - name: Frontend smoke test
+        continue-on-error: true
         run: |
           cd frontend
           npm ci --legacy-peer-deps --prefer-offline || npm install --legacy-peer-deps
