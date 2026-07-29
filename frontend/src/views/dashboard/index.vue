@@ -65,13 +65,25 @@
       <KpiCards :key="kpiRefreshKey" />
     </div>
 
-    <!-- 常用快捷操作 -->
+    <!-- 常用快捷操作（按角色权限显示） -->
     <div class="shortcut-strip">
       <span class="shortcut-label">常用操作</span>
-      <el-button type="primary" plain :icon="Plus" @click="pushSafe('/projects/create')">
+      <el-button
+        v-if="isAdmin"
+        type="primary"
+        plain
+        :icon="Plus"
+        @click="pushSafe('/projects/create')"
+      >
         新建项目
       </el-button>
-      <el-button type="success" plain :icon="House" @click="pushSafe('/supported-villages')">
+      <el-button
+        v-if="isAdmin"
+        type="success"
+        plain
+        :icon="House"
+        @click="pushSafe('/supported-villages')"
+      >
         新增帮扶村
       </el-button>
       <el-button type="warning" plain :icon="Money" @click="pushSafe('/funds/user')">

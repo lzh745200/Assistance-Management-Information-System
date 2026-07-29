@@ -27,7 +27,11 @@
             <el-icon class="btn-icon"><OfficeBuilding /></el-icon
             ><span class="btn-text">组织架构</span>
           </button>
-          <button class="action-btn primary" @click="pushSafe('/projects/import')">
+          <button
+            v-if="isManager || isAdmin"
+            class="action-btn primary"
+            @click="pushSafe('/projects/import')"
+          >
             <el-icon class="btn-icon"><Download /></el-icon><span class="btn-text">项目导入</span>
           </button>
           <button class="action-btn primary" @click="pushSafe('/funds/user')">
@@ -49,7 +53,7 @@
       </el-collapse-item>
 
       <!-- 数据与分析 -->
-      <el-collapse-item name="data">
+      <el-collapse-item v-if="isManager || isAdmin" name="data">
         <template #title>
           <span class="group-header">数据与分析</span>
           <el-tag size="small" type="success" effect="plain">11</el-tag>
