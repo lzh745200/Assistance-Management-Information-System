@@ -38,11 +38,21 @@
       <div v-if="preview" class="preview-section">
         <el-divider content-position="left">包内容预览</el-divider>
         <el-descriptions :column="2" border size="small">
-          <el-descriptions-item label="包类型">{{ preview.manifest?.package_type }}</el-descriptions-item>
-          <el-descriptions-item label="包版本">{{ preview.manifest?.package_version }}</el-descriptions-item>
-          <el-descriptions-item label="目标组织ID">{{ preview.manifest?.target_organization_id }}</el-descriptions-item>
-          <el-descriptions-item label="生成时间">{{ preview.manifest?.generated_at }}</el-descriptions-item>
-          <el-descriptions-item label="模块策略数">{{ preview.module_policy_count }} 项</el-descriptions-item>
+          <el-descriptions-item label="包类型">{{
+            preview.manifest?.package_type
+          }}</el-descriptions-item>
+          <el-descriptions-item label="包版本">{{
+            preview.manifest?.package_version
+          }}</el-descriptions-item>
+          <el-descriptions-item label="目标组织ID">{{
+            preview.manifest?.target_organization_id
+          }}</el-descriptions-item>
+          <el-descriptions-item label="生成时间">{{
+            preview.manifest?.generated_at
+          }}</el-descriptions-item>
+          <el-descriptions-item label="模块策略数"
+            >{{ preview.module_policy_count }} 项</el-descriptions-item
+          >
           <el-descriptions-item label="用户数">{{ preview.user_count }} 个</el-descriptions-item>
         </el-descriptions>
 

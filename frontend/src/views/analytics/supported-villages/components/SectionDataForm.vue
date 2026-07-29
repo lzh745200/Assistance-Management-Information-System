@@ -24,7 +24,7 @@
         <el-divider content-position="left">人口与户籍数据</el-divider>
         <el-row :gutter="24">
           <el-col :span="8">
-            <el-form-item label="总户数">
+            <el-form-item label="总户数" prop="totalHouseholds">
               <el-input-number v-model="formData.totalHouseholds" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -41,31 +41,31 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="8">
-            <el-form-item label="劳动力(人)">
+            <el-form-item label="劳动力(人)" prop="laborForce">
               <el-input-number v-model="formData.laborForce" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="外出务工(人)">
+            <el-form-item label="外出务工(人)" prop="migrantWorkers">
               <el-input-number v-model="formData.migrantWorkers" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="脱贫人口(人)">
+            <el-form-item label="脱贫人口(人)" prop="povertyPopulation">
               <el-input-number v-model="formData.povertyPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="8">
-            <el-form-item label="脱贫户数(户)">
+            <el-form-item label="脱贫户数(户)" prop="povertyHouseholds">
               <el-input-number v-model="formData.povertyHouseholds" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="脱贫不稳定户(户)">
+            <el-form-item label="脱贫不稳定户(户)" prop="unstablePovertyHouseholds">
               <el-input-number
                 v-model="formData.unstablePovertyHouseholds"
                 :min="0"
@@ -74,7 +74,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="脱贫不稳定户(人)">
+            <el-form-item label="脱贫不稳定户(人)" prop="unstablePovertyPopulation">
               <el-input-number
                 v-model="formData.unstablePovertyPopulation"
                 :min="0"
@@ -85,7 +85,7 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="边缘易致贫户(户)">
+            <el-form-item label="边缘易致贫户(户)" prop="marginalPovertyHouseholds">
               <el-input-number
                 v-model="formData.marginalPovertyHouseholds"
                 :min="0"
@@ -94,7 +94,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="边缘易致贫户(人)">
+            <el-form-item label="边缘易致贫户(人)" prop="marginalPovertyPopulation">
               <el-input-number
                 v-model="formData.marginalPovertyPopulation"
                 :min="0"
@@ -105,7 +105,7 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="突发严重困难户(户)">
+            <el-form-item label="突发严重困难户(户)" prop="suddenDifficultyHouseholds">
               <el-input-number
                 v-model="formData.suddenDifficultyHouseholds"
                 :min="0"
@@ -114,7 +114,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="突发严重困难户(人)">
+            <el-form-item label="突发严重困难户(人)" prop="suddenDifficultyPopulation">
               <el-input-number
                 v-model="formData.suddenDifficultyPopulation"
                 :min="0"
@@ -125,7 +125,7 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="村支书(退役军人)">
+            <el-form-item label="村支书(退役军人)" prop="veteranVillageSecretary">
               <el-input-number
                 v-model="formData.veteranVillageSecretary"
                 :min="0"
@@ -134,7 +134,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="村委员(退役军人)">
+            <el-form-item label="村委员(退役军人)" prop="veteranVillageCommittee">
               <el-input-number
                 v-model="formData.veteranVillageCommittee"
                 :min="0"
@@ -160,7 +160,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="县区人均收入(万元)">
+            <el-form-item label="县区人均收入(万元)" prop="countyPerCapitaIncome">
               <el-input-number
                 v-model="formData.countyPerCapitaIncome"
                 :min="0"
@@ -189,12 +189,12 @@
         <el-divider content-position="left">力量投入情况</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="军以上领导到村(人次)">
+            <el-form-item label="军以上领导到村(人次)" prop="seniorLeaderVisits">
               <el-input-number v-model="formData.seniorLeaderVisits" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="帮扶单位官兵到村(人次)">
+            <el-form-item label="帮扶单位官兵到村(人次)" prop="unitSoldierVisits">
               <el-input-number v-model="formData.unitSoldierVisits" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -216,7 +216,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="计划投入(万元)">
+            <el-form-item label="计划投入(万元)" prop="plannedInvestment">
               <el-input-number
                 v-model="formData.plannedInvestment"
                 :min="0"
@@ -228,24 +228,24 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="种植养殖(个)">
+            <el-form-item label="种植养殖(个)" prop="plantingBreeding">
               <el-input-number v-model="formData.plantingBreeding" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="帮扶车间(个)">
+            <el-form-item label="帮扶车间(个)" prop="workshop">
               <el-input-number v-model="formData.workshop" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="乡村旅游(个)">
+            <el-form-item label="乡村旅游(个)" prop="ruralTourism">
               <el-input-number v-model="formData.ruralTourism" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="其他(个)">
+            <el-form-item label="其他(个)" prop="otherIndustry">
               <el-input-number v-model="formData.otherIndustry" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -257,7 +257,7 @@
         <el-divider content-position="left">改善基础设施</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="当年投入(万元)">
+            <el-form-item label="当年投入(万元)" prop="investment">
               <el-input-number
                 v-model="formData.investment"
                 :min="0"
@@ -267,7 +267,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="计划投入(万元)">
+            <el-form-item label="计划投入(万元)" prop="plannedInvestment">
               <el-input-number
                 v-model="formData.plannedInvestment"
                 :min="0"
@@ -279,7 +279,7 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="乡村道路(公里)">
+            <el-form-item label="乡村道路(公里)" prop="roadKm">
               <el-input-number
                 v-model="formData.roadKm"
                 :min="0"
@@ -289,26 +289,26 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="住房改造(户)">
+            <el-form-item label="住房改造(户)" prop="housingRenovation">
               <el-input-number v-model="formData.housingRenovation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="水利设施(个)">
+            <el-form-item label="水利设施(个)" prop="waterFacilities">
               <el-input-number v-model="formData.waterFacilities" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="文化广场(个)">
+            <el-form-item label="文化广场(个)" prop="culturalPlaza">
               <el-input-number v-model="formData.culturalPlaza" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="书屋网吧(个)">
+            <el-form-item label="书屋网吧(个)" prop="libraryCafe">
               <el-input-number v-model="formData.libraryCafe" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -320,7 +320,7 @@
         <el-divider content-position="left">党建帮扶</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="当年投入(万元)">
+            <el-form-item label="当年投入(万元)" prop="investment">
               <el-input-number
                 v-model="formData.investment"
                 :min="0"
@@ -330,7 +330,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="计划投入(万元)">
+            <el-form-item label="计划投入(万元)" prop="plannedInvestment">
               <el-input-number
                 v-model="formData.plannedInvestment"
                 :min="0"
@@ -342,24 +342,24 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="结对帮扶党支部(个)">
+            <el-form-item label="结对帮扶党支部(个)" prop="pairedBranches">
               <el-input-number v-model="formData.pairedBranches" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="党建指导员(人)">
+            <el-form-item label="党建指导员(人)" prop="partyInstructors">
               <el-input-number v-model="formData.partyInstructors" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="联建共促活动(次)">
+            <el-form-item label="联建共促活动(次)" prop="jointActivities">
               <el-input-number v-model="formData.jointActivities" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="乡风文明活动(次)">
+            <el-form-item label="乡风文明活动(次)" prop="civilizationActivities">
               <el-input-number
                 v-model="formData.civilizationActivities"
                 :min="0"
@@ -375,7 +375,7 @@
         <el-divider content-position="left">医疗帮扶</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="当年投入(万元)">
+            <el-form-item label="当年投入(万元)" prop="investment">
               <el-input-number
                 v-model="formData.investment"
                 :min="0"
@@ -385,7 +385,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="计划投入(万元)">
+            <el-form-item label="计划投入(万元)" prop="plannedInvestment">
               <el-input-number
                 v-model="formData.plannedInvestment"
                 :min="0"
@@ -397,12 +397,12 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="帮建卫生院室(个)">
+            <el-form-item label="帮建卫生院室(个)" prop="clinicsBuilt">
               <el-input-number v-model="formData.clinicsBuilt" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="巡诊群众(人次)">
+            <el-form-item label="巡诊群众(人次)" prop="patientsServed">
               <el-input-number v-model="formData.patientsServed" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -414,7 +414,7 @@
         <el-divider content-position="left">消费帮扶</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="采购村产品(万元)">
+            <el-form-item label="采购村产品(万元)" prop="villageProductsPurchase">
               <el-input-number
                 v-model="formData.villageProductsPurchase"
                 :min="0"
@@ -424,7 +424,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="采购他村产品(万元)">
+            <el-form-item label="采购他村产品(万元)" prop="otherProductsPurchase">
               <el-input-number
                 v-model="formData.otherProductsPurchase"
                 :min="0"
@@ -436,12 +436,12 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="营区销售专柜(个)">
+            <el-form-item label="营区销售专柜(个)" prop="salesCounters">
               <el-input-number v-model="formData.salesCounters" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="惠及群众(人)">
+            <el-form-item label="惠及群众(人)" prop="benefitedPopulation">
               <el-input-number
                 v-model="formData.benefitedPopulation"
                 :min="0"
@@ -457,19 +457,19 @@
         <el-divider content-position="left">就业帮扶</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="聘用脱贫群众(人)">
+            <el-form-item label="聘用脱贫群众(人)" prop="hiredPopulation">
               <el-input-number v-model="formData.hiredPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="技能培训(人次)">
+            <el-form-item label="技能培训(人次)" prop="trainedPopulation">
               <el-input-number v-model="formData.trainedPopulation" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="推荐就业(人次)">
+            <el-form-item label="推荐就业(人次)" prop="recommendedEmployment">
               <el-input-number
                 v-model="formData.recommendedEmployment"
                 :min="0"
@@ -485,7 +485,7 @@
         <el-divider content-position="left">教育帮扶</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="教育投入(万元)">
+            <el-form-item label="教育投入(万元)" prop="investment">
               <el-input-number
                 v-model="formData.investment"
                 :min="0"
@@ -497,12 +497,12 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="捐赠帮扶村学校(所)">
+            <el-form-item label="捐赠帮扶村学校(所)" prop="donatedSchools">
               <el-input-number v-model="formData.donatedSchools" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="援建外村学校(所)">
+            <el-form-item label="援建外村学校(所)" prop="aidedExternalSchools">
               <el-input-number
                 v-model="formData.aidedExternalSchools"
                 :min="0"
@@ -513,7 +513,7 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="助学兴教活动(次)">
+            <el-form-item label="助学兴教活动(次)" prop="educationActivities">
               <el-input-number
                 v-model="formData.educationActivities"
                 :min="0"
@@ -522,14 +522,14 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="资助困难学生(人)">
+            <el-form-item label="资助困难学生(人)" prop="aidedStudents">
               <el-input-number v-model="formData.aidedStudents" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="官兵辅导员(人)">
+            <el-form-item label="官兵辅导员(人)" prop="volunteerCounselors">
               <el-input-number
                 v-model="formData.volunteerCounselors"
                 :min="0"
@@ -566,7 +566,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="集体收入(万元)">
+            <el-form-item label="集体收入(万元)" prop="collectiveIncomeAmount">
               <el-input-number
                 v-model="formData.collectiveIncomeAmount"
                 :min="0"
@@ -746,13 +746,123 @@ const emit = defineEmits<{
 const formRef = ref()
 defineExpose({ formRef })
 
-// 动态验证规则 — 根据 sectionKey 返回对应规则
+// ==================== 表单验证规则 ====================
+// 通用规则生成器：必填 / 非负
+function requiredRule(label: string) {
+  return { required: true, message: `请输入${label}`, trigger: ['blur', 'change'] }
+}
+
+function nonNegativeRule(label: string) {
+  return {
+    validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
+      if (value != null && value < 0) {
+        callback(new Error(`${label}不能为负数`))
+      } else {
+        callback()
+      }
+    },
+    trigger: ['blur', 'change'],
+  }
+}
+
+// 各板块数值字段配置：[字段名, 显示名称, 是否必填]
+const SECTION_NUMERIC_FIELDS: Record<string, Array<[string, string, boolean]>> = {
+  population: [
+    ['totalHouseholds', '总户数', true],
+    ['totalPopulation', '总人数', true],
+    ['residentPopulation', '常住人口数', true],
+    ['laborForce', '劳动力人数', false],
+    ['migrantWorkers', '外出务工人数', false],
+    ['povertyPopulation', '脱贫人口数', false],
+    ['povertyHouseholds', '脱贫户数', false],
+    ['unstablePovertyHouseholds', '脱贫不稳定户数', false],
+    ['unstablePovertyPopulation', '脱贫不稳定人口数', false],
+    ['marginalPovertyHouseholds', '边缘易致贫户数', false],
+    ['marginalPovertyPopulation', '边缘易致贫人口数', false],
+    ['suddenDifficultyHouseholds', '突发严重困难户数', false],
+    ['suddenDifficultyPopulation', '突发严重困难人口数', false],
+    ['veteranVillageSecretary', '村支书(退役军人)人数', false],
+    ['veteranVillageCommittee', '村委员(退役军人)人数', false],
+  ],
+  income: [
+    ['perCapitaIncome', '村人均纯收入', true],
+    ['countyPerCapitaIncome', '县区人均收入', false],
+    ['collectiveIncome', '村集体收入', true],
+  ],
+  force_investment: [
+    ['seniorLeaderVisits', '军以上领导到村人次', false],
+    ['unitSoldierVisits', '帮扶单位官兵到村人次', false],
+  ],
+  industry: [
+    ['investment', '当年投入金额', true],
+    ['plannedInvestment', '计划投入金额', false],
+    ['plantingBreeding', '种植养殖数量', false],
+    ['workshop', '帮扶车间数量', false],
+    ['ruralTourism', '乡村旅游数量', false],
+    ['otherIndustry', '其他产业数量', false],
+  ],
+  infrastructure: [
+    ['investment', '当年投入金额', true],
+    ['plannedInvestment', '计划投入金额', false],
+    ['roadKm', '乡村道路里程', false],
+    ['housingRenovation', '住房改造户数', false],
+    ['waterFacilities', '水利设施数量', false],
+    ['culturalPlaza', '文化广场数量', false],
+    ['libraryCafe', '书屋网吧数量', false],
+  ],
+  party_building: [
+    ['investment', '当年投入金额', true],
+    ['plannedInvestment', '计划投入金额', false],
+    ['pairedBranches', '结对帮扶党支部数量', false],
+    ['partyInstructors', '党建指导员人数', false],
+    ['jointActivities', '联建共促活动次数', false],
+    ['civilizationActivities', '乡风文明活动次数', false],
+  ],
+  medical: [
+    ['investment', '当年投入金额', true],
+    ['plannedInvestment', '计划投入金额', false],
+    ['clinicsBuilt', '帮建卫生院室数量', false],
+    ['patientsServed', '巡诊群众人次', false],
+  ],
+  consumption: [
+    ['villageProductsPurchase', '采购村产品金额', false],
+    ['otherProductsPurchase', '采购他村产品金额', false],
+    ['salesCounters', '销售专柜数量', false],
+    ['benefitedPopulation', '惠及群众人数', false],
+  ],
+  employment: [
+    ['hiredPopulation', '聘用脱贫群众人数', false],
+    ['trainedPopulation', '技能培训人次', false],
+    ['recommendedEmployment', '推荐就业人次', false],
+  ],
+  education: [
+    ['investment', '教育投入金额', true],
+    ['donatedSchools', '捐赠学校数量', false],
+    ['aidedExternalSchools', '援建外村学校数量', false],
+    ['educationActivities', '助学兴教活动次数', false],
+    ['aidedStudents', '资助学生人数', false],
+    ['volunteerCounselors', '官兵辅导员人数', false],
+  ],
+  committee: [['collectiveIncomeAmount', '集体收入', false]],
+}
+
+// 动态验证规则 — 根据 sectionKey 生成对应规则
 const formRules = computed(() => {
   const rules: Record<string, any[]> = {}
 
+  // 1) 数值字段：关键字段必填 + 全部字段非负校验
+  for (const [field, label, required] of SECTION_NUMERIC_FIELDS[props.sectionKey] ?? []) {
+    rules[field] = []
+    if (required) {
+      rules[field].push(requiredRule(label))
+    }
+    rules[field].push(nonNegativeRule(label))
+  }
+
+  // 2) 特殊业务规则（人口板块：总人数须大于0，常住人口不能超过总人数）
   if (props.sectionKey === 'population') {
     rules.totalPopulation = [
-      { required: true, message: '请输入总人数', trigger: ['blur', 'change'] },
+      ...(rules.totalPopulation ?? []),
       {
         validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
           if (value != null && value <= 0) {
@@ -765,61 +875,11 @@ const formRules = computed(() => {
       },
     ]
     rules.residentPopulation = [
-      { required: true, message: '请输入常住人口数', trigger: ['blur', 'change'] },
+      ...(rules.residentPopulation ?? []),
       {
         validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
           if (value != null && value > (formData.totalPopulation || 0)) {
             callback(new Error('常住人口不能超过总人数'))
-          } else {
-            callback()
-          }
-        },
-        trigger: ['blur', 'change'],
-      },
-    ]
-  }
-
-  if (props.sectionKey === 'income') {
-    rules.perCapitaIncome = [
-      { required: true, message: '请输入村人均纯收入', trigger: ['blur', 'change'] },
-      {
-        validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
-          if (value != null && value < 0) {
-            callback(new Error('人均收入不能为负数'))
-          } else {
-            callback()
-          }
-        },
-        trigger: ['blur', 'change'],
-      },
-    ]
-    rules.collectiveIncome = [
-      { required: true, message: '请输入村集体收入', trigger: ['blur', 'change'] },
-      {
-        validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
-          if (value != null && value < 0) {
-            callback(new Error('集体收入不能为负数'))
-          } else {
-            callback()
-          }
-        },
-        trigger: ['blur', 'change'],
-      },
-    ]
-  }
-
-  // Investment validation for sections that have an investment field
-  if (
-    ['industry', 'infrastructure', 'party_building', 'medical', 'education'].includes(
-      props.sectionKey
-    )
-  ) {
-    rules.investment = [
-      { required: true, message: '请输入当年投入金额', trigger: ['blur', 'change'] },
-      {
-        validator: (_rule: any, value: number, callback: (error?: Error) => void) => {
-          if (value != null && value < 0) {
-            callback(new Error('投入金额不能为负数'))
           } else {
             callback()
           }

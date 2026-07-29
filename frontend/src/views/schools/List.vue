@@ -77,6 +77,22 @@
       </div>
     </div>
 
+    <!-- 统计图表 -->
+    <el-row :gutter="16" class="charts-row">
+      <el-col :xs="24" :sm="12">
+        <div class="chart-card">
+          <h3 class="chart-title">学生分布（按学校 Top 10）</h3>
+          <div ref="studentBarRef" class="chart-body" />
+        </div>
+      </el-col>
+      <el-col :xs="24" :sm="12">
+        <div class="chart-card">
+          <h3 class="chart-title">学校类型分布</h3>
+          <div ref="typePieRef" class="chart-body" />
+        </div>
+      </el-col>
+    </el-row>
+
     <!-- 搜索筛选 -->
     <div class="filter-card">
       <el-form :model="filterForm" inline>
@@ -251,7 +267,7 @@
 import { logger } from '@/utils/logger'
 import { AuthStorage } from '@/utils/authStorage'
 
-import { ref, reactive, computed, onMounted, onActivated } from 'vue'
+import { ref, reactive, computed, onMounted, onActivated, onUnmounted, watch, nextTick } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useDesensitize } from '@/composables/useDesensitize'
 import { ElMessage } from 'element-plus'
@@ -259,6 +275,7 @@ import { Plus, Download, Upload, Search } from '@element-plus/icons-vue'
 import { del, apiRequest } from '@/api/request'
 import { schoolApi } from '@/api/schools'
 import { downloadImportTemplateAndSave } from '@/api/import'
+import echarts from '@/utils/echarts'
 
 const { pushSafe } = useRouterSafe()
 const { ds } = useDesensitize()
@@ -357,6 +374,121 @@ function getStatusTagType(status: string) {
   if (status === 'completed') return 'primary'
   return 'info'
 }
+
+// ========== 统计图表 ==========
+const studentBarRef = ref<HTMLElement>()
+const typePieRef = ref<HTMLElement>()
+let studentBarChart: echarts.ECharts | null = null
+let typePieChart: echarts.ECharts | null = null
+
+function buildStudentBarOption(): echarts.EChartsCoreOption {
+  const rows = tableData.value
+    .map((s: any) => ({
+      name: String(s.name || '-'),
+      value: Number(s.student_count || s.students || 0),
+    }))
+    .sort((a: any, b: any) => b.value - a.value)
+    .slice(0, 10)
+  return {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: 'rgba(255,255,255,.96)',
+      borderColor: '#e2e8f0',
+      borderRadius: 8,
+      textStyle: { color: '#1e293b', fontSize: 13 },
+    },
+    grid: { left: 8, right: 32, top: 8, bottom: 8, containLabel: true },
+    xAxis: {
+      type: 'value',
+      axisLabel: { color: '#94a3b8', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
+    },
+    yAxis: {
+      type: 'category',
+      data: rows.map((r: any) => (r.name.length > 8 ? r.name.slice(0, 8) + '…' : r.name)).reverse(),
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#475569', fontSize: 12 },
+    },
+    series: [
+      {
+        name: '学生数',
+        type: 'bar',
+        data: rows.map((r: any) => r.value).reverse(),
+        barWidth: 16,
+        itemStyle: {
+          borderRadius: [0, 6, 6, 0],
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#2d6a4f' },
+            { offset: 1, color: '#52b788' },
+          ]),
+        },
+        label: { show: true, position: 'right', color: '#64748b', fontSize: 11 },
+      },
+    ],
+  }
+}
+
+function buildTypePieOption(): echarts.EChartsCoreOption {
+  const counts: Record<string, number> = {}
+  tableData.value.forEach((s: any) => {
+    const key = String(s.type || 'other')
+    counts[key] = (counts[key] || 0) + 1
+  })
+  const data = Object.entries(counts)
+    .map(([key, value]) => ({ value, name: typeMap[key] || key }))
+    .sort((a, b) => b.value - a.value)
+  return {
+    color: ['#2d6a4f', '#1e4d8c', '#f59e0b', '#52b788', '#94a3b8'],
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: 'rgba(255,255,255,.96)',
+      borderColor: '#e2e8f0',
+      borderRadius: 8,
+      textStyle: { color: '#1e293b', fontSize: 13 },
+      formatter: (p: any) => `${p.marker} ${p.name}: <b>${p.value}所</b> (${p.percent}%)`,
+    },
+    legend: { bottom: 0, textStyle: { color: '#64748b', fontSize: 11 } },
+    series: [
+      {
+        name: '学校类型',
+        type: 'pie',
+        radius: ['45%', '70%'],
+        center: ['50%', '46%'],
+        itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 3 },
+        label: { show: false },
+        emphasis: { itemStyle: { shadowBlur: 16, shadowColor: 'rgba(0,0,0,.12)' } },
+        data,
+      },
+    ],
+  }
+}
+
+function renderCharts() {
+  studentBarChart?.dispose()
+  studentBarChart = null
+  typePieChart?.dispose()
+  typePieChart = null
+  if (studentBarRef.value) {
+    studentBarChart = echarts.init(studentBarRef.value)
+    studentBarChart.setOption(buildStudentBarOption())
+  }
+  if (typePieRef.value) {
+    typePieChart = echarts.init(typePieRef.value)
+    typePieChart.setOption(buildTypePieOption())
+  }
+}
+
+function handleChartResize() {
+  studentBarChart?.resize()
+  typePieChart?.resize()
+}
+
+// 表格数据变化（加载/筛选/翻页）时重绘图表
+watch(tableData, () => {
+  nextTick(renderCharts)
+})
 
 async function fetchData() {
   loading.value = true
@@ -499,12 +631,23 @@ async function handleExport() {
 onMounted(() => {
   fetchData()
   loadApiStats()
+  window.addEventListener('resize', handleChartResize)
 })
 
 // 页面激活时刷新数据（解决keep-alive缓存问题）
 onActivated(() => {
   fetchData()
   loadApiStats()
+  // keep-alive 恢复后容器尺寸可能变化，重绘图表
+  nextTick(handleChartResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleChartResize)
+  studentBarChart?.dispose()
+  studentBarChart = null
+  typePieChart?.dispose()
+  typePieChart = null
 })
 </script>
 
@@ -606,6 +749,44 @@ onActivated(() => {
 }
 .text-scholarship {
   color: var(--color-accent-gold);
+}
+
+/* 统计图表 */
+.charts-row {
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-lighter);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.chart-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+.chart-body {
+  width: 100%;
+  height: 260px;
 }
 
 /* 筛选区 */

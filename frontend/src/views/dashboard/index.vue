@@ -47,7 +47,39 @@
 
     <!-- KPI 统计横条 -->
     <div v-if="visible.kpi" class="kpi-strip">
-      <KpiCards />
+      <div class="kpi-toolbar">
+        <span class="auto-refresh-hint">
+          <el-icon><Refresh /></el-icon>
+          数据每 60 秒自动刷新
+        </span>
+        <el-tooltip content="刷新数据" placement="top">
+          <el-button
+            data-test="btn-refresh-kpi"
+            size="small"
+            circle
+            :icon="Refresh"
+            @click="refreshKpiData"
+          />
+        </el-tooltip>
+      </div>
+      <KpiCards :key="kpiRefreshKey" />
+    </div>
+
+    <!-- 常用快捷操作 -->
+    <div class="shortcut-strip">
+      <span class="shortcut-label">常用操作</span>
+      <el-button type="primary" plain :icon="Plus" @click="pushSafe('/projects/create')">
+        新建项目
+      </el-button>
+      <el-button type="success" plain :icon="House" @click="pushSafe('/supported-villages')">
+        新增帮扶村
+      </el-button>
+      <el-button type="warning" plain :icon="Money" @click="pushSafe('/funds/user')">
+        资金申请
+      </el-button>
+      <el-button type="info" plain :icon="EditPen" @click="pushSafe('/data-package/report')">
+        数据上报
+      </el-button>
     </div>
 
     <!-- 中部：图表 + 快捷入口 -->
@@ -89,9 +121,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Setting, Rank, TrendCharts, Grid, Clock, Select } from '@element-plus/icons-vue'
+import {
+  Setting,
+  Rank,
+  TrendCharts,
+  Grid,
+  Clock,
+  Select,
+  Refresh,
+  Plus,
+  House,
+  Money,
+  EditPen,
+} from '@element-plus/icons-vue'
 import PageHeader from './PageHeader.vue'
 import KpiCards from './KpiCards.vue'
 import QuickActions from './components/QuickActions.vue'
@@ -157,6 +201,28 @@ const visible = computed(() => {
 })
 watch(layoutSections, saveLayout, { deep: true })
 onMounted(loadLayout)
+
+// ── KPI 数据自动刷新（每 60 秒）+ 手动刷新 ──
+const kpiRefreshKey = ref(0)
+let kpiRefreshTimer: ReturnType<typeof setInterval> | null = null
+
+function refreshKpiData() {
+  // 页签隐藏时不刷新，避免无效请求
+  if (document.hidden) return
+  // 通过变更 key 触发 KpiCards 重新挂载，复用其内部的数据加载逻辑
+  kpiRefreshKey.value++
+}
+
+onMounted(() => {
+  kpiRefreshTimer = setInterval(refreshKpiData, 60 * 1000)
+})
+
+onUnmounted(() => {
+  if (kpiRefreshTimer) {
+    clearInterval(kpiRefreshTimer)
+    kpiRefreshTimer = null
+  }
+})
 
 // 拖拽排序
 let dragKey = ''
@@ -266,6 +332,44 @@ function handleRestore() {
 
 .kpi-strip {
   /* KpiCards 内部自行管理 5 列布局 */
+}
+
+.kpi-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.auto-refresh-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #909399;
+
+  .el-icon {
+    font-size: 13px;
+  }
+}
+
+.shortcut-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.shortcut-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1b4332;
+  margin-right: 4px;
 }
 
 .middle-row {

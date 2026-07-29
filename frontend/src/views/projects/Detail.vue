@@ -76,6 +76,31 @@
 
         <!-- 任务 -->
         <el-tab-pane label="任务" name="tasks">
+          <!-- 任务完成进度与状态分布 -->
+          <div class="task-progress-summary">
+            <div class="task-progress-bar">
+              <div class="task-progress-label">
+                <span>任务完成进度</span>
+                <span class="task-progress-num">{{ taskCompleted }} / {{ taskTotal }}</span>
+              </div>
+              <el-progress
+                :percentage="taskProgressPercent"
+                :color="taskProgressColor"
+                :stroke-width="10"
+              />
+            </div>
+            <div class="task-status-dist">
+              <el-tag type="info" size="small" effect="plain"
+                >待处理 {{ taskStatusCounts.pending }}</el-tag
+              >
+              <el-tag type="warning" size="small" effect="plain"
+                >进行中 {{ taskStatusCounts.in_progress }}</el-tag
+              >
+              <el-tag type="success" size="small" effect="plain"
+                >已完成 {{ taskStatusCounts.completed }}</el-tag
+              >
+            </div>
+          </div>
           <div class="tab-toolbar">
             <el-button type="primary" size="small" @click="openTaskDialog()">新建任务</el-button>
           </div>
@@ -298,6 +323,29 @@ const progressColor = computed(() => {
   return '#f56c6c'
 })
 
+// 任务完成进度与状态分布
+const taskTotal = computed(() => tasks.value.length)
+const taskCompleted = computed(
+  () => tasks.value.filter((t: any) => t.status === 'completed').length
+)
+const taskProgressPercent = computed(() =>
+  taskTotal.value === 0 ? 0 : Math.round((taskCompleted.value / taskTotal.value) * 100)
+)
+const taskProgressColor = computed(() => {
+  const p = taskProgressPercent.value
+  if (p >= 80) return '#40916c'
+  if (p >= 50) return '#e6a23c'
+  return '#f56c6c'
+})
+const taskStatusCounts = computed(() => {
+  const counts = { pending: 0, in_progress: 0, completed: 0 }
+  tasks.value.forEach((t: any) => {
+    const s = t.status as keyof typeof counts
+    if (s in counts) counts[s] += 1
+  })
+  return counts
+})
+
 // --- Helpers ---
 const taskStatusType = (s: string): ElTagType =>
   ((({ pending: 'info', in_progress: 'warning', completed: 'success' }) as Record<string, string>)[
@@ -508,6 +556,41 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 12px;
+}
+
+.task-progress-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: #f8faf9;
+  border: 1px solid #e6ebe8;
+  border-radius: 8px;
+
+  .task-progress-bar {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #606266;
+
+    .task-progress-num {
+      font-weight: 600;
+      color: #303133;
+    }
+  }
+
+  .task-status-dist {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
 }
 
 .history-card {

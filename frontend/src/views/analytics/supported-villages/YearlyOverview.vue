@@ -70,6 +70,32 @@
       </div>
     </div>
 
+    <!-- 数据可视化 -->
+    <el-row :gutter="20" class="chart-row">
+      <el-col :xs="24" :lg="12">
+        <el-card shadow="never" class="chart-card">
+          <template #header>
+            <div class="chart-card-header">
+              <span class="chart-title">收入趋势</span>
+              <span class="chart-hint">近六年人均 / 集体收入（万元）</span>
+            </div>
+          </template>
+          <div ref="incomeTrendChartRef" class="chart-box"></div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :lg="12">
+        <el-card shadow="never" class="chart-card">
+          <template #header>
+            <div class="chart-card-header">
+              <span class="chart-title">投入分布</span>
+              <span class="chart-hint">{{ selectedYear }}年各板块帮扶投入（万元）</span>
+            </div>
+          </template>
+          <div ref="investmentPieChartRef" class="chart-box"></div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 年度数据编辑弹窗（按板块独立填写） -->
     <el-dialog
       v-model="editDialogVisible"
@@ -91,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, markRaw } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick, markRaw } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
 import {
@@ -122,6 +148,7 @@ import {
 } from '@/api/supportedVillage'
 import type { YearlyDataSummary } from '@/types/analytics'
 import SectionDataForm from './components/SectionDataForm.vue'
+import echarts from '@/utils/echarts'
 
 const route = useRoute()
 const { pushSafe } = useRouterSafe()
@@ -325,6 +352,181 @@ const sections = computed(() => {
   ]
 })
 
+// ==================== 数据可视化图表 ====================
+const incomeTrendChartRef = ref<HTMLElement | null>(null)
+const investmentPieChartRef = ref<HTMLElement | null>(null)
+let incomeTrendChart: ReturnType<typeof echarts.init> | null = null
+let investmentPieChart: ReturnType<typeof echarts.init> | null = null
+
+// 多年收入趋势（近六年）
+const trendData = ref<{
+  years: number[]
+  perCapita: (number | null)[]
+  collective: (number | null)[]
+}>({ years: [], perCapita: [], collective: [] })
+
+async function loadTrendData() {
+  const currentYear = new Date().getFullYear()
+  const yearList = Array.from({ length: 6 }, (_, i) => currentYear - i + 1)
+  const records: Array<{ year: number; perCapita: number | null; collective: number | null }> = []
+  for (const year of yearList) {
+    try {
+      const data = await getYearlyData(villageId.value, year)
+      const income = (data as any)?.income
+      if (income && (income.perCapitaIncome != null || income.collectiveIncome != null)) {
+        records.push({
+          year,
+          perCapita: income.perCapitaIncome != null ? Number(income.perCapitaIncome) : null,
+          collective: income.collectiveIncome != null ? Number(income.collectiveIncome) : null,
+        })
+      }
+    } catch {
+      // 跳过无数据年份
+    }
+  }
+  records.sort((a, b) => a.year - b.year)
+  trendData.value = {
+    years: records.map((r) => r.year),
+    perCapita: records.map((r) => r.perCapita),
+    collective: records.map((r) => r.collective),
+  }
+  await nextTick()
+  renderTrendChart()
+}
+
+function renderTrendChart() {
+  if (!incomeTrendChartRef.value) return
+  if (!incomeTrendChart) {
+    incomeTrendChart = echarts.init(incomeTrendChartRef.value)
+  }
+  const hasData = trendData.value.years.length > 0
+  incomeTrendChart.setOption(
+    {
+      title: hasData
+        ? undefined
+        : {
+            text: '暂无收入数据',
+            left: 'center',
+            top: 'middle',
+            textStyle: { color: '#bbb', fontSize: 14, fontWeight: 400 },
+          },
+      tooltip: {
+        trigger: 'axis',
+        formatter: (params: any) => {
+          const list = Array.isArray(params) ? params : [params]
+          const lines = list.map(
+            (p: any) => `${p.marker}${p.seriesName}：${Number(p.value ?? 0).toFixed(2)} 万元`
+          )
+          return `${list[0]?.axisValue ?? ''}<br/>${lines.join('<br/>')}`
+        },
+      },
+      legend: { data: ['人均纯收入', '集体收入'], bottom: 0 },
+      grid: { left: '3%', right: '4%', top: 30, bottom: 40, containLabel: true },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: trendData.value.years.map((y) => `${y}年`),
+      },
+      yAxis: { type: 'value', name: '万元' },
+      series: [
+        {
+          name: '人均纯收入',
+          type: 'line',
+          smooth: true,
+          data: trendData.value.perCapita,
+          areaStyle: { opacity: 0.15 },
+          itemStyle: { color: '#40916c' },
+          lineStyle: { width: 3 },
+        },
+        {
+          name: '集体收入',
+          type: 'line',
+          smooth: true,
+          data: trendData.value.collective,
+          itemStyle: { color: '#b08968' },
+          lineStyle: { width: 3 },
+        },
+      ],
+    },
+    { notMerge: true }
+  )
+}
+
+// 当年各板块投入分布
+const investmentDistribution = computed(() => {
+  const d = yearlyData.value
+  const items: Array<{ name: string; value: number }> = []
+  if (!d) return items
+  const push = (name: string, value: number | undefined) => {
+    const v = Number(value ?? 0)
+    if (v > 0) items.push({ name, value: v })
+  }
+  push('产业帮扶', d.industrySupport?.investment)
+  push('基础设施', d.infrastructure?.investment)
+  push('党建帮扶', d.partyBuilding?.investment)
+  push('医疗帮扶', d.medicalSupport?.investment)
+  push('教育帮扶', d.educationSupport?.investment)
+  return items
+})
+
+function renderPieChart() {
+  if (!investmentPieChartRef.value) return
+  if (!investmentPieChart) {
+    investmentPieChart = echarts.init(investmentPieChartRef.value)
+  }
+  const data = investmentDistribution.value
+  investmentPieChart.setOption(
+    {
+      title: data.length
+        ? undefined
+        : {
+            text: '暂无投入数据',
+            left: 'center',
+            top: 'middle',
+            textStyle: { color: '#bbb', fontSize: 14, fontWeight: 400 },
+          },
+      tooltip: {
+        trigger: 'item',
+        formatter: (p: any) =>
+          `${p.marker}${p.name}<br/>投入：${Number(p.value).toFixed(2)} 万元（${p.percent}%）`,
+      },
+      legend: { bottom: 0 },
+      color: ['#1b4332', '#2d6a4f', '#40916c', '#52b788', '#95d5b2'],
+      series: [
+        {
+          name: '投入分布',
+          type: 'pie',
+          radius: ['42%', '68%'],
+          center: ['50%', '45%'],
+          itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+          label: { formatter: '{b}\n{d}%' },
+          emphasis: {
+            itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0, 0, 0, 0.2)' },
+          },
+          data,
+        },
+      ],
+    },
+    { notMerge: true }
+  )
+}
+
+// 年度数据变化后刷新饼图
+watch(yearlyData, async () => {
+  await nextTick()
+  renderPieChart()
+})
+
+// 防抖 resize
+let chartResizeTimer: ReturnType<typeof setTimeout> | null = null
+function handleChartResize() {
+  if (chartResizeTimer) clearTimeout(chartResizeTimer)
+  chartResizeTimer = setTimeout(() => {
+    incomeTrendChart?.resize()
+    investmentPieChart?.resize()
+  }, 200)
+}
+
 async function loadAllData() {
   loading.value = true
   try {
@@ -333,6 +535,8 @@ async function loadAllData() {
     villageName.value = village.villageName
     const _raw = await getYearlyData(villageId.value, selectedYear.value)
     yearlyData.value = _raw
+    // 刷新多年收入趋势（不阻塞主流程）
+    loadTrendData()
   } catch (e: any) {
     ElMessage.error(e?.message || '加载数据失败')
   } finally {
@@ -430,7 +634,21 @@ function handleBack() {
 }
 
 onMounted(() => {
+  window.addEventListener('resize', handleChartResize)
   loadAllData()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleChartResize)
+  if (chartResizeTimer) clearTimeout(chartResizeTimer)
+  if (incomeTrendChart) {
+    incomeTrendChart.dispose()
+    incomeTrendChart = null
+  }
+  if (investmentPieChart) {
+    investmentPieChart.dispose()
+    investmentPieChart = null
+  }
 })
 </script>
 
@@ -549,5 +767,37 @@ onMounted(() => {
 
 .inline-upload {
   display: inline-block;
+}
+
+/* 数据可视化卡片 */
+.chart-card {
+  border-radius: 10px;
+}
+
+.chart-card :deep(.el-card__header) {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.chart-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.chart-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1b4332;
+}
+
+.chart-hint {
+  font-size: 12px;
+  color: #999;
+}
+
+.chart-box {
+  width: 100%;
+  height: 320px;
 }
 </style>

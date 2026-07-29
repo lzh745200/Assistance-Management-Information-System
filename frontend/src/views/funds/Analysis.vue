@@ -88,6 +88,28 @@
       </el-col>
     </el-row>
 
+    <!-- 年度趋势图表 -->
+    <el-row :gutter="20">
+      <el-col :span="12">
+        <el-card class="chart-card">
+          <template #header><span class="title">年度经费趋势</span></template>
+          <BaseChart v-if="yearlyTrendAreaOption" :option="yearlyTrendAreaOption" height="300px" />
+          <el-empty v-else description="暂无年度趋势数据" />
+        </el-card>
+      </el-col>
+      <el-col :span="12">
+        <el-card class="chart-card">
+          <template #header><span class="title">利用率趋势</span></template>
+          <BaseChart
+            v-if="utilizationTrendOption"
+            :option="utilizationTrendOption"
+            height="300px"
+          />
+          <el-empty v-else description="暂无利用率趋势数据" />
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 年度对比图表 -->
     <YearlyComparisonChart
       ref="yearlyChartRef"
@@ -155,7 +177,12 @@ import YearlyComparisonChart from '@/components/funds/YearlyComparisonChart.vue'
 import type { EChartsOption } from 'echarts'
 import { useFundsStore } from '@/stores/funds'
 import { fundApi } from '@/api/funds'
-import { getFundStatisticsByType, type FundStatistics } from '@/api/fundStatistics'
+import {
+  getFundStatisticsByType,
+  getYearlyFundComparison,
+  type FundStatistics,
+  type YearlyFundSummary,
+} from '@/api/fundStatistics'
 import { exportUtil } from '@/utils/exportUtil'
 
 const fundsStore = useFundsStore()
@@ -176,6 +203,8 @@ const filterForm = reactive({
 // 多维度统计数据
 const dimensionData = ref<any[]>([])
 const fundStatsByType = ref<Record<string, FundStatistics>>({})
+// 年度趋势数据
+const yearlyTrend = ref<YearlyFundSummary[]>([])
 
 const summary = computed(() => {
   const total = Number(fundsStore.totalFunds) || 0
@@ -252,6 +281,80 @@ const barChartOption = computed<EChartsOption>(() => {
   }
 })
 
+// 年度经费趋势面积图
+const yearlyTrendAreaOption = computed<EChartsOption | null>(() => {
+  const data = yearlyTrend.value
+  if (!data.length) return null
+  const years = data.map((d) => `${d.year}年`)
+  const totals = data.map(
+    (d) => Number(d.total_actual ?? (d.total_military || 0) + (d.total_local || 0)) || 0
+  )
+  return {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'cross' },
+    },
+    legend: { data: ['经费总额'] },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', boundaryGap: false, data: years },
+    yAxis: { type: 'value', name: '万元' },
+    series: [
+      {
+        name: '经费总额',
+        type: 'line',
+        smooth: true,
+        symbolSize: 7,
+        data: totals,
+        lineStyle: { width: 2, color: '#40916c' },
+        itemStyle: { color: '#40916c' },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(64, 145, 108, 0.45)' },
+              { offset: 1, color: 'rgba(64, 145, 108, 0.05)' },
+            ],
+          },
+        },
+      },
+    ],
+  }
+})
+
+// 利用率趋势折线图
+const utilizationTrendOption = computed<EChartsOption | null>(() => {
+  const data = yearlyTrend.value
+  if (!data.length) return null
+  const years = data.map((d) => `${d.year}年`)
+  const rates = data.map((d) => Number(d.utilization_rate) || 0)
+  return {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'cross' },
+    },
+    legend: { data: ['利用率'] },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'category', boundaryGap: false, data: years },
+    yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
+    series: [
+      {
+        name: '利用率',
+        type: 'line',
+        smooth: true,
+        symbolSize: 8,
+        data: rates,
+        lineStyle: { width: 2, color: '#b8960c' },
+        itemStyle: { color: '#b8960c' },
+        label: { show: true, formatter: '{c}%' },
+      },
+    ],
+  }
+})
+
 // 加载多维度统计
 const loadDimensionStats = async () => {
   try {
@@ -289,6 +392,22 @@ const loadFundStatsByType = async () => {
   }
 }
 
+const loadYearlyTrend = async () => {
+  try {
+    const res = await getYearlyFundComparison({
+      year_start: filterForm.yearStart,
+      year_end: filterForm.yearEnd,
+      department: filterForm.department || undefined,
+    })
+    if (res?.success) {
+      yearlyTrend.value = res.data || []
+    }
+  } catch (error) {
+    logger.error('加载年度趋势数据失败:', error)
+    ElMessage.error('加载年度趋势数据失败，请稍后重试')
+  }
+}
+
 function handleDimensionChange() {
   // 切换维度时清除旧数据，避免图表用错误格式的数据渲染
   dimensionData.value = []
@@ -298,6 +417,7 @@ function handleDimensionChange() {
 const handleSearch = () => {
   loadDimensionStats()
   loadFundStatsByType()
+  loadYearlyTrend()
   yearlyChartRef.value?.refresh()
 }
 
@@ -321,6 +441,7 @@ onMounted(() => {
   fundsStore.fetchFunds()
   loadDimensionStats()
   loadFundStatsByType()
+  loadYearlyTrend()
 })
 </script>
 

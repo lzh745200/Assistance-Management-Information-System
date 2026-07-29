@@ -40,6 +40,47 @@
       </div>
     </div>
 
+    <!-- 预算执行概览：仪表盘 + 分类进度 -->
+    <div class="detail-card">
+      <div class="card-header">
+        <h3>{{ selectedYear }}年度预算执行概览</h3>
+      </div>
+      <div class="card-body execution-overview">
+        <div class="gauge-wrap">
+          <BaseChart :option="gaugeOption" height="260px" />
+          <div class="gauge-footer">
+            已使用 <span class="amount-text">{{ summary.totalUsed }}</span> / 总预算
+            <span class="amount-text">{{ summary.totalBudget }}</span> 万元
+          </div>
+        </div>
+        <div class="category-progress">
+          <div class="category-progress-title">分类执行进度</div>
+          <div v-if="budgetData.length" class="category-progress-list">
+            <div v-for="row in budgetData" :key="row.id ?? row.category" class="progress-item">
+              <div class="progress-head">
+                <span class="progress-name">{{ row.category }}</span>
+                <span class="progress-amounts">
+                  {{ row.used.toFixed(2) }} / {{ row.budget.toFixed(2) }} 万元
+                  <span
+                    class="progress-rate"
+                    :style="{ color: getProgressColor(getUsageRate(row)) }"
+                  >
+                    （{{ getUsageRate(row) }}%）
+                  </span>
+                </span>
+              </div>
+              <el-progress
+                :percentage="getUsageRate(row)"
+                :color="getProgressColor(getUsageRate(row))"
+                :stroke-width="10"
+              />
+            </div>
+          </div>
+          <el-empty v-else-if="!loading" description="暂无预算数据" :image-size="60" />
+        </div>
+      </div>
+    </div>
+
     <!-- 预算分配表 -->
     <div class="detail-card">
       <div class="card-header">
@@ -171,6 +212,13 @@ import { ElMessage, type FormInstance } from 'element-plus'
 import { logger } from '@/utils/logger'
 import { ArrowLeft, Plus } from '@element-plus/icons-vue'
 import { fundApi } from '@/api/funds'
+import BaseChart from '@/components/common/BaseChart.vue'
+import echarts from '@/utils/echarts'
+import { GaugeChart } from 'echarts/charts'
+import type { EChartsOption } from 'echarts'
+
+// 按需注册仪表盘组件（echarts.use 幂等，可安全重复调用）
+echarts.use(GaugeChart)
 
 interface BudgetRow {
   id?: number
@@ -351,6 +399,59 @@ function getProgressColor(rate: number) {
   return '#40916c'
 }
 
+function getUsageRate(row: BudgetRow) {
+  return row.budget > 0 ? Math.min(Math.round((row.used / row.budget) * 100), 100) : 0
+}
+
+// 预算执行率仪表盘
+const gaugeOption = computed<EChartsOption>(() => {
+  const totalBudget = budgetData.value.reduce((s, r) => s + (r.budget || 0), 0)
+  const totalUsed = budgetData.value.reduce((s, r) => s + (r.used || 0), 0)
+  const rate = totalBudget > 0 ? parseFloat(((totalUsed / totalBudget) * 100).toFixed(1)) : 0
+  const color = getProgressColor(rate)
+  return {
+    series: [
+      {
+        type: 'gauge',
+        center: ['50%', '58%'],
+        radius: '95%',
+        min: 0,
+        max: 100,
+        startAngle: 210,
+        endAngle: -30,
+        progress: {
+          show: true,
+          width: 14,
+          roundCap: true,
+          itemStyle: { color },
+        },
+        axisLine: {
+          lineStyle: { width: 14, color: [[1, 'rgba(45, 106, 79, 0.15)']] },
+        },
+        axisTick: { show: false },
+        splitLine: {
+          distance: -16,
+          length: 8,
+          lineStyle: { color: 'rgba(27, 67, 50, 0.35)', width: 2 },
+        },
+        axisLabel: { distance: -30, color: '#8a9a90', fontSize: 11 },
+        pointer: { length: '58%', width: 4, itemStyle: { color } },
+        anchor: { show: true, size: 10, itemStyle: { color } },
+        title: { offsetCenter: [0, '78%'], fontSize: 13, color: '#666' },
+        detail: {
+          valueAnimation: true,
+          offsetCenter: [0, '45%'],
+          formatter: '{value}%',
+          fontSize: 26,
+          fontWeight: 700,
+          color,
+        },
+        data: [{ value: rate, name: '预算执行率' }],
+      },
+    ],
+  }
+})
+
 function getSummary({ columns, data }: { columns: unknown[]; data: BudgetRow[] }) {
   const sums: string[] = []
   columns.forEach((_col, index: number) => {
@@ -489,5 +590,94 @@ onMounted(() => loadBudgets())
 .amount-text {
   font-weight: 600;
   color: #1b4332;
+}
+
+/* 预算执行概览 */
+.execution-overview {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.gauge-wrap {
+  flex: 0 0 340px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px dashed rgba(45, 106, 79, 0.25);
+  padding-right: 24px;
+}
+
+.gauge-footer {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-top: -8px;
+}
+
+.category-progress {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.category-progress-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1b4332;
+  margin-bottom: 12px;
+}
+
+.category-progress-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 280px;
+  padding-right: 8px;
+}
+
+.progress-item {
+  padding: 8px 0;
+}
+
+.progress-item + .progress-item {
+  border-top: 1px dashed rgba(45, 106, 79, 0.15);
+}
+
+.progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  gap: 12px;
+}
+
+.progress-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.progress-amounts {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.progress-rate {
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .execution-overview {
+    flex-direction: column;
+  }
+  .gauge-wrap {
+    flex: none;
+    border-right: none;
+    border-bottom: 1px dashed rgba(45, 106, 79, 0.25);
+    padding-right: 0;
+    padding-bottom: 16px;
+  }
 }
 </style>

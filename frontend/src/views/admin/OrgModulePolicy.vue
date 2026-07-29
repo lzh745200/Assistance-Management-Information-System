@@ -5,10 +5,21 @@
         <div class="card-header">
           <span>模块策略配置</span>
           <div>
-            <el-select v-model="selectedOrgId" placeholder="选择下级组织" style="width: 200px; margin-right: 12px" @change="loadPolicies">
+            <el-select
+              v-model="selectedOrgId"
+              placeholder="选择下级组织"
+              style="width: 200px; margin-right: 12px"
+              @change="loadPolicies"
+            >
               <el-option v-for="org in orgs" :key="org.id" :label="org.name" :value="org.id" />
             </el-select>
-            <el-button type="primary" :disabled="!selectedOrgId" :loading="saving" @click="handleSave">保存策略</el-button>
+            <el-button
+              type="primary"
+              :disabled="!selectedOrgId"
+              :loading="saving"
+              @click="handleSave"
+              >保存策略</el-button
+            >
           </div>
         </div>
       </template>
@@ -21,7 +32,7 @@
         style="margin-bottom: 16px"
       />
 
-      <el-table v-else :data="policies" v-loading="loading" stripe>
+      <el-table v-else v-loading="loading" :data="policies" stripe>
         <el-table-column prop="name" label="模块名称" width="140" />
         <el-table-column prop="category" label="分类" width="100">
           <template #default="{ row }">
@@ -85,7 +96,13 @@ const loading = ref(false)
 const saving = ref(false)
 
 function categoryLabel(cat: string) {
-  const map: Record<string, string> = { core: '核心', business: '业务', analysis: '分析', data: '数据', system: '系统' }
+  const map: Record<string, string> = {
+    core: '核心',
+    business: '业务',
+    analysis: '分析',
+    data: '数据',
+    system: '系统',
+  }
   return map[cat] || cat
 }
 
@@ -93,7 +110,10 @@ async function loadOrgs() {
   try {
     const res = await get('/organizations', { page_size: 100 })
     const data = res.data || res
-    orgs.value = (data.items || []).map((o: Record<string, unknown>) => ({ id: o.id as number, name: o.name as string }))
+    orgs.value = (data.items || []).map((o: Record<string, unknown>) => ({
+      id: o.id as number,
+      name: o.name as string,
+    }))
   } catch {
     // 静默失败
   }
@@ -117,7 +137,7 @@ async function handleSave() {
   saving.value = true
   try {
     await put(`/org-policies/${selectedOrgId.value}`, {
-      policies: policies.value.map(p => ({
+      policies: policies.value.map((p) => ({
         module_key: p.key,
         visibility: p.visibility,
         edit_mode: p.edit_mode,

@@ -6,31 +6,53 @@
           <span>下级单位管理</span>
           <div>
             <el-button size="small" @click="handleImportReport">导入上报包</el-button>
-            <el-button size="small" type="primary" @click="showRegisterDialog = true">注册下级单位</el-button>
+            <el-button size="small" type="primary" @click="showRegisterDialog = true"
+              >注册下级单位</el-button
+            >
           </div>
         </div>
       </template>
 
-      <el-table :data="instances" v-loading="loading" stripe>
-        <el-table-column prop="instanceCode" label="实例标识" min-width="140" show-overflow-tooltip />
+      <el-table v-loading="loading" :data="instances" stripe>
+        <el-table-column
+          prop="instanceCode"
+          label="实例标识"
+          min-width="140"
+          show-overflow-tooltip
+        />
         <el-table-column prop="organizationId" label="组织ID" width="80" />
         <el-table-column prop="systemVersion" label="版本" width="90" />
         <el-table-column prop="licenseStatus" label="授权状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="licenseTagType(row.licenseStatus)" size="small">{{ licenseLabel(row.licenseStatus) }}</el-tag>
+            <el-tag :type="licenseTagType(row.licenseStatus)" size="small">{{
+              licenseLabel(row.licenseStatus)
+            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="在线状态" width="90">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'online' ? 'success' : 'info'" size="small">{{ row.status === 'online' ? '在线' : '离线' }}</el-tag>
+            <el-tag :type="row.status === 'online' ? 'success' : 'info'" size="small">{{
+              row.status === 'online' ? '在线' : '离线'
+            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="userCount" label="用户数" width="80" />
         <el-table-column prop="lastReportAt" label="最后上报" width="160" show-overflow-tooltip />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button link size="small" type="primary" @click="handleGeneratePackage(row as SubordinateInstance)">生成管控包</el-button>
-            <el-button link size="small" type="warning" @click="handleToggleLicense(row as SubordinateInstance)">
+            <el-button
+              link
+              size="small"
+              type="primary"
+              @click="handleGeneratePackage(row as SubordinateInstance)"
+              >生成管控包</el-button
+            >
+            <el-button
+              link
+              size="small"
+              type="warning"
+              @click="handleToggleLicense(row as SubordinateInstance)"
+            >
               {{ (row as SubordinateInstance).licenseStatus === 'active' ? '撤销' : '授权' }}
             </el-button>
           </template>
@@ -55,13 +77,21 @@
           <el-input-number v-model="registerForm.organization_id" :min="1" />
         </el-form-item>
         <el-form-item label="实例标识" required>
-          <el-input v-model="registerForm.instance_code" placeholder="下级系统唯一标识（至少8位）" />
+          <el-input
+            v-model="registerForm.instance_code"
+            placeholder="下级系统唯一标识（至少8位）"
+          />
         </el-form-item>
         <el-form-item label="机器码">
           <el-input v-model="registerForm.machine_code" placeholder="可选" />
         </el-form-item>
         <el-form-item label="授权到期">
-          <el-date-picker v-model="registerForm.license_expiry" type="date" placeholder="可选" value-format="YYYY-MM-DD" />
+          <el-date-picker
+            v-model="registerForm.license_expiry"
+            type="date"
+            placeholder="可选"
+            value-format="YYYY-MM-DD"
+          />
         </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="registerForm.remark" type="textarea" :rows="2" />
@@ -69,12 +99,20 @@
       </el-form>
       <template #footer>
         <el-button @click="showRegisterDialog = false">取消</el-button>
-        <el-button type="primary" :loading="registering" @click="handleRegister">确认注册</el-button>
+        <el-button type="primary" :loading="registering" @click="handleRegister"
+          >确认注册</el-button
+        >
       </template>
     </el-dialog>
 
     <!-- 隐藏的文件输入 -->
-    <input ref="fileInputRef" type="file" accept=".zip" style="display: none" @change="handleFileSelected" />
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept=".zip"
+      style="display: none"
+      @change="handleFileSelected"
+    />
   </div>
 </template>
 
@@ -112,12 +150,22 @@ const registerForm = ref({
 })
 
 function licenseTagType(status: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' {
-  const map: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = { active: 'success', pending: 'warning', expired: 'danger', revoked: 'info' }
+  const map: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
+    active: 'success',
+    pending: 'warning',
+    expired: 'danger',
+    revoked: 'info',
+  }
   return map[status] || 'info'
 }
 
 function licenseLabel(status: string) {
-  const map: Record<string, string> = { active: '已授权', pending: '待授权', expired: '已过期', revoked: '已撤销' }
+  const map: Record<string, string> = {
+    active: '已授权',
+    pending: '待授权',
+    expired: '已过期',
+    revoked: '已撤销',
+  }
   return map[status] || status
 }
 
@@ -150,7 +198,13 @@ async function handleRegister() {
     await post('/subordinates', registerForm.value)
     ElMessage.success('注册成功')
     showRegisterDialog.value = false
-    registerForm.value = { organization_id: 1, instance_code: '', machine_code: '', license_expiry: null, remark: '' }
+    registerForm.value = {
+      organization_id: 1,
+      instance_code: '',
+      machine_code: '',
+      license_expiry: null,
+      remark: '',
+    }
     await loadData()
   } catch (e: unknown) {
     ElMessage.error(e instanceof Error ? e.message : '注册失败')
