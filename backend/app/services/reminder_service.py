@@ -73,6 +73,11 @@ class ApprovalReminderService:
             except Exception as e:
                 logger.error(f"审批超时检查失败: {e}", exc_info=True)
 
+            try:
+                self._check_deadline_reminders()
+            except Exception as e:
+                logger.error(f"截止日提醒检查失败: {e}", exc_info=True)
+
             # 等待下一次检查（响应停止信号）
             self._stop_event.wait(self._check_interval)
 
@@ -159,6 +164,89 @@ class ApprovalReminderService:
         )
         db.add(message)
         logger.info(f"审批提醒已创建: {title}")
+
+    def _check_deadline_reminders(self):
+        """检查项目/里程碑/待办截止日，生成到期提醒"""
+        from app.core.database import SessionLocal
+        from app.models.message import Message
+        from app.models.project import Project
+        from app.models.todo import Todo
+
+        db = SessionLocal()
+        try:
+            now = datetime.now(timezone.utc)
+            three_days_later = now + timedelta(days=3)
+            created_count = 0
+
+            # 项目截止日提醒（3天内到期或已逾期）
+            if hasattr(Project, "end_date"):
+                overdue_projects = (
+                    db.query(Project)
+                    .filter(
+                        Project.is_active == True,  # noqa: E712
+                        Project.status.notin_(["completed", "cancelled"]),
+                        Project.end_date != None,  # noqa: E711
+                        Project.end_date <= three_days_later,
+                    )
+                    .limit(20)
+                    .all()
+                )
+                for proj in overdue_projects:
+                    ref_link = f"/projects/{proj.id}"
+                    existing = db.query(Message).filter(
+                        Message.link == ref_link,
+                        Message.message_type == "project_deadline",
+                    ).first()
+                    if not existing:
+                        is_overdue = proj.end_date < now.date() if hasattr(proj.end_date, 'year') else False
+                        title = f"项目{'已逾期' if is_overdue else '即将到期'} - {proj.name or proj.id}"
+                        status_text = '已逾期请尽快处理' if is_overdue else '即将到期请注意'
+                        content = f"项目「{proj.name or ''}」截止日期为 {proj.end_date}，{status_text}。"
+                        db.add(Message(
+                            user_id=proj.created_by,
+                            title=title,
+                            content=content,
+                            message_type="project_deadline",
+                            link=ref_link,
+                            is_read=False,
+                        ))
+                        created_count += 1
+
+            # 待办截止日提醒（已逾期）
+            if hasattr(Todo, "deadline"):
+                overdue_todos = (
+                    db.query(Todo)
+                    .filter(
+                        Todo.completed == False,  # noqa: E712
+                        Todo.deadline != None,  # noqa: E711
+                        Todo.deadline < now.date(),
+                    )
+                    .limit(20)
+                    .all()
+                )
+                for todo in overdue_todos:
+                    ref_link = f"/todos/{todo.id}"
+                    existing = db.query(Message).filter(
+                        Message.link == ref_link,
+                        Message.message_type == "todo_overdue",
+                    ).first()
+                    if not existing:
+                        db.add(Message(
+                            user_id=todo.user_id,
+                            title=f"待办已逾期 - {todo.title or todo.id}",
+                            content=f"待办「{todo.title or ''}」截止日期为 {todo.deadline}，已逾期请尽快完成。",
+                            message_type="todo_overdue",
+                            link=ref_link,
+                            is_read=False,
+                        ))
+                        created_count += 1
+
+            if created_count > 0:
+                safe_commit(db)
+                logger.info(f"截止日提醒扫描完成: 创建{created_count}条提醒")
+
+        finally:
+            db.close()
 
 
 # ══════════════════════════════════════════════════════════════

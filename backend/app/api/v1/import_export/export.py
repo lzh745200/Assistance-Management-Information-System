@@ -342,6 +342,9 @@ _REPORT_TYPE_MAP = {
     "summary": ("年度帮扶工作总结", "docx"),
     "fund_detail": ("帮扶资金拨付明细表", "docx"),
     "project_progress": ("帮扶项目进度统计表", "docx"),
+    "school_statistics": ("帮扶学校统计表", "docx"),
+    "village_summary": ("帮扶村年度汇总表", "docx"),
+    "annual_summary": ("年度综合总结报告", "docx"),
 }
 
 
@@ -362,8 +365,14 @@ async def export_report_word(
         data = report_export_service.generate_summary_report_data(db, year)
     elif report_type == "fund_detail":
         data = report_export_service.generate_fund_detail_report_data(db, year)
-    else:
+    elif report_type == "project_progress":
         data = report_export_service.generate_project_progress_report_data(db, year)
+    elif report_type == "school_statistics":
+        data = report_export_service.generate_school_statistics_report_data(db, year)
+    elif report_type == "village_summary":
+        data = report_export_service.generate_village_summary_report_data(db, year)
+    else:
+        data = report_export_service.generate_annual_summary_report_data(db, year)
 
     content = report_export_service.export_word(report_type, data)
     filename = f"{_REPORT_TYPE_MAP[report_type][0]}_{data['year']}.docx"
@@ -392,8 +401,14 @@ async def export_report_pdf(
         data = report_export_service.generate_summary_report_data(db, year)
     elif report_type == "fund_detail":
         data = report_export_service.generate_fund_detail_report_data(db, year)
-    else:
+    elif report_type == "project_progress":
         data = report_export_service.generate_project_progress_report_data(db, year)
+    elif report_type == "school_statistics":
+        data = report_export_service.generate_school_statistics_report_data(db, year)
+    elif report_type == "village_summary":
+        data = report_export_service.generate_village_summary_report_data(db, year)
+    else:
+        data = report_export_service.generate_annual_summary_report_data(db, year)
 
     content = report_export_service.export_pdf(report_type, data)
     filename = f"{_REPORT_TYPE_MAP[report_type][0]}_{data['year']}.pdf"

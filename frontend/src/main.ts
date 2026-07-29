@@ -39,6 +39,8 @@ import '@/styles/dashboard-theme.scss'
 import '@/styles/components/list-page.scss'
 // 表单/详情页统一升级 (Phase 3)
 import '@/styles/components/form-page.scss'
+// 打印样式（A4适配，隐藏非内容区域）
+import '@/styles/print.scss'
 
 // 一次性将旧版 localStorage token 迁移到 sessionStorage
 AuthStorage.migrateFromLocalStorage()

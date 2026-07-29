@@ -13,7 +13,7 @@
 import asyncio
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -277,6 +277,67 @@ def _query_project_approval_stats(db: Session, data_scope: OrgScopeFilter) -> di
     }
 
 
+def _compute_trends(db: Session, data_scope: OrgScopeFilter) -> dict:
+    """计算各KPI的30天环比趋势百分比"""
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    trends = {}
+
+    try:
+        # 帮扶村趋势
+        current_villages = db.query(func.count(SupportedVillage.id)).filter(
+            SupportedVillage.is_active == True  # noqa: E712
+        ).scalar() or 0
+        prev_villages = db.query(func.count(SupportedVillage.id)).filter(
+            SupportedVillage.is_active == True,  # noqa: E712
+            SupportedVillage.created_at <= thirty_days_ago,
+        ).scalar() or 0
+        trends["villages"] = _pct_change(current_villages, prev_villages)
+
+        # 项目趋势
+        current_projects = db.query(func.count(Project.id)).filter(
+            Project.is_active == True,  # noqa: E712
+            Project.status != "cancelled",
+        ).scalar() or 0
+        prev_projects = db.query(func.count(Project.id)).filter(
+            Project.is_active == True,  # noqa: E712
+            Project.status != "cancelled",
+            Project.created_at <= thirty_days_ago,
+        ).scalar() or 0
+        trends["projects"] = _pct_change(current_projects, prev_projects)
+
+        # 学校趋势
+        current_schools = db.query(func.count(School.id)).filter(
+            School.is_active == True  # noqa: E712
+        ).scalar() or 0
+        prev_schools = db.query(func.count(School.id)).filter(
+            School.is_active == True,  # noqa: E712
+            School.created_at <= thirty_days_ago,
+        ).scalar() or 0
+        trends["schools"] = _pct_change(current_schools, prev_schools)
+
+        # 资金趋势
+        current_funds = db.query(func.coalesce(func.sum(Fund.amount), 0)).filter(
+            Fund.is_active == True  # noqa: E712
+        ).scalar() or 0
+        prev_funds = db.query(func.coalesce(func.sum(Fund.amount), 0)).filter(
+            Fund.is_active == True,  # noqa: E712
+            Fund.created_at <= thirty_days_ago,
+        ).scalar() or 0
+        trends["funds"] = _pct_change(float(current_funds), float(prev_funds))
+
+    except Exception:
+        logger.debug("趋势计算失败，返回空趋势", exc_info=True)
+
+    return trends
+
+
+def _pct_change(current, previous) -> float:
+    """计算环比百分比变化"""
+    if previous == 0:
+        return 100.0 if current > 0 else 0.0
+    return round((current - previous) / previous * 100, 1)
+
+
 @router.get("/stats")
 async def get_dashboard_stats(
     refresh: bool = False,
@@ -299,10 +360,15 @@ async def get_dashboard_stats(
 
         result = {**village_stats, **fund_stats, **project_stats}
 
+        # 计算30天环比趋势
+        trends = _compute_trends(db, data_scope)
+        result["trends"] = trends
+
         # 检查是否有任何非零数据
         has_data = any(
             isinstance(v, (int, float)) and v > 0
             for v in result.values()
+            if not isinstance(v, dict)
         )
 
         # 如果完全没有数据，返回 None 而不是全0
