@@ -578,6 +578,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '更新日志', roles: ['admin', 'super_admin'] },
       },
       {
+        path: '/system/operation-logs',
+        name: 'SystemOperationLogs',
+        component: () => retryImport(() => import('@/views/system/OperationLogs.vue')),
+        meta: { title: '操作日志', roles: ['admin', 'super_admin'] },
+      },
+      {
         path: '/system/i18n',
         name: 'SystemI18n',
         component: () => retryImport(() => import('@/views/system/I18nManagement.vue')),
