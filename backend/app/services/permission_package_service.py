@@ -315,7 +315,8 @@ class PermissionPackageService:
         if not parsed:
             return {"success": False, "errors": ["解析 ZIP 失败"], "message": "解析失败"}
 
-        roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data, organizations_data = parsed
+        roles_data, user_roles_data, user_permissions_data, \
+            user_menus_data, user_legacy_data, organizations_data = parsed
 
         errors = []
         stats = self._init_import_stats()
@@ -366,7 +367,8 @@ class PermissionPackageService:
                     json.loads(zf.read("data/organizations.json").decode("utf-8"))
                     if "data/organizations.json" in zf.namelist() else []
                 )
-            return roles_data, user_roles_data, user_permissions_data, user_menus_data, user_legacy_data, organizations_data
+            return (roles_data, user_roles_data, user_permissions_data,
+                    user_menus_data, user_legacy_data, organizations_data)
         except Exception as e:
             logger.error("解析权限配置包 JSON 数据失败: %s", e)
             return None

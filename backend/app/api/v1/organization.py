@@ -4,10 +4,12 @@
 与权限管理集成：组织创建、修改需要管理员权限
 """
 
+import io
 from datetime import datetime
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -19,6 +21,7 @@ from ...core.permission_utils import is_superuser
 from ...core.response import ok_list
 from ...core.security import get_current_user
 from ...models.organization import Organization, OrganizationLevel, OrganizationType
+from ...models.user import User
 from ...services.organization_service import OrganizationService
 from app.core.transaction import safe_commit
 from app.services.work_log_service import write_work_log
@@ -652,6 +655,276 @@ async def batch_update_sort_orders(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"批量更新排序失败: {str(e)}")
+
+
+@router.get("/statistics/summary", summary="获取组织统计信息")
+async def get_organization_statistics(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取组织机构统计数据
+
+    返回：总数量、活跃/停用数、按类型分布、按层级分布、成员总数等
+    """
+    try:
+        total = db.query(func.count(Organization.id)).scalar() or 0
+        active = db.query(func.count(Organization.id)).filter(
+            Organization.is_active == True  # noqa: E712
+        ).scalar() or 0
+        inactive = total - active
+
+        # 按类型统计
+        type_rows = (
+            db.query(Organization.org_type, func.count(Organization.id))
+            .filter(Organization.is_active == True)  # noqa: E712
+            .group_by(Organization.org_type)
+            .all()
+        )
+        type_dist = {str(t or "unknown"): c for t, c in type_rows}
+
+        # 按层级统计
+        level_rows = (
+            db.query(Organization.level, func.count(Organization.id))
+            .filter(Organization.is_active == True)  # noqa: E712
+            .group_by(Organization.level)
+            .all()
+        )
+        level_dist = {str(lv or "unknown"): c for lv, c in level_rows}
+
+        # 绑定了用户的组织数
+        orgs_with_members = (
+            db.query(func.count(func.distinct(User.organization_id)))
+            .filter(User.organization_id.isnot(None), User.is_active == True)  # noqa: E712
+            .scalar()
+            or 0
+        )
+
+        # 总用户数
+        total_members = (
+            db.query(func.count(User.id))
+            .filter(User.is_active == True, User.organization_id.isnot(None))  # noqa: E712
+            .scalar()
+            or 0
+        )
+
+        return {
+            "code": 200,
+            "data": {
+                "total": total,
+                "active": active,
+                "inactive": inactive,
+                "type_distribution": type_dist,
+                "level_distribution": level_dist,
+                "orgs_with_members": orgs_with_members,
+                "total_members": total_members,
+            },
+            "message": "获取统计信息成功",
+        }
+    except Exception as e:
+        logger.error(f"获取组织统计信息失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取统计信息失败")
+
+
+@router.get("/{org_id}/members", summary="获取组织成员列表")
+async def get_organization_members(
+    org_id: int,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取指定组织的成员列表"""
+    org = db.query(Organization).filter(Organization.id == org_id).first()
+    if not org:
+        raise HTTPException(status_code=404, detail="组织不存在")
+
+    try:
+        query = db.query(User).filter(User.organization_id == org_id, User.is_active == True)  # noqa: E712
+        total = query.count()
+        users = (
+            query.order_by(User.id)
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+
+        items = [
+            {
+                "id": u.id,
+                "username": u.username,
+                "full_name": u.full_name or "",
+                "email": u.email or "",
+                "role": u.role or "user",
+                "is_active": u.is_active,
+                "last_login": u.last_login.isoformat() if u.last_login else None,
+            }
+            for u in users
+        ]
+        return ok_list(items=items, total=total, page=page, page_size=page_size)
+    except Exception as e:
+        logger.error(f"获取组织成员列表失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取成员列表失败")
+
+
+@router.get("/{org_id}/detail", summary="获取组织详情（含子组织和成员数）")
+async def get_organization_detail(
+    org_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取组织详情，包含子组织数量、成员数量、上级组织路径等扩展信息"""
+    org = db.query(Organization).filter(Organization.id == org_id).first()
+    if not org:
+        raise HTTPException(status_code=404, detail="组织不存在")
+
+    try:
+        # 子组织数量
+        children_count = (
+            db.query(func.count(Organization.id))
+            .filter(Organization.parent_id == org_id, Organization.is_active == True)  # noqa: E712
+            .scalar()
+            or 0
+        )
+
+        # 成员数量
+        member_count = (
+            db.query(func.count(User.id))
+            .filter(User.organization_id == org_id, User.is_active == True)  # noqa: E712
+            .scalar()
+            or 0
+        )
+
+        # 直接子组织列表
+        children = (
+            db.query(Organization)
+            .filter(Organization.parent_id == org_id, Organization.is_active == True)  # noqa: E712
+            .order_by(Organization.sort_order, Organization.id)
+            .all()
+        )
+        children_list = [
+            {
+                "id": c.id,
+                "name": c.name,
+                "code": c.code or "",
+                "org_type": str(c.org_type) if c.org_type else None,
+                "level": str(c.level) if c.level else None,
+                "sort_order": c.sort_order,
+                "is_active": c.is_active,
+            }
+            for c in children
+        ]
+
+        # 上级组织路径
+        ancestors = []
+        current_id = org.parent_id
+        visited: set = set()
+        while current_id and current_id not in visited:
+            visited.add(current_id)
+            parent = db.query(Organization).filter(Organization.id == current_id).first()
+            if not parent:
+                break
+            ancestors.insert(0, {"id": parent.id, "name": parent.name})
+            current_id = parent.parent_id
+
+        return {
+            "code": 200,
+            "data": {
+                "id": org.id,
+                "name": org.name,
+                "code": org.code or "",
+                "org_type": str(org.org_type) if org.org_type else None,
+                "level": str(org.level) if org.level else None,
+                "parent_id": org.parent_id,
+                "parent_name": ancestors[-1]["name"] if ancestors else None,
+                "is_active": org.is_active,
+                "sort_order": org.sort_order,
+                "description": org.description or "",
+                "contact_person": org.contact_person or "",
+                "contact_phone": org.contact_phone or "",
+                "contact_email": org.contact_email or "",
+                "address": org.address or "",
+                "created_at": org.created_at.isoformat() if org.created_at else None,
+                "updated_at": org.updated_at.isoformat() if org.updated_at else None,
+                "children_count": children_count,
+                "member_count": member_count,
+                "children": children_list,
+                "ancestors": ancestors,
+            },
+            "message": "获取详情成功",
+        }
+    except Exception as e:
+        logger.error(f"获取组织详情失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="获取详情失败")
+
+
+@router.get("/export/list", summary="导出组织列表Excel")
+async def export_organizations(
+    org_type: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """导出组织列表为 Excel 文件"""
+    # 权限检查
+    if getattr(current_user, "role", None) not in ("admin", "super_admin") and not is_superuser(current_user):
+        raise HTTPException(status_code=403, detail="仅管理员可导出组织列表")
+
+    try:
+        from app.services.export_service import ExcelExportService
+
+        query = db.query(Organization)
+        if org_type:
+            query = query.filter(Organization.org_type == org_type)
+        if is_active is not None:
+            query = query.filter(Organization.is_active == is_active)
+
+        orgs = query.order_by(Organization.sort_order, Organization.id).all()
+
+        # 构建导出数据
+        export_data = []
+        for org in orgs:
+            # 查询成员数
+            member_count = (
+                db.query(func.count(User.id))
+                .filter(User.organization_id == org.id, User.is_active == True)  # noqa: E712
+                .scalar()
+                or 0
+            )
+            type_label = {"department": "部门单位", "support_unit": "帮扶单位", "other": "其他"}.get(
+                str(org.org_type) if org.org_type else "", str(org.org_type or "")
+            )
+            export_data.append(
+                {
+                    "name": org.name,
+                    "code": org.code or "",
+                    "type": type_label,
+                    "level": str(org.level or ""),
+                    "contact_person": org.contact_person or "",
+                    "contact_phone": org.contact_phone or "",
+                    "address": org.address or "",
+                    "description": org.description or "",
+                    "member_count": member_count,
+                    "status": "正常" if org.is_active else "停用",
+                    "created_at": org.created_at.strftime("%Y-%m-%d") if org.created_at else "",
+                }
+            )
+
+        export_service = ExcelExportService()
+        excel_bytes = export_service.export_organizations(
+            organizations=export_data,
+            filename="组织机构列表",
+        )
+
+        return StreamingResponse(
+            io.BytesIO(excel_bytes),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=organizations.xlsx"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"导出组织列表失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="导出失败")
 
 
 @router.post("/{org_id}/activate", summary="激活组织")
