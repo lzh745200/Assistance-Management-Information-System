@@ -130,6 +130,7 @@ _BUSINESS_MODULES = [
     'ai_enhanced', 'data_sync', 'offline_map', 'batch_operations', 'sync',
     'user_permissions', 'machine_code', 'effectiveness', 'sentiment',
     'messages_extended', 'encryption', 'search', 'menus', 'permission_package',
+    'org_module_policy', 'subordinate_registry', 'control_package',
 ]
 
 _loaded_count = 0

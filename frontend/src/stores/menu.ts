@@ -13,6 +13,12 @@ export interface MenuItem {
   order?: number
 }
 
+export interface ModulePolicy {
+  module_key: string
+  visibility: 'visible' | 'hidden'
+  edit_mode: 'full_edit' | 'read_only' | 'disabled'
+}
+
 /** 从菜单树中提取所有 key（含子节点） */
 function _extractAllKeys(items: MenuItem[]): Set<string> {
   const keys = new Set<string>()
@@ -33,6 +39,7 @@ export const useMenuStore = defineStore('menu', () => {
   const loading = ref(false)
   const loadFailed = ref(false)
   const allKeys = ref<Set<string>>(new Set())
+  const orgPolicies = ref<Record<string, ModulePolicy>>({})
 
   /** 可访问的菜单 key 集合 */
   const accessibleKeys = computed(() => allKeys.value)
@@ -50,9 +57,31 @@ export const useMenuStore = defineStore('menu', () => {
     activeMenu.value = key
   }
 
+  function setOrgPolicies(policies: ModulePolicy[]) {
+    const map: Record<string, ModulePolicy> = {}
+    for (const p of policies) {
+      map[p.module_key] = p
+    }
+    orgPolicies.value = map
+  }
+
   function canAccessMenu(menuKey: string): boolean {
     if (!loaded.value) return false
+    // 组织级策略优先：hidden 模块不可见
+    const policy = orgPolicies.value[menuKey]
+    if (policy && policy.visibility === 'hidden') return false
     return allKeys.value.has(menuKey)
+  }
+
+  function canEditModule(moduleKey: string): boolean {
+    const policy = orgPolicies.value[moduleKey]
+    if (!policy) return true
+    return policy.edit_mode === 'full_edit'
+  }
+
+  function isModuleDisabled(moduleKey: string): boolean {
+    const policy = orgPolicies.value[moduleKey]
+    return policy?.edit_mode === 'disabled' || policy?.visibility === 'hidden'
   }
 
   /** 从后端加载当前用户可见菜单，更新 store */
@@ -72,6 +101,19 @@ export const useMenuStore = defineStore('menu', () => {
     }
   }
 
+  /** 加载当前用户所属组织的模块策略 */
+  async function fetchOrgPolicies(): Promise<void> {
+    try {
+      const res = await get('/org-policies/current')
+      const data = res.data || res || []
+      if (Array.isArray(data)) {
+        setOrgPolicies(data)
+      }
+    } catch {
+      // 策略加载失败不阻塞正常使用
+    }
+  }
+
   return {
     menus,
     activeMenu,
@@ -79,9 +121,14 @@ export const useMenuStore = defineStore('menu', () => {
     loading,
     loadFailed,
     accessibleKeys,
+    orgPolicies,
     setMenus,
     setActive,
+    setOrgPolicies,
     canAccessMenu,
+    canEditModule,
+    isModuleDisabled,
     fetchMenus,
+    fetchOrgPolicies,
   }
 })

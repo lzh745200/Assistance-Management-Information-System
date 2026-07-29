@@ -663,7 +663,7 @@ async def get_data_scope_options(
             {"value": "all", "label": "全部数据", "description": "可访问系统内所有数据"},
             {"value": "org_children", "label": "本组织及下级", "description": "可访问本组织及其下级组织的所有数据"},
             {"value": "org", "label": "仅本组织", "description": "仅能访问本组织的数据"},
-            {"value": "sel", "label": "仅自己", "description": "仅能访问自己创建的数据"},
+            {"value": "self", "label": "仅自己", "description": "仅能访问自己创建的数据"},
         ]
     }
 

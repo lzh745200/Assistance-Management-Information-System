@@ -73,6 +73,8 @@ _MODULE_MAP = {
     "TokenBlacklist": ".token_blacklist", "TwoFactorAuth": ".two_factor_auth",
     "UserOrganization": ".user_organization",
     "ErrorReport": ".error_report",
+    "OrgModulePolicy": ".org_module_policy",
+    "SubordinateInstance": ".subordinate_registry",
 }
 
 import sys as _sys

@@ -536,6 +536,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '系统配置', roles: ['admin', 'super_admin'] },
       },
       {
+        path: '/system/control-package',
+        name: 'ControlPackage',
+        component: () => retryImport(() => import('@/views/system/ControlPackage.vue')),
+        meta: { title: '管控配置包', roles: ['admin', 'super_admin'] },
+      },
+      {
         path: '/system/email',
         name: 'SystemEmail',
         component: () => retryImport(() => import('@/views/system/EmailSettings.vue')),
