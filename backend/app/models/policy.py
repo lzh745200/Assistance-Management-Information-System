@@ -129,6 +129,10 @@ class Policy(Base):
         comment="状态: active-有效, invalid-失效, draft-草稿",
     )
     is_important = Column(Boolean, default=False, comment="是否重要")
+    is_active = Column(Boolean, default=True, nullable=False, comment="是否活跃（软删除标记）")
+    # 归属与审计
+    organization_id = Column(Integer, nullable=True, index=True, comment="所属组织ID")
+    created_by = Column(Integer, nullable=True, comment="创建人用户ID")
     # 学习统计
     view_count = Column(Integer, default=0, comment="查看次数")
     download_count = Column(Integer, default=0, comment="下载次数")

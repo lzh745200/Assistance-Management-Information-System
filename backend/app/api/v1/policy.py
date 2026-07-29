@@ -541,7 +541,7 @@ async def export_policies_pdf(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """导出政策为 PDF（以 Excel 格式替代，前端下载后缀为 .pdf）"""
+    """导出政策列表（Excel 格式，.xlsx 后缀）"""
     policies_list = _query_policies_for_export(
         db,
         {
@@ -559,8 +559,8 @@ async def export_policies_pdf(
 
     return StreamingResponse(
         output,
-        media_type="application/octet-stream",
-        headers={"Content-Disposition": "attachment; filename=policies.pdf"},
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=policies_export.xlsx"},
     )
 
 
@@ -573,7 +573,7 @@ async def export_policies_wps(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """导出政策为 WPS 格式（以 Excel 格式替代）"""
+    """导出政策列表（Excel 格式，WPS 兼容）"""
     policies_list = _query_policies_for_export(
         db,
         {
@@ -591,8 +591,8 @@ async def export_policies_wps(
 
     return StreamingResponse(
         output,
-        media_type="application/octet-stream",
-        headers={"Content-Disposition": "attachment; filename=policies.wps"},
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=policies_export.xlsx"},
     )
 
 
@@ -838,7 +838,7 @@ async def get_policies(
         if cached is not None:
             return cached
 
-    query = db.query(Policy)
+    query = db.query(Policy).filter(Policy.is_active == True)  # noqa: E712
 
     # 关键字搜索
     kw = search or keyword
@@ -968,6 +968,8 @@ async def create_policy(
             effective_date=effective_date,
             summary=data.summary,
             keywords=data.keywords,
+            created_by=current_user.id,
+            organization_id=getattr(current_user, "organization_id", None),
         )
         db.add(policy)
         safe_commit(db)
@@ -1061,13 +1063,13 @@ async def delete_policy(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除政策"""
+    """删除政策（软删除）"""
     require_manager_role(current_user)
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="政策不存在")
 
-    db.delete(policy)
+    policy.is_active = False
     safe_commit(db)
     await cache_manager.delete("policies:list")
     # FTS 索引同步
