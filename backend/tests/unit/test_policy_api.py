@@ -370,7 +370,7 @@ class TestPolicyAPI:
         mock_db.query.return_value = q
         resp = client.get("/api/v1/policies/export/pdf")
         assert resp.status_code == 200
-        assert "policies.pdf" in resp.headers["content-disposition"]
+        assert "policies_export.xlsx" in resp.headers["content-disposition"]
 
     def test_export_policies_wps(self, client, mock_db, admin_user, sample_policy):
         _setup_client(client, mock_db, admin_user)
@@ -379,7 +379,7 @@ class TestPolicyAPI:
         mock_db.query.return_value = q
         resp = client.get("/api/v1/policies/export/wps")
         assert resp.status_code == 200
-        assert "policies.wps" in resp.headers["content-disposition"]
+        assert "policies_export.xlsx" in resp.headers["content-disposition"]
 
     def test_get_level_options(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)

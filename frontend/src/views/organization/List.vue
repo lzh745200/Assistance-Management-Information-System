@@ -474,7 +474,8 @@ async function handleDelete(row: any) {
 async function handleExport() {
   exporting.value = true
   try {
-    const response = await apiRequest({
+    // apiRequest with responseType:'blob' returns the Blob directly (res.data = Blob)
+    const blobData = await apiRequest({
       method: 'GET',
       url: '/organizations/export/list',
       responseType: 'blob',
@@ -482,7 +483,7 @@ async function handleExport() {
         org_type: filterType.value || undefined,
       },
     })
-    const blob = new Blob([response.data], {
+    const blob = new Blob([blobData], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     })
     const url = window.URL.createObjectURL(blob)

@@ -19,7 +19,7 @@ class ChartGenerator:
 
     def __init__(self):
         if HAS_MATPLOTLIB:  # 设置中文字体
-            plt.rcParams["font.sans-seri"] = ["SimHei", "DejaVu Sans"]
+            plt.rcParams["font.sans-serif"] = ["SimHei", "DejaVu Sans"]
             plt.rcParams["axes.unicode_minus"] = False
 
     def create_bar_chart(

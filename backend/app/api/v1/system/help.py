@@ -374,7 +374,7 @@ _HELP_ARTICLES = [
             "- 在项目详情中管理关键节点\n"
             "- 设置里程碑名称、计划日期、实际完成日期\n"
             "- 系统自动计算里程碑达成率\n\n"
-            "【批量操作】支持Excel导入项目、批量导出项目列表。n\n"
+            "【批量操作】支持Excel导入项目、批量导出项目列表。\n\n"
             "【软删除】项目删除为逻辑删除，管理员可恢复。"
         ),
         "tags": ["项目", "任务", "管理", "里程碑"],
@@ -1027,13 +1027,7 @@ async def search_help_articles(
     results.sort(key=lambda x: x["relevance_score"], reverse=True)
     results = results[:limit]
 
-    return {
-        "success": True,
-        "data": {
-            "items": results,
-            "total": len(results),
-        },
-    }
+    return ok_list(items=results, total=len(results))
 
 
 @router.get("/system-info", summary="获取系统简介")

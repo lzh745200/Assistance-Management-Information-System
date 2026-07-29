@@ -21,8 +21,8 @@ class SupportedVillageService:
             query = query.where(SupportedVillage.organization_id == organization_id)
             count_q = count_q.where(SupportedVillage.organization_id == organization_id)
         if name:
-            query = query.where(SupportedVillage.name.contains(name))
-            count_q = count_q.where(SupportedVillage.name.contains(name))
+            query = query.where(SupportedVillage.village_name.contains(name))
+            count_q = count_q.where(SupportedVillage.village_name.contains(name))
         total = (await self.db.execute(count_q)).scalar() or 0
         query = query.offset((page - 1) * page_size).limit(page_size)
         result = await self.db.execute(query)

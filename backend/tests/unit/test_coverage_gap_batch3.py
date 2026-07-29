@@ -142,12 +142,18 @@ class TestMachineCodeServiceDB:
         with pytest.raises(ValueError, match="数据库会话未初始化"):
             svc.create_machine_code_record("mc1", 1)
 
-    def test_create_existing_raises(self):
+    def test_create_existing_reuses_record(self):
         db = MagicMock()
-        db.query.return_value.filter.return_value.first.return_value = MagicMock()
+        existing = MagicMock()
+        existing.status = "active"
+        existing.user_id = 99
+        db.query.return_value.filter.return_value.first.return_value = existing
         svc = self._make_service(db)
-        with pytest.raises(ValueError, match="该机器码已存在"):
-            svc.create_machine_code_record("mc1", 1)
+        result = svc.create_machine_code_record("mc1", 1)
+        # 复用已有记录：重置状态为 pending，清除用户绑定
+        assert existing.status == "pending"
+        assert existing.user_id is None
+        assert db.commit.called
 
     def test_create_with_custom_pass_code(self):
         db = MagicMock()
@@ -1003,7 +1009,11 @@ class TestTrendPredictionService:
             record.year = 2022
             record.per_capita_income = 50000
             db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [record]
-            result = TrendPredictionService.predict_village_income(db, 1, periods=1)
+            with patch.object(TrendPredictionService, "_predict_with_prophet", return_value={
+                "predictions": [{"ds": "2023", "yhat": 52000}],
+                "model": "prophet",
+            }):
+                result = TrendPredictionService.predict_village_income(db, 1, periods=1)
             assert "predictions" in result
 
     def test_predict_village_population_no_data(self):
@@ -1022,7 +1032,11 @@ class TestTrendPredictionService:
             record.year = 2022
             record.total_population = 1500
             db.query.return_value.filter.return_value.order_by.return_value.all.return_value = [record]
-            result = TrendPredictionService.predict_village_population(db, 1, periods=1)
+            with patch.object(TrendPredictionService, "_predict_with_prophet", return_value={
+                "predictions": [{"ds": "2023", "yhat": 1520}],
+                "model": "prophet",
+            }):
+                result = TrendPredictionService.predict_village_population(db, 1, periods=1)
             assert "predictions" in result
 
 

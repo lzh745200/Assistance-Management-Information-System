@@ -670,7 +670,7 @@ async def upload_policy_file(
 
     # 校验文件类型
     ext = os.path.splitext(file.filename or "")[1].lower().lstrip(".")
-    allowed = {"pd", "doc", "docx", "pptx"}
+    allowed = {"pdf", "doc", "docx", "pptx"}
     if ext not in allowed:
         raise HTTPException(status_code=400, detail=f"不支持的文件类型，仅支持: {', '.join(allowed)}")
 

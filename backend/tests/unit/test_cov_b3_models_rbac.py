@@ -5,6 +5,7 @@ from app.models.rbac import (
     AccessLog,
     MachineCodePermission,
     RbacRole,
+    ResourceAccessControl,
     RolePermission,
     UserPermission,
     UserRole,

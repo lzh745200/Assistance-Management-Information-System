@@ -22,14 +22,14 @@ def ensure_fts_table(db: Session) -> None:
     )).fetchone()
     if result:
         return
-    db.execute(text("""
+    db.execute(text(f"""
         CREATE VIRTUAL TABLE IF NOT EXISTS {FTS_TABLE}
         USING fts5(title, content, summary, keywords,
                    content='policies', content_rowid='id',
                    tokenize='unicode61')
     """))  # nosec B608
     # 同步已有数据
-    db.execute(text("""
+    db.execute(text(f"""
         INSERT INTO {FTS_TABLE}(rowid, title, content, summary, keywords)
         SELECT id, title, content, summary, keywords FROM policies
     """))  # nosec B608

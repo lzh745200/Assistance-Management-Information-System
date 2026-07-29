@@ -249,6 +249,6 @@ class ImportExportHistoryService:
     async def record(self, **kwargs) -> ImportExportHistory:
         record = ImportExportHistory(**kwargs)
         self.db.add(record)
-        await safe_commit(self.db)
+        await self.db.commit()
         await self.db.refresh(record)
         return record

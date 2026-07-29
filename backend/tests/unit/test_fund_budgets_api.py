@@ -71,13 +71,18 @@ class TestGetBudgets:
         mock_db.all.return_value = []
         resp = client.get("/fund-budgets")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 0
+        data = resp.json()
+        # 兼容 envelope 和 bare 格式
+        total = data.get("total", data.get("data", {}).get("total", 0))
+        assert total == 0
 
     def test_with_filters(self, client, mock_db):
         mock_db.all.return_value = [_make_budget()]
         resp = client.get("/fund-budgets?year=2025&category=基建&village_id=1")
         assert resp.status_code == 200
-        assert resp.json()["total"] == 1
+        data = resp.json()
+        total = data.get("total", data.get("data", {}).get("total", 0))
+        assert total == 1
 
 
 class TestCreateBudget:

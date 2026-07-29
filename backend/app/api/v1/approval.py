@@ -651,7 +651,7 @@ def batch_approve(
     }
 
 
-@router.get("/tasks/{task_id}/dif", summary="变更对比")
+@router.get("/tasks/{task_id}/diff", summary="变更对比")
 def get_task_diff(
     task_id: int,
     db: Session = Depends(get_db),

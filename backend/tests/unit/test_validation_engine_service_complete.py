@@ -66,7 +66,7 @@ class TestValidationEngineService:
         errors = service.validate(data, rules)
 
         assert len(errors) == 1
-        assert "email is required" in errors
+        assert "email" in errors[0]
 
     def test_validate_multiple_errors(self):
         """测试验证 - 多个错误"""

@@ -108,6 +108,7 @@ class TestPermissionPackageServiceExport:
         user.permissions = "read,write"
         user.data_scope = "all"
         user.is_superuser = True
+        user.organization_id = 1
 
         def side_effect(model):
             q = MagicMock()
@@ -123,6 +124,10 @@ class TestPermissionPackageServiceExport:
                 q.all.return_value = [up]
             elif name == "User":
                 q.filter.return_value.all.return_value = [user]
+            else:
+                q.all.return_value = []
+                q.filter.return_value.all.return_value = []
+                q.order_by.return_value.all.return_value = []
             return q
 
         db.query.side_effect = side_effect
@@ -145,6 +150,7 @@ class TestPermissionPackageServiceExport:
         user.permissions = None
         user.data_scope = None
         user.is_superuser = None
+        user.organization_id = None
 
         def side_effect(model):
             q = MagicMock()
@@ -173,6 +179,7 @@ class TestPermissionPackageServiceExport:
         user.permissions = ""
         user.data_scope = "org"
         user.is_superuser = False
+        user.organization_id = 1
 
         def side_effect(model):
             q = MagicMock()
@@ -201,6 +208,7 @@ class TestPermissionPackageServiceExport:
         user.permissions = ""
         user.data_scope = "org"
         user.is_superuser = False
+        user.organization_id = None
 
         def side_effect(model):
             q = MagicMock()
