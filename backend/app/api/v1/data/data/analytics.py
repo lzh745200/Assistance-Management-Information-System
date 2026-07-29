@@ -262,3 +262,66 @@ async def get_kpi_summary(
 async def get_analytics_health():
     """获取分析服务健康状态"""
     return AnalyticsResponse(success=True, data={"status": "healthy"}, message="分析服务状态正常")
+
+
+@router.get("/cross-org-comparison")
+@safe_api_call("跨组织对比分析")
+async def get_cross_org_comparison(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """跨组织对比分析（仅 super_admin/admin 可用）
+
+    按组织分组聚合：帮扶村数、项目数、资金总额、完成率。
+    """
+    role = getattr(current_user, "role", "")
+    is_super = getattr(current_user, "is_superuser", False)
+    if role not in ("admin", "super_admin") and not is_super:
+        return AnalyticsResponse(success=False, data=None, message="仅管理员可查看跨组织对比")
+
+    from app.models.organization import Organization
+    from app.models.project import Project
+    from app.models.fund import Fund
+    from app.models.supported_village import SupportedVillage
+
+    orgs = db.query(Organization.id, Organization.name).filter(
+        Organization.is_active == True  # noqa: E712
+    ).all()
+
+    comparison = []
+    for org_id, org_name in orgs:
+        villages = db.query(sa_func.count(SupportedVillage.id)).filter(
+            SupportedVillage.organization_id == org_id,
+            SupportedVillage.is_active == True,  # noqa: E712
+        ).scalar() or 0
+
+        projects_total = db.query(sa_func.count(Project.id)).filter(
+            Project.organization_id == org_id,
+            Project.is_active == True,  # noqa: E712
+        ).scalar() or 0
+
+        projects_completed = db.query(sa_func.count(Project.id)).filter(
+            Project.organization_id == org_id,
+            Project.is_active == True,  # noqa: E712
+            Project.status == "completed",
+        ).scalar() or 0
+
+        funds_total = db.query(sa_func.coalesce(sa_func.sum(Fund.amount), 0)).filter(
+            Fund.organization_id == org_id,
+            Fund.is_active == True,  # noqa: E712
+        ).scalar() or 0
+
+        completion_rate = round(projects_completed / projects_total * 100, 1) if projects_total > 0 else 0.0
+
+        comparison.append({
+            "organization_id": org_id,
+            "organization_name": org_name,
+            "villages": villages,
+            "projects_total": projects_total,
+            "projects_completed": projects_completed,
+            "completion_rate": completion_rate,
+            "funds_total": round(float(funds_total), 2),
+        })
+
+    comparison.sort(key=lambda x: x["funds_total"], reverse=True)
+    return AnalyticsResponse(success=True, data=comparison, message="跨组织对比数据获取成功")
