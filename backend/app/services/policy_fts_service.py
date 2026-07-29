@@ -138,9 +138,14 @@ def sync_policy_to_fts(db: Session, policy_id: int) -> None:
             return
         # 先删除旧记录再插入（INSERT OR REPLACE 在 FTS5 中不支持）
         db.execute(text(f"DELETE FROM {FTS_TABLE} WHERE rowid = :id"), {"id": policy_id})  # nosec B608
+        insert_sql = (
+            f"INSERT INTO {FTS_TABLE}(rowid, title, content, summary, keywords)"
+            " VALUES (:id, :title, :content, :summary, :keywords)"
+        )
         db.execute(
-            text(f"INSERT INTO {FTS_TABLE}(rowid, title, content, summary, keywords) VALUES (:id, :title, :content, :summary, :keywords)"),  # nosec B608
-            {"id": row[0], "title": row[1] or "", "content": row[2] or "", "summary": row[3] or "", "keywords": row[4] or ""},
+            text(insert_sql),  # nosec B608
+            {"id": row[0], "title": row[1] or "", "content": row[2] or "",
+             "summary": row[3] or "", "keywords": row[4] or ""},
         )
         safe_commit(db)
     except Exception:

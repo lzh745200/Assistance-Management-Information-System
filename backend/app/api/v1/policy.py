@@ -22,6 +22,7 @@ from ...core.security import get_current_user
 from ...models.policy import Policy, PolicyCategory, PolicyFavorite
 from app.core.transaction import safe_commit
 from app.api.v1.deps import require_manager_role
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -972,6 +973,15 @@ async def create_policy(
         safe_commit(db)
         db.refresh(policy)
         await cache_manager.delete("policies:list")
+        # FTS 索引同步
+        from app.services.policy_fts_service import sync_policy_to_fts
+        sync_policy_to_fts(db, policy.id)
+        # 审计日志
+        try:
+            write_work_log(db, "policy", "create", policy.id, f"创建政策: {policy.title}",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败", exc_info=True)
         return _policy_to_frontend(policy)
     except HTTPException:
         raise
@@ -1027,6 +1037,15 @@ async def update_policy(
         safe_commit(db)
         db.refresh(policy)
         await cache_manager.delete("policies:list")
+        # FTS 索引同步
+        from app.services.policy_fts_service import sync_policy_to_fts
+        sync_policy_to_fts(db, policy.id)
+        # 审计日志
+        try:
+            write_work_log(db, "policy", "update", policy.id, f"更新政策: {policy.title}",
+                           user_id=current_user.id, username=getattr(current_user, "username", ""))
+        except Exception:
+            logger.debug("记录工作日志失败", exc_info=True)
         return _policy_to_frontend(policy)
     except HTTPException:
         raise
@@ -1051,6 +1070,15 @@ async def delete_policy(
     db.delete(policy)
     safe_commit(db)
     await cache_manager.delete("policies:list")
+    # FTS 索引同步
+    from app.services.policy_fts_service import remove_policy_from_fts
+    remove_policy_from_fts(db, policy_id)
+    # 审计日志
+    try:
+        write_work_log(db, "policy", "delete", policy_id, f"删除政策: {policy.title}",
+                       user_id=current_user.id, username=getattr(current_user, "username", ""))
+    except Exception:
+        logger.debug("记录工作日志失败", exc_info=True)
     return {"message": "删除成功"}
 
 
