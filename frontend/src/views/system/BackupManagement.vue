@@ -1,5 +1,44 @@
 <template>
   <div class="backup-management">
+    <!-- 自动备份设置 -->
+    <el-card class="auto-backup-card">
+      <template #header>
+        <div class="card-header">
+          <span class="title">自动备份设置</span>
+        </div>
+      </template>
+      <el-form :model="autoBackupConfig" label-width="140px" class="auto-backup-form">
+        <el-form-item label="启用自动备份">
+          <el-switch v-model="autoBackupConfig.enabled" active-text="开启" inactive-text="关闭" />
+        </el-form-item>
+        <el-form-item label="备份频率">
+          <el-radio-group
+            v-model="autoBackupConfig.frequency"
+            :disabled="!autoBackupConfig.enabled"
+          >
+            <el-radio value="daily">每日</el-radio>
+            <el-radio value="weekly">每周</el-radio>
+            <el-radio value="monthly">每月</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="保留备份份数">
+          <el-input-number
+            v-model="autoBackupConfig.retentionCount"
+            :min="1"
+            :max="30"
+            :disabled="!autoBackupConfig.enabled"
+          />
+          <span class="retention-hint">保留最近 N 份备份</span>
+        </el-form-item>
+        <el-form-item label="下次备份时间">
+          <span>{{ nextBackupTime }}</span>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="saveAutoBackupConfig">保存设置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
     <el-card>
       <template #header>
         <div class="card-header">
@@ -176,7 +215,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { get, post, put, del } from '@/api/request'
 import { AuthStorage } from '@/utils/authStorage'
@@ -203,6 +242,85 @@ const backupForm = ref({
   password: '',
 })
 const restoreForm = ref({ password: '' })
+
+// ── Auto backup settings (localStorage-based) ──
+const AUTO_BACKUP_STORAGE_KEY = 'auto-backup-config'
+
+interface AutoBackupConfig {
+  enabled: boolean
+  frequency: 'daily' | 'weekly' | 'monthly'
+  retentionCount: number
+}
+
+function loadAutoBackupConfig(): AutoBackupConfig {
+  try {
+    const raw = localStorage.getItem(AUTO_BACKUP_STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return {
+        enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : false,
+        frequency: ['daily', 'weekly', 'monthly'].includes(parsed.frequency)
+          ? parsed.frequency
+          : 'daily',
+        retentionCount:
+          typeof parsed.retentionCount === 'number' &&
+          parsed.retentionCount >= 1 &&
+          parsed.retentionCount <= 30
+            ? parsed.retentionCount
+            : 7,
+      }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return { enabled: false, frequency: 'daily', retentionCount: 7 }
+}
+
+const autoBackupConfig = reactive<AutoBackupConfig>(loadAutoBackupConfig())
+
+watch(
+  () => ({ ...autoBackupConfig }),
+  (val) => {
+    try {
+      localStorage.setItem(AUTO_BACKUP_STORAGE_KEY, JSON.stringify(val))
+    } catch {
+      // Storage full or unavailable
+    }
+  },
+  { deep: true }
+)
+
+const nextBackupTime = computed(() => {
+  if (!autoBackupConfig.enabled) return '未启用'
+  const now = new Date()
+  const next = new Date(now)
+  next.setHours(2, 0, 0, 0)
+  switch (autoBackupConfig.frequency) {
+    case 'daily':
+      if (next <= now) next.setDate(next.getDate() + 1)
+      break
+    case 'weekly': {
+      const dayOfWeek = next.getDay()
+      const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7
+      next.setDate(next.getDate() + daysUntilMonday)
+      if (next <= now) next.setDate(next.getDate() + 7)
+      break
+    }
+    case 'monthly':
+      next.setMonth(next.getMonth() + 1, 1)
+      break
+  }
+  return next.toLocaleString('zh-CN')
+})
+
+function saveAutoBackupConfig() {
+  try {
+    localStorage.setItem(AUTO_BACKUP_STORAGE_KEY, JSON.stringify({ ...autoBackupConfig }))
+    ElMessage.success('自动备份设置已保存')
+  } catch {
+    ElMessage.error('保存自动备份设置失败')
+  }
+}
 
 // ── Backup schedule configuration ──
 const savingSchedule = ref(false)
@@ -425,6 +543,17 @@ onMounted(() => {
 }
 .backup-status {
   margin-bottom: 20px;
+}
+.auto-backup-card {
+  margin-bottom: 20px;
+}
+.auto-backup-form {
+  max-width: 500px;
+}
+.retention-hint {
+  margin-left: 8px;
+  color: #909399;
+  font-size: 13px;
 }
 .schedule-card {
   margin-top: 20px;

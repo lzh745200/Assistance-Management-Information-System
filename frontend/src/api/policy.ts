@@ -111,10 +111,33 @@ export const exportPoliciesWPS = (params?: any) =>
     fallbackFileName: `政策法规_${Date.now()}.wps`,
   })
 // ── Display helpers (used by views for status/label formatting) ──
-const CATEGORY_LABELS: Record<string, string> = {}
-const LEVEL_LABELS: Record<string, string> = {}
-const STATUS_LABELS: Record<string, string> = {}
-const STATUS_COLORS: Record<string, string> = {}
+const CATEGORY_LABELS: Record<string, string> = {
+  military: '军队政策',
+  local: '地方政策',
+  joint: '军民融合',
+  other: '其他',
+}
+const LEVEL_LABELS: Record<string, string> = {
+  national: '国家级',
+  provincial: '省级',
+  municipal: '市级',
+  county: '县级',
+  unit: '单位级',
+}
+const STATUS_LABELS: Record<string, string> = {
+  draft: '草稿',
+  active: '有效',
+  archived: '已归档',
+  expired: '已失效',
+  invalid: '失效',
+}
+const STATUS_COLORS: Record<string, string> = {
+  draft: 'info',
+  active: 'success',
+  archived: 'warning',
+  expired: 'danger',
+  invalid: 'danger',
+}
 
 export const getCategoryLabel = (cat: string) => CATEGORY_LABELS[cat] || cat
 export const getLevelLabel = (level: string) => LEVEL_LABELS[level] || level
