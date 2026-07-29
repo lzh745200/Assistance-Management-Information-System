@@ -182,6 +182,7 @@ backend/check_*.py
 backend/diagnose_*.py
 backend/fix_*.py
 backend/reset_*.py
+backend/temp_*.py
 backend/cleanup_*.py
 backend/gen_cover*.py
 /fix_*.py
