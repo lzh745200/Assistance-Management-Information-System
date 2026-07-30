@@ -101,9 +101,10 @@
             <el-tag v-if="todo.priority" :type="priorityTagType(todo.priority)" size="small">
               {{ priorityLabel(todo.priority) }}
             </el-tag>
-            <span v-if="todo.deadline" class="todo-deadline">
+            <span v-if="todo.deadline" class="todo-deadline" :class="{ 'todo-deadline--overdue': isOverdue(todo) }">
               <el-icon><Calendar /></el-icon>
               {{ todo.deadline?.split('T')[0] || todo.deadline }}
+              <el-tag v-if="isOverdue(todo)" type="danger" size="small" style="margin-left: 4px">已逾期</el-tag>
             </span>
             <span v-if="todo.created_at" class="todo-date">
               创建于 {{ formatDate(todo.created_at) }}
@@ -227,6 +228,11 @@ const priorityLabel = (p: string) => {
 }
 
 const formatDate = (d: string) => (d ? d.split('T')[0] : '-')
+
+function isOverdue(todo: { deadline?: string; completed?: boolean }) {
+  if (!todo.deadline || todo.completed) return false
+  return new Date(todo.deadline) < new Date()
+}
 
 function scrollToAdd() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -451,6 +457,11 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.todo-deadline--overdue {
+  color: #f56c6c;
+  font-weight: 600;
 }
 
 .todo-desc {

@@ -409,10 +409,10 @@ async def reset_password_with_machine_code(
             _f.write(f"用户: {username}\n新密码: {new_password}\n请首次登录后立即修改\n")
         if _os.name != "nt":
             _os.chmod(tmp_path, 0o600)
-        logger.info("用户 %s 密码已通过机器码验证重置，新密码已写入临时文件: %s", username, tmp_path)
+        logger.info("用户 %s 密码已通过机器码验证重置，新密码已写入临时文件", username)
         return {
             "code": 200,
-            "data": {"username": username, "password_file": tmp_path},
+            "data": {"username": username},
             "message": "密码已重置，新密码已写入临时文件，请首次登录后立即修改",
         }
     except HTTPException:

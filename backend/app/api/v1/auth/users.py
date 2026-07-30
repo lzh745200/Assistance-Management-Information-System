@@ -225,6 +225,18 @@ async def list_users(
     require_admin(current_user)
     query = db.query(User)
 
+    # 非 super_admin 只能查看本组织及下级组织的用户
+    is_super = getattr(current_user, "is_superuser", False) or current_user.role == "super_admin"
+    if not is_super and current_user.organization_id:
+        from app.models.organization import Organization
+        child_org_ids = [
+            row[0] for row in db.query(Organization.id).filter(
+                Organization.path.contains(f"/{current_user.organization_id}/")
+            ).all()
+        ]
+        allowed_org_ids = [current_user.organization_id] + child_org_ids
+        query = query.filter(User.organization_id.in_(allowed_org_ids))
+
     if keyword:
         query = query.filter(
             User.username.contains(keyword) | User.full_name.contains(keyword) | User.email.contains(keyword)

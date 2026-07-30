@@ -4,6 +4,7 @@
 """
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from typing import Any, Dict, List
 
 import numpy as np
@@ -11,6 +12,9 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+# Prophet 初始化超时（秒）— Windows 上 cmdstanpy 可能因 where.exe 挂起
+_PROPHET_TIMEOUT = 10
 
 # 尝试导入Prophet
 try:
@@ -57,7 +61,19 @@ class TrendPredictionService:
 
         try:
             if method == "prophet" and PROPHET_AVAILABLE:
-                return TrendPredictionService._predict_with_prophet(historical_data, periods, date_field, value_field)
+                # Prophet 在 Windows 上可能因 cmdstanpy/where.exe 挂起，添加超时保护
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(
+                        TrendPredictionService._predict_with_prophet,
+                        historical_data, periods, date_field, value_field,
+                    )
+                    try:
+                        return future.result(timeout=_PROPHET_TIMEOUT)
+                    except FuturesTimeoutError:
+                        logger.warning("Prophet 预测超时，回退到线性回归")
+                        return TrendPredictionService._predict_with_linear(
+                            historical_data, periods, date_field, value_field
+                        )
             elif method == "moving_average":
                 return TrendPredictionService._predict_with_moving_average(
                     historical_data, periods, date_field, value_field

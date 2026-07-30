@@ -1195,6 +1195,7 @@ async def search_policies(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
     """全文检索帮扶政策（FTS5 + 关键词高亮）"""
     from app.services.policy_fts_service import search_policies_fts
