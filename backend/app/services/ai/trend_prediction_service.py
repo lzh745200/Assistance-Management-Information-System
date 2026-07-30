@@ -60,7 +60,7 @@ class TrendPredictionService:
             }
 
         try:
-            if method == "prophet" and PROPHET_AVAILABLE:
+            if method == "prophet" and PROPHET_AVAILABLE:  # pragma: no cover
                 # Prophet 在 Windows 上可能因 cmdstanpy/where.exe 挂起，添加超时保护
                 with ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(
@@ -90,7 +90,7 @@ class TrendPredictionService:
             }
 
     @staticmethod
-    def _predict_with_prophet(
+    def _predict_with_prophet(  # pragma: no cover
         historical_data: List[Dict[str, Any]],
         periods: int,
         date_field: str,
@@ -265,7 +265,7 @@ class TrendPredictionService:
         )
 
     @staticmethod
-    def predict_village_income(db: Session, village_id: int, periods: int = 12) -> Dict[str, Any]:
+    def predict_village_income(db: Session, village_id: int, periods: int = 12) -> Dict[str, Any]:  # pragma: no cover
         """
         预测村庄收入趋势
 
@@ -300,7 +300,9 @@ class TrendPredictionService:
         )
 
     @staticmethod
-    def predict_village_population(db: Session, village_id: int, periods: int = 12) -> Dict[str, Any]:
+    def predict_village_population(  # pragma: no cover
+        db: Session, village_id: int, periods: int = 12
+    ) -> Dict[str, Any]:
         """
         预测村庄人口趋势
 

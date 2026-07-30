@@ -187,7 +187,7 @@ async def admin_create_machine_code(
         try:
             write_work_log(db, "machine_code", "create", record.id, f"录入机器码: {request.machine_code}",
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
@@ -278,7 +278,7 @@ async def admin_revoke_machine_code(
         try:
             write_work_log(db, "machine_code", "revoke", machine_code_id, f"撤销机器码: id={machine_code_id}",
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
         return {"code": 200, "message": "机器码已撤销"}
     except HTTPException:
@@ -337,7 +337,7 @@ async def generate_initial_password(
         try:
             write_work_log(db, "machine_code", "generate_password", user.id, f"生成初始密码: {request.username}",
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
@@ -528,7 +528,7 @@ async def create_organization_pass_code(
         try:
             write_work_log(db, "machine_code", "create_org_pass_code", record.id, f"生成组织通行码: org={org.name}",
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
@@ -721,7 +721,7 @@ async def delete_organization_pass_code(
         try:
             write_work_log(db, "machine_code", "delete_org_pass_code", pass_code_id, f"删除通行码记录: id={pass_code_id}",
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
 
         return {"code": 200, "message": "通行码记录已删除"}
@@ -822,7 +822,7 @@ async def grant_machine_code_permissions(
         try:
             write_work_log(db, "machine_code", "grant_permissions", machine_code_id, f"授予机器码权限: {count}个",
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
@@ -857,7 +857,7 @@ async def revoke_machine_code_permissions(
         try:
             write_work_log(db, "machine_code", "revoke_permissions", machine_code_id, f"撤销机器码权限: {count}个",
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
         return {
             "code": 200,

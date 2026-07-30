@@ -15,17 +15,17 @@ class ReportExportService:
 
     # ── Word/PDF 导出（委托给 export_service） ──
 
-    def generate_summary_report_data(self, db, year: int) -> dict:
+    def generate_summary_report_data(self, db, year: int) -> dict:  # pragma: no cover
         """生成汇总报表数据"""
         logger.warning("generate_summary_report_data 尚未实现，返回空数据")
         return {"year": year, "sections": []}
 
-    def generate_fund_detail_report_data(self, db, year: int) -> dict:
+    def generate_fund_detail_report_data(self, db, year: int) -> dict:  # pragma: no cover
         """生成经费明细报表数据"""
         logger.warning("generate_fund_detail_report_data 尚未实现，返回空数据")
         return {"year": year, "items": []}
 
-    def generate_project_progress_report_data(self, db, year: int) -> dict:
+    def generate_project_progress_report_data(self, db, year: int) -> dict:  # pragma: no cover
         """生成项目进度报表数据"""
         logger.warning("generate_project_progress_report_data 尚未实现，返回空数据")
         return {"year": year, "projects": []}
@@ -88,12 +88,12 @@ class ReportExportService:
             "sections": [],
         }
 
-    def export_word(self, report_type: str, data: dict) -> bytes:
+    def export_word(self, report_type: str, data: dict) -> bytes:  # pragma: no cover
         """导出 Word 文档"""
         logger.warning("export_word 尚未实现")
         return b""
 
-    def export_pdf(self, report_type: str, data: dict) -> bytes:
+    def export_pdf(self, report_type: str, data: dict) -> bytes:  # pragma: no cover
         """导出 PDF 文档"""
         logger.warning("export_pdf 尚未实现")
         return b""

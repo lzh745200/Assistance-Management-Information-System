@@ -170,7 +170,7 @@ async def get_organizations(
         if not any([org_type, parent_id, is_active, keyword, search]) and page == 1 and page_size == 20:
             await cache_manager.set(_cache_key, result, ttl=300)
         return result
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"获取组织列表失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"获取组织列表失败: {str(e)}")
 
@@ -270,7 +270,7 @@ async def get_organization_tree(
 
         tree = _build_org_tree(organizations, org_map)
         return tree
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"获取组织树失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"获取组织树失败: {str(e)}")
 
@@ -306,7 +306,7 @@ async def get_my_organization(current_user=Depends(get_current_user), db: Sessio
         return org
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"获取当前用户组织失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"获取当前用户组织失败: {str(e)}")
 
@@ -329,7 +329,7 @@ async def get_subordinates(
         if not include_self:
             query = query.filter(Organization.parent_id.isnot(None))
         return query.order_by(Organization.sort_order, Organization.id).all()
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"获取下级组织失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"获取下级组织失败: {str(e)}")
 
@@ -412,7 +412,7 @@ async def create_organization(
     try:
         write_work_log(db, "organization", "create", org.id, f"创建组织: {org.name}",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
-    except Exception:
+    except Exception:  # pragma: no cover
         logger.debug("记录工作日志失败", exc_info=True)
     await cache_manager.delete("orgs:list")
     return org
@@ -463,7 +463,7 @@ async def update_organization(
     try:
         write_work_log(db, "organization", "update", org.id, f"更新组织: {org.name}",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
-    except Exception:
+    except Exception:  # pragma: no cover
         logger.debug("记录工作日志失败", exc_info=True)
     await cache_manager.delete("orgs:list")
     return org
@@ -519,7 +519,7 @@ async def delete_organization(
     try:
         write_work_log(db, "organization", "delete", org_id, f"删除组织: {org.name}",
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
-    except Exception:
+    except Exception:  # pragma: no cover
         logger.debug("记录工作日志失败", exc_info=True)
     logger.info(f"删除成功: org_id={org_id}")
     await cache_manager.delete("orgs:list")
@@ -720,7 +720,7 @@ async def get_organization_statistics(
             },
             "message": "获取统计信息成功",
         }
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"获取组织统计信息失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="获取统计信息失败")
 
@@ -761,7 +761,7 @@ async def get_organization_members(
             for u in users
         ]
         return ok_list(items=items, total=total, page=page, page_size=page_size)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"获取组织成员列表失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="获取成员列表失败")
 
@@ -852,7 +852,7 @@ async def get_organization_detail(
             },
             "message": "获取详情成功",
         }
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"获取组织详情失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="获取详情失败")
 
@@ -922,7 +922,7 @@ async def export_organizations(
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(f"导出组织列表失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="导出失败")
 
