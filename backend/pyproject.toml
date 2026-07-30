@@ -8,62 +8,13 @@ omit = [
     "*/__pycache__/*",
     "*/venv/*",
     "*/.venv/*",
-    # 不可单元测试的工具（需外部依赖/手动运行）
-    "*/app/utils/chart.py",             # matplotlib 图表生成，需图形环境
-    "*/app/utils/email.py",              # SMTP 邮件发送，需真实邮件服务器
-    "*/app/utils/database_init.py",      # 数据库初始化 CLI 工具，一次性运行
-    "*/app/utils/database_migration.py", # 数据库迁移 CLI 工具，一次性运行
-    "*/app/utils/database_indexes.py",   # 索引创建 CLI 工具，一次性运行
-    "*/app/utils/init_permissions.py",   # 权限初始化 CLI 工具，一次性运行
-    "*/app/utils/secret_migration.py",   # 密钥迁移 CLI 工具，一次性运行
-    "*/app/utils/db_performance.py",     # 数据库性能 CLI 工具
-    "*/app/utils/performance.py",        # 性能测试 CLI 工具
-    "*/app/utils/export.py",             # 导出 CLI 工具
-    "*/app/utils/query_optimizer.py",    # 查询优化 CLI 工具
-    "*/app/utils/encryption.py",         # 加密工具（与 encryption_service 重复）
-    "*/app/config.py",                   # 简单配置
-    # 以下文件目前无测试且为工具/脚本性质
-    "*/app/api/dependencies/permissions.py",  # 依赖项，需集成测试
-    "*/app/api/v1/data/conflict_resolution.py",
-    "*/app/api/v1/data/incremental_update.py",
-    "*/app/api/v1/data/package_versions.py",
-    "*/app/api/v1/system/data_tier.py",
-    "*/app/api/v1/system_init.py",
-    "*/app/api/v1/village/__init__.py",
-    "*/app/api/v1/village/crud.py",
-    "*/app/api/v1/village/export.py",
-    "*/app/api/v1/village/schemas.py",
-    "*/app/api/v1/village/statistics.py",
-    "*/app/api/v1/village/template.py",
-    "*/app/api/v1/village_templates.py",
-    "*/app/api/v1/messages_extended.py",
-    "*/app/application/services/permission_service.py",
-    "*/app/core/audit.py",
-    "*/app/core/auth_root.py",
-    # 仅保留：数据库兼容层、过时/废弃模块
-    "*/app/core/database_compat.py",
-    "*/app/core/logging_config.py",
-    "*/app/core/structured_logging.py",
-    # 仅保留：实验性/外部中间件
-    # 服务层 — 移除排除，所有服务应被覆盖
-    "*/app/services/zero_trust/*.py",
-    # 仅保留：生成的/第三方/初始化文件
-    "*/app/services/domain/**/*.py",
-    "*/app/services/aircraft/*.py",
-    "*/app/services/funding/__init__.py",
-    "*/app/services/village/__init__.py",
-    "*/app/services/project/__init__.py",
-    # 其他 — 仅保留生成文件和遗留代码
-    "*/app/dependencies.py",
-    "*/app/exceptions.py",
-    "*/app/static_files.py",
 ]
 
 [tool.coverage.report]
 precision = 2
 show_missing = true
 skip_covered = false
-fail_under = 98  # 提升至 98% 覆盖率门禁（与 CI --cov-fail-under=98 保持一致）
+fail_under = 100  # 100% 覆盖率门禁（可覆盖集：pragma 豁免真正不可执行的行）
 
 exclude_lines = [
     "pragma: no cover",

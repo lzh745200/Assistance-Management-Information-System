@@ -409,9 +409,12 @@ describe('删除经费', () => {
     const vm = wrapper.vm as any
     mockApiRequest.mockClear()
     mockGet.mockClear()
+    // 删除后 fetchData 重新获取时返回空列表
+    mockApiRequest.mockResolvedValue({ data: { items: [], total: 0 } })
     await vm.handleDelete(sampleFund)
     expect(mockDel).toHaveBeenCalledWith('/funds/1')
     expect(ElMessage.success).toHaveBeenCalledWith('删除成功')
+    await flushPromises()
     expect(vm.tableData).toEqual([])
     expect(vm.total).toBe(0)
     expect(mockApiRequest).toHaveBeenCalled()

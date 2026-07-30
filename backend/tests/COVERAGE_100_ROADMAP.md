@@ -1,138 +1,88 @@
 # 后端测试覆盖率100%实现路线图
 
-**当前状态**: 2026-07-27
-**当前覆盖率**: 98% 门禁已启用
-**通过率**: 100% ✅
+**当前状态**: 2026-07-30
+**覆盖率门禁**: 100%（可覆盖集：pragma 豁免真正不可执行的行）
+**通过率目标**: 100%
 
-## 覆盖率门禁提升记录 🎉
+## 覆盖率门禁提升记录
 
-### 2026-07-27: 门禁从 90% 提升至 98%
+### 2026-07-30: 门禁从 98% 提升至 100%
+
+- `pyproject.toml` → `fail_under = 100`
+- `Makefile` → `--cov-fail-under=100`
+- `.github/workflows/pr-checks.yml` → `--cov-fail-under=100`
+- `frontend/vitest.config.ts` → 所有阈值提升至 100%
+
+### 2026-07-30: 移除 pyproject.toml omit 列表
+
+此前 30+ 个文件被 `omit` 排除在覆盖率测量之外（CLI 工具、外部依赖等）。
+现已移除全部 omit 条目，所有 `app/` 下的文件均纳入覆盖率测量。
+
+**处理策略**：
+1. 已有测试的文件（database_init, secret_migration, init_permissions, zero_trust, encryption, logging_config, village_templates, messages_extended）→ 移除 omit 后现有测试自动纳入统计
+2. 新增测试的文件（database_migration, db_performance, core/audit, core/auth_root, core/database_compat, core/structured_logging, dependencies, static_files, config, utils/performance, utils/chart, utils/email, utils/query_optimizer）→ 新建 `test_previously_excluded_cov.py` 等测试文件
+3. 不存在的文件（export.py, api/dependencies/permissions.py, data/conflict_resolution.py 等）→ 从 omit 列表移除后自动忽略
 
 ### 测试统计
+
 | 指标 | 数值 |
 |------|------|
-| 后端测试总数 | 8,890+ |
-| 前端测试总数 | 1,681 |
-| 通过率 | 100% |
-| 失败 | 0 |
-| 跳过 | 0 |
+| 后端测试文件数 | 440+ |
+| 后端测试总数 | ~10,845 |
+| 前端测试文件数 | 137+ |
+| 前端测试总数 | ~1,997 |
 
-### 测试覆盖全面达成
+## 覆盖率现状
 
-经过系统性的测试开发工作，项目已完成以下目标：
+### 后端
 
-- ✅ 后端 8,890+ 个测试全部通过，100% 通过率
-- ✅ 前端 1,681 个测试全部通过
-- ✅ 核心 utils 模块 100% 覆盖率
-- ✅ API 层完整 CRUD 测试覆盖
-- ✅ Services 层所有业务逻辑分支覆盖
-- ✅ Domain 层聚合根、值对象、领域事件全覆盖
-- ✅ Infrastructure 层消息传递、仓储完整测试
-- ✅ 集成测试和端到端工作流覆盖
+| 模块 | 覆盖率（run7 基线） | 状态 |
+|------|---------------------|------|
+| app/api/v1/ | ~99% | ⚠️ 393 语句缺口 |
+| app/core/ | ~99% | ⚠️ 新增 audit/auth_root/database_compat/structured_logging 测试 |
+| app/middleware/ | ~99% | ✅ |
+| app/models/ | ~99% | ⚠️ 少量缺口 |
+| app/schemas/ | ~99% | ⚠️ 少量缺口 |
+| app/services/ | ~99% | ⚠️ 新增 zero_trust 测试 |
+| app/utils/ | ~99% | ⚠️ 新增 database_migration/db_performance 测试 |
 
-### 已创建测试文件汇总
+### 前端
 
-#### API层测试
-- `test_api_approval_full.py`
-- `test_api_assessment_full.py`
-- `test_api_auth_full.py`
-- `test_api_data_statistics_full.py`
-- `test_api_dependencies_full.py`
-- `test_api_endpoints_additional.py`
-- `test_api_endpoints_coverage.py`
-- `test_api_error.py`
-- `test_api_funds_full.py`
-- `test_api_health_full.py`
-- `test_api_layer_full.py`
-- `test_api_map_full.py`
-- `test_api_messages_full.py`
-- `test_api_policy_full.py`
-- `test_api_projects_full.py`
-- `test_api_routes_detailed.py`
-- `test_api_schools_full.py`
-- `test_api_system_full.py`
-- `test_api_users_full.py`
-- `test_api_rural_tasks_full.py`
+| 模块 | 覆盖率 | 状态 |
+|------|--------|------|
+| src/utils/ | ~90% | ❌ 需提升至 100% |
+| src/stores/ | ~90% | ❌ 需提升至 100% |
+| src/composables/ | ~90% | ❌ 需提升至 100% |
+| src/api/ | ~90% | ❌ 需提升至 100% |
+| src/views/ | ~64% | ❌ 大量缺口（174 文件） |
+| src/components/ | ~64% | ❌ 大量缺口 |
+| src/router/ | ~100% | ✅ |
+| src/config/ | ~90% | ❌ 需提升至 100% |
 
-#### Services层测试
-- `test_ai_service.py`
-- `test_ai_services_full.py`
-- `test_analytics_service.py`
-- `test_backup_service.py`
-- `test_cache_service.py`
-- `test_fund_service_full.py`
-- `test_organization_service_full.py`
-- `test_policy_service.py`
-- `test_project_service_full.py`
-- `test_rbac_service_full.py`
-- `test_remaining_services_final.py`
-- `test_remaining_services_full.py`
-- `test_services_effectiveness_full.py`
-- `test_services_resource_limiter.py`
-- `test_services_sentiment_full.py`
-- `test_services_system_config.py`
-- `test_services_validation_engine.py`
-- `test_smart_conflict_resolver.py`
-- `test_user_service_full.py`
-- `test_work_log_service_full.py`
+## 待办事项
 
-#### Domain层测试
-- `test_domain.py`
-- `test_domain_aggregates.py`
-- `test_domain_layer_final.py`
-- `test_domain_layer_full.py`
-- `test_domain_value_objects.py`
+### 后端（优先级：高）
+1. [ ] 运行全量测试，确认通过率 100%
+2. [ ] 运行覆盖率报告，确认 100%
+3. [ ] 修复剩余 393 语句缺口（98 文件）
+4. [ ] 为新增测试文件验证覆盖率
 
-#### Infrastructure层测试
-- `test_infrastructure_cache.py`
-- `test_infrastructure_messaging.py`
-- `test_infrastructure_repositories.py`
+### 前端（优先级：高）
+1. [ ] 运行全量测试，确认通过率 100%
+2. [ ] 运行覆盖率报告，识别所有 <100% 的文件
+3. [ ] 为 174 个 <100% 的文件编写补充测试
+4. [ ] 逐步提升各模块覆盖率至 100%
 
-#### Core/Middleware/Utils测试
-- `test_core_modules.py`
-- `test_middleware_modules.py`
-- `test_utils_modules.py`
-- `test_utils_coverage.py`
-- `test_utils_final.py`
-- `test_helpers.py`
+## pragma 豁免登记
 
-#### 其他测试
-- `test_all_models_import.py`
-- `test_all_services_import.py`
-- `test_approval_workflow_service.py`
-- `test_password_encryption.py`
-- `test_redis_adapter.py`
-- `test_security.py`
-- `test_token_manager.py`
-- `test_zero_trust_middleware.py`
-
-## 覆盖率里程碑
-
-### 最终覆盖状态
-
-| 模块类别 | 覆盖率 |
-|----------|--------|
-| app/utils/ | 100% |
-| app/services/domain/ | 100% |
-| app/services/ (全部) | 100% |
-| app/api/v1/ | 100% |
-| app/core/ | 100% |
-| app/middleware/ | 100% |
-| app/infrastructure/ | 100% |
-| app/models/ | 100% |
-| app/repositories/ | 100% |
-
-### 零覆盖率消除
-
-所有此前为零覆盖率的模块（event_bus, handlers, async_base, repositories 等）均已完成测试覆盖。
+| 文件 | 行 | 理由 |
+|------|----|------|
+| `app/api/v1/data/data/dashboard.py` | 53-56 | diskcache ImportError 分支不可执行 |
+| `app/main.py` | 17-20 | PyInstaller 无控制台模式 stdout/stderr 为 None |
+| `app/services/zero_trust.py` | 325-328 | 评分模型数学不可达死代码 |
+| `app/api/v1/system/audit.py` | 301-302 | Excel 列宽计算 except 分支不可达 |
+| `app/api/v1/auth/auth.py` | 541-561 | logout 端点 CTracer 线程漏记（行为已由 TestClient 验证） |
 
 ## 结论
 
-🎉 **100% 通过率达成！**
-
-- 后端: 8,890+ 测试，100% 通过率
-- 前端: 1,681 测试，100% 通过率
-- 所有模块覆盖率均达到目标水平
-- 完整的测试金字塔：单元测试 → 集成测试 → E2E 测试
-
-项目已具备生产级质量保障体系。
+覆盖率门禁已提升至 100%。后端通过移除 omit 列表和新增测试文件，预计覆盖率从 ~99% 提升至接近 100%。前端覆盖率仍有较大缺口（~64% → 100%），需要系统性补充测试。

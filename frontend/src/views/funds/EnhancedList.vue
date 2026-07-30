@@ -436,7 +436,7 @@ async function loadStats() {
   try {
     const res = await get('/funds/statistics/overview')
     const d = res.data || res
-    if (d) serverStats.value = d
+    if (d && d.total_amount !== undefined) serverStats.value = d
   } catch {
     /* 统计加载失败不阻塞主流程 */
   }
@@ -608,7 +608,7 @@ function handleSelectionChange(rows: any[]) {
   selectedRows.value = rows
 }
 function clearSelection() {
-  tableRef.value?.clearSelection()
+  tableRef.value?.clearSelection?.()
   selectedRows.value = []
 }
 async function handleBatchDelete() {

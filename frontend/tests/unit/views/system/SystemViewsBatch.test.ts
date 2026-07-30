@@ -46,12 +46,10 @@ vi.mock('element-plus', () => ({
   ElMessageBox: { confirm: vi.fn(() => Promise.resolve('confirm')), alert: vi.fn(), prompt: vi.fn() },
 }))
 
-// Mock @element-plus/icons-vue — 系统视图可能导入各种图标，用 Proxy 兜底所有命名导出
-vi.mock('@element-plus/icons-vue', () => {
-  const stub = { template: '<svg/>' }
-  return new Proxy(stub, {
-    get: () => stub,
-  })
+// Mock @element-plus/icons-vue — 使用 importOriginal 保留所有真实导出
+vi.mock('@element-plus/icons-vue', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>()
+  return { ...actual }
 })
 
 // Mock @/api/chunkedUpload — ChunkedUploadManager.vue 导入 chunkedUploadApi

@@ -33,7 +33,7 @@ vi.mock('@/utils/logger', () => ({ logger: { error: vi.fn(), warn: vi.fn(), info
 vi.mock('@/composables/useRouterSafe', () => ({ useRouterSafe: () => ({ push: mockPush, pushSafe: mockPush }), pushSafe: vi.fn(() => Promise.resolve()), safeRouteParam: (v: unknown, fallback = 0) => { const n = Number(Array.isArray(v) ? v[0] : v); return Number.isFinite(n) ? n : fallback } }))
 vi.mock('@/utils/notify', () => ({ notify: Object.assign(() => vi.fn(), { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn(), closeAll: vi.fn() }), default: vi.fn() }))
 vi.mock('@/stores/auth', () => ({ useAuthStore: () => ({ user: { id: 1, username: 'admin', role: 'admin' }, token: 'fake-token', isAdmin: true, logout: vi.fn() }) }))
-vi.mock('@/stores/menu', () => ({ useMenuStore: () => ({ menuItems: [], filteredMenus: [], generateMenus: vi.fn() }) }))
+vi.mock('@/stores/menu', () => ({ useMenuStore: () => ({ menuItems: [], filteredMenus: [], generateMenus: vi.fn(), fetchMenus: vi.fn(), loaded: true, canAccessMenu: () => true }) }))
 vi.mock('@/composables/useOnboarding', () => ({ useOnboarding: () => ({ startTour: vi.fn() }) }))
 vi.mock('@/utils/enhancedStorage', () => ({ enhancedStorage: { get: vi.fn(() => null), set: vi.fn(), remove: vi.fn() }, STORAGE_KEYS: { DASHBOARD_LAYOUT: 'dashboard_layout', DASHBOARD_ORDER: 'dashboard_order' } }))
 vi.mock('element-plus', () => ({
