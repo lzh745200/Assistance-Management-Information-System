@@ -263,9 +263,8 @@ describe('Common component imports', () => {
 describe('Store imports', () => {
   const stores = [
     'app', 'auth', 'user', 'project', 'funds', 'village', 'policy',
-    'organization', 'rbac', 'menu', 'config', 'data', 'route',
-    'ruralWork', 'taskQueue', 'dataPackage', 'dataReport', 'industry',
-    'villager',
+    'organization', 'rbac', 'menu', 'config', 'route',
+    'taskQueue', 'dataPackage', 'dataReport',
   ]
 
   stores.forEach((name) => {

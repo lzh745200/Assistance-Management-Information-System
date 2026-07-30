@@ -151,9 +151,9 @@ async def import_subordinate_report(
             names = zf.namelist()
 
             if "status_report.json" in names:
-                return _process_status_report(db, zf, current_user)
+                return _process_status_report(zf, db, current_user)
             elif "registration_report.json" in names:
-                return _process_registration_report(db, zf, current_user)
+                return _process_registration_report(zf, db, current_user)
             else:
                 raise HTTPException(status_code=400, detail="无法识别的上报包格式")
     except zipfile.BadZipFile:
