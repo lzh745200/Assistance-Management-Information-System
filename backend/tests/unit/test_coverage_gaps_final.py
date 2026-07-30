@@ -1070,7 +1070,8 @@ class TestRequestLogger:
 
 class TestPermissionUtils:
 
-    def test_require_admin_decorator_no_user(self):
+    @pytest.mark.asyncio
+    async def test_require_admin_decorator_no_user(self):
         from app.core.permission_utils import require_admin
 
         @require_admin
@@ -1078,7 +1079,7 @@ class TestPermissionUtils:
             return "ok"
 
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.get_event_loop().run_until_complete(protected())
+            await protected()
         assert exc_info.value.status_code == 401
 
     def test_get_org_with_fallback_callback(self):
