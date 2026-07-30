@@ -82,14 +82,15 @@ class TestResetPasswordPosixChmod:
                                         verification_code="VC001",
                                         db=mock_db,
                                     )
-            tmp_path = result["data"]["password_file"]
-
+            # password_file 不再在响应中返回（安全加固），从 chmod spy 获取路径
             assert result["code"] == 200
             assert result["data"]["username"] == "testuser"
-            assert os.path.exists(tmp_path)
+            assert "password_file" not in result["data"]
             # chmod 0o600 被应用到临时密码文件
+            assert len(chmod_calls) >= 1
+            tmp_path = chmod_calls[0][0]
             assert (tmp_path, 0o600) in chmod_calls
-            # 临时文件内容包含用户名与新密码（端点按系统默认编码写入，按字节断言）
+            # 临时文件内容包含用户名与新密码
             content = open(tmp_path, "rb").read()
             assert b"testuser" in content
             assert b"NewPwd123!x" in content

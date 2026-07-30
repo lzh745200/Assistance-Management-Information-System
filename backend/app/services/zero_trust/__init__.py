@@ -60,7 +60,7 @@ class DeviceFingerprintService(_RealDeviceFingerprintService):
             ip = request.client.host if request.client else "unknown"
         except (AttributeError, TypeError):
             pass
-        return _RealDeviceFingerprintService.generate_fingerprint(ua, ip)
+        return _real_service.generate_fingerprint(ua, ip)
 
     def assess_risk(self, fingerprint_id: str) -> DeviceRiskLevel:
         """评估设备风险等级。

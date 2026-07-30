@@ -188,7 +188,12 @@ def get_upload_dir(*, settings=None) -> str:
         except Exception:
             settings = None
 
-    upload_dir = getattr(settings, "UPLOAD_DIR", "./uploads") if settings else "./uploads"
+    upload_dir = "./uploads"
+    if settings is not None:
+        raw = getattr(settings, "UPLOAD_DIR", "./uploads")
+        # Guard against MagicMock or other non-string objects in tests
+        if isinstance(raw, str):
+            upload_dir = raw
     path = Path(upload_dir)
     path.mkdir(parents=True, exist_ok=True)
     return str(path.absolute())
