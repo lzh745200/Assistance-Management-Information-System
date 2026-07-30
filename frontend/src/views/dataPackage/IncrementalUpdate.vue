@@ -61,10 +61,8 @@
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" @click="handleDetectChanges"> 检测变更 </el-button>
-              <el-button type="success" :disabled="!changesSummary" @click="handleExport">
-                导出增量包
-              </el-button>
+              <el-button type="primary" disabled @click="handleDetectChanges"> 检测变更 </el-button>
+              <el-button type="success" disabled @click="handleExport"> 导出增量包 </el-button>
             </el-form-item>
           </el-form>
 
@@ -123,7 +121,7 @@
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" :disabled="!importForm.package_id" @click="handleImport">
+              <el-button type="primary" disabled @click="handleImport">
                 {{ importForm.apply_changes ? '导入增量包' : '预览变更' }}
               </el-button>
             </el-form-item>

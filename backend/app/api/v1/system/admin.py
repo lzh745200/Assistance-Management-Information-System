@@ -392,3 +392,76 @@ async def optimize_database(
         "size_after_kb": round(size_after / 1024, 1),
         "saved_kb": round(saved / 1024, 1),
     }
+
+
+# ==================== 用户会话管理 ====================
+
+
+@router.get("/users/{user_id}/sessions")
+async def list_user_sessions(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
+):
+    """查看用户活跃会话（基于 token 黑名单反向推断）"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    from app.core.security import token_blacklist
+
+    return {
+        "code": 200,
+        "data": {
+            "user_id": user_id,
+            "username": user.username,
+            "blacklisted_tokens": token_blacklist.count,
+            "sessions": [],
+            "message": "单机部署模式下会话信息有限，仅显示 token 黑名单统计",
+        },
+    }
+
+
+@router.post("/users/{user_id}/sessions/{session_id}/revoke")
+async def revoke_user_session(
+    user_id: int,
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
+):
+    """强制登出用户（将 token 加入黑名单）"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    from app.core.security import token_blacklist
+
+    token_blacklist.add(session_id)
+    logger.info("管理员 %s 强制登出用户 %s (session: %s)", current_user.username, user.username, session_id)
+    return {"code": 200, "message": f"已强制登出用户 {user.username}"}
+
+
+@router.post("/users/{user_id}/two-factor/reset")
+async def reset_user_two_factor(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
+):
+    """重置用户双因素认证"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    from app.models.two_factor_auth import TwoFactorAuth
+
+    tfa = db.query(TwoFactorAuth).filter(TwoFactorAuth.user_id == user_id).first()
+    if tfa:
+        tfa.enabled = False
+        tfa.secret_key = ""
+        tfa.backup_codes = None
+        tfa.verified_at = None
+        db.commit()
+        logger.info("管理员 %s 重置用户 %s 的双因素认证", current_user.username, user.username)
+        return {"code": 200, "message": f"已重置用户 {user.username} 的双因素认证"}
+
+    return {"code": 200, "message": f"用户 {user.username} 未启用双因素认证，无需重置"}

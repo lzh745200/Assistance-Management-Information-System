@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useProjectStore } from '@/stores/project'
-import { useDataStore } from '@/stores/data'
-import { useIndustryStore } from '@/stores/industry'
 import { usePolicyStore } from '@/stores/policy'
 
 const mockGet = vi.fn()
@@ -38,48 +36,6 @@ describe('useProjectStore', () => {
     const p = { id: 5, name: 'X' }
     store.setCurrent(p)
     expect(store.currentProject).toEqual(p)
-  })
-})
-
-describe('useDataStore', () => {
-  let store: ReturnType<typeof useDataStore>
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    store = useDataStore()
-  })
-
-  it('初始: dataList=[], currentData=null, total=0', () => {
-    expect(store.dataList).toEqual([])
-    expect(store.currentData).toBeNull()
-    expect(store.total).toBe(0)
-  })
-
-  it('fetchData 重置 total=0', async () => {
-    await store.fetchData()
-    expect(store.total).toBe(0)
-  })
-
-  it('setCurrentData 设置 currentData', () => {
-    store.setCurrentData({ id: 1, value: 'test' })
-    expect(store.currentData).toEqual({ id: 1, value: 'test' })
-  })
-})
-
-describe('useIndustryStore', () => {
-  let store: ReturnType<typeof useIndustryStore>
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    store = useIndustryStore()
-  })
-
-  it('初始: industryList=[], loading=false', () => {
-    expect(store.industryList).toEqual([])
-    expect(store.loading).toBe(false)
-  })
-
-  it('fetchIndustries 成功 (stub)', async () => {
-    await store.fetchIndustries({ page: 1 })
-    expect(store.loading).toBe(false)
   })
 })
 

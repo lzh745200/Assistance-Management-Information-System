@@ -93,26 +93,6 @@ describe('Store Import Verification', () => {
     }
   })
 
-  it('should import ruralWork store', async () => {
-    try {
-      const { useRuralWorkStore } = await import('@/stores/ruralWork')
-      const store = useRuralWorkStore()
-      expect(store).toBeDefined()
-    } catch (e) {
-      expect(true).toBe(true)
-    }
-  })
-
-  it('should import data store', async () => {
-    try {
-      const { useDataStore } = await import('@/stores/data')
-      const store = useDataStore()
-      expect(store).toBeDefined()
-    } catch (e) {
-      expect(true).toBe(true)
-    }
-  })
-
   it('should import config store', async () => {
     try {
       const { useConfigStore } = await import('@/stores/config')

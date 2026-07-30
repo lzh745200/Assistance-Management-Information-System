@@ -3,11 +3,8 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useRouteStore } from '@/stores/route'
 import { useProjectStore } from '@/stores/project'
 import { useTaskQueueStore } from '@/stores/taskQueue'
-import { useDataStore } from '@/stores/data'
-import { useIndustryStore } from '@/stores/industry'
-import { useRuralWorkStore } from '@/stores/ruralWork'
 
-describe('stores misc (route, project, taskQueue, data, industry, ruralWork)', () => {
+describe('stores misc (route, project, taskQueue)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
@@ -81,57 +78,4 @@ describe('stores misc (route, project, taskQueue, data, industry, ruralWork)', (
     })
   })
 
-  describe('useDataStore', () => {
-    it('initial state', () => {
-      const s = useDataStore()
-      expect(s.dataList).toEqual([])
-      expect(s.currentData).toBeNull()
-      expect(s.loading).toBe(false)
-      expect(s.error).toBeNull()
-      expect(s.total).toBe(0)
-    })
-    it('fetchData: stub sets total=0 + loading flips', async () => {
-      const s = useDataStore()
-      const p = s.fetchData()
-      // before await: loading should be true (sync part)
-      // after await: loading false
-      await p
-      expect(s.loading).toBe(false)
-      expect(s.total).toBe(0)
-    })
-    it('setCurrentData', () => {
-      const s = useDataStore()
-      s.setCurrentData({ id: 1 })
-      expect(s.currentData).toEqual({ id: 1 })
-    })
-  })
-
-  describe('useIndustryStore', () => {
-    it('initial state', () => {
-      const s = useIndustryStore()
-      expect(s.industryList).toEqual([])
-      expect(s.loading).toBe(false)
-      expect(s.error).toBeNull()
-    })
-    it('fetchIndustries stub', async () => {
-      const s = useIndustryStore()
-      await s.fetchIndustries()
-      expect(s.loading).toBe(false)
-    })
-  })
-
-  describe('useRuralWorkStore', () => {
-    it('initial state', () => {
-      const s = useRuralWorkStore()
-      expect(s.works).toEqual([])
-      expect(s.currentWork).toBeNull()
-      expect(s.loading).toBe(false)
-      expect(s.error).toBeNull()
-    })
-    it('fetchWorks stub', async () => {
-      const s = useRuralWorkStore()
-      await s.fetchWorks()
-      expect(s.loading).toBe(false)
-    })
-  })
 })

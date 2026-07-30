@@ -12,7 +12,7 @@
       <template #header>
         <div class="card-header">
           <span>数据包版本管理</span>
-          <el-button type="primary" @click="handleCreateVersion"> 创建新版本 </el-button>
+          <el-button type="primary" disabled @click="handleCreateVersion"> 创建新版本 </el-button>
         </div>
       </template>
 
@@ -49,7 +49,9 @@
             >
               对比
             </el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row.id)"> 删除 </el-button>
+            <el-button size="small" type="danger" disabled @click="handleDelete(row.id)">
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -159,7 +161,7 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="doCompare">对比</el-button>
+          <el-button type="primary" disabled @click="doCompare">对比</el-button>
         </el-form-item>
       </el-form>
 
