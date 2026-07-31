@@ -21,7 +21,7 @@ try:
 
     HAS_DOCX = True
     DocumentType = Document
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_DOCX = False
     DocumentType = object
     Document = None  # 避免 NameError

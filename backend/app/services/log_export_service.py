@@ -201,7 +201,7 @@ class LogExportService:
             disk_used_gb = disk.used / 1024 / 1024 / 1024
             disk_total_gb = disk.total / 1024 / 1024 / 1024
             f.write(f"磁盘使用: {disk_used_gb:.2f}GB / {disk_total_gb:.2f}GB ({disk.percent}%)\n")
-        except ImportError:
+        except ImportError:  # pragma: no cover
             f.write("psutil未安装，无法获取性能指标\n")
         except Exception as e:
             f.write(f"获取性能指标失败: {e}\n")

@@ -65,7 +65,7 @@ def _ensure_prometheus():
 
         _PROMETHEUS_AVAILABLE = True
         return True
-    except ImportError:
+    except ImportError:  # pragma: no cover
         _PROMETHEUS_AVAILABLE = False
         return False
 

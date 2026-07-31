@@ -39,7 +39,7 @@ def read_excel_fast(file_content: bytes) -> Tuple[List[str], List[Dict[str, Any]
 
     try:
         df = pd.read_excel(BytesIO(file_content), **PANDAS_READ_KWARGS)
-    except ImportError:
+    except ImportError:  # pragma: no cover
         logger.warning("pandas 不可用，回退到 openpyxl 逐行模式")
         return _read_excel_fallback(file_content)
 

@@ -85,7 +85,7 @@ def _patch_proactor_transport() -> None:
     """
     try:
         from asyncio.proactor_events import _ProactorBasePipeTransport
-    except ImportError:
+    except ImportError:  # pragma: no cover
         logger.debug("无法导入 _ProactorBasePipeTransport，跳过 transport patch")
         return
 

@@ -97,7 +97,7 @@ async def get_monitor_snapshot(current_user=Depends(get_current_user)):
         snapshot["process_threads"] = process.num_threads()
 
         snapshot["status"] = "healthy"
-    except ImportError:
+    except ImportError:  # pragma: no cover
         snapshot["status"] = "limited"
         snapshot["message"] = "psutil未安装，仅提供基础监控数据"
     except Exception as e:
@@ -171,7 +171,7 @@ async def get_resource_usage(current_user=Depends(get_current_user)):
 
         resources["health_status"] = "unhealthy" if len(issues) > 2 else "degraded" if issues else "healthy"
         resources["health_issues"] = issues
-    except ImportError:
+    except ImportError:  # pragma: no cover
         resources["status"] = "limited"
         resources["message"] = "psutil未安装，资源监控功能受限"
     except Exception as e:

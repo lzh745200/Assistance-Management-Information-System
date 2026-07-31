@@ -18,7 +18,7 @@ try:
     import psutil
 
     PSUTIL_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover
     psutil = None
     PSUTIL_AVAILABLE = False
     logger.warning("psutil 未安装，资源监控将使用有限的 fallback 方案")

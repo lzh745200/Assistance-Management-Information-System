@@ -16,7 +16,7 @@
 
 import logging
 import mimetypes
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -127,6 +127,40 @@ def _safe_val(val: Any) -> Any:
     if hasattr(val, "isoformat"):  # 兼容 date 类型
         return val.isoformat()
     return val
+
+
+# 需要解析为 date/datetime 的字段集合
+_DATE_FIELDS = {"date", "start_date", "end_date", "approval_date", "application_date", "allocation_date", "audit_date"}
+
+
+def _parse_date_value(key: str, value: Any) -> Any:
+    """将日期字符串解析为 Python date/datetime 对象。
+
+    SQLite Date/DateTime 列只接受 Python date/datetime 对象，
+    前端发来的 JSON 日期是字符串（如 '2026-07-21'），必须转换。
+    """
+    if value is None or key not in _DATE_FIELDS:
+        return value
+    if isinstance(value, (date, datetime)):
+        return value
+    if isinstance(value, str):
+        value_str = value.strip()
+        if not value_str:
+            return None
+        # 尝试解析 datetime（含时间部分）
+        for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"):
+            try:
+                return datetime.strptime(value_str, fmt)
+            except ValueError:
+                continue
+        # 尝试解析纯日期
+        try:
+            return date.fromisoformat(value_str)
+        except ValueError:
+            pass
+        # 无法解析则原样返回（让 SQLAlchemy 报错而非静默丢失）
+        logger.warning("无法解析日期字段 %s='%s'，原样传递", key, value_str)
+    return value
 
 
 def _fund_to_dict(f: Fund) -> Dict[str, Any]:
@@ -347,7 +381,7 @@ def update_fund(
     # exclude_unset: 仅排除客户端未发送的字段，显式传 null 的字段会设为 None（清空）
     for key, value in data.model_dump(exclude_unset=True).items():
         if hasattr(fund, key):
-            setattr(fund, key, value)
+            setattr(fund, key, _parse_date_value(key, value))
         else:  # pragma: no cover —— FundUpdate schema 字段在 Fund 模型上全部存在，防御分支不可达
             logger.warning("update_fund: skipping unknown field '%s' on Fund(id=%d)", key, fund_id)
 

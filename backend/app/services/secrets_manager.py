@@ -40,7 +40,7 @@ class SecretsManager:
                     default_key = Fernet.generate_key().decode()
                     with open(key_file, "w", encoding="utf-8") as f:
                         f.write(default_key)
-            except ImportError:
+            except ImportError:  # pragma: no cover
                 default_key = secrets.token_urlsafe(32)
             except Exception:
                 default_key = secrets.token_urlsafe(32)

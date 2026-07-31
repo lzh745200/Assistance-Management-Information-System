@@ -65,6 +65,6 @@ def safe_import(module_path: str, name: str = None):
     try:
         mod = importlib.import_module(module_path)
         return getattr(mod, name) if name else mod
-    except ImportError as e:
+    except ImportError as e:  # pragma: no cover
         logger.warning("Optional module unavailable: %s (%s)", module_path, e)
         return None

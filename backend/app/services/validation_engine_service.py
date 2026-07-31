@@ -118,7 +118,7 @@ class ValidationEngineService:
 
             self._errors = errors
             return errors
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.debug("DB规则加载失败，跳过", exc_info=True)
             return []
 

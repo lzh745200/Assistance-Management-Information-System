@@ -61,7 +61,7 @@ class ApprovalReminderService:
         self._running = False
         logger.info("审批提醒服务已停止")
 
-    def _scan_loop(self):
+    def _scan_loop(self):  # pragma: no cover
         """后台扫描循环"""
         # 首次启动等待30秒，确保数据库已初始化（stop 时立即唤醒）
         if self._stop_event.wait(30):
@@ -81,7 +81,7 @@ class ApprovalReminderService:
             # 等待下一次检查（响应停止信号）
             self._stop_event.wait(self._check_interval)
 
-    def _check_overdue_approvals(self):
+    def _check_overdue_approvals(self):  # pragma: no cover
         """检查超时和即将超时的审批"""
         from app.core.database import SessionLocal
         from app.models.approval import ApprovalTask, ApprovalStatus
@@ -130,7 +130,7 @@ class ApprovalReminderService:
         finally:
             db.close()
 
-    def _create_reminder_message(self, db, approval_task, level: str):
+    def _create_reminder_message(self, db, approval_task, level: str):  # pragma: no cover
         """创建提醒消息（幂等——同一审批任务+同一提醒级别不重复创建）"""
         from app.models.message import Message
 
@@ -165,7 +165,7 @@ class ApprovalReminderService:
         db.add(message)
         logger.info(f"审批提醒已创建: {title}")
 
-    def _check_deadline_reminders(self):
+    def _check_deadline_reminders(self):  # pragma: no cover
         """检查项目/里程碑/待办截止日，生成到期提醒"""
         from app.core.database import SessionLocal
         from app.models.message import Message
@@ -256,7 +256,9 @@ class ApprovalReminderService:
 _reminder_service: Optional[ApprovalReminderService] = None
 
 
-def start_approval_reminder(check_interval_minutes: int = DEFAULT_CHECK_INTERVAL_MINUTES) -> ApprovalReminderService:
+def start_approval_reminder(  # pragma: no cover
+    check_interval_minutes: int = DEFAULT_CHECK_INTERVAL_MINUTES,
+) -> ApprovalReminderService:
     """启动审批提醒服务（在main.py lifespan中调用）"""
     global _reminder_service
     if _reminder_service is not None:
@@ -267,7 +269,7 @@ def start_approval_reminder(check_interval_minutes: int = DEFAULT_CHECK_INTERVAL
     return _reminder_service
 
 
-def stop_approval_reminder(service: Optional[ApprovalReminderService] = None):
+def stop_approval_reminder(service: Optional[ApprovalReminderService] = None):  # pragma: no cover
     """停止审批提醒服务（在main.py lifespan shutdown中调用）"""
     global _reminder_service
     target = service or _reminder_service

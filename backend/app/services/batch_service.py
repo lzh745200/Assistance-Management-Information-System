@@ -191,7 +191,7 @@ class BatchService:
             wb.save(output)
             data = base64.b64encode(output.getvalue()).decode()
             return {"success": True, "data": data, "exported_count": len(ids)}
-        except ImportError:
+        except ImportError:  # pragma: no cover
             return {"success": False, "data": "", "exported_count": 0}
 
     async def validate_batch(self, table_name: str,

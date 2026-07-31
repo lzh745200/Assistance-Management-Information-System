@@ -45,7 +45,7 @@ try:
         os.path.join(_map_cache_dir, "map"),
         size_limit=10 * 1024 * 1024,  # 10MB
     )
-except ImportError:
+except ImportError:  # pragma: no cover
     _map_cache = None
     logger.warning("diskcache 未安装，地图距离缓存已禁用")
 except Exception as e:

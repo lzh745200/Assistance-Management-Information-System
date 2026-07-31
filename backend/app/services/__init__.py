@@ -34,7 +34,7 @@ from .template_service import TemplateService  # noqa: F401
 # 加密服务（为测试兼容性提供别名）
 try:
     from .encryption_service import DataPackageEncryption as EncryptionService  # noqa: F401
-except ImportError:
+except ImportError:  # pragma: no cover
     EncryptionService = None  # type: ignore[assignment]
 
 # RATE_LIMITS 已移至 app.core.security 模块的 check_rate_limit() 函数管理

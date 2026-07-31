@@ -33,10 +33,12 @@
         <el-form-item label="校验码" prop="verification_code">
           <el-input
             v-model="generateForm.verification_code"
-            placeholder="选择组织后自动生成"
-            readonly
-            style="width: 200px"
+            placeholder="选择组织后自动生成，或手动输入下级单位提供的校验码"
+            style="width: 280px"
+            maxlength="4"
+            clearable
           />
+          <span class="form-tip">选择组织后自动填充；也可手动输入下级单位报告的4位校验码</span>
         </el-form-item>
 
         <el-form-item label="允许下级生成">
@@ -279,16 +281,21 @@ const loadOrganizations = async () => {
 // 组织变更处理
 const handleOrganizationChange = async (orgId: number) => {
   if (!orgId) {
-    generateForm.verification_code = ''
     return
   }
 
   try {
     const response = await getOrganizationVerificationCode(orgId)
-    generateForm.verification_code = response.verification_code
+    // 兼容两种响应格式：展开后的顶层字段 或 嵌套在 data 中
+    const code = response?.verification_code ?? (response as any)?.data?.verification_code
+    if (code) {
+      generateForm.verification_code = code
+    } else {
+      ElMessage.warning('未能获取校验码，请手动输入')
+    }
   } catch (error) {
     logger.error('获取校验码失败', error)
-    ElMessage.error('获取校验码失败')
+    ElMessage.warning('自动获取校验码失败，请手动输入下级单位提供的校验码')
   }
 }
 
@@ -302,15 +309,26 @@ const handleGenerate = async () => {
     try {
       generating.value = true
       const response = await createOrganizationPassCode(generateForm)
-      generatedPassCode.value = response.pass_code
-      ElMessage.success('通行证码生成成功')
+      // 兼容两种响应格式
+      const passCode = response?.pass_code ?? (response as any)?.data?.pass_code
+      if (passCode) {
+        generatedPassCode.value = passCode
+        ElMessage.success('通行证码生成成功')
+      } else {
+        ElMessage.warning('生成成功但未获取到通行码，请刷新列表查看')
+      }
 
       // 刷新列表
       pagination.page = 1 // 重置到第1页，确保新建/编辑后的数据可见
       await handleQuery()
     } catch (error: any) {
       logger.error('生成通行证码失败', error)
-      ElMessage.error(error.response?.data?.detail || '生成通行证码失败')
+      const msg =
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        error?.message ||
+        '生成通行证码失败'
+      ElMessage.error(msg)
     } finally {
       generating.value = false
     }

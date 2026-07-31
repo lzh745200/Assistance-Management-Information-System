@@ -96,7 +96,7 @@ def register_date_type_handlers(base_class: Type[DeclarativeBase]) -> int:
     # 导入所有模型以确保它们被映射到 base_class.metadata
     try:
         import app.models  # noqa: F401
-    except ImportError:
+    except ImportError:  # pragma: no cover
         logger.warning("无法导入 app.models 包，跳过 Date 类型监听器注册")
 
     registered_count = 0

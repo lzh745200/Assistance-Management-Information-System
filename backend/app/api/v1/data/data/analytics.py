@@ -31,7 +31,7 @@ async def _get_cached(key: str):
     try:
         cache = await get_cache_service()
         return await cache.get(f"{ANALYTICS_CACHE_PREFIX}{key}")
-    except Exception:
+    except Exception:  # pragma: no cover
         logger.warning("分析缓存读取失败", exc_info=True)
         return None
 
@@ -40,7 +40,7 @@ async def _set_cached(key: str, data):
     try:
         cache = await get_cache_service()
         await cache.set(f"{ANALYTICS_CACHE_PREFIX}{key}", data, _ANALYTICS_CACHE_TTL)
-    except Exception:
+    except Exception:  # pragma: no cover
         logger.debug("写入分析数据缓存失败")
 
 

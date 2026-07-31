@@ -16,10 +16,8 @@
 
 import json
 import logging
-from typing import Callable
 
 from app.services.zero_trust.device_fingerprint import (
-    DeviceRiskLevel,
     device_fingerprint_service,
 )
 

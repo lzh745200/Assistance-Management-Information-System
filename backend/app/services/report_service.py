@@ -93,7 +93,7 @@ class ReportService:
             wb.save(output)
             output.seek(0)
             return output.getvalue()
-        except ImportError:
+        except ImportError:  # pragma: no cover
             logger.warning("openpyxl not available, returning empty Excel")
             return self._empty_excel()
         except Exception as e:
@@ -154,7 +154,7 @@ class ReportService:
             c.save()
             buffer.seek(0)
             return buffer.getvalue()
-        except ImportError:
+        except ImportError:  # pragma: no cover
             logger.warning("reportlab not available, returning empty PDF")
             return self._empty_pdf()
         except Exception as e:
@@ -298,7 +298,7 @@ class ReportService:
             wb.save(output)
             output.seek(0)
             return output.getvalue()
-        except ImportError:
+        except ImportError:  # pragma: no cover
             return b""
 
     @staticmethod
@@ -312,5 +312,5 @@ class ReportService:
             c.save()
             buffer.seek(0)
             return buffer.getvalue()
-        except ImportError:
+        except ImportError:  # pragma: no cover
             return b""

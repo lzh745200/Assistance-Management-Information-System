@@ -30,6 +30,7 @@ resources_dir = os.path.join(project_root, 'resources')
 # 后端启动时通过 FRONTEND_DIST_PATH 环境变量定位前端静态资源。
 datas = [
     (os.path.join(backend_dir, 'alembic'), 'alembic'),
+    (os.path.join(backend_dir, 'alembic.ini'), '.'),
     (os.path.join(backend_dir, '.env.example'), '.'),
     (os.path.join(backend_dir, 'app'), 'app'),
 ]

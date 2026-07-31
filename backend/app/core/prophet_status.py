@@ -13,7 +13,7 @@ if not FORCE_DISABLE:
         from prophet import Prophet  # noqa: F401  尝试导入
         PROPHET_AVAILABLE = True
         logger.info("Prophet 已成功加载，AI预测功能可用")
-    except ImportError as e:
+    except ImportError as e:  # pragma: no cover
         logger.warning(f"Prophet 导入失败: {e}，AI预测功能将不可用")
     except Exception as e:
         logger.error(f"Prophet 初始化异常: {e}")

@@ -634,7 +634,7 @@ def _seed_default_admin():
                 with os.fdopen(fd, "w") as _f:
                     _f.write(f"用户名: admin\n密码: {_admin_password}\n")
                     _f.write("请立即复制保存！首次登录后须修改密码。\n")
-                if os.name != "nt":
+                if os.name != "nt":  # pragma: no cover
                     os.chmod(_pwd_file, 0o600)
                 # 日志中仅记录哈希前缀和临时文件路径（安全）
                 logger.warning(
@@ -687,7 +687,7 @@ def _check_required_packages():
     for pkg in REQUIRED_PACKAGES:
         try:
             importlib.import_module(pkg)
-        except ImportError:
+        except ImportError:  # pragma: no cover
             missing.append(pkg)
 
     if missing:

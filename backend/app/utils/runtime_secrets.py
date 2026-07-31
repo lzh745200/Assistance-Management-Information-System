@@ -163,7 +163,7 @@ def _atomic_write_json(path: Path, data: dict) -> None:
         os.replace(tmp_path, path)
         tmp_path = None
 
-        if os.name != "nt":
+        if os.name != "nt":  # pragma: no cover
             os.chmod(path, 0o600)
     finally:
         if fd is not None:

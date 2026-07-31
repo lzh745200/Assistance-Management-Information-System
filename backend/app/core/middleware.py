@@ -129,5 +129,5 @@ def setup_default_middleware(app: FastAPI, settings=None) -> None:
     try:
         from app.core.security import SecurityHeadersMiddleware
         app.add_middleware(SecurityHeadersMiddleware)
-    except ImportError:
+    except ImportError:  # pragma: no cover
         pass

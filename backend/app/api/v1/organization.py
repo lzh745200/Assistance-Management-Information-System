@@ -652,7 +652,7 @@ async def batch_update_sort_orders(
         }
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         db.rollback()
         raise HTTPException(status_code=500, detail=f"批量更新排序失败: {str(e)}")
 

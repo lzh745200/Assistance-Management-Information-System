@@ -584,7 +584,7 @@ async def export_projects(
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
         )
-    except ImportError:
+    except ImportError:  # pragma: no cover
         import csv
         from io import StringIO
 

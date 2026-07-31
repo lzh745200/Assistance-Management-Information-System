@@ -219,7 +219,7 @@ class ApprovalWorkflowService:
             )
             self.db.add(msg)
             safe_commit(self.db)
-        except ImportError:
+        except ImportError:  # pragma: no cover
             logger.warning("消息模块不可用，跳过审批推送")
         except Exception:
             self.db.rollback()

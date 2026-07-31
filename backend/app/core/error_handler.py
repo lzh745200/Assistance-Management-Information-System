@@ -28,7 +28,7 @@ try:
         AuthenticationException as ConflictError,
         DatabaseError as ServerError,
     )
-except ImportError:
+except ImportError:  # pragma: no cover
     AppError = Exception  # type: ignore
     NotFoundError = Exception  # type: ignore
     BadRequestError = Exception  # type: ignore
@@ -138,7 +138,7 @@ def register_handlers(
         from app.core.exceptions import register_exception_handlers
 
         register_exception_handlers(app)
-    except ImportError:
+    except ImportError:  # pragma: no cover
         logger.debug("app.core.exceptions not found; skipping default handlers")
         # Register a minimal fallback
 

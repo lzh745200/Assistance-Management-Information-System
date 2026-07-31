@@ -134,15 +134,15 @@ const canSubmit = computed(() => {
 const useCurrentMachineCode = async () => {
   loadingMachineCode.value = true
   try {
+    // get() 已自动解包，返回值即为 {code, data, message} 信封体
     const response = await get('/machine-code/get-machine-code')
-    const resData = response.data
-    const payload = resData?.code === 200 ? resData.data : (resData?.data ?? resData)
+    const payload = response?.data ?? response
     if (payload?.machine_code) {
       resetForm.value.machine_code = payload.machine_code
       resetForm.value.verification_code = payload.verification_code ?? ''
       ElMessage.success('已自动填入当前机器码和校验码')
     } else {
-      ElMessage.error(resData?.message || '获取机器码失败，请重试')
+      ElMessage.error(response?.message || '获取机器码失败，请重试')
     }
   } catch (error: any) {
     logger.error('[ForgotPassword] 获取机器码失败', error)
@@ -166,18 +166,23 @@ const handleResetPassword = async () => {
   resetting.value = true
 
   try {
+    // post() 已自动解包，返回值即为 {code, data, message} 信封体
     const response = await post('/machine-code/reset-password-with-machine-code', undefined, {
       params: resetForm.value,
     })
 
-    const resData = response.data
-    const payload = resData?.code === 200 ? resData.data : (resData?.data ?? resData)
-    if (payload?.new_password) {
+    const payload = response?.data ?? response
+    if (response?.code === 200 && payload?.new_password) {
       newPassword.value = payload.new_password
       currentStep.value = 1
       ElMessage.success('密码重置成功')
+    } else if (response?.code === 200) {
+      // 后端返回成功但未携带密码（兼容旧版）
+      currentStep.value = 1
+      newPassword.value = '(请查看系统临时文件)'
+      ElMessage.success(response?.message || '密码重置成功')
     } else {
-      const errMsg = resData?.message || resData?.detail || '重置密码失败，请检查填写信息'
+      const errMsg = response?.message || response?.detail || '重置密码失败，请检查填写信息'
       ElMessage.error(errMsg)
     }
   } catch (error: any) {
