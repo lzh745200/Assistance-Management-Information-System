@@ -600,3 +600,81 @@ class TestActivateDeactivate:
         assert resp.status_code == 200
         assert resp.json()["is_active"] is False
         assert org.is_active is False
+
+
+# ---------------------------------------------------------------------------
+#  /statistics/summary 与 /export/list（路由前移后可达，补全分支覆盖）
+# ---------------------------------------------------------------------------
+
+
+class TestStatisticsSummary:
+    def test_summary_full(self, client_admin, mock_db):
+        q = mock_db.query.return_value
+        q.group_by.return_value = q
+        # total=5, active=3, orgs_with_members=2, total_members=5
+        q.scalar.side_effect = [5, 3, 2, 5]
+        q.all.side_effect = [
+            [("department", 3), (None, 2)],  # 类型分布（含 None → unknown）
+            [("level_1", 4), (None, 1)],  # 层级分布（含 None → unknown）
+        ]
+        resp = client_admin.get("/api/v1/organizations/statistics/summary")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["code"] == 200
+        data = body["data"]
+        assert data["total"] == 5
+        assert data["active"] == 3
+        assert data["inactive"] == 2
+        assert data["type_distribution"] == {"department": 3, "unknown": 2}
+        assert data["level_distribution"] == {"level_1": 4, "unknown": 1}
+        assert data["orgs_with_members"] == 2
+        assert data["total_members"] == 5
+
+
+class TestExportOrganizations:
+    def test_forbidden_for_regular_user(self, client_regular):
+        resp = client_regular.get("/api/v1/organizations/export/list")
+        assert resp.status_code == 403
+
+    def test_export_success_with_filters(self, client_admin, mock_db):
+        q = mock_db.query.return_value
+        org1 = _make_mock_org(1, org_type="department", is_active=True)
+        org2 = _make_mock_org(2, org_type=None, is_active=False)
+        org2.code = ""  # code or "" 兜底
+        org2.level = None  # level 空值兜底
+        org2.created_at = None  # created_at 空值兜底
+        q.all.return_value = [org1, org2]
+        q.scalar.side_effect = [2, 0]  # 成员数；0 走 or 0 分支
+        resp = client_admin.get(
+            "/api/v1/organizations/export/list?org_type=department&is_active=true"
+        )
+        assert resp.status_code == 200
+        assert (
+            resp.headers["content-type"]
+            == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        assert len(resp.content) > 100  # 真实 Excel 字节流
+
+    def test_export_success_no_filters(self, client_admin, mock_db):
+        q = mock_db.query.return_value
+        q.all.return_value = [_make_mock_org(1)]
+        q.scalar.side_effect = [1]
+        resp = client_admin.get("/api/v1/organizations/export/list")
+        assert resp.status_code == 200
+
+    def test_export_http_exception_passthrough(self, client_admin, mock_db, monkeypatch):
+        """try 内抛出 HTTPException → except HTTPException: raise 原样透传"""
+        from fastapi import HTTPException
+
+        class RaisingService:
+            def export_organizations(self, **kwargs):
+                raise HTTPException(status_code=400, detail="导出参数错误")
+
+        monkeypatch.setattr(
+            "app.services.export_service.ExcelExportService", RaisingService
+        )
+        q = mock_db.query.return_value
+        q.all.return_value = []
+        resp = client_admin.get("/api/v1/organizations/export/list")
+        assert resp.status_code == 400
+        assert resp.json()["detail"] == "导出参数错误"
