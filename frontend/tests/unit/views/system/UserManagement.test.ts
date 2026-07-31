@@ -82,7 +82,11 @@ vi.mock('@/views/system/Role.vue', () => ({
 }))
 
 vi.mock('@/components/permission/PermissionAssignmentDrawer.vue', () => ({
-  default: { name: 'PermissionAssignmentDrawer', template: '<div class="perm-drawer-mock" />', emits: ['saved'] },
+  default: {
+    name: 'PermissionAssignmentDrawer',
+    template: '<div class="perm-drawer-mock" />',
+    emits: ['saved', 'update:modelValue'],
+  },
 }))
 
 import UserManagement from '@/views/system/UserManagement.vue'
@@ -130,10 +134,24 @@ function mountComp() {
     global: {
       renderStubDefaultSlot: true,
       stubs: {
-        'el-card': { template: '<div class="el-card-stub"><slot name="header" /><slot /></div>' },
-        'el-dialog': { template: '<div class="el-dialog-stub"><slot /><slot name="footer" /></div>' },
-        'el-dropdown': { template: '<div class="el-dropdown-stub"><slot /><slot name="dropdown" /></div>' },
-        'el-input': { template: '<div class="el-input-stub"><slot /><slot name="append" /></div>' },
+        'el-card': {
+          name: 'ElCard',
+          template: '<div class="el-card-stub"><slot name="header" /><slot /></div>',
+        },
+        'el-dialog': {
+          name: 'ElDialog',
+          template: '<div class="el-dialog-stub"><slot /><slot name="footer" /></div>',
+          emits: ['update:modelValue'],
+        },
+        'el-dropdown': {
+          name: 'ElDropdown',
+          template: '<div class="el-dropdown-stub"><slot /><slot name="dropdown" /></div>',
+        },
+        'el-input': {
+          name: 'ElInput',
+          template: '<div class="el-input-stub"><slot /><slot name="append" /></div>',
+          emits: ['update:modelValue'],
+        },
         // 注入两行样本数据，覆盖 machine_code 有/无、is_active 真/假、organization_name 空值等模板两侧分支
         'el-table-column': {
           name: 'ElTableColumn',
@@ -1144,5 +1162,239 @@ describe('模板条件渲染（非管理员视角）', () => {
     await nextTick()
     // 非管理员分支渲染不崩溃即可（v-if false 路径）
     expect(wrapper.find('.user-management').exists()).toBe(true)
+  })
+})
+
+
+describe('模板 v-model 处理器（函数覆盖）', () => {
+  it('全部 v-model 组件触发 update 事件', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+
+    // 输入框（搜索区 + 表单 + 重置密码对话框）——逐个触发 v-model 更新
+    const inputs = wrapper.findAllComponents({ name: 'ElInput' })
+    expect(inputs.length).toBeGreaterThan(0)
+    for (const c of inputs) c.vm.$emit('update:modelValue', 'x')
+    expect(vm.searchForm.username).toBe('x')
+    expect(vm.formData.username).toBe('x')
+    expect(vm.resetPwdForm.newPassword).toBe('x')
+
+    // 下拉选择（搜索角色/状态 + 表单角色/数据范围/权限）
+    const selects = wrapper.findAllComponents({ name: 'ElSelect' })
+    expect(selects.length).toBeGreaterThan(0)
+    for (const c of selects) c.vm.$emit('update:modelValue', 'admin')
+
+    // 组织树选择 / 开关
+    const trees = wrapper.findAllComponents({ name: 'ElTreeSelect' })
+    for (const c of trees) c.vm.$emit('update:modelValue', 7)
+    expect(vm.formData.organization_id).toBe(7)
+    const switches = wrapper.findAllComponents({ name: 'ElSwitch' })
+    for (const c of switches) c.vm.$emit('update:modelValue', false)
+    expect(vm.formData.is_active).toBe(false)
+
+    // 分页器双 v-model
+    const pager = wrapper.findComponent({ name: 'ElPagination' })
+    expect(pager.exists()).toBe(true)
+    pager.vm.$emit('update:currentPage', 2)
+    pager.vm.$emit('update:pageSize', 20)
+    expect(vm.pagination.page).toBe(2)
+    expect(vm.pagination.size).toBe(20)
+
+    // 两个对话框 + 权限抽屉的 v-model
+    const dialogs = wrapper.findAllComponents({ name: 'ElDialog' })
+    expect(dialogs.length).toBe(2)
+    for (const d of dialogs) d.vm.$emit('update:modelValue', false)
+    expect(vm.dialogVisible).toBe(false)
+    expect(vm.resetPwdDialogVisible).toBe(false)
+    const drawer = wrapper.findComponent({ name: 'PermissionAssignmentDrawer' })
+    drawer.vm.$emit('update:modelValue', true)
+    expect(vm.permDrawerVisible).toBe(true)
+
+    // Tabs v-model（放最后：切到 roles 会卸载搜索区组件）
+    const tabs = wrapper.findComponent({ name: 'ElTabs' })
+    expect(tabs.exists()).toBe(true)
+    tabs.vm.$emit('update:modelValue', 'roles')
+    expect(vm.activeTab).toBe('roles')
+    await nextTick()
+  })
+})
+
+describe('行操作与内联点击处理器（函数覆盖）', () => {
+  it('点击编辑/强制登出/重置密码/角色权限/删除/取消按钮', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    const findBtn = (text: string) => {
+      const btn = wrapper.findAll('el-button-stub').find((b) => b.text().includes(text))
+      expect(btn, text).toBeTruthy()
+      return btn!
+    }
+
+    // 编辑（打开会话区）→ 强制登出
+    await findBtn('编辑').trigger('click')
+    await flushPromises()
+    expect(vm.isEdit).toBe(true)
+    await nextTick()
+    await findBtn('强制登出').trigger('click')
+    await flushPromises()
+    expect(mockPost).toHaveBeenCalledWith('/system/admin/users/1/sessions/s1/revoke')
+
+    // 行内 重置密码 / 角色权限 / 删除
+    await findBtn('重置密码').trigger('click')
+    expect(vm.resetPwdDialogVisible).toBe(true)
+    await findBtn('角色/权限').trigger('click')
+    expect(vm.permDrawerVisible).toBe(true)
+    await findBtn('删除').trigger('click')
+    await flushPromises()
+    expect(mockDel).toHaveBeenCalledWith('/users/1')
+
+    // 两个“取消”按钮分别关闭两个对话框（两条内联赋值箭头）
+    const cancels = wrapper.findAll('el-button-stub').filter((b) => b.text().trim() === '取消')
+    expect(cancels.length).toBe(2)
+    vm.dialogVisible = true
+    vm.resetPwdDialogVisible = true
+    await cancels[0].trigger('click')
+    await cancels[1].trigger('click')
+    expect(vm.dialogVisible).toBe(false)
+    expect(vm.resetPwdDialogVisible).toBe(false)
+  })
+})
+
+describe('逻辑或 / 空值合并兜底分支', () => {
+  it('fetchRoles：响应为 null → 保持默认角色', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/roles') return Promise.resolve(null)
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).roleOptions).toHaveLength(6)
+  })
+
+  it('loadData：无 items 无 total → 双兜底为 0', async () => {
+    mockApiRequest.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.tableData).toEqual([])
+    expect(vm.pagination.total).toBe(0)
+  })
+
+  it('loadPendingCount：原始数组与 falsy 响应', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') return Promise.resolve([{ id: 1 }, { id: 2 }])
+      return defaultGetImpl(url)
+    })
+    let wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).pendingCount).toBe(2)
+    wrapper.unmount()
+
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') return Promise.resolve(0)
+      return defaultGetImpl(url)
+    })
+    wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).pendingCount).toBe(0)
+  })
+
+  it('showPendingUsers：原始数组与空对象响应', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') return Promise.resolve([{ id: 5 }])
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.showPendingUsers()
+    expect(vm.pendingUsers).toEqual([{ id: 5 }])
+
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') return Promise.resolve({ data: {} })
+      return defaultGetImpl(url)
+    })
+    await vm.showPendingUsers()
+    expect(vm.pendingUsers).toEqual([])
+    expect(vm.pendingCount).toBe(0)
+
+    // res.data 与 res 均 falsy → || [] 兜底
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/users/pending/list') return Promise.resolve(0)
+      return defaultGetImpl(url)
+    })
+    await vm.showPendingUsers()
+    expect(vm.pendingUsers).toEqual([])
+  })
+
+  it('loadUserSessions：无 sessions 字段的对象 → ?? [] 兜底', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockGet.mockResolvedValueOnce({ data: { foo: 1 } })
+    await vm.loadUserSessions(1)
+    expect(vm.userSessions).toEqual([])
+  })
+
+  it('导出：响应无 .data 包装 → res 本体兜底', async () => {
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockPost.mockResolvedValueOnce({ file_name: 'plain.zip', role_count: 1, user_count: 1 })
+    await vm.handleExportPermissionPackage()
+    expect(clickSpy).toHaveBeenCalled()
+    expect(ElMessage.success).toHaveBeenCalledWith('权限包导出成功 (1 个角色, 1 个用户)')
+    clickSpy.mockRestore()
+  })
+
+  it('导入：无 .data 包装 / success 无 message / 异常无任何字段', async () => {
+    const inputs: HTMLInputElement[] = []
+    const orig = document.createElement.bind(document)
+    const spy = vi.spyOn(document, 'createElement').mockImplementation((tag: any, opts?: any) => {
+      const el = orig(tag, opts)
+      if (String(tag).toLowerCase() === 'input') inputs.push(el as HTMLInputElement)
+      return el
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    const file = new File(['zip'], 'p.zip')
+    const fire = async (i: number) => {
+      Object.defineProperty(inputs[i], 'files', { value: [file], configurable: true })
+      inputs[i].dispatchEvent(new Event('change'))
+      await flushPromises()
+    }
+
+    // 1) 响应无 .data → res 本体；confirm 走通
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') return Promise.resolve({ success: true })
+      if (url.startsWith('/permission-packages/confirm/')) return Promise.resolve({})
+      return Promise.resolve({ data: {} })
+    })
+    vm.handleImportPermissionPackage()
+    await fire(0)
+    expect(confirmMock).toHaveBeenCalled()
+
+    // 2) success=false 且无 message → '导入失败'
+    confirmMock.mockResolvedValue(undefined)
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') return Promise.resolve({ success: false })
+      return Promise.resolve({ data: {} })
+    })
+    vm.handleImportPermissionPackage()
+    await fire(1)
+    expect(ElMessage.error).toHaveBeenCalledWith('导入失败')
+
+    // 3) 异常无 detail 无 message → '导入失败'
+    mockPost.mockImplementation((url: string) => {
+      if (url === '/permission-packages/import') return Promise.reject({})
+      return Promise.resolve({ data: {} })
+    })
+    vm.handleImportPermissionPackage()
+    await fire(2)
+    expect(ElMessage.error).toHaveBeenCalledWith('导入失败')
+    spy.mockRestore()
   })
 })
