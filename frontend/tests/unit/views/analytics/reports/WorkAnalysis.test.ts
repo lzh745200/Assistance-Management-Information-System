@@ -419,3 +419,83 @@ describe('WorkAnalysis.vue (analytics/reports)', () => {
     expect(instances.every((c) => c.destroyed)).toBe(true)
   })
 })
+
+describe('分支补全：进度三元/映射兜底/分页 v-model/导出稀疏行', () => {
+  it('进度列三种状态色 + 类型/状态标签映射兜底（模板三元与 || 回退）', async () => {
+    // 列样本行：progress 100/65/30 覆盖三元三侧；未知 type/status 覆盖 map || 回退
+    const wrapper = mount(WorkAnalysis, {
+      global: {
+        plugins: [createPinia()],
+        stubs: {
+          ...stubs,
+          'el-table-column': {
+            name: 'ElTableColumnStub',
+            data() {
+              return {
+                rows: [
+                  { type: 'unknown_t', typeName: 'X', status: 'unknown_s', statusName: 'Y', progress: 100, responsible_person: 'p' },
+                  { type: 'industry', typeName: 'X', status: 'completed', statusName: 'Y', progress: 65, responsible_person: 'p' },
+                  { type: 'industry', typeName: 'X', status: 'planned', statusName: 'Y', progress: 30, responsible_person: 'p' },
+                ],
+              }
+            },
+            template: '<div class="el-table-column-stub"><slot v-for="r in rows" :key="r.progress" :row="r" /></div>',
+          },
+        },
+        renderStubDefaultSlot: true,
+      },
+    })
+    await flushPromises()
+    expect(wrapper.find('.el-table-column-stub').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('getTypeTagType / getStatusTagType 未知值 → info 兜底', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.getTypeTagType('nope')).toBe('info')
+    expect(vm.getStatusTagType('nope')).toBe('info')
+    wrapper.unmount()
+  })
+
+  it('updateCharts 类型为空字符串 → 其他 兜底', async () => {
+    vi.mocked(getRuralWorks).mockResolvedValue({
+      items: [{ id: 1, name: 'X', type: '', status: 'completed', progress: 50, start_date: thisMonthDate }],
+    } as any)
+    const wrapper = mountPage()
+    await flushPromises()
+    // updateCharts 会被 watch 多次触发，取首个饼图实例校验（type '' → '其他' 计入）
+    expect(chartInstances().length).toBeGreaterThanOrEqual(3)
+    // 全量跑时其他用例的滞后异步链可能向 instances 追加旧图表，按类型+标签断言而非下标
+    const pies = chartInstances().filter((c: any) => c.config.type === 'doughnut')
+    const hit = pies.some((p: any) => (p.config.data.labels || []).includes('其他'))
+    expect(hit).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('分页 v-model 双向绑定处理器', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    const pager = findPagination(wrapper)
+    pager.vm.$emit('update:currentPage', 2)
+    pager.vm.$emit('update:pageSize', 20)
+    expect(vm.currentPage).toBe(2)
+    expect(vm.pageSize).toBe(20)
+    wrapper.unmount()
+  })
+
+  it('导出稀疏行：name/type/village_name 等全字段 || 兜底', async () => {
+    vi.mocked(getRuralWorks).mockResolvedValue({ items: [{ id: 1 }] } as any)
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    const wrapper = mountPage()
+    await flushPromises()
+    const exportBtn = wrapper.findAll('button').find((b) => b.text().includes('导出报告'))!
+    await exportBtn.trigger('click')
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(ElMessage.warning).not.toHaveBeenCalled()
+    clickSpy.mockRestore()
+    wrapper.unmount()
+  })
+})

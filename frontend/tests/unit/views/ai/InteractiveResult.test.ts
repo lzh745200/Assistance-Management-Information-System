@@ -657,3 +657,163 @@ describe('NLP 查询', () => {
     expect(vm.nlpLoading).toBe(false)
   })
 })
+
+// ==================== 分支覆盖率补测 ====================
+
+describe('分支补测：script 零分支', () => {
+  it('服务状态：local_analysis.status 缺失时回退 available（367 || 右侧）', async () => {
+    mockGetStatus.mockResolvedValue({ data: { services: { local_analysis: {} } } })
+    const wrapper = mountAI()
+    await flushPromises()
+
+    expect((wrapper.vm as any).serviceStatus).toBe('available')
+  })
+
+  it('数据分析：无 result 字段时 flattenObject 回退 inner 自身（388 || inner）', async () => {
+    mockAnalyze.mockResolvedValue({ data: { data: { analysis_type: '概览', 备注: 'x' } } })
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '开始分析')
+    const vm = wrapper.vm as any
+    expect(vm.analyzeResult.analysis_type).toBe('概览')
+    expect(vm.analyzeResult.flattened).toEqual({ analysis_type: '概览', 备注: 'x' })
+  })
+
+  it('数据分析：响应为 null 时 flattenObject 回退空对象（388 || {}、384 ?? 右侧）', async () => {
+    mockAnalyze.mockResolvedValue(null)
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '开始分析')
+    expect((wrapper.vm as any).analyzeResult.flattened).toEqual({})
+    expect(mockMessage.success).toHaveBeenCalledWith('分析完成')
+  })
+
+  it('收入预测：响应无 data 包装时回退 response 本身（403 ?? 右侧）', async () => {
+    mockForecastIncome.mockResolvedValue({ predictions: [{ year: 2031, value: 42 }] })
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '预测')
+    expect((wrapper.vm as any).forecastItems).toEqual([{ year: 2031, value: 42 }])
+    expect(wrapper.text()).toContain('2031: 42')
+  })
+
+  it('经费预测：响应为 null 时预测源回退空对象（424 || {} 右侧）', async () => {
+    mockForecastFunds.mockResolvedValue(null)
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '执行预测')
+    expect((wrapper.vm as any).fundForecastItems).toEqual([])
+    expect(mockMessage.success).toHaveBeenCalledWith('预测完成')
+  })
+
+  it('异常检测：响应无 data 包装时回退 response 本身（464 ?? 右侧）', async () => {
+    mockDetectAnomalies.mockResolvedValue({
+      anomalies: [{ index: 1, value: 5, is_anomaly: false }],
+      anomaly_count: 0,
+    })
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '检测异常')
+    const vm = wrapper.vm as any
+    expect(vm.anomalyResult.anomaly_count).toBe(0)
+    expect(vm.anomalyColumns).toEqual(['index', 'value'])
+    expect(mockMessage.success).toHaveBeenCalledWith('检测完成：发现 0 个异常')
+  })
+
+  it('项目推荐：data.data.items 嵌套时取内层 items（488 首操作数为真）', async () => {
+    mockRecommendProjects.mockResolvedValue({
+      data: { data: { items: [{ name: '嵌套推荐项目', score: 8 }] } },
+    })
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '推荐项目')
+    expect((wrapper.vm as any).recommendResults).toEqual([{ name: '嵌套推荐项目', score: 8 }])
+    expect(wrapper.text()).toContain('嵌套推荐项目')
+  })
+
+  it('项目推荐：响应为 null 时逐项回退至空数组（488 || [] 右侧）', async () => {
+    mockRecommendProjects.mockResolvedValue(null)
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '推荐项目')
+    expect((wrapper.vm as any).recommendResults).toEqual([])
+    expect(mockMessage.success).toHaveBeenCalledWith('推荐完成')
+  })
+
+  it('系统推荐：data.data.recommendations 嵌套时取内层（504 首操作数为真）', async () => {
+    mockGetRecommendations.mockResolvedValue({
+      data: { data: { recommendations: [{ priority: 'low', content: '嵌套系统建议' }] } },
+    })
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '获取系统建议')
+    expect((wrapper.vm as any).systemRecommendations).toHaveLength(1)
+    expect(wrapper.text()).toContain('嵌套系统建议')
+  })
+
+  it('系统推荐：响应为 null 时回退空数组（503 ?? 右侧、504 || [] 右侧）', async () => {
+    mockGetRecommendations.mockResolvedValue(null)
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '获取系统建议')
+    expect((wrapper.vm as any).systemRecommendations).toEqual([])
+    expect(mockMessage.success).toHaveBeenCalledWith('获取推荐成功')
+  })
+})
+
+describe('分支补测：template 零分支', () => {
+  it('异常标记列：is_anomaly=false 渲染"否"（156 三元否侧）', async () => {
+    mockDetectAnomalies.mockResolvedValue({
+      data: { anomalies: [{ index: 6, value: 1, is_anomaly: false }], anomaly_count: 0 },
+    })
+    const wrapper = mount(InteractiveResult, {
+      global: {
+        stubs: {
+          ...stubs,
+          'el-table-column': {
+            template: '<td><slot :row="rowData" /></td>',
+            props: ['prop', 'label', 'width', 'type'],
+            setup() {
+              return { rowData: { index: 6, value: 1, is_anomaly: false } }
+            },
+          },
+        },
+      },
+    })
+    await flushPromises()
+
+    await clickButton(wrapper, '检测异常')
+    expect(wrapper.find('table .el-tag-stub').text()).toBe('否')
+  })
+
+  it('推荐项无 name/title 时回退"推荐N"占位（200 模板字符串分支）', async () => {
+    mockRecommendProjects.mockResolvedValue([{ score: 7.5 }])
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '推荐项目')
+    expect(wrapper.text()).toContain('推荐1')
+    expect(wrapper.text()).toContain('7.5')
+  })
+
+  it('系统推荐无 priority 时显示 info；字符串条目直接渲染（232/234 || 右侧）', async () => {
+    mockGetRecommendations.mockResolvedValue({
+      data: { recommendations: [{ content: '普通建议内容' }, '字符串建议'] },
+    })
+    const wrapper = mountAI()
+    await flushPromises()
+
+    await clickButton(wrapper, '获取系统建议')
+    expect(wrapper.text()).toContain('info')
+    expect(wrapper.text()).toContain('字符串建议')
+  })
+})

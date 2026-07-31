@@ -271,3 +271,27 @@ describe('工具函数', () => {
     expect(vm.storagePercent).toBe(25)
   })
 })
+
+describe('loadAdminData 兜底分支补全', () => {
+  it('storage 字段缺失 → used/total/db/backup/log 各级默认值', async () => {
+    mockGet.mockResolvedValue({ data: { data: { storage: {} } } })
+    const wrapper = mountDashboard()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.storageUsed).toBe(0)
+    expect(vm.storageTotal).toBe(1) // || 1 防除零
+    expect(vm.dbSize).toBe(0)
+    expect(vm.backupSize).toBe(0)
+    expect(vm.logSize).toBe(0)
+  })
+
+  it('res.data 为 null → || {} 兜底，统计归零', async () => {
+    mockGet.mockResolvedValue({ data: null })
+    const wrapper = mountDashboard()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.adminStats[0].value).toBe(0)
+    expect(vm.adminStats[1].value).toBe(0)
+    expect(vm.adminStats[2].value).toBe(0)
+  })
+})

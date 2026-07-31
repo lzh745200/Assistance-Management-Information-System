@@ -556,3 +556,66 @@ describe('步骤4-5：导入执行与结果', () => {
     expect(vm.importResult).toEqual({ success: 0, failed: 0 })
   })
 })
+
+describe('分支补全：|| 回退侧', () => {
+  it('previewSections：模板类型无预定义字段时回退空数组（L464 || []）', async () => {
+    const wrapper = mountImport()
+    const vm = wrapper.vm as any
+    // 'unknown_type' 不在 entityPreviewFields 中 → 查表结果为 undefined → 走 || []
+    vm.selectedTemplate = 'unknown_type'
+    await nextTick()
+    expect(vm.previewSections).toEqual([])
+  })
+
+  it('校验发现问题：错误项缺 row/field/message 且响应缺 total_rows 时全部回退默认值', async () => {
+    // first_errors 元素为空对象 → L505 || 0 / L506 || '' / L507 || ''；
+    // 响应无 total_rows → L510 || 0
+    mockPost.mockResolvedValue({ data: { error_count: 1, first_errors: [{}] } })
+    const wrapper = mountImport()
+    const vm = wrapper.vm as any
+    vm.handleFileSelect({ raw: xlsxFile })
+
+    await vm.handleValidate()
+    await flushPromises()
+
+    expect(vm.validationErrors).toEqual([{ row: 0, field: '', message: '' }])
+    expect(vm.previewCount).toBe(0)
+    expect(vm.step).toBe(2)
+  })
+
+  it('校验接口异常且后端返回 detail：优先展示后端 detail（L516 || 左侧）', async () => {
+    mockPost.mockRejectedValue({ response: { data: { detail: '校验服务暂不可用' } } })
+    const wrapper = mountImport()
+    const vm = wrapper.vm as any
+    vm.handleFileSelect({ raw: xlsxFile })
+    vm.step = 1 // 模拟真实流程：从上传页发起校验
+
+    await vm.handleValidate()
+    await flushPromises()
+
+    expect(mockMessage.error).toHaveBeenCalledWith('校验服务暂不可用')
+    expect(vm.previewCount).toBe(0)
+    expect(vm.step).toBe(1)
+  })
+
+  it('导入成功但响应缺 success_rows/failed_rows/errors：回退默认结果（L543-545）', async () => {
+    vi.useFakeTimers()
+    try {
+      mockPost.mockResolvedValue({ data: {} })
+      const wrapper = mountImport()
+      const vm = wrapper.vm as any
+      vm.handleFileSelect({ raw: xlsxFile })
+
+      await vm.handleImport()
+      await flushPromises()
+
+      expect(vm.importProgress).toBe(100)
+      expect(vm.importResult).toEqual({ success: 0, failed: 0, errors: [] })
+
+      await vi.advanceTimersByTimeAsync(600)
+      expect(vm.step).toBe(5)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})

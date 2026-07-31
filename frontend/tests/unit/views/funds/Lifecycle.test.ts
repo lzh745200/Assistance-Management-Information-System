@@ -422,3 +422,238 @@ describe('导航按钮', () => {
     }
   })
 })
+
+// ==================== 四指标 100% 补缺（分支/函数零计数项） ====================
+// 变体挂载：列插槽样本行取「非 danger / 未锁定」一侧，
+// 覆盖 severity/status/budget_locked 文本三元的 else 分支（113/140/221 行）
+function mountCompSoftRow() {
+  return mount(Lifecycle, {
+    global: {
+      renderStubDefaultSlot: true,
+      stubs: {
+        'el-alert': {
+          template: '<div class="el-alert-stub">{{ title }}</div>',
+          props: ['title'],
+        },
+        'el-page-header': {
+          name: 'ElPageHeader',
+          template: '<div class="el-page-header-stub"><slot name="content" /><slot /></div>',
+          emits: ['back'],
+        },
+        'el-table-column': {
+          name: 'ElTableColumn',
+          template: '<div class="el-table-column-stub"><slot :row="row" /></div>',
+          data() {
+            return {
+              row: {
+                fund_name: '样例经费',
+                type: '类型',
+                message: '说明',
+                severity: 'warning',
+                budget_locked: false,
+                status: 'warning',
+              },
+            }
+          },
+        },
+      },
+    },
+  })
+}
+
+describe('补缺：loadPhases/advance/rollback 兜底分支', () => {
+  it('loadPhases 响应缺 phases/current_phase 时走 || 兜底', async () => {
+    api.getPhases.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    expect(wrapper.vm.phases).toEqual([])
+    expect(wrapper.vm.currentPhase).toBe(1)
+    expect(wrapper.vm.activeTab).toBe('phase1')
+  })
+
+  it('handleAdvance 成功但 res.message 为空时用兜底文案', async () => {
+    confirmMock.mockResolvedValue(true)
+    api.advancePhase.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.handleAdvance()
+    expect(ElMessage.success).toHaveBeenCalledWith('操作成功')
+  })
+
+  it('handleRollback 失败且无 detail 时用兜底文案', async () => {
+    confirmMock.mockResolvedValue(true)
+    api.rollbackPhase.mockRejectedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.handleRollback()
+    expect(ElMessage.error).toHaveBeenCalledWith('退回失败')
+  })
+})
+
+describe('补缺：各处理器可选链/detail 与 || 双侧', () => {
+  it('handleInitiate 失败带 detail 时展示 detail', async () => {
+    api.initiate.mockRejectedValue({ response: { data: { detail: '立项被拒' } } })
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.handleInitiate()
+    expect(ElMessage.error).toHaveBeenCalledWith('立项被拒')
+  })
+
+  it('handleLockBudget 成功无 message 用兜底；失败无 detail 用兜底', async () => {
+    api.lockBudget.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.handleLockBudget()
+    expect(ElMessage.success).toHaveBeenCalledWith('预算基线已锁定')
+
+    api.lockBudget.mockRejectedValue({})
+    await wrapper.vm.handleLockBudget()
+    expect(ElMessage.error).toHaveBeenCalledWith('锁定失败')
+  })
+
+  it('handleComplianceCheck 失败带 detail 时展示 detail', async () => {
+    api.complianceCheck.mockRejectedValue({ response: { data: { detail: '校验异常' } } })
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.handleComplianceCheck()
+    expect(ElMessage.error).toHaveBeenCalledWith('校验异常')
+  })
+
+  it('loadAllocationPlan 缺 items 走空数组；失败带 detail', async () => {
+    api.allocationPlan.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.loadAllocationPlan()
+    expect(wrapper.vm.allocationItems).toEqual([])
+
+    api.allocationPlan.mockRejectedValue({ response: { data: { detail: '计划错误' } } })
+    await wrapper.vm.loadAllocationPlan()
+    expect(ElMessage.error).toHaveBeenCalledWith('计划错误')
+  })
+
+  it('handleQuotaLock 成功无 message 用兜底；失败无 detail 用兜底', async () => {
+    api.quotaLock.mockResolvedValue({})
+    api.allocationPlan.mockResolvedValue({ items: [] })
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.handleQuotaLock(3)
+    expect(ElMessage.success).toHaveBeenCalledWith('额度已锁定')
+
+    api.quotaLock.mockRejectedValue({})
+    await wrapper.vm.handleQuotaLock(3)
+    expect(ElMessage.error).toHaveBeenCalledWith('锁定失败')
+  })
+
+  it('loadTransferLedger 失败带 detail 时展示 detail', async () => {
+    api.transferLedger.mockRejectedValue({ response: { data: { detail: '台账错误' } } })
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.loadTransferLedger()
+    expect(ElMessage.error).toHaveBeenCalledWith('台账错误')
+  })
+
+  it('loadDeviation 缺 deviations 走空数组；失败带 detail', async () => {
+    api.monitoringDeviation.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.loadDeviation()
+    expect(wrapper.vm.deviations).toEqual([])
+
+    api.monitoringDeviation.mockRejectedValue({ response: { data: { detail: '偏差错误' } } })
+    await wrapper.vm.loadDeviation()
+    expect(ElMessage.error).toHaveBeenCalledWith('偏差错误')
+  })
+
+  it('handleDetect 成功无 message 用兜底；失败带 detail', async () => {
+    api.detectAnomalies.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.handleDetect()
+    expect(wrapper.vm.detectResult).toBe('检测完成')
+    expect(ElMessage.success).toHaveBeenCalledWith(undefined)
+
+    api.detectAnomalies.mockRejectedValue({ response: { data: { detail: '检测异常' } } })
+    await wrapper.vm.handleDetect()
+    expect(ElMessage.error).toHaveBeenCalledWith('检测异常')
+  })
+
+  it('handleCreateSettlement 成功无 message 用兜底；失败带 detail', async () => {
+    api.createSettlement.mockResolvedValue({})
+    api.getPerformance.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.handleCreateSettlement()
+    expect(ElMessage.success).toHaveBeenCalledWith('决算报告已生成')
+
+    api.createSettlement.mockRejectedValue({ response: { data: { detail: '生成异常' } } })
+    await wrapper.vm.handleCreateSettlement()
+    expect(ElMessage.error).toHaveBeenCalledWith('生成异常')
+  })
+
+  it('loadHealth 无 projectId 直接返回；失败无 detail 用兜底', async () => {
+    // route.params 是普通对象，projectId 计算属性挂载时即定型，需分两次挂载
+    routeParams.projectId = ''
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.loadHealth()
+    expect(api.getHealth).not.toHaveBeenCalled()
+
+    routeParams.projectId = '1'
+    api.getHealth.mockRejectedValue({})
+    const w2 = mountComp()
+    await flushPromises()
+    await w2.vm.loadHealth()
+    expect(ElMessage.error).toHaveBeenCalledWith('加载失败')
+  })
+})
+
+describe('补缺：模板内联函数与列插槽 else 分支', () => {
+  it('el-tabs v-model onUpdate 更新 activeTab', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const tabs = wrapper.findComponent({ name: 'ElTabs' })
+    expect(tabs.exists()).toBe(true)
+    tabs.vm.$emit('update:modelValue', 'phase5')
+    await nextTick()
+    expect(wrapper.vm.activeTab).toBe('phase5')
+  })
+
+  it('额度锁定按钮 onClick 内联箭头调用 handleQuotaLock', async () => {
+    api.allocationPlan.mockResolvedValue({
+      items: [{ fund_id: 1, fund_name: '经费A', budget_locked: true }],
+    })
+    api.quotaLock.mockResolvedValue({ message: '额度已锁定' })
+    const wrapper = mountComp()
+    await flushPromises()
+    await wrapper.vm.loadAllocationPlan()
+    await nextTick()
+    const btn = wrapper.findAll('el-button-stub').find((b) => b.text().includes('额度锁定'))
+    expect(btn).toBeTruthy()
+    await btn!.trigger('click')
+    await flushPromises()
+    expect(api.quotaLock).toHaveBeenCalled()
+  })
+
+  it('列插槽样本行为 warning/未锁定：severity/status/budget_locked 文本 else 分支', async () => {
+    api.complianceCheck.mockResolvedValue({
+      compliant: false,
+      total_issues: 1,
+      issues: [{ fund_name: 'a', type: 't', message: 'm', severity: 'warning' }],
+    })
+    api.allocationPlan.mockResolvedValue({
+      items: [{ fund_id: 1, fund_name: '经费A', budget_locked: false }],
+    })
+    api.monitoringDeviation.mockResolvedValue({
+      deviations: [{ fund_name: 'a', status: 'warning' }],
+    })
+    const wrapper = mountCompSoftRow()
+    await flushPromises()
+    await wrapper.vm.handleComplianceCheck()
+    await wrapper.vm.loadAllocationPlan()
+    await wrapper.vm.loadDeviation()
+    await nextTick()
+    expect(wrapper.text()).toContain('警告')
+    expect(wrapper.text()).toContain('未锁定')
+    expect(wrapper.text()).toContain('偏差')
+  })
+})

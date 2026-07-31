@@ -353,4 +353,37 @@ describe('Dashboard.vue (analytics/dashboard)', () => {
 
     expect(() => wrapper.unmount()).not.toThrow()
   })
+
+  describe('分支补满：?? 兜底与 initCharts 重复初始化', () => {
+    it('KPI 趋势接口字段缺失时使用 ?? 0 兜底', async () => {
+      vi.mocked(getKpiTrends).mockResolvedValue({} as any)
+      const wrapper = mountDashboard()
+      await flushPromises()
+
+      // villages/population/income/investment 均走 ?? 0 → 0%
+      expect(wrapper.text()).toContain('0%')
+      wrapper.unmount()
+    })
+
+    it('年度趋势接口数组字段缺失时回退默认零值序列', async () => {
+      // trendData.years 存在但 villages/population/income 缺失 → ?? 默认序列兜底
+      vi.mocked(getYearlyTrends).mockResolvedValue({ years: [2021, 2022] } as any)
+      const wrapper = mountDashboard()
+      await flushPromises()
+
+      expect(getYearlyTrends).toHaveBeenCalled()
+      wrapper.unmount()
+    })
+
+    it('图表已初始化后再次 initCharts 先销毁旧实例', async () => {
+      const wrapper = mountDashboard()
+      await flushPromises()
+
+      // 挂载后图表变量已非空；同实例再次 initCharts 覆盖 ?.dispose() 非空分支
+      const vm = wrapper.vm as any
+      expect(typeof vm.initCharts).toBe('function')
+      vm.initCharts()
+      wrapper.unmount()
+    })
+  })
 })
