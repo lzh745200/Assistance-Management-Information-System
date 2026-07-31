@@ -12,7 +12,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import require_admin
+from app.core.security import get_current_user
+from app.core.permission_utils import is_admin
 from app.models.user import User
 from app.schemas.permission_package import (
     PermissionPackageConfirmRequest,
@@ -31,7 +32,7 @@ router = APIRouter(prefix="/permission-packages", tags=["权限配置包"])
 @router.post("/export", response_model=PermissionPackageExportResult, summary="导出权限配置包")
 def export_permission_package(
     body: PermissionPackageExportRequest = None,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -40,6 +41,8 @@ def export_permission_package(
     包含: RBAC 角色、角色权限、用户-角色关联、用户直接权限、
     用户菜单覆盖、用户遗留权限字段。
     """
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
     service = PermissionPackageService(db)
     result = service.export_package(
         password=body.password if body else None,
@@ -54,11 +57,13 @@ def export_permission_package(
 @router.get("/download/{file_name}", summary="下载权限配置包文件")
 def download_permission_package(
     file_name: str,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
 ):
     """
     下载已导出的权限配置包 ZIP 文件。
     """
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
     from app.utils.paths import get_uploads_path
 
     upload_dir = str(get_uploads_path("permission_packages"))
@@ -78,7 +83,7 @@ def download_permission_package(
 @router.post("/import", response_model=PermissionPackageImportResult, summary="导入权限配置包（验证预览）")
 async def import_permission_package(
     file: UploadFile = File(...),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -86,6 +91,8 @@ async def import_permission_package(
 
     此步骤不实际修改数据库，让管理员确认后再执行导入。
     """
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
     if not file.filename or not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="请上传 .zip 格式的权限配置包文件")
 
@@ -118,7 +125,7 @@ async def import_permission_package(
 def confirm_import_permission_package(
     file_name: str,
     body: PermissionPackageConfirmRequest = PermissionPackageConfirmRequest(),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -127,6 +134,8 @@ def confirm_import_permission_package(
     导入策略: 完全替换（mirror mode）。
     警告: 此操作会删除目标电脑上的现有 RBAC 权限配置（系统角色除外）。
     """
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
     from app.utils.paths import get_uploads_path
 
     upload_dir = str(get_uploads_path("permission_packages"))

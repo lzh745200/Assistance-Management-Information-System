@@ -9,11 +9,18 @@ from typing import Optional
 from datetime import timezone, datetime
 
 from app.core.database import get_db
-from app.core.security import get_current_active_user, require_admin
+from app.core.security import get_current_active_user
+from app.core.permission_utils import is_admin
 from app.models.user import User
 from app.services.data_tier_service import data_tier_service, DataTier
 
 router = APIRouter(prefix="/data-tier", tags=["数据分级存储"])
+
+
+def _require_admin(user: User) -> None:
+    """校验管理员权限，非管理员抛出 403"""
+    if not is_admin(user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要管理员权限")
 
 
 @router.get("/stats")
@@ -29,11 +36,12 @@ async def get_storage_stats(
 
 @router.get("/summary")
 async def get_storage_summary(
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     获取存储摘要报告（管理员）
     """
+    _require_admin(current_user)
     summary = data_tier_service.get_storage_summary()
     return summary
 
@@ -68,7 +76,7 @@ async def archive_model(
     model_name: str,
     before_days: int = 365,
     batch_size: int = 1000,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -79,6 +87,7 @@ async def archive_model(
         before_days: 归档多少天之前的数据
         batch_size: 批次大小
     """
+    _require_admin(current_user)
     # 模型名称映射
     model_map = {
         "auditlog": "AuditLog",
@@ -112,11 +121,12 @@ async def archive_model(
 @router.get("/archives")
 async def list_archives(
     tier: Optional[str] = None,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     列出归档文件（管理员）
     """
+    _require_admin(current_user)
     from pathlib import Path
 
     config = data_tier_service.config
@@ -161,12 +171,13 @@ async def list_archives(
 async def restore_from_archive(
     archive_file: str,
     model_name: str,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """
     从归档恢复数据（管理员）
     """
+    _require_admin(current_user)
     # 模型名称映射
     model_map = {
         "auditlog": "AuditLog",
@@ -195,11 +206,12 @@ async def restore_from_archive(
 @router.delete("/cleanup")
 async def cleanup_old_archives(
     max_age_days: int = 365,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     清理过期归档文件（管理员）
     """
+    _require_admin(current_user)
     deleted, message = data_tier_service.cleanup_old_archives(max_age_days)
 
     return {"deleted_count": deleted, "message": message, "max_age_days": max_age_days}
