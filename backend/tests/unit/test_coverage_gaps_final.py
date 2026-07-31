@@ -2104,8 +2104,12 @@ class TestWorkLogs:
         data = WorkLogCreate.model_construct(
             title="Test", content="test content", log_date=12345, category="daily"
         )
-        with pytest.raises(HTTPException) as exc_info:
-            await create_work_log(data, current_user=user, db=db)
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            with pytest.raises(HTTPException) as exc_info:
+                await create_work_log(data, current_user=user, db=db)
         assert exc_info.value.status_code == 422
 
     async def test_update_work_log_type_to_category(self):

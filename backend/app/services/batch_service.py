@@ -140,41 +140,64 @@ class BatchService:
         return {"processed": len(data)}
 
     async def batch_update(self, table_name: str, ids: List[int],
-                           updates: dict, **kwargs) -> Dict[str, Any]:
+                           updates: dict, *, organization_id: int | None = None,
+                           is_superuser: bool = False, **kwargs) -> Dict[str, Any]:
         self._validate_table_name(table_name)
         _reject_protected_table(table_name)
         model = _resolve_model(table_name)
         # 二次防线：过滤禁止更新的敏感字段
         safe_updates = {k: v for k, v in updates.items() if k not in _FORBIDDEN_UPDATE_FIELDS}
         count = 0
+        skipped = 0
         if self.db:
             for id_ in ids:
                 inst = self.db.get(model, id_) if hasattr(self.db, 'get') else self.db.query(model).get(id_)
                 if inst:
+                    # 数据隔离：非超级管理员只能操作本组织数据
+                    if not is_superuser and organization_id is not None:
+                        inst_org = getattr(inst, 'organization_id', None)
+                        if inst_org is not None and inst_org != organization_id:
+                            skipped += 1
+                            continue
                     for k, v in safe_updates.items():
                         if hasattr(inst, k):
                             setattr(inst, k, v)
                     count += 1
             safe_commit(self.db)
-        return {"success": True, "success_count": count}
+        return {"success": True, "success_count": count, "skipped": skipped}
 
     async def batch_delete(self, table_name: str, ids: List[int],
-                           soft_delete: bool = False, **kwargs) -> Dict[str, Any]:
+                           soft_delete: bool = False, *,
+                           organization_id: int | None = None,
+                           is_superuser: bool = False, **kwargs) -> Dict[str, Any]:
         self._validate_table_name(table_name)
         _reject_protected_table(table_name)
         model = _resolve_model(table_name)
         count = 0
+        skipped = 0
         if self.db:
             for id_ in ids:
                 inst = self.db.get(model, id_) if hasattr(self.db, 'get') else self.db.query(model).get(id_)
                 if inst:
-                    if soft_delete and hasattr(inst, 'is_deleted'):
-                        inst.is_deleted = True
+                    # 数据隔离：非超级管理员只能操作本组织数据
+                    if not is_superuser and organization_id is not None:
+                        inst_org = getattr(inst, 'organization_id', None)
+                        if inst_org is not None and inst_org != organization_id:
+                            skipped += 1
+                            continue
+                    if soft_delete:
+                        # 优先使用 is_active 列（SupportedVillage/School/Project/Fund）
+                        if hasattr(inst, 'is_active'):
+                            inst.is_active = False
+                        elif hasattr(inst, 'is_deleted'):
+                            inst.is_deleted = True
+                        else:
+                            self.db.delete(inst)
                     else:
                         self.db.delete(inst)
                     count += 1
             safe_commit(self.db)
-        return {"success": True, "success_count": count}
+        return {"success": True, "success_count": count, "skipped": skipped}
 
     async def batch_export(self, table_name: str, ids: List[int],
                            format: str = "xlsx", **kwargs) -> Dict[str, Any]:
@@ -195,7 +218,9 @@ class BatchService:
             return {"success": False, "data": "", "exported_count": 0}
 
     async def validate_batch(self, table_name: str,
-                             ids: List[int], **kwargs) -> Dict[str, Any]:
+                             ids: List[int], *,
+                             organization_id: int | None = None,
+                             is_superuser: bool = False, **kwargs) -> Dict[str, Any]:
         self._validate_table_name(table_name)
         _reject_protected_table(table_name)
         model = _resolve_model(table_name)
@@ -204,6 +229,11 @@ class BatchService:
             for id_ in ids:
                 inst = self.db.get(model, id_) if hasattr(self.db, 'get') else self.db.query(model).get(id_)
                 if inst:
+                    # 数据隔离：非超级管理员只能验证本组织数据
+                    if not is_superuser and organization_id is not None:
+                        inst_org = getattr(inst, 'organization_id', None)
+                        if inst_org is not None and inst_org != organization_id:
+                            continue
                     existing_count += 1
         return {"success": True, "existing_count": existing_count}
 

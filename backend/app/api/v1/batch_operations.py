@@ -1,15 +1,17 @@
 """批量操作API路由"""
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 import logging
 
+from app.core.database import get_db
 from app.core.exceptions import BusinessError, ValidationError, DatabaseError
-from app.core.permission_utils import require_admin
+from app.core.permission_utils import require_admin, is_superuser
 from app.core.security import get_current_user
 from app.models.user import User
-from app.services.batch_service import batch_service, TABLE_MODEL_MAP
+from app.services.batch_service import BatchService, TABLE_MODEL_MAP
 
 logger = logging.getLogger(__name__)
 
@@ -117,13 +119,17 @@ class BatchExportRequest(BaseModel):
 @router.post("/update")
 async def batch_update(
     request: BatchUpdateRequest,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """批量更新（仅管理员）"""
     require_admin(current_user)
     try:
-        result = await batch_service.batch_update(
-            table_name=request.table_name, ids=request.ids, updates=request.updates
+        svc = BatchService(db)
+        result = await svc.batch_update(
+            table_name=request.table_name, ids=request.ids, updates=request.updates,
+            organization_id=getattr(current_user, 'organization_id', None),
+            is_superuser=is_superuser(current_user),
         )
         return result
     except ValidationError:
@@ -141,15 +147,19 @@ async def batch_update(
 @router.post("/delete")
 async def batch_delete(
     request: BatchDeleteRequest,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """批量删除（仅管理员）"""
     require_admin(current_user)
     try:
-        result = await batch_service.batch_delete(
+        svc = BatchService(db)
+        result = await svc.batch_delete(
             table_name=request.table_name,
             ids=request.ids,
             soft_delete=request.soft_delete,
+            organization_id=getattr(current_user, 'organization_id', None),
+            is_superuser=is_superuser(current_user),
         )
         return result
     except ValidationError:
@@ -164,12 +174,14 @@ async def batch_delete(
 @router.post("/export")
 async def batch_export(
     request: BatchExportRequest,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """批量导出（仅管理员）"""
     require_admin(current_user)
     try:
-        result = await batch_service.batch_export(table_name=request.table_name, ids=request.ids, format=request.format)
+        svc = BatchService(db)
+        result = await svc.batch_export(table_name=request.table_name, ids=request.ids, format=request.format)
         return result
     except ValidationError:
         raise
@@ -184,11 +196,17 @@ async def batch_export(
 async def validate_batch(
     table_name: str = Query(..., description="表名"),
     ids: List[int] = Query(..., description="ID列表"),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """验证批量操作"""
     try:
-        result = await batch_service.validate_batch(table_name=table_name, ids=ids)
+        svc = BatchService(db)
+        result = await svc.validate_batch(
+            table_name=table_name, ids=ids,
+            organization_id=getattr(current_user, 'organization_id', None),
+            is_superuser=is_superuser(current_user),
+        )
         return result
     except ValidationError:
         raise
