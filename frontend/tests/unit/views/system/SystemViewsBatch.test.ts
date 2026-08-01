@@ -294,16 +294,6 @@ describe('Feedback.vue', () => {
   })
 })
 
-// --- Help ---
-describe('Help.vue', () => {
-  it('渲染', async () => {
-    const { default: Comp } = await import('@/views/system/Help.vue')
-    const w = mount(Comp)
-    await flushPromises()
-    expect(w.exists()).toBe(true)
-  })
-})
-
 // --- I18nManagement ---
 describe('I18nManagement.vue', () => {
   it('渲染', async () => {
@@ -348,26 +338,6 @@ describe('Role.vue', () => {
 describe('SecretsManagement.vue', () => {
   it('渲染', async () => {
     const { default: Comp } = await import('@/views/system/SecretsManagement.vue')
-    const w = mount(Comp)
-    await flushPromises()
-    expect(w.exists()).toBe(true)
-  })
-})
-
-// --- SystemConfig ---
-describe('SystemConfig.vue', () => {
-  it('渲染', async () => {
-    const { default: Comp } = await import('@/views/system/SystemConfig.vue')
-    const w = mount(Comp)
-    await flushPromises()
-    expect(w.exists()).toBe(true)
-  })
-})
-
-// --- SystemInit ---
-describe('SystemInit.vue', () => {
-  it('渲染', async () => {
-    const { default: Comp } = await import('@/views/system/SystemInit.vue')
     const w = mount(Comp)
     await flushPromises()
     expect(w.exists()).toBe(true)

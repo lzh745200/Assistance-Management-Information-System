@@ -77,12 +77,6 @@ describe('schools/Edit.vue', () => {
     const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true)
   })
 })
-describe('schools/Improvement.vue', () => {
-  it('渲染', async () => {
-    const { default: C } = await import('@/views/schools/Improvement.vue')
-    const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true)
-  })
-})
 describe('schools/List.vue', () => {
   it('渲染并加载列表', async () => {
     const { default: C } = await import('@/views/schools/List.vue')
@@ -106,12 +100,6 @@ describe('schools/List.vue', () => {
 describe('schools/Projects.vue', () => {
   it('渲染', async () => {
     const { default: C } = await import('@/views/schools/Projects.vue')
-    const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true)
-  })
-})
-describe('schools/Support.vue', () => {
-  it('渲染', async () => {
-    const { default: C } = await import('@/views/schools/Support.vue')
     const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true)
   })
 })

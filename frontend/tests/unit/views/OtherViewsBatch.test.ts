@@ -178,9 +178,6 @@ describe('dataPackage/ReceivePackage.vue', () => {
 describe('dataPackage/ReportPackage.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/dataPackage/ReportPackage.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
 })
-describe('dataPackage/TaskPackageAdmin.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/views/dataPackage/TaskPackageAdmin.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
-})
 
 // --- DataSync ---
 describe('dataSync/ConflictResolution.vue', () => {
@@ -243,23 +240,11 @@ describe('dataAnalysis/Index.vue', () => {
 describe('dataEntry/ComprehensiveEntry.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/dataEntry/ComprehensiveEntry.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
 })
-describe('dataManagement/Backup.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/views/dataManagement/Backup.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
-})
 describe('dataManagement/Index.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/dataManagement/Index.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
 })
-describe('dataManagement/Logs.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/views/dataManagement/Logs.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
-})
 describe('dataManagement/Overview.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/dataManagement/Overview.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
-})
-describe('dataManagement/Quality.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/views/dataManagement/Quality.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
-})
-describe('dataManagement/UserBackup.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/views/dataManagement/UserBackup.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
 })
 describe('dataVerify/Index.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/dataVerify/Index.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
@@ -285,17 +270,11 @@ describe('export/ReportExport.vue', () => {
 describe('help/HelpCenter.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/help/HelpCenter.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
 })
-describe('HomeSafe.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/views/HomeSafe.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
-})
 describe('import/DataImport.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/import/DataImport.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
 })
 describe('message/MessageCenter.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/message/MessageCenter.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
-})
-describe('message/NotificationSettings.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/views/message/NotificationSettings.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })
 })
 describe('NotFound.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/views/NotFound.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) })

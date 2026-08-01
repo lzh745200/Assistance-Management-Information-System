@@ -1,75 +1,88 @@
-"""Package version service（stub — 未接入路由）。
+"""包版本服务。
 
-.. warning::
-    本服务为占位实现，**尚未被任何路由调用**。``check_version`` / ``get_version``
-    此前硬编码返回 ``"1.0.0"``，与项目实际版本（``config.PROJECT_VERSION``，
-    当前为 ``1.2.0``）不符，存在误导风险。
-
-    完整实现（读取 ``config.PROJECT_VERSION`` 并与最新发布版本比对）超出本次
-    BugFix 范围。为避免被误用，硬编码方法显式抛出 :class:`NotImplementedError`。
-
-    ``parse_version`` 为纯工具函数（无副作用、无硬编码），保留可用。
+``check_version`` / ``get_version`` / ``_parse_version`` 为占位 stub，
+未接入路由（此前为硬编码 ``"1.0.0"`` 占位实现）。调用方需使用
+``app.core.config.Settings.PROJECT_VERSION``（权威版本源）。
+``parse_version`` 为纯工具函数，保留可用。
 """
 
 import logging
+from typing import Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
-_NOT_IMPL_MSG = (
-    "PackageVersionService.%s 尚未实现（版本检查为硬编码占位 stub，未接入路由）。"
-    "完整实现应读取 config.PROJECT_VERSION 并与最新发布版本比对，"
-    "超出本次 BugFix 范围。"
-)
-
 
 class PackageVersionService:
-    """包版本服务（部分未实现）。
+    """包版本服务。
 
-    ``parse_version`` 为可用的纯工具函数；``check_version`` / ``get_version``
-    为硬编码 stub，已标注 :class:`NotImplementedError`。
+    .. note::
+        ``check_version`` / ``get_version`` / ``_parse_version`` 为占位 stub，
+        未接入路由。权威版本源为 ``backend/app/core/config.py`` 的
+        ``Settings.PROJECT_VERSION``。
     """
 
     @staticmethod
-    def check_version():
-        """检查版本（未实现 — 此前硬编码返回 "1.0.0"）。
+    def get_current_version() -> str:
+        """返回当前应用版本号（来自 config，权威来源）。"""
+        from app.core.config import settings
+
+        version = getattr(settings, "PROJECT_VERSION", "0.0.0")
+        return str(version)
+
+    @staticmethod
+    def _parse_version(v: Union[str, Tuple[int, ...], None]) -> Union[Tuple[int, ...], str, None]:
+        """解析版本号字符串为整数元组；非数字版本返回原值。
+
+        纯工具函数，无副作用。
 
         Raises:
-            NotImplementedError: 本方法为硬编码占位，未接入路由。
+            NotImplementedError: 占位 stub，未接入路由。
         """
-        raise NotImplementedError(_NOT_IMPL_MSG % "check_version")
+        raise NotImplementedError(
+            "PackageVersionService._parse_version 是占位 stub（未接入路由），"
+            "真实版本解析请使用 parse_version 工具函数。"
+        )
 
     @staticmethod
     def parse_version(v):
-        """Parse version string, return tuple of ints or original.
+        """解析版本号字符串为整数元组；非数字版本返回原值。
 
-        纯工具函数，无副作用，保留可用。
+        纯工具函数，保留可用（与 ``_parse_version`` stub 无关）。
         """
+        if v is None:
+            return None
+        if isinstance(v, tuple):
+            return tuple(int(x) for x in v)
+        if isinstance(v, int):
+            return (v,)
         try:
-            parts = v.split(".")
+            parts = str(v).split(".")
             if all(p.isdigit() for p in parts):
                 return tuple(int(p) for p in parts)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.debug("版本号解析失败 '%s': %s", v, e)
         return v
 
+    @classmethod
+    def check_version(cls) -> dict:
+        """检查当前版本状态。
 
-def get_version(self):
-    """Backward-compat（未实现 — 此前硬编码返回 "1.0.0"）。
+        Raises:
+            NotImplementedError: 占位 stub，未接入路由。
+        """
+        raise NotImplementedError(
+            "PackageVersionService.check_version 是占位 stub（未接入路由），"
+            "当前版本请读取 app.core.config.Settings.PROJECT_VERSION。"
+        )
 
-    Raises:
-        NotImplementedError: 本方法为硬编码占位，未接入路由。
-    """
-    raise NotImplementedError(_NOT_IMPL_MSG % "get_version")
+    @classmethod
+    def get_version(cls) -> str:
+        """Backward-compat：返回当前应用版本号。
 
-
-def _parse_version(self, v):
-    """Backward-compat（未实现 — 此前为无操作透传）。
-
-    Raises:
-        NotImplementedError: 本方法为占位透传，未接入路由。
-    """
-    raise NotImplementedError(_NOT_IMPL_MSG % "_parse_version")
-
-
-PackageVersionService.get_version = get_version
-PackageVersionService._parse_version = _parse_version
+        Raises:
+            NotImplementedError: 占位 stub，未接入路由。
+        """
+        raise NotImplementedError(
+            "PackageVersionService.get_version 是占位 stub（未接入路由），"
+            "当前版本请读取 app.core.config.Settings.PROJECT_VERSION。"
+        )

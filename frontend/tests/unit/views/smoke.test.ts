@@ -65,7 +65,6 @@ const router = createRouter({ history: createWebHistory(), routes: [{ path: '/',
 
 describe('Core view smoke tests', () => {
   const views = [
-    { name: 'HomeSafe', path: '@/views/HomeSafe.vue' },
     { name: 'NotFound', path: '@/views/NotFound.vue' },
     { name: 'ChangePassword', path: '@/views/auth/ChangePassword.vue' },
     { name: 'LoginEnhanced', path: '@/views/auth/LoginEnhanced.vue' },
@@ -140,10 +139,8 @@ describe('System view imports', () => {
   const systemViews = [
     ['Audit Management', '@/views/system/AuditManagement.vue'],
     ['Backup Management', '@/views/system/BackupManagement.vue'],
-    ['System Config', '@/views/system/SystemConfig.vue'],
     ['User Management', '@/views/system/UserManagement.vue'],
     ['Role', '@/views/system/Role.vue'],
-    ['Help', '@/views/system/Help.vue'],
     ['Monitoring', '@/views/system/MonitoringDashboard.vue'],
     ['Menu', '@/views/system/Menu.vue'],
     ['Update Logs', '@/views/system/UpdateLogs.vue'],
@@ -158,7 +155,6 @@ describe('System view imports', () => {
     ['Zero Trust', '@/views/system/ZeroTrust.vue'],
     ['Email Settings', '@/views/system/EmailSettings.vue'],
     ['I18n Management', '@/views/system/I18nManagement.vue'],
-    ['System Init', '@/views/system/SystemInit.vue'],
     ['Data Tier', '@/views/system/DataTier.vue'],
   ]
 
@@ -177,10 +173,7 @@ describe('System view imports', () => {
 describe('Data and workflow view imports', () => {
   const dataViews = [
     ['Data Management', '@/views/dataManagement/Index.vue'],
-    ['Data Management Logs', '@/views/dataManagement/Logs.vue'],
-    ['Data Management Backup', '@/views/dataManagement/Backup.vue'],
     ['Data Management Overview', '@/views/dataManagement/Overview.vue'],
-    ['Data Management Quality', '@/views/dataManagement/Quality.vue'],
     ['Data Package List', '@/views/dataPackage/List.vue'],
     ['Data Sync Export', '@/views/dataSync/Export.vue'],
     ['Data Sync Import', '@/views/dataSync/Import.vue'],

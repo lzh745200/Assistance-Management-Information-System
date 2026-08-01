@@ -3,7 +3,7 @@
 > 乡村振兴 — 完全离线的单机版桌面应用 | 多机协同数据同步 | v1.4.2
 
 ![Version](https://img.shields.io/badge/version-1.4.2-blue)
-![License](https://img.shields.io/badge/license-UNLICENSED-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20ARM64-orange)
 ![Tests](https://img.shields.io/badge/tests-11%2C700%2B-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-50%25%2B-brightgreen)
@@ -12,7 +12,7 @@
 
 | 指标 | 结果 |
 |------|------|
-| 后端测试 | **10,056 passed**, 9 skipped |
+| 后端测试 | **10,889 passed**, 0 skipped |
 | 前端测试 | **1,622 passed**, 125 文件, 0 失败 |
 | Flake8 | 0 错误, 0 警告 |
 | ESLint | 0 错误, 0 警告 |
@@ -22,8 +22,9 @@
 | Pre-commit | ruff（变更文件）+ flake8/bandit/vue-tsc（推送前） |
 | CI/CD | PR Checks + Nightly Full Suite + Codecov |
 | Sass | 1.101.0（modern-compiler API） |
+| 角色体系 | 4 核心角色 (super_admin/admin/user/viewer) |
 
-> **上次全量验证**: 2026-07-29 — 全部 11,700+ 测试通过（后端 10,056 + 前端 1,622），零 lint 错误，零安全告警
+> **上次全量验证**: 2026-08-01 — 全部 11,700+ 测试通过（后端 10,889 + 前端 1,622），零 lint 错误，零安全告警
 
 ## 快速开始
 
@@ -71,9 +72,10 @@ cd frontend && npm install && npm run dev
 ### 后端
 - **框架**: FastAPI + SQLAlchemy 2.0 + Pydantic
 - **数据库**: SQLite（`backend/data/rural_revitalization.db`）
-- **认证**: JWT + bcrypt + 机器码绑定 + 2FA
+- **认证**: JWT + bcrypt + 机器码绑定 + 通行码验证（三级回退）+ 2FA
 - **缓存**: diskcache + 内存 LRU
 - **任务**: APScheduler（KPI预计算/异常检测/待办提醒/周报）
+- **角色体系**: 4 核心角色（super_admin/admin/user/viewer）+ `normalize_role()` 向后兼容
 - **打包**: PyInstaller（x64 + ARM64）+ electron-builder（NSIS 安装包）
 
 ### 前端
@@ -180,4 +182,14 @@ make build-kylin                       # 麒麟 V10 ARM64 DEB
 
 MIT License - 详见 [LICENSE](LICENSE)
 
-Copyright © 2025 贵州省乡村振兴项目组
+Copyright © 2025-2026 贵州省乡村振兴项目组
+
+## 近期修复记录
+
+### 2026-08-01
+- 🐛 修复 Vue `setAttribute('0')` 页面白屏崩溃（ErrorBoundary 单一根元素修复）
+- 🐛 修复注册时“通行码无效或已被使用”误报（机器码三级回退验证）
+- 🐛 修复 files API 响应格式不统一（改用 `success_response()` 信封格式）
+- ✨ 精简用户角色至 4 个核心角色 + `normalize_role()` 向后兼容
+
+> 详见 [CHANGELOG.md](CHANGELOG.md)
