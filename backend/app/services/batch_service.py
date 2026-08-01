@@ -150,19 +150,21 @@ class BatchService:
         count = 0
         skipped = 0
         if self.db:
-            for id_ in ids:
-                inst = self.db.get(model, id_) if hasattr(self.db, 'get') else self.db.query(model).get(id_)
-                if inst:
-                    # 数据隔离：非超级管理员只能操作本组织数据
-                    if not is_superuser and organization_id is not None:
-                        inst_org = getattr(inst, 'organization_id', None)
-                        if inst_org is not None and inst_org != organization_id:
-                            skipped += 1
-                            continue
-                    for k, v in safe_updates.items():
-                        if hasattr(inst, k):
-                            setattr(inst, k, v)
-                    count += 1
+            # 批量查询替代逐条 GET（避免 N+1）
+            base_query = self.db.query(model).filter(model.id.in_(ids))
+            total_matched = base_query.count()
+            # 数据隔离：非超级管理员只能操作本组织数据
+            org_col = getattr(model, 'organization_id', None)
+            if not is_superuser and organization_id is not None and org_col is not None:
+                instances = base_query.filter(org_col == organization_id).all()
+                skipped = total_matched - len(instances)
+            else:
+                instances = base_query.all()
+            for inst in instances:
+                for k, v in safe_updates.items():
+                    if hasattr(inst, k):
+                        setattr(inst, k, v)
+                count += 1
             safe_commit(self.db)
         return {"success": True, "success_count": count, "skipped": skipped}
 
@@ -176,26 +178,28 @@ class BatchService:
         count = 0
         skipped = 0
         if self.db:
-            for id_ in ids:
-                inst = self.db.get(model, id_) if hasattr(self.db, 'get') else self.db.query(model).get(id_)
-                if inst:
-                    # 数据隔离：非超级管理员只能操作本组织数据
-                    if not is_superuser and organization_id is not None:
-                        inst_org = getattr(inst, 'organization_id', None)
-                        if inst_org is not None and inst_org != organization_id:
-                            skipped += 1
-                            continue
-                    if soft_delete:
-                        # 优先使用 is_active 列（SupportedVillage/School/Project/Fund）
-                        if hasattr(inst, 'is_active'):
-                            inst.is_active = False
-                        elif hasattr(inst, 'is_deleted'):
-                            inst.is_deleted = True
-                        else:
-                            self.db.delete(inst)
+            # 批量查询替代逐条 GET（避免 N+1）
+            base_query = self.db.query(model).filter(model.id.in_(ids))
+            total_matched = base_query.count()
+            # 数据隔离：非超级管理员只能操作本组织数据
+            org_col = getattr(model, 'organization_id', None)
+            if not is_superuser and organization_id is not None and org_col is not None:
+                instances = base_query.filter(org_col == organization_id).all()
+                skipped = total_matched - len(instances)
+            else:
+                instances = base_query.all()
+            for inst in instances:
+                if soft_delete:
+                    # 优先使用 is_active 列（SupportedVillage/School/Project/Fund）
+                    if hasattr(inst, 'is_active'):
+                        inst.is_active = False
+                    elif hasattr(inst, 'is_deleted'):
+                        inst.is_deleted = True
                     else:
                         self.db.delete(inst)
-                    count += 1
+                else:
+                    self.db.delete(inst)
+                count += 1
             safe_commit(self.db)
         return {"success": True, "success_count": count, "skipped": skipped}
 
@@ -226,15 +230,12 @@ class BatchService:
         model = _resolve_model(table_name)
         existing_count = 0
         if self.db:
-            for id_ in ids:
-                inst = self.db.get(model, id_) if hasattr(self.db, 'get') else self.db.query(model).get(id_)
-                if inst:
-                    # 数据隔离：非超级管理员只能验证本组织数据
-                    if not is_superuser and organization_id is not None:
-                        inst_org = getattr(inst, 'organization_id', None)
-                        if inst_org is not None and inst_org != organization_id:
-                            continue
-                    existing_count += 1
+            # 批量 COUNT 查询替代逐条 GET（避免 N+1）
+            query = self.db.query(model).filter(model.id.in_(ids))
+            org_col = getattr(model, 'organization_id', None)
+            if not is_superuser and organization_id is not None and org_col is not None:
+                query = query.filter(org_col == organization_id)
+            existing_count = query.count()
         return {"success": True, "existing_count": existing_count}
 
 

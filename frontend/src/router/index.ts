@@ -88,6 +88,18 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '编辑学校' },
       },
       {
+        path: '/schools/:id/projects',
+        name: 'SchoolProjects',
+        component: () => retryImport(() => import('@/views/schools/Projects.vue')),
+        meta: { title: '助学兴教项目' },
+      },
+      {
+        path: '/schools/:id/scholarship',
+        name: 'SchoolScholarship',
+        component: () => retryImport(() => import('@/views/schools/Scholarship.vue')),
+        meta: { title: '资助学生管理' },
+      },
+      {
         path: '/schools/analysis',
         name: 'SchoolAnalysis',
         component: () => retryImport(() => import('@/views/schools/Analysis.vue')),
@@ -368,28 +380,32 @@ export const routes: RouteRecordRaw[] = [
       },
       // ── 组织机构 ──
       {
-        path: '/organization',
+        path: '/organizations',
+        alias: '/organization',
         name: 'Organization',
         component: () => retryImport(() => import('@/views/organization/List.vue')),
         meta: { title: '组织机构' },
       },
       {
-        path: '/organization/:id',
+        path: '/organizations/pass-code',
+        alias: '/organization/pass-code',
+        name: 'OrganizationPassCode',
+        component: () => retryImport(() => import('@/views/organization/PassCodeManagement.vue')),
+        meta: { title: '通行证码管理', roles: ['admin', 'super_admin'] },
+      },
+      {
+        path: '/organizations/:id',
+        alias: '/organization/:id',
         name: 'OrganizationDetail',
         component: () => retryImport(() => import('@/views/organization/Detail.vue')),
         meta: { title: '机构详情' },
       },
       {
-        path: '/organization/:id/edit',
+        path: '/organizations/:id/edit',
+        alias: '/organization/:id/edit',
         name: 'OrganizationEdit',
         component: () => retryImport(() => import('@/views/organization/Edit.vue')),
         meta: { title: '编辑机构' },
-      },
-      {
-        path: '/organization/pass-code',
-        name: 'OrganizationPassCode',
-        component: () => retryImport(() => import('@/views/organization/PassCodeManagement.vue')),
-        meta: { title: '通行证码管理', roles: ['admin', 'super_admin'] },
       },
       // ── 数据同步 ──
       {

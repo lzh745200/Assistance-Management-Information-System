@@ -74,7 +74,7 @@ s = prs.slides.add_slide(prs.slide_layouts[6])
 bg(s); bar(s); bar(s, Inches(7.44))
 txt(s, Inches(1.5), Inches(1.2), Inches(10), Inches(1.2), "帮扶村振兴管理系统", 52, W, True, PP_ALIGN.CENTER)
 txt(s, Inches(1.5), Inches(2.5), Inches(10), Inches(0.7), "Assistance Management Information System", 24, GOLD, False, PP_ALIGN.CENTER)
-txt(s, Inches(1.5), Inches(3.5), Inches(10), Inches(0.5), "军民融合 · 乡村振兴 · 数字化管理 · 离线安全", 20, GRAY, False, PP_ALIGN.CENTER)
+txt(s, Inches(1.5), Inches(3.5), Inches(10), Inches(0.5), "乡村振兴 · 数字化管理 · 离线安全", 20, GRAY, False, PP_ALIGN.CENTER)
 s2 = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(4.5), Inches(4.3), Inches(4.333), Inches(0.03))
 s2.fill.solid(); s2.fill.fore_color.rgb = GOLD; s2.line.fill.background()
 txt(s, Inches(1.5), Inches(5.0), Inches(10), Inches(0.5), "Vue 3 + FastAPI + Electron + SQLite | 完全离线单机部署", 16, GRAY, False, PP_ALIGN.CENTER)
@@ -103,7 +103,7 @@ s = prs.slides.add_slide(prs.slide_layouts[6])
 title_slide(s, "项目背景与建设目标")
 bullets(s, Inches(0.8), Inches(1.5), Inches(5.5), Inches(5), [
     "📌 战略背景",
-    "  • 军民融合深度发展国家战略",
+    "  • 乡村振兴国家战略",
     "  • 乡村振兴全面推进",
     "  • 部队帮扶工作信息化需求迫切",
     "",
@@ -127,13 +127,13 @@ card(s, Inches(7), Inches(1.5), Inches(5.5), Inches(4.5), "核心痛点", [
 s = prs.slides.add_slide(prs.slide_layouts[6])
 title_slide(s, "系统概述与适用场景")
 card(s, Inches(0.6), Inches(1.5), Inches(3.8), Inches(2.5), "系统定位", [
-    "面向军队单位帮扶乡村工作的",
+    "面向帮扶乡村工作的",
     "综合管理平台",
     "完全离线、单机部署、数据安全",
 ])
 card(s, Inches(4.7), Inches(1.5), Inches(3.8), Inches(2.5), "适用场景", [
     "• 部队帮扶乡村振兴工作管理",
-    "• 军民共建学校管理",
+    "• 共建学校管理",
     "• 帮扶资金预算与审计",
     "• 多级单位间加密数据交换",
 ])

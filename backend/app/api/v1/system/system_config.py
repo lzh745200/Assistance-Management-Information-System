@@ -68,64 +68,6 @@ async def get_all_configs(
     }
 
 
-@router.get("/{key}", summary="获取指定配置项")
-async def get_config(
-    key: str,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-):
-    """获取指定配置项的值及其说明"""
-    svc = SystemConfigService(db)
-    value = svc.get(key)
-
-    if value is None:
-        raise HTTPException(status_code=404, detail=f"配置项 '{key}' 不存在")
-
-    desc = svc.DEFAULT_CONFIGS.get(key, {}).get("description", "")
-
-    return {
-        "success": True,
-        "data": {
-            "key": key,
-            "value": value,
-            "description": desc,
-        },
-    }
-
-
-@router.put("/{key}", summary="更新指定配置项")
-async def update_config(
-    key: str,
-    value: str = Query(..., description="配置值"),
-    description: Optional[str] = Query(None, description="配置说明"),
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-):
-    """更新指定配置项的值
-
-    修改系统运行参数，如备份间隔、数据保留天数、会话超时时间等。
-    需要管理员权限。
-    """
-    from app.core.permission_utils import require_admin
-    require_admin(current_user, error_message="仅超级管理员可修改系统配置")
-
-    svc = SystemConfigService(db)
-    svc.set(key, value, description)
-
-    logger.info(
-        "系统配置 '%s' 已更新为 '%s'，操作人: %s",
-        key,
-        value,
-        getattr(current_user, "username", "unknown"),
-    )
-
-    return {
-        "success": True,
-        "message": f"配置项 '{key}' 已更新",
-        "data": {"key": key, "value": value},
-    }
-
-
 @router.put("", summary="批量更新配置项")
 async def batch_update_configs(
     batch: ConfigBatchUpdate,
@@ -158,39 +100,6 @@ async def batch_update_configs(
         "message": f"成功更新 {len(updated)} 项配置",
         "data": {"updated_keys": updated},
     }
-
-
-@router.delete("/{key}", summary="删除指定配置项")
-async def delete_config(
-    key: str,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-):
-    """删除指定配置项
-
-    删除非默认的配置项，系统将回退使用默认值。
-    需要管理员权限。
-    """
-    from app.core.permission_utils import require_admin
-    require_admin(current_user, error_message="仅超级管理员可删除系统配置")
-
-    svc = SystemConfigService(db)
-
-    # 不允许删除核心默认配置
-    if key in svc.DEFAULT_CONFIGS:
-        raise HTTPException(status_code=400, detail=f"不能删除核心默认配置项 '{key}'")
-
-    success = svc.delete(key)
-    if not success:
-        raise HTTPException(status_code=404, detail=f"配置项 '{key}' 不存在")
-
-    logger.info(
-        "系统配置 '%s' 已删除，操作人: %s",
-        key,
-        getattr(current_user, "username", "unknown"),
-    )
-
-    return {"success": True, "message": f"配置项 '{key}' 已删除"}
 
 
 @router.get("/export/json", summary="导出配置为JSON")
@@ -259,3 +168,94 @@ async def get_default_configs():
             "total": len(defaults),
         },
     }
+
+
+@router.get("/{key}", summary="获取指定配置项")
+async def get_config(
+    key: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """获取指定配置项的值及其说明"""
+    svc = SystemConfigService(db)
+    value = svc.get(key)
+
+    if value is None:
+        raise HTTPException(status_code=404, detail=f"配置项 '{key}' 不存在")
+
+    desc = svc.DEFAULT_CONFIGS.get(key, {}).get("description", "")
+
+    return {
+        "success": True,
+        "data": {
+            "key": key,
+            "value": value,
+            "description": desc,
+        },
+    }
+
+
+@router.put("/{key}", summary="更新指定配置项")
+async def update_config(
+    key: str,
+    value: str = Query(..., description="配置值"),
+    description: Optional[str] = Query(None, description="配置说明"),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """更新指定配置项的值
+
+    修改系统运行参数，如备份间隔、数据保留天数、会话超时时间等。
+    需要管理员权限。
+    """
+    from app.core.permission_utils import require_admin
+    require_admin(current_user, error_message="仅超级管理员可修改系统配置")
+
+    svc = SystemConfigService(db)
+    svc.set(key, value, description)
+
+    logger.info(
+        "系统配置 '%s' 已更新为 '%s'，操作人: %s",
+        key,
+        value,
+        getattr(current_user, "username", "unknown"),
+    )
+
+    return {
+        "success": True,
+        "message": f"配置项 '{key}' 已更新",
+        "data": {"key": key, "value": value},
+    }
+
+
+@router.delete("/{key}", summary="删除指定配置项")
+async def delete_config(
+    key: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """删除指定配置项
+
+    删除非默认的配置项，系统将回退使用默认值。
+    需要管理员权限。
+    """
+    from app.core.permission_utils import require_admin
+    require_admin(current_user, error_message="仅超级管理员可删除系统配置")
+
+    svc = SystemConfigService(db)
+
+    # 不允许删除核心默认配置
+    if key in svc.DEFAULT_CONFIGS:
+        raise HTTPException(status_code=400, detail=f"不能删除核心默认配置项 '{key}'")
+
+    success = svc.delete(key)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"配置项 '{key}' 不存在")
+
+    logger.info(
+        "系统配置 '%s' 已删除，操作人: %s",
+        key,
+        getattr(current_user, "username", "unknown"),
+    )
+
+    return {"success": True, "message": f"配置项 '{key}' 已删除"}

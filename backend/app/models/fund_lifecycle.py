@@ -27,7 +27,7 @@ class LifecyclePhase(int, enum.Enum):
     INITIATION = 1  # 论证立项
     REVIEW = 2  # 汇总审核
     ALLOCATION = 3  # 计划下达与资金拨付
-    TRANSFER = 4  # 军地对接与资金划转
+    TRANSFER = 4  # 对接与资金划转
     IMPLEMENTATION = 5  # 组织实施与过程监管
     INSPECTION = 6  # 核查督查与效益评估
     SETTLEMENT = 7  # 常态监管与项目决算
@@ -37,7 +37,7 @@ PHASE_LABELS = {
     1: "论证立项",
     2: "汇总审核",
     3: "计划下达与资金拨付",
-    4: "军地对接与资金划转",
+    4: "对接与资金划转",
     5: "组织实施与过程监管",
     6: "核查督查与效益评估",
     7: "常态监管与项目决算",
@@ -189,7 +189,7 @@ class BudgetBaseline(Base):
 
 
 class FundTransferVoucher(Base):
-    """军地资金划转凭证"""
+    """资金划转凭证"""
 
     __tablename__ = "fund_transfer_vouchers"
 
@@ -228,7 +228,7 @@ class FundTransferVoucher(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    # 军地协同扩展字段
+    # 协同扩展字段
     military_project_code = Column(String(100), nullable=True, comment="军方项目编号")
     local_project_code = Column(String(100), nullable=True, comment="地方项目编号")
     sync_status = Column(String(20), default="pending", comment="同步状态: pending/synced/failed")

@@ -45,7 +45,7 @@
                 style="width: 100%"
                 @change="handleCategoryChange"
               >
-                <el-option label="军队政策" value="military" />
+                <el-option label="专项政策" value="military" />
                 <el-option label="地方政策" value="local" />
               </el-select>
             </el-form-item>
@@ -147,6 +147,7 @@
           <el-upload
             class="upload-demo"
             :action="uploadAction"
+            :headers="uploadHeaders"
             :file-list="fileList"
             :on-success="handleUploadSuccess"
             :on-remove="handleUploadRemove"
@@ -184,6 +185,7 @@ import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
 import { ElMessage, type FormInstance, type FormRules, type UploadFile } from 'element-plus'
 import { Back, Upload, Check } from '@element-plus/icons-vue'
+import { AuthStorage } from '@/utils/authStorage'
 import { usePolicyStore } from '@/stores/policy'
 import { getLevelOptions, type PolicyCategory, type PolicyStatus } from '@/api/policy'
 
@@ -192,6 +194,13 @@ type OrganizationLevel = string
 const route = useRoute()
 const { pushSafe } = useRouterSafe()
 const policyStore = usePolicyStore()
+
+// 上传配置：通用文件上传端点 + 认证头
+const uploadAction = ref(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/files/upload`)
+const uploadHeaders = computed(() => {
+  const token = AuthStorage.getToken() || ''
+  return { Authorization: token ? `Bearer ${token}` : '' }
+})
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -214,7 +223,6 @@ const formData = reactive({
 })
 
 const fileList = ref<UploadFile[]>([])
-const uploadAction = ref(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/files/upload`)
 
 // 层级选项（根据分类动态变化）
 // Level options (loaded async on category change)

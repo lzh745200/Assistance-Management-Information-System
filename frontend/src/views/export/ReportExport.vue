@@ -118,7 +118,7 @@
     <!-- 公文报告导出 -->
     <el-card class="official-report-export">
       <h3 class="section-title">公文报告导出</h3>
-      <p class="section-desc">一键生成 Word / PDF 格式军队帮扶公文</p>
+      <p class="section-desc">一键生成 Word / PDF 格式帮扶公文</p>
 
       <el-form :model="officialForm" label-width="80px">
         <el-row :gutter="20">

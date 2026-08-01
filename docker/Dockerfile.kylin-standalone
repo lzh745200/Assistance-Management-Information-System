@@ -199,7 +199,7 @@ RUN echo "Package: assistance-management-system" > DEBIAN/control && \
     echo "Installed-Size: $(du -sk opt/ | cut -f1)" >> DEBIAN/control && \
     echo "Depends: " >> DEBIAN/control && \
     echo "Recommends: firefox-esr | chromium | chromium-browser" >> DEBIAN/control && \
-    echo "Description: 军队全面推进乡村振兴工作综合管理平台" >> DEBIAN/control && \
+    echo "Description: 全面推进乡村振兴工作综合管理平台" >> DEBIAN/control && \
     echo " 完全单机版，适用于麒麟 V10 ARM64 系统。" >> DEBIAN/control && \
     echo " 集成村庄管理、项目跟踪、资金监管、数据分析等功能。" >> DEBIAN/control && \
     echo " 无外部依赖，安装即用。" >> DEBIAN/control

@@ -10,7 +10,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from app.core.permission_utils import is_admin
+from app.core.permission_utils import is_superuser
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,23 @@ class DataScope(str, Enum):
 
     OWN = "own"
     """See only the user's own records."""
+
+
+def is_admin(user: Any) -> bool:
+    """Check whether a user holds an administrative role.
+
+    Args:
+        user: A user model instance (must have ``role`` and optionally
+            ``is_superuser`` attributes).
+
+    Returns:
+        *True* if the user is a superuser or has an admin-level role.
+    """
+    if user is None:
+        return False
+    if getattr(user, "is_superuser", False):
+        return True
+    return getattr(user, "role", "") in ("admin", "super_admin")
 
 
 def get_data_scope(user: Any) -> DataScope:
@@ -123,9 +140,11 @@ def check_record_access(
 
 
 def filter_by_data_scope(query, model, user, db=None, org_field="organization_id"):
-    """按数据权限过滤查询。委托给 apply_scope_to_query 实现完整过滤。"""
-    if is_admin(user):
-        return query
+    """按数据权限过滤查询。委托给 apply_scope_to_query 实现完整过滤。
+
+    仅 super_admin 跳过过滤（DataScope.ALL）；admin/manager 限定本组织（OWN_DEPT）；
+    普通用户限定本人记录（OWN）。
+    """
     return apply_scope_to_query(query, model, user, owner_field="created_by", dept_field=org_field)
 
 
@@ -133,12 +152,13 @@ apply_data_scope = apply_scope_to_query
 
 
 def require_data_permission(current_user, organization_id=None, created_by=None, db=None, error_message="无权执行此操作"):
-    """检查数据权限。管理员自动通过；非管理员需通过 record-ownership 检查。"""
-    if is_admin(current_user):
+    """检查数据权限。超级管理员自动通过；其他用户需通过归属/组织检查。"""
+    if is_superuser(current_user):
         return True
-    if not db:
-        logger.warning("require_data_permission called without db session — denying access")
-        raise HTTPException(status_code=403, detail=error_message)
+    # 检查是否为用户自己的记录
     if created_by is not None and created_by == getattr(current_user, "id", None):
+        return True
+    # 检查是否为用户本组织的记录
+    if organization_id is not None and organization_id == getattr(current_user, "organization_id", None):
         return True
     raise HTTPException(status_code=403, detail=error_message)

@@ -9,9 +9,11 @@ import logging
 from app.core.database import get_db
 from app.core.exceptions import BusinessError, ValidationError, DatabaseError
 from app.core.permission_utils import require_admin, is_superuser
+from app.core.response import success_response
 from app.core.security import get_current_user
 from app.models.user import User
 from app.services.batch_service import BatchService, TABLE_MODEL_MAP
+from app.services.work_log_service import write_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +133,18 @@ async def batch_update(
             organization_id=getattr(current_user, 'organization_id', None),
             is_superuser=is_superuser(current_user),
         )
-        return result
+        # 审计日志（失败不阻断主操作）
+        try:
+            write_work_log(
+                db, "batch", "batch_update", 0,
+                f"{request.table_name} ({len(request.ids)} records)",
+                user_id=getattr(current_user, 'id', None),
+                username=getattr(current_user, 'username', ''),
+                detail=f"fields={list(request.updates.keys())}, success={result.get('success_count', 0)}, skipped={result.get('skipped', 0)}",
+            )
+        except Exception as log_err:
+            logger.warning(f"批量更新审计日志写入失败: {log_err}")
+        return success_response(data=result)
     except ValidationError:
         # 验证错误直接抛出，让全局处理器处理
         raise
@@ -161,7 +174,18 @@ async def batch_delete(
             organization_id=getattr(current_user, 'organization_id', None),
             is_superuser=is_superuser(current_user),
         )
-        return result
+        # 审计日志（失败不阻断主操作）
+        try:
+            write_work_log(
+                db, "batch", "batch_delete", 0,
+                f"{request.table_name} ({len(request.ids)} records, soft={request.soft_delete})",
+                user_id=getattr(current_user, 'id', None),
+                username=getattr(current_user, 'username', ''),
+                detail=f"success={result.get('success_count', 0)}, skipped={result.get('skipped', 0)}",
+            )
+        except Exception as log_err:
+            logger.warning(f"批量删除审计日志写入失败: {log_err}")
+        return success_response(data=result)
     except ValidationError:
         raise
     except DatabaseError:
@@ -182,7 +206,7 @@ async def batch_export(
     try:
         svc = BatchService(db)
         result = await svc.batch_export(table_name=request.table_name, ids=request.ids, format=request.format)
-        return result
+        return success_response(data=result)
     except ValidationError:
         raise
     except DatabaseError:
@@ -207,7 +231,7 @@ async def validate_batch(
             organization_id=getattr(current_user, 'organization_id', None),
             is_superuser=is_superuser(current_user),
         )
-        return result
+        return success_response(data=result)
     except ValidationError:
         raise
     except DatabaseError:

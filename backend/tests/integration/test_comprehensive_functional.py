@@ -268,7 +268,7 @@ class TestPoliciesComprehensive:
 
     POLICY_DATA = {
         "title": "关于加强帮扶管理信息的指导意见",
-        "content": "为贯彻落实中央部署，现就军队参与乡村振兴提出如下意见...",
+        "content": "为贯彻落实中央部署，现就参与乡村振兴提出如下意见...",
         "category": "指导意见",
         "level": "national",
         "publish_date": "2025-01-15",

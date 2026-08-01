@@ -13,7 +13,6 @@
 import importlib
 
 import pytest
-import pytest_asyncio
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -70,7 +69,7 @@ async def _build_async_session():
     return Session(), engine
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def async_db():
     db, engine = await _build_async_session()
     yield db

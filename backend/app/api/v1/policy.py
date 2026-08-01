@@ -37,7 +37,7 @@ def _level_display_map() -> Dict[str, str]:
         "provincial": "省级",
         "municipal": "市级",
         "county": "县级",
-        "military": "军队",
+        "military": "专项",
         "central_military": "中央军委",
         "theater": "战区",
         "army": "军",
@@ -82,7 +82,7 @@ def _policy_to_frontend(policy: Policy) -> Dict[str, Any]:
         # 分类 & 层级
         "category": category_val,
         "category_name": (
-            "军队政策" if category_val == "military" else "地方政策" if category_val == "local" else category_val
+            "专项政策" if category_val == "military" else "地方政策" if category_val == "local" else category_val
         ),
         "organization_level": level_val,
         "level": level_val,
@@ -210,7 +210,7 @@ async def get_categories(
     # 返回前端期望的静态分类配置
     return {
         "military": {
-            "label": "军队政策",
+            "label": "专项政策",
             "levels": [
                 {"value": "central_military", "label": "中央军委"},
                 {"value": "theater", "label": "战区"},
@@ -457,7 +457,7 @@ def _build_export_workbook(policies_list: List[Policy]):
                 idx,
                 policy.title,
                 policy.code or "",
-                ("军队政策" if cat == "military" else "地方政策" if cat == "local" else cat),
+                ("专项政策" if cat == "military" else "地方政策" if cat == "local" else cat),
                 level_display.get(level_val, level_val),
                 policy.issuing_authority or "",
                 policy.issue_date.strftime("%Y-%m-%d") if policy.issue_date else "",
@@ -601,7 +601,7 @@ async def get_policy_types(db: Session = Depends(get_db)):
     """获取政策类型选项 — 合并预定义类型与数据库中的实际分类"""
     # 预定义政策类型
     types = [
-        {"value": "military", "label": "军队政策"},
+        {"value": "military", "label": "专项政策"},
         {"value": "local", "label": "地方政策"},
         {"value": "national", "label": "国家政策"},
         {"value": "provincial", "label": "省级政策"},
@@ -634,7 +634,7 @@ async def get_level_options():
         {"value": "provincial", "label": "省级"},
         {"value": "municipal", "label": "市级"},
         {"value": "county", "label": "县级"},
-        {"value": "military", "label": "军队"},
+        {"value": "military", "label": "专项"},
     ]
 
 
@@ -916,6 +916,20 @@ async def get_related_policies(
     return [_policy_to_frontend(p) for p in related]
 
 
+@router.get("/search")
+async def search_policies(
+    q: str = Query("", description="搜索关键词"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """全文检索帮扶政策（FTS5 + 关键词高亮）"""
+    from app.services.policy_fts_service import search_policies_fts
+    results = search_policies_fts(db, q, limit=limit, offset=offset)
+    return ok_list(results, len(results), query=q)
+
+
 @router.get("/{policy_id}")
 async def get_policy(
     policy_id: int,
@@ -1185,19 +1199,3 @@ async def get_user_favorites(
         return []
     items = db.query(Policy).filter(Policy.id.in_(policy_ids)).all()
     return [_policy_to_frontend(p) for p in items]
-
-
-# ── FTS5 全文搜索 ──
-
-@router.get("/search")
-async def search_policies(
-    q: str = Query("", description="搜索关键词"),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-):
-    """全文检索帮扶政策（FTS5 + 关键词高亮）"""
-    from app.services.policy_fts_service import search_policies_fts
-    results = search_policies_fts(db, q, limit=limit, offset=offset)
-    return ok_list(results, len(results), query=q)

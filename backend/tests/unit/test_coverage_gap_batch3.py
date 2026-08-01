@@ -1313,7 +1313,7 @@ class TestPolicyService:
         svc = self._make_service(db)
         policy = self._mock_policy(category="military", level="cmc")
         resp = svc._to_response(policy)
-        assert resp.category_name == "军队政策"
+        assert resp.category_name == "专项政策"
 
     def test_to_response_local(self):
         db = MagicMock()

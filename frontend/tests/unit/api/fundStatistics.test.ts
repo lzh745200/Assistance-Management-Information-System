@@ -36,7 +36,7 @@ describe('api/fundStatistics', () => {
     })
 
     it('FUND_SOURCES 包含 military/government/donation/enterprise/other', () => {
-      expect(FUND_SOURCES.military).toBe('军队')
+      expect(FUND_SOURCES.military).toBe('专项')
       expect(FUND_SOURCES.government).toBe('政府')
       expect(FUND_SOURCES.donation).toBe('捐赠')
       expect(FUND_SOURCES.enterprise).toBe('企业')

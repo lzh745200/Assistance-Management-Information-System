@@ -2,7 +2,7 @@
 
 挂载到 /api/v1/fund-lifecycle 前缀，覆盖七阶段全部端点：
 1. 论证立项  2. 汇总审核  3. 计划下达与资金拨付
-4. 军地对接与资金划转  5. 组织实施与过程监管
+4. 对接与资金划转  5. 组织实施与过程监管
 6. 核查督查与效益评估  7. 常态监管与项目决算
 """
 
@@ -617,7 +617,7 @@ async def allocation_plan(
 
 
 # =====================================================================
-#  3.5 阶段4 - 军地对接与资金划转
+#  3.5 阶段4 - 对接与资金划转
 # =====================================================================
 
 
@@ -863,7 +863,7 @@ async def transfer_ledger(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """军地协调台账"""
+    """协调台账"""
     _get_project_or_403(project_id, current_user, db)
     vouchers = (
         db.query(FundTransferVoucher)

@@ -400,7 +400,7 @@ class MessageTemplateService:
 
         if use_defaults:  # 添加默认值
             defaults = {
-                "system_name": "军民融合帮扶管理系统",
+                "system_name": "帮扶管理系统",
                 "time": datetime.now().strftime("%H:%M:%S"),
                 "date": datetime.now().strftime("%Y-%m-%d"),
                 "datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

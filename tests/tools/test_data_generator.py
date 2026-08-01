@@ -63,7 +63,7 @@ class TestDataGenerator:
         print(f"生成 {count} 个测试组织...")
 
         organizations = []
-        org_types = ["军队单位", "地方政府", "企业", "社会组织"]
+        org_types = ["帮扶单位", "地方政府", "企业", "社会组织"]
 
         for i in range(count):
             org = Organization(

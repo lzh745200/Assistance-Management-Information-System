@@ -25,12 +25,7 @@
         style="width: 140px"
         @change="loadData"
       >
-        <el-option
-          v-for="y in yearOptions"
-          :key="y"
-          :label="`${y} 年`"
-          :value="y"
-        />
+        <el-option v-for="y in yearOptions" :key="y" :label="`${y} 年`" :value="y" />
       </el-select>
       <el-select
         v-model="filterStatus"
@@ -98,12 +93,7 @@
           <el-col :span="12">
             <el-form-item label="年度" prop="year">
               <el-select v-model="form.year" placeholder="选择年度" style="width: 100%">
-                <el-option
-                  v-for="y in yearOptions"
-                  :key="y"
-                  :label="`${y} 年`"
-                  :value="y"
-                />
+                <el-option v-for="y in yearOptions" :key="y" :label="`${y} 年`" :value="y" />
               </el-select>
             </el-form-item>
           </el-col>

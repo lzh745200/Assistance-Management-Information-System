@@ -214,7 +214,7 @@
                     <div class="timeline-content">
                       <div class="timeline-title">
                         <el-tag :type="getStatusType(item.from_status)" size="small">{{
-                          getStatusText(item.from_status) || '新建'
+                          getStatusText(item.from_status)
                         }}</el-tag>
                         <span style="margin: 0 8px">→</span>
                         <el-tag :type="getStatusType(item.to_status)" size="small">{{
@@ -405,7 +405,7 @@
                       clearable
                       style="width: 100%"
                     >
-                      <el-option label="军队" value="military" /><el-option
+                      <el-option label="专项" value="military" /><el-option
                         label="政府"
                         value="government"
                       />
@@ -725,7 +725,7 @@ async function loadAttachments() {
   if (!fundData.id) return
   try {
     const res = await fundApi.listAttachments(fundData.id)
-    attachments.value = res.items
+    attachments.value = res.items || []
   } catch (error) {
     logger.error('加载附件失败', error)
   }
@@ -894,7 +894,7 @@ const getTypeName = (t: string) =>
   '-'
 const getSourceName = (s: string) =>
   ({
-    military: '军队',
+    military: '专项',
     government: '政府',
     donation: '捐赠',
     enterprise: '企业',

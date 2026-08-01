@@ -254,7 +254,7 @@ class PolicyService:
         """获取政策分类和层级配置"""
         return CategoriesResponse(
             military=CategoryConfig(
-                name="军队政策",
+                name="专项政策",
                 levels=[
                     CategoryLevelConfig(value="cmc", label="军委", order=1),
                     CategoryLevelConfig(value="provincial_military", label="省军区", order=2),

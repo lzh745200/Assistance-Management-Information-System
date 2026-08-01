@@ -45,7 +45,7 @@ class FundMock:
             village_id=1,
             school_id=None,
             purpose="测试用途",
-            source="军队拨款",
+            source="专项拨款",
             operator="张三",
             receiver=None,
             usage_description="使用说明",
@@ -519,7 +519,7 @@ class TestCreateFund:
                 "fund_type": "infrastructure", "fund_source": "military",
                 "project_id": 10, "project_name": "基础设施",
                 "village_id": 5, "school_id": 2,
-                "purpose": "基础设施建设", "source": "军队",
+                "purpose": "基础设施建设", "source": "专项",
                 "operator": "王五", "receiver": "赵六",
                 "usage_description": "建设村道", "status": "pending",
                 "applicant": "张三", "remarks": "紧急",
@@ -742,7 +742,7 @@ class TestFundStatisticsMultiDimension:
 
         resp = client.get("/api/v1/funds/statistics/multi-dimension?group_by=source")
         assert resp.status_code == 200
-        assert resp.json()["data"][0]["label"] == "军队投资"
+        assert resp.json()["data"][0]["label"] == "专项投资"
 
     def test_by_status(self, client, mock_db):
         """Group by status."""

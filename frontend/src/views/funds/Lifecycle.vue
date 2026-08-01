@@ -157,8 +157,8 @@
         </div>
       </el-tab-pane>
 
-      <!-- 阶段4 - 军地对接 -->
-      <el-tab-pane label="军地对接" name="phase4">
+      <!-- 阶段4 - 对接 -->
+      <el-tab-pane label="对接" name="phase4">
         <div class="phase-content">
           <el-button
             type="primary"

@@ -1,6 +1,6 @@
 # 帮扶管理信息系统
 
-> 军民融合乡村振兴 — 完全离线的单机版桌面应用 | 多机协同数据同步 | v1.4.2
+> 乡村振兴 — 完全离线的单机版桌面应用 | 多机协同数据同步 | v1.4.2
 
 ![Version](https://img.shields.io/badge/version-1.4.2-blue)
 ![License](https://img.shields.io/badge/license-UNLICENSED-lightgrey)
@@ -180,4 +180,4 @@ make build-kylin                       # 麒麟 V10 ARM64 DEB
 
 MIT License - 详见 [LICENSE](LICENSE)
 
-Copyright © 2025 贵州省军民融合乡村振兴项目组
+Copyright © 2025 贵州省乡村振兴项目组

@@ -304,6 +304,15 @@ class Settings(BaseSettings):
             )
             self.DB_ECHO = False
 
+        # 安全基线：生产环境检查字段加密密钥是否为空（使用默认测试密钥是安全风险）
+        if self.ENVIRONMENT == "production" and not self.ENCRYPTION_KEY:
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "ENCRYPTION_KEY 未配置，字段加密将使用默认测试密钥——"
+                "生产环境存在数据泄露风险，请通过环境变量或 .env 配置 ENCRYPTION_KEY"
+            )
+
         # 动态设置数据目录路径（解决 Windows 安装版权限问题）
         # 首先获取默认数据目录，供后续使用
         data_dir = _get_default_data_dir()

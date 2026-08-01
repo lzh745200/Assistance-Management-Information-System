@@ -1227,7 +1227,7 @@ async function submitVillageData() {
     department: b.department,
     support_unit: b.supportUnit,
     village_name: b.villageName,
-    province: '贵州省',
+    province: detectRegionAttributes(b.province).province || '贵州省',
     city: b.city || undefined,
     county: b.county || undefined,
     township: b.township || undefined,

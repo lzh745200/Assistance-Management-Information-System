@@ -486,7 +486,7 @@ const globalShortcuts: Shortcut[] = [
   {
     key: 'm',
     ctrl: true,
-    handler: () => pushSafe('/map'),
+    handler: () => pushSafe('/data-analysis/map'),
     description: '地图看板',
     group: '导航',
   },

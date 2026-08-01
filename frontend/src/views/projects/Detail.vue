@@ -23,7 +23,7 @@
           <el-tag :type="statusType" size="large">{{ statusText }}</el-tag>
         </div>
         <div class="header-actions">
-          <el-button type="primary" @click="pushSafe(`/projects/edit/${projectId}`)">
+          <el-button type="primary" @click="pushSafe(`/projects/${projectId}/edit`)">
             <el-icon><Edit /></el-icon> 编辑
           </el-button>
           <el-button @click="pushSafe('/projects')">

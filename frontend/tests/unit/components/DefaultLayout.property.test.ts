@@ -30,7 +30,7 @@ vi.mock('@/stores/auth', () => ({
 
 // Mock constants
 vi.mock('@/config/constants', () => ({
-  SYSTEM_NAME: '军队全面推进乡村振兴工作管理系统'
+  SYSTEM_NAME: '全面推进乡村振兴帮扶工作管理系统'
 }))
 
 describe('侧边栏折叠/展开属性测试', () => {

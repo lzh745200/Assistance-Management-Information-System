@@ -6,6 +6,10 @@
 # ── 关键修复：强制 UTF-8 编码，消除 Windows 控制台 GBK 导致的 UnicodeEncodeError ──
 import os as _os
 _os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+# ── 关键修复：无头测试环境强制 matplotlib 使用 Agg 后端 ──
+# 默认后端（如 TkAgg）会在测试期间初始化 tkinter 资源，解释器关闭时
+# 触发 "main thread is not in main loop" 的 ResourceWarning。
+_os.environ.setdefault("MPLBACKEND", "Agg")
 import sys as _sys
 if _sys.stdout and hasattr(_sys.stdout, 'reconfigure'):
     try:

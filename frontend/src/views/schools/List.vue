@@ -360,9 +360,11 @@ const apiStats = ref({
 async function loadApiStats() {
   try {
     const data = await schoolApi.getStatistics()
-    apiStats.value = data
     // 服务端返回的 total_schools/active/completed 是全量准确数据
-    if (data) serverSchoolStats.value = data
+    if (data) {
+      apiStats.value = data
+      serverSchoolStats.value = data
+    }
   } catch (error) {
     logger.error('Failed to load API stats:', error)
     ElMessage.error('统计数据加载失败')

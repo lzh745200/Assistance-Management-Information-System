@@ -46,7 +46,7 @@ describe('api/analytics', () => {
   it('getFilterOptions GET filter-options', async () => {
     mockGet.mockResolvedValueOnce({ departments: [] })
     await getFilterOptions()
-    expect(mockGet).toHaveBeenCalledWith('/analytics/filter-options')
+    expect(mockGet).toHaveBeenCalledWith('/reports/analytics/filter-options')
   })
 
   it('filterVillages POST with default page=1 size=20', async () => {
@@ -60,7 +60,7 @@ describe('api/analytics', () => {
     await filterVillages({ department: 'X' } as any)
     expect(mockApiRequest).toHaveBeenCalledWith({
       method: 'POST',
-      url: '/analytics/filter',
+      url: '/reports/analytics/filter',
       data: { department: 'X' },
       params: { page: 1, page_size: 20 },
     })
@@ -87,7 +87,7 @@ describe('api/analytics', () => {
       targetDimension: 'city',
       filters: {},
     } as any)
-    expect(mockPost).toHaveBeenCalledWith('/analytics/drill-down', {
+    expect(mockPost).toHaveBeenCalledWith('/reports/analytics/drill-down', {
       dimension: 'province',
       value: '北京',
       target_dimension: 'city',
@@ -100,7 +100,7 @@ describe('api/analytics', () => {
     await compareVillages([1, 2], 2026, ['gdp', 'population'])
     expect(mockApiRequest).toHaveBeenCalledWith({
       method: 'POST',
-      url: '/analytics/compare-villages',
+      url: '/reports/analytics/compare-villages',
       data: [1, 2],
       params: { year: 2026, metrics: 'gdp,population' },
     })
@@ -115,7 +115,7 @@ describe('api/analytics', () => {
   it('compareYears GET with years joined', async () => {
     mockGet.mockResolvedValueOnce({ items: [] })
     await compareYears(1, [2024, 2025, 2026], ['gdp'])
-    expect(mockGet).toHaveBeenCalledWith('/analytics/compare-years/1', {
+    expect(mockGet).toHaveBeenCalledWith('/reports/analytics/compare-years/1', {
       years: '2024,2025,2026',
       metrics: 'gdp',
     })
@@ -129,7 +129,7 @@ describe('api/analytics', () => {
       isThreeRegions: true,
       isKeyCounty: false,
     })
-    expect(mockGet).toHaveBeenCalledWith('/analytics/summary', {
+    expect(mockGet).toHaveBeenCalledWith('/reports/analytics/summary', {
       year: 2026,
       department: 'X',
       is_three_regions: true,
@@ -140,7 +140,7 @@ describe('api/analytics', () => {
   it('getSummaryStatistics 无参', async () => {
     mockGet.mockResolvedValueOnce({ total: 0 })
     await getSummaryStatistics()
-    expect(mockGet).toHaveBeenCalledWith('/analytics/summary', {
+    expect(mockGet).toHaveBeenCalledWith('/reports/analytics/summary', {
       year: undefined,
       department: undefined,
       is_three_regions: undefined,

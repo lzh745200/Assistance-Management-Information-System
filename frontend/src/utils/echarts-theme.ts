@@ -1,8 +1,8 @@
 /**
- * ECharts "军队科技风" 主题配置
+ * ECharts "科技风" 主题配置
  *
  * 设计理念：
- * - 军队蓝 (#1e4d8c) + 振兴绿 (#2d6a4f) + 点缀金 (#b8960c) 为品牌色系
+ * - 品牌蓝 (#1e4d8c) + 振兴绿 (#2d6a4f) + 点缀金 (#b8960c) 为品牌色系
  * - 低饱和度配色，去除冗余视觉噪音
  * - 干净克制的坐标轴、网格线、Tooltip
  * - 与 dashboard-theme.scss 中的 CSS 变量保持一致
@@ -24,7 +24,7 @@ import * as echarts from 'echarts/core'
 
 /** 品牌色板 —— 16 色，覆盖饼图/柱图等多系列场景 */
 const COLOR_PALETTE = [
-  '#1e4d8c', // 军队蓝（主）
+  '#1e4d8c', // 品牌蓝（主）
   '#2d6a4f', // 振兴绿
   '#b8960c', // 点缀金
   '#3b82f6', // 亮蓝
@@ -433,7 +433,7 @@ const militaryTechDarkTheme: ThemeConfig = {
 let isThemeRegistered = false
 
 /**
- * 注册 ECharts 军队科技风主题。
+ * 注册 ECharts 科技风主题。
  * 幂等调用——多次调用仅首次生效。
  *
  * 注册后可通过以下方式使用：

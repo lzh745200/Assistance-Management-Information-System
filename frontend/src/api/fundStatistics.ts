@@ -15,7 +15,7 @@ export const FUND_TYPES = {
 } as const
 
 export const FUND_SOURCES = {
-  military: '军队',
+  military: '专项',
   government: '政府',
   donation: '捐赠',
   enterprise: '企业',

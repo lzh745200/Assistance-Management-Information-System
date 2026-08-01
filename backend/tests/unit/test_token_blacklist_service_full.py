@@ -18,7 +18,6 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-import pytest_asyncio
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
@@ -54,7 +53,7 @@ async def _build_async_session():
     return db, engine
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def async_db():
     db, engine = await _build_async_session()
     yield db

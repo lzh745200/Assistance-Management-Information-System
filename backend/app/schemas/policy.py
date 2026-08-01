@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # ==================== 常量定义 ====================
 
 CATEGORY_NAMES: Dict[str, str] = {
-    "military": "军队政策",
+    "military": "专项政策",
     "local": "地方政策",
     "national": "国家政策",
     "regulation": "法规条例",

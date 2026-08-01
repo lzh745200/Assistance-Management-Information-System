@@ -100,7 +100,7 @@ add_text_box(slide, Inches(1.5), Inches(1.5), Inches(10), Inches(1.2),
 add_text_box(slide, Inches(1.5), Inches(2.8), Inches(10), Inches(0.8),
              "Assistance Management Information System", font_size=24, color=ACCENT_GOLD, alignment=PP_ALIGN.CENTER)
 add_text_box(slide, Inches(1.5), Inches(3.8), Inches(10), Inches(0.6),
-             "军民融合 · 乡村振兴 · 数字化管理", font_size=20, color=SUBTITLE_GRAY, alignment=PP_ALIGN.CENTER)
+             "乡村振兴 · 数字化管理", font_size=20, color=SUBTITLE_GRAY, alignment=PP_ALIGN.CENTER)
 
 add_shape_bg(slide, Inches(4.5), Inches(4.8), Inches(4.333), Inches(0.03), ACCENT_GOLD)
 
@@ -118,7 +118,7 @@ add_text_box(slide, Inches(0.8), Inches(0.4), Inches(8), Inches(0.7), "系统概
 add_shape_bg(slide, Inches(0.8), Inches(1.1), Inches(2), Inches(0.05), ACCENT_GOLD)
 
 add_text_box(slide, Inches(0.8), Inches(1.5), Inches(11.5), Inches(1.0),
-             "本系统是面向军民融合帮扶工作的综合管理平台，实现对帮扶村、帮扶项目、资金管理、学校共建等核心业务的全流程数字化管理。"
+             "本系统是面向帮扶工作的综合管理平台，实现对帮扶村、帮扶项目、资金管理、学校共建等核心业务的全流程数字化管理。"
              "系统采用单机离线部署模式，支持数据加密导入导出，满足涉密环境下的使用需求。",
              font_size=17, color=WHITE)
 

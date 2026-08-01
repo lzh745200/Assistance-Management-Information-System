@@ -664,7 +664,7 @@ class ReportSubscription(Base, TimestampMixin):
     send_time = Column(String(10), nullable=True, comment="发送时间")
     email = Column(String(200), nullable=True, comment="接收邮箱（单机版保留兼容，未来联网可恢复）")
     output_dir = Column(String(500), nullable=True, comment="本地输出目录（单机版使用）")
-    output_format = Column(String(20), default="pd", comment="输出格式: pdf/excel")
+    output_format = Column(String(20), default="pdf", comment="输出格式: pdf/excel")
     is_active = Column(Boolean, default=True, comment="是否启用")
 
 

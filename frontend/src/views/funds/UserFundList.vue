@@ -207,7 +207,7 @@
                 clearable
                 style="width: 100%"
               >
-                <el-option label="军队投资" value="military" />
+                <el-option label="专项投资" value="military" />
                 <el-option label="政府拨款" value="government" />
                 <el-option label="社会捐赠" value="donation" />
                 <el-option label="企业投资" value="enterprise" />

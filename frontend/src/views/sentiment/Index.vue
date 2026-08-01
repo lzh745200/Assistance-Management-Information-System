@@ -304,7 +304,7 @@ async function handleCollect() {
   collecting.value = true
   try {
     await collectNews({
-      keywords: ['乡村振兴', '帮扶', '军队扶贫', '助学兴教'],
+      keywords: ['乡村振兴', '帮扶', '帮扶', '助学兴教'],
     })
     ElMessage.success('新闻采集已触发')
     setTimeout(() => {

@@ -186,7 +186,7 @@ class TestPolicyServiceQueries:
     def test_to_response_military(self):
         mock_policy = MagicMock()
         mock_policy.id = 1
-        mock_policy.title = "军队政策"
+        mock_policy.title = "专项政策"
         mock_policy.category = "military"
         mock_policy.organization_level = "central"
         mock_policy.level = "central"
@@ -214,7 +214,7 @@ class TestPolicyServiceQueries:
         mock_policy.updated_by = 1
 
         result = self.service._to_response(mock_policy)
-        assert result.category_name == "军队政策"
+        assert result.category_name == "专项政策"
         assert result.level_name == "中央军委"
 
     def test_to_response_local(self):

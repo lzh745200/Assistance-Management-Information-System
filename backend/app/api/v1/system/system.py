@@ -290,7 +290,7 @@ async def get_version_info():
             "name": "帮扶管理信息系统",
             "codename": "军乡振兴",
             "release_date": "2026-04-25",
-            "description": "面向军队单位帮扶乡村工作的综合管理平台",
+            "description": "面向帮扶乡村工作的综合管理平台",
             "copyright": "2025-2026",
             "license": "内部使用",
         },

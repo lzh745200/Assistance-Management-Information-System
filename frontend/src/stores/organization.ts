@@ -13,8 +13,10 @@ export const useOrganizationStore = defineStore('organization', () => {
   async function fetchOrganizations(params?: any) {
     loading.value = true
     try {
-      const res = await get<ApiResponse<any[]>>('/organizations', params)
-      if (res.code === 200 && res.data) orgs.value = res.data
+      const res = await get<ApiResponse<any>>('/organizations', params)
+      if (res.code === 200 && res.data) {
+        orgs.value = Array.isArray(res.data) ? (res.data as any[]) : (res.items as any[]) || []
+      }
     } catch {
       /* silent */
     } finally {

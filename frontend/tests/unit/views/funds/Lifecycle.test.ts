@@ -57,7 +57,7 @@ const phasesFull = [
   { phase: 1, status: 'completed', completed_at: '2024-01-15T10:00:00', phase_label: '论证立项' },
   { phase: 2, status: 'in_progress', phase_label: '汇总审核' },
   { phase: 3, status: 'skipped', phase_label: '计划下达' },
-  { phase: 4, status: 'not_started', phase_label: '军地对接' },
+  { phase: 4, status: 'not_started', phase_label: '对接' },
   { phase: 5, status: 'completed', completed_at: null, phase_label: '实施监管' },
 ]
 

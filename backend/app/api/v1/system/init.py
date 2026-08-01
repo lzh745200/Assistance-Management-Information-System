@@ -234,7 +234,7 @@ async def get_init_checklist():
         "data": {
             "checklist": [
                 {"item": "确定系统部署单位全称和简称", "required": True},
-                {"item": "准备单位编码（如有军队单位编码体系）", "required": False},
+                {"item": "准备单位编码（如有帮扶单位编码体系）", "required": False},
                 {"item": "确定超级管理员账号用户名", "required": True},
                 {"item": "设置安全的超级管理员密码（至少12位）", "required": True},
                 {"item": "准备超级管理员联系邮箱", "required": False},

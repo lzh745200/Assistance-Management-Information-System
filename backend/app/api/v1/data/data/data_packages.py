@@ -938,3 +938,231 @@ async def confirm_import_with_conflict_resolution(
             error_message=str(e),
         )
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+# ==================== 数据包版本管理 ====================
+
+
+class PackageVersionCreate(BaseModel):
+    """创建数据包版本请求体"""
+
+    version: str
+    description: Optional[str] = None
+
+
+def _package_version_changes(package) -> dict:
+    """根据数据包信息生成版本变更摘要（各数据类型空变更结构）"""
+    data_types = package.data_types or ["villages", "projects", "funds", "schools"]
+    return {dt: {"added": [], "modified": [], "deleted": []} for dt in data_types}
+
+
+def _package_version_to_dict(version) -> dict:
+    """将 PackageVersion 模型转为前端兼容的字典"""
+    import json as _json
+
+    changes = {}
+    if version.changes:
+        try:
+            changes = _json.loads(version.changes)
+        except (ValueError, TypeError):
+            changes = {}
+    return {
+        "id": version.id,
+        "version": version.version,
+        "description": version.description or "",
+        "changes": changes,
+        "created_at": version.created_at.isoformat() if version.created_at else None,
+    }
+
+
+def _get_package_or_404(db: Session, package_id: int):
+    """获取数据包，不存在则 404"""
+    from app.models.data_package import DataPackage
+
+    package = db.query(DataPackage).filter(DataPackage.id == package_id).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="数据包不存在")
+    return package
+
+
+@router.get("/{package_id}/versions", summary="获取数据包版本列表")
+async def list_package_versions(
+    package_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取指定数据包的所有版本"""
+    _get_package_or_404(db, package_id)
+
+    from app.models.package_version import PackageVersion
+
+    versions = (
+        db.query(PackageVersion)
+        .filter(PackageVersion.package_id == package_id)
+        .order_by(PackageVersion.created_at.desc(), PackageVersion.id.desc())
+        .all()
+    )
+    return {
+        "success": True,
+        "data": {
+            "versions": [_package_version_to_dict(v) for v in versions],
+            "total": len(versions),
+        },
+    }
+
+
+@router.post("/{package_id}/versions", summary="创建数据包版本")
+async def create_package_version(
+    package_id: int,
+    body: PackageVersionCreate,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """为数据包创建新版本记录"""
+    package = _get_package_or_404(db, package_id)
+
+    version_text = (body.version or "").strip()
+    if not version_text:
+        raise HTTPException(status_code=422, detail="版本号不能为空")
+
+    from app.models.package_version import PackageVersion
+
+    existing = (
+        db.query(PackageVersion)
+        .filter(
+            PackageVersion.package_id == package_id,
+            PackageVersion.version == version_text,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail=f"版本号 {version_text} 已存在")
+
+    import json as _json
+
+    version = PackageVersion(
+        package_id=package_id,
+        version=version_text,
+        description=body.description,
+        changes=_json.dumps(_package_version_changes(package), ensure_ascii=False),
+        created_by=current_user.id,
+    )
+    db.add(version)
+    safe_commit(db)
+    db.refresh(version)
+    return {"success": True, "data": _package_version_to_dict(version)}
+
+
+@router.get("/{package_id}/versions/compare", summary="对比数据包两个版本")
+async def compare_package_versions(
+    package_id: int,
+    version1: str = Query(..., description="第一个版本号"),
+    version2: str = Query(..., description="第二个版本号"),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """对比数据包两个版本的变更差异"""
+    from app.models.package_version import PackageVersion
+
+    v1 = (
+        db.query(PackageVersion)
+        .filter(PackageVersion.package_id == package_id, PackageVersion.version == version1)
+        .first()
+    )
+    v2 = (
+        db.query(PackageVersion)
+        .filter(PackageVersion.package_id == package_id, PackageVersion.version == version2)
+        .first()
+    )
+    if not v1:
+        raise HTTPException(status_code=404, detail=f"版本 {version1} 不存在")
+    if not v2:
+        raise HTTPException(status_code=404, detail=f"版本 {version2} 不存在")
+
+    def _load_changes(version) -> dict:
+        import json as _json
+
+        if not version.changes:
+            return {}
+        try:
+            return _json.loads(version.changes)
+        except (ValueError, TypeError):
+            return {}
+
+    c1 = _load_changes(v1)
+    c2 = _load_changes(v2)
+
+    added_in_v2: dict = {}
+    removed_in_v2: dict = {}
+    modified: dict = {}
+    for dtype in sorted(set(list(c1.keys()) + list(c2.keys()))):
+        a = c1.get(dtype, {}) or {}
+        b = c2.get(dtype, {}) or {}
+        a_added = set(a.get("added", []) or [])
+        b_added = set(b.get("added", []) or [])
+        added_in_v2[dtype] = sorted(b_added - a_added, key=str)
+        removed_in_v2[dtype] = sorted(a_added - b_added, key=str)
+        modified[dtype] = sorted(set(b.get("modified", []) or []), key=str)
+
+    return {
+        "success": True,
+        "data": {
+            "version1": {"version": v1.version},
+            "version2": {"version": v2.version},
+            "comparison": {
+                "differences": {
+                    "added_in_v2": added_in_v2,
+                    "modified": modified,
+                    "removed_in_v2": removed_in_v2,
+                }
+            },
+        },
+    }
+
+
+@router.get("/{package_id}/versions/{version_id}", summary="获取数据包版本详情")
+async def get_package_version(
+    package_id: int,
+    version_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取指定版本的详细信息"""
+    from app.models.package_version import PackageVersion
+
+    version = (
+        db.query(PackageVersion)
+        .filter(
+            PackageVersion.id == version_id,
+            PackageVersion.package_id == package_id,
+        )
+        .first()
+    )
+    if not version:
+        raise HTTPException(status_code=404, detail="版本不存在")
+    return {"success": True, "data": _package_version_to_dict(version)}
+
+
+@router.delete("/{package_id}/versions/{version_id}", summary="删除数据包版本")
+async def delete_package_version(
+    package_id: int,
+    version_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """删除指定版本记录"""
+    from app.models.package_version import PackageVersion
+
+    version = (
+        db.query(PackageVersion)
+        .filter(
+            PackageVersion.id == version_id,
+            PackageVersion.package_id == package_id,
+        )
+        .first()
+    )
+    if not version:
+        raise HTTPException(status_code=404, detail="版本不存在")
+    db.delete(version)
+    safe_commit(db)
+    return {"success": True, "message": "删除成功"}

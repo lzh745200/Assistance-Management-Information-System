@@ -205,7 +205,7 @@ export const fundLifecycleApi = {
     return res.data
   },
 
-  // ========== 阶段4 - 军地对接与资金划转 ==========
+  // ========== 阶段4 - 对接与资金划转 ==========
   async listTransferVouchers(params?: Record<string, any>) {
     const res = await get(`${BASE}/transfer-vouchers`, params)
     return res.data || res

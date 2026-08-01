@@ -115,7 +115,7 @@ const sections: HelpSection[] = [
     title: '系统概述',
     icon: 'HomeFilled',
     content: `
-      <p>帮扶管理信息系统是一套面向军队帮扶工作的综合管理平台，支持离线单机运行。</p>
+      <p>帮扶管理信息系统是一套面向帮扶工作的综合管理平台，支持离线单机运行。</p>
       <p><strong>主要功能模块：</strong></p>
       <ul>
         <li>帮扶村管理 — 管理帮扶村基本信息、年度数据</li>

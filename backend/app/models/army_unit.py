@@ -4,7 +4,7 @@ from .base import Base, TimestampMixin
 
 
 class ArmyUnit(Base, TimestampMixin):
-    """军队单位模型"""
+    """帮扶单位模型"""
 
     __tablename__ = "army_units"
 

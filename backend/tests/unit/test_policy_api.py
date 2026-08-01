@@ -115,7 +115,7 @@ class TestUtilityFunctions:
         sample_policy.category = "military"
         sample_policy.level = "central_military"
         d = _policy_to_frontend(sample_policy)
-        assert d["category_name"] == "军队政策"
+        assert d["category_name"] == "专项政策"
         assert d["level_name"] == "中央军委"
 
     def test_policy_to_frontend_minimal(self):
@@ -784,9 +784,9 @@ class TestPolicyAPI:
     def test_search_policies(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
         resp = client.get("/api/v1/policies/search?q=test")
-        # /search is shadowed by /{policy_id} in source code (route ordering)
-        # so it returns 422: 'search' cannot be parsed as int for policy_id
-        assert resp.status_code == 422
+        # /search 路由已前移至 /{policy_id} 之前（修复被动态路由遮蔽的 BUG），
+        # 现在能正常命中全文搜索接口并返回 200
+        assert resp.status_code == 200
 
     def test_batch_delete_policies(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)

@@ -131,7 +131,7 @@ _BUSINESS_MODULES = [
     'user_permissions', 'machine_code', 'effectiveness', 'sentiment',
     'messages_extended', 'encryption', 'search', 'menus', 'permission_package',
     'org_module_policy', 'subordinate_registry', 'control_package',
-    'subordinate_reports',
+    'subordinate_reports', 'files',
 ]
 
 _loaded_count = 0

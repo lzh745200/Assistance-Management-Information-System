@@ -112,9 +112,9 @@ export const exportPoliciesWPS = (params?: any) =>
   })
 // ── Display helpers (used by views for status/label formatting) ──
 const CATEGORY_LABELS: Record<string, string> = {
-  military: '军队政策',
+  military: '专项政策',
   local: '地方政策',
-  joint: '军民融合',
+  joint: '融合',
   other: '其他',
 }
 const LEVEL_LABELS: Record<string, string> = {

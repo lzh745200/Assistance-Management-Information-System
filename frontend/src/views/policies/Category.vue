@@ -1,12 +1,12 @@
 <template>
   <div class="policy-category">
-    <!-- 军队政策分类 -->
+    <!-- 专项政策分类 -->
     <el-card v-loading="loading" class="category-card">
       <template #header>
         <div class="card-header">
           <div class="header-left">
             <el-icon class="category-icon military"><Aim /></el-icon>
-            <span class="title">军队政策</span>
+            <span class="title">专项政策</span>
             <el-tag type="danger" size="small">{{ statistics.military.total }} 条</el-tag>
           </div>
         </div>
@@ -76,7 +76,7 @@
         <el-col :xs="24" :sm="8">
           <el-button type="success" size="large" class="action-btn" @click="handleViewMilitary">
             <el-icon><Aim /></el-icon>
-            查看军队政策
+            查看专项政策
           </el-button>
         </el-col>
         <el-col :xs="24" :sm="8">
@@ -150,7 +150,7 @@ const handleViewAll = () => {
   pushSafe('/policies')
 }
 
-// 查看军队政策
+// 查看专项政策
 const handleViewMilitary = () => {
   pushSafe({
     path: '/policies',

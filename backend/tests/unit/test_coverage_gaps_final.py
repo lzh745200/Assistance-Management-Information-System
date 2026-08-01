@@ -560,16 +560,36 @@ class TestAnalyticsCrossOrg:
         from app.api.v1.data.data.analytics import get_cross_org_comparison
         db = _mock_db()
         user = _make_user(role="admin")
-        mock_q = MagicMock()
-        mock_q.filter.return_value.all.return_value = [(1, "Org1")]
-        mock_q.filter.return_value.scalar.return_value = 5
-        db.query.return_value = mock_q
-        # AnalyticsResponse.data expects dict; the endpoint passes a list which
-        # triggers a validation error wrapped by safe_api_call → HTTPException 500.
-        # The important thing is that lines 277-327 are exercised.
-        with pytest.raises(HTTPException) as exc_info:
-            await get_cross_org_comparison(db=db, current_user=user)
-        assert exc_info.value.status_code == 500
+        # 模拟 4 次 GROUP BY 查询（替代旧 N+1 逐条查询）
+        call_count = [0]
+
+        def query_side_effect(*args, **kwargs):
+            call_count[0] += 1
+            q = MagicMock()
+            if call_count[0] == 1:
+                # 组织列表
+                q.filter.return_value.all.return_value = [(1, "Org1")]
+            elif call_count[0] == 2:
+                # 帮扶村 GROUP BY 计数
+                q.filter.return_value.group_by.return_value.all.return_value = [(1, 5)]
+            elif call_count[0] == 3:
+                # 项目 GROUP BY（总数 + 完成数）
+                q.filter.return_value.group_by.return_value.all.return_value = [(1, 3, 1)]
+            elif call_count[0] == 4:
+                # 资金 GROUP BY 汇总
+                q.filter.return_value.group_by.return_value.all.return_value = [(1, 10000.0)]
+            return q
+
+        db.query.side_effect = query_side_effect
+        result = await get_cross_org_comparison(db=db, current_user=user)
+        assert result.success is True
+        assert result.data["total"] == 1
+        item = result.data["items"][0]
+        assert item["organization_name"] == "Org1"
+        assert item["villages"] == 5
+        assert item["projects_total"] == 3
+        assert item["projects_completed"] == 1
+        assert item["funds_total"] == 10000.0
 
     async def test_cross_org_comparison_forbidden(self):
         from app.api.v1.data.data.analytics import get_cross_org_comparison

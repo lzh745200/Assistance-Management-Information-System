@@ -146,6 +146,13 @@ def init_default_roles(db: SessionLocal) -> None:
         raise
 
 
+def _mask_password(pwd: str) -> str:
+    """口令脱敏：长度 ≤4 全星号，否则仅展示首尾各 2 位。"""
+    if len(pwd) <= 4:
+        return "*" * len(pwd)
+    return f"{pwd[:2]}{'*' * (len(pwd) - 4)}{pwd[-2:]}"
+
+
 def init_default_users(db: SessionLocal) -> None:
     """
     初始化默认用户
@@ -234,15 +241,10 @@ def init_default_users(db: SessionLocal) -> None:
         logger.info("⚠️  安全提醒：首次登录后立即修改初始口令")
         logger.info("🔐 初始口令已随机生成，仅在控制台一次性展示脱敏提示，不写入日志")
         # 安全提示：仅展示口令前2位和后2位，中间用星号替代（防止旁观者/日志泄露完整口令）
-
-        def _mask(pwd: str) -> str:
-            if len(pwd) <= 4:
-                return "*" * len(pwd)
-            return f"{pwd[:2]}{'*' * (len(pwd) - 4)}{pwd[-2:]}"
         print("=" * 60)
         print("初始登录口令（脱敏展示，完整口令请查看初始化日志或联系管理员）:")
-        print(f"  admin     : {_mask(admin_password)}")
-        print(f"  officer01 : {_mask(officer_password)}")
+        print(f"  admin     : {_mask_password(admin_password)}")
+        print(f"  officer01 : {_mask_password(officer_password)}")
         print("⚠️  首次登录后系统将强制修改口令。")
         print("⚠️  如需获取完整初始口令，请查看 app.log 中的初始化记录。")
         print("=" * 60)

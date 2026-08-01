@@ -19,7 +19,7 @@
             style="width: 140px"
             @change="handleCategoryChange"
           >
-            <el-option label="军队政策" value="military" />
+            <el-option label="专项政策" value="military" />
             <el-option label="地方政策" value="local" />
           </el-select>
         </el-form-item>

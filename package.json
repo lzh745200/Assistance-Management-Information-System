@@ -112,10 +112,10 @@
       "category": "Office",
       "maintainer": "开发团队 <dev@bumofu.com>",
       "synopsis": "帮扶管理系统",
-      "description": "帮扶管理系统 - 贵州省版 军民融合乡村振兴",
+      "description": "帮扶管理系统 - 贵州省版 乡村振兴",
       "desktop": {
         "Name": "帮扶管理系统",
-        "Comment": "军民融合乡村振兴综合管理平台",
+        "Comment": "乡村振兴综合管理平台",
         "Categories": [
           "Office",
           "Utility"

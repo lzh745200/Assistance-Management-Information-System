@@ -348,7 +348,7 @@ class TestPrepareVariables:
     def test_with_defaults(self, svc):
         result = svc._prepare_variables({"username": "Alice"}, use_defaults=True)
         assert result["username"] == "Alice"
-        assert result["system_name"] == "军民融合帮扶管理系统"
+        assert result["system_name"] == "帮扶管理系统"
         assert "time" in result
         assert "date" in result
         assert "datetime" in result

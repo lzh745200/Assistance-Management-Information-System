@@ -81,16 +81,16 @@ class TestBatchExportEndpointErrors:
     @pytest.mark.asyncio
     async def test_validation_error_reraised(self):
         req = BatchExportRequest(table_name="villages", ids=[1], format="xlsx")
-        with patch.object(mod, "batch_service") as svc:
-            svc.batch_export = AsyncMock(side_effect=ValidationError("bad data"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            MockSvc.return_value.batch_export = AsyncMock(side_effect=ValidationError("bad data"))
             with pytest.raises(ValidationError):
                 await mod.batch_export(req, current_user=_admin_user())
 
     @pytest.mark.asyncio
     async def test_database_error_reraised(self):
         req = BatchExportRequest(table_name="villages", ids=[1], format="xlsx")
-        with patch.object(mod, "batch_service") as svc:
-            svc.batch_export = AsyncMock(side_effect=DatabaseError("db error"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            MockSvc.return_value.batch_export = AsyncMock(side_effect=DatabaseError("db error"))
             with pytest.raises(DatabaseError):
                 await mod.batch_export(req, current_user=_admin_user())
 
@@ -98,8 +98,8 @@ class TestBatchExportEndpointErrors:
 class TestValidateBatchEndpointErrors:
     @pytest.mark.asyncio
     async def test_validation_error_reraised(self):
-        with patch.object(mod, "batch_service") as svc:
-            svc.validate_batch = AsyncMock(side_effect=ValidationError("bad data"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            MockSvc.return_value.validate_batch = AsyncMock(side_effect=ValidationError("bad data"))
             with pytest.raises(ValidationError):
                 await mod.validate_batch(
                     table_name="villages", ids=[1], current_user=_admin_user()
@@ -107,8 +107,8 @@ class TestValidateBatchEndpointErrors:
 
     @pytest.mark.asyncio
     async def test_database_error_reraised(self):
-        with patch.object(mod, "batch_service") as svc:
-            svc.validate_batch = AsyncMock(side_effect=DatabaseError("db error"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            MockSvc.return_value.validate_batch = AsyncMock(side_effect=DatabaseError("db error"))
             with pytest.raises(DatabaseError):
                 await mod.validate_batch(
                     table_name="villages", ids=[1], current_user=_admin_user()

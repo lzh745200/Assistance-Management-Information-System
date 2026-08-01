@@ -52,8 +52,9 @@ class TestBatchUpdate:
         assert resp.status_code == 422
 
     def test_success(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_update = AsyncMock(return_value={"success": True, "updated": 1})
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_update = AsyncMock(return_value={"success": True, "updated": 1})
             resp = client_with_mocked_auth.post(
                 f"{BASE}/update",
                 json={"table_name": "villages", "ids": [1], "updates": {"name": "new_name"}},
@@ -64,8 +65,9 @@ class TestBatchUpdate:
 
     def test_validation_error_raised(self, client_with_mocked_auth):
         from app.core.exceptions import ValidationError
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_update = AsyncMock(side_effect=ValidationError("bad data"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_update = AsyncMock(side_effect=ValidationError("bad data"))
             resp = client_with_mocked_auth.post(
                 f"{BASE}/update",
                 json={"table_name": "villages", "ids": [1], "updates": {"name": "x"}},
@@ -74,8 +76,9 @@ class TestBatchUpdate:
 
     def test_database_error_raised(self, client_with_mocked_auth):
         from app.core.exceptions import DatabaseError
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_update = AsyncMock(side_effect=DatabaseError("db error"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_update = AsyncMock(side_effect=DatabaseError("db error"))
             resp = client_with_mocked_auth.post(
                 f"{BASE}/update",
                 json={"table_name": "villages", "ids": [1], "updates": {"name": "x"}},
@@ -83,8 +86,9 @@ class TestBatchUpdate:
             assert resp.status_code >= 400
 
     def test_unexpected_error_fallback(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_update = AsyncMock(side_effect=RuntimeError("unexpected"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_update = AsyncMock(side_effect=RuntimeError("unexpected"))
             resp = client_with_mocked_auth.post(
                 f"{BASE}/update",
                 json={"table_name": "villages", "ids": [1], "updates": {"name": "x"}},
@@ -103,8 +107,9 @@ class TestBatchDelete:
         assert resp.status_code == 422
 
     def test_success_soft_delete(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_delete = AsyncMock(return_value={"success": True, "deleted": 2})
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_delete = AsyncMock(return_value={"success": True, "deleted": 2})
             resp = client_with_mocked_auth.post(
                 f"{BASE}/delete",
                 json={"table_name": "villages", "ids": [1, 2], "soft_delete": True},
@@ -112,8 +117,9 @@ class TestBatchDelete:
             assert resp.status_code == 200
 
     def test_success_hard_delete(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_delete = AsyncMock(return_value={"success": True, "deleted": 1})
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_delete = AsyncMock(return_value={"success": True, "deleted": 1})
             resp = client_with_mocked_auth.post(
                 f"{BASE}/delete",
                 json={"table_name": "villages", "ids": [1], "soft_delete": False},
@@ -122,8 +128,9 @@ class TestBatchDelete:
 
     def test_validation_error(self, client_with_mocked_auth):
         from app.core.exceptions import ValidationError
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_delete = AsyncMock(side_effect=ValidationError("bad"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_delete = AsyncMock(side_effect=ValidationError("bad"))
             resp = client_with_mocked_auth.post(
                 f"{BASE}/delete",
                 json={"table_name": "villages", "ids": [1]},
@@ -132,8 +139,9 @@ class TestBatchDelete:
 
     def test_database_error(self, client_with_mocked_auth):
         from app.core.exceptions import DatabaseError
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_delete = AsyncMock(side_effect=DatabaseError("db err"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_delete = AsyncMock(side_effect=DatabaseError("db err"))
             resp = client_with_mocked_auth.post(
                 f"{BASE}/delete",
                 json={"table_name": "villages", "ids": [1]},
@@ -141,8 +149,9 @@ class TestBatchDelete:
             assert resp.status_code >= 400
 
     def test_unexpected_error(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_delete = AsyncMock(side_effect=RuntimeError("boom"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_delete = AsyncMock(side_effect=RuntimeError("boom"))
             resp = client_with_mocked_auth.post(
                 f"{BASE}/delete",
                 json={"table_name": "villages", "ids": [1]},
@@ -168,8 +177,9 @@ class TestBatchExport:
         assert resp.status_code == 422
 
     def test_success_xlsx(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_export = AsyncMock(return_value={"success": True, "file": "data.xlsx"})
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_export = AsyncMock(return_value={"success": True, "file": "data.xlsx"})
             resp = client_with_mocked_auth.post(
                 f"{BASE}/export",
                 json={"table_name": "villages", "ids": [1, 2], "format": "xlsx"},
@@ -177,8 +187,9 @@ class TestBatchExport:
             assert resp.status_code == 200
 
     def test_success_csv(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_export = AsyncMock(return_value={"success": True, "file": "data.csv"})
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_export = AsyncMock(return_value={"success": True, "file": "data.csv"})
             resp = client_with_mocked_auth.post(
                 f"{BASE}/export",
                 json={"table_name": "villages", "ids": [1], "format": "csv"},
@@ -186,8 +197,9 @@ class TestBatchExport:
             assert resp.status_code == 200
 
     def test_success_json(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_export = AsyncMock(return_value={"success": True, "file": "data.json"})
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_export = AsyncMock(return_value={"success": True, "file": "data.json"})
             resp = client_with_mocked_auth.post(
                 f"{BASE}/export",
                 json={"table_name": "villages", "ids": [1], "format": "json"},
@@ -195,8 +207,9 @@ class TestBatchExport:
             assert resp.status_code == 200
 
     def test_unexpected_error(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.batch_export = AsyncMock(side_effect=RuntimeError("fail"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.batch_export = AsyncMock(side_effect=RuntimeError("fail"))
             resp = client_with_mocked_auth.post(
                 f"{BASE}/export",
                 json={"table_name": "villages", "ids": [1], "format": "xlsx"},
@@ -208,16 +221,18 @@ class TestBatchExport:
 
 class TestValidateBatch:
     def test_success(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.validate_batch = AsyncMock(return_value={"success": True, "valid": True})
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.validate_batch = AsyncMock(return_value={"success": True, "valid": True})
             resp = client_with_mocked_auth.post(
                 f"{BASE}/validate?table_name=villages&ids=1&ids=2",
             )
             assert resp.status_code == 200
 
     def test_unexpected_error(self, client_with_mocked_auth):
-        with patch("app.api.v1.batch_operations.batch_service") as mock_svc:
-            mock_svc.validate_batch = AsyncMock(side_effect=RuntimeError("fail"))
+        with patch("app.api.v1.batch_operations.BatchService") as MockSvc:
+            mock_instance = MockSvc.return_value
+            mock_instance.validate_batch = AsyncMock(side_effect=RuntimeError("fail"))
             resp = client_with_mocked_auth.post(
                 f"{BASE}/validate?table_name=villages&ids=1",
             )

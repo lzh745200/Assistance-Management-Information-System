@@ -36,7 +36,7 @@ async def import_policies_from_excel(
             "省级": "provincial",
             "市级": "municipal",
             "县级": "county",
-            "军队": "military",
+            "专项": "military",
             "中央军委": "central_military",
             "战区": "theater",
             "军": "army",

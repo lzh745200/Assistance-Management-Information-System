@@ -57,10 +57,10 @@ class TestAllSchemasImport:
         assert success_rate >= 0.9, f"Only {success_rate:.1%} modules imported. Failed: {failed[:5]}"
 
 class TestArmyUnitSchemas:
-    """测试军队单位Schemas"""
+    """测试帮扶单位Schemas"""
 
     def test_army_unit_schema_import(self):
-        """测试军队单位schema导入"""
+        """测试帮扶单位schema导入"""
         from app.schemas.army_unit import ArmyUnitCreate, ArmyUnitUpdate, ArmyUnitResponse
         assert ArmyUnitCreate is not None
         assert ArmyUnitUpdate is not None

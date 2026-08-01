@@ -177,7 +177,7 @@ export interface Project {
   updatedAt?: string
 }
 
-// 军队人员实体
+// 帮扶人员实体
 export interface ArmyPersonnel {
   id: string
   name: string

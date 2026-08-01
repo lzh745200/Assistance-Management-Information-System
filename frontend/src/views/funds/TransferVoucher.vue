@@ -1,7 +1,7 @@
 <template>
   <div class="voucher-container">
     <el-page-header title="返回" @back="pushSafe('/funds')">
-      <template #content><span class="page-title">军地资金划转凭证</span></template>
+      <template #content><span class="page-title">资金划转凭证</span></template>
     </el-page-header>
 
     <el-card class="mt-4" shadow="never">

@@ -64,7 +64,7 @@ class TestPolicyCRUD:
 
     def test_list_policies_filter_category(self, client, admin_headers):
         client.post("/api/v1/policies", headers=admin_headers, json={
-            "title": "军队分类政策",
+            "title": "专项分类政策",
             "category": "military",
         })
         resp = client.get("/api/v1/policies", headers=admin_headers, params={

@@ -236,19 +236,24 @@ class TestBatchUpdate:
         svc = BatchService(db=None)
         result = await svc.batch_update("projects", [1, 2],
                                         {"name": "x"})
-        assert result == {"success": True, "success_count": 0}
+        assert result == {"success": True, "success_count": 0, "skipped": 0}
 
     async def test_with_db_get_inst_found_attr_exists(self):
         from app.services.batch_service import BatchService
         inst = _make_instance(name="old", status="pending")
         db = Mock()
-        db.get.return_value = inst
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 1
+        mock_f.all.return_value = [inst]
         svc = BatchService(db)
         result = await svc.batch_update(
             "projects", [1],
             {"name": "new", "status": "active"}
         )
-        assert result == {"success": True, "success_count": 1}
+        assert result == {"success": True, "success_count": 1, "skipped": 0}
         assert inst.name == "new"
         assert inst.status == "active"
         db.commit.assert_called_once()
@@ -256,40 +261,53 @@ class TestBatchUpdate:
     async def test_with_db_get_inst_found_attr_missing(self):
         """hasattr(inst, k) is False for some update keys → skip."""
         from app.services.batch_service import BatchService
-        # Only has 'name', not 'status'
         inst = _make_instance(name="old")
         db = Mock()
-        db.get.return_value = inst
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 1
+        mock_f.all.return_value = [inst]
         svc = BatchService(db)
         result = await svc.batch_update(
             "projects", [1],
             {"name": "new", "nonexistent": "val"}
         )
-        assert result == {"success": True, "success_count": 1}
+        assert result == {"success": True, "success_count": 1, "skipped": 0}
         assert inst.name == "new"
-        # nonexistent attribute was skipped, no error
         assert not hasattr(inst, "nonexistent")
 
     async def test_with_db_get_inst_not_found(self):
         """Instance not in DB → skip."""
         from app.services.batch_service import BatchService
         db = Mock()
-        db.get.return_value = None
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 0
+        mock_f.all.return_value = []
         svc = BatchService(db)
         result = await svc.batch_update("projects", [1, 2],
                                         {"name": "x"})
-        assert result == {"success": True, "success_count": 0}
+        assert result == {"success": True, "success_count": 0, "skipped": 0}
 
     async def test_with_db_query_path(self):
-        """hasattr(db, 'get') is False → uses db.query path."""
+        """db.query path: uses query().filter().all() for batch fetch."""
         from app.services.batch_service import BatchService
         inst = _make_instance(name="old")
-        db = Mock(spec=["query", "commit"])
-        db.query.return_value.get.return_value = inst
+        db = Mock()
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 1
+        mock_f.all.return_value = [inst]
         svc = BatchService(db)
         result = await svc.batch_update("projects", [1],
                                         {"name": "new"})
-        assert result == {"success": True, "success_count": 1}
+        assert result == {"success": True, "success_count": 1, "skipped": 0}
         assert inst.name == "new"
         db.query.assert_called_once()
 
@@ -308,18 +326,23 @@ class TestBatchDelete:
         from app.services.batch_service import BatchService
         svc = BatchService(db=None)
         result = await svc.batch_delete("projects", [1, 2])
-        assert result == {"success": True, "success_count": 0}
+        assert result == {"success": True, "success_count": 0, "skipped": 0}
 
     async def test_soft_delete_has_is_deleted(self):
         """soft_delete=True and inst has is_deleted → set to True."""
         from app.services.batch_service import BatchService
         inst = _make_instance(is_deleted=False, name="test")
         db = Mock()
-        db.get.return_value = inst
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 1
+        mock_f.all.return_value = [inst]
         svc = BatchService(db)
         result = await svc.batch_delete("projects", [1],
                                         soft_delete=True)
-        assert result == {"success": True, "success_count": 1}
+        assert result == {"success": True, "success_count": 1, "skipped": 0}
         assert inst.is_deleted is True
 
     async def test_soft_delete_without_is_deleted(self):
@@ -327,11 +350,16 @@ class TestBatchDelete:
         from app.services.batch_service import BatchService
         inst = _make_instance(name="test")  # no is_deleted
         db = Mock()
-        db.get.return_value = inst
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 1
+        mock_f.all.return_value = [inst]
         svc = BatchService(db)
         result = await svc.batch_delete("projects", [1],
                                         soft_delete=True)
-        assert result == {"success": True, "success_count": 1}
+        assert result == {"success": True, "success_count": 1, "skipped": 0}
         db.delete.assert_called_once_with(inst)
 
     async def test_hard_delete(self):
@@ -339,21 +367,31 @@ class TestBatchDelete:
         from app.services.batch_service import BatchService
         inst = _make_instance(name="test")
         db = Mock()
-        db.get.return_value = inst
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 1
+        mock_f.all.return_value = [inst]
         svc = BatchService(db)
         result = await svc.batch_delete("projects", [1],
                                         soft_delete=False)
-        assert result == {"success": True, "success_count": 1}
+        assert result == {"success": True, "success_count": 1, "skipped": 0}
         db.delete.assert_called_once_with(inst)
 
     async def test_inst_not_found(self):
         """Instance not found → skip."""
         from app.services.batch_service import BatchService
         db = Mock()
-        db.get.return_value = None
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 0
+        mock_f.all.return_value = []
         svc = BatchService(db)
         result = await svc.batch_delete("projects", [1, 2])
-        assert result == {"success": True, "success_count": 0}
+        assert result == {"success": True, "success_count": 0, "skipped": 0}
         db.delete.assert_not_called()
 
 
@@ -414,10 +452,11 @@ class TestValidateBatch:
         """Some ids exist, some don't → partial count."""
         from app.services.batch_service import BatchService
         db = Mock()
-        # id 1 exists, id 2 doesn't
-        db.get.side_effect = lambda model, id_: (
-            _make_instance(id=id_) if id_ == 1 else None
-        )
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 1
         svc = BatchService(db)
         result = await svc.validate_batch("projects", [1, 2])
         assert result == {"success": True, "existing_count": 1}
@@ -425,7 +464,11 @@ class TestValidateBatch:
     async def test_all_exist(self):
         from app.services.batch_service import BatchService
         db = Mock()
-        db.get.return_value = _make_instance(id=99)
+        mock_q = Mock()
+        mock_f = Mock()
+        db.query.return_value = mock_q
+        mock_q.filter.return_value = mock_f
+        mock_f.count.return_value = 3
         svc = BatchService(db)
         result = await svc.validate_batch("projects", [1, 2, 3])
         assert result == {"success": True, "existing_count": 3}

@@ -1,0 +1,89 @@
+"""补齐 app.services.machine_code_service 覆盖率缺口。
+
+目标行：
+- 409-410：verify_pass_code 机器特定通行码 active(未绑定) → 重置 pending + 提交
+- 434-438：verify_pass_code 组织通行码回退命中分支（含 active 未绑定重置与直接返回）
+- 728-739：delete_organization_pass_code 全分支（记录不存在返回 False / 删除并返回 True）
+
+db 使用 MagicMock 链式 mock；safe_commit 在模块命名空间打 patch。
+"""
+
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from app.services.machine_code_service import MachineCodeService
+
+_MOD = "app.services.machine_code_service"
+
+
+def _svc_with_first(first_values):
+    """构造 db.query().filter().first() 依次返回 first_values 的服务实例。"""
+    db = MagicMock()
+    q = db.query.return_value
+    q.filter.return_value = q
+    q.first.side_effect = first_values
+    return MachineCodeService(db), db
+
+
+class TestVerifyPassCode:
+    def test_machine_code_active_unbound_reset_to_pending(self):
+        # 第一次查询即命中：机器特定通行码，active 且未绑定用户 → 重置 pending（409-410）
+        record = SimpleNamespace(status="active", user_id=None)
+        svc, db = _svc_with_first([record])
+
+        with patch(f"{_MOD}.safe_commit") as mock_commit:
+            result = svc.verify_pass_code("P" * 40, "M" * 40)
+
+        assert result is record
+        assert record.status == "pending"
+        mock_commit.assert_called_once_with(db)
+
+    def test_org_pass_code_fallback_active_unbound_reset(self):
+        # 机器特定未命中 → 组织通行码回退命中，active 未绑定 → 重置（434-436）并返回（437-438）
+        record = SimpleNamespace(status="active", user_id=None)
+        svc, db = _svc_with_first([None, record])
+
+        with patch(f"{_MOD}.safe_commit") as mock_commit:
+            result = svc.verify_pass_code("P" * 40, "M" * 40)
+
+        assert result is record
+        assert record.status == "pending"
+        mock_commit.assert_called_once_with(db)
+
+    def test_org_pass_code_fallback_pending_returned_as_is(self):
+        # 回退命中 pending 记录：不触发重置，直接返回（434 条件为假分支）
+        record = SimpleNamespace(status="pending", user_id=None)
+        svc, db = _svc_with_first([None, record])
+
+        with patch(f"{_MOD}.safe_commit") as mock_commit:
+            result = svc.verify_pass_code("P" * 40, "M" * 40)
+
+        assert result is record
+        assert record.status == "pending"
+        mock_commit.assert_not_called()
+
+
+class TestDeleteOrganizationPassCode:
+    def test_no_db_session_raises_value_error(self):
+        # db 未初始化 → 729 行 raise ValueError
+        svc = MachineCodeService(None)
+        with pytest.raises(ValueError, match="数据库会话未初始化"):
+            svc.delete_organization_pass_code(1)
+
+    def test_not_found_returns_false(self):
+        svc, db = _svc_with_first([None])
+
+        assert svc.delete_organization_pass_code(123) is False
+        db.delete.assert_not_called()
+
+    def test_found_deletes_and_returns_true(self):
+        record = SimpleNamespace(id=5)
+        svc, db = _svc_with_first([record])
+
+        with patch(f"{_MOD}.safe_commit") as mock_commit:
+            assert svc.delete_organization_pass_code(5) is True
+
+        db.delete.assert_called_once_with(record)
+        mock_commit.assert_called_once_with(db)

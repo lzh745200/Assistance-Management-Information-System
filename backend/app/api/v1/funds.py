@@ -487,7 +487,7 @@ def fund_statistics_multi_dimension(
     rows = db.execute(stmt).all()
 
     label_maps = {
-        "source": {"military": "军队投资", "government": "政府拨款", "donation": "社会捐赠", "enterprise": "企业投资", "other": "其他"},
+        "source": {"military": "专项投资", "government": "政府拨款", "donation": "社会捐赠", "enterprise": "企业投资", "other": "其他"},
         "status": {
             "pending": "待审批", "planned": "规划中", "approved": "已批准",
             "allocated": "已拨付", "in_use": "使用中", "completed": "已完成", "audited": "已审计",

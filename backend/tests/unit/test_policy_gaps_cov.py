@@ -43,7 +43,7 @@ class TestGetPolicyTypes:
 
     async def test_db_categories_merged_and_deduped(self):
         cats = [
-            SimpleNamespace(code="military", name="军队政策"),  # 与预定义重复 → 跳过
+            SimpleNamespace(code="military", name="专项政策"),  # 与预定义重复 → 跳过
             SimpleNamespace(code="special", name="专项政策"),   # 新分类 → 追加
             SimpleNamespace(code=None, name="无名分类"),        # code 为空 → 用 name
         ]
@@ -66,7 +66,7 @@ class TestGetCategoriesExcept:
         db.query.side_effect = TypeError("boom")
         result = await m.get_categories(
             parent_id=None, is_active=None, current_user=_admin(), db=db, response=None)
-        assert result["military"]["label"] == "军队政策"
+        assert result["military"]["label"] == "专项政策"
         assert result["local"]["label"] == "地方政策"
 
 

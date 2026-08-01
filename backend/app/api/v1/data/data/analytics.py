@@ -9,7 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from pydantic import BaseModel
-from sqlalchemy import func as sa_func
+from sqlalchemy import case, func as sa_func
 from sqlalchemy.orm import Session
 
 from app.core.cache import get_cache_service
@@ -284,44 +284,64 @@ async def get_cross_org_comparison(
     from app.models.fund import Fund
     from app.models.supported_village import SupportedVillage
 
+    # 1. 查询所有活跃组织（1 次查询）
     orgs = db.query(Organization.id, Organization.name).filter(
         Organization.is_active == True  # noqa: E712
     ).all()
+    org_map = {
+        org_id: {"organization_id": org_id, "organization_name": org_name,
+                 "villages": 0, "projects_total": 0,
+                 "projects_completed": 0, "completion_rate": 0.0,
+                 "funds_total": 0.0}
+        for org_id, org_name in orgs
+    }
 
+    # 2. 一次 GROUP BY 查询帮扶村计数（1 次查询，替代 N 次 COUNT）
+    village_rows = db.query(
+        SupportedVillage.organization_id,
+        sa_func.count(SupportedVillage.id),
+    ).filter(
+        SupportedVillage.is_active == True,  # noqa: E712
+    ).group_by(SupportedVillage.organization_id).all()
+    for org_id, cnt in village_rows:
+        if org_id in org_map:
+            org_map[org_id]["villages"] = cnt
+
+    # 3. 一次 GROUP BY 查询项目总数+完成数（条件聚合，1 次查询替代 2N 次 COUNT）
+    project_rows = db.query(
+        Project.organization_id,
+        sa_func.count(Project.id),
+        sa_func.sum(case((Project.status == "completed", 1), else_=0)),
+    ).filter(
+        Project.is_active == True,  # noqa: E712
+    ).group_by(Project.organization_id).all()
+    for org_id, total, completed in project_rows:
+        if org_id in org_map:
+            org_map[org_id]["projects_total"] = total
+            org_map[org_id]["projects_completed"] = completed or 0
+
+    # 4. 一次 GROUP BY 查询资金总额（1 次查询，替代 N 次 SUM）
+    fund_rows = db.query(
+        Fund.organization_id,
+        sa_func.coalesce(sa_func.sum(Fund.amount), 0),
+    ).filter(
+        Fund.is_active == True,  # noqa: E712
+    ).group_by(Fund.organization_id).all()
+    for org_id, total in fund_rows:
+        if org_id in org_map:
+            org_map[org_id]["funds_total"] = round(float(total), 2)
+
+    # 计算完成率并构建结果列表
     comparison = []
-    for org_id, org_name in orgs:
-        villages = db.query(sa_func.count(SupportedVillage.id)).filter(
-            SupportedVillage.organization_id == org_id,
-            SupportedVillage.is_active == True,  # noqa: E712
-        ).scalar() or 0
-
-        projects_total = db.query(sa_func.count(Project.id)).filter(
-            Project.organization_id == org_id,
-            Project.is_active == True,  # noqa: E712
-        ).scalar() or 0
-
-        projects_completed = db.query(sa_func.count(Project.id)).filter(
-            Project.organization_id == org_id,
-            Project.is_active == True,  # noqa: E712
-            Project.status == "completed",
-        ).scalar() or 0
-
-        funds_total = db.query(sa_func.coalesce(sa_func.sum(Fund.amount), 0)).filter(
-            Fund.organization_id == org_id,
-            Fund.is_active == True,  # noqa: E712
-        ).scalar() or 0
-
-        completion_rate = round(projects_completed / projects_total * 100, 1) if projects_total > 0 else 0.0
-
-        comparison.append({
-            "organization_id": org_id,
-            "organization_name": org_name,
-            "villages": villages,
-            "projects_total": projects_total,
-            "projects_completed": projects_completed,
-            "completion_rate": completion_rate,
-            "funds_total": round(float(funds_total), 2),
-        })
+    for org_data in org_map.values():
+        total = org_data["projects_total"]
+        completed = org_data["projects_completed"]
+        org_data["completion_rate"] = round(completed / total * 100, 1) if total > 0 else 0.0
+        comparison.append(org_data)
 
     comparison.sort(key=lambda x: x["funds_total"], reverse=True)
-    return AnalyticsResponse(success=True, data=comparison, message="跨组织对比数据获取成功")
+    return AnalyticsResponse(
+        success=True,
+        data={"items": comparison, "total": len(comparison)},
+        message="跨组织对比数据获取成功",
+    )

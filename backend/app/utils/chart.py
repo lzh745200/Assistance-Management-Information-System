@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 try:
+    import matplotlib
+    matplotlib.use("Agg")  # 无头环境强制非交互后端，避免 tkinter 初始化与警告
     import matplotlib.pyplot as plt
 
     HAS_MATPLOTLIB = True
