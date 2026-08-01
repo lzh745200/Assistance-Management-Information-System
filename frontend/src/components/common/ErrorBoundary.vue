@@ -1,50 +1,53 @@
 <template>
-  <div v-if="hasError" class="error-boundary-fallback">
-    <div class="error-boundary-content">
-      <!-- 类型 1: ChunkLoadError -->
-      <template v-if="errorType === 'chunk'">
-        <el-result icon="warning" title="页面模块加载失败" :sub-title="errorMessage">
-          <template #extra>
-            <el-button type="primary" :loading="isRetrying" @click="handleRetry">
-              重新加载
-            </el-button>
-            <el-button @click="handleReload">刷新页面</el-button>
-            <el-button @click="handleIgnore">忽略</el-button>
-          </template>
-        </el-result>
-      </template>
+  <!-- 单一根元素：避免 <transition> 内多根条件分支导致 patchProp 异常 -->
+  <div class="error-boundary-root">
+    <div v-if="hasError" class="error-boundary-fallback">
+      <div class="error-boundary-content">
+        <!-- 类型 1: ChunkLoadError -->
+        <template v-if="errorType === 'chunk'">
+          <el-result icon="warning" title="页面模块加载失败" :sub-title="errorMessage">
+            <template #extra>
+              <el-button type="primary" :loading="isRetrying" @click="handleRetry">
+                重新加载
+              </el-button>
+              <el-button @click="handleReload">刷新页面</el-button>
+              <el-button @click="handleIgnore">忽略</el-button>
+            </template>
+          </el-result>
+        </template>
 
-      <!-- 类型 2: NetworkError -->
-      <template v-else-if="errorType === 'network'">
-        <el-result icon="error" title="网络连接异常" :sub-title="errorMessage">
-          <template #extra>
-            <el-button type="primary" @click="handleReload">刷新页面</el-button>
-            <el-button @click="handleGoHome">返回首页</el-button>
-            <el-button @click="handleIgnore">忽略</el-button>
-          </template>
-        </el-result>
-      </template>
+        <!-- 类型 2: NetworkError -->
+        <template v-else-if="errorType === 'network'">
+          <el-result icon="error" title="网络连接异常" :sub-title="errorMessage">
+            <template #extra>
+              <el-button type="primary" @click="handleReload">刷新页面</el-button>
+              <el-button @click="handleGoHome">返回首页</el-button>
+              <el-button @click="handleIgnore">忽略</el-button>
+            </template>
+          </el-result>
+        </template>
 
-      <!-- 类型 3: 未知错误 -->
-      <template v-else>
-        <el-result icon="error" title="页面发生异常" :sub-title="errorMessage">
-          <template #extra>
-            <el-button type="primary" @click="handleReload">刷新页面</el-button>
-            <el-button @click="handleGoHome">返回首页</el-button>
-            <el-button @click="handleIgnore">忽略</el-button>
-            <el-button @click="showDetail = !showDetail">
-              {{ showDetail ? '收起' : '查看' }}详情
-            </el-button>
-          </template>
-        </el-result>
-        <div v-if="showDetail && errorStack" class="error-boundary-stack">
-          <pre>{{ errorStack }}</pre>
-        </div>
-      </template>
+        <!-- 类型 3: 未知错误 -->
+        <template v-else>
+          <el-result icon="error" title="页面发生异常" :sub-title="errorMessage">
+            <template #extra>
+              <el-button type="primary" @click="handleReload">刷新页面</el-button>
+              <el-button @click="handleGoHome">返回首页</el-button>
+              <el-button @click="handleIgnore">忽略</el-button>
+              <el-button @click="showDetail = !showDetail">
+                {{ showDetail ? '收起' : '查看' }}详情
+              </el-button>
+            </template>
+          </el-result>
+          <div v-if="showDetail && errorStack" class="error-boundary-stack">
+            <pre>{{ errorStack }}</pre>
+          </div>
+        </template>
+      </div>
     </div>
+    <!-- 无错误时透明渲染子组件 -->
+    <slot v-else />
   </div>
-  <!-- 无错误时透明渲染子组件 -->
-  <slot v-else />
 </template>
 
 <script setup lang="ts">
@@ -144,6 +147,10 @@ function handleGoHome() {
 </script>
 
 <style scoped>
+.error-boundary-root {
+  /* 透明容器，不影响子组件布局 */
+  display: contents;
+}
 .error-boundary-fallback {
   display: flex;
   align-items: center;

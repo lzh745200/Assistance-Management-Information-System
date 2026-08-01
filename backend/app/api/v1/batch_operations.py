@@ -140,7 +140,11 @@ async def batch_update(
                 f"{request.table_name} ({len(request.ids)} records)",
                 user_id=getattr(current_user, 'id', None),
                 username=getattr(current_user, 'username', ''),
-                detail=f"fields={list(request.updates.keys())}, success={result.get('success_count', 0)}, skipped={result.get('skipped', 0)}",
+                detail=(
+                    f"fields={list(request.updates.keys())}, "
+                    f"success={result.get('success_count', 0)}, "
+                    f"skipped={result.get('skipped', 0)}"
+                ),
             )
         except Exception as log_err:
             logger.warning(f"批量更新审计日志写入失败: {log_err}")

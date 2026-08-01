@@ -2103,8 +2103,8 @@ def _init_phases(db: Session, project_id: int) -> list:
 
 def _voucher_to_dict(v: FundTransferVoucher) -> dict:
     direction_labels = {
-        "military_to_local": "军方→地方",
-        "local_to_military": "地方→军方",
+        "military_to_local": "专项→地方",
+        "local_to_military": "地方→专项",
     }
     status_labels = {
         "draft": "草稿",

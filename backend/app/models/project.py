@@ -136,7 +136,7 @@ class Project(Base):
     total_budget_estimate = Column(Numeric(15, 2), nullable=True, comment="经费总预算估算(万元)")
     fund_source_category = Column(Text, nullable=True, comment="资金来源分类(JSON)")
     expected_economic_benefit = Column(Text, nullable=True, comment="预期经济效益量化指标")
-    expected_military_benefit = Column(Text, nullable=True, comment="预期战备效益量化指标")
+    expected_military_benefit = Column(Text, nullable=True, comment="预期效益量化指标")
 
     # ================= 软删标记 =================
     is_active = Column(Boolean, default=True, nullable=False, comment="是否启用(软删标记)")

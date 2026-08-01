@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.models.machine_code import MachineCode
 from app.models.user import User
 from app.services.user_service import VALID_ROLES
+from app.core.constants import normalize_role
 from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class UserCreateBody(BaseModel):
     password: str
     email: Optional[str] = None
     full_name: Optional[str] = None
-    role: Optional[str] = "operator"
+    role: Optional[str] = "user"
     organization_id: Optional[int] = None
     data_scope: Optional[str] = "org"
     permissions: Optional[str] = ""  # 兼容旧格式，逗号分隔
@@ -115,14 +116,15 @@ OPTIONS_CACHE_TTL = 3600
 # ==================== 个人中心 ====================
 
 
-# 角色中文名称映射
+# 角色中文名称映射（兼容历史角色值：approval_leader/manager→管理员级，operator→普通用户）
 _ROLE_DISPLAY_MAP = {
     "super_admin": "超级管理员",
     "admin": "系统管理员",
     "approval_leader": "审批领导",
     "manager": "管理人员",
     "operator": "操作员",
-    "viewer": "查看者",
+    "user": "普通用户",
+    "viewer": "访客",
 }
 
 
@@ -155,7 +157,7 @@ async def get_current_user_profile(current_user=Depends(get_current_user), db: S
             "birthday": getattr(user, "birthday", "") or "",
             "address": getattr(user, "address", "") or "",
             "remark": getattr(user, "remark", "") or "",
-            "role": user.role or "operator",
+            "role": user.role or "user",
             "roleName": _get_role_display(user),
             "is_active": user.is_active,
             "is_superuser": user.is_superuser,
@@ -199,7 +201,7 @@ async def update_current_user_profile(
             "birthday": getattr(user, "birthday", "") or "",
             "address": getattr(user, "address", "") or "",
             "remark": getattr(user, "remark", "") or "",
-            "role": user.role or "operator",
+            "role": user.role or "user",
             "roleName": _get_role_display(user),
             "is_active": user.is_active,
             "status": "active" if user.is_active else "inactive",
@@ -458,8 +460,8 @@ async def create_user(
         if not org:
             raise HTTPException(status_code=400, detail=f"组织ID {data.organization_id} 不存在")
 
-    # 验证角色有效性
-    role = data.role or "operator"
+    # 验证角色有效性（兼容历史角色值：approval_leader/manager→admin，operator→user）
+    role = normalize_role(data.role)
     if role not in VALID_ROLES:
         raise HTTPException(status_code=400, detail=f"无效的角色: {role}")
 
@@ -543,8 +545,9 @@ async def update_user(
         if not org:
             raise HTTPException(status_code=400, detail="组织不存在")
 
-    # 验证角色有效性
+    # 验证角色有效性（归一化兼容历史角色值）
     if "role" in update_fields and update_fields["role"]:
+        update_fields["role"] = normalize_role(update_fields["role"])
         if update_fields["role"] not in VALID_ROLES:
             raise HTTPException(status_code=400, detail="无效的角色")
 
@@ -614,8 +617,10 @@ async def update_user_permissions(
         if not org:
             raise HTTPException(status_code=400, detail=f"组织ID {update_fields['organization_id']} 不存在")
 
-    # 验证角色有效性
+    # 验证角色有效性（归一化兼容历史角色值）
     if "role" in update_fields:
+        if update_fields["role"]:
+            update_fields["role"] = normalize_role(update_fields["role"])
         if update_fields["role"] not in VALID_ROLES:
             raise HTTPException(status_code=400, detail=f"无效的角色: {update_fields['role']}")
 
@@ -654,10 +659,8 @@ async def get_role_options(
         "roles": [
             {"value": "super_admin", "label": "超级管理员", "description": "系统最高权限，可管理所有功能"},
             {"value": "admin", "label": "系统管理员", "description": "可管理用户、组织、系统配置"},
-            {"value": "approval_leader", "label": "审批领导", "description": "负责审批重要事项"},
-            {"value": "manager", "label": "管理人员", "description": "可管理本组织内的大部分数据"},
-            {"value": "operator", "label": "操作员", "description": "日常数据录入和操作"},
-            {"value": "viewer", "label": "查看者", "description": "只能查看数据，无法修改"},
+            {"value": "user", "label": "普通用户", "description": "日常数据录入和操作"},
+            {"value": "viewer", "label": "访客", "description": "只能查看数据，无法修改"},
         ]
     }
 

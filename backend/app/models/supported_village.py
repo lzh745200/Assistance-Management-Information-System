@@ -5,7 +5,7 @@
 - SupportedVillage: 帮扶村基本信息
 - VillagePopulation: 村级人口数据
 - VillageIncome: 村级收入数据
-- ForceInvestment: 部队投入
+- ForceInvestment: 专项投入
 - IndustrySupport: 产业帮扶
 - InfrastructureImprovement: 基础设施改善
 - PartyBuildingSupport: 党建帮扶
@@ -88,7 +88,7 @@ class SupportedVillage(Base, TimestampMixin):
 
     # 帮扶经费汇总
     transition_fund_military_total = Column(
-        Float, default=0, comment="部队投入(万元)"
+        Float, default=0, comment="专项投入(万元)"
     )
     transition_fund_local_total = Column(
         Float, default=0, comment="协调地方投入(万元)"
@@ -313,10 +313,10 @@ class VillagePopulation(Base, TimestampMixin):
         Integer, default=0, comment="突发严重困难户(人)"
     )
     veteran_village_secretary = Column(
-        Integer, default=0, comment="村支书(退役军人)"
+        Integer, default=0, comment="村支书(退役人员)"
     )
     veteran_village_committee = Column(
-        Integer, default=0, comment="村委员(退役军人)"
+        Integer, default=0, comment="村委员(退役人员)"
     )
 
     village = relationship("SupportedVillage", back_populates="population_data")
@@ -362,7 +362,7 @@ class VillageIncome(Base, TimestampMixin):
 
 
 class ForceInvestment(Base, TimestampMixin):
-    """部队投入"""
+    """专项投入"""
 
     __tablename__ = "force_investment"
 
@@ -380,8 +380,8 @@ class ForceInvestment(Base, TimestampMixin):
         nullable=False,
     )
     year = Column(Integer, nullable=False, comment="年份")
-    senior_leader_visits = Column(Integer, default=0, comment="军以上领导到村(人次)")
-    unit_soldier_visits = Column(Integer, default=0, comment="帮扶单位官兵到村(人次)")
+    senior_leader_visits = Column(Integer, default=0, comment="上级领导到村(人次)")
+    unit_soldier_visits = Column(Integer, default=0, comment="帮扶单位人员到村(人次)")
 
     village = relationship("SupportedVillage", back_populates="force_investment_data")
 
@@ -627,7 +627,7 @@ class SupportFunding(Base, TimestampMixin):
     )
     year = Column(Integer, nullable=False, comment="年份")
     funding_type = Column(String(50), default="transition", comment="经费类型")
-    military_investment = Column(Float, default=0, comment="部队投入(万元)")
+    military_investment = Column(Float, default=0, comment="专项投入(万元)")
     local_investment = Column(Float, default=0, comment="地方投入(万元)")
     planned_investment = Column(Float, default=0, comment="计划投入(万元)")
 
@@ -728,7 +728,7 @@ class VillageCommitteeMember(Base, TimestampMixin):
     name = Column(String(100), nullable=False, comment="姓名")
     position = Column(String(50), nullable=True, comment="职务")
     phone = Column(String(20), nullable=True, comment="电话")
-    is_veteran = Column(Boolean, default=False, comment="是否退役军人")
+    is_veteran = Column(Boolean, default=False, comment="是否退役人员")
     remark = Column(String(500), nullable=True, comment="备注")
 
     committee_info = relationship("VillageCommitteeInfo", back_populates="members")

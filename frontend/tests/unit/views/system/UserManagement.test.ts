@@ -225,7 +225,7 @@ afterEach(() => {
 })
 
 describe('挂载与初始化', () => {
-  it('onMounted 并行加载用户/组织树/待审核数/角色列表', async () => {
+  it('onMounted 并行加载用户/组织树/待审核数（角色选项固定不请求）', async () => {
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any
@@ -239,8 +239,14 @@ describe('挂载与初始化', () => {
     expect(vm.orgTreeOptions).toHaveLength(1)
     expect(mockGet).toHaveBeenCalledWith('/users/pending/list')
     expect(vm.pendingCount).toBe(1) // 数组 → length
-    expect(mockGet).toHaveBeenCalledWith('/rbac/roles', { limit: 100 })
-    expect(vm.roleOptions).toEqual([{ value: 'custom', label: '自定义角色' }])
+    // 角色选项固定为 users.role 体系 4 个角色，不再请求 /rbac/roles
+    expect(mockGet).not.toHaveBeenCalledWith('/rbac/roles', expect.anything())
+    expect(vm.roleOptions).toEqual([
+      { value: 'super_admin', label: '超级管理员' },
+      { value: 'admin', label: '系统管理员' },
+      { value: 'user', label: '普通用户' },
+      { value: 'viewer', label: '访客' },
+    ])
   })
 
   it('loadOrgTree：返回非数组 → 置空', async () => {
@@ -273,45 +279,17 @@ describe('挂载与初始化', () => {
     expect((wrapper.vm as any).orgTreeOptions).toEqual([])
   })
 
-  it('fetchRoles：items 为空 → 保留硬编码默认角色', async () => {
-    mockGet.mockImplementation((url: string) => {
-      if (url === '/rbac/roles') return Promise.resolve({ data: { items: [] } })
-      return defaultGetImpl(url)
-    })
+  it('fetchRoles：固定 users.role 体系 4 角色，不再请求 /rbac/roles 覆盖', async () => {
     const wrapper = mountComp()
     await flushPromises()
-    expect((wrapper.vm as any).roleOptions).toHaveLength(6)
-  })
-
-  it('fetchRoles：异常 → 保留硬编码默认角色', async () => {
-    mockGet.mockImplementation((url: string) => {
-      if (url === '/rbac/roles') return Promise.reject(new Error('net'))
-      return defaultGetImpl(url)
-    })
-    const wrapper = mountComp()
-    await flushPromises()
-    expect((wrapper.vm as any).roleOptions).toHaveLength(6)
-  })
-
-  it('fetchRoles：字段多级兜底（id/name/role_id 与 name/label/role_name）', async () => {
-    mockGet.mockImplementation((url: string) => {
-      if (url === '/rbac/roles') {
-        return Promise.resolve({
-          data: [
-            { id: 7 },
-            { name: 'n2', label: 'L2' },
-            { role_id: 'r3', role_name: 'R3' },
-          ],
-        })
-      }
-      return defaultGetImpl(url)
-    })
-    const wrapper = mountComp()
-    await flushPromises()
-    expect((wrapper.vm as any).roleOptions).toEqual([
-      { value: 7, label: '7' },
-      { value: 'n2', label: 'n2' },
-      { value: 'r3', label: 'R3' },
+    const vm = wrapper.vm as any
+    await vm.fetchRoles()
+    expect(mockGet).not.toHaveBeenCalledWith('/rbac/roles', expect.anything())
+    expect(vm.roleOptions).toEqual([
+      { value: 'super_admin', label: '超级管理员' },
+      { value: 'admin', label: '系统管理员' },
+      { value: 'user', label: '普通用户' },
+      { value: 'viewer', label: '访客' },
     ])
   })
 
@@ -496,7 +474,8 @@ describe('字典映射函数', () => {
     expect(vm.getRoleName('approval_leader')).toBe('审批领导')
     expect(vm.getRoleName('manager')).toBe('管理人员')
     expect(vm.getRoleName('operator')).toBe('操作员')
-    expect(vm.getRoleName('viewer')).toBe('查看者')
+    expect(vm.getRoleName('user')).toBe('普通用户')
+    expect(vm.getRoleName('viewer')).toBe('访客')
     expect(vm.getRoleName('custom_role')).toBe('custom_role')
   })
 
@@ -560,7 +539,7 @@ describe('新增 / 编辑 / 提交', () => {
     expect(vm.formData).toMatchObject({
       id: 0,
       username: '',
-      role: 'operator',
+      role: 'user',
       data_scope: 'org',
       is_active: true,
       organization_id: null,
@@ -796,7 +775,7 @@ describe('会话管理', () => {
     expect(vm.userSessions).toEqual([{ session_id: 'c' }])
   })
 
-  it('loadUserSessions：异常 → 空列表；空态渲染（el-empty 分支）', async () => {
+  it('loadUserSessions：异常 → 空列表 + 错误提示；空态渲染（el-empty 分支）', async () => {
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any
@@ -808,6 +787,7 @@ describe('会话管理', () => {
     await flushPromises()
     expect(vm.userSessions).toEqual([])
     expect(vm.sessionsLoading).toBe(false)
+    expect(ElMessage.error).toHaveBeenCalled()
     await nextTick() // 渲染“无活跃会话”空态
   })
 
@@ -1262,14 +1242,14 @@ describe('行操作与内联点击处理器（函数覆盖）', () => {
 })
 
 describe('逻辑或 / 空值合并兜底分支', () => {
-  it('fetchRoles：响应为 null → 保持默认角色', async () => {
+  it('fetchRoles：外部接口数据不影响固定角色选项', async () => {
     mockGet.mockImplementation((url: string) => {
       if (url === '/rbac/roles') return Promise.resolve(null)
       return defaultGetImpl(url)
     })
     const wrapper = mountComp()
     await flushPromises()
-    expect((wrapper.vm as any).roleOptions).toHaveLength(6)
+    expect((wrapper.vm as any).roleOptions).toHaveLength(4)
   })
 
   it('loadData：无 items 无 total → 双兜底为 0', async () => {

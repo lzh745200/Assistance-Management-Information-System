@@ -19,7 +19,6 @@ from app.core.security import (
     SENSITIVE_FIELDS,
     SENSITIVE_PATTERNS,
     SQL_INJECTION_PATTERNS,
-    TokenBlacklist,
     _ensure_secret_key,
     _rate_limit_store,
     _truncate_password,
@@ -31,7 +30,6 @@ from app.core.security import (
     decode_token,
     decode_token_with_machine_code,
     generate_password,
-    generate_session_id,
     get_client_ip,
     get_current_active_user,
     get_current_user,
@@ -42,8 +40,6 @@ from app.core.security import (
     require_roles,
     sanitize_input,
     sanitize_log_data,
-    token_blacklist,
-    validate_session_token,
     verify_password,
 )
 
@@ -520,60 +516,6 @@ class TestSanitizeInput:
         assert result == "hello world"
 
 
-class TestTokenBlacklist:
-    def test_add_and_is_blacklisted(self):
-        tb = TokenBlacklist()
-        tb.add("token1")
-        assert tb.is_blacklisted("token1") is True
-        assert tb.is_blacklisted("token2") is False
-
-    def test_remove(self):
-        tb = TokenBlacklist()
-        tb.add("token1")
-        tb.remove("token1")
-        assert tb.is_blacklisted("token1") is False
-
-    def test_remove_nonexistent(self):
-        tb = TokenBlacklist()
-        tb.remove("nonexistent")
-
-    def test_len(self):
-        tb = TokenBlacklist()
-        tb.add("a")
-        tb.add("b")
-        assert len(tb) == 2
-
-    def test_clear(self):
-        tb = TokenBlacklist()
-        tb.add("a")
-        tb.clear()
-        assert len(tb) == 0
-
-    def test_global_instance(self):
-        assert isinstance(token_blacklist, TokenBlacklist)
-
-
-class TestSessionToken:
-    def test_generate_session_id(self):
-        sid = generate_session_id()
-        assert len(sid) == 64
-
-    def test_validate_empty_token(self):
-        assert validate_session_token("") is False
-        assert validate_session_token(None) is False
-
-    def test_validate_blacklisted_token(self):
-        tb = TokenBlacklist()
-        tb.add("bad_token")
-        with patch("app.core.security.token_blacklist", tb):
-            assert validate_session_token("bad_token") is False
-
-    def test_validate_valid_token(self):
-        tb = TokenBlacklist()
-        with patch("app.core.security.token_blacklist", tb):
-            assert validate_session_token("good_token") is True
-
-
 class TestCheckRateLimit:
     @pytest.mark.asyncio
     async def test_key_is_none_returns_true(self):
@@ -722,7 +664,7 @@ class TestPasswordPolicy:
 class TestSecurityConstants:
     def test_all_roles_defined(self):
         assert ROLE_ADMIN in ALL_ROLES
-        assert len(ALL_ROLES) == 6
+        assert len(ALL_ROLES) == 7
 
     def test_admin_roles(self):
         assert "super_admin" in ADMIN_ROLES

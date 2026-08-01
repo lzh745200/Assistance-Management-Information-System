@@ -193,7 +193,7 @@
                 </el-form-item>
               </el-col>
               <el-col :span="3">
-                <el-form-item label="退役军人">
+                <el-form-item label="退役人员">
                   <el-switch v-model="member.isVeteran" />
                 </el-form-item>
               </el-col>
@@ -354,7 +354,7 @@
             <el-divider content-position="left">{{ yr }}年</el-divider>
             <el-row :gutter="20">
               <el-col :span="6"
-                ><el-form-item label="部队投入(万)"
+                ><el-form-item label="专项投入(万)"
                   ><el-input-number
                     v-model="getInvestData(yr).militaryInvestment"
                     :min="0"
@@ -380,7 +380,7 @@
                     style="width: 100%" /></el-form-item
               ></el-col>
               <el-col :span="6"
-                ><el-form-item label="官兵到村(人次)"
+                ><el-form-item label="人员到村(人次)"
                   ><el-input-number
                     v-model="getInvestData(yr).soldierVisits"
                     :min="0"
@@ -391,7 +391,7 @@
           </div>
           <div class="auto-calc">
             <el-descriptions title="投入汇总（自动计算）" :column="4" border>
-              <el-descriptions-item label="部队投入合计"
+              <el-descriptions-item label="专项投入合计"
                 >{{ totalMilitaryInvest.toFixed(2) }}万</el-descriptions-item
               >
               <el-descriptions-item label="地方投入合计"

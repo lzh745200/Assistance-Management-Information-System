@@ -1,8 +1,8 @@
 """
-Excel模板生成服务 — 军事正式风格 A4 打印版
+Excel模板生成服务 — 正式风格 A4 打印版
 提供帮扶村/项目/资金/学校数据导入模板的生成和下载功能
 
-Requirements: 1.1, 1.9 - 标准 A4 打印模板，军事主题
+Requirements: 1.1, 1.9 - 标准 A4 打印模板
 """
 
 from io import BytesIO
@@ -18,7 +18,7 @@ from openpyxl.worksheet.page import PageMargins
 from app.services.entity_import_validator import EntityImportValidator
 
 # ═══════════════════════════════════════════════════════════════
-# 军事正式风格颜色常量
+# 正式风格颜色常量
 # ═══════════════════════════════════════════════════════════════
 MILITARY_DARK_GREEN = "1b4332"
 MILITARY_GOLD = "d4af37"
@@ -89,7 +89,7 @@ TEMPLATE_NAMES = {
 
 
 class ExcelTemplateService:
-    """Excel模板生成服务 — 军事正式风格"""
+    """Excel模板生成服务 — 正式风格"""
 
     VILLAGE_FIELDS: List[Dict[str, Any]] = [
         {
@@ -349,7 +349,7 @@ class ExcelTemplateService:
     # ══════════════════════════════════════════════════════════
 
     def _write_title_header(self, ws, title: str, col_count: int) -> int:
-        """写入军事风格标题区，返回数据起始行号"""
+        """写入风格标题区，返回数据起始行号"""
         max_col = get_column_letter(max(col_count, 6))
 
         # ── 第1行：主标题（深绿底色 + 金色大字）──

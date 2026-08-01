@@ -78,7 +78,7 @@ class TestUtilityFunctions:
     def test_level_display_map(self):
         m = _level_display_map()
         assert m["national"] == "国家级"
-        assert m["central_military"] == "中央军委"
+        assert m["central_military"] == "中央部署"
 
     def test_status_display_map(self):
         m = _status_display_map()
@@ -116,7 +116,7 @@ class TestUtilityFunctions:
         sample_policy.level = "central_military"
         d = _policy_to_frontend(sample_policy)
         assert d["category_name"] == "专项政策"
-        assert d["level_name"] == "中央军委"
+        assert d["level_name"] == "中央部署"
 
     def test_policy_to_frontend_minimal(self):
         p = MagicMock(spec=Policy)

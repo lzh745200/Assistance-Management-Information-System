@@ -9,17 +9,12 @@ from typing import List
 
 from sqlalchemy.orm import Session
 from app.core.transaction import safe_commit
+from app.core.constants import ALL_ROLES
 
 logger = logging.getLogger(__name__)
 
-VALID_ROLES = [
-    "super_admin",
-    "admin",
-    "approval_leader",
-    "manager",
-    "operator",
-    "viewer",
-]
+# 校验用完整角色集合（含兼容的历史角色值）
+VALID_ROLES = list(ALL_ROLES)
 
 
 class UserService:
@@ -84,13 +79,14 @@ class UserService:
             return None
         from app.models.user import User
         from app.core.security import get_password_hash
+        from app.core.constants import normalize_role
 
         user = User(
             username=data["username"],
             email=data.get("email"),
             hashed_password=get_password_hash(data["password"]),
             full_name=data.get("full_name"),
-            role=data.get("role", "operator"),
+            role=normalize_role(data.get("role", "user")),
             is_active=True,
         )
         self.db.add(user)

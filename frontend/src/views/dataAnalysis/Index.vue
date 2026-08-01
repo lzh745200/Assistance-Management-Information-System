@@ -39,7 +39,7 @@
             <h3>经费投入趋势</h3>
             <el-table :data="investmentTrend" stripe border>
               <el-table-column prop="year" label="年份" width="100" />
-              <el-table-column prop="military" label="部队投入(万)" align="right" />
+              <el-table-column prop="military" label="专项投入(万)" align="right" />
               <el-table-column prop="local" label="地方投入(万)" align="right" />
               <el-table-column prop="total" label="合计(万)" align="right" />
               <el-table-column prop="growth" label="增长率" width="100">

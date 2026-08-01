@@ -451,7 +451,7 @@ async def download_template(
     ws = wb.active
     ws.title = t.name[:31]  # Excel sheet name max 31 chars
 
-    # 军绿色表头样式
+    # 绿色表头样式
     header_fill = PatternFill(start_color="1B4332", end_color="1B4332", fill_type="solid")
     header_font = Font(bold=True, color="FFFFFF", size=11)
     border = Border(

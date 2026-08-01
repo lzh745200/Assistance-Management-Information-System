@@ -62,13 +62,13 @@ export interface PopulationEconomicData {
 export interface InvestmentData {
   /** 经费投入年份 */
   year: number
-  /** 部队投入（万元） */
+  /** 专项投入（万元） */
   militaryInvestment: number
   /** 协调地方投入（万元） */
   localInvestment: number
   /** 领导干部到村人次 */
   leaderVisits: number
-  /** 官兵到村人次 */
+  /** 人员到村人次 */
   soldierVisits: number
 }
 
@@ -196,7 +196,7 @@ export interface VillageCommitteeMember {
   position: string
   /** 联系方式 */
   phone: string
-  /** 是否退役军人 */
+  /** 是否退役人员 */
   isVeteran: boolean
   /** 备注 */
   remark?: string

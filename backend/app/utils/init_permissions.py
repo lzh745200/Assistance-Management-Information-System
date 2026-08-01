@@ -174,8 +174,8 @@ def init_roles(db) -> int:
             "permissions": [p.name for p in all_permissions],
         },
         {
-            "name": "editor",
-            "display_name": "编辑员",
+            "name": "user",
+            "display_name": "普通用户",
             "description": "可以创建、编辑数据",
             "is_system": True,
             "permissions": [p.name for p in all_permissions if p.action in ["create", "read", "update"]],

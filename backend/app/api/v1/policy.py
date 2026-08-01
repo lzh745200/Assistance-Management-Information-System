@@ -38,10 +38,10 @@ def _level_display_map() -> Dict[str, str]:
         "municipal": "市级",
         "county": "县级",
         "military": "专项",
-        "central_military": "中央军委",
-        "theater": "战区",
-        "army": "军",
-        "division": "师",
+        "central_military": "中央部署",
+        "theater": "区域",
+        "army": "重点",
+        "division": "单元",
     }
 
 
@@ -212,10 +212,10 @@ async def get_categories(
         "military": {
             "label": "专项政策",
             "levels": [
-                {"value": "central_military", "label": "中央军委"},
-                {"value": "theater", "label": "战区"},
-                {"value": "army", "label": "军"},
-                {"value": "division", "label": "师"},
+                {"value": "central_military", "label": "中央部署"},
+                {"value": "theater", "label": "区域"},
+                {"value": "army", "label": "重点"},
+                {"value": "division", "label": "单元"},
             ],
         },
         "local": {

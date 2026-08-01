@@ -11,6 +11,7 @@ from typing import Any
 from fastapi import HTTPException
 
 from app.core.permission_utils import is_superuser
+from app.core.constants import normalize_role, ROLE_SUPER_ADMIN, ROLE_ADMIN
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,9 @@ class DataScope(str, Enum):
 def is_admin(user: Any) -> bool:
     """Check whether a user holds an administrative role.
 
+    Uses normalize_role() to map deprecated roles (approval_leader, manager)
+    to their current equivalents (admin), ensuring backward compatibility.
+
     Args:
         user: A user model instance (must have ``role`` and optionally
             ``is_superuser`` attributes).
@@ -42,11 +46,15 @@ def is_admin(user: Any) -> bool:
         return False
     if getattr(user, "is_superuser", False):
         return True
-    return getattr(user, "role", "") in ("admin", "super_admin")
+    role = normalize_role(getattr(user, "role", ""))
+    return role in (ROLE_ADMIN, ROLE_SUPER_ADMIN)
 
 
 def get_data_scope(user: Any) -> DataScope:
     """Determine the data scope for a given user.
+
+    Uses normalize_role() to map deprecated roles to current equivalents,
+    ensuring consistent data scoping for legacy user accounts.
 
     Args:
         user: A user model instance (must have ``role`` and optionally
@@ -58,15 +66,16 @@ def get_data_scope(user: Any) -> DataScope:
     if user is None:
         return DataScope.OWN
 
-    is_superuser = getattr(user, "is_superuser", False)
-    role = getattr(user, "role", "")
+    is_su = getattr(user, "is_superuser", False)
+    role = normalize_role(getattr(user, "role", ""))
 
-    if is_superuser or role == "super_admin":
+    if is_su or role == ROLE_SUPER_ADMIN:
         return DataScope.ALL
 
-    if role in ("admin", "manager", "approval_leader"):
+    if role == ROLE_ADMIN:
         return DataScope.OWN_DEPT
 
+    # user, viewer → 仅本人数据
     return DataScope.OWN
 
 

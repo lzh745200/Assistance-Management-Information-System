@@ -108,5 +108,5 @@ class TestSystemInfo:
         resp = client.get(f"{BASE}/system-info")
         assert resp.status_code == 200
         data = resp.json()["data"]
-        assert data["short_name"] == "军乡振兴"
+        assert data["short_name"] == "帮扶振兴"
         assert len(data["features"]) >= 5

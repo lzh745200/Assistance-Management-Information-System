@@ -169,7 +169,7 @@
   <!-- 帮扶经费（独立区域，不受 form disabled 影响）-->
   <el-divider content-position="left">帮扶经费</el-divider>
   <div class="funding-section" :class="{ 'funding-section--disabled': mode === 'view' }">
-    <!-- 单行紧凑布局：选择年度 + 部队投入 + 地方投入 + 按钮 -->
+    <!-- 单行紧凑布局：选择年度 + 专项投入 + 地方投入 + 按钮 -->
     <el-row :gutter="12" style="margin-bottom: 16px" align="bottom">
       <el-col :span="5">
         <label class="funding-label">选择年度</label>
@@ -188,7 +188,7 @@
         </el-select>
       </el-col>
       <el-col :span="6">
-        <label class="funding-label">部队投入（万元）</label>
+        <label class="funding-label">专项投入（万元）</label>
         <el-input-number
           v-model="currentMilitaryInput"
           :min="0"
@@ -196,7 +196,7 @@
           :controls="true"
           controls-position="right"
           style="width: 100%"
-          placeholder="部队投入"
+          placeholder="专项投入"
           :disabled="mode === 'view'"
         />
       </el-col>
@@ -242,7 +242,7 @@
       <el-table-column label="年度" width="90" align="center">
         <template #default="{ row }">{{ row.year }}年</template>
       </el-table-column>
-      <el-table-column label="部队投入（万元）" align="right">
+      <el-table-column label="专项投入（万元）" align="right">
         <template #default="{ row }">
           <span class="funding-number">{{ (row.militaryInvestment || 0).toFixed(2) }}</span>
         </template>
@@ -285,7 +285,7 @@
 
     <!-- 合计行 -->
     <el-descriptions v-if="transitionFundingRows.length > 0" :column="2" border size="small">
-      <el-descriptions-item label="部队合计（万元）" align="right">
+      <el-descriptions-item label="专项合计（万元）" align="right">
         <strong>{{ transitionMilitaryTotal.toFixed(2) }}</strong>
       </el-descriptions-item>
       <el-descriptions-item label="地方合计（万元）" align="right">

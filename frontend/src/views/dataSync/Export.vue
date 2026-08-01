@@ -37,7 +37,7 @@
             <el-checkbox value="village_incomes">收入数据</el-checkbox>
             <el-checkbox value="organizations">组织</el-checkbox>
             <el-checkbox value="policies">政策</el-checkbox>
-            <el-checkbox value="force_investments">部队投入</el-checkbox>
+            <el-checkbox value="force_investments">专项投入</el-checkbox>
             <el-checkbox value="industry_supports">产业帮扶</el-checkbox>
             <el-checkbox value="infrastructure_improvements">基础设施</el-checkbox>
             <el-checkbox value="party_building_supports">党建帮扶</el-checkbox>

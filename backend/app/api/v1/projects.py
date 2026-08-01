@@ -1588,7 +1588,7 @@ _STATUS_MAP = {
 }
 _URGENCY_MAP = {"低": "low", "中": "medium", "高": "high", "紧急": "urgent"}
 _FUND_SOURCE_MAP = {
-    "中央财政": "central", "地方财政": "local", "专项专项": "military",
+    "中央财政": "central", "地方财政": "local", "专项": "military",
     "社会资金": "social", "自筹资金": "self_raised", "其他": "other",
 }
 

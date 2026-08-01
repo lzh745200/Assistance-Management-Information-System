@@ -45,12 +45,12 @@ def mock_db():
     return db
 
 
-# ── reset_password_with_machine_code：POSIX chmod 分支（line 395） ─────────
+# ── reset_password_with_machine_code：安全加固（不再写明文临时文件） ─────────
 
 
-class TestResetPasswordPosixChmod:
-    async def test_posix_chmod_applied_to_password_file(self, mock_db):
-        """非 Windows 环境下新密码临时文件会被 chmod 0o600（覆盖 394-395）。"""
+class TestResetPasswordNoTempFile:
+    async def test_no_plaintext_temp_file_written(self, mock_db):
+        """重置密码后不落盘明文临时文件，新密码仅在响应中返回。"""
         q = mock_db.query.return_value
         user = MagicMock()
         user.username = "testuser"
@@ -60,21 +60,13 @@ class TestResetPasswordPosixChmod:
         svc.get_machine_code.return_value = "MC001"
         svc.verify_machine_code.return_value = True
 
-        chmod_calls = []
-        real_chmod = os.chmod
-
-        def spy_chmod(path, mode, *args, **kwargs):
-            chmod_calls.append((path, mode))
-            return real_chmod(path, mode, *args, **kwargs)
-
-        tmp_path = None
-        try:
-            with patch.object(mc, "check_rate_limit", AsyncMock(return_value=True)):
-                with patch.object(mc, "get_client_ip", return_value="127.0.0.1"):
-                    with patch.object(mc, "MachineCodeService", return_value=svc):
-                        with patch("app.core.security.generate_password", return_value="NewPwd123!x"):
-                            with patch.object(os, "name", "posix"):
-                                with patch.object(os, "chmod", spy_chmod):
+        with patch.object(mc, "check_rate_limit", AsyncMock(return_value=True)):
+            with patch.object(mc, "get_client_ip", return_value="127.0.0.1"):
+                with patch.object(mc, "MachineCodeService", return_value=svc):
+                    with patch("app.core.security.generate_password", return_value="NewPwd123!x"):
+                        with patch.object(os, "name", "posix"):
+                            with patch("tempfile.mkstemp") as mock_mkstemp:
+                                with patch.object(os, "chmod") as mock_chmod:
                                     result = await reset_password_with_machine_code(
                                         MagicMock(),
                                         username="testuser",
@@ -82,21 +74,11 @@ class TestResetPasswordPosixChmod:
                                         verification_code="VC001",
                                         db=mock_db,
                                     )
-            # password_file 不再在响应中返回（安全加固），从 chmod spy 获取路径
-            assert result["code"] == 200
-            assert result["data"]["username"] == "testuser"
-            assert "password_file" not in result["data"]
-            # chmod 0o600 被应用到临时密码文件
-            assert len(chmod_calls) >= 1
-            tmp_path = chmod_calls[0][0]
-            assert (tmp_path, 0o600) in chmod_calls
-            # 临时文件内容包含用户名与新密码
-            content = open(tmp_path, "rb").read()
-            assert b"testuser" in content
-            assert b"NewPwd123!x" in content
-        finally:
-            if tmp_path and os.path.exists(tmp_path):
-                os.remove(tmp_path)
+        assert result["code"] == 200
+        assert result["data"]["username"] == "testuser"
+        assert result["data"]["new_password"] == "NewPwd123!x"
+        mock_mkstemp.assert_not_called()
+        mock_chmod.assert_not_called()
 
 
 # ── 机器码权限端点：异常兜底与单权限撤销成功 ──────────────────────────────

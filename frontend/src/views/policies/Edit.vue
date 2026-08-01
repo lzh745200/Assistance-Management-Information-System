@@ -323,10 +323,11 @@ const handleBack = () => {
   pushSafe('/policies')
 }
 
-// 上传成功处理
+// 上传成功处理（兼容新旧两种响应格式：{url} 直返 与 {code,data:{url}} 信封）
 const handleUploadSuccess = (response: any, _file: UploadFile) => {
-  if (response?.url) {
-    formData.attachment_urls.push(response.url)
+  const url = response?.data?.url ?? response?.url
+  if (url) {
+    formData.attachment_urls.push(url)
   }
   ElMessage.success('上传成功')
 }

@@ -13,7 +13,7 @@
           <img src="/images/badges/badge.png" alt="徽章" class="badge-image" />
         </div>
         <h1 class="brand-title">帮扶管理信息系统</h1>
-        <p class="brand-subtitle">地方所需 群众所盼 部队所能</p>
+        <p class="brand-subtitle">地方所需 群众所盼 帮扶所能</p>
       </div>
 
       <!-- 右侧登录卡片 -->
@@ -358,7 +358,7 @@ const goToMachineCode = () => {
   bottom: 0;
   background-size: cover;
   background-position: center;
-  background-color: #0a1a12; /* 军事绿底色 — 图片加载前不露黑 */
+  background-color: #0a1a12; /* 绿色底色 — 图片加载前不露黑 */
   opacity: 0;
   transition: opacity 1.5s ease-in-out;
   will-change: opacity;

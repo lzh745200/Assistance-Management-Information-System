@@ -17,7 +17,7 @@
             <el-option label="紧凑模式" value="compact" />
             <el-option label="展开全部" value="expand" />
             <el-option label="管理员模板" value="role_admin" />
-            <el-option label="军官模板" value="role_officer" />
+            <el-option label="管理模板" value="role_officer" />
             <el-option label="访客模板" value="role_viewer" />
           </el-select>
           <el-button size="small" text @click="resetLayout">恢复默认</el-button>
@@ -291,7 +291,7 @@ function applyPreset(val: string) {
     // 管理员模板：全展开，突出系统管理功能
     layoutSections.splice(0, 99, ...defaults.map((s) => ({ ...s, visible: true })))
   } else if (val === 'role_officer') {
-    // 军官模板：突出数据趋势和快捷入口，隐藏最新动态
+    // 管理模板：突出数据趋势和快捷入口，隐藏最新动态
     layoutSections.splice(
       0,
       99,

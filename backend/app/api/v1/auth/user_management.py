@@ -32,7 +32,7 @@ class UserCreate(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     department: Optional[str] = None
-    role: Optional[str] = "operator"
+    role: Optional[str] = "user"
     is_active: bool = True
     organization_id: Optional[int] = None  # 所属组织ID
 
@@ -106,35 +106,19 @@ async def list_roles(db: Session = Depends(get_db), current_user=Depends(get_cur
         },
         {
             "id": "3",
-            "name": "审批领导",
-            "code": "approval_leader",
-            "description": "审批流程专用角色",
+            "name": "普通用户",
+            "code": "user",
+            "description": "日常数据录入和操作权限",
             "is_system": True,
-            "user_count": role_counts.get("approval_leader", 0),
+            "user_count": role_counts.get(UserRole.USER, 0),
         },
         {
             "id": "4",
-            "name": "部门主管",
-            "code": "manager",
-            "description": "上级单位管理权限",
-            "is_system": True,
-            "user_count": role_counts.get("manager", 0),
-        },
-        {
-            "id": "5",
-            "name": "操作员",
-            "code": "operator",
-            "description": "下级单位数据录入操作权限",
-            "is_system": True,
-            "user_count": role_counts.get("operator", 0),
-        },
-        {
-            "id": "6",
-            "name": "只读用户",
+            "name": "访客",
             "code": "viewer",
             "description": "只读查看权限",
             "is_system": True,
-            "user_count": role_counts.get("viewer", 0),
+            "user_count": role_counts.get(UserRole.VIEWER, 0),
         },
     ]
 
@@ -189,7 +173,7 @@ async def list_users(
                 "id": str(user.id),
                 "username": user.username,
                 "name": user.full_name or user.username,
-                "role": (user.role if user.role else ("admin" if user.is_superuser else "operator")),
+                "role": (user.role if user.role else ("admin" if user.is_superuser else "user")),
                 "department": user.department or "",
                 "phone": user.phone or "",
                 "email": user.email or "",
@@ -226,7 +210,9 @@ async def create_user(
     # 生成或使用提供的密码
     password = user_data.password or generate_password()
 
-    # 创建用户
+    # 创建用户（角色归一化：兼容历史角色值）
+    from app.core.constants import normalize_role
+
     user = User(
         username=user_data.username,
         full_name=user_data.full_name or user_data.username,
@@ -234,7 +220,7 @@ async def create_user(
         email=user_data.email,
         phone=user_data.phone,
         department=user_data.department,
-        role=user_data.role or "operator",
+        role=normalize_role(user_data.role),
         is_active=user_data.is_active,
         is_superuser=(is_superuser(user_data) or user_data.role == UserRole.ADMIN),
         organization_id=user_data.organization_id,

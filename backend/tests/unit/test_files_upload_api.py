@@ -12,10 +12,11 @@ class TestFilesUpload:
         assert resp.status_code == 200
         body = resp.json()
         assert body["success"] is True
-        assert body["url"].startswith("/uploads/")
-        assert body["url"].endswith(".pdf")
-        assert body["file_name"] == "测试文档.pdf"
-        assert body["file_size"] == len(b"%PDF-1.4 test content")
+        assert body["code"] == 200
+        assert body["data"]["url"].startswith("/uploads/")
+        assert body["data"]["url"].endswith(".pdf")
+        assert body["data"]["file_name"] == "测试文档.pdf"
+        assert body["data"]["file_size"] == len(b"%PDF-1.4 test content")
 
     def test_upload_with_category(self, client_with_mocked_auth):
         resp = client_with_mocked_auth.post(
@@ -23,7 +24,7 @@ class TestFilesUpload:
             files={"file": ("note.txt", b"hello", "text/plain")},
         )
         assert resp.status_code == 200
-        assert "/uploads/generic/policies/" in resp.json()["url"]
+        assert "/uploads/generic/policies/" in resp.json()["data"]["url"]
 
     def test_upload_rejects_unsupported_type(self, client_with_mocked_auth):
         resp = client_with_mocked_auth.post(

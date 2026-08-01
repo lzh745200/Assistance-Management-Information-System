@@ -86,7 +86,7 @@
         v-model="updatesInput"
         type="textarea"
         :rows="4"
-        placeholder='例如：{"status": "active", "support_unit": "某某部队"}'
+        placeholder='例如：{"status": "active", "support_unit": "某某单位"}'
       />
     </div>
 

@@ -382,6 +382,9 @@ class MachineCodeService:
         if not self.db:
             raise ValueError("数据库会话未初始化")
 
+        # 去除首尾空白（防止复制粘贴带入空格导致匹配失败）
+        pass_code = (pass_code or "").strip()
+
         from sqlalchemy import or_
 
         # 1. 优先匹配机器特定通行码
@@ -435,6 +438,35 @@ class MachineCodeService:
                 record.status = "pending"
                 safe_commit(self.db)
             logger.info("组织通行码验证成功: pass_code=%s...", pass_code[:16])
+            return record
+
+        # 3. 最终回退：仅凭 pass_code 匹配（不要求 machine_code 一致）
+        #    处理场景：wmic 输出不稳定 / 进程重启后机器码重新计算导致不一致
+        #    安全性：仅限 status=pending 且 organization_id 为空（机器通行码）
+        record = (
+            self.db.query(MachineCode)
+            .filter(
+                and_(
+                    MachineCode.pass_code == pass_code,
+                    MachineCode.organization_id.is_(None),
+                    MachineCode.status == "pending",
+                )
+            )
+            .first()
+        )
+
+        if record:
+            # 自动更新机器码绑定到当前机器，后续登录走第一优先级
+            old_machine_code = record.machine_code[:16] if record.machine_code else "None"
+            record.machine_code = machine_code
+            safe_commit(self.db)
+            logger.info(
+                "通行码回退验证成功（机器码已更新）: pass_code=%s..., "
+                "old_machine_code=%s..., new_machine_code=%s...",
+                pass_code[:16],
+                old_machine_code,
+                machine_code[:16],
+            )
             return record
 
         logger.warning(

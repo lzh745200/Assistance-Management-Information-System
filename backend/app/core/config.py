@@ -87,7 +87,7 @@ class Settings(BaseSettings):
 
     # 字段加密密钥（用于 encrypt_field/decrypt_field）
     ENCRYPTION_KEY: str = ""  # 空字符串表示使用默认测试密钥
-    # 加密后端: "aes256" (AES-256-GCM, 军标推荐) | "fernet" (Fernet/AES-128-CBC, 兼容旧版)
+    # 加密后端: "aes256" (AES-256-GCM, 高安全推荐) | "fernet" (Fernet/AES-128-CBC, 兼容旧版)
     ENCRYPTION_BACKEND: str = "aes256"
     # 密钥派生方式: "pbkdf2" (PBKDF2-SHA256, 200000迭代, 推荐) | "raw" (直接使用密钥)
     ENCRYPTION_KEY_DERIVATION: str = "pbkdf2"
@@ -120,7 +120,7 @@ class Settings(BaseSettings):
     REDIS_MAX_CONNECTIONS: int = 50
 
     # 安全配置
-    # 单机版 token 有效期收窄至 8 小时（军用安全基线要求 ≤8h）。
+    # 单机版 token 有效期收窄至 8 小时（安全基线要求 ≤8h）。
     # 结合 token_version 强制下线可进一步缓解会话泄露风险。
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8小时
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30  # 30天，单机版延长
@@ -144,9 +144,9 @@ class Settings(BaseSettings):
     # CSRF配置
     # 启用后，所有状态变更请求（POST/PUT/DELETE/PATCH）需要携带有效的 CSRF token
     # 前端需先调用 /api/v1/auth/csrf-token 获取 token，并在请求头 X-CSRF-Token 中携带
-    # 军用安全基线要求：即使单机部署也应启用 CSRF 保护，防止同源跨站请求攻击
+    # 安全基线要求：即使单机部署也应启用 CSRF 保护，防止同源跨站请求攻击
     # 默认开启；如需临时关闭（如调试），可设置环境变量 CSRF_ENABLED=false
-    CSRF_ENABLED: bool = True  # 军用安全基线：默认开启 CSRF 保护
+    CSRF_ENABLED: bool = True  # 安全基线：默认开启 CSRF 保护
     CSRF_SECRET_KEY: str = ""  # 留空时自动生成（与 SECRET_KEY 类似持久化到 runtime_secrets.json）
 
     # 速率限制配置
@@ -306,12 +306,23 @@ class Settings(BaseSettings):
 
         # 安全基线：生产环境检查字段加密密钥是否为空（使用默认测试密钥是安全风险）
         if self.ENVIRONMENT == "production" and not self.ENCRYPTION_KEY:
-            import logging
+            # 自动从运行时密钥存储加载或生成持久化密钥（每台机器独立随机生成，
+            # 跨重启保持，位于用户数据目录），避免使用任何硬编码默认密钥。
+            try:
+                from app.utils.runtime_secrets import get_or_create_secret
 
-            logging.getLogger(__name__).warning(
-                "ENCRYPTION_KEY 未配置，字段加密将使用默认测试密钥——"
-                "生产环境存在数据泄露风险，请通过环境变量或 .env 配置 ENCRYPTION_KEY"
-            )
+                self.ENCRYPTION_KEY = get_or_create_secret(
+                    "ENCRYPTION_FERNET_KEY",
+                    generate=lambda: _generate_fernet_key(),
+                )
+            except Exception as exc:
+                import logging
+
+                logging.getLogger(__name__).warning(
+                    "ENCRYPTION_KEY 未配置且自动生成失败（%s），字段加密将使用进程内随机密钥——"
+                    "重启后历史密文可能无法解密，请尽快通过环境变量或 .env 配置 ENCRYPTION_KEY",
+                    exc,
+                )
 
         # 动态设置数据目录路径（解决 Windows 安装版权限问题）
         # 首先获取默认数据目录，供后续使用
@@ -352,6 +363,14 @@ class Settings(BaseSettings):
 # 无论 production 还是 dev，如果 SECRET_KEY 为空则自动生成并持久化到 runtime_secrets.json。
 # 这避免了因 .env 文件路径不匹配（如从 backend/ 目录启动时找不到根目录 .env）导致启动崩溃。
 from app.utils.runtime_secrets import ensure_runtime_secrets  # noqa: E402
+
+
+def _generate_fernet_key() -> str:
+    """生成 Fernet 格式密钥（延迟导入 cryptography，避免模块加载顺序问题）"""
+    from cryptography.fernet import Fernet
+
+    return Fernet.generate_key().decode()
+
 
 ensure_runtime_secrets()
 

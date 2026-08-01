@@ -37,8 +37,8 @@ class User(Base):
     full_name = Column(String(100), comment="姓名")
     role = Column(
         String(20),
-        default="operator",
-        comment="角色: super_admin-超级管理员, admin-管理员, approval_leader-审批领导, manager-管理者, operator-操作员, viewer-查看者",
+        default="user",
+        comment="角色: super_admin-超级管理员, admin-管理员, user-普通用户, viewer-访客",
     )
     is_active = Column(Boolean, default=True, comment="是否激活")
     is_superuser = Column(Boolean, default=False, comment="是否超级管理员")

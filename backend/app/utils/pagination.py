@@ -1,7 +1,7 @@
 """
 Pagination Utilities (SQLAlchemy 2.0 升级版)
 
-军用级离线桌面管理系统 - 统一分页工具库
+离线桌面管理系统 - 统一分页工具库
 包含：
 1. Keyset Pagination (游标分页)：适用于大数据量、无限滚动、深层分页场景，性能 O(log N)。
 2. Offset Pagination (传统分页)：适用于需要精确页码跳转的后台管理列表。

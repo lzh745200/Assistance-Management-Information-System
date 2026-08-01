@@ -1,5 +1,19 @@
 <template>
   <div class="role-management">
+    <!-- 系统固定角色提示 -->
+    <el-alert
+      title="系统角色说明"
+      type="info"
+      :closable="false"
+      show-icon
+      style="margin-bottom: 16px"
+    >
+      <template #default>
+        系统固定角色为：<b>超级管理员</b>、<b>系统管理员</b>、<b>普通用户</b>、<b>访客</b>。
+        用户注册时默认为「普通用户」。此处的 RBAC 角色用于细粒度权限包管理，
+        不影响用户角色（users.role）的分配。
+      </template>
+    </el-alert>
     <el-card class="search-card">
       <el-form :inline="true" :model="searchForm">
         <el-form-item label="角色名称">
@@ -327,7 +341,7 @@ const handlePermission = async (row: RoleItem) => {
   // 从后端加载角色已有权限
   try {
     const res = await get(`/rbac/roles/${row.id}`)
-    const perms: string[] = res.data?.data?.permissions || []
+    const perms: string[] = res.data?.permissions || []
     defaultCheckedKeys.value = perms
   } catch {
     defaultCheckedKeys.value = []
@@ -439,7 +453,7 @@ const savePermissions = async () => {
 async function loadPermissions() {
   try {
     const res = await get('/rbac/permissions')
-    const categories: Record<string, PermissionItem[]> = res.data?.categories || {}
+    const categories: Record<string, PermissionItem[]> = res.categories || {}
 
     // 扩展权限类别中文映射，覆盖所有系统模块
     const categoryNames: Record<string, string> = {

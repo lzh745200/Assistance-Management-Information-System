@@ -193,8 +193,8 @@ class TestPolicyServiceQueries:
         mock_policy.publish_date = datetime(2025, 1, 1)
         mock_policy.issue_date = datetime(2025, 1, 1)
         mock_policy.effective_date = None
-        mock_policy.department = "军委"
-        mock_policy.issuing_authority = "军委"
+        mock_policy.department = "中央"
+        mock_policy.issuing_authority = "中央"
         mock_policy.content = "内容"
         mock_policy.summary = "摘要"
         mock_policy.document_number = "M-001"
@@ -215,7 +215,7 @@ class TestPolicyServiceQueries:
 
         result = self.service._to_response(mock_policy)
         assert result.category_name == "专项政策"
-        assert result.level_name == "中央军委"
+        assert result.level_name == "中央部署"
 
     def test_to_response_local(self):
         mock_policy = MagicMock()

@@ -256,10 +256,10 @@ class PolicyService:
             military=CategoryConfig(
                 name="专项政策",
                 levels=[
-                    CategoryLevelConfig(value="cmc", label="军委", order=1),
-                    CategoryLevelConfig(value="provincial_military", label="省军区", order=2),
-                    CategoryLevelConfig(value="military_sub_district", label="军分区", order=3),
-                    CategoryLevelConfig(value="armed_forces_dept", label="人武部", order=4),
+                    CategoryLevelConfig(value="cmc", label="中央", order=1),
+                    CategoryLevelConfig(value="provincial_military", label="省级", order=2),
+                    CategoryLevelConfig(value="military_sub_district", label="市级", order=3),
+                    CategoryLevelConfig(value="armed_forces_dept", label="区县级", order=4),
                 ],
             ),
             local=CategoryConfig(

@@ -40,7 +40,7 @@ class ExportModule(str, enum.Enum):
 MODULE_NAMES = {
     "population": "人口数据",
     "income": "收入数据",
-    "force_investment": "部队投入",
+    "force_investment": "专项投入",
     "industry_support": "产业帮扶",
     "infrastructure": "基础设施改善",
     "party_building": "党建帮扶",

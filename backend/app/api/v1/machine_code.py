@@ -403,15 +403,10 @@ async def reset_password_with_machine_code(
 
         db.commit()
 
-        # 离线单机环境：同时写入临时文件备份 + 在HTTP响应中返回（仅localhost可访问）
-        import tempfile
-        import os as _os
-        fd, tmp_path = tempfile.mkstemp(suffix=".txt", prefix="pwd_reset_")
-        with _os.fdopen(fd, "w") as _f:
-            _f.write(f"用户: {username}\n新密码: {new_password}\n请首次登录后立即修改\n")
-        if _os.name != "nt":  # pragma: no cover
-            _os.chmod(tmp_path, 0o600)
-        logger.info("用户 %s 密码已通过机器码验证重置，新密码已写入临时文件", username)
+        # 离线单机环境：新密码通过 HTTP 响应返回（仅 localhost 可访问），
+        # 不再写入系统临时目录——明文落盘于 %TEMP% 且 Windows 无权限限制，
+        # 存在泄密风险（军标审计不合格）。
+        logger.info("用户 %s 密码已通过机器码验证重置，新密码仅在本次响应中返回", username)
         return {
             "code": 200,
             "data": {"username": username, "new_password": new_password},

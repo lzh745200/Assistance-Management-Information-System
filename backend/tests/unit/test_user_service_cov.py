@@ -52,7 +52,7 @@ class TestCreateUser:
 
         user = svc.create_user({"username": "u2", "password": "p"})
 
-        assert user.role == "operator"  # 默认角色
+        assert user.role == "user"  # 默认角色（精简后为普通用户）
         assert user.email is None
         assert user.full_name is None
         db.add.assert_called_once_with(user)

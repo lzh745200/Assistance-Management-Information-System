@@ -219,7 +219,7 @@ const sections = computed(() => {
               value: d.forceInvestment.seniorLeaderVisits ?? 0,
             },
             {
-              label: '官兵到村(人次)',
+              label: '人员到村(人次)',
               value: d.forceInvestment.unitSoldierVisits ?? 0,
             },
           ]

@@ -1,5 +1,5 @@
 /**
- * 键盘快捷键 Composable — 军用增强版
+ * 键盘快捷键 Composable — 增强版
  *
  * 提供全局和页面级快捷键注册，支持：
  * - Ctrl/Shift/Alt 组合键

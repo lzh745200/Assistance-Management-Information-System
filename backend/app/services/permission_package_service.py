@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 CURRENT_VERSION = "1.0"
 
 # 系统内置角色名 — 导入时不删除/不覆盖
-SYSTEM_ROLE_NAMES = {"super_admin", "admin", "approval_leader", "manager", "operator", "viewer"}
+SYSTEM_ROLE_NAMES = {"super_admin", "admin", "user", "viewer", "approval_leader", "manager", "operator"}
 
 
 class PermissionPackageService:

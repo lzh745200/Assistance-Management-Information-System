@@ -7,7 +7,7 @@ CSRF 保护中间件
 3. 前端在状态变更请求的 X-CSRF-Token 请求头中携带 token
 4. 服务器比对 Cookie 中的 token 与 Header 中的 token，一致则放行
 
-军用安全基线要求：即使单机部署也应启用 CSRF 保护，防止同源跨站请求攻击。
+安全基线要求：即使单机部署也应启用 CSRF 保护，防止同源跨站请求攻击。
 """
 
 import hashlib

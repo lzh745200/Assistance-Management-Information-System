@@ -125,7 +125,7 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="村支书(退役军人)" prop="veteranVillageSecretary">
+            <el-form-item label="村支书(退役人员)" prop="veteranVillageSecretary">
               <el-input-number
                 v-model="formData.veteranVillageSecretary"
                 :min="0"
@@ -134,7 +134,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="村委员(退役军人)" prop="veteranVillageCommittee">
+            <el-form-item label="村委员(退役人员)" prop="veteranVillageCommittee">
               <el-input-number
                 v-model="formData.veteranVillageCommittee"
                 :min="0"
@@ -189,12 +189,12 @@
         <el-divider content-position="left">力量投入情况</el-divider>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="军以上领导到村(人次)" prop="seniorLeaderVisits">
+            <el-form-item label="上级领导到村(人次)" prop="seniorLeaderVisits">
               <el-input-number v-model="formData.seniorLeaderVisits" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="帮扶单位官兵到村(人次)" prop="unitSoldierVisits">
+            <el-form-item label="帮扶单位人员到村(人次)" prop="unitSoldierVisits">
               <el-input-number v-model="formData.unitSoldierVisits" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -529,7 +529,7 @@
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
-            <el-form-item label="官兵辅导员(人)" prop="volunteerCounselors">
+            <el-form-item label="校外辅导员(人)" prop="volunteerCounselors">
               <el-input-number
                 v-model="formData.volunteerCounselors"
                 :min="0"
@@ -596,7 +596,7 @@
               <el-input v-model="row.phone" size="small" placeholder="电话" />
             </template>
           </el-table-column>
-          <el-table-column label="退役军人" width="90" align="center">
+          <el-table-column label="退役人员" width="90" align="center">
             <template #default="{ row }">
               <el-switch v-model="row.isVeteran" size="small" />
             </template>
@@ -781,8 +781,8 @@ const SECTION_NUMERIC_FIELDS: Record<string, Array<[string, string, boolean]>> =
     ['marginalPovertyPopulation', '边缘易致贫人口数', false],
     ['suddenDifficultyHouseholds', '突发严重困难户数', false],
     ['suddenDifficultyPopulation', '突发严重困难人口数', false],
-    ['veteranVillageSecretary', '村支书(退役军人)人数', false],
-    ['veteranVillageCommittee', '村委员(退役军人)人数', false],
+    ['veteranVillageSecretary', '村支书(退役人员)人数', false],
+    ['veteranVillageCommittee', '村委员(退役人员)人数', false],
   ],
   income: [
     ['perCapitaIncome', '村人均纯收入', true],
@@ -790,8 +790,8 @@ const SECTION_NUMERIC_FIELDS: Record<string, Array<[string, string, boolean]>> =
     ['collectiveIncome', '村集体收入', true],
   ],
   force_investment: [
-    ['seniorLeaderVisits', '军以上领导到村人次', false],
-    ['unitSoldierVisits', '帮扶单位官兵到村人次', false],
+    ['seniorLeaderVisits', '上级领导到村人次', false],
+    ['unitSoldierVisits', '帮扶单位人员到村人次', false],
   ],
   industry: [
     ['investment', '当年投入金额', true],
@@ -841,7 +841,7 @@ const SECTION_NUMERIC_FIELDS: Record<string, Array<[string, string, boolean]>> =
     ['aidedExternalSchools', '援建外村学校数量', false],
     ['educationActivities', '助学兴教活动次数', false],
     ['aidedStudents', '资助学生人数', false],
-    ['volunteerCounselors', '官兵辅导员人数', false],
+    ['volunteerCounselors', '校外辅导员人数', false],
   ],
   committee: [['collectiveIncomeAmount', '集体收入', false]],
 }

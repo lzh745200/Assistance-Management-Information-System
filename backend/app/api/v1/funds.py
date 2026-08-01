@@ -1,7 +1,7 @@
 """
 经费管理 API 路由 (最终优化版)
 
-军用级离线桌面管理系统 - 经费全流程管理
+离线桌面管理系统 - 经费全流程管理
 重构亮点：
 1. 全面拥抱 SQLAlchemy 2.0 (select 语法)
 2. 修复状态流转中的字段映射 Bug (allocated_at -> allocation_date 等)

@@ -3,16 +3,18 @@
 提供无业务绑定的文件上传端点，返回可直接访问的 /uploads 静态 URL。
 """
 
+import logging
 import os
 import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.database import get_db
 from app.core.security import get_current_user
+from app.core.response import success_response
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/files", tags=["文件上传"])
 
@@ -38,7 +40,6 @@ async def upload_file(
     file: UploadFile = File(...),
     category: Optional[str] = None,
     current_user=Depends(get_current_user),
-    db: Session = Depends(get_db),
 ):
     """上传任意业务模块的附件文件
 
@@ -92,11 +93,20 @@ async def upload_file(
     rel_path = os.path.relpath(file_path, base_upload).replace("\\", "/")
     url = f"/uploads/{rel_path}"
 
-    return {
-        "success": True,
-        "url": url,
-        "file_name": file.filename or unique_name,
-        "file_size": len(content),
-        "file_type": file.content_type or "application/octet-stream",
-        "message": "上传成功",
-    }
+    logger.info(
+        "文件上传成功: user=%s, file=%s, url=%s, size=%d",
+        getattr(current_user, 'username', 'unknown'),
+        file.filename or unique_name,
+        url,
+        len(content),
+    )
+
+    return success_response(
+        data={
+            "url": url,
+            "file_name": file.filename or unique_name,
+            "file_size": len(content),
+            "file_type": file.content_type or "application/octet-stream",
+        },
+        message="上传成功",
+    )

@@ -96,7 +96,7 @@ class TestListRoles:
             assert response.status_code == 200
             data = response.json()
             assert data["success"] is True
-            assert data["data"]["total"] == 6
+            assert data["data"]["total"] == 4
 
 
 class TestListUsersManagement:

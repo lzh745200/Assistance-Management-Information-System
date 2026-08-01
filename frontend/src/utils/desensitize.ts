@@ -1,5 +1,5 @@
 /**
- * 数据脱敏工具 — 军用安全增强版
+ * 数据脱敏工具 — 安全增强版
  *
  * 用于前端展示时对敏感信息进行分级脱敏处理。
  * 支持基于用户角色的分级脱敏（管理员可见原文，查看者完全隐藏，其他角色脱敏展示）。
@@ -87,7 +87,7 @@ export function maskAmount(amount: number | string | null | undefined, showAmoun
   return '****'
 }
 
-/** 军官证/士兵证脱敏 */
+/** 证件编号脱敏 */
 export function maskMilitaryID(id: string | null | undefined): string {
   if (!id || id.length < 4) return id || ''
   return id.slice(0, 2) + '****' + id.slice(-2)

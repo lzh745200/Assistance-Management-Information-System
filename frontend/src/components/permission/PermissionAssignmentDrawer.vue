@@ -68,10 +68,8 @@
               <el-select v-model="legacyForm.role" placeholder="选择系统角色" style="width: 240px">
                 <el-option label="超级管理员" value="super_admin" />
                 <el-option label="管理员" value="admin" />
-                <el-option label="审批领导" value="approval_leader" />
-                <el-option label="管理者" value="manager" />
-                <el-option label="操作员" value="operator" />
-                <el-option label="查看者" value="viewer" />
+                <el-option label="普通用户" value="user" />
+                <el-option label="访客" value="viewer" />
               </el-select>
             </el-form-item>
             <el-form-item label="数据范围">

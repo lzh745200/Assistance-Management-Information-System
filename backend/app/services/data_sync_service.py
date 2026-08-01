@@ -77,7 +77,7 @@ class DataSyncService:
             "village_incomes": "收入数据",
             "organizations": "组织",
             "policies": "政策",
-            "force_investments": "部队投入",
+            "force_investments": "专项投入",
             "industry_supports": "产业帮扶",
             "infrastructure_improvements": "基础设施",
             "party_building_supports": "党建帮扶",

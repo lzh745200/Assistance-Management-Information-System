@@ -10,7 +10,7 @@
 // ==================== 颜色Token ====================
 
 :root {
-  // ── 主色调：军绿系（Phase 1-B: 全局默认军事主题）──
+  // ── 主色调：绿色系（Phase 1-B: 全局默认主题）──
   --color-primary: #2d6a4f;
   --color-primary-light-1: #40916c;
   --color-primary-light-2: #52b788;
@@ -332,11 +332,11 @@
   --shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-// ==================== 军事主题Token ====================
-// Requirements: 2.1 - 军事主题设计令牌
+// ==================== 主题Token ====================
+// Requirements: 2.1 - 主题设计令牌
 
 [data-theme="military"] {
-  // 军绿色系主色调 - 深邃军绿渐变
+  // 绿色系主色调 - 深邃绿渐变
   --color-military-darkest: #081c15;
   --color-military-dark: #1b4332;
   --color-military-medium: #2d6a4f;
@@ -344,7 +344,7 @@
   --color-military-lighter: #52b788;
   --color-military-lightest: #74c69d;
 
-  // 金色系点缀色 - 军徽金色
+  // 金色系点缀色 - 金色
   --color-badge-gold: #d4af37;
   --color-badge-gold-light: #e6c158;
   --color-badge-gold-lighter: #f0e68c;
@@ -472,7 +472,7 @@
   --icon-size-xl: 36px;
 }
 
-// ==================== 军事主题动画Token ====================
+// ==================== 主题动画Token ====================
 
 :root {
   // 动画时长
@@ -567,10 +567,10 @@ $layout-header-height: var(--layout-header-height);
 $layout-sidebar-width: var(--layout-sidebar-width);
 $layout-sidebar-collapsed-width: var(--layout-sidebar-collapsed-width);
 
-// ==================== 军事主题SCSS变量 ====================
+// ==================== 主题SCSS变量 ====================
 // 为了方便在组件中使用，提供SCSS变量
 
-// 军绿色系
+// 绿色系
 $military-darkest: #081c15;
 $military-dark: #1b4332;
 $military-medium: #2d6a4f;

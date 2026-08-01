@@ -21,9 +21,9 @@ const DEFAULT_BACKEND_PORT = 8000;
 const MAX_PORT_ATTEMPTS = 11;
 let backendPort = DEFAULT_BACKEND_PORT;
 const APP_TITLE = '帮扶管理系统';
-const BACKEND_READY_TIMEOUT = 180000; // 3分钟——PyInstaller打包exe首次启动需提取文件+初始化数据库
+const BACKEND_READY_TIMEOUT = 300000; // 5分钟——PyInstaller打包exe首次启动需提取文件+杀软扫描+初始化数据库（实测可超3分钟）
 const MAX_URL_LOAD_RETRIES = 5;     // 页面加载失败最大重试次数
-const URL_LOAD_RETRY_DELAY = 3000;  // 页面加载重试间隔（毫秒）
+const URL_LOAD_RETRY_DELAY = 3000;  // 页面加载重试间隔（毫秒，健康检查等待将覆盖此延时）
 const AUTO_BACKUP_INTERVAL = 24 * 60 * 60 * 1000;
 const WINDOW_STATE_FILE = path.join(getUserDataPath(), 'window-state.json');
 const SECRETS_FILE = path.join(getUserDataPath(), 'secrets.json');
@@ -412,6 +412,27 @@ function waitForBackend(stderrCapture = []) {
 }
 
 // ─── 页面加载（带重试） ───
+// 后端冷启动（PyInstaller 解包 + 杀软扫描）可能长达数分钟，页面重试前
+// 先做 /health 健康检查，后端就绪后再加载，避免盲目重试耗尽次数。
+function waitForBackendReady(timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    function probe() {
+      if (Date.now() - startTime > timeoutMs) {
+        reject(new Error('backend not ready'));
+        return;
+      }
+      const req = http.get(`http://127.0.0.1:${backendPort}/health`, (res) => {
+        if (res.statusCode === 200) resolve();
+        else setTimeout(probe, 1000);
+      });
+      req.on('error', () => setTimeout(probe, 1000));
+      req.setTimeout(3000, () => { req.destroy(); setTimeout(probe, 1000); });
+    }
+    probe();
+  });
+}
+
 function loadURLWithRetry(win, url, retryCount) {
   if (retryCount >= MAX_URL_LOAD_RETRIES) {
     const msg = `加载页面失败（已重试 ${MAX_URL_LOAD_RETRIES} 次）: ${url}`;
@@ -430,12 +451,17 @@ function loadURLWithRetry(win, url, retryCount) {
     const errMsg = err?.message || String(err);
     console.error(`[Window] 加载失败 (重试 ${retryCount + 1}/${MAX_URL_LOAD_RETRIES}):`, errMsg);
     writeDiagnosticLog(`页面加载失败 (${retryCount + 1}/${MAX_URL_LOAD_RETRIES}): ${errMsg}`);
-    // 等待后重试——后端可能还在启动中
-    setTimeout(() => {
+    // 后端可能仍在冷启动：先等待健康检查通过（每轮最长 60 秒），就绪后再重试加载
+    waitForBackendReady(60000).then(() => {
       if (win && !win.isDestroyed()) {
+        console.log(`[Window] 后端已就绪，重新加载页面 (${retryCount + 1}/${MAX_URL_LOAD_RETRIES})`);
         loadURLWithRetry(win, url, retryCount + 1);
       }
-    }, URL_LOAD_RETRY_DELAY);
+    }).catch(() => {
+      if (win && !win.isDestroyed()) {
+        setTimeout(() => loadURLWithRetry(win, url, retryCount + 1), URL_LOAD_RETRY_DELAY);
+      }
+    });
   });
 }
 

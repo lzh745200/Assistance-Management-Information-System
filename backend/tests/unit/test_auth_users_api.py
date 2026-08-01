@@ -690,7 +690,7 @@ class TestRoleOptions:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}/roles/options")
             assert response.status_code == 200
-            assert len(response.json()["roles"]) == 6
+            assert len(response.json()["roles"]) == 4
         _clear_overrides(client, get_current_user)
 
 

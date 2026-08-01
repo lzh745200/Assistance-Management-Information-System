@@ -123,10 +123,10 @@
           </el-form-item>
         </el-col>
       </el-row>
-      <!-- 村两委退役军人 -->
+      <!-- 村两委退役人员 -->
       <el-row :gutter="12">
         <el-col :span="8">
-          <el-form-item label="村支书(退役军人)">
+          <el-form-item label="村支书(退役人员)">
             <el-input-number
               v-model="formData.population.veteranVillageSecretary"
               :min="0"
@@ -135,7 +135,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="村委员(退役军人)">
+          <el-form-item label="村委员(退役人员)">
             <el-input-number
               v-model="formData.population.veteranVillageCommittee"
               :min="0"
@@ -184,7 +184,7 @@
       <el-divider content-position="left">力量投入情况</el-divider>
       <el-row :gutter="12">
         <el-col :span="8">
-          <el-form-item label="军以上领导到村(人次)">
+          <el-form-item label="上级领导到村(人次)">
             <el-input-number
               v-model="formData.forceInvestment.seniorLeaderVisits"
               :min="0"
@@ -193,7 +193,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="8">
-          <el-form-item label="帮扶单位官兵到村(人次)">
+          <el-form-item label="帮扶单位人员到村(人次)">
             <el-input-number
               v-model="formData.forceInvestment.unitSoldierVisits"
               :min="0"
@@ -574,7 +574,7 @@
       </el-row>
       <el-row :gutter="12">
         <el-col :span="6">
-          <el-form-item label="官兵辅导员(人)">
+          <el-form-item label="校外辅导员(人)">
             <el-input-number
               v-model="formData.education.volunteerCounselors"
               :min="0"

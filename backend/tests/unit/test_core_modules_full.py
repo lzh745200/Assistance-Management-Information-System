@@ -72,13 +72,6 @@ class TestCoreSecurity:
         assert verify_password("test123", hashed) is True
         assert verify_password("wrong", hashed) is False
 
-    def test_generate_session_id(self):
-        """测试生成会话ID"""
-        from app.core.security import generate_session_id
-        session_id = generate_session_id()
-        assert isinstance(session_id, str)
-        assert len(session_id) > 0
-
     def test_generate_password(self):
         """测试生成密码"""
         from app.core.security import generate_password

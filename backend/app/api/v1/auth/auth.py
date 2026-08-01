@@ -773,8 +773,8 @@ async def register_user(
     machine_service = MachineCodeService(db)
     current_machine_code = machine_service.get_machine_code()
 
-    # 验证通行码
-    machine_record = machine_service.verify_pass_code(pass_code, current_machine_code)
+    # 验证通行码（去除首尾空白，防止复制粘贴带入空格）
+    machine_record = machine_service.verify_pass_code(pass_code.strip(), current_machine_code)
     if not machine_record:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -803,8 +803,8 @@ async def register_user(
             is_superuser=False,
         )
 
-        # 创建新用户（默认为viewer角色）
-        user = user_service.create_user(user_create)
+        # 创建新用户（create_user 期望 dict；model_dump 转换 pydantic 对象）
+        user = user_service.create_user(user_create.model_dump())
 
         # 激活机器码（绑定到用户）
         machine_service.activate_machine_code(machine_record, user.id)
@@ -827,7 +827,7 @@ async def register_user(
             username=user.username,
             email=user.email,
             full_name=user.full_name,
-            role=user.role or "viewer",
+            role=user.role or "user",
             is_active=user.is_active if user.is_active is not None else True,
             is_superuser=user.is_superuser or user.role in ("admin", "super_admin"),
             allowed_menus=getattr(user, "allowed_menus", None),

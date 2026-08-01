@@ -96,8 +96,8 @@
         /></el-form-item>
         <el-form-item label="划转方向" required>
           <el-radio-group v-model="form.direction">
-            <el-radio value="military_to_local">军方→地方</el-radio>
-            <el-radio value="local_to_military">地方→军方</el-radio>
+            <el-radio value="military_to_local">专项→地方</el-radio>
+            <el-radio value="local_to_military">地方→专项</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="金额(万元)" required

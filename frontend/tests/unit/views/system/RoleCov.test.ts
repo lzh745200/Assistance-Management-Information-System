@@ -50,9 +50,7 @@ const roleAdmin = {
 }
 const roleViewer = { id: 'r2', name: '', description: '', is_active: false }
 
-const roleUsersR1 = [
-  { username: 'u1', real_name: '张三', email: 'a@b.c', is_active: true },
-]
+const roleUsersR1 = [{ username: 'u1', real_name: '张三', email: 'a@b.c', is_active: true }]
 
 // 权限树：覆盖 categoryNames 命中/回退、空类别 continue、null 类别 continue、
 // actionNames 命中、code 缺失回退 p.name、label 三级回退
@@ -70,11 +68,11 @@ const permissionsPayload = {
 
 function defaultGetImpl(url: string) {
   if (url === '/rbac/roles') return Promise.resolve({ data: { data: [roleAdmin, roleViewer] } })
-  if (url === '/rbac/permissions') return Promise.resolve({ data: permissionsPayload })
+  if (url === '/rbac/permissions') return Promise.resolve(permissionsPayload)
   if (url === '/rbac/roles/r1/users') return Promise.resolve({ data: roleUsersR1 })
   if (url === '/rbac/roles/r2/users') return Promise.resolve({ data: [] })
   if (url === '/rbac/roles/r1') {
-    return Promise.resolve({ data: { data: { permissions: ['user:read'] } } })
+    return Promise.resolve({ data: { permissions: ['user:read'] } })
   }
   return Promise.resolve({ data: {} })
 }
@@ -143,7 +141,8 @@ function mountComp() {
         },
         'el-table-column': {
           name: 'ElTableColumn',
-          template: '<div class="el-table-column-stub"><slot :row="rowA" /><slot :row="rowB" /></div>',
+          template:
+            '<div class="el-table-column-stub"><slot :row="rowA" /><slot :row="rowB" /></div>',
           data() {
             return { rowA, rowB }
           },
@@ -254,6 +253,16 @@ describe('挂载与数据加载', () => {
     expect((wrapper.vm as any).tableData[1].userCount).toBe(2)
   })
 
+  it('角色用户数接口响应缺 data 与 users → userCount 兜底 0（|| [] 末段）', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/roles/r1/users') return Promise.resolve({})
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).tableData[0].userCount).toBe(0)
+  })
+
   it('loadPermissions 失败 → 空树并提示', async () => {
     mockGet.mockImplementation((url: string) => {
       if (url === '/rbac/permissions') return Promise.reject(new Error('net'))
@@ -264,6 +273,18 @@ describe('挂载与数据加载', () => {
     const vm = wrapper.vm as any
     expect(vm.menuTreeData).toEqual([])
     expect(ElMessage.error).toHaveBeenCalledWith('加载权限菜单失败，请稍后重试')
+  })
+
+  it('loadPermissions：响应缺 categories → 空树兜底（|| {} 分支），不报错', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/permissions') return Promise.resolve({})
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.menuTreeData).toEqual([])
+    expect(ElMessage.error).not.toHaveBeenCalled()
   })
 })
 
@@ -340,7 +361,13 @@ describe('新增 / 编辑 / 取消 / 提交', () => {
     expect(vm.isEdit).toBe(false)
     expect(vm.dialogTitle).toBe('新增角色')
     expect(vm.dialogVisible).toBe(true)
-    expect(vm.formData).toMatchObject({ id: '', name: '', code: '', description: '', status: 'active' })
+    expect(vm.formData).toMatchObject({
+      id: '',
+      name: '',
+      code: '',
+      description: '',
+      status: 'active',
+    })
   })
 
   it('点击行内编辑 → 填充表单', async () => {
@@ -510,6 +537,19 @@ describe('用户列表对话框', () => {
     expect(vm.roleUsers).toEqual([{ username: 'x' }])
   })
 
+  it('users 接口响应缺 data 与 users → 空数组兜底（|| [] 末段）', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/roles/r2/users') return Promise.resolve({})
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.handleViewUsers({ ...rowB })
+    expect(vm.roleUsers).toEqual([])
+    expect(vm.loadingUsers).toBe(false)
+  })
+
   it('users 接口异常 → 空列表且 loading 复位', async () => {
     mockGet.mockImplementation((url: string) => {
       if (url === '/rbac/roles/r2/users') return Promise.reject(new Error('net'))
@@ -588,6 +628,23 @@ describe('删除角色', () => {
       expect.stringContaining('该角色下还有 1 个用户'),
       '警告',
       expect.anything()
+    )
+    expect(mockDel).toHaveBeenCalledWith('/rbac/roles/r2')
+  })
+
+  it('删除前 users 接口响应缺 data 与 users → 按 0 人走普通确认（|| [] 末段）', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/roles/r2/users') return Promise.resolve({})
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.handleDelete({ ...rowB })
+    expect(confirmMock).toHaveBeenCalledWith(
+      expect.stringContaining('确定删除角色 "观察员" 吗？'),
+      '提示',
+      expect.objectContaining({ type: 'warning' })
     )
     expect(mockDel).toHaveBeenCalledWith('/rbac/roles/r2')
   })

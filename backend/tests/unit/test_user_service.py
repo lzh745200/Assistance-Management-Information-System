@@ -126,7 +126,8 @@ class TestValidRoles:
         assert "super_admin" in VALID_ROLES
         assert "admin" in VALID_ROLES
         assert "viewer" in VALID_ROLES
-        assert len(VALID_ROLES) == 6
+        assert "user" in VALID_ROLES
+        assert len(VALID_ROLES) == 7
 
     def test_valid_roles_all_strings(self):
         from app.services.user_service import VALID_ROLES

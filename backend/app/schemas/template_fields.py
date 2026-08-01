@@ -20,7 +20,7 @@ TEMPLATE_FIELDS: Dict[str, List[FieldDef]] = {
         {"name": "所属乡镇", "key": "township", "required": False, "type": "text", "width": 12,
          "desc": "如：丙妹镇"},
         {"name": "帮扶部门", "key": "department", "required": True, "type": "text", "width": 18,
-         "desc": "负责帮扶的帮扶部门，如：陆军第X集团军政治工作部"},
+         "desc": "负责帮扶的部门，如：市乡村振兴局"},
         {"name": "帮扶单位", "key": "support_unit", "required": True, "type": "text", "width": 18,
          "desc": "具体执行帮扶的单位名称"},
         {"name": "帮扶起始年份", "key": "support_year", "required": True, "type": "number", "width": 10,

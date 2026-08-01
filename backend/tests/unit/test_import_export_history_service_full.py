@@ -13,6 +13,10 @@
 import importlib
 
 import pytest
+
+# 异步 SQLAlchemy 依赖 greenlet；32 位 Python 无 wheel 无法安装时跳过而非报错
+pytest.importorskip("greenlet")
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker

@@ -1,5 +1,5 @@
 <template>
-  <el-config-provider :locale="zhCn" :size="'default'">
+  <el-config-provider :locale="zhCn">
     <router-view v-slot="{ Component }">
       <template v-if="appError">
         <div class="app-error-boundary">

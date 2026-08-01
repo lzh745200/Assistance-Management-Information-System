@@ -126,7 +126,7 @@ async def download_import_template(
 
     - entity_type: 实体类型，支持 supported_village、project、fund、school、policy
     - 返回 Excel 模板文件，包含所有字段说明和示例数据
-    - 统一样式：军绿主题 (ExcelTemplateService)
+    - 统一样式：绿色主题 (ExcelTemplateService)
     """
     template_service = ExcelTemplateService()
     entity_labels = {

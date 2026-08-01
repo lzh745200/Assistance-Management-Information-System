@@ -438,7 +438,8 @@ const stats = computed(() => {
 async function loadFundStats() {
   try {
     const res = await get('/funds/statistics/overview')
-    const d = res.data || res
+    // data 显式为 null 表示"无统计"→ 不覆盖已有值（避免 serverFundStats 变成 {data:null}）
+    const d = res.data === null ? null : res.data || res
     if (d) serverFundStats.value = d
   } catch {
     /* 统计加载失败不阻塞主流程 */

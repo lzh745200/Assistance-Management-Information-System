@@ -263,7 +263,7 @@ backend/test_result.txt
 
 # ===== 额外测试产物 =====
 .pytest_cache/**
-coverage*/**
+**/coverage*/**
 .coverage
 .coverage.*
 htmlcov/**

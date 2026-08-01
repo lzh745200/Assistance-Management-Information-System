@@ -101,9 +101,9 @@ def setup_database():
     """每个测试前创建所有表，测试后清除"""
 
     # 清理全局状态
-    from app.core.security import token_blacklist, _rate_limit_store
-    if hasattr(token_blacklist, 'clear'):
-        token_blacklist.clear()
+    from app.core.security import _rate_limit_store
+    from app.core.token_blacklist import clear as clear_token_blacklist
+    clear_token_blacklist()
     _rate_limit_store.clear()
 
     # 清理 token_manager 缓存，避免跨测试污染

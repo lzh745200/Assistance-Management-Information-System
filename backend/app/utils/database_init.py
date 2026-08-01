@@ -146,13 +146,6 @@ def init_default_roles(db: SessionLocal) -> None:
         raise
 
 
-def _mask_password(pwd: str) -> str:
-    """口令脱敏：长度 ≤4 全星号，否则仅展示首尾各 2 位。"""
-    if len(pwd) <= 4:
-        return "*" * len(pwd)
-    return f"{pwd[:2]}{'*' * (len(pwd) - 4)}{pwd[-2:]}"
-
-
 def init_default_users(db: SessionLocal) -> None:
     """
     初始化默认用户
@@ -168,24 +161,9 @@ def init_default_users(db: SessionLocal) -> None:
 
         logger.info("📋 初始化默认用户...")
 
-        # 使用更强的默认密码（建议首次登录后立即修改）
-        import secrets
-        import string
-
-        # 生成强密码：至少12位，包含大小写字母、数字和符号
-        def generate_strong_password(length=16):
-            alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-            while True:
-                password = ''.join(secrets.choice(alphabet) for _ in range(length))
-                if (any(c.islower() for c in password)
-                    and any(c.isupper() for c in password)
-                    and any(c.isdigit() for c in password)
-                        and any(c in "!@#$%^&*" for c in password)):
-                    return password
-
-        # 初始口令随机生成（不再硬编码），首次登录强制修改
-        admin_password = generate_strong_password()
-        officer_password = generate_strong_password()
+        # 初始口令使用文档约定的默认密码（首次登录强制修改，安全性由 must_change_password 保障）
+        admin_password = "admin123"
+        officer_password = "officer123"
 
         admin_user = User(
             username="admin",
@@ -201,8 +179,8 @@ def init_default_users(db: SessionLocal) -> None:
 
         officer_user = User(
             username="officer01",
-            email="officer01@military.gov.cn",
-            full_name="张军官",
+            email="officer01@assistance-management.gov.cn",
+            full_name="帮扶专员",
             hashed_password=pwd_context.hash(officer_password),
             role="user",
             is_active=True,
@@ -236,18 +214,10 @@ def init_default_users(db: SessionLocal) -> None:
 
         safe_commit(db)
         logger.info("✅ 默认用户初始化成功")
-        logger.info("📝 管理员账号: admin")
-        logger.info("📝 军官账号: officer01")
+        # 口令只记录脱敏形式（完整口令见 README 文档约定，不落入日志）
+        logger.info("📝 管理员账号: admin / ad****23")
+        logger.info("📝 普通账号: officer01 / of****23")
         logger.info("⚠️  安全提醒：首次登录后立即修改初始口令")
-        logger.info("🔐 初始口令已随机生成，仅在控制台一次性展示脱敏提示，不写入日志")
-        # 安全提示：仅展示口令前2位和后2位，中间用星号替代（防止旁观者/日志泄露完整口令）
-        print("=" * 60)
-        print("初始登录口令（脱敏展示，完整口令请查看初始化日志或联系管理员）:")
-        print(f"  admin     : {_mask_password(admin_password)}")
-        print(f"  officer01 : {_mask_password(officer_password)}")
-        print("⚠️  首次登录后系统将强制修改口令。")
-        print("⚠️  如需获取完整初始口令，请查看 app.log 中的初始化记录。")
-        print("=" * 60)
     except Exception as e:
         db.rollback()
         logger.error(f"❌ 初始化用户失败: {str(e)}")

@@ -173,7 +173,7 @@ const schoolData = ref({
   studentCount: 320,
   teacherCount: 18,
   classCount: 12,
-  supportUnit: '某军区政治工作部',
+  supportUnit: '某帮扶单位',
   supportAmount: 50,
   supportDate: '2020年9月',
 })

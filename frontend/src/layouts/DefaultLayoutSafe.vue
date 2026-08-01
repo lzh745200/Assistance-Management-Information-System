@@ -358,8 +358,8 @@
       <el-main id="main-content" class="layout-content" role="main" aria-label="主内容区">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <CommonErrorBoundary>
-              <component :is="Component" />
+            <CommonErrorBoundary :key="route.path">
+              <component :is="Component" v-if="Component" />
             </CommonErrorBoundary>
           </transition>
         </router-view>
@@ -552,7 +552,7 @@ function handleCommand(command: string) {
 }
 
 /* ===================================================================
-   侧边栏 — 深色军事主题
+   侧边栏 — 深色主题
    =================================================================== */
 .layout-aside {
   background: linear-gradient(180deg, #132818 0%, #1d3d2a 40%, #1d3d2a 100%);

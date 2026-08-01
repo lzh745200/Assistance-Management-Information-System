@@ -480,10 +480,11 @@ class TestAdminEndpoints:
         user = _make_user()
         target = _make_user(uid=5, username="target")
         db.query.return_value.filter.return_value.first.return_value = target
-        with patch("app.core.security.token_blacklist") as tb:
-            tb.count = 3
+        with patch("app.core.token_blacklist.count") as tb_count:
+            tb_count.return_value = 3
             result = await list_user_sessions(5, db=db, current_user=user)
             assert result["code"] == 200
+            assert result["data"]["blacklisted_tokens"] == 3
 
     async def test_list_user_sessions_not_found(self):
         from app.api.v1.system.admin import list_user_sessions
@@ -500,10 +501,23 @@ class TestAdminEndpoints:
         user = _make_user()
         target = _make_user(uid=5, username="target")
         db.query.return_value.filter.return_value.first.return_value = target
-        with patch("app.core.security.token_blacklist") as tb:
-            tb.add = MagicMock()
+        with patch("app.core.token_manager.revoke_token") as revoke:
+            revoke.return_value = True
             result = await revoke_user_session(5, "sess-123", db=db, current_user=user)
             assert result["code"] == 200
+            revoke.assert_called_once_with("sess-123", reason="admin_force_logout")
+
+    async def test_revoke_user_session_invalid_token(self):
+        from app.api.v1.system.admin import revoke_user_session
+        db = _mock_db()
+        user = _make_user()
+        target = _make_user(uid=5, username="target")
+        db.query.return_value.filter.return_value.first.return_value = target
+        with patch("app.core.token_manager.revoke_token") as revoke:
+            revoke.return_value = False
+            with pytest.raises(HTTPException) as exc_info:
+                await revoke_user_session(5, "sess-456", db=db, current_user=user)
+            assert exc_info.value.status_code == 400
 
     async def test_reset_user_two_factor_with_tfa(self):
         from app.api.v1.system.admin import reset_user_two_factor
@@ -1263,8 +1277,9 @@ class TestChart:
             assert gen is not None
 
     def test_create_line_chart_no_file(self):
+        # create=True：matplotlib 未安装时模块无 plt 属性（try/except 导入）
         with patch("app.utils.chart.HAS_MATPLOTLIB", True), \
-             patch("app.utils.chart.plt"):
+             patch("app.utils.chart.plt", create=True):
             from app.utils.chart import ChartGenerator
             gen = ChartGenerator()
             result = gen.create_line_chart(

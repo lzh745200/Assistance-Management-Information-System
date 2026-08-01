@@ -101,7 +101,7 @@ body {
   justify-content: space-between;
 }
 
-/* ====== Element Plus 全局 CSS 变量覆盖（军事主题默认） ====== */
+/* ====== Element Plus 全局 CSS 变量覆盖（主题默认） ====== */
 :root {
   /* 与 tokens.scss 色值完全一致的一律用 var() 引用，保证单一数据源；
      无 token 对应的派生色阶（light-5/7/9 等中间档）保留原值并在下方注明 */

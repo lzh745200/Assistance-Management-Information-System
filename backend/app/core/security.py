@@ -88,21 +88,23 @@ except Exception as _settings_err:
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.environ.get("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
 
-# 角色常量
+# 角色常量（精简为 4 个实用角色 + 兼容历史角色值）
 ROLE_SUPER_ADMIN = "super_admin"
 ROLE_ADMIN = "admin"
+ROLE_USER = "user"
+ROLE_VIEWER = "viewer"
 ROLE_APPROVAL_LEADER = "approval_leader"
 ROLE_MANAGER = "manager"
 ROLE_OPERATOR = "operator"
-ROLE_VIEWER = "viewer"
 
 ALL_ROLES = [
     ROLE_SUPER_ADMIN,
     ROLE_ADMIN,
+    ROLE_USER,
+    ROLE_VIEWER,
     ROLE_APPROVAL_LEADER,
     ROLE_MANAGER,
     ROLE_OPERATOR,
-    ROLE_VIEWER,
 ]
 
 ADMIN_ROLES = {ROLE_SUPER_ADMIN, ROLE_ADMIN}
@@ -480,53 +482,6 @@ def sanitize_input(value: str) -> str:
     sanitized = sanitized.replace("/*", "")
     sanitized = sanitized.replace("*/", "")
     return sanitized
-
-
-# Token 黑名单（内存存储）
-class TokenBlacklist:
-    """JWT Token 黑名单"""
-
-    def __init__(self):
-        self._blacklist: set = set()
-
-    def add(self, token: str) -> None:
-        self._blacklist.add(token)
-
-    def is_blacklisted(self, token: str) -> bool:
-        return token in self._blacklist
-
-    def remove(self, token: str) -> None:
-        self._blacklist.discard(token)
-
-    def clear(self) -> None:
-        self._blacklist.clear()
-
-    def __len__(self) -> int:
-        return len(self._blacklist)
-
-
-token_blacklist = TokenBlacklist()
-
-
-def generate_session_id() -> str:
-    """生成安全的会话ID"""
-    return secrets.token_hex(32)
-
-
-def validate_session_token(token: str) -> bool:
-    """验证会话token是否有效。
-
-    Args:
-        token: 会话token
-
-    Returns:
-        bool: token是否有效（非空且非黑名单）
-    """
-    if not token:
-        return False
-    if token_blacklist.is_blacklisted(token):
-        return False
-    return True
 
 
 # ── 内存速率限制器（slowapi 回退） ──

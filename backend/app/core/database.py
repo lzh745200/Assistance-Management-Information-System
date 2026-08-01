@@ -1,7 +1,7 @@
 """
 Database engine and session configuration.
 
-军用级离线桌面管理系统 - 数据库核心配置
+离线桌面管理系统 - 数据库核心配置
 针对 SQLite 进行了深度调优，确保在单机/多机物理协同环境下的数据一致性与极致性能。
 
 SQLite 性能优化策略：
@@ -86,7 +86,7 @@ def _set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
     # WAL 模式下 NORMAL 已经足够安全，无需 FULL（FULL 会严重拖慢写入）
     cursor.execute("PRAGMA synchronous=NORMAL")
 
-    # 3. 锁等待与超时 (军用环境硬件可能较慢或存在大事务，放宽至 10 秒)
+    # 3. 锁等待与超时 (本地环境硬件可能较慢或存在大事务，放宽至 10 秒)
     cursor.execute("PRAGMA busy_timeout=10000")
 
     # 4. 内存与缓存调优 (针对现代 PC/工控机，适当放大；可通过环境变量覆盖)

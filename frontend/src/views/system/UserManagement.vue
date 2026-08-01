@@ -437,7 +437,7 @@ const formData = reactive({
   username: '',
   full_name: '',
   password: '',
-  role: 'operator',
+  role: 'user',
   data_scope: 'org',
   department: '',
   phone: '',
@@ -506,29 +506,20 @@ const permissionGroups = [
   },
 ]
 
+// 角色选项：精简为 4 个实用角色（users.role 体系）
+// 兼容映射：approval_leader/manager→管理员级，operator→普通用户
 const roleOptions = ref<{ value: string; label: string }[]>([
   { value: 'super_admin', label: '超级管理员' },
   { value: 'admin', label: '系统管理员' },
-  { value: 'approval_leader', label: '审批领导' },
-  { value: 'manager', label: '管理人员' },
-  { value: 'operator', label: '操作员' },
-  { value: 'viewer', label: '查看者' },
+  { value: 'user', label: '普通用户' },
+  { value: 'viewer', label: '访客' },
 ])
 
 async function fetchRoles() {
-  try {
-    const res = await get('/rbac/roles', { limit: 100 })
-    const data = res?.data ?? res
-    const items = data?.items || (Array.isArray(data) ? data : [])
-    if (items.length > 0) {
-      roleOptions.value = items.map((r: any) => ({
-        value: r.id ?? r.name ?? r.role_id,
-        label: r.name ?? r.label ?? r.role_name ?? String(r.id),
-      }))
-    }
-  } catch {
-    // 保持硬编码默认值
-  }
+  // 角色选项固定使用 users.role 体系（4 个实用角色）
+  // 注意：不再用 /rbac/roles（RbacRole 表）覆盖选项——
+  // RBAC 角色是细粒度权限包的补充，与 users.role 是两套体系，
+  // 混用会导致 users.role 存入 RBAC 角色名而使权限判断失效。
 }
 
 const dataScopeOptions = [
@@ -558,6 +549,7 @@ const getRoleTagType = (role: string): 'info' | 'primary' | 'success' | 'warning
     approval_leader: 'warning',
     manager: 'warning',
     operator: 'success',
+    user: 'success',
     viewer: 'info',
   }
   return types[role] || 'info'
@@ -570,7 +562,8 @@ const getRoleName = (role: string) => {
     approval_leader: '审批领导',
     manager: '管理人员',
     operator: '操作员',
-    viewer: '查看者',
+    user: '普通用户',
+    viewer: '访客',
   }
   return names[role] || role
 }
@@ -684,7 +677,7 @@ const handleAdd = () => {
     username: '',
     full_name: '',
     password: '',
-    role: 'operator',
+    role: 'user',
     data_scope: 'org',
     department: '',
     phone: '',
@@ -822,9 +815,10 @@ async function loadUserSessions(userId: number) {
     const res = await get(`/system/admin/users/${userId}/sessions`)
     const data = res.data?.data ?? res.data ?? res
     userSessions.value = Array.isArray(data) ? data : (data?.sessions ?? [])
-  } catch {
-    // Endpoint may not exist yet – show empty
+  } catch (e: any) {
+    // 会话接口异常时提示而非静默吞错，避免掩盖后端故障
     userSessions.value = []
+    ElMessage.error(e?.response?.data?.detail || '会话信息加载失败，请检查后端服务')
   } finally {
     sessionsLoading.value = false
   }

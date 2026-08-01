@@ -92,7 +92,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         "path": "/funds/user",
         "icon": "Money",
         "order": 6,
-        "roles": ["operator", "viewer", "approval_leader"],
+        "roles": ["user", "viewer", "approval_leader"],
     },
     {
         "key": "policies",
@@ -123,7 +123,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         "label": "帮扶数据管理",
         "icon": "TrendCharts",
         "order": 10,
-        "roles": ["admin", "super_admin", "manager", "operator"],
+        "roles": ["admin", "super_admin", "manager", "user"],
         "children": [
             {
                 "key": "comprehensive-entry",
@@ -608,8 +608,8 @@ async def get_role_default_menus(
         raise HTTPException(status_code=403, detail="需要管理员权限")
 
     all_roles = [
-        "super_admin", "admin", "approval_leader",
-        "manager", "operator", "viewer",
+        "super_admin", "admin", "user", "viewer",
+        "approval_leader", "manager", "operator",
     ]
     role_menus: dict[str, list[str]] = {}
     for role in all_roles:

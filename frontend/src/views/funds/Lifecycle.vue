@@ -171,14 +171,14 @@
             <el-row :gutter="16">
               <el-col :span="8">
                 <el-statistic
-                  title="军方→地方"
+                  title="专项→地方"
                   :value="ledgerData.total_military_to_local"
                   suffix="万元"
                 />
               </el-col>
               <el-col :span="8">
                 <el-statistic
-                  title="地方→军方"
+                  title="地方→专项"
                   :value="ledgerData.total_local_to_military"
                   suffix="万元"
                 />

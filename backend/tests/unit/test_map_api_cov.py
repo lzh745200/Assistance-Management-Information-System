@@ -198,13 +198,13 @@ class TestDistancesBranches:
             resp = map_client.get(f"{BASE}/distances")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["base"]["name"] == "军分区"
+        assert data["base"]["name"] == "区域中心"
         # 按距离排序：近村在前
         assert [v["name"] for v in data["villages"]] == ["近村", "远村"]
         assert data["villages"][0]["road_distance_km"] > data["villages"][0]["distance_km"]
         assert data["schools"][0]["travel_display"]
         assert len(data["county_distances"]) == 13  # 13 个县市全称（简称已过滤）
-        assert data["county_distances"][0]["county"] == "都匀市"  # 军分区所在地最近
+        assert data["county_distances"][0]["county"] == "都匀市"  # 区域中心所在地最近
 
     def test_cache_hit(self, map_client):
         mc = MagicMock()

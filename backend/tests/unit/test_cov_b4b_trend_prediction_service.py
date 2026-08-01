@@ -24,7 +24,8 @@ class TestPredictWithProphet:
         model = MagicMock()
         model.predict.return_value = forecast
 
-        with patch(f"{_MOD}.Prophet", return_value=model):
+        # create=True：prophet 未安装时模块无 Prophet 属性（try/except 导入），patch 需创建
+        with patch(f"{_MOD}.Prophet", return_value=model, create=True):
             result = TrendPredictionService._predict_with_prophet(history, 2, "date", "value")
 
         assert result["method"] == "prophet"

@@ -140,8 +140,8 @@ export interface ForceInvestment {
   id: number
   supportedVillageId: number
   year: number
-  seniorLeaderVisits: number // 军以上领导干部到村(人次)
-  unitSoldierVisits: number // 帮扶单位官兵到村(人次)
+  seniorLeaderVisits: number // 上级领导干部到村(人次)
+  unitSoldierVisits: number // 帮扶单位人员到村(人次)
   createdAt?: string
 }
 
@@ -189,7 +189,7 @@ export interface PartyBuildingSupport {
   investment: number
   plannedInvestment: number
   pairedBranches: number // 结对帮扶村党支部(个)
-  partyInstructors: number // 部队兼职党建指导员(人)
+  partyInstructors: number // 兼职党建指导员(人)
   jointActivities: number // 支部联建共促活动(次)
   civilizationActivities: number // 乡风文明建设活动(次)
   createdAt?: string

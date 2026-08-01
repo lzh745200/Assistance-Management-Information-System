@@ -18,11 +18,11 @@ CATEGORY_NAMES: Dict[str, str] = {
 }
 
 MILITARY_LEVEL_NAMES: Dict[str, str] = {
-    "central": "中央军委",
-    "theater": "战区级",
-    "corps": "军级",
-    "division": "师级",
-    "regiment": "团级",
+    "central": "中央部署",
+    "theater": "区域级",
+    "corps": "重点级",
+    "division": "单元级",
+    "regiment": "基础级",
 }
 
 LOCAL_LEVEL_NAMES: Dict[str, str] = {

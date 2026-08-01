@@ -409,14 +409,14 @@ async def list_user_sessions(
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
 
-    from app.core.security import token_blacklist
+    from app.core.token_blacklist import count as blacklist_count
 
     return {
         "code": 200,
         "data": {
             "user_id": user_id,
             "username": user.username,
-            "blacklisted_tokens": token_blacklist.count,
+            "blacklisted_tokens": blacklist_count(),
             "sessions": [],
             "message": "单机部署模式下会话信息有限，仅显示 token 黑名单统计",
         },
@@ -436,9 +436,10 @@ async def revoke_user_session(
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
 
-    from app.core.security import token_blacklist
+    from app.core.token_manager import revoke_token
 
-    token_blacklist.add(session_id)
+    if not revoke_token(session_id, reason="admin_force_logout"):
+        raise HTTPException(status_code=400, detail="无效的会话 Token，无法强制登出")
     logger.info("管理员 %s 强制登出用户 %s (session: %s)", current_user.username, user.username, session_id)
     return {"code": 200, "message": f"已强制登出用户 {user.username}"}
 

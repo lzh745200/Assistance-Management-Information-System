@@ -37,10 +37,10 @@ async def import_policies_from_excel(
             "市级": "municipal",
             "县级": "county",
             "专项": "military",
-            "中央军委": "central_military",
-            "战区": "theater",
-            "军": "army",
-            "师": "division",
+            "中央部署": "central_military",
+            "区域": "theater",
+            "重点": "army",
+            "单元": "division",
         }
         status_map = {
             "草稿": "draft",

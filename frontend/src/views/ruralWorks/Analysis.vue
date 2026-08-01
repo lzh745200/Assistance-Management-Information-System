@@ -275,7 +275,7 @@
       </el-table>
     </div>
 
-    <!-- 军事风格装饰元素 -->
+    <!-- 装饰元素 -->
     <div class="military-decoration-corner corner-top-left"></div>
     <div class="military-decoration-corner corner-top-right"></div>
     <div class="military-decoration-corner corner-bottom-left"></div>
@@ -1129,7 +1129,7 @@ const getQualityScoreClass = (score: number) => {
   min-height: 100vh;
   position: relative;
 
-  // 军事风格装饰
+  // 装饰
   &::before {
     content: '';
     position: absolute;
@@ -1171,7 +1171,7 @@ const getQualityScoreClass = (score: number) => {
   }
 }
 
-// 军事风格通用类
+// 通用类
 .military-border {
   border: 1px solid #003366;
   border-radius: 4px;
@@ -1202,7 +1202,7 @@ const getQualityScoreClass = (score: number) => {
   background: linear-gradient(90deg, #003366, #0055aa);
 }
 
-// 军事风格角落装饰
+// 角落装饰
 .military-decoration-corner {
   position: absolute;
   width: 30px;

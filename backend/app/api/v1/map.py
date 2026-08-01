@@ -298,7 +298,7 @@ async def get_regions(
 
 # --------------- 距离与车程计算 ---------------
 
-# 军分区坐标（都匀市）
+# 区域中心坐标（都匀市）
 MILITARY_BASE = (107.518871, 26.259379)
 
 
@@ -398,9 +398,9 @@ async def get_distances(
     data_scope: OrgScopeFilter = Depends(get_org_scope),
     db: Session = Depends(get_db),
 ):
-    """计算军分区到每个帮扶点的距离和预估车程
+    """计算区域中心到每个帮扶点的距离和预估车程
 
-    以军分区坐标(107.518871, 26.259379)为起点
+    以区域中心坐标(107.518871, 26.259379)为起点
     山区公路修正系数: 1.4, 平均时速: 45km/h
     """
     user_id = getattr(current_user, "id", 0)
@@ -414,7 +414,7 @@ async def get_distances(
             logger.debug("读取地图距离缓存失败")
 
     result = {
-        "base": {"lng": MILITARY_BASE[0], "lat": MILITARY_BASE[1], "name": "军分区"},
+        "base": {"lng": MILITARY_BASE[0], "lat": MILITARY_BASE[1], "name": "区域中心"},
         "villages": [],
         "schools": [],
         "county_distances": [],
