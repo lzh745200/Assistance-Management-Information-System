@@ -97,7 +97,7 @@ echo      - 预计耗时: ~20-40 分钟
 echo.
 echo 查看构建进度:
 echo   https://github.com/actions
-echo   （或仓库 -> Actions 标签页）
+echo   （或仓库 - 标签页）
 echo.
 echo 构建完成后，在 Actions 运行页面下载 Artifacts:
 echo   - windows-installer-x64  (.exe)
