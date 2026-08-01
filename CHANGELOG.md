@@ -5,6 +5,23 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布] - 2026-08-01
+
+### 关键 Bug 修复
+- 🐛 **修复 Vue setAttribute('0') 页面崩溃** — `ErrorBoundary.vue` 在 `<transition>` 组件内使用 `v-if`/`v-else` 双根元素切换时，Vue patch 算法异常调用 `setAttribute('0')` 导致页面白屏崩溃。修复方案：包裹单一根元素 `<div class="error-boundary-root">` 并设 `display:contents` 保持布局语义
+- 🐛 **修复注册时"通行码无效或已被使用"误报** — Windows 环境下 `wmic` 命令生成的机器码因进程重启或系统更新可能不一致，导致通行码验证失败。`machine_code_service.py` 新增第三级回退逻辑：仅凭通行码匹配 pending 记录并自动更新机器码绑定
+- 🐛 **修复 files API 响应格式不统一** — `files.py` 上传端点返回裸 dict 而非 `{code:200, data:{...}, message:"成功"}` 信封格式，且存在未使用的 `db` 参数。已改用 `success_response()` 统一格式并补充审计日志
+
+### 角色体系精简
+- ✨ **精简用户角色至 4 个核心角色** — 从原来的 7+ 个角色精简为：超级管理员(`super_admin`)、系统管理员(`admin`)、普通用户(`user`)、访客(`viewer`)
+- 🔧 **角色归一化函数** — `constants.py` 新增 `normalize_role()` 函数，将旧角色值自动映射到新体系（`approval_leader`/`manager` → `admin`，`operator` → `user`），确保向后兼容
+- 🔧 **数据权限层适配** — `data_permission.py` 使用 `normalize_role()` 处理历史角色值，旧用户登录自动映射
+- 🎨 **前端角色选择适配** — `UserManagement.vue` 修复默认角色从 `operator` 改为 `user`；`Role.vue` 新增系统角色信息提示横幅
+
+### 测试与代码质量
+- ✅ **files API 测试更新** — `test_files_upload_api.py` 断言改为信封格式 `response.data.url`
+- ✅ **角色相关测试覆盖** — 新增多组角色归一化测试
+
 ## [未发布] - 2026-07-30
 
 ### 功能缺陷修复

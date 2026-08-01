@@ -123,6 +123,10 @@ bash build-scripts/build-linux-arm64.sh           # Linux ARM64 安装包
 - **前端 API 调用规则** (2026-07-05): ① 所有 api 文件必须 `import { get, post, apiRequest } from '@/api/request'`（自动解包），禁止 `import request from './request'`（返回原始 AxiosResponse）。② `get()` 第二参数直接是 params：`get(url, { refresh:true })`，不是 `get(url, { params:{ refresh:true } })`。③ Blob 下载：API 函数内部链式 `.then(r=>triggerDownload(r.data,name))`，调用方只 `await`。
 - **列表视图分页重置** (2026-07-05): 所有列表视图的 create/edit/delete/import 处理器必须在调用 `loadData`/`fetchData` 之前重置 `page.value=1`/`currentPage.value=1`/`pagination.page=1`。遗漏会导致用户在第2页+时看不到新建项。
 - **安全路由导航** (2026-07-05): 使用 `pushSafe()` from `@/composables/useRouterSafe` 替代 `router.push()`，避免 `NavigationFailureType.aborted` 未捕获拒绝。`useRouterSafe()` 必须在 `<script setup>` 顶层调用。
+- **ErrorBoundary 单一根元素** (2026-08-01): `ErrorBoundary.vue` 必须包裹单一根元素 `<div class="error-boundary-root">`（设 `display:contents`）后内部再用 `v-if`/`v-else` 切换。**禁止**在 `<transition>` 内直接使用多根元素的 `v-if`/`v-else`，否则 Vue patch 算法会异常调用 `setAttribute('0')` 导致页面白屏崩溃。
+- **角色精简与归一化** (2026-08-01): 系统角色精简为 4 个：`super_admin`/`admin`/`user`/`viewer`。旧角色值通过 `normalize_role()`（`app/core/constants.py`）自动映射：`approval_leader`/`manager` → `admin`，`operator` → `user`。`data_permission.py` 已适配。前端角色选择器默认值必须为 `user`（非 `operator`）。
+- **通行码验证三级回退** (2026-08-01): `machine_code_service.py` 的 `verify_pass_code()` 增加第三级回退逻辑：当机器码+通行码匹配失败时，仅凭通行码匹配 `status=pending` 的记录并自动更新 `machine_code` 绑定。解决 Windows 下 `wmic` 命令不稳定导致机器码变化的问题。
+- **files API 响应格式统一** (2026-08-01): `files.py` 上传端点必须使用 `success_response()` 返回信封格式，禁止返回裸 dict。所有文件上传操作必须补充审计日志（`AuditLogger`）。
 
 ## Pre-commit Hooks（分阶段策略）
 
@@ -220,3 +224,19 @@ python scripts/audit_static_assets.py --verbose
 ### 登录超时（bcrypt 5.x 兼容性）
 
 `backend/app/core/security.py` 已注入 `_bcrypt.__about__` 使 passlib 能加载 bcrypt C 扩展，`verify_password()` 耗时从 ~30s 降至 ~200ms。
+
+### 页面白屏 - setAttribute('0') is not a valid attribute name
+
+**症状**: 工作台首页等使用 `<transition>` 包裹 `ErrorBoundary` 的页面白屏，控制台报 `Failed to execute 'setAttribute' on 'Element': '0' is not a valid attribute name`。
+
+**根因**: `ErrorBoundary.vue` 在 `<transition>` 组件内使用 `v-if`/`v-else` 双根元素切换，Vue 的 patch 算法在处理 transition 的 `patchProp` 时将数字索引 `0` 误作为属性名调用 `setAttribute`。
+
+**修复**: 包裹单一根元素 `<div class="error-boundary-root">` 并设 `display:contents`，内部再用 `v-if`/`v-else` 切换。
+
+### 注册时"通行码无效或已被使用"
+
+**症状**: 新用户注册时明明通行码正确，但系统提示"通行码无效或已被使用"。
+
+**根因**: Windows 环境下 `wmic` 命令生成的机器码可能因进程重启、系统更新或权限变化而不一致，导致机器码+通行码双重匹配失败。
+
+**修复**: `machine_code_service.py` 新增第三级回退逻辑，仅凭通行码匹配 `status=pending` 的记录并自动更新 `machine_code` 绑定。

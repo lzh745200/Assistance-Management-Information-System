@@ -264,6 +264,22 @@ A previous automated edit inserted `from app.core.transaction import safe_commit
 
 Removed all 3 `pytest.skip()` calls in `test_comprehensive_coverage.py` — tests now fail on import errors instead of silently skipping. Also updated `SCHEMA_FILES` list to reference actual existing schema modules.
 
+### Vue setAttribute('0') Page Crash (Fixed 2026-08-01)
+
+`ErrorBoundary.vue` used `v-if`/`v-else` dual-root elements inside `<transition>`, causing Vue's patch algorithm to call `setAttribute('0')` — crashing the page. Fixed by wrapping in a single root `<div style="display:contents">`.
+
+### Passcode Validation False Rejection (Fixed 2026-08-01)
+
+Windows `wmic` generates inconsistent machine codes across process restarts. `machine_code_service.py` `verify_pass_code()` now has a third-level fallback: match by pass_code only (ignoring machine_code), then auto-update the `machine_code` binding.
+
+### Role Simplification (2026-08-01)
+
+System roles reduced from 7+ to 4: `super_admin`/`admin`/`user`/`viewer`. `normalize_role()` in `app/core/constants.py` maps deprecated roles (`approval_leader`/`manager`→`admin`, `operator`→`user`). `data_permission.py` uses `normalize_role()` for backward compatibility. Frontend default role is now `user` (not `operator`).
+
+### files.py Response Format (Fixed 2026-08-01)
+
+`files.py` upload endpoint was returning bare dict instead of `{code:200, data:{...}, message:"成功"}` envelope. Fixed to use `success_response()`. Removed unused `db` param. Added audit logging.
+
 ### WinError 10054 (Connection Reset)
 
 Auto-fixed by `app/utils/win_proactor_fix.py`. Loaded by `start.py` and `main.py`. No action needed.
@@ -352,6 +368,14 @@ Fixed in 16 files (43 handler instances): `funds/{ContractManage,TransferVoucher
 
 **Rule**: `useRouterSafe()` MUST be called at Vue `<script setup>` top level (NOT inside event handlers — `inject()` only works during setup).
 
+### 5. ErrorBoundary multi-root in `<transition>` (Fixed 2026-08-01)
+
+**Bug**: `ErrorBoundary.vue` used `v-if`/`v-else` with two separate root elements inside a `<transition>` wrapper. Vue's patch algorithm treated the numeric index `0` as an attribute name and called `setAttribute('0')`, crashing the page with `Failed to execute 'setAttribute' on 'Element': '0' is not a valid attribute name`.
+
+**Fix**: Wrap both branches in a single root element (`<div class="error-boundary-root" style="display:contents">`) so Vue's diff sees one vnode root.
+
+**Rule**: When using `<transition>` or `<KeepAlive>`, the child MUST have exactly one root element. If you need `v-if`/`v-else` branching, wrap both in a single root `<div style="display:contents">` to preserve layout semantics.
+
 ## Test-Writing Conventions (Added 2026-07-17)
 
 The 2026-07 coverage sprint introduced **244 failing tests** written against assumed APIs. These conventions prevent recurrence.
@@ -407,6 +431,9 @@ Every new feature must verify:
 | Transaction utilities | `backend/app/core/transaction.py` (6 helper functions) |
 | Soft delete migration | `backend/alembic/versions/village_softdel_001_add_is_active.py` |
 | Password policy | `backend/app/core/security.py` → `PasswordPolicy` class |
+| Role constants & normalization | `backend/app/core/constants.py` → `normalize_role()`, `PRACTICAL_ROLES` |
+| Machine code & passcode service | `backend/app/services/machine_code_service.py` → `verify_pass_code()` (3-level fallback) |
+| ErrorBoundary component | `frontend/src/components/common/ErrorBoundary.vue` (single-root pattern) |
 | Frontend HTTP client | `frontend/src/api/request.ts` |
 | Safe router composable | `frontend/src/composables/useRouterSafe.ts` |
 | Design tokens | `frontend/src/styles/tokens.scss` |
