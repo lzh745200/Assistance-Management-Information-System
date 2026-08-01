@@ -41,7 +41,6 @@ class TestConstants:
     def test_all_roles(self):
         expected = [
             "super_admin", "admin", "user", "viewer",
-            "approval_leader", "manager", "operator",
         ]
         assert ALL_ROLES == expected
 

@@ -94,7 +94,7 @@ async def get_work_logs(
 
     # 非管理员只能看自己的日志（自动日志所有人都能看）
     role = getattr(current_user, "role", "")
-    if role not in ("admin", "super_admin", "manager"):
+    if role not in ("admin", "super_admin"):
         # 手动日志只看自己的，自动日志所有人都能看
         from sqlalchemy import or_
 
@@ -315,7 +315,7 @@ async def get_calendar_events(
 
     # 非管理员只能看自己的日志（自动日志所有人都能看）
     role = getattr(current_user, "role", "")
-    if role not in ("admin", "super_admin", "manager"):
+    if role not in ("admin", "super_admin"):
         from sqlalchemy import or_ as sa_or
 
         query = query.filter(

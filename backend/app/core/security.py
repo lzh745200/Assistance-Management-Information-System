@@ -88,23 +88,17 @@ except Exception as _settings_err:
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "480"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.environ.get("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
 
-# 角色常量（精简为 4 个实用角色 + 兼容历史角色值）
+# 角色常量（4 个实用角色；历史角色值统一通过 constants.py normalize_role() 归一化）
 ROLE_SUPER_ADMIN = "super_admin"
 ROLE_ADMIN = "admin"
 ROLE_USER = "user"
 ROLE_VIEWER = "viewer"
-ROLE_APPROVAL_LEADER = "approval_leader"
-ROLE_MANAGER = "manager"
-ROLE_OPERATOR = "operator"
 
 ALL_ROLES = [
     ROLE_SUPER_ADMIN,
     ROLE_ADMIN,
     ROLE_USER,
     ROLE_VIEWER,
-    ROLE_APPROVAL_LEADER,
-    ROLE_MANAGER,
-    ROLE_OPERATOR,
 ]
 
 ADMIN_ROLES = {ROLE_SUPER_ADMIN, ROLE_ADMIN}

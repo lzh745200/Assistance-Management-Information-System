@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.response import ok_list
 from app.core.security import generate_password, get_current_user, get_password_hash
-from app.core.constants import UserRole
+from app.core.constants import UserRole, normalize_role
 from app.core.permission_utils import is_superuser
 from app.models.user import User
 from app.core.transaction import safe_commit
@@ -274,7 +274,7 @@ async def update_user(
     if user_data.status is not None:
         user.is_active = user_data.status == "active"
     if user_data.role is not None:
-        user.role = user_data.role
+        user.role = normalize_role(user_data.role)
         user.is_superuser = is_superuser(user_data) or user_data.role == UserRole.ADMIN
     if user_data.organization_id is not None:
         user.organization_id = user_data.organization_id

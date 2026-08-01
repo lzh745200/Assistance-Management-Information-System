@@ -116,13 +116,10 @@ OPTIONS_CACHE_TTL = 3600
 # ==================== 个人中心 ====================
 
 
-# 角色中文名称映射（兼容历史角色值：approval_leader/manager→管理员级，operator→普通用户）
+# 角色中文名称映射
 _ROLE_DISPLAY_MAP = {
     "super_admin": "超级管理员",
     "admin": "系统管理员",
-    "approval_leader": "审批领导",
-    "manager": "管理人员",
-    "operator": "操作员",
     "user": "普通用户",
     "viewer": "访客",
 }

@@ -952,7 +952,7 @@ class TestConstants:
 
     def test_all_roles(self):
         from app.core.constants import ALL_ROLES
-        assert len(ALL_ROLES) == 7
+        assert len(ALL_ROLES) == 4
 
     def test_user_role_class(self):
         from app.core.constants import UserRole

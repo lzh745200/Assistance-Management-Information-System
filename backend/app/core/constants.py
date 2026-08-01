@@ -37,12 +37,9 @@ PRACTICAL_ROLES = [
     ROLE_VIEWER,
 ]
 
-# 兼容校验用的完整角色集合（含历史值）
-ALL_ROLES = PRACTICAL_ROLES + [
-    ROLE_APPROVAL_LEADER,
-    ROLE_MANAGER,
-    ROLE_OPERATOR,
-]
+# 全部合法角色集合（精简后仅 4 个实用角色；
+# 历史角色值由 normalize_role() 在入口处归一化，不再作为合法值）
+ALL_ROLES = list(PRACTICAL_ROLES)
 
 # 旧角色值 → 新角色值的归一化映射（approval_leader/manager 视为管理员级，operator 视为普通用户）
 _ROLE_NORMALIZE_MAP = {

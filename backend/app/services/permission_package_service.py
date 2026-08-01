@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 CURRENT_VERSION = "1.0"
 
 # 系统内置角色名 — 导入时不删除/不覆盖
-SYSTEM_ROLE_NAMES = {"super_admin", "admin", "user", "viewer", "approval_leader", "manager", "operator"}
+SYSTEM_ROLE_NAMES = {"super_admin", "admin", "user", "viewer"}
 
 
 class PermissionPackageService:
@@ -130,7 +130,7 @@ class PermissionPackageService:
             # 遗留权限字段
             user_legacy_data.append({
                 "username": user.username,
-                "role": user.role or "operator",
+                "role": user.role or "user",
                 "permissions": user.permissions or "",
                 "data_scope": user.data_scope or "org",
                 "is_superuser": user.is_superuser or False,
@@ -564,7 +564,7 @@ class PermissionPackageService:
                 user = self.db.query(User).filter(User.username == username).first()
                 if not user:
                     continue
-                user.role = legacy_data.get("role", "operator")
+                user.role = legacy_data.get("role", "user")
                 user.permissions = legacy_data.get("permissions", "")
                 user.data_scope = legacy_data.get("data_scope", "org")
                 # 恢复组织关联（按 ID 直接匹配，不存在则尝试按名称匹配）

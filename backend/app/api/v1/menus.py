@@ -21,6 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.constants import normalize_role
 from app.core.database import get_db
 from app.core.security import (
     get_current_user,
@@ -84,7 +85,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         "path": "/funds",
         "icon": "Money",
         "order": 5,
-        "roles": ["admin", "super_admin", "manager"],
+        "roles": ["admin", "super_admin"],
     },
     {
         "key": "funds-user",
@@ -92,7 +93,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         "path": "/funds/user",
         "icon": "Money",
         "order": 6,
-        "roles": ["user", "viewer", "approval_leader"],
+        "roles": ["user", "viewer"],
     },
     {
         "key": "policies",
@@ -116,14 +117,14 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         "path": "/approval/pending",
         "icon": "Stamp",
         "order": 9,
-        "roles": ["admin", "super_admin", "approval_leader", "manager"],
+        "roles": ["admin", "super_admin"],
     },
     {
         "key": "helpData",
         "label": "帮扶数据管理",
         "icon": "TrendCharts",
         "order": 10,
-        "roles": ["admin", "super_admin", "manager", "user"],
+        "roles": ["admin", "super_admin", "user"],
         "children": [
             {
                 "key": "comprehensive-entry",
@@ -135,13 +136,13 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
                 "key": "batch-import",
                 "label": "数据批量导入",
                 "path": "/data-import/batch",
-                "roles": ["admin", "super_admin", "manager"],
+                "roles": ["admin", "super_admin"],
             },
             {
                 "key": "data-verify",
                 "label": "数据校验审核",
                 "path": "/data-verify",
-                "roles": ["admin", "super_admin", "manager"],
+                "roles": ["admin", "super_admin"],
             },
             {
                 "key": "data-analysis",
@@ -153,13 +154,13 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
                 "key": "report-templates",
                 "label": "报表模板管理",
                 "path": "/report-templates",
-                "roles": ["admin", "super_admin", "manager"],
+                "roles": ["admin", "super_admin"],
             },
             {
                 "key": "report-export",
                 "label": "报表导出",
                 "path": "/report-export",
-                "roles": ["admin", "super_admin", "manager"],
+                "roles": ["admin", "super_admin"],
             },
         ],
     },
@@ -207,7 +208,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
                 "key": "data-package-receive",
                 "label": "接收数据包",
                 "path": "/data-package/receive",
-                "roles": ["admin", "super_admin", "manager"],
+                "roles": ["admin", "super_admin"],
             },
             {
                 "key": "data-package-list",
@@ -228,7 +229,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         "label": "数据管理",
         "icon": "FolderOpened",
         "order": 13,
-        "roles": ["admin", "super_admin", "manager"],
+        "roles": ["admin", "super_admin"],
         "children": [
             {
                 "key": "data-overview",
@@ -240,7 +241,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
                 "key": "user-backup",
                 "label": "用户数据备份",
                 "path": "/data-management/user-backup",
-                "roles": ["admin", "super_admin", "manager"],
+                "roles": ["admin", "super_admin"],
             },
             {
                 "key": "data-quality",
@@ -273,7 +274,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
                 "key": "users-orgs",
                 "label": "用户与组织管理",
                 "path": "/system/users-orgs",
-                "roles": ["admin", "super_admin", "manager"],
+                "roles": ["admin", "super_admin"],
             },
             # 角色权限管理和菜单权限管理已合并到用户管理页面中的"角色/权限"子模块
             # /system/roles → redirect /system/users
@@ -358,6 +359,7 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
 @lru_cache(maxsize=8)
 def _get_role_default_menu_keys(role: str) -> frozenset[str]:
     """根据角色返回默认可见的菜单key集合"""
+    role = normalize_role(role)  # 兼容旧角色值（manager/approval_leader→admin, operator→user）
     role_menu_keys: set[str] = set()
 
     def traverse(menus: list[dict[str, Any]]) -> None:
@@ -609,7 +611,6 @@ async def get_role_default_menus(
 
     all_roles = [
         "super_admin", "admin", "user", "viewer",
-        "approval_leader", "manager", "operator",
     ]
     role_menus: dict[str, list[str]] = {}
     for role in all_roles:

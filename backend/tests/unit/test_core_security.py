@@ -664,7 +664,7 @@ class TestPasswordPolicy:
 class TestSecurityConstants:
     def test_all_roles_defined(self):
         assert ROLE_ADMIN in ALL_ROLES
-        assert len(ALL_ROLES) == 7
+        assert len(ALL_ROLES) == 4
 
     def test_admin_roles(self):
         assert "super_admin" in ADMIN_ROLES

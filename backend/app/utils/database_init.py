@@ -117,19 +117,19 @@ def init_default_roles(db: SessionLocal) -> None:
 
         logger.info("📋 初始化默认角色...")
 
+        super_admin_role = Role(
+            name="super_admin",
+            description="超级管理员 - 拥有全部权限",
+        )
+
         admin_role = Role(
             name="admin",
             description="系统管理员 - 拥有所有权限",
         )
 
-        officer_role = Role(
-            name="officer",
-            description="军官 - 管理人员和项目",
-        )
-
-        villager_role = Role(
-            name="villager",
-            description="村民 - 查看和参与项目",
+        user_role = Role(
+            name="user",
+            description="普通用户 - 管理业务数据",
         )
 
         viewer_role = Role(
@@ -137,7 +137,7 @@ def init_default_roles(db: SessionLocal) -> None:
             description="访客 - 仅查看仪表板",
         )
 
-        db.add_all([admin_role, officer_role, villager_role, viewer_role])
+        db.add_all([super_admin_role, admin_role, user_role, viewer_role])
         safe_commit(db)
         logger.info("✅ 默认角色初始化成功")
     except Exception as e:

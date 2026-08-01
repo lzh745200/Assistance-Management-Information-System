@@ -130,7 +130,8 @@ class TestGetCurrentUserProfile:
             mock_req.return_value = None
             response = client.get(f"{self.prefix}/me")
             assert response.status_code == 200
-            assert response.json()["data"]["roleName"] == "操作员"
+            # 角色精简后 operator 并入普通用户（user），显示名同步为普通用户
+            assert response.json()["data"]["roleName"] == "普通用户"
         _clear_overrides(client, get_db, get_current_user)
 
     def test_me_role_display_unknown(self, client):

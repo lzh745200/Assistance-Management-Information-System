@@ -12,12 +12,17 @@ from app.core.permission_utils import is_admin, is_superuser  # noqa: F401 — r
 get_current_active_user = get_current_user
 
 # 管理角色列表（可执行创建/编辑/删除操作）
-ADMIN_ROLES = ("admin", "super_admin", "manager")
+# 历史角色 manager/approval_leader 已由 constants.normalize_role() 归一化为 admin
+ADMIN_ROLES = ("admin", "super_admin")
 
 
 def require_manager_role(current_user) -> None:
     """要求管理角色，否则返回 403。在 funds / fund_lifecycle 等模块共用。"""
-    role = getattr(current_user, "role", "")
+    from app.core.constants import normalize_role
+
+    # 归一化角色：历史角色值（manager/approval_leader）映射为 admin，
+    # 保证存量用户的管理权限不因角色精简而降级
+    role = normalize_role(getattr(current_user, "role", ""))
     if role not in ADMIN_ROLES and not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="权限不足，仅管理员或管理角色可执行此操作")
 

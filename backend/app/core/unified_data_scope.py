@@ -66,13 +66,17 @@ def get_data_scope(user: Any) -> DataScope:
     if user is None:
         return DataScope.OWN
 
+    from app.core.constants import normalize_role
+
     is_su = getattr(user, "is_superuser", False)
-    role = getattr(user, "role", "")
+    # 归一化角色：历史角色值（manager/approval_leader/operator）映射到精简角色，
+    # 保证存量用户的数据范围不因角色精简而降级
+    role = normalize_role(getattr(user, "role", ""))
 
     if is_su or role == "super_admin":
         return DataScope.ALL
 
-    if role in ("admin", "manager", "approval_leader"):
+    if role == "admin":
         return DataScope.OWN_DEPT
 
     return DataScope.OWN

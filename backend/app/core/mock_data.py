@@ -95,7 +95,7 @@ def create_mock_users(count: int = 10) -> List[Dict[str, Any]]:
     Returns:
         List of user dicts.
     """
-    roles = ["admin", "manager", "operator", "viewer"]
+    roles = ["admin", "super_admin", "user", "viewer"]
     return [
         create_mock_user(username=f"user_{i:04d}", role=random.choice(roles))
         for i in range(count)
