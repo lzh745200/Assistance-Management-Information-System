@@ -72,7 +72,6 @@ declare module 'vue' {
     DataPackageExportEncryptedDialog: typeof import('./components/dataPackage/ExportEncryptedDialog.vue')['default']
     DataPackageImportDialog: typeof import('./components/dataPackage/ImportDialog.vue')['default']
     DataPackageImportEncryptedDialog: typeof import('./components/dataPackage/ImportEncryptedDialog.vue')['default']
-    DemoCryptoToolDemo: typeof import('./components/demo/CryptoToolDemo.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
@@ -159,8 +158,6 @@ declare module 'vue' {
     LayoutMobileBottomNav: typeof import('./components/layout/MobileBottomNav.vue')['default']
     MapOfflineMap: typeof import('./components/map/OfflineMap.vue')['default']
     MapPicker: typeof import('./components/MapPicker.vue')['default']
-    OrganizationOrganizationForm: typeof import('./components/organization/OrganizationForm.vue')['default']
-    OrganizationOrganizationTree: typeof import('./components/organization/OrganizationTree.vue')['default']
     PageHeader: typeof import('./components/PageHeader.vue')['default']
     PermissionMenuVisibilityPanel: typeof import('./components/permission/MenuVisibilityPanel.vue')['default']
     PermissionPermissionAssignmentDrawer: typeof import('./components/permission/PermissionAssignmentDrawer.vue')['default']
@@ -172,7 +169,6 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SkeletonList: typeof import('./components/SkeletonList.vue')['default']
     TemplatesTemplateDownload: typeof import('./components/templates/TemplateDownload.vue')['default']
-    UiMilitaryBadge: typeof import('./components/ui/MilitaryBadge.vue')['default']
     UiSecurityMonitor: typeof import('./components/ui/SecurityMonitor.vue')['default']
   }
   export interface ComponentCustomProperties {
