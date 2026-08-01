@@ -570,7 +570,8 @@ describe('补缺：各处理器可选链/detail 与 || 双侧', () => {
     await flushPromises()
     await wrapper.vm.handleDetect()
     expect(wrapper.vm.detectResult).toBe('检测完成')
-    expect(ElMessage.success).toHaveBeenCalledWith(undefined)
+    // Bug#18 修复后：成功提示同样走兜底，与 detectResult 及其他处理器一致
+    expect(ElMessage.success).toHaveBeenCalledWith('检测完成')
 
     api.detectAnomalies.mockRejectedValue({ response: { data: { detail: '检测异常' } } })
     await wrapper.vm.handleDetect()

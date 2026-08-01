@@ -491,7 +491,7 @@ async function handleDetect() {
   try {
     const res = await fundLifecycleApi.detectAnomalies(projectId.value)
     detectResult.value = res.message || '检测完成'
-    ElMessage.success(res.message)
+    ElMessage.success(res.message || '检测完成')
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.detail || '检测失败')
   } finally {

@@ -413,7 +413,7 @@
               <el-col :span="12">
                 <el-form-item label="截止日期">
                   <span :class="currentTaskProgress ? getDeadlineClass(currentTaskProgress) : ''">
-                    {{ currentTaskProgress ? formatDate(currentTaskProgress.deadline) : '' }}
+                    {{ formatDate(currentTaskProgress.deadline) }}
                     <span
                       v-if="currentTaskProgress && isOverdue(currentTaskProgress)"
                       class="overdue-badge"
@@ -1236,7 +1236,7 @@ const importTasks = () => {
           if (cols.length >= 2 && cols[1]) {
             const newTask: Task = {
               id: `T${String(tasks.value.length + importCount + 1).padStart(3, '0')}`,
-              name: cols[1] || `导入任务${i}`,
+              name: cols[1],
               projectId: '',
               projectName: cols[3] || '',
               assigneeId: '',

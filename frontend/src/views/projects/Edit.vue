@@ -1088,6 +1088,7 @@ function generateProjectId(): string {
 // 保存项目数据
 async function saveProjectData(): Promise<number | string | false> {
   loading.value = true
+  let projectId: number | string
 
   try {
     // 所有字段的公共payload
@@ -1124,8 +1125,6 @@ async function saveProjectData(): Promise<number | string | false> {
       remarks: projectForm.remarks || undefined,
     }
 
-    let projectId: number | string
-
     if (isEditMode.value) {
       // 编辑模式 - 调用更新 API
       const rawId = route.params.id as string
@@ -1158,14 +1157,14 @@ async function saveProjectData(): Promise<number | string | false> {
         ElMessage.success(`已成功上传 ${uploaded} 个附件`)
       }
     }
-
-    return projectId
   } catch (error) {
     logger.error('保存项目数据失败:', error)
     return false
   } finally {
     loading.value = false
   }
+
+  return projectId
 }
 
 // 处理保存
