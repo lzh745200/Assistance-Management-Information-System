@@ -128,11 +128,63 @@ describe('UpdateLogs.vue', () => {
     expect(w.text()).not.toContain('添加更新记录')
   })
 
+  it('管理员按钮：添加更新记录 / 删除日志', async () => {
+    const w = await mountComp()
+    const vm = w.vm as any
+    const addBtn = w
+      .findAll('button')
+      .find((b) => b.text().includes('添加更新记录'))
+    await addBtn!.trigger('click')
+    expect(vm.showAddDialog).toBe(true)
+    const delBtn = w
+      .findAll('button')
+      .find((b) => b.text().includes('删除'))
+    await delBtn!.trigger('click')
+    expect(ElMessageBox.confirm).toHaveBeenCalled()
+    expect(updateLogsApi.deleteLog).toHaveBeenCalled()
+  })
+
+  it('最新版本无操作人 → 显示系统', async () => {
+    updateLogsApi.getLatest.mockResolvedValue({
+      success: true,
+      data: { id: '1', version: 'V1.2.0', description: 'x', created_at: '2024-01-01T10:00:00Z' },
+    })
+    const w = await mountComp()
+    expect(w.text()).toContain('系统')
+  })
+
   it('loadLogs：success=false → 不更新', async () => {
     updateLogsApi.listLogs.mockResolvedValue({ success: false })
     const w = await mountComp()
     expect((w.vm as any).logs).toEqual([])
     expect((w.vm as any).total).toBe(0)
+  })
+
+  it('loadLogs：success 但无 data → 不更新', async () => {
+    updateLogsApi.listLogs.mockResolvedValue({ success: true })
+    const w = await mountComp()
+    expect((w.vm as any).logs).toEqual([])
+  })
+
+  it('分页：总数大于页大小 → 渲染分页并切换', async () => {
+    updateLogsApi.listLogs.mockResolvedValue({
+      success: true,
+      data: {
+        items: [{ id: '1', version: 'V1.2.0', description: 'x', created_at: '2024-01-01T10:00:00Z' }],
+        total: 25,
+      },
+    })
+    const w = await mountComp()
+    const vm = w.vm as any
+    expect(vm.total).toBe(25)
+    const pagination = w.findComponent({ name: 'ElPagination' })
+    expect(pagination.exists()).toBe(true)
+    pagination.vm.$emit('update:currentPage', 2)
+    await nextTick()
+    expect(vm.currentPage).toBe(2)
+    pagination.vm.$emit('current-change', 2)
+    await nextTick()
+    expect(updateLogsApi.listLogs).toHaveBeenCalledWith({ page: 2, page_size: 20 })
   })
 
   it('loadLogs 失败 → 错误提示', async () => {
@@ -262,6 +314,8 @@ describe('UpdateLogs.vue', () => {
     const inputs = w.findAll('.el-dialog-stub input')
     await inputs[0].setValue('V9.9.9')
     expect(vm.newLog.version).toBe('V9.9.9')
+    await inputs[1].setValue('更新说明内容')
+    expect(vm.newLog.description).toBe('更新说明内容')
     const cancelBtn = w
       .findAll('button')
       .find((b) => b.text().includes('取消'))

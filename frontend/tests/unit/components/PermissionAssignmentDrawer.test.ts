@@ -41,13 +41,14 @@ const ElDrawerStub = {
   props: ['modelValue', 'title'],
   emits: ['update:modelValue', 'close'],
   template:
-    '<div v-if="modelValue" class="stub-drawer"><button class="drawer-close" @click="$emit(\'close\')">x</button><slot /></div>',
+    '<div v-if="modelValue" class="stub-drawer"><button class="drawer-close" @click="$emit(\'close\')">x</button><button class="drawer-vmodel" @click="$emit(\'update:modelValue\', false)">v</button><slot /></div>',
 }
 
 const ElTabsStub = {
   props: ['modelValue'],
   emits: ['update:modelValue'],
-  template: '<div class="stub-tabs"><slot /></div>',
+  template:
+    '<div class="stub-tabs"><button class="tab-switch" @click="$emit(\'update:modelValue\', \'permissions\')">switch</button><slot /></div>',
 }
 
 const ElTabPaneStub = {
@@ -493,6 +494,22 @@ describe('PermissionAssignmentDrawer.vue', () => {
     // 父组件收到 update:modelValue 后回写 prop → 抽屉卸载
     await wrapper.setProps({ modelValue: false })
     expect(wrapper.find('.stub-drawer').exists()).toBe(false)
+  })
+
+  it('el-drawer v-model 回写路径（visible 计算属性 setter）', async () => {
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+    await wrapper.find('button.drawer-vmodel').trigger('click')
+    // visible setter → emit update:modelValue(false)
+    expect(wrapper.emitted('update:modelValue')!.at(-1)![0]).toBe(false)
+  })
+
+  it('el-tabs v-model 切换 activeTab', async () => {
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+    await wrapper.find('button.tab-switch').trigger('click')
+    const state = (wrapper.vm as any).$.setupState
+    expect(state.activeTab).toBe('permissions')
   })
 
   it('子面板事件：assigned/removed 刷新权限，saved 刷新菜单', async () => {

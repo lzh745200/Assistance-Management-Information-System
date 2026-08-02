@@ -38,6 +38,13 @@ export const routes: RouteRecordRaw[] = [
     component: () => retryImport(() => import('@/views/auth/ChangePassword.vue')),
     meta: { title: '修改密码', noAuth: true },
   },
+  // ── 帮扶成效大屏（汇报模式，无导航栏独立全屏页）──
+  {
+    path: '/bigscreen',
+    name: 'BigScreen',
+    component: () => retryImport(() => import('@/views/bigscreen/BigScreen.vue')),
+    meta: { title: '帮扶成效大屏' },
+  },
   // ── 主布局（带侧边导航栏）──
   {
     path: '/',
@@ -867,5 +874,14 @@ router.beforeEach((to, _from, next) => {
   }
   next()
 })
+
+// Electron 托盘/快捷键导航：主进程 webContents.send('app-route', path)
+if (typeof window !== 'undefined' && (window as any).electronAPI?.onNavigate) {
+  ;(window as any).electronAPI.onNavigate((route: string) => {
+    if (typeof route === 'string' && route.startsWith('/')) {
+      router.push(route).catch(() => {})
+    }
+  })
+}
 
 export default router

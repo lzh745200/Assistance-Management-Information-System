@@ -108,6 +108,11 @@
               <span v-if="!loading">立即登录</span>
               <span v-else>登录中...</span>
             </button>
+
+            <label class="remember-me">
+              <input v-model="rememberMe" type="checkbox" />
+              <span>记住登录（本机自动登录，下次开机免输密码）</span>
+            </label>
           </template>
         </form>
 
@@ -181,6 +186,7 @@ import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { SYSTEM_VERSION, COPYRIGHT_OWNER } from '@/config/constants'
 import { User, Lock, Key, View, Hide, UploadFilled } from '@element-plus/icons-vue'
+import { AuthStorage } from '@/utils/authStorage'
 import { logger } from '@/utils/logger'
 import type { UploadFile, UploadUserFile } from 'element-plus'
 import { apiRequest } from '@/api/request'
@@ -192,6 +198,7 @@ const authStore = useAuthStore()
 const username = ref('')
 const password = ref('')
 const verificationCode = ref('')
+const rememberMe = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
 const showPassword = ref(false)
@@ -375,6 +382,15 @@ const handleLogin = async () => {
     }
 
     if (result.status === 'success') {
+      // 记住登录：持久化令牌供本机自动登录（默认关闭）
+      if (rememberMe.value) {
+        const authData = authStore.authData ?? authStore.getAuthData?.()
+        if (authData) {
+          AuthStorage.persistForAutoLogin(authData)
+        }
+      } else {
+        AuthStorage.clearPersisted()
+      }
       navigateAfterLogin()
       return
     }
@@ -691,6 +707,21 @@ const goToMachineCode = () => {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
   background: linear-gradient(135deg, #e0c048, var(--military-gold));
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--el-text-color-secondary, #8a8a8a);
+  cursor: pointer;
+  user-select: none;
+}
+.remember-me input {
+  accent-color: var(--military-gold, #d4af37);
+  cursor: pointer;
 }
 
 .login-btn:disabled {

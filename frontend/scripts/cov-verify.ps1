@@ -28,7 +28,18 @@ for ($i = 1; $i -le $MaxAttempts -and -not $ok; $i++) {
   Write-Output "attempt $i exit=$($p.ExitCode) ok=$ok"
 }
 if ($ok) {
-  Get-ChildItem (Join-Path $frontend 'coverage') -Exclude '.tmp' | Copy-Item -Destination (Join-Path $frontend $ReportDir) -Recurse -Force
+  $src = Join-Path $frontend 'coverage'
+  $dst = Join-Path $frontend $ReportDir
+  $leaf = Split-Path $dst -Leaf
+  for ($c = 1; $c -le 5; $c++) {
+    if (Test-Path (Join-Path $src 'coverage-final.json')) {
+      New-Item -ItemType Directory -Path $dst -Force | Out-Null
+      Get-ChildItem $src -Exclude '.tmp' -Exclude $leaf | Copy-Item -Destination $dst -Recurse -Force
+      Start-Sleep -Milliseconds 300
+      if (Test-Path (Join-Path $dst 'coverage-final.json')) { break }
+    }
+    Start-Sleep -Seconds 2
+  }
 }
 Get-Content $out -Encoding UTF8 | Select-String -Pattern "All files|Tests |Test Files|Uncovered|ERROR" | Select-Object -First 8
 if ($ok) {

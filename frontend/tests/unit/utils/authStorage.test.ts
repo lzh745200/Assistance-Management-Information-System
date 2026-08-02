@@ -202,4 +202,42 @@ describe('utils/authStorage', () => {
       expect(typeof AuthStorage.setToken).toBe('function')
     })
   })
+
+  describe('记住登录（自动登录持久化）', () => {
+    it('persistForAutoLogin 写入 localStorage', () => {
+      AuthStorage.persistForAutoLogin({ token: 'persist-t', user: USER, refreshToken: 'persist-r' })
+      expect(localStorage.getItem('auth_persist_token')).toBe('persist-t')
+      expect(localStorage.getItem('auth_persist_user')).toContain('admin')
+      expect(localStorage.getItem('auth_persist_refresh')).toBe('persist-r')
+    })
+
+    it('persistForAutoLogin 无 refreshToken 时不写入', () => {
+      AuthStorage.persistForAutoLogin({ token: 't2', user: USER })
+      expect(localStorage.getItem('auth_persist_refresh')).toBeNull()
+    })
+
+    it('hasPersistedAuth 判断', () => {
+      expect(AuthStorage.hasPersistedAuth()).toBe(false)
+      AuthStorage.persistForAutoLogin({ token: 't3', user: USER })
+      expect(AuthStorage.hasPersistedAuth()).toBe(true)
+    })
+
+    it('getToken 回退持久令牌', () => {
+      AuthStorage.persistForAutoLogin({ token: 'persist-fallback', user: USER })
+      expect(AuthStorage.getToken()).toBe('persist-fallback')
+    })
+
+    it('getUser 回退持久用户（含损坏 JSON 兜底）', () => {
+      localStorage.setItem('auth_persist_user', '{bad json')
+      expect(AuthStorage.getUser()).toBeNull()
+      AuthStorage.persistForAutoLogin({ token: 't4', user: USER })
+      expect(AuthStorage.getUser()).toMatchObject({ username: 'admin' })
+    })
+
+    it('clearPersisted 清除持久数据', () => {
+      AuthStorage.persistForAutoLogin({ token: 't5', user: USER })
+      AuthStorage.clearPersisted()
+      expect(AuthStorage.hasPersistedAuth()).toBe(false)
+    })
+  })
 })

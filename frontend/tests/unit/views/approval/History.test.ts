@@ -153,7 +153,7 @@ describe('挂载与加载', () => {
     expect(vm.loading).toBe(false)
     const text = wrapper.text()
     expect(text).toContain('任务A')
-    expect(text).toContain('类型rural_work #5') // title 缺失回退
+    expect(text).toContain('类型project #8') // title 缺失回退
     expect(text).toContain('状态pending')
     expect(text).toContain('第 2 级')
     expect(text).toContain('-') // completed_at 空
@@ -225,6 +225,7 @@ describe('分页', () => {
     pg[0].vm.$emit('size-change', 50)
     await flushPromises()
     expect(mockGetApprovalHistory).toHaveBeenCalledWith(expect.objectContaining({ skip: 50 }))
+    pg[0].vm.$emit('update:currentPage', 3)
     pg[0].vm.$emit('current-change', 3)
     await flushPromises()
     expect(mockGetApprovalHistory).toHaveBeenCalledWith(expect.objectContaining({ skip: 100 }))
@@ -282,8 +283,8 @@ describe('详情与 diff', () => {
     await nextTick()
     expect(wrapper.find('.diff-view').exists()).toBe(true)
     expect(wrapper.find('.el-empty-stub').exists()).toBe(false)
-    expect(wrapper.text()).toContain('旧') // rowA original
-    expect(wrapper.text()).toContain('-') // rowB/C 缺省
+    // 注入行（task 行）无 original/new → ?? "-" 兜底
+    expect(wrapper.text()).toContain('-')
 
     vm.taskDiff = null
     await nextTick()

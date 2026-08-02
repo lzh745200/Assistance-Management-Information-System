@@ -108,6 +108,11 @@ export const useAuthStore = defineStore('auth', () => {
     AuthStorage.clear()
   }
 
+  /** 当前认证数据（供"记住登录"持久化） */
+  function getAuthData(): AuthData | null {
+    return { token: token.value, user: user.value as AuthData['user'], refreshToken: undefined }
+  }
+
   /**
    * 登录；返回 LoginResult 表示登录结果。
    * - success: 登录成功
@@ -212,5 +217,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     verifyTwoFactorLogin,
     fetchUser,
+    getAuthData,
   }
 })

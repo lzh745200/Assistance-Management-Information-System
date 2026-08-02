@@ -30,6 +30,12 @@ vi.mock('element-plus', () => ({
   ElNotification: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
 }))
 
+const { mockSetTheme } = vi.hoisted(() => ({ mockSetTheme: vi.fn() }))
+
+vi.mock('@/stores/config', () => ({
+  useConfigStore: () => ({ theme: 'light', setTheme: mockSetTheme }),
+}))
+
 import ConfigPackage from '@/views/system/ConfigPackage.vue'
 
 const configData = {
@@ -300,5 +306,29 @@ describe('ConfigPackage.vue', () => {
     const vm = w.vm as any
     await vm.resetConfig()
     expect(mockGet).not.toHaveBeenCalledWith('/system/config/defaults')
+  })
+
+  describe('外观主题（T2.4）', () => {
+    it('挂载时应用已存主题到 data-theme', async () => {
+      const w = await mountComp()
+      expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+    })
+
+    it('applyTheme 切换主题并持久化到 store', async () => {
+      const w = await mountComp()
+      const vm = w.vm as any
+      vm.applyTheme('dark')
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+      expect(mockSetTheme).toHaveBeenCalledWith('dark')
+      expect(vm.currentTheme).toBe('dark')
+    })
+
+    it('applyTheme 非法主题回退 light', async () => {
+      const w = await mountComp()
+      const vm = w.vm as any
+      vm.applyTheme('neon')
+      expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+      expect(vm.currentTheme).toBe('light')
+    })
   })
 })

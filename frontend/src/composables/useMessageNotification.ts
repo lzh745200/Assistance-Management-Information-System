@@ -60,6 +60,15 @@ export function useMessageNotification() {
         showNotification('新消息提醒', `您有 ${newCount} 条新消息，请及时查看。`)
       }
       lastUnread = count
+      // Electron 托盘未读角标
+      const electronAPI = (window as any).electronAPI
+      if (electronAPI?.updateTrayUnread) {
+        try {
+          electronAPI.updateTrayUnread(count)
+        } catch {
+          /* 静默 */
+        }
+      }
     } catch {
       // 网络不可用时静默失败
     } finally {

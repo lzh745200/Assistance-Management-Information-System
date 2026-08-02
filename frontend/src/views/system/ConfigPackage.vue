@@ -32,6 +32,21 @@
       </el-row>
     </el-card>
 
+    <!-- 外观主题 -->
+    <el-card style="margin-bottom: 16px">
+      <template #header>
+        <span>外观主题</span>
+      </template>
+      <el-radio-group v-model="currentTheme" @change="applyTheme">
+        <el-radio-button value="light">明亮</el-radio-button>
+        <el-radio-button value="dark">深色</el-radio-button>
+        <el-radio-button value="military">军旅</el-radio-button>
+        <el-radio-button value="outdoor">户外</el-radio-button>
+        <el-radio-button value="high-contrast">高对比</el-radio-button>
+      </el-radio-group>
+      <p class="theme-hint">主题实时切换并自动记忆，图表配色随主题联动。</p>
+    </el-card>
+
     <!-- 配置列表 -->
     <el-card>
       <template #header>
@@ -96,6 +111,7 @@ import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download, Upload, RefreshRight, Refresh } from '@element-plus/icons-vue'
 import { get, post, put } from '@/api/request'
+import { useConfigStore } from '@/stores/config'
 
 interface ConfigItem {
   key: string
@@ -105,6 +121,18 @@ interface ConfigItem {
 }
 
 const loading = ref(false)
+
+// ── 外观主题 ──
+const configStore = useConfigStore()
+const currentTheme = ref(configStore.theme || 'light')
+const THEMES = ['light', 'dark', 'military', 'outdoor', 'high-contrast']
+
+function applyTheme(t: string) {
+  const theme = THEMES.includes(t) ? t : 'light'
+  currentTheme.value = theme
+  document.documentElement.setAttribute('data-theme', theme)
+  configStore.setTheme(theme)
+}
 const configList = ref<ConfigItem[]>([])
 const dialogVisible = ref(false)
 const editRow = ref<ConfigItem | null>(null)
@@ -205,6 +233,9 @@ async function resetConfig() {
 }
 
 loadConfig()
+
+// 应用已保存主题（页面级兜底，全局由布局负责）
+applyTheme(currentTheme.value)
 </script>
 
 <style scoped>
@@ -239,5 +270,10 @@ loadConfig()
   color: #909399;
   font-size: 13px;
   margin: 0;
+}
+.theme-hint {
+  color: #909399;
+  font-size: 13px;
+  margin-top: 8px;
 }
 </style>

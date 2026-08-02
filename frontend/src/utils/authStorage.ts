@@ -34,6 +34,10 @@ const STORAGE_KEYS = {
   REFRESH_TOKEN: 'refresh_token',
   // 迁移标记
   MIGRATED: 'auth_migrated',
+  // 记住登录（自动登录）：持久化到 localStorage
+  PERSIST_TOKEN: 'auth_persist_token',
+  PERSIST_USER: 'auth_persist_user',
+  PERSIST_REFRESH: 'auth_persist_refresh',
 } as const
 
 // 旧版 localStorage 键名（用于向后兼容读取和清理）
@@ -57,10 +61,14 @@ export class AuthStorage {
 
   /**
    * 获取认证令牌
-   * 优先从 sessionStorage 读取，回退到 localStorage（向后兼容）
+   * 优先从 sessionStorage 读取，回退到 localStorage（向后兼容）与持久令牌（记住登录）
    */
   static getToken(): string | null {
-    return sessionStorage.getItem(STORAGE_KEYS.TOKEN)
+    return (
+      sessionStorage.getItem(STORAGE_KEYS.TOKEN) ||
+      localStorage.getItem(STORAGE_KEYS.PERSIST_TOKEN) ||
+      localStorage.getItem(STORAGE_KEYS.TOKEN)
+    )
   }
 
   /**
@@ -78,6 +86,14 @@ export class AuthStorage {
     if (sessionUser) {
       try {
         return JSON.parse(sessionUser)
+      } catch {
+        return null
+      }
+    }
+    const persistUser = localStorage.getItem(STORAGE_KEYS.PERSIST_USER)
+    if (persistUser) {
+      try {
+        return JSON.parse(persistUser)
       } catch {
         return null
       }
@@ -124,6 +140,30 @@ export class AuthStorage {
       user,
       refreshToken: this.getRefreshToken() || undefined,
     }
+  }
+
+  /**
+   * 记住登录：将认证数据持久化到 localStorage（供"本机自动登录"使用）
+   * 默认关闭——由登录页"记住登录"勾选显式开启
+   */
+  static persistForAutoLogin(data: AuthData): void {
+    localStorage.setItem(STORAGE_KEYS.PERSIST_TOKEN, data.token)
+    localStorage.setItem(STORAGE_KEYS.PERSIST_USER, JSON.stringify(data.user))
+    if (data.refreshToken) {
+      localStorage.setItem(STORAGE_KEYS.PERSIST_REFRESH, data.refreshToken)
+    }
+  }
+
+  /** 清除记住登录的持久数据 */
+  static clearPersisted(): void {
+    localStorage.removeItem(STORAGE_KEYS.PERSIST_TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.PERSIST_USER)
+    localStorage.removeItem(STORAGE_KEYS.PERSIST_REFRESH)
+  }
+
+  /** 是否已开启记住登录（存在持久令牌） */
+  static hasPersistedAuth(): boolean {
+    return !!localStorage.getItem(STORAGE_KEYS.PERSIST_TOKEN)
   }
 
   /**

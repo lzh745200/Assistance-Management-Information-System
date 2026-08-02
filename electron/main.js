@@ -589,7 +589,15 @@ function createMainWindow() {
   mainWindow.on('move', () => { clearTimeout(timer); timer = setTimeout(saveWindowState, 500); });
   mainWindow.on('close', (e) => {
     saveWindowState();
-    if (!isQuitting) { e.preventDefault(); mainWindow.hide(); }
+    if (!isQuitting) {
+      const remembered = closeBehaviorStore.get();
+      if (remembered === 'quit') { isQuitting = true; return; }
+      if (remembered === 'hide') { e.preventDefault(); mainWindow.hide(); return; }
+      e.preventDefault();
+      // 首次关闭：询问用户（结果经 confirm-close-behavior IPC 处理，此处仅隐藏等待回答）
+      mainWindow.hide();
+      handleCloseBehaviorPrompt(mainWindow);
+    }
   });
   mainWindow.on('closed', () => { mainWindow = null; });
   mainWindow.webContents.on('render-process-gone', (event, details) => {
@@ -606,12 +614,23 @@ async function restartBackend() {
 }
 
 // ─── 系统托盘 ───
+let trayUnreadCount = 0;
+
+function updateTrayUnread(count) {
+  trayUnreadCount = Math.max(0, Number(count) || 0);
+  if (!tray) return;
+  tray.setToolTip(trayUnreadCount > 0 ? `${APP_TITLE}（${trayUnreadCount} 条未读消息）` : APP_TITLE);
+}
+
 function createTray() {
   const iconPath = getIconPath();
   if (!fs.existsSync(iconPath)) return;
   tray = new Tray(iconPath);
   const menu = Menu.buildFromTemplate([
     { label: '显示主窗口', click: () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
+    { type: 'separator' },
+    { label: '我的待办', click: () => navigateToRoute('/todos') },
+    { label: '打开成效大屏', click: () => navigateToRoute('/bigscreen') },
     { type: 'separator' },
     { label: '立即备份', click: () => { performAutoBackup(); showTrayNotification('备份任务', '执行中...'); } },
     { label: '重启后端', click: () => { restartBackend(); } },
@@ -621,6 +640,66 @@ function createTray() {
   tray.setToolTip(APP_TITLE);
   tray.setContextMenu(menu);
   tray.on('double-click', () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } });
+}
+
+/** 托盘/快捷键 → 打开窗口并跳转前端路由 */
+function navigateToRoute(route) {
+  if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
+  if (mainWindow) { mainWindow.webContents.send('app-route', route); }
+}
+
+// ─── 关闭行为记忆 ───
+const CLOSE_BEHAVIOR_KEY = 'close-behavior';
+function closeBehaviorStore() {
+  return {
+    get() {
+      try { return require('fs').readFileSync(require('path').join(app.getPath('userData'), CLOSE_BEHAVIOR_KEY), 'utf8'); }
+      catch (_) { return null; }
+    },
+    set(v) {
+      try { require('fs').writeFileSync(require('path').join(app.getPath('userData'), CLOSE_BEHAVIOR_KEY), v); } catch (_) {}
+    },
+  };
+}
+function handleCloseBehaviorPrompt(win) {
+  const remembered = closeBehaviorStore().get();
+  if (remembered === 'quit') { isQuitting = true; app.quit(); return; }
+  if (remembered === 'hide') { return; } // 已隐藏
+  dialog.showMessageBox(win, {
+    type: 'question',
+    title: '关闭窗口',
+    message: '关闭窗口后程序将最小化到系统托盘继续运行（自动备份、消息提醒仍生效）。',
+    buttons: ['最小化到托盘', '完全退出'],
+    defaultId: 0,
+    cancelId: 1,
+    checkboxLabel: '记住我的选择，下次不再询问',
+    checkboxChecked: false,
+  }).then(({ response, checkboxChecked }) => {
+    if (checkboxChecked) { closeBehaviorStore().set(response === 0 ? 'hide' : 'quit'); }
+    if (response === 0) { win.show(); win.hide(); } // 保持最小化到托盘
+    else { isQuitting = true; app.quit(); }
+  }).catch(() => {});
+}
+
+// ─── 全局快捷键 ───
+function registerGlobalShortcuts() {
+  const { globalShortcut } = require('electron');
+  const shortcuts = [
+    { accelerator: 'CommandOrControl+Alt+N', route: '/approval/pending', name: '新建审批' },
+    { accelerator: 'CommandOrControl+Alt+T', route: '/todos', name: '我的待办' },
+    { accelerator: 'CommandOrControl+Alt+B', route: null, name: '立即备份' },
+    { accelerator: 'CommandOrControl+Alt+D', route: '/bigscreen', name: '成效大屏' },
+  ];
+  for (const s of shortcuts) {
+    let ok = false;
+    try { ok = globalShortcut.register(s.accelerator, () => {
+      if (s.route) { navigateToRoute(s.route); }
+      else { performAutoBackup(); showTrayNotification('备份任务', '执行中...'); }
+    }); } catch (_) { ok = false; }
+    if (ok) { console.log(`[Shortcut] 已注册 ${s.accelerator} (${s.name})`); }
+    else { console.warn(`[Shortcut] 注册失败 ${s.accelerator} (${s.name})，可能被其他程序占用`); }
+  }
+  app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch (_) {} });
 }
 
 function showTrayNotification(title, body) {
@@ -717,6 +796,30 @@ function setupIpcHandlers() {
     return dialog.showOpenDialog(mainWindow, opts || { title: '选择文件', properties: ['openFile'] });
   });
   ipcMain.handle('send-notification', (_, title, body) => { showTrayNotification(title, body); });
+  // 托盘未读角标
+  ipcMain.on('tray-unread', (_, count) => {
+    updateTrayUnread(Number(count) || 0);
+  });
+  // 前端路由导航（托盘/快捷键 → 打开窗口并跳转）
+  ipcMain.on('app-navigate', (_, route) => {
+    if (mainWindow) { mainWindow.show(); mainWindow.focus(); }
+    const target = typeof route === 'string' ? route : '';
+    if (target && mainWindow) {
+      mainWindow.webContents.send('app-route', target);
+    }
+  });
+  // 开机自启（默认关闭，单机共用电脑场景谨慎开启）
+  ipcMain.handle('get-auto-start', () => {
+    try { return app.getLoginItemSettings().openAtLogin; } catch (_) { return false; }
+  });
+  ipcMain.handle('set-auto-start', (_, enabled) => {
+    try {
+      app.setLoginItemSettings({ openAtLogin: !!enabled });
+      return { success: true, enabled: !!enabled };
+    } catch (e) {
+      return { success: false, error: String(e) };
+    }
+  });
   ipcMain.handle('open-path', async (_, p) => {
     const os = require('os');
     const resolved = path.resolve(String(p || ''));
@@ -790,6 +893,7 @@ app.whenReady().then(async () => {
   if (!gotLock) { app.exit(0); return; }
   console.log('[App] 启动...');
   setupIpcHandlers();
+  registerGlobalShortcuts();
 
   const stderrCapture = [];
   // 首次启动时探测可用端口
