@@ -323,3 +323,6 @@ add*.txt
 logs/app.log.*
 frontend/vitest.config.ts.timestamp-*
 *.bak  
+
+# vitest 临时配置
+frontend/vitest.*.mjs
