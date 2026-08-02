@@ -107,7 +107,7 @@ async def get_pending_reports(
 ):
     """获取待审批的上报"""
     if not hasattr(current_user, "org_id") or not current_user.org_id:
-        from app.core.response import ok_list, success_response
+        from app.core.response import ok_list
         return ok_list(items=[], total=0)
 
     reports = service.get_subordinate_reports(

@@ -460,7 +460,7 @@ async def restore_backup(
 
 
 @router.post("/upload-restore", summary="上传备份文件并恢复系统")
-async def upload_and_restore(
+async def upload_and_restore(  # noqa: C901 - 恢复流程多分支校验,拆分风险高
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),

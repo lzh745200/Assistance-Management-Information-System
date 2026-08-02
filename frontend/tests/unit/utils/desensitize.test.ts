@@ -16,6 +16,25 @@ import {
   DesensitizeLevel,
 } from '@/utils/desensitize'
 
+describe('desensitize edge branches', () => {
+  it('maskBankCard: null/短卡号返回原值', () => {
+    expect(maskBankCard(null)).toBe('')
+    expect(maskBankCard('123')).toBe('123')
+  })
+  it('maskEmail: 无@返回原值', () => {
+    expect(maskEmail('no-at-sign')).toBe('no-at-sign')
+  })
+  it('maskAddress: 空地址返回空串', () => {
+    expect(maskAddress('')).toBe('')
+  })
+  it('maskName: 2字姓名', () => {
+    expect(maskName('张三')).toBe('张*')
+  })
+  it('maskAmount: showAmount 数字格式', () => {
+    expect(maskAmount(12345, true)).toBe('12,345')
+  })
+})
+
 describe('desensitize', () => {
   describe('maskPhone', () => {
     it('11位手机号: 138****1234', () => {

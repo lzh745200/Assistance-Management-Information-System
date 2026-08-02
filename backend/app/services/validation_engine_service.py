@@ -122,7 +122,7 @@ class ValidationEngineService:
             logger.debug("DB规则加载失败，跳过", exc_info=True)
             return []
 
-    def _check_typed_rule(self, rule_type: str, value, params: dict) -> bool:
+    def _check_typed_rule(self, rule_type: str, value, params: dict) -> bool:  # noqa: C901 - 校验规则多类型分支,保持单函数便于审计
         """执行类型化规则检查，返回 True 表示校验失败"""
         if rule_type == "range":
             try:
