@@ -210,6 +210,7 @@ describe('EncryptionSettings.vue', () => {
   })
 
   it('handleChangePassword：无表单引用 → 返回', async () => {
+    mockGet.mockResolvedValue({ success: true, data: statusEnabled })
     const w = await mountComp()
     const vm = w.vm as any
     vm.changeFormRef = null
@@ -218,6 +219,7 @@ describe('EncryptionSettings.vue', () => {
   })
 
   it('handleChangePassword：校验失败 → 返回', async () => {
+    mockGet.mockResolvedValue({ success: true, data: statusEnabled })
     formState.validateFn = (cb) => cb(false)
     const w = await mountComp()
     await (w.vm as any).handleChangePassword()
@@ -225,6 +227,7 @@ describe('EncryptionSettings.vue', () => {
   })
 
   it('handleChangePassword：修改成功', async () => {
+    mockGet.mockResolvedValue({ success: true, data: statusEnabled })
     const w = await mountComp()
     const vm = w.vm as any
     vm.changeForm.oldPassword = 'old1'
@@ -241,6 +244,7 @@ describe('EncryptionSettings.vue', () => {
   })
 
   it('handleChangePassword：失败 → 错误提示', async () => {
+    mockGet.mockResolvedValue({ success: true, data: statusEnabled })
     mockPost.mockRejectedValue(new Error('change failed'))
     const w = await mountComp()
     await (w.vm as any).handleChangePassword()
@@ -248,6 +252,7 @@ describe('EncryptionSettings.vue', () => {
   })
 
   it('handleChangePassword：失败无 message → 默认文案', async () => {
+    mockGet.mockResolvedValue({ success: true, data: statusEnabled })
     mockPost.mockRejectedValue({})
     const w = await mountComp()
     await (w.vm as any).handleChangePassword()
@@ -305,5 +310,32 @@ describe('EncryptionSettings.vue', () => {
     const vm = w.vm as any
     expect(vm.formatDate('')).toBe('N/A')
     expect(vm.formatDate('2024-01-01T00:00:00Z')).toContain('2024')
+  })
+
+  it('启用表单 v-model（密码/确认密码）', async () => {
+    const w = await mountComp()
+    const vm = w.vm as any
+    const inputs = w.findAll('input')
+    await inputs[0].setValue('pw123456')
+    expect(vm.initForm.password).toBe('pw123456')
+    await inputs[1].setValue('pw123456')
+    expect(vm.initForm.confirmPassword).toBe('pw123456')
+  })
+
+  it('修改密码表单 v-model（旧/新/确认）', async () => {
+    mockGet.mockResolvedValue({ success: true, data: statusEnabled })
+    const w = await mountComp()
+    const vm = w.vm as any
+    const inputs = w.findAll('input')
+    // inputs[0]/[1] 为旧密码/新密码（disable 表单在后）
+    await inputs[0].setValue('old1')
+    expect(vm.changeForm.oldPassword).toBe('old1')
+    await inputs[1].setValue('new1')
+    expect(vm.changeForm.newPassword).toBe('new1')
+    await inputs[2].setValue('new1')
+    expect(vm.changeForm.confirmPassword).toBe('new1')
+    // disable 表单密码
+    await inputs[3].setValue('pw123456')
+    expect(vm.disableForm.password).toBe('pw123456')
   })
 })

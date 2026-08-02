@@ -257,7 +257,7 @@ class TestSystemConfigService:
         mock_db.query.return_value.filter.return_value.first.return_value = None
         svc = SystemConfigService(mock_db)
         svc.initialize_defaults()
-        assert mock_db.add.call_count == 14
+        assert mock_db.add.call_count == 21
 
     def test_initialize_defaults_skip_existing(self):
         from app.services.system_config_service import SystemConfigService

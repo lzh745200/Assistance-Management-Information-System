@@ -97,6 +97,8 @@ describe('TemplateDownload.vue', () => {
     const wrapper = mountTpl()
     const btn0 = wrapper.findAll('button.stub-btn')[0]
     await btn0.trigger('click')
+    // 等待动态 import 完成，get 被调用并挂起
+    await flushPromises()
 
     // 下载中 → loading 状态
     expect(wrapper.findAll('button.stub-btn')[0].attributes('loading')).toBe('true')

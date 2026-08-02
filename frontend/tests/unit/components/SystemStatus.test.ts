@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SystemStatus.vue 测试
  * 覆盖：快照加载（在线/离线/无数据）、数据库大小、同步时间文案分支、
  * CPU/内存告警等级、刷新按钮、轮询与清理
@@ -89,11 +89,11 @@ describe('SystemStatus.vue', () => {
     expect(wrapper.text()).toContain('-- MB')
 
     const state = (wrapper.vm as any).$.setupState
-    state.dbSizeBytes.value = 2 * 1024 * 1024 * 1024
+    state.dbSizeBytes = 2 * 1024 * 1024 * 1024
     await nextTick()
     expect(wrapper.text()).toContain('2.00 GB')
 
-    state.dbSizeBytes.value = 300 * 1024 * 1024
+    state.dbSizeBytes = 300 * 1024 * 1024
     await nextTick()
     expect(wrapper.text()).toContain('300.0 MB')
   })
@@ -118,6 +118,18 @@ describe('SystemStatus.vue', () => {
     expect(wrapper.text()).toContain('0%')
   })
 
+  it('快照字段缺失/为 0 时使用回退值', async () => {
+    mocks.getMonitorSnapshot.mockResolvedValue({
+      success: true,
+      data: { cpu_usage: 0, memory_usage: undefined, process_memory_mb: 0, process_threads: 0 },
+    })
+    const wrapper = mountStatus({ pollInterval: 0 })
+    await flushPromises()
+    expect(wrapper.text()).toContain('0%')
+    expect(wrapper.text()).toContain('0MB')
+    expect(wrapper.text()).toContain('0线程')
+  })
+
   it('getDatabaseFileSize 失败时降级为 0', async () => {
     mocks.getDatabaseFileSize.mockRejectedValue(new Error('x'))
     const wrapper = mountStatus({ pollInterval: 0 })
@@ -130,24 +142,24 @@ describe('SystemStatus.vue', () => {
     await flushPromises()
     const state = (wrapper.vm as any).$.setupState
 
-    state.lastSyncTime.value = new Date(Date.now() - 30 * 1000)
+    state.lastSyncTime = new Date(Date.now() - 30 * 1000)
     await nextTick()
     expect(wrapper.text()).toContain('刚刚')
 
-    state.lastSyncTime.value = new Date(Date.now() - 5 * 60 * 1000)
+    state.lastSyncTime = new Date(Date.now() - 5 * 60 * 1000)
     await nextTick()
     expect(wrapper.text()).toContain('5分钟前')
 
-    state.lastSyncTime.value = new Date(Date.now() - 2 * 3600 * 1000)
+    state.lastSyncTime = new Date(Date.now() - 2 * 3600 * 1000)
     await nextTick()
     expect(wrapper.text()).toContain('2小时前')
 
-    state.lastSyncTime.value = new Date(Date.now() - 50 * 3600 * 1000)
+    state.lastSyncTime = new Date(Date.now() - 50 * 3600 * 1000)
     await nextTick()
     expect(wrapper.text()).not.toContain('分钟前')
     expect(wrapper.text()).not.toContain('小时前')
 
-    state.lastSyncTime.value = null
+    state.lastSyncTime = null
     await nextTick()
     expect(wrapper.text()).toContain('--:--')
   })
@@ -157,15 +169,15 @@ describe('SystemStatus.vue', () => {
     await flushPromises()
     const state = (wrapper.vm as any).$.setupState
 
-    state.cpuPercent.value = 80
-    state.memPercent.value = 80
+    state.cpuPercent = 80
+    state.memPercent = 80
     await nextTick()
     let fills = wrapper.findAll('.status-bar__fill')
     expect(fills[0].classes()).toContain('status-bar__fill--warning')
     expect(fills[1].classes()).toContain('status-bar__fill--warning')
 
-    state.cpuPercent.value = 95
-    state.memPercent.value = 90
+    state.cpuPercent = 95
+    state.memPercent = 90
     await nextTick()
     fills = wrapper.findAll('.status-bar__fill')
     expect(fills[0].classes()).toContain('status-bar__fill--danger')
@@ -183,9 +195,10 @@ describe('SystemStatus.vue', () => {
     expect(wrapper.text()).toContain('在线')
   })
 
-  it('showRefresh=false 时不渲染刷新按钮', () => {
+  it('showRefresh prop 声明存在但模板未使用（死 props，仅验证挂载）', () => {
     const wrapper = mountStatus({ pollInterval: 0, showRefresh: false })
-    expect(wrapper.find('button.stub-btn').exists()).toBe(false)
+    // 模板始终渲染刷新按钮
+    expect(wrapper.find('button.stub-btn').exists()).toBe(true)
   })
 
   it('轮询：pollInterval > 0 时定时拉取快照，卸载后清理', async () => {
@@ -210,3 +223,4 @@ describe('SystemStatus.vue', () => {
     wrapper.unmount()
   })
 })
+

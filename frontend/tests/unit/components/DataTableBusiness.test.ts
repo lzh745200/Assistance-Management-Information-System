@@ -11,12 +11,12 @@ enableAutoUnmount(afterEach)
 const ElTableStub = {
   props: ['data', 'loading'],
   template:
-    '<table class="stub-table"><tbody><tr v-for="(row, i) in data" :key="i"><slot :row="row" /></tr></tbody></table>',
+    '<table class="stub-table" :loading="loading"><tbody><tr v-for="(row, i) in data" :key="i"><slot :row="row" /></tr></tbody></table>',
 }
 
 const ElTableColumnStub = {
   props: ['label', 'prop', 'width'],
-  template: '<td class="stub-col" />',
+  template: '<td class="stub-col" :prop="prop" :label="label" />',
 }
 
 const ElPaginationStub = {
@@ -51,8 +51,9 @@ describe('business/DataTable/DataTable.vue', () => {
     expect(wrapper.findAll('tr')).toHaveLength(2)
     // 每行 2 列
     expect(wrapper.findAll('td.stub-col')).toHaveLength(4)
-    expect(wrapper.findAll('td.stub-col')[0].props('prop')).toBe('name')
-    expect(wrapper.findAll('td.stub-col')[1].props('prop')).toBe('age')
+    const cols = wrapper.findAll('td.stub-col')
+    expect(cols[0].attributes('prop')).toBe('name')
+    expect(cols[1].attributes('prop')).toBe('age')
   })
 
   it('空数据时无行', () => {
@@ -62,7 +63,7 @@ describe('business/DataTable/DataTable.vue', () => {
 
   it('loading prop 透传到表格', () => {
     const wrapper = mountTable({ data: [], columns, loading: true })
-    expect(wrapper.find('table.stub-table').props('loading')).toBe(true)
+    expect(wrapper.find('table.stub-table').attributes('loading')).toBe('true')
   })
 
   it('pagination=false 时不渲染分页', () => {

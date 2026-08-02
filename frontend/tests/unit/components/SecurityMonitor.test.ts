@@ -38,12 +38,12 @@ const ElTableStub = {
 
 const ElTableColumnStub = {
   props: ['label', 'prop', 'width', 'row'],
-  template: '<td class="stub-td"><slot :row="row" /></td>',
+  template: '<td class="stub-td">{{ row ? row[prop] : \'\' }}<slot :row="row" /></td>',
 }
 
 const ElTagStub = {
   props: ['type'],
-  template: '<span class="stub-tag"><slot /></span>',
+  template: '<span class="stub-tag" :type="type"><slot /></span>',
 }
 
 const ElButtonStub = {
@@ -82,11 +82,11 @@ describe('SecurityMonitor.vue', () => {
     const tags = wrapper.findAll('span.stub-tag')
     expect(tags).toHaveLength(4) // 3 个等级标签 + 1 个状态标签
     // INTERNAL → info（默认分支）
-    expect(tags[1].props('type')).toBe('info')
+    expect(tags[1].attributes('type')).toBe('info')
     // CONFIDENTIAL → primary
-    expect(tags[2].props('type')).toBe('primary')
+    expect(tags[2].attributes('type')).toBe('primary')
     // SECRET → warning
-    expect(tags[3].props('type')).toBe('warning')
+    expect(tags[3].attributes('type')).toBe('warning')
     expect(wrapper.text()).toContain('安全监控面板')
     expect(wrapper.text()).toContain('登录成功')
     expect(wrapper.text()).toContain('数据访问')

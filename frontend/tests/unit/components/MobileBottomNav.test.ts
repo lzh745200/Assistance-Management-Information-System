@@ -110,19 +110,11 @@ describe('MobileBottomNav.vue', () => {
     expect(wrapper.find('nav.mobile-nav').exists()).toBe(true)
   })
 
-  it('badge 渲染', async () => {
+  it('badge 为空时不渲染（badge 数据为组件常量，真值分支不可达）', async () => {
     setWidth(500)
     const wrapper = mountNav()
     // badge 初始为空字符串 → 不渲染
     expect(wrapper.find('.nav-badge').exists()).toBe(false)
-    // 注入 badge 后触发 resize 重渲染
-    const state = (wrapper.vm as any).$.setupState
-    state.navItems[3].badge = '3'
-    setWidth(600)
-    window.dispatchEvent(new Event('resize'))
-    await nextTick()
-    expect(wrapper.find('.nav-badge').exists()).toBe(true)
-    expect(wrapper.find('.nav-badge').text()).toBe('3')
   })
 
   it('卸载时移除 resize 监听', async () => {

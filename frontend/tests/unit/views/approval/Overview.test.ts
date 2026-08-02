@@ -152,7 +152,7 @@ describe('挂载与统计', () => {
     vm.filters.applicant = '不存在'
     expect(vm.filteredTasks).toHaveLength(0)
     vm.filters.applicant = ''
-    vm.allTasks.push({ id: 99, title: 'T99', status: 'pending', type: '', created_at: todayISO } as any)
+    vm.allTasks = [...vm.allTasks, { id: 99, title: 'T99', status: 'pending', type: '', created_at: todayISO } as any]
     vm.filters.applicant = 'x' // 缺失 applicant_name → '' 兜底分支
     expect(vm.filteredTasks).toHaveLength(0)
     vm.filters.applicant = ''
@@ -321,13 +321,16 @@ describe('导出日志', () => {
     await flushPromises()
     const vm = wrapper.vm as any
     // 覆盖 title/applicant_name/type 缺失的 ?? 兜底
-    vm.allTasks.push({
-      id: 88,
-      status: 'pending',
-      created_at: todayISO,
-      reviewer_name: undefined,
-      reviewed_at: undefined,
-    } as any)
+    vm.allTasks = [
+      ...vm.allTasks,
+      {
+        id: 88,
+        status: 'pending',
+        created_at: todayISO,
+        reviewer_name: undefined,
+        reviewed_at: undefined,
+      } as any,
+    ]
     await findBtn(wrapper, '导出当前查询结果').trigger('click')
     expect(exportUtilMock.exportToCSV).toHaveBeenCalled()
     const data = exportUtilMock.exportToCSV.mock.calls[0][0]

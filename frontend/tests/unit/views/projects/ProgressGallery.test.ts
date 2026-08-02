@@ -52,6 +52,7 @@ const fileSeq2 = { id: 15, filename: '图B.jpg', name: '图B.jpg', category: 'pr
 const fileNoCat = { id: 16, name: '无分类文件.pdf' }
 const fileNoFilename = { id: 17, name: '仅name字段', category: 'progress' }
 const fileEmptyNames = { id: 18, filename: '', name: '', category: 'progress' }
+const fileNoNames = { id: 19, category: 'progress' }
 
 const fetchMock = vi.hoisted(() => vi.fn())
 
@@ -92,9 +93,11 @@ beforeEach(() => {
   routeBox.params = { id: '5' }
   projectsApiMock.get.mockResolvedValue(project)
   projectsApiMock.listFiles.mockResolvedValue({
-    items: [fileBefore, fileAfter, fileOther, fileSeq1, fileSeq2, fileNoCat, fileNoFilename, fileEmptyNames],
+    items: [fileBefore, fileAfter, fileOther, fileSeq1, fileSeq2, fileNoCat, fileNoFilename, fileEmptyNames, fileNoNames],
   })
-  projectsApiMock.getFileDownloadUrl.mockReturnValue('/api/v1/projects/5/files/11/download')
+  projectsApiMock.getFileDownloadUrl.mockImplementation(
+    (projectId: number, fileId: number) => `/api/v1/projects/${projectId}/files/${fileId}/download`
+  )
   projectsApiMock.uploadFiles.mockResolvedValue({})
   projectsApiMock.deleteFile.mockResolvedValue({})
   confirmMock.mockResolvedValue(undefined)
@@ -196,6 +199,21 @@ describe('comparisonPairs', () => {
     expect(pairs[0].afterUrl).toBeTruthy()
   })
 
+  it('顺序配对：后一张无 Blob URL → afterUrl || 兜底', async () => {
+    projectsApiMock.listFiles.mockResolvedValue({ items: [fileSeq1, fileSeq2] })
+    fetchMock.mockImplementation((url: string) => {
+      if (String(url).includes('/15/')) return Promise.resolve({ ok: false })
+      return Promise.resolve({ ok: true, blob: vi.fn().mockResolvedValue(new Blob(['x'])) })
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    const pairs = vm.comparisonPairs
+    expect(pairs).toHaveLength(1)
+    expect(pairs[0].afterUrl).toBe('')
+    expect(pairs[0].beforeUrl).toBeTruthy()
+  })
+
   it('少于 2 张 → 空', async () => {
     projectsApiMock.listFiles.mockResolvedValue({ items: [fileSeq1, fileOther] })
     const wrapper = mountComp()
@@ -222,6 +240,14 @@ describe('上传', () => {
     projectsApiMock.uploadFiles.mockRejectedValue(new Error('上传失败'))
     await (wrapper.vm as any).handleUpload({ file: {} })
     expect(logError).toHaveBeenCalled()
+    expect(ElMessage.error).toHaveBeenCalledWith('上传失败')
+  })
+
+  it('上传失败无 message → 兜底文案', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    projectsApiMock.uploadFiles.mockRejectedValue({})
+    await (wrapper.vm as any).handleUpload({ file: {} })
     expect(ElMessage.error).toHaveBeenCalledWith('上传失败')
   })
 
@@ -272,6 +298,14 @@ describe('删除', () => {
     projectsApiMock.deleteFile.mockRejectedValueOnce(new Error('删除失败'))
     await (wrapper.vm as any).handleDelete(11)
     expect(logError).toHaveBeenCalled()
+    expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
+  })
+
+  it('删除失败无 message → 兜底文案', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    projectsApiMock.deleteFile.mockRejectedValueOnce({})
+    await (wrapper.vm as any).handleDelete(11)
     expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
   })
 })
