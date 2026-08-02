@@ -622,6 +622,7 @@ async def update_organization(
 async def delete_organization(
     org_id: int,
     force: bool = Query(False, description="保留参数，暂未使用"),
+    confirm_password: str = Query("", description="二次确认：输入当前用户密码"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -631,6 +632,7 @@ async def delete_organization(
     Args:
         org_id: 组织ID
         force: 保留参数，暂未使用
+        confirm_password: 二次确认密码（单机共用电脑防误删）
 
     Returns:
         删除结果
@@ -642,6 +644,13 @@ async def delete_organization(
         "super_admin",
     ) and not is_superuser(current_user):
         raise HTTPException(status_code=403, detail="仅管理员可执行此操作")
+
+    # 二次确认：校验当前用户密码（防共用电脑误操作）
+    from app.core.security import verify_password
+
+    user_row = db.query(User).filter(User.id == current_user.id).first()
+    if not user_row or not verify_password(confirm_password, user_row.password_hash or ""):
+        raise HTTPException(status_code=400, detail="二次确认失败：密码不正确")
 
     logger.info(f"=== 开始删除组织 === org_id={org_id}, user={current_user.id}")
 

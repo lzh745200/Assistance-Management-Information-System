@@ -58,7 +58,6 @@ const summary = ref<any>({})
 
 let clockTimer: number | null = null
 let rotateTimer: number | null = null
-let activeRotate = 0
 
 const kpis = computed(() => {
   const s = stats.value ?? {}

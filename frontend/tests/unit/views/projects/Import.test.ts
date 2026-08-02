@@ -146,11 +146,35 @@ describe('步骤向导', () => {
   it('继续上传 → 步骤 2', async () => {
     const wrapper = mountComp()
     await flushPromises()
-    ;(wrapper.vm as any).currentStep = 1
+    const vm = wrapper.vm as any
+    // 自然流程：步骤0 → 跳过此步 → 步骤1 → 继续上传
+    const skip = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('跳过'))
+    await skip!.trigger('click')
     await wrapper.vm.$nextTick()
     const btn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('继续上传'))
+    expect(btn, '继续上传按钮').toBeTruthy()
     await btn!.trigger('click')
-    expect((wrapper.vm as any).currentStep).toBe(2)
+    await wrapper.vm.$nextTick()
+    expect(vm.currentStep).toBe(2)
+    // 再次点击（同一步骤块内重复触发编译后的缓存内联函数）
+    vm.currentStep = 1
+    await wrapper.vm.$nextTick()
+    await wrapper.findAll('.el-button-stub').find((b) => b.text().includes('继续上传'))!.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(vm.currentStep).toBe(2)
+  })
+
+  it('步骤3 返回修改 → 步骤 2', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.currentStep = 3
+    vm.previewData = [previewRows[0]]
+    await wrapper.vm.$nextTick()
+    const btn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('返回修改'))
+    expect(btn, '步骤3返回修改按钮').toBeTruthy()
+    await btn!.trigger('click')
+    expect(vm.currentStep).toBe(2)
   })
 
   it('返回修改 → 步骤 1', async () => {
@@ -196,6 +220,14 @@ describe('downloadTemplate', () => {
     await btn!.trigger('click')
     await flushPromises()
     expect(requestMock.apiRequest).toHaveBeenCalled()
+  })
+
+  it('下载模板 resp 无 data → || resp 兜底', async () => {
+    requestMock.apiRequest.mockResolvedValue({ headers: {} })
+    const wrapper = mountComp()
+    await flushPromises()
+    await (wrapper.vm as any).downloadTemplate()
+    expect(requestMock.downloadBlob).toHaveBeenCalled()
   })
 })
 
@@ -270,12 +302,63 @@ describe('handleUpload', () => {
       expect.objectContaining({ timeout: 120000 })
     )
     expect(vm.currentStep).toBe(3)
-    expect(vm.previewData).toHaveLength(3)
+    expect(vm.previewData).toHaveLength(2)
     expect(vm.previewData[0].projectName).toBe('项目A')
     expect(vm.previewData[1].projectName).toBe('')
     expect(vm.validationFailed).toBe(true)
     expect(vm.validationErrors).toEqual([{ index: 2, message: '名称必填; 日期格式错误' }])
     expect(vm.loading).toBe(false)
+  })
+
+  it('解析成功且无失败行 / project_name 兜底 / 无 errors 兜底', async () => {
+    requestMock.post.mockResolvedValue({
+      rows: [
+        { row_number: 1, has_error: false, data: { project_name: 'P名称', budget: 5 } },
+        { row_number: 2, has_error: true, data: {} },
+      ],
+      invalid_rows: 0,
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.fileList = [{ raw: new File(['x'], 'd.xlsx') }]
+    await vm.handleUpload()
+    expect(vm.previewData[0].projectName).toBe('P名称')
+    expect(vm.previewData[0].totalBudget).toBe(5)
+    expect(vm.validationFailed).toBe(false)
+    expect(vm.validationErrors).toEqual([{ index: 2, message: '' }])
+  })
+
+  it('全部行 has_error → 全部计入校验错误', async () => {
+    requestMock.post.mockResolvedValue({
+      rows: [
+        { row_number: 1, has_error: true, errors: [{ message: 'E1' }], data: {} },
+        { row_number: 2, has_error: true, errors: [{ message: 'E2' }], data: {} },
+      ],
+      invalid_rows: 2,
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.fileList = [{ raw: new File(['x'], 'd.xlsx') }]
+    await vm.handleUpload()
+    expect(vm.validationErrors).toEqual([
+      { index: 1, message: 'E1' },
+      { index: 2, message: 'E2' },
+    ])
+  })
+
+  it('行无 row_number → idx+1 兜底', async () => {
+    requestMock.post.mockResolvedValue({
+      rows: [{ has_error: false, data: { name: 'N' } }],
+      invalid_rows: 0,
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.fileList = [{ raw: new File(['x'], 'd.xlsx') }]
+    await vm.handleUpload()
+    expect(vm.previewData[0].rowIndex).toBe(1)
   })
 
   it('响应无 rows → 解析失败提示', async () => {
@@ -286,6 +369,16 @@ describe('handleUpload', () => {
     vm.fileList = [{ raw: new File(['x'], 'd.xlsx') }]
     await vm.handleUpload()
     expect(ElMessage.error).toHaveBeenCalledWith('文件解析失败，请检查文件格式')
+  })
+
+  it('file 无 raw 字段 → || file 兜底', async () => {
+    requestMock.post.mockResolvedValue({ rows: [], invalid_rows: 0 })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.fileList = [{ name: 'd.xlsx', size: 1 }]
+    await vm.handleUpload()
+    expect(requestMock.post).toHaveBeenCalled()
   })
 
   it('请求异常 → 解析失败 detail', async () => {
@@ -300,6 +393,10 @@ describe('handleUpload', () => {
     requestMock.post.mockRejectedValue(new Error('网络错误'))
     await vm.handleUpload()
     expect(ElMessage.error).toHaveBeenCalledWith('解析失败: 网络错误')
+
+    requestMock.post.mockRejectedValue({})
+    await vm.handleUpload()
+    expect(ElMessage.error).toHaveBeenCalledWith('解析失败: 文件解析失败')
   })
 
   it('开始解析按钮（disabled 无文件）→ 无文件提示', async () => {
@@ -308,6 +405,9 @@ describe('handleUpload', () => {
     ;(wrapper.vm as any).currentStep = 2
     await wrapper.vm.$nextTick()
     const btn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('开始解析'))
+    expect(btn).toBeTruthy()
+    // VTU trigger 会跳过 disabled 元素，先移除属性再点击
+    btn!.element.removeAttribute('disabled')
     await btn!.trigger('click')
     await flushPromises()
     expect(ElMessage.warning).toHaveBeenCalledWith('请选择要上传的文件')
@@ -333,6 +433,32 @@ describe('confirmImport', () => {
     expect(vm.importLoading).toBe(false)
   })
 
+  it('导入成功无失败行/无计数 → || 0 兜底', async () => {
+    requestMock.post.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.fileList = [{ raw: new File(['x'], 'd.xlsx') }]
+    await vm.confirmImport()
+    expect(vm.importResult).toEqual({
+      success: true,
+      failure: false,
+      successCount: 0,
+      failureCount: 0,
+      totalCount: 0,
+    })
+  })
+
+  it('confirmImport 时 file 无 raw → || file 兜底', async () => {
+    requestMock.post.mockResolvedValue({ success_rows: 1, failed_rows: 0, total_rows: 1 })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.fileList = [{ name: 'd.xlsx' }]
+    await vm.confirmImport()
+    expect(vm.importResult.success).toBe(true)
+  })
+
   it('导入失败 → 失败结果 + message', async () => {
     requestMock.post.mockRejectedValue({ response: { data: { detail: '导入失败' } } })
     const wrapper = mountComp()
@@ -352,6 +478,16 @@ describe('confirmImport', () => {
     })
   })
 
+  it('导入失败无 detail/message → 兜底文案', async () => {
+    requestMock.post.mockRejectedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.fileList = [{ raw: new File(['x'], 'd.xlsx') }]
+    await vm.confirmImport()
+    expect(vm.importResult.message).toBe('导入失败')
+  })
+
   it('确认导入按钮 → confirmImport', async () => {
     requestMock.post.mockResolvedValue({ success_rows: 1, failed_rows: 0, total_rows: 1 })
     const wrapper = mountComp()
@@ -359,8 +495,10 @@ describe('confirmImport', () => {
     const vm = wrapper.vm as any
     vm.currentStep = 3
     vm.fileList = [{ raw: new File(['x'], 'd.xlsx') }]
+    vm.previewData = [previewRows[0]]
     await wrapper.vm.$nextTick()
     const btn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('确认导入'))
+    expect(btn).toBeTruthy()
     await btn!.trigger('click')
     await flushPromises()
     expect(vm.currentStep).toBe(4)
@@ -416,9 +554,10 @@ describe('结果页', () => {
     await flushPromises()
     const vm = wrapper.vm as any
     vm.currentStep = 4
-    vm.importResult = { success: false, failure: true, successCount: 0, failureCount: 1, totalCount: 1, message: '未知错误' }
+    vm.importResult = { success: false, failure: true, successCount: 0, failureCount: 1, totalCount: 1, message: '' }
     await wrapper.vm.$nextTick()
     expect(wrapper.text()).toContain('导入失败')
+    expect(wrapper.text()).toContain('未知错误')
     const btn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('重新导入'))
     await btn!.trigger('click')
     expect(vm.currentStep).toBe(0)

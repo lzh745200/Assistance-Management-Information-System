@@ -2,7 +2,7 @@
 
 import logging
 from datetime import date, datetime
-from typing import Optional
+from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
@@ -204,6 +204,20 @@ async def create_work_log(
     elif not isinstance(raw_date, dt_date):
         raise HTTPException(status_code=422, detail="工作日期格式无效")
 
+    # 驻村打卡去重：同一用户同一天仅允许一条 checkin 记录
+    if log_data.get("category") == "checkin":
+        exists = (
+            db.query(WorkLog)
+            .filter(
+                WorkLog.user_id == current_user.id,
+                WorkLog.category == "checkin",
+                WorkLog.log_date == log_data["log_date"],
+            )
+            .first()
+        )
+        if exists:
+            raise HTTPException(status_code=400, detail="今天已完成驻村打卡")
+
     log = WorkLog(user_id=current_user.id, **log_data)
     db.add(log)
     safe_commit(db)
@@ -355,3 +369,68 @@ async def get_calendar_events(
         )
 
     return ok_list(items, len(items), year=year, month=month)
+
+
+@router.get("/monthly-summary", summary="驻村工作月度总结")
+async def work_log_monthly_summary(
+    year: int = Query(..., ge=2000, le=2099),
+    month: int = Query(..., ge=1, le=12),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """聚合当月工作日志生成月度总结：总条数/打卡天数/分类统计/内容列表"""
+    import calendar
+
+    _, last_day = calendar.monthrange(year, month)
+    start = date(year, month, 1)
+    end = date(year, month, last_day)
+
+    query = db.query(WorkLog).filter(WorkLog.log_date >= start, WorkLog.log_date <= end)
+    role = getattr(current_user, "role", "")
+    if role not in ("admin", "super_admin"):
+        from sqlalchemy import or_ as sa_or
+
+        query = query.filter(
+            sa_or(
+                WorkLog.category == "system_auto",
+                WorkLog.user_id == current_user.id,
+            )
+        )
+
+    logs = query.order_by(WorkLog.log_date).all()
+
+    category_counts: Dict[str, int] = {}
+    checkin_days: set = set()
+    items = []
+    for log in logs:
+        cat = log.category or "daily"
+        category_counts[cat] = category_counts.get(cat, 0) + 1
+        if cat == "checkin":
+            checkin_days.add(log.log_date.isoformat())
+        items.append(
+            {
+                "work_date": log.log_date.isoformat(),
+                "content": log.content,
+                "category": cat,
+                "location": log.location,
+            }
+        )
+
+    summary_text = (
+        f"{year}年{month}月驻村工作总结："
+        f"共记录工作 {len(logs)} 项，驻村打卡 {len(checkin_days)} 天"
+        + (f"，其中 {category_counts.get('checkin', 0)} 次打卡。" if category_counts.get('checkin') else "。")
+    )
+
+    return success_response(
+        data={
+            "year": year,
+            "month": month,
+            "total_logs": len(logs),
+            "checkin_days": len(checkin_days),
+            "category_counts": category_counts,
+            "items": items,
+            "summary_text": summary_text,
+        },
+        message="月度总结已生成",
+    )

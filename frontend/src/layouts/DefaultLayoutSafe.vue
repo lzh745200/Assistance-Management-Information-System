@@ -376,6 +376,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAutoLock as useAutoLockModule } from '@/composables/useAutoLock'
 import { useRoute } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useKeyboardShortcuts, type Shortcut } from '@/composables/useKeyboardShortcuts'
@@ -436,6 +437,15 @@ onMounted(() => {
 onUnmounted(() => {
   narrowMq.removeEventListener('change', handleNarrowChange)
 })
+
+// ── 自动锁屏（单机共用电脑，无操作 N 分钟回登录页）──
+useAutoLockModule({
+  onLock: () => {
+    authStore.logout()
+    window.location.href = '/login'
+  },
+})
+
 const username = computed(() => authStore.user?.username || authStore.user?.full_name || '管理员')
 const currentRoute = computed(() => (route.meta?.title as string) || '')
 

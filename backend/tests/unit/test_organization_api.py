@@ -1,6 +1,7 @@
 """Comprehensive tests for organization.py — all endpoints, full branch coverage."""
 
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -398,33 +399,66 @@ class TestUpdateOrganization:
 # ---------------------------------------------------------------------------
 
 class TestDeleteOrganization:
+    def _mock_user_password(self, mock_db, password_hash):
+        """mock User 密码校验查询通过"""
+        from app.models.user import User
+
+        def _query(model):
+            if model is User:
+                q = MagicMock(name="user_q")
+                q.filter.return_value.first.return_value = SimpleNamespace(
+                    id=1, password_hash=password_hash,
+                )
+                return q
+            return mock_db.query.return_value
+
+        mock_db.query.side_effect = _query
+
     def test_permission_denied(self, client_regular):
         resp = client_regular.delete("/api/v1/organizations/1")
         assert resp.status_code == 403
 
+    def test_bad_confirm_password(self, client_admin, mock_db):
+        # 密码不匹配 → 400 二次确认失败
+        from app.core.security import hash_password
+
+        self._mock_user_password(mock_db, hash_password("real-pass"))
+        resp = client_admin.delete("/api/v1/organizations/1?confirm_password=wrong")
+        assert resp.status_code == 400
+        assert "二次确认" in resp.text
+
     def test_not_found(self, client_admin, mock_db):
+        from app.core.security import hash_password
+
+        self._mock_user_password(mock_db, hash_password("pass123"))
         mock_db.query.return_value.first.return_value = None
-        resp = client_admin.delete("/api/v1/organizations/999")
+        resp = client_admin.delete("/api/v1/organizations/999?confirm_password=pass123")
         assert resp.status_code == 404
 
     def test_has_children(self, client_admin, mock_db):
+        from app.core.security import hash_password
+
+        self._mock_user_password(mock_db, hash_password("pass123"))
         q = mock_db.query.return_value
         q.first.return_value = _make_mock_org(1)
         children_q = MagicMock(name="children_q")
         children_q.filter.return_value = children_q
         children_q.count.return_value = 2
         mock_db.query.return_value = children_q
-        resp = client_admin.delete("/api/v1/organizations/1")
+        resp = client_admin.delete("/api/v1/organizations/1?confirm_password=pass123")
         assert resp.status_code == 400
 
     def test_success(self, client_admin, mock_db):
+        from app.core.security import hash_password
+
+        self._mock_user_password(mock_db, hash_password("pass123"))
         q = mock_db.query.return_value
         q.first.return_value = _make_mock_org(1)
         children_q = MagicMock(name="children_q")
         children_q.filter.return_value = children_q
         children_q.count.return_value = 0
         mock_db.query.return_value = children_q
-        resp = client_admin.delete("/api/v1/organizations/1")
+        resp = client_admin.delete("/api/v1/organizations/1?confirm_password=pass123")
         assert resp.status_code == 200
         assert resp.json()["type"] == "soft_delete"
 

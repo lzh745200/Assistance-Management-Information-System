@@ -107,8 +107,10 @@ class DataPackageService:
         export_by: int,
         description: str = None,
         package_type: PackageType = PackageType.report,
+        incremental: bool = False,
+        since_sync_version: Optional[int] = None,
     ) -> DataPackageExportResult:
-        """导出数据包"""
+        """导出数据包（incremental=True 时仅导出 sync_version 大于 since_sync_version 的记录）"""
         org = self.org_service.get_organization(org_id)
         if not org:
             raise BusinessError(f"组织不存在: {org_id}")
@@ -120,7 +122,10 @@ class DataPackageService:
         for data_type in data_types:
             if data_type in DATA_TYPE_MODELS:
                 model = DATA_TYPE_MODELS[data_type]
-                records = self._export_data_type(org_id, model)
+                records = self._export_data_type(
+                    org_id, model,
+                    since_sync_version=since_sync_version if incremental else None,
+                )
                 data_dict[data_type] = records
                 record_counts[data_type] = len(records)
 
@@ -137,7 +142,7 @@ class DataPackageService:
             checksum="",
             encryption="none",
             compression="zip",
-            incremental=False,
+            incremental=incremental,
             base_package_id=None,
         )
 
@@ -168,13 +173,16 @@ class DataPackageService:
             download_url=f"/api/v1/data-packages/{package.id}/download",
         )
 
-    def _export_data_type(self, org_id: int, model: Any) -> List[Dict]:
-        """导出指定类型的数据"""
+    def _export_data_type(self, org_id: int, model: Any, since_sync_version: Optional[int] = None) -> List[Dict]:
+        """导出指定类型的数据（增量模式按 sync_version 过滤）"""
         query = self.db.query(model)
         if hasattr(model, "org_id"):
             query = query.filter(model.org_id == org_id)
         elif hasattr(model, "organization_id"):
             query = query.filter(model.organization_id == org_id)
+
+        if since_sync_version is not None and hasattr(model, "sync_version"):
+            query = query.filter(model.sync_version > since_sync_version)
 
         records = query.all()
         result = []

@@ -385,6 +385,13 @@ export const routes: RouteRecordRaw[] = [
         component: () => retryImport(() => import('@/views/work-calendar/Index.vue')),
         meta: { title: '工作日历' },
       },
+      // ── 驻村工作台（打卡+月度总结） ──
+      {
+        path: '/rural-works/checkin',
+        name: 'CheckinWorkbench',
+        component: () => retryImport(() => import('@/views/ruralWorks/checkin/Index.vue')),
+        meta: { title: '驻村工作台' },
+      },
       // ── 组织机构 ──
       {
         path: '/organizations',
@@ -776,6 +783,13 @@ export const routes: RouteRecordRaw[] = [
         name: 'EffectivenessEvaluate',
         component: () => retryImport(() => import('@/views/effectiveness/Evaluation.vue')),
         meta: { title: '成效评估' },
+      },
+      // ── 提醒中心 ──
+      {
+        path: '/reminder',
+        name: 'ReminderCenter',
+        component: () => retryImport(() => import('@/views/reminder/Index.vue')),
+        meta: { title: '提醒中心' },
       },
       // ── 舆情监测 ──
       {

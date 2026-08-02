@@ -32,6 +32,7 @@ const villages = [
   { id: 2, name: '乙村', department: '', support_unit: '', county: '', transition_fund_military_total: 0, created_at: '' },
   { id: 3, village_name: '丙村', department: '参谋处', support_unit: '帮扶队B', county: '', transition_fund_military_total: 50, created_at: '2024-06-02T11:00:00' },
   { id: 4, village_name: '丁村', department: '作训处', support_unit: '帮扶队C', county: '', transition_fund_military_total: 0, created_at: '2024-06-03T12:00:00' },
+  { id: 5, department: '', support_unit: '', county: '', transition_fund_military_total: 0, created_at: '' },
 ]
 
 // 完整度：v1 5/5=100%→pass；v2 0/5=0%→fail；v3 4/5=80%→pass；v4 3/5=60%→pending
@@ -99,7 +100,7 @@ describe('挂载与加载', () => {
     expect(mockApiRequest).toHaveBeenCalledWith(
       expect.objectContaining({ url: '/supported-villages', params: { page: 1, page_size: 50 } })
     )
-    expect(vm.dataList).toHaveLength(4)
+    expect(vm.dataList).toHaveLength(5)
     expect(vm.dataList[0].completeness).toBe(100)
     expect(vm.dataList[0].verifyStatus).toBe('pass')
     expect(vm.dataList[1].completeness).toBe(0)
@@ -108,11 +109,12 @@ describe('挂载与加载', () => {
     expect(vm.dataList[2].verifyStatus).toBe('pass')
     expect(vm.dataList[3].completeness).toBe(60)
     expect(vm.dataList[3].verifyStatus).toBe('pending')
+    expect(vm.dataList[4].villageName).toBe('') // village_name/name 均缺 → ''
     expect(vm.dataList[0].submitTime).toBe('2024-06-01 10:00')
     expect(vm.stats.pending).toBe(1)
     expect(vm.stats.approved).toBe(2)
-    expect(vm.stats.rejected).toBe(1)
-    expect(vm.stats.issues).toBe(1) // completeness <60
+    expect(vm.stats.rejected).toBe(2) // v2、v5
+    expect(vm.stats.issues).toBe(2) // completeness <60
     expect(vm.loading).toBe(false)
     const text = wrapper.text()
     expect(text).toContain('100') // progress
@@ -124,7 +126,7 @@ describe('挂载与加载', () => {
     mockApiRequest.mockResolvedValue({ data: villages })
     let wrapper = mountComp()
     await flushPromises()
-    expect((wrapper.vm as any).dataList).toHaveLength(4)
+    expect((wrapper.vm as any).dataList).toHaveLength(5)
 
     mockApiRequest.mockResolvedValue({ data: {} })
     wrapper = mountComp()
@@ -170,7 +172,7 @@ describe('handleBatchCheck', () => {
     const vm = wrapper.vm as any
     await findBtn(wrapper, '批量校验').trigger('click')
     await flushPromises()
-    expect(mockPost).toHaveBeenCalledTimes(4)
+    expect(mockPost).toHaveBeenCalledTimes(5)
     expect(mockPost).toHaveBeenCalledWith('/validation/validate', villages[1], {
       params: { module: 'village' },
     })
@@ -179,10 +181,11 @@ describe('handleBatchCheck', () => {
     expect(vm.dataList[1].verifyErrors).toHaveLength(1)
     expect(vm.dataList[2].verifyStatus).toBe('pass') // valid 且完整度 80
     expect(vm.dataList[3].verifyStatus).toBe('pending') // valid 但完整度 60 → pending
-    expect(vm.batchResult.total).toBe(4)
-    expect(vm.batchResult.passed).toBe(3)
+    expect(vm.dataList[4].verifyStatus).toBe('pending') // valid 但完整度 0 → pending
+    expect(vm.batchResult.total).toBe(5)
+    expect(vm.batchResult.passed).toBe(4)
     expect(vm.batchResult.failed).toBe(1)
-    expect(ElMessage.warning).toHaveBeenCalledWith('校验完成：3 条通过，1 条未通过')
+    expect(ElMessage.warning).toHaveBeenCalledWith('校验完成：4 条通过，1 条未通过')
     expect(vm.batchResultVisible).toBe(true)
     expect(vm.batchChecking).toBe(false)
   })
@@ -197,28 +200,30 @@ describe('handleBatchCheck', () => {
     vm.dataList = []
     await vm.handleBatchCheck()
     await flushPromises()
-    expect(vm.batchResult.total).toBe(4) // 预加载后为全量 4 条
-    expect(vm.batchResult.passed).toBe(4)
+    expect(vm.batchResult.total).toBe(5) // 预加载后为全量 5 条
+    expect(vm.batchResult.passed).toBe(5)
     expect(vm.batchResult.failed).toBe(0)
-    expect(ElMessage.success).toHaveBeenCalledWith('批量校验完成，全部 4 条数据通过')
+    expect(ElMessage.success).toHaveBeenCalledWith('批量校验完成，全部 5 条数据通过')
     expect(vm.batchResultVisible).toBe(false)
   })
 
-  it('后端异常 → 完整度回退三分支（含 pending 中间分支）', async () => {
+  it('后端异常 → 完整度回退三分支（含 pending/fail 中间与兜底）', async () => {
     mockPost.mockRejectedValue(new Error('net'))
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any
     vm.dataList[1].completeness = 60 // 触发回退的 pending 分支
+    vm.dataList[2].completeness = 0 // 触发回退的 fail 分支
     await vm.handleBatchCheck()
     await flushPromises()
-    // v1 100→pass、v2 60→pending、v3 80→pass、v4 60→pending
+    // v1 100→pass、v2 60→pending、v3 0→fail、v4 60→pending、v5 0→fail
     expect(vm.dataList[0].verifyStatus).toBe('pass')
     expect(vm.dataList[1].verifyStatus).toBe('pending')
-    expect(vm.dataList[2].verifyStatus).toBe('pass')
+    expect(vm.dataList[2].verifyStatus).toBe('fail')
     expect(vm.dataList[3].verifyStatus).toBe('pending')
-    expect(vm.batchResult.passed).toBe(2)
-    expect(vm.batchResult.failed).toBe(2)
+    expect(vm.dataList[4].verifyStatus).toBe('fail')
+    expect(vm.batchResult.passed).toBe(1)
+    expect(vm.batchResult.failed).toBe(4)
     expect(ElMessage.warning).toHaveBeenCalled()
     expect(vm.batchResultVisible).toBe(true)
   })
@@ -286,7 +291,7 @@ describe('行操作', () => {
     expect(vm.stats.approved).toBe(3)
     vm.handleReject(vm.dataList[1])
     expect(vm.dataList[1].verifyStatus).toBe('fail')
-    expect(vm.stats.rejected).toBe(1)
+    expect(vm.stats.rejected).toBe(2)
   })
 
   it('审核按钮（rowA）打开错误弹窗', async () => {

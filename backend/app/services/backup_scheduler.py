@@ -282,6 +282,18 @@ async def auto_package_job():
         logger.error("自动打包失败: %s", e, exc_info=True)
 
 
+async def reminder_scan_job():
+    """统一提醒扫描（每 6 小时）：审批超时/项目截止/预算预警 → Message 表"""
+    try:
+        from app.services.reminder_orchestrator import run_reminder_scans
+
+        created = run_reminder_scans()
+        if created:
+            logger.info("提醒扫描完成，新增 %d 条提醒", len(created))
+    except Exception as e:
+        logger.error("提醒扫描失败: %s", e, exc_info=True)
+
+
 async def _auto_package_with_db(db):
     """自动打包核心逻辑（独立函数便于测试）"""
     enabled = get_config("auto_package_enabled", "false")
@@ -414,15 +426,33 @@ def start_backup_scheduler():
         t.start()
         _timers.append(t)
 
+    def _schedule_interval(coro_func, interval_seconds, task_name):
+        """按固定间隔调度（首次延迟 interval 秒）"""
+
+        def _job():
+            _run_async_job(coro_func)
+            t = threading.Timer(interval_seconds, _job)
+            t.daemon = True
+            t.name = f"scheduler-{task_name}"
+            t.start()
+            _timers.append(t)
+
+        t = threading.Timer(interval_seconds, _job)
+        t.daemon = True
+        t.name = f"scheduler-{task_name}"
+        t.start()
+        _timers.append(t)
+
     _schedule_daily(kpi_precalculate_job, 0, 30, "kpi_precalculate")
     _schedule_daily(anomaly_detection_job, 1, 0, "anomaly_detection")
     _schedule_daily(auto_backup_job, 2, 0, "auto_backup")
     _schedule_daily(auto_package_job, 3, 0, "auto_package")
+    _schedule_interval(reminder_scan_job, 6 * 3600, "reminder_scan")
     _schedule_daily(todo_reminder_job, 8, 0, "todo_reminder")
     _schedule_weekly(weekly_report_job, 0, 6, 30, "weekly_report")
 
     _scheduler_started = True
-    logger.info("调度器已启动（KPI预计算 + 异常检测 + 自动备份 + 自动打包 + 待办提醒 + 周报）")
+    logger.info("调度器已启动（KPI预计算 + 异常检测 + 自动备份 + 自动打包 + 提醒扫描 + 待办提醒 + 周报）")
 
 
 def stop_backup_scheduler():

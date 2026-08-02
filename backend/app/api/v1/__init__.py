@@ -114,6 +114,13 @@ try:
 except Exception as e:
     logger.warning("加载 notifications 路由失败: %s", e, exc_info=True)
 
+try:
+    from app.api.v1.reminders import router as reminders_router
+    api_v1_router.include_router(reminders_router)
+    logger.debug("已加载路由: reminders")
+except Exception as e:
+    logger.warning("加载 reminders 路由失败: %s", e, exc_info=True)
+
 # ---- 业务模块 ----
 # 使用列表而非 dict（key==value 无需 dict 映射）
 _BUSINESS_MODULES = [

@@ -127,8 +127,8 @@ const configStore = useConfigStore()
 const currentTheme = ref(configStore.theme || 'light')
 const THEMES = ['light', 'dark', 'military', 'outdoor', 'high-contrast']
 
-function applyTheme(t: string) {
-  const theme = THEMES.includes(t) ? t : 'light'
+function applyTheme(t: string | number | boolean | undefined) {
+  const theme = THEMES.includes(String(t)) ? String(t) : 'light'
   currentTheme.value = theme
   document.documentElement.setAttribute('data-theme', theme)
   configStore.setTheme(theme)

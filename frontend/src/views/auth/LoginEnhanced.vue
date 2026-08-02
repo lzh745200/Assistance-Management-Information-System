@@ -384,7 +384,7 @@ const handleLogin = async () => {
     if (result.status === 'success') {
       // 记住登录：持久化令牌供本机自动登录（默认关闭）
       if (rememberMe.value) {
-        const authData = authStore.authData ?? authStore.getAuthData?.()
+        const authData = authStore.getAuthData?.()
         if (authData) {
           AuthStorage.persistForAutoLogin(authData)
         }

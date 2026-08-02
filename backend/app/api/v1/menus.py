@@ -439,6 +439,22 @@ MENU_DEFINITIONS: list[dict[str, Any]] = [
         "order": 113,
         "roles": None,
     },
+    {
+        "key": "reminder",
+        "label": "提醒中心",
+        "icon": "Bell",
+        "path": "/reminder",
+        "order": 114,
+        "roles": None,
+    },
+    {
+        "key": "checkin",
+        "label": "驻村工作台",
+        "icon": "Location",
+        "path": "/rural-works/checkin",
+        "order": 115,
+        "roles": None,
+    },
 ]
 
 

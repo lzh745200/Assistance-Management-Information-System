@@ -21,8 +21,8 @@ class ExcelExportService:
     )
     _CENTER_ALIGN = Alignment(horizontal="center", vertical="center")
 
-    def _create_workbook(self, sheet_name: str, headers: list, rows: list[dict]) -> Workbook:
-        """创建通用 Excel 工作簿"""
+    def _create_workbook(self, sheet_name: str, headers: list, rows: list[dict], watermark: str = "") -> Workbook:
+        """创建通用 Excel 工作簿（watermark 追加到页脚，用于审计溯源）"""
         wb = Workbook()
         ws = wb.active
         ws.title = sheet_name
@@ -49,6 +49,11 @@ class ExcelExportService:
                 cell_value = str(ws.cell(row=row_idx, column=col_idx).value or "")
                 max_length = max(max_length, len(cell_value))
             ws.column_dimensions[get_column_letter(col_idx)].width = min(max_length + 4, 40)
+
+        # 审计水印（导出人/时间）写入页脚
+        if watermark:
+            ws.oddFooter.center.text = watermark
+            ws.evenFooter.center.text = watermark
 
         return wb
 

@@ -193,15 +193,21 @@ class TestOrganizationEndpoints:
 
     async def test_delete_org_write_log_fails(self):
         from app.api.v1.organization import delete_organization
+        from app.core.security import hash_password
         db = _mock_db()
         user = _make_user()
         org = _make_org(1)
+        # 二次确认所需: User 记录带 password_hash
+        user_row = MagicMock()
+        user_row.password_hash = hash_password("pass123")
         call_count = [0]
 
         def query_side_effect(model):
             q = MagicMock()
             call_count[0] += 1
             if call_count[0] == 1:
+                q.filter.return_value.first.return_value = user_row
+            elif call_count[0] == 2:
                 q.filter.return_value.first.return_value = org
             else:
                 q.filter.return_value.count.return_value = 0
@@ -212,7 +218,9 @@ class TestOrganizationEndpoints:
              patch("app.api.v1.organization.cache_manager") as cm, \
              patch("app.api.v1.organization.write_work_log", side_effect=Exception("fail")):
             cm.delete = AsyncMock()
-            result = await delete_organization(1, force=False, current_user=user, db=db)
+            result = await delete_organization(
+                1, force=False, confirm_password="pass123", current_user=user, db=db
+            )
             assert result["type"] == "soft_delete"
 
     async def test_get_organization_statistics(self):

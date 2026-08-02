@@ -65,6 +65,8 @@ class DataPackageExportRequest(BaseModel):
     data_types: List[str] = []
     description: Optional[str] = None
     type: PackageType = PackageType.report  # task: 任务包, report: 上报包
+    incremental: bool = False  # 增量包: 仅导出 sync_version 大于 since_sync_version 的记录
+    since_sync_version: Optional[int] = None  # 增量基准版本（配合 incremental=True）
 
     @field_validator("data_types")
     @classmethod

@@ -46,6 +46,29 @@ async def evaluate_village(
 
         raise HTTPException(status_code=400, detail=result["error"])
 
+    # 年度考核闭环：评估完成后提交"复核"审批任务（若配置了 assessment 工作流）
+    review_task_id = None
+    try:
+        from app.services.approval_workflow_service import ApprovalWorkflowService
+
+        svc = ApprovalWorkflowService(db)
+        task = svc.submit_approval(
+            entity_type="assessment",
+            entity_id=request.village_id,
+            submitter_id=current_user.id,
+            title=f"年度考核复核-村{request.village_id}-{request.year}年",
+            change_data={"year": request.year, "score": result.get("score")},
+        )
+        if task:
+            review_task_id = task.id
+    except Exception:
+        # 复核任务创建失败不阻断评估
+        review_task_id = None
+
+    if review_task_id:
+        result["review_task_id"] = review_task_id
+        result["review_status"] = "pending_review"
+
     return result
 
 

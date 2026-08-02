@@ -310,6 +310,8 @@ async def export_data_package(
             export_by=current_user.id,
             description=data.description,
             package_type=data.type,
+            incremental=data.incremental,
+            since_sync_version=data.since_sync_version if data.incremental else None,
         )
 
         duration_ms = int((time.time() - start_time) * 1000)
