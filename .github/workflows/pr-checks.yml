@@ -125,33 +125,34 @@ jobs:
       # 检查前端 API 调用是否使用具名导入
       - name: Frontend import pattern audit
         run: |
-          cd frontend && node -e "
-          const fs = require('fs');
-          const path = require('path');
+          cd frontend && node -e '
+          const fs = require("fs");
+          const path = require("path");
           function walk(dir) {
             const results = [];
             for (const entry of fs.readdirSync(dir, {withFileTypes: true})) {
               const full = path.join(dir, entry.name);
-              if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+              if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
                 results.push(...walk(full));
-              } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.vue'))) {
+              } else if (entry.isFile() && (entry.name.endsWith(".ts") || entry.name.endsWith(".vue"))) {
                 results.push(full);
               }
             }
             return results;
           }
+          const re = /import request from [\x27\x22]\.\/request[\x27\x22]/;
           const violations = [];
-          for (const fp of walk('src/api')) {
-            const content = fs.readFileSync(fp, 'utf-8');
-            if (content.includes("import request from './request'") || content.includes('import request from "./request"')) {
+          for (const fp of walk("src/api")) {
+            const content = fs.readFileSync(fp, "utf-8");
+            if (re.test(content)) {
               violations.push(fp);
             }
           }
           if (violations.length) {
-            console.error('Pattern A violations (should use named imports):');
-            violations.forEach(v => console.error('  ' + v));
+            console.error("Pattern A violations (should use named imports):");
+            violations.forEach(v => console.error("  " + v));
             process.exit(1);
           } else {
-            console.log('All API files use Pattern B (named imports)');
+            console.log("All API files use Pattern B (named imports)");
           }
           "
