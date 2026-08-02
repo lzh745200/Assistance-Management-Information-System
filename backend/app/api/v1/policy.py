@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from ...core.cache import cache_manager
 from ...core.database import get_db
-from ...core.response import ok_list
+from ...core.response import ok_list, success_response
 from ...core.security import get_current_user
 from ...models.policy import Policy, PolicyCategory, PolicyFavorite
 from app.core.transaction import safe_commit
@@ -282,7 +282,10 @@ async def create_category(
     db.add(category)
     safe_commit(db)
     db.refresh(category)
-    return {"id": category.id, "name": category.name, "code": category.code}
+    return success_response(
+        data={"id": category.id, "name": category.name, "code": category.code},
+        message="成功",
+    )
 
 
 @router.put("/categories/{category_id}")
@@ -302,7 +305,10 @@ async def update_category(
         setattr(category, key, value)
     safe_commit(db)
     db.refresh(category)
-    return {"id": category.id, "name": category.name, "code": category.code}
+    return success_response(
+        data={"id": category.id, "name": category.name, "code": category.code},
+        message="成功",
+    )
 
 
 @router.delete("/categories/{category_id}")
@@ -326,7 +332,7 @@ async def delete_category(
 
     db.delete(category)
     safe_commit(db)
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 # ==================== 统计 API ====================
@@ -364,10 +370,12 @@ async def get_policy_statistics(current_user=Depends(get_current_user), db: Sess
             local_total += count
             local_levels[lvl] = local_levels.get(lvl, 0) + count
 
-    return {
-        "military": {"total": military_total, "levels": military_levels},
-        "local": {"total": local_total, "levels": local_levels},
-    }
+    return success_response(
+        data={
+            "military": {"total": military_total, "levels": military_levels},
+            "local": {"total": local_total, "levels": local_levels},
+        }
+    )
 
 
 # ==================== 导入导出API ====================
@@ -623,7 +631,7 @@ async def get_policy_types(db: Session = Depends(get_db)):
     except Exception:
         logger.debug("获取政策分类时出错，使用预定义类型")
 
-    return {"data": types}
+    return success_response(data=types)
 
 
 @router.get("/options/levels")
@@ -694,12 +702,14 @@ async def upload_policy_file(
     setattr(policy, "file_type", ext)
     safe_commit(db)
 
-    return {
-        "message": "上传成功",
-        "file_path": file_path,
-        "file_size": len(content),
-        "file_type": ext,
-    }
+    return success_response(
+        message="上传成功",
+        data={
+            "file_path": file_path,
+            "file_size": len(content),
+            "file_type": ext,
+        },
+    )
 
 
 @router.get("/{policy_id}/preview")
@@ -801,7 +811,7 @@ async def batch_delete_policies(data: dict, current_user=Depends(get_current_use
     deleted = db.query(Policy).filter(Policy.id.in_(ids)).delete(synchronize_session=False)
     safe_commit(db)
     await cache_manager.delete("policies:list")
-    return {"message": f"成功删除{deleted}条政策", "deleted": deleted}
+    return success_response(message=f"成功删除{deleted}条政策", data={"deleted": deleted})
 
 
 # ==================== 政策CRUD API ====================
@@ -1095,7 +1105,7 @@ async def delete_policy(
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
         logger.debug("记录工作日志失败", exc_info=True)
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 @router.post("/{policy_id}/publish")
@@ -1113,7 +1123,7 @@ async def publish_policy(
     setattr(policy, "status", "active")
     safe_commit(db)
     await cache_manager.delete("policies:list")
-    return {"message": "发布成功"}
+    return success_response(message="发布成功")
 
 
 @router.post("/{policy_id}/archive")
@@ -1131,7 +1141,7 @@ async def archive_policy(
     setattr(policy, "status", "invalid")
     safe_commit(db)
     await cache_manager.delete("policies:list")
-    return {"message": "归档成功"}
+    return success_response(message="归档成功")
 
 
 # ==================== 收藏API ====================
@@ -1160,7 +1170,7 @@ async def add_favorite(
     favorite = PolicyFavorite(policy_id=policy_id, user_id=user_id)
     db.add(favorite)
     safe_commit(db)
-    return {"message": "收藏成功"}
+    return success_response(message="收藏成功")
 
 
 @router.delete("/{policy_id}/favorite")
@@ -1181,7 +1191,7 @@ async def remove_favorite(
 
     db.delete(favorite)
     safe_commit(db)
-    return {"message": "取消收藏成功"}
+    return success_response(message="取消收藏成功")
 
 
 @router.get("/user/{user_id}/favorites")

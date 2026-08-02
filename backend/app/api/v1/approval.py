@@ -32,6 +32,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.permission_utils import is_admin
+from app.core.response import success_response
 from app.core.security import get_current_user
 from app.models.message import Message
 from app.models.user import User
@@ -46,7 +47,10 @@ router = APIRouter(prefix="/approval", tags=["审批管理"])
 @router.get("")
 async def approval_overview(current_user: User = Depends(get_current_user)):
     """审批管理概览"""
-    return {"message": "审批管理模块", "endpoints": ["/workflows", "/submit", "/tasks"]}
+    return success_response(
+        message="审批管理模块",
+        data={"endpoints": ["/workflows", "/submit", "/tasks"]},
+    )
 
 
 # ==================== Schemas ====================
@@ -138,6 +142,7 @@ def create_workflow(
         )
         return {
             "code": 200,
+            "success": True,
             "message": "创建成功",
             "data": {
                 "id": workflow.id,
@@ -166,6 +171,7 @@ def list_workflows(
         workflows = [w for w in workflows if w.created_by == current_user.id]
     return {
         "code": 200,
+        "success": True,
         "data": [
             {
                 "id": w.id,
@@ -195,6 +201,7 @@ def get_workflow(
 
     return {
         "code": 200,
+        "success": True,
         "data": {
             "id": workflow.id,
             "name": workflow.name,
@@ -237,7 +244,7 @@ def update_workflow(
         if not workflow:
             raise HTTPException(status_code=404, detail="审批流程不存在")
 
-        return {"code": 200, "message": "更新成功", "data": {"id": workflow.id}}
+        return {"code": 200, "success": True, "message": "更新成功", "data": {"id": workflow.id}}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -255,7 +262,7 @@ def delete_workflow(
     if not success:
         raise HTTPException(status_code=404, detail="审批流程不存在")
 
-    return {"code": 200, "message": "删除成功"}
+    return {"code": 200, "success": True, "message": "删除成功"}
 
 
 # ==================== Task Endpoints ====================
@@ -287,6 +294,7 @@ def submit_approval(
 
     return {
         "code": 200,
+        "success": True,
         "message": "提交成功",
         "data": {
             "task_id": task.id,
@@ -320,6 +328,7 @@ def approve_task(
 
     return {
         "code": 200,
+        "success": True,
         "message": "审批通过",
         "data": {
             "task_id": task.id,
@@ -351,6 +360,7 @@ def reject_task(
 
     return {
         "code": 200,
+        "success": True,
         "message": "已拒绝",
         "data": {"task_id": task.id, "status": task.status},
     }
@@ -376,6 +386,7 @@ def transfer_task(
 
     return {
         "code": 200,
+        "success": True,
         "message": "转交成功",
         "data": {"task_id": task.id, "current_approver_id": task.current_approver_id},
     }
@@ -400,6 +411,7 @@ def withdraw_task(
 
     return {
         "code": 200,
+        "success": True,
         "message": "撤回成功",
         "data": {"task_id": task.id, "status": task.status},
     }
@@ -424,6 +436,7 @@ def resubmit_task(
 
     return {
         "code": 200,
+        "success": True,
         "message": "已重新提交",
         "data": {"task_id": task.id, "status": task.status},
     }
@@ -476,6 +489,7 @@ def submit_and_auto_approve(
 
     return {
         "code": 200,
+        "success": True,
         "message": "提交并自动审批通过",
         "data": {"task_id": task.id, "status": task.status},
     }
@@ -509,6 +523,7 @@ def auto_approve_single_task(
 
     return {
         "code": 200,
+        "success": True,
         "message": "审批通过",
         "data": {"task_id": task.id, "status": task.status},
     }
@@ -530,6 +545,7 @@ def auto_approve_all(
 
     return {
         "code": 200,
+        "success": True,
         "message": f"批量审批完成: 共 {results['total_pending']} 条待审批, 成功 {results['approved']} 条",
         "data": results,
     }
@@ -559,6 +575,7 @@ def get_all_tasks(
 
     return {
         "code": 200,
+        "success": True,
         "total": total,
         "data": [
             {
@@ -612,6 +629,7 @@ def get_pending_tasks(
 
     return {
         "code": 200,
+        "success": True,
         "total": len(tasks),
         "data": [
             {
@@ -646,6 +664,7 @@ def batch_approve(
 
     return {
         "code": 200,
+        "success": True,
         "message": f"成功: {len(results['success'])}, 失败: {len(results['failed'])}",
         "data": results,
     }
@@ -668,7 +687,7 @@ def get_task_diff(
     if not diff:
         raise HTTPException(status_code=404, detail="任务不存在")
 
-    return {"code": 200, "data": diff}
+    return {"code": 200, "success": True, "data": diff}
 
 
 @router.post("/tasks/{task_id}/remind", summary="发送审批提醒")
@@ -722,7 +741,7 @@ def remind_task(
         logger.error(f"创建提醒消息失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"提醒发送失败: {str(e)}")
 
-    return {"code": 200, "message": "提醒已发送"}
+    return {"code": 200, "success": True, "message": "提醒已发送"}
 
 
 @router.get("/history", summary="审批历史")
@@ -758,6 +777,7 @@ def get_approval_history(
 
     return {
         "code": 200,
+        "success": True,
         "data": [
             {
                 "id": r.id,

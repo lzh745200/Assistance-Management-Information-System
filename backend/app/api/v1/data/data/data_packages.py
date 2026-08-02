@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.exceptions import BusinessError, NotFoundException
+from app.core.response import success_response
 from app.core.security import get_current_user
 from app.core.permission_utils import get_org_with_fallback
 from app.models.import_export_history import OperationResult
@@ -267,7 +268,7 @@ async def preview_data_for_export(
         else:
             counts[dt] = 0
 
-    return {"counts": counts}
+    return success_response(data={"counts": counts})
 
 
 @router.post("/export", response_model=DataPackageExportResult)
@@ -633,7 +634,7 @@ async def delete_data_package(
     db.delete(package)
     safe_commit(db)
 
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 @router.get("/{package_id}/history")
@@ -653,28 +654,32 @@ async def get_package_history(
 
     # 检查权限 - 无权限时返回空历史
     if not permission_service.can_access_organization(current_user.id, package.org_id):
-        return {
-            "package_id": package_id,
-            "items": [],
-        }
+        return success_response(
+            data={"package_id": package_id, "items": [], "total": 0},
+            message="成功",
+        )
 
     history = history_service.get_history_by_package(package_id, skip=(page - 1) * page_size, limit=page_size)
 
-    return {
-        "package_id": package_id,
-        "items": [
-            {
-                "id": h.id,
-                "operation_type": h.operation_type,
-                "result": h.result,
-                "user_id": h.user_id,
-                "operation_time": h.operation_time,
-                "duration_ms": h.duration_ms,
-                "error_message": h.error_message,
-            }
-            for h in history
-        ],
-    }
+    return success_response(
+        data={
+            "package_id": package_id,
+            "items": [
+                {
+                    "id": h.id,
+                    "operation_type": h.operation_type,
+                    "result": h.result,
+                    "user_id": h.user_id,
+                    "operation_time": h.operation_time,
+                    "duration_ms": h.duration_ms,
+                    "error_message": h.error_message,
+                }
+                for h in history
+            ],
+            "total": len(history),
+        },
+        message="成功",
+    )
 
 
 # ========================================================================

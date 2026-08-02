@@ -252,7 +252,7 @@ class TestPreviewDataForExport:
             with _override_deps(client_with_mocked_auth, svc=mock_svc):
                 resp = client_with_mocked_auth.post(f"{BASE}/preview", json={"data_types": ["villages"]})
                 assert resp.status_code == 200
-                assert "counts" in resp.json()
+                assert "counts" in resp.json()["data"]
 
     def test_unknown_data_type(self, client_with_mocked_auth):
         with patch("app.api.v1.data.data.data_packages.get_org_with_fallback", return_value=1):
@@ -262,7 +262,7 @@ class TestPreviewDataForExport:
             with _override_deps(client_with_mocked_auth, svc=mock_svc):
                 resp = client_with_mocked_auth.post(f"{BASE}/preview", json={"data_types": ["unknown_type"]})
                 assert resp.status_code == 200
-                assert resp.json()["counts"]["unknown_type"] == 0
+                assert resp.json()["data"]["counts"]["unknown_type"] == 0
 
     def test_no_org_id_uses_fallback(self, client_with_mocked_auth):
         from app.core.security import get_current_user
@@ -776,7 +776,7 @@ class TestGetPackageHistory:
         with _override_deps(client_with_mocked_auth, svc=mock_svc, hist=MagicMock(), perm=mock_perm):
             resp = client_with_mocked_auth.get(f"{BASE}/1/history")
             assert resp.status_code == 200
-            assert resp.json()["items"] == []
+            assert resp.json()["data"]["items"] == []
 
     def test_success(self, client_with_mocked_auth):
         mock_pkg = MagicMock()
@@ -801,8 +801,8 @@ class TestGetPackageHistory:
         with _override_deps(client_with_mocked_auth, svc=mock_svc, hist=mock_hist, perm=mock_perm):
             resp = client_with_mocked_auth.get(f"{BASE}/1/history")
             assert resp.status_code == 200
-            assert len(resp.json()["items"]) == 1
-            assert resp.json()["items"][0]["operation_type"] == "export"
+        assert len(resp.json()["data"]["items"]) == 1
+        assert resp.json()["data"]["items"][0]["operation_type"] == "export"
 
 
 class TestExportEncryptedPackage:

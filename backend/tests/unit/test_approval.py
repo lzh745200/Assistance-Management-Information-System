@@ -76,7 +76,7 @@ class TestApprovalOverview:
         resp = client_with_mocked_auth.get(BASE)
         assert resp.status_code == 200
         data = resp.json()
-        assert "endpoints" in data
+        assert "endpoints" in data["data"]
         assert data["message"] == "审批管理模块"
 
 

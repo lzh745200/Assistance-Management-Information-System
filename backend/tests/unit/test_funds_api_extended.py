@@ -397,7 +397,7 @@ class TestExportFunds:
 
         resp = client.get("/api/v1/funds/export")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total_exported"] == 0
         assert data["limit"] == 5000
 
@@ -410,7 +410,7 @@ class TestExportFunds:
 
         resp = client.get("/api/v1/funds/export")
         assert resp.status_code == 200
-        assert resp.json()["total_exported"] == 1
+        assert resp.json()["data"]["total_exported"] == 1
 
     def test_export_funds_with_custom_limit(self, client, mock_db):
         """Export with custom limit."""

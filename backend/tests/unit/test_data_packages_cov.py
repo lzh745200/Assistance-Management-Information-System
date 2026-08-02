@@ -94,7 +94,7 @@ class TestPreviewDataForExport:
         result = await m.preview_data_for_export(
             data=data, current_user=_user(), service=service)
 
-        assert result["counts"] == {"villages": 3, "mystery": 0}
+        assert result["data"]["counts"] == {"villages": 3, "mystery": 0}
         q.filter.assert_called_once()  # 组织过滤已应用
 
 

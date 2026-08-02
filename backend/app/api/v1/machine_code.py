@@ -147,6 +147,7 @@ async def get_machine_code():
 
         return {
             "code": 200,
+            "success": True,
             "data": {
                 "machine_code": machine_code,
                 "verification_code": verification_code,
@@ -191,6 +192,7 @@ async def admin_create_machine_code(
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
+            "success": True,
             "data": {
                 "id": record.id,
                 "machine_code": record.machine_code,
@@ -280,7 +282,7 @@ async def admin_revoke_machine_code(
                            user_id=current_user.id, username=getattr(current_user, "username", ""))
         except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
-        return {"code": 200, "message": "机器码已撤销"}
+        return {"code": 200, "success": True, "message": "机器码已撤销"}
     except HTTPException:
         raise
     except Exception as e:  # pragma: no cover
@@ -299,6 +301,7 @@ async def verify_machine_code(request: VerifyMachineCodeRequest):
 
     return {
         "code": 200,
+        "success": True,
         "data": {"is_valid": is_valid},
         "message": "验证成功" if is_valid else "验证失败",
     }
@@ -341,6 +344,7 @@ async def generate_initial_password(
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
+            "success": True,
             "data": {
                 "username": request.username,
                 "initial_password": initial_password,
@@ -409,6 +413,7 @@ async def reset_password_with_machine_code(
         logger.info("用户 %s 密码已通过机器码验证重置，新密码仅在本次响应中返回", username)
         return {
             "code": 200,
+            "success": True,
             "data": {"username": username, "new_password": new_password},
             "message": "密码重置成功，请首次登录后立即修改",
         }
@@ -427,7 +432,7 @@ async def get_machine_info(current_user=Depends(get_current_user)):
         service = MachineCodeService()
         machine_info = service.get_machine_info()
 
-        return {"code": 200, "data": machine_info, "message": "获取成功"}
+        return {"code": 200, "success": True, "data": machine_info, "message": "获取成功"}
     except Exception as e:  # pragma: no cover
         logger.error(f"获取机器信息失败: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="获取机器信息失败，请稍后重试或联系管理员")
@@ -467,6 +472,7 @@ async def get_organization_verification_code(
 
         return {
             "code": 200,
+            "success": True,
             "data": {
                 "organization_id": org.id,
                 "organization_name": org.name,
@@ -529,6 +535,7 @@ async def create_organization_pass_code(
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
+            "success": True,
             "data": {
                 "id": record.id,
                 "organization_id": record.organization_id,
@@ -721,7 +728,7 @@ async def delete_organization_pass_code(
         except Exception:  # pragma: no cover
             logger.debug("记录工作日志失败")
 
-        return {"code": 200, "message": "通行码记录已删除"}
+        return {"code": 200, "success": True, "message": "通行码记录已删除"}
     except HTTPException:
         raise
     except Exception as e:  # pragma: no cover
@@ -823,6 +830,7 @@ async def grant_machine_code_permissions(
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
+            "success": True,
             "data": {"granted_count": count},
             "message": f"成功授予 {count} 个权限",
         }
@@ -858,6 +866,7 @@ async def revoke_machine_code_permissions(
             logger.debug("记录工作日志失败")
         return {
             "code": 200,
+            "success": True,
             "data": {"revoked_count": count},
             "message": f"成功撤销 {count} 个权限",
         }
@@ -886,7 +895,7 @@ async def revoke_single_machine_code_permission(
         if not success:
             raise HTTPException(status_code=404, detail="权限记录不存在")
 
-        return {"code": 200, "message": "权限已撤销"}
+        return {"code": 200, "success": True, "message": "权限已撤销"}
     except HTTPException:
         raise
     except Exception:  # pragma: no cover
@@ -911,6 +920,7 @@ async def get_user_effective_permissions(
 
         return {
             "code": 200,
+            "success": True,
             "data": {
                 "user_id": user_id,
                 "effective_permissions": list(permissions),

@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api.v1.deps import require_manager_role, enforce_admin_include_deleted, build_viewable_because
 from app.core.database import get_db
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from app.core.security import get_current_user
 from app.core.transaction import safe_commit
 from app.utils.pagination import keyset_paginate
@@ -291,10 +291,9 @@ def export_funds(
     stmt = select(Fund).where(Fund.is_active == True).order_by(Fund.id.desc()).limit(limit)  # noqa: E712
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     funds = db.execute(stmt).scalars().all()
-    return {
-        "data": [_fund_to_dict(f) for f in funds],
-        "total_exported": len(funds), "limit": limit,
-    }
+    return success_response(
+        data={"items": [_fund_to_dict(f) for f in funds], "total_exported": len(funds), "limit": limit},
+    )
 
 
 @router.get("/{fund_id}")
@@ -329,7 +328,7 @@ def get_fund(
         raise HTTPException(status_code=403, detail="无权访问该组织数据")
     data = _fund_to_dict(fund)
     data["viewableBecause"] = build_viewable_because(current_user, fund)
-    return {"data": data}
+    return success_response(data=data)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -344,7 +343,7 @@ def create_fund(
     fund = FundService(db).create_fund_for_user(
         data, current_user.id, current_user.organization_id,
     )
-    return {"data": {"id": fund.id}, "message": "创建成功"}
+    return success_response(data={"id": fund.id}, message="创建成功")
 
 
 @router.post("/apply", status_code=status.HTTP_201_CREATED)
@@ -360,7 +359,7 @@ def apply_fund(
         status="pending",
         applicant=current_user.full_name or current_user.username,
     )
-    return {"data": {"id": fund.id}, "message": "申请已提交，等待审批"}
+    return success_response(data={"id": fund.id}, message="申请已提交，等待审批")
 
 
 @router.put("/{fund_id}")
@@ -386,7 +385,7 @@ def update_fund(
             logger.warning("update_fund: skipping unknown field '%s' on Fund(id=%d)", key, fund_id)
 
     safe_commit(db)
-    return {"message": "更新成功"}
+    return success_response(message="更新成功")
 
 
 @router.delete("/{fund_id}")
@@ -404,7 +403,7 @@ def delete_fund(
 
     fund.is_active = False
     safe_commit(db)
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 # ============================================================================
@@ -427,14 +426,12 @@ def fund_statistics_overview(
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
 
     row = db.execute(stmt).one()
-    return {
-        "data": {
+    return success_response(data={
             "total_count": row.total_count,
             "total_amount": float(row.total_amount),
             "pending_count": row.pending_count,
             "approved_count": row.approved_count,
-        }
-    }
+        })
 
 
 @router.get("/statistics/multi-dimension")
@@ -518,7 +515,7 @@ def fund_statistics_multi_dimension(
             "utilization_rate": round((used_amt / total_amt * 100), 1) if total_amt > 0 else 0,
         })
 
-    return {"success": True, "data": result}
+    return success_response(data=result)
 
 
 # ============================================================================
@@ -589,7 +586,7 @@ def approve_fund(fund_id: int, current_user: User = Depends(get_current_user), d
                        required_attachments=[],  # 至少需要 1 个附件
                        approved_by=current_user.full_name or current_user.username,
                        approval_date=datetime.now(timezone.utc))
-    return {"message": "审批通过"}
+    return success_response(message="审批通过")
 
 
 @router.post("/{fund_id}/reject")
@@ -598,7 +595,7 @@ def reject_fund(fund_id: int, current_user: User = Depends(get_current_user), db
     fund = _get_fund_or_404(db, fund_id, current_user)
     _transition_status(db, fund, "rejected", ["pending", "planned"],
                        approved_by=current_user.full_name or current_user.username)
-    return {"message": "审批驳回"}
+    return success_response(message="审批驳回")
 
 
 @router.post("/{fund_id}/allocate")
@@ -634,7 +631,7 @@ def allocate_fund(
     _transition_status(db, fund, "allocated", ["approved"],
                        required_attachments=["contract", "allocation_order"],
                        allocation_date=datetime.now(timezone.utc))
-    return {"message": "经费已拨付"}
+    return success_response(message="经费已拨付")
 
 
 @router.post("/{fund_id}/start-use")
@@ -643,7 +640,7 @@ def start_use_fund(fund_id: int, current_user: User = Depends(get_current_user),
     fund = _get_fund_or_404(db, fund_id, current_user)
     _transition_status(db, fund, "in_use", ["allocated"],
                        start_date=datetime.now(timezone.utc))
-    return {"message": "经费已开始使用"}
+    return success_response(message="经费已开始使用")
 
 
 @router.post("/{fund_id}/complete")
@@ -652,7 +649,7 @@ def complete_fund(fund_id: int, current_user: User = Depends(get_current_user), 
     fund = _get_fund_or_404(db, fund_id, current_user)
     _transition_status(db, fund, "completed", ["in_use"],
                        end_date=datetime.now(timezone.utc))
-    return {"message": "经费使用完成"}
+    return success_response(message="经费使用完成")
 
 
 @router.post("/{fund_id}/audit")
@@ -661,7 +658,7 @@ def audit_fund(fund_id: int, current_user: User = Depends(get_current_user), db:
     fund = _get_fund_or_404(db, fund_id, current_user)
     _transition_status(db, fund, "audited", ["completed"],
                        audit_date=datetime.now(timezone.utc))
-    return {"message": "经费审计完成"}
+    return success_response(message="经费审计完成")
 
 
 # ============================================================================
@@ -700,7 +697,7 @@ def fund_stats_by_type(
             "total_investment": float(r.amount),
             "count": r.count,
         }
-    return {"success": True, "data": result, "fund_types": type_labels}
+    return success_response(data=result)
 
 
 @router.get("/supported-village/statistics/yearly-comparison")
@@ -723,10 +720,10 @@ def fund_stats_yearly_comparison(
     stmt = stmt.where(Fund.is_active == True)  # noqa: E712
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     rows = db.execute(stmt).all()
-    return {"success": True, "data": [
+    return success_response(data=[
         {"year": r.year or 0, "total_actual": float(r.amount),
          "total_planned": float(r.allocated), "count": r.count} for r in rows
-    ]}
+    ])
 
 
 @router.get("/supported-village/statistics/utilization-rate")
@@ -749,8 +746,8 @@ def fund_stats_utilization(
     planned = float(row.planned)
     actual = float(row.actual)
     rate = round((actual / planned * 100), 1) if planned > 0 else 0
-    return {"success": True, "data": {"overall_utilization_rate": rate,
-            "total_actual_investment": actual, "total_planned_investment": planned}}
+    return success_response(data={"overall_utilization_rate": rate,
+            "total_actual_investment": actual, "total_planned_investment": planned})
 
 
 @router.get("/supported-village/statistics/summary")
@@ -772,10 +769,10 @@ def fund_stats_summary(
         stmt = stmt.where(Fund.year <= year_end)
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
-    return {"success": True, "data": {
+    return success_response(data={
         "total_count": row.total_count, "total_amount": float(row.total_amount),
         "total_allocated": float(row.total_allocated), "total_used": float(row.total_used),
-    }}
+    })
 
 
 @router.get("/village/{village_id}/summary")
@@ -797,9 +794,7 @@ def village_fund_summary(
         stmt = stmt.where(Fund.year == year)
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
-    return {
-        "success": True,
-        "data": {
+    return success_response(data={
             "village_id": village_id,
             "year": year,
             "fund_count": row.count,
@@ -808,8 +803,7 @@ def village_fund_summary(
             "allocated_amount": float(row.allocated),
             "used_amount": float(row.used),
             "remaining_amount": float(row.approved) - float(row.used),
-        },
-    }
+        })
 
 
 @router.get("/school/{school_id}/summary")
@@ -831,9 +825,7 @@ def school_fund_summary(
         stmt = stmt.where(Fund.year == year)
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
-    return {
-        "success": True,
-        "data": {
+    return success_response(data={
             "school_id": school_id,
             "year": year,
             "fund_count": row.count,
@@ -842,8 +834,7 @@ def school_fund_summary(
             "allocated_amount": float(row.allocated),
             "used_amount": float(row.used),
             "remaining_amount": float(row.approved) - float(row.used),
-        },
-    }
+        })
 
 
 @router.get("/{fund_id}/history/status")
@@ -856,12 +847,12 @@ def fund_history_status(fund_id: int, current_user: User = Depends(get_current_u
         .order_by(FundStatusHistory.operation_time.desc())
         .limit(100).all()
     )
-    return {"data": [{
+    return success_response(data=[{
         "id": r.id, "from_status": r.from_status, "to_status": r.to_status,
         "operator_id": r.operator_id, "operator_name": r.operator_name,
         "operation_time": r.operation_time.isoformat() if r.operation_time else None,
         "remark": r.remark,
-    } for r in rows]}
+    } for r in rows])
 
 
 @router.get("/{fund_id}/history/fields")
@@ -1007,7 +998,7 @@ async def delete_fund_attachment(
         db, "fund", "delete_attachment", fund_id, file_name,
         user_id=current_user.id, username=getattr(current_user, "username", "系统"),
     )
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 @router.get("/{fund_id}/attachments")
@@ -1080,4 +1071,4 @@ async def upload_fund_attachment(
         user_id=current_user.id, username=getattr(current_user, "username", "系统"),
         detail=f"分类: {category or 'other'}",
     )
-    return {"message": "上传成功", "data": attachment.to_dict()}
+    return success_response(data=attachment.to_dict(), message="上传成功")

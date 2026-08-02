@@ -133,7 +133,9 @@ class TestMachineCodePermissionEndpoints:
                 1, "village:read", db=mock_db, current_user=admin_user
             )
 
-        assert result == {"code": 200, "message": "权限已撤销"}
+        assert result["code"] == 200
+        assert result["success"] is True
+        assert result["message"] == "权限已撤销"
         svc.revoke_permission.assert_called_once_with(1, "village:read")
 
     async def test_revoke_single_permission_exception_raises_500(self, mock_db, admin_user):
