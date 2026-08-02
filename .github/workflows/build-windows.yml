@@ -27,7 +27,10 @@ jobs:
         continue-on-error: true
         run: |
           pip install -r backend/requirements.txt -r backend/requirements-dev.txt
-          cd backend && python -m pytest tests/ -q --tb=short -n auto --dist loadfile --cov=app --cov-report=term --cov-fail-under=50 --reruns 3 --reruns-delay 1 --junitxml=test-results.xml
+          # 注意：--dist loadfile 与 pytest-rerunfailures 不兼容（worker 崩溃时
+          # mark_test_pending 在 loadscope 调度器上抛 NotImplementedError），
+          # 使用默认 load 调度器让 rerun 正常生效。
+          cd backend && python -m pytest tests/ -q --tb=short -n auto --cov=app --cov-report=term --cov-fail-under=50 --reruns 3 --reruns-delay 1 --junitxml=test-results.xml
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
