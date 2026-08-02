@@ -512,7 +512,7 @@ export const routes: RouteRecordRaw[] = [
         path: '/data-package/receive',
         name: 'DataPackageReceive',
         component: () => retryImport(() => import('@/views/dataPackage/ReceivePackage.vue')),
-        meta: { title: '接收数据包', roles: ['admin', 'super_admin', 'manager'] },
+        meta: { title: '接收数据包', roles: ['admin', 'super_admin', 'user'] },
       },
       { path: '/system/config-package', redirect: '/system/config' },
       // ── 数据录入 ──
@@ -784,7 +784,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => retryImport(() => import('@/views/batch/Index.vue')),
         meta: {
           title: '批量操作',
-          roles: ['admin', 'super_admin', 'manager'],
+          roles: ['admin', 'super_admin', 'user'],
         },
       },
       // ── 导入导出 ──
@@ -816,7 +816,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => retryImport(() => import('@/views/dataVerify/RulesManagement.vue')),
         meta: {
           title: '校验规则管理',
-          roles: ['admin', 'super_admin', 'manager'],
+          roles: ['admin', 'super_admin', 'user'],
         },
       },
     ],

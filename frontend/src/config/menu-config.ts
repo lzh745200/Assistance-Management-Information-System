@@ -124,7 +124,7 @@ export const MENU_CONFIG: MenuItem[] = [
       {
         key: 'pass-code',
         label: '通行码管理',
-        path: '/organization/pass-code',
+        path: '/organizations/pass-code',
         icon: 'Key',
       },
       {

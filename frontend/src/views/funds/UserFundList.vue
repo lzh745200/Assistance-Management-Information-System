@@ -336,10 +336,10 @@ defineOptions({ name: 'UserFundList' })
 const { pushSafe } = useRouterSafe()
 const authStore = useAuthStore()
 
-// 检查用户是否有管理权限（管理员、超级管理员、管理者）
+// 检查用户是否有管理权限（管理员、超级管理员；manager 历史角色已归一化为 admin）
 const isManager = computed(() => {
   const role = authStore.user?.role || ''
-  return ['admin', 'super_admin', 'manager'].includes(role)
+  return ['admin', 'super_admin'].includes(role)
 })
 
 // 获取当前用户ID

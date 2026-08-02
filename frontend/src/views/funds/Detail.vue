@@ -658,7 +658,8 @@ const formRef = ref()
 
 const isManager = computed(() => {
   const role = authStore.user?.role || ''
-  return ['admin', 'super_admin', 'manager'].includes(role)
+  // manager/approval_leader 历史角色已归一化为 admin
+  return ['admin', 'super_admin'].includes(role)
 })
 
 // 判断当前用户是否可以编辑此经费

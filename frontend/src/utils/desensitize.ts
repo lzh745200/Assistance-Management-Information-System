@@ -14,14 +14,8 @@
  * - 金额:     ****  (无权限时)
  */
 
-/** 用户角色类型 */
-export type UserRole =
-  | 'super_admin'
-  | 'admin'
-  | 'approval_leader'
-  | 'manager'
-  | 'operator'
-  | 'viewer'
+/** 用户角色类型（历史角色由 normalizeRole 归一化） */
+export type UserRole = 'super_admin' | 'admin' | 'user' | 'viewer'
 
 /** 脱敏级别 */
 export enum DesensitizeLevel {
@@ -101,7 +95,9 @@ export function maskMilitaryID(id: string | null | undefined): string {
  * 根据用户角色确定脱敏级别
  */
 export function getDesensitizeLevel(role: UserRole | string): DesensitizeLevel {
-  switch (role) {
+  // 历史角色归一化：manager/approval_leader → admin, operator → user
+  const normalized = normalizeRoleLocal(role)
+  switch (normalized) {
     case 'super_admin':
     case 'admin':
       return DesensitizeLevel.FULL
@@ -110,6 +106,16 @@ export function getDesensitizeLevel(role: UserRole | string): DesensitizeLevel {
     default:
       return DesensitizeLevel.PARTIAL
   }
+}
+
+function normalizeRoleLocal(role: string): string {
+  const map: Record<string, string> = {
+    approval_leader: 'admin',
+    manager: 'admin',
+    operator: 'user',
+  }
+  const r = (role || '').toLowerCase()
+  return map[r] || r
 }
 
 /**

@@ -251,7 +251,7 @@ const mockUsers = [
     id: 2,
     username: 'zhangsan',
     full_name: '张三',
-    role: 'operator',
+    role: 'user',
     organization: '成都分部',
     is_active: true,
   },

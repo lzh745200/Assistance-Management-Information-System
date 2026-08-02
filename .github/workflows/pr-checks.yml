@@ -110,6 +110,9 @@ jobs:
       # 版本一致性门禁：sync-version.js --check 检测 13 处版本号漂移
       - name: Version consistency check
         run: node scripts/sync-version.js --check
+      # 前后端菜单对齐门禁：前端菜单 key/path 与后端 MENU_DEFINITIONS/前端路由一致
+      - name: Menu alignment check
+        run: python scripts/check_menu_alignment.py
       # 后端综合安全审计：裸 db.commit()、跨组织删除、缺 ok_list/write_work_log/filter_by_data_scope
       - name: Backend comprehensive security audit
         run: python scripts/security_audit.py --verbose

@@ -167,7 +167,7 @@ const isAdmin = computed(
     ['admin', 'super_admin'].includes(userStore.currentUser?.role || '') ||
     !!userStore.currentUser?.is_superuser
 )
-const isManager = computed(() => isAdmin.value || userStore.currentUser?.role === 'manager')
+const isManager = computed(() => isAdmin.value)
 
 // 布局持久化
 const STORAGE_KEY = 'dashboard_layout_v2'

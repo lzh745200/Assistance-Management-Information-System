@@ -274,7 +274,7 @@ watch(
   async (user) => {
     if (user) {
       legacyForm.value = {
-        role: user.role || 'operator',
+        role: user.role || 'user',
         data_scope: user.data_scope || 'org',
       }
       await Promise.all([loadAllRoles(), loadCurrentPermissions(), loadMenuConfig()])

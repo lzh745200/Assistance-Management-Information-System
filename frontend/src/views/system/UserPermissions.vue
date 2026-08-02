@@ -582,14 +582,12 @@ const handleRemoveUser = async (row: any) => {
 /** 带角色信息的用户列表 */
 const orgUsersWithRoles = ref<OrgUser[]>([])
 
-/** 常用角色选项 */
+/** 常用角色选项（角色精简：4 个实用角色） */
 const commonRoles = [
   { label: '超级管理员 (super_admin)', value: 'super_admin' },
   { label: '管理员 (admin)', value: 'admin' },
-  { label: '管理者 (manager)', value: 'manager' },
-  { label: '操作员 (operator)', value: 'operator' },
-  { label: '观察者 (viewer)', value: 'viewer' },
-  { label: '审批负责人 (approval_leader)', value: 'approval_leader' },
+  { label: '普通用户 (user)', value: 'user' },
+  { label: '访客 (viewer)', value: 'viewer' },
 ]
 
 const addRoleDialogVisible = ref(false)

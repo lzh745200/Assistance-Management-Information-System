@@ -5,8 +5,8 @@
 
 // ==================== 用户相关 ====================
 
-// 用户角色
-export type UserRole = 'admin' | 'manager' | 'user' | 'guest' | 'super_admin'
+// 用户角色（与后端 constants.USER_ROLES 对齐；历史角色 manager/operator 由 normalizeRole 归一化）
+export type UserRole = 'super_admin' | 'admin' | 'user' | 'viewer'
 
 // 用户实体
 export interface User {
