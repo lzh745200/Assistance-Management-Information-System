@@ -1,17 +1,19 @@
+# -*- coding: utf-8 -*-
 """
-请求体键名转换中间件
+请求体键名转换中间件 + 响应信封最小补全
 
-将前端发送的 camelCase JSON 键名自动转换为 snake_case，
-确保与后端 Pydantic Schema 的字段名一致。
-
-使用 starlette BaseHTTPMiddleware 实现，通过修改 Request._body 来转换键名。
+1. 请求体: 前端 camelCase JSON 键 → snake_case(Pydantic 字段一致)
+2. 响应: 对裸 dict JSON 响应补全信封元数据(success/code),不改变数据层级。
+   - 已含 success 或 code 的响应跳过
+   - 裸 list/标量跳过(前端拦截器已兼容)
+   - 文件/流式响应跳过
 """
-
 import json
 from typing import Any, Dict
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from app.utils.common import StringHelper  # noqa: E402
 
@@ -39,12 +41,26 @@ def _convert_keys(obj: Any, converter) -> Any:
     return obj, False
 
 
+def _patch_envelope(data: Any) -> Dict[str, Any]:
+    """裸 dict → 补全 success/code 元数据(不改变数据层级,向前端/后端测试兼容)"""
+    if not isinstance(data, dict):
+        return data
+    if 'success' in data or 'code' in data:
+        return data
+    patch = {"code": 200, "success": True}
+    if 'message' not in data:
+        patch["message"] = "success"
+    # 保持键顺序: 元数据在前,原数据在后
+    merged = dict(patch)
+    merged.update(data)
+    return merged
+
+
 class CamelToSnakeMiddleware(BaseHTTPMiddleware):
     """
-    HTTP 中间件：自动将 JSON 请求体中的 camelCase 键转换为 snake_case。
-
-    仅在 Content-Type 为 application/json 时生效。
-    不影响响应体。
+    HTTP 中间件：
+    1. 请求体 camelCase → snake_case
+    2. 响应裸 dict 自动补全 code/success 元数据(最小补全,不包 data 层)
     """
 
     async def dispatch(self, request: Request, call_next):
@@ -61,5 +77,29 @@ class CamelToSnakeMiddleware(BaseHTTPMiddleware):
                         ).encode("utf-8")
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     pass  # 非 JSON 体保持原样
+
         response = await call_next(request)
-        return response
+
+        # ── 响应信封最小补全 ──
+        try:
+            resp_content_type = response.headers.get("content-type", "")
+            if "application/json" not in resp_content_type:
+                return response
+            if response.status_code >= 400:
+                return response  # 错误响应由异常处理器生成
+            body_bytes = getattr(response, "body", None)
+            if not body_bytes:
+                return response
+
+            parsed = json.loads(body_bytes.decode("utf-8"))
+            patched = _patch_envelope(parsed)
+            if patched is parsed:
+                return response
+
+            new_response = JSONResponse(
+                content=patched,
+                status_code=response.status_code,
+            )
+            return new_response
+        except Exception:
+            return response

@@ -220,9 +220,9 @@ class TestValidateYearlyData:
         db = self._db_sequence([None] * (n * 2))  # 当年 + 前一年均无记录
         with patch.object(sv, "_get_village_or_404"):
             result = await sv.validate_yearly_data(1, 2026, current_user=_admin(), db=db)
-        assert result["valid"] is False
-        assert len(result["errors"]) == n
-        assert result["warnings"] == []
+        assert result["data"]["valid"] is False
+        assert len(result["data"]["errors"]) == n
+        assert result["data"]["warnings"] == []
 
     async def test_negative_value_error_and_yoy_warning(self):
         n = len(sv._SECTION_MODEL)
@@ -232,8 +232,8 @@ class TestValidateYearlyData:
         db = self._db_sequence(current + previous)
         with patch.object(sv, "_get_village_or_404"):
             result = await sv.validate_yearly_data(1, 2026, current_user=_admin(), db=db)
-        assert any("不能为负数" in e["message"] for e in result["errors"])
-        assert any("同比变动" in w["message"] for w in result["warnings"])
+        assert any("不能为负数" in e["message"] for e in result["data"]["errors"])
+        assert any("同比变动" in w["message"] for w in result["data"]["warnings"])
 
 
 class TestDownloadSectionAttachment:

@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from app.core.security import get_current_user
 from app.models.supported_village import ReportSubscription
 from app.schemas.supported_village import (
@@ -674,7 +674,7 @@ async def generate_report(
                 "total_villages": service.db.query(SupportedVillage).count(),
             }
 
-        return {"message": "报表生成成功", "data": report_data}
+        return success_response(data=report_data, message="报表生成成功")
 
     except Exception as e:
         logger.error("报表生成失败: %s", e, exc_info=True)

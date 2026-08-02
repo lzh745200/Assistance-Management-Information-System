@@ -210,7 +210,7 @@ class TestUpdateActivity:
         client.app.dependency_overrides[get_db] = lambda: db
         with patch.object(d, "_cache", None):
             r = client.put("/api/v1/dashboard/recent-activities/custom_1", json={"type": "f"})
-            assert r.status_code == 200 and r.json() == {"message": "更新成功"}
+            assert r.status_code == 200 and r.json()["message"] == "更新成功"
 
     def test_custom_not_found(self, client):
         import app.api.v1.data.data.dashboard as d
@@ -223,7 +223,7 @@ class TestUpdateActivity:
 
     def test_system_activity(self, client):
         r = client.put("/api/v1/dashboard/recent-activities/project_1", json={"type": "f"})
-        assert r.status_code == 200 and r.json() == {"message": "无法更新系统自动生成的动态"}
+        assert r.status_code == 200 and r.json()["message"] == "无法更新系统自动生成的动态"
 
     def test_exception(self, client):
         import app.api.v1.data.data.dashboard as d

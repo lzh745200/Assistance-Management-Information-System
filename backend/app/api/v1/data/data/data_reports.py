@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.exceptions import BusinessError, NotFoundException
 from app.core.permission_utils import get_user_org_id
+from app.core.response import success_response
 from app.core.security import get_current_user
 from app.models.data_report import ReportStatus
 from app.schemas.data_report import (DataReportCreate, DataReportListResponse,
@@ -106,7 +107,7 @@ async def get_pending_reports(
 ):
     """获取待审批的上报"""
     if not hasattr(current_user, "org_id") or not current_user.org_id:
-        from app.core.response import ok_list
+        from app.core.response import ok_list, success_response
         return ok_list(items=[], total=0)
 
     reports = service.get_subordinate_reports(
@@ -429,7 +430,7 @@ async def preview_data_report(
             "status": package.status.value if hasattr(package.status, "value") else str(package.status),
         }
 
-    return {"data": preview_data}
+    return success_response(data=preview_data)
 
 
 @router.get("/{report_id}/download")

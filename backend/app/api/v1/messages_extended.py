@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.v1.deps import get_current_active_user, get_db
+from app.core.response import success_response
 from app.models.user import User
 from app.services.message_service import MessageService
 from app.services.work_log_service import write_work_log
@@ -125,7 +126,7 @@ async def mark_as_read(
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
         logger.debug("记录工作日志失败", exc_info=True)
-    return {"message": "已标记为已读"}
+    return success_response(message="已标记为已读")
 
 
 @router.post("/read-all")
@@ -159,4 +160,4 @@ async def delete_message(
                        user_id=current_user.id, username=getattr(current_user, "username", ""))
     except Exception:
         logger.debug("记录工作日志失败", exc_info=True)
-    return {"message": "消息已删除"}
+    return success_response(message="消息已删除")

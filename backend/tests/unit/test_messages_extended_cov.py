@@ -97,7 +97,9 @@ class TestMarkAsRead:
             result = await m.mark_as_read(
                 message_id=3, current_user=SimpleNamespace(id=5), db=MagicMock()
             )
-        assert result == {"message": "已标记为已读"}
+        assert result["code"] == 200
+        assert result["success"] is True
+        assert result["message"] == "已标记为已读"
         svc.mark_as_read.assert_called_once_with(user_id=5, message_ids=[3])
 
     async def test_not_found_404(self):
@@ -130,7 +132,9 @@ class TestDeleteMessage:
             result = await m.delete_message(
                 message_id=3, current_user=SimpleNamespace(id=5), db=MagicMock()
             )
-        assert result == {"message": "消息已删除"}
+        assert result["code"] == 200
+        assert result["success"] is True
+        assert result["message"] == "消息已删除"
         svc.delete_messages.assert_called_once_with(user_id=5, message_ids=[3])
 
     async def test_not_found_404(self):

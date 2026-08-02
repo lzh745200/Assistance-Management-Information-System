@@ -98,7 +98,9 @@ class TestDeleteTransactionFundLink:
 
         result = await fb.delete_transaction(transaction_id=1, current_user=_user(), db=db)
 
-        assert result == {"message": "删除成功"}
+        assert result["code"] == 200
+        assert result["success"] is True
+        assert result["message"] == "删除成功"
         assert fund.used_amount == 400.0
         assert fund.remaining_amount == 600.0
         db.delete.assert_called_once_with(tx)

@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from app.core.config import settings
 from app.core.database import SessionLocal, get_db
+from app.core.response import success_response
 from app.core.security import get_current_user
 from app.models.approval import ApprovalTask
 from app.models.fund import Fund
@@ -632,8 +633,8 @@ async def update_activity(
                     _cache.delete("dashboard_recent_activities")
                 except Exception:
                     logger.debug("清除仪表盘活动缓存失败")
-            return {"message": "更新成功"}
-        return {"message": "无法更新系统自动生成的动态"}
+            return success_response(message="更新成功")
+        return success_response(message="无法更新系统自动生成的动态")
     except HTTPException:
         raise
     except Exception as e:
@@ -674,7 +675,7 @@ async def delete_activity(
                 _cache.delete("dashboard_recent_activities")
             except Exception:
                 logger.debug("清除仪表盘活动缓存失败")
-        return {"message": "删除成功"}
+        return success_response(message="删除成功")
     except Exception as e:
         logger.error("删除动态失败: %s", e, exc_info=True)
         db.rollback()
