@@ -664,7 +664,7 @@ class TestProjectsAPI:
         q2 = MagicMock(); q2.filter.return_value = q2; q2.order_by.return_value.all.return_value = [sample_project_file]
         mock_db.query.side_effect = lambda m: q1 if m == Project else q2
         resp = client.get("/api/v1/projects/1/files")
-        assert resp.status_code == 200 and len(resp.json()["files"]) == 1
+        assert resp.status_code == 200 and len(resp.json()["data"]["files"]) == 1
 
     def test_list_project_files_filtered(self, client, mock_db, admin_user, sample_project, sample_project_file):
         _setup_client(client, mock_db, admin_user)

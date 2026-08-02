@@ -188,7 +188,7 @@ class TestGetFilterOptions:
         q.all.return_value = [("某部",), ("某厅",)]
         resp = client.get("/api/v1/supported-villages/filter-options")
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert "departments" in data
         assert "counties" in data
 
@@ -203,7 +203,7 @@ class TestGetFilterOptions:
         q.all.return_value = [(None,)]
         resp = client.get("/api/v1/supported-villages/filter-options")
         assert resp.status_code == 200
-        assert resp.json()["departments"] == []
+        assert resp.json()["data"]["departments"] == []
 
 
 # ---------------------------------------------------------------------------

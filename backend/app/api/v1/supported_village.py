@@ -371,10 +371,12 @@ async def get_filter_options(
         .distinct()
         .all()
     )
-    return {
-        "departments": [d[0] for d in departments if d[0]],
-        "counties": [c[0] for c in counties if c[0]],
-    }
+    return success_response(
+        data={
+            "departments": [d[0] for d in departments if d[0]],
+            "counties": [c[0] for c in counties if c[0]],
+        }
+    )
 
 
 @router.get("/options/dropdown")
@@ -490,7 +492,7 @@ async def get_village(
     data = village.to_dict() if hasattr(village, "to_dict") else {"id": village.id}
     # 管理员查看已软删记录时附带可见性元数据，便于前端审计展示
     data["viewableBecause"] = build_viewable_because(current_user, village)
-    return {"data": data}
+    return success_response(data=data)
 
 
 @router.post("")
@@ -508,7 +510,7 @@ async def create_village(
     safe_commit(db)
     db.refresh(village)
     await _invalidate_village_cache()
-    return {"data": {"id": village.id}, "message": "创建成功"}
+    return success_response(data={"id": village.id}, message="创建成功")
 
 
 @router.put("/{village_id}")
@@ -586,7 +588,7 @@ async def get_yearly_data(
     for section, model in _SECTION_MODEL.items():
         data = _get_section_data(db, model, village_id, year)
         result[section] = data if data else None
-    return {"data": result, "message": "ok"}
+    return success_response(data=result, message="ok")
 
 
 @router.post("/{village_id}/yearly/copy")
@@ -705,11 +707,13 @@ async def validate_yearly_data(
                                 "suggestion": "请核实数据是否准确，如无误可忽略此预警",
                             })
 
-    return {
-        "valid": len(errors) == 0,
-        "errors": errors,
-        "warnings": warnings,
-    }
+    return success_response(
+        data={
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings,
+        }
+    )
 
 
 # ── 区块附件管理 ──
@@ -736,6 +740,7 @@ async def get_section_attachments(
     )
     return {
         "code": 200,
+        "success": True,
         "data": [
             {
                 "id": a.id,
@@ -781,7 +786,7 @@ async def upload_section_attachment(
     db.add(attachment)
     safe_commit(db)
     db.refresh(attachment)
-    return {"code": 200, "data": {"id": attachment.id, "filename": attachment.file_name}, "message": "上传成功"}
+    return {"code": 200, "success": True, "data": {"id": attachment.id, "filename": attachment.file_name}, "message": "上传成功"}
 
 
 @router.get("/{village_id}/sections/{section}/attachments/{attachment_id}")
@@ -832,7 +837,7 @@ async def delete_section_attachment(
         raise HTTPException(status_code=404, detail="附件不存在")
     db.delete(attachment)
     safe_commit(db)
-    return {"code": 200, "message": "删除成功"}
+    return {"code": 200, "success": True, "message": "删除成功"}
 
 
 # ── 村委数据 ──
@@ -860,7 +865,7 @@ async def save_committee_data(
         if hasattr(committee, k) and k not in ("id", "supported_village_id"):
             setattr(committee, k, v)
     safe_commit(db)
-    return {"code": 200, "message": "保存成功"}
+    return {"code": 200, "success": True, "message": "保存成功"}
 
 
 # ── 区块数据导入 ──
@@ -884,6 +889,7 @@ async def import_section_data(
         rows = [[cell.value for cell in row] for row in ws.iter_rows()][1:]  # skip header
         return {
             "code": 200,
+            "success": True,
             "data": {
                 "rows": len(rows),
                 "imported": len(rows),
@@ -915,6 +921,7 @@ async def import_all_sections_data(
         total_rows = sum(max(0, ws.max_row - 1) for ws in [wb[s] for s in wb.sheetnames])
         return {
             "code": 200,
+            "success": True,
             "data": {
                 "sheets": sheets_imported,
                 "sections": [{"name": s, "rows": max(0, wb[s].max_row - 1)} for s in wb.sheetnames],

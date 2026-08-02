@@ -1143,7 +1143,7 @@ async def create_project_fund(
         db.add(fund)
         safe_commit(db)
         db.refresh(fund)
-        return {"id": fund.id, "message": "经费添加成功"}
+        return success_response(data={"id": fund.id}, message="经费添加成功")
     except Exception as e:
         db.rollback()
         logger.error(f"添加经费失败: project_id={project_id}, error={e}", exc_info=True)
@@ -1259,7 +1259,7 @@ async def delete_project_task(
     try:
         db.delete(task)
         safe_commit(db)
-        return {"message": "任务删除成功"}
+        return success_response(message="任务删除成功")
     except Exception as e:
         db.rollback()
         logger.error(f"删除任务失败: task_id={task_id}, error={e}", exc_info=True)
@@ -1869,7 +1869,7 @@ async def list_project_files(
     grouped: dict = {}
     for f in items:
         grouped.setdefault(f.category, []).append(_file_to_dict(f))
-    return {"files": [_file_to_dict(f) for f in items], "grouped": grouped}
+    return success_response(data={"files": [_file_to_dict(f) for f in items], "grouped": grouped})
 
 
 @router.delete("/{project_id}/files/{file_id}", summary="删除项目文件")

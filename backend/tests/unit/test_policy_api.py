@@ -223,7 +223,7 @@ class TestPolicyAPI:
             "name": "新分类", "code": "new"
         })
         assert resp.status_code == 200
-        assert resp.json()["name"] == "新分类"
+        assert resp.json()["data"]["name"] == "新分类"
 
     def test_create_category_duplicate_code(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -286,8 +286,8 @@ class TestPolicyAPI:
         resp = client.get("/api/v1/policies/statistics")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["military"]["total"] == 3
-        assert data["local"]["total"] == 2
+        assert data["data"]["military"]["total"] == 3
+        assert data["data"]["local"]["total"] == 2
 
     def test_download_import_template(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
@@ -796,7 +796,7 @@ class TestPolicyAPI:
         with patch("app.core.cache.cache_manager.delete", AsyncMock()):
             resp = client.post("/api/v1/policies/batch-delete", json={"ids": [1, 2]})
         assert resp.status_code == 200
-        assert resp.json()["deleted"] == 2
+        assert resp.json()["data"]["deleted"] == 2
 
     def test_batch_delete_policies_no_ids(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)
