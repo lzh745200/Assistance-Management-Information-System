@@ -195,6 +195,11 @@ function analyzeStartupError(stderrCapture) {
 // isFirstStart: 首次启动时探测端口；后续重启复用已确定的端口，
 // 避免端口变化导致前端页面（已加载在旧端口）API 请求失败。
 async function startBackend(stderrCapture = null, isFirstStart = false) {
+  // 防止重复启动：如果已有后端进程在运行，先终止
+  if (backendProcess && !backendProcess.killed) {
+    console.log('[Backend] 后端进程已在运行，跳过重复启动');
+    return backendProcess;
+  }
   const exePath = getBackendExePath();
   console.log('[Backend] 启动路径:', exePath);
   writeDiagnosticLog(`后端路径: ${exePath}`);
