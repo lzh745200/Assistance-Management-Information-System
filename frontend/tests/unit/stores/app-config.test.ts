@@ -35,7 +35,7 @@ describe('stores/app + stores/config', () => {
     it('默认值', () => {
       const c = useConfigStore()
       expect(c.appName).toBe('帮扶管理信息系统')
-      expect(c.version).toBe('1.2.0')
+      expect(c.version).toBe('1.5.0')
       expect(c.theme).toBe('light')  // localStorage empty
     })
 

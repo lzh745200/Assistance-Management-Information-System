@@ -11,7 +11,7 @@ describe('useConfigStore', () => {
   it('appName 和 version 是常量', () => {
     const store = useConfigStore()
     expect(store.appName).toBe('帮扶管理信息系统')
-    expect(store.version).toBe('1.2.0')
+    expect(store.version).toBe('1.5.0')
   })
 
   it('无 localStorage 时 theme 默认 light', () => {
