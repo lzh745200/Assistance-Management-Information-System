@@ -1031,12 +1031,14 @@ async def search_help_articles(
 @router.get("/system-info", summary="获取系统简介")
 async def get_system_info():
     """获取帮扶管理信息系统简介"""
+    from app.core.config import settings
+
     return {
         "success": True,
         "data": {
             "name": "帮扶管理信息系统",
             "short_name": "帮扶振兴",
-            "version": "1.4.2",
+            "version": getattr(settings, "PROJECT_VERSION", "1.5.0"),
             "description": (
                 "帮扶管理信息系统是面向帮扶乡村工作的综合管理平台，"
                 "实现帮扶村庄、学校、项目、资金的全流程信息化管理，"

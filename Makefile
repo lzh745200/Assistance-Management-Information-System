@@ -150,7 +150,7 @@ build-win-all: build-win-x64 build-win-x86
 # DEB 包构建（Docker 跨平台构建，推荐方式）
 # ============================================================
 
-VERSION := $(shell node -p "require('./package.json').version" 2>/dev/null || echo "1.4.2")
+VERSION := $(shell node -p "require('./package.json').version" 2>/dev/null || echo "1.5.0")
 APP_NAME := assistance-management-system
 OUTPUT_DIR := dist/deb
 

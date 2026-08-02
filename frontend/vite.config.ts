@@ -74,7 +74,7 @@ export default defineConfig(({ mode }) => {
         apply: 'build',
         generateBundle() {
           const versionJson = JSON.stringify({
-            version: process.env.npm_package_version || '1.4.2',
+            version: process.env.npm_package_version || '1.5.0',
             buildTime: new Date().toISOString(),
           }, null, 2);
           this.emitFile({

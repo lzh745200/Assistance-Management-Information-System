@@ -8,7 +8,7 @@
         </div>
         <h2 class="app-name">帮扶管理信息系统</h2>
         <p class="app-name-en">Assistance Management Information System</p>
-        <el-tag type="success" effect="dark" round>v1.4.2</el-tag>
+        <el-tag type="success" effect="dark" round>v{{ systemVersion }}</el-tag>
       </div>
 
       <!-- 系统信息 -->
@@ -24,7 +24,7 @@
             >Assistance Management Information System</el-descriptions-item
           >
           <el-descriptions-item label="版本">
-            <el-tag type="success" size="small">v1.4.2</el-tag>
+            <el-tag type="success" size="small">v{{ systemVersion }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="技术栈">
             <div class="tag-list">
@@ -143,6 +143,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { Platform, InfoFilled, Monitor, Stamp, Cpu, Refresh } from '@element-plus/icons-vue'
 import { get } from '@/api/request'
+import { SYSTEM_VERSION } from '@/config/constants'
 
 // ── 类型定义 ──
 interface RuntimeSystemInfo {
@@ -159,6 +160,7 @@ interface EnvCheckResponse {
 }
 
 // ── 静态信息 ──
+const systemVersion = SYSTEM_VERSION
 const techStack = ['Vue 3', 'TypeScript', 'FastAPI', 'Electron', 'SQLite']
 
 const openSourceLibs = ['Vue 3', 'Element Plus', 'ECharts', 'FastAPI', 'SQLAlchemy', 'Electron']

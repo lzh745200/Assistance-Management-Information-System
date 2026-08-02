@@ -116,7 +116,7 @@
 
     <!-- 版本信息 -->
     <div class="version-footer">
-      <span class="version-name">帮扶管理信息系统 v1.4.2</span>
+      <span class="version-name">帮扶管理信息系统 v{{ systemVersion }}</span>
       <span v-if="buildInfoText" class="version-build">{{ buildInfoText }}</span>
       <span class="version-copyright">内部系统 · 未经授权禁止外传</span>
     </div>
@@ -152,6 +152,9 @@ import {
 import { get } from '@/api/request'
 import { getBackupStats } from '@/api/backup'
 import { getSecretsStatus } from '@/api/secrets'
+import { SYSTEM_VERSION } from '@/config/constants'
+
+const systemVersion = SYSTEM_VERSION
 
 // ── 类型定义 ──
 type StatusLevel = 'green' | 'yellow' | 'red' | 'gray'

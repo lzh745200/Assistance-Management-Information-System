@@ -1,15 +1,15 @@
 {
-  "version": "1.4.2",
-  "build": "20260529",
-  "release_date": "2026-05-29",
-  "description": "项目全面清理与结构优化版本",
+  "version": "1.5.0",
+  "build": "20260802",
+  "release_date": "2026-08-02",
+  "description": "生产闪退修复、CI 稳定性修复、版本统一与角色精简收敛版本",
   "features": [
-    "项目文件全面清理（移除冗余/损坏/临时文件）",
-    "CLAUDE.md 与 database/init.sql 重新生成",
-    ".gitignore 和 .dockerignore 模式优化去重",
-    "数据库参考 Schema 完善（索引补充、类型修正）",
-    "跨文件硬编码版本号消除",
-    "文档一致性修复（README、CLAUDE.md 去重）",
-    "Git 仓库重新初始化"
+    "Electron 单实例锁时序修复（防止双后端进程闪退）",
+    "后端自动重启计数重置与崩溃诊断增强",
+    "政策法规页面普通用户权限一致（导入/编辑/发布/归档按钮）",
+    "admin 会话列表黑名单计数健壮化（消除 AttributeError 500）",
+    "CI: 移除 --dist loadfile 解决 pytest-xdist + rerunfailures 不兼容",
+    "角色精简（super_admin/admin/user/viewer）前端对齐",
+    "全系统版本号统一为 1.5.0"
   ]
 }
