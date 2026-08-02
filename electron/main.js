@@ -328,6 +328,8 @@ async function startBackend(stderrCapture = null, isFirstStart = false) {
           // 等待重启的后端就绪后重新加载页面
           try {
             await waitForBackend(restartStderr);
+            // 重启成功后重置重启计数：恢复运行后偶发崩溃不应消耗历史配额
+            backendRestartCount = 0;
             console.log('[Backend] 重启后端已就绪，重新加载页面');
             writeDiagnosticLog('重启后端已就绪，重新加载页面');
             if (mainWindow && !mainWindow.isDestroyed()) {
@@ -343,8 +345,15 @@ async function startBackend(stderrCapture = null, isFirstStart = false) {
         }, 2000);
       } else {
         const logPath = path.join(getUserDataPath(), 'logs', 'app.log');
+        // 提示可能原因：安全软件（杀软）可能拦截/终止了后端进程，
+        // 请将安装目录加入白名单；不要将应用安装在系统临时目录。
         dialog.showErrorBox('后端异常退出',
-          `后端已重启 ${MAX_BACKEND_RESTARTS} 次仍失败。\n诊断日志: ${CRASH_LOG_FILE}\n应用日志: ${logPath}`);
+          `后端已重启 ${MAX_BACKEND_RESTARTS} 次仍失败。\n\n` +
+          `可能原因：\n` +
+          `1. 安全软件（杀毒/Defender）拦截了后端进程——请将程序安装目录加入白名单\n` +
+          `2. 安装目录位于临时目录（%TEMP%），文件可能被系统清理——请安装到正式目录\n` +
+          `3. 数据库文件损坏或磁盘空间不足\n\n` +
+          `诊断日志: ${CRASH_LOG_FILE}\n应用日志: ${logPath}`);
       }
     }
   });
