@@ -15,7 +15,7 @@ from app.core.database import get_db
 from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.core.permission_utils import require_admin
-from app.services.backup_service import get_backup_service
+from app.services.backup_service import BackupService, get_backup_service
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ class CreateBackupRequest(BaseModel):
     description: str = Field("手动备份", description="备份描述")
     include_uploads: bool = Field(True, description="是否包含上传文件")
     password: Optional[str] = Field(None, description="加密密码（可选）")
+    target_dir: Optional[str] = Field(None, description="备份目标目录（可选，缺省用配置 backup_target_dir，再缺省用应用数据目录）")
 
 
 class RestoreBackupRequest(BaseModel):
@@ -93,7 +94,17 @@ async def create_backup(
     """
 
     try:
+        # 目标目录解析: 请求参数 > 配置 backup_target_dir > 应用数据目录
+        from app.services.system_config_service import get_config
+
         svc = get_backup_service(db)
+        target_dir = body.target_dir or get_config("backup_target_dir", "")
+        if target_dir:
+            from app.utils.drive_detect import ensure_target_dir
+
+            if not ensure_target_dir(target_dir):
+                raise HTTPException(status_code=400, detail=f"备份目标目录不可写: {target_dir}")
+            svc = BackupService(db, backup_dir=target_dir)
         record = svc.create_backup(
             description=body.description,
             include_uploads=body.include_uploads,
@@ -117,6 +128,8 @@ async def create_backup(
                 "created_at": record.created_at.isoformat(),
             },
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("创建备份失败: %s", e)
         raise HTTPException(status_code=500, detail=f"创建备份失败: {str(e)}")
@@ -185,6 +198,62 @@ async def get_backup_stats(
     except Exception as e:
         logger.error("获取备份统计失败: %s", e)
         raise HTTPException(status_code=500, detail=f"获取备份统计失败: {str(e)}")
+
+
+@router.get("/dirs", summary="检测可用备份目标目录（U盘/移动硬盘）")
+async def list_backup_dirs(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """枚举可用的备份目标目录（可移动磁盘/固定盘/网络盘），供前端备份目标选择。
+
+    单机场景：把备份写到 U 盘/移动硬盘可防止本机硬盘故障导致数据丢失。
+    """
+    try:
+        from app.services.system_config_service import get_config
+        from app.utils.drive_detect import list_backup_dirs as _list_dirs
+
+        dirs = _list_dirs()
+        # 当前配置的目标目录若不在列表中则追加（可能尚未插入磁盘）
+        current = get_config("backup_target_dir", "")
+        paths = {d["path"] for d in dirs}
+        if current and current not in paths:
+            dirs.append({"path": current, "type": "configured", "available": False})
+
+        return {
+            "success": True,
+            "data": {
+                "dirs": dirs,
+                "current": current,
+                "default_dir": os.environ.get("BACKUP_DEFAULT_DIR", ""),
+            },
+        }
+    except Exception as e:
+        logger.error("检测备份目录失败: %s", e)
+        raise HTTPException(status_code=500, detail=f"检测备份目录失败: {str(e)}")
+
+
+@router.put("/target", summary="设置备份目标目录")
+async def set_backup_target(
+    body: dict,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """持久化备份目标目录（写入 SystemConfig）"""
+    try:
+        from app.services.system_config_service import set_config
+        from app.utils.drive_detect import ensure_target_dir
+
+        target = (body.get("target_dir") or "").strip()
+        if target and not ensure_target_dir(target):
+            raise HTTPException(status_code=400, detail=f"目标目录不可用或不可写: {target}")
+        set_config("backup_target_dir", target, "备份目标目录（单机防丢失）")
+        return {"success": True, "message": "备份目标已更新", "data": {"target_dir": target}}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("设置备份目标失败: %s", e)
+        raise HTTPException(status_code=500, detail=f"设置备份目标失败: {str(e)}")
 
 
 @router.get("/schedule", summary="获取备份计划配置")

@@ -1,7 +1,7 @@
 /**
  * 备份 API
  */
-import { get, post, del } from '@/api/request'
+import { get, post, del, put } from '@/api/request'
 
 export interface BackupItem {
   filename: string
@@ -47,4 +47,26 @@ export async function deleteBackup(filename: string) {
 export async function getBackupStats(): Promise<BackupStats> {
   const res = await get(`${BASE}/stats`)
   return res
+}
+
+export interface BackupDirInfo {
+  path: string
+  type: string
+  available: boolean
+}
+
+export interface BackupDirsResponse {
+  dirs: BackupDirInfo[]
+  current: string
+  default_dir: string
+}
+
+/** 检测可用备份目标目录（U盘/移动硬盘） */
+export async function getBackupDirs(): Promise<BackupDirsResponse> {
+  return get(`${BASE}/dirs`)
+}
+
+/** 设置备份目标目录 */
+export async function setBackupTarget(targetDir: string): Promise<void> {
+  return put(`${BASE}/target`, { target_dir: targetDir })
 }

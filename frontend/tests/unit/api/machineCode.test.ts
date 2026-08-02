@@ -15,6 +15,10 @@ import {
   generateInitialPassword,
   resetPasswordWithMachineCode,
   getMachineInfo,
+  getOrganizationVerificationCode,
+  createOrganizationPassCode,
+  listOrganizationPassCodes,
+  exportOrganizationPassCodes,
 } from '@/api/machineCode'
 
 describe('api/machineCode', () => {
@@ -101,6 +105,51 @@ describe('api/machineCode', () => {
     expect(mockApiRequest).toHaveBeenCalledWith({
       url: '/machine-code/machine-info',
       method: 'get',
+    })
+  })
+
+  it('getOrganizationVerificationCode 调用 GET /machine-code/organization/{id}/verification-code', () => {
+    getOrganizationVerificationCode(3)
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      url: '/machine-code/organization/3/verification-code',
+      method: 'get',
+    })
+  })
+
+  it('createOrganizationPassCode 调用 POST /machine-code/organization/create', () => {
+    const data = { organization_id: 1, verification_code: 'VC' }
+    createOrganizationPassCode(data)
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      url: '/machine-code/organization/create',
+      method: 'post',
+      data,
+    })
+  })
+
+  it('listOrganizationPassCodes 带分页参数', () => {
+    listOrganizationPassCodes({ page: 1, page_size: 10 })
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      url: '/machine-code/organization/list',
+      method: 'get',
+      params: { page: 1, page_size: 10 },
+    })
+  })
+
+  it('listOrganizationPassCodes 无参数', () => {
+    listOrganizationPassCodes()
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      url: '/machine-code/organization/list',
+      method: 'get',
+      params: undefined,
+    })
+  })
+
+  it('exportOrganizationPassCodes 调用 GET blob 导出', () => {
+    exportOrganizationPassCodes()
+    expect(mockApiRequest).toHaveBeenCalledWith({
+      url: '/machine-code/organization/export',
+      method: 'get',
+      responseType: 'blob',
     })
   })
 })

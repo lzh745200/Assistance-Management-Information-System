@@ -40,6 +40,12 @@ describe('stores/user', () => {
       expect(s.error).toBeNull()
       expect(s.total).toBe(0)
     })
+
+    it('AuthStorage 中有用户时 currentUser 初始化恢复', () => {
+      ;(AuthStorage.getUser as any).mockReturnValue({ id: 5, username: 'restored' })
+      const s = useUserStore()
+      expect(s.currentUser).toEqual({ id: 5, username: 'restored' })
+    })
   })
 
   describe('fetchUsers', () => {
@@ -48,6 +54,21 @@ describe('stores/user', () => {
       const s = useUserStore()
       await s.fetchUsers()
       expect(s.userList).toHaveLength(2)
+      expect(s.total).toBe(2)
+    })
+
+    it('裸格式 res.items 直接使用', async () => {
+      ;(get as any).mockResolvedValue({ items: [{ id: 1, name: 'A' }], total: 9 })
+      const s = useUserStore()
+      await s.fetchUsers()
+      expect(s.userList).toHaveLength(1)
+      expect(s.total).toBe(9)
+    })
+
+    it('无 total 字段时用 items.length 兜底', async () => {
+      ;(get as any).mockResolvedValue({ items: [{ id: 1 }, { id: 2 }] })
+      const s = useUserStore()
+      await s.fetchUsers()
       expect(s.total).toBe(2)
     })
 
@@ -88,6 +109,13 @@ describe('stores/user', () => {
       await s.fetchUsers()
       expect(s.error).toBe('Forbidden')
     })
+
+    it('失败无任何信息: 用默认错误文案', async () => {
+      ;(get as any).mockRejectedValue({})
+      const s = useUserStore()
+      await s.fetchUsers()
+      expect(s.error).toBe('获取用户列表失败')
+    })
   })
 
   describe('fetchUser', () => {
@@ -99,12 +127,42 @@ describe('stores/user', () => {
       expect(r).toEqual({ id: 7, name: 'X' })
     })
 
+    it('裸对象响应直接作为 user', async () => {
+      ;(get as any).mockResolvedValue({ id: 9, username: 'bare' })
+      const s = useUserStore()
+      const r = await s.fetchUser(9)
+      expect(s.currentUser).toEqual({ id: 9, username: 'bare' })
+      expect(r).toEqual({ id: 9, username: 'bare' })
+    })
+
+    it('响应为空时不修改 currentUser', async () => {
+      ;(get as any).mockResolvedValue(null)
+      const s = useUserStore()
+      s.currentUser = { id: 1 } as any
+      await s.fetchUser(1)
+      expect(s.currentUser).toEqual({ id: 1 })
+    })
+
     it('失败: error + loading=false', async () => {
       ;(get as any).mockRejectedValue(new Error('boom'))
       const s = useUserStore()
       await s.fetchUser(1)
       expect(s.error).toBe('boom')
       expect(s.loading).toBe(false)
+    })
+
+    it('失败无任何信息: 用默认错误文案', async () => {
+      ;(get as any).mockRejectedValue({})
+      const s = useUserStore()
+      await s.fetchUser(1)
+      expect(s.error).toBe('获取用户详情失败')
+    })
+
+    it('失败有 response.data.message: 用它', async () => {
+      ;(get as any).mockRejectedValue({ response: { data: { message: 'Not Found' } } })
+      const s = useUserStore()
+      await s.fetchUser(1)
+      expect(s.error).toBe('Not Found')
     })
   })
 
@@ -144,6 +202,16 @@ describe('stores/user', () => {
       const s = useUserStore()
       await s.updateUser(99, { name: 'X' })
       expect(s.userList).toEqual([])
+    })
+
+    it('code !== 200: 不更新任何状态', async () => {
+      ;(put as any).mockResolvedValue({ code: 500 })
+      const s = useUserStore()
+      s.userList.push({ id: 1, name: 'old' } as any)
+      s.currentUser = { id: 1, name: 'old' } as any
+      await s.updateUser(1, { name: 'updated' })
+      expect(s.userList[0].name).toBe('old')
+      expect(s.currentUser?.name).toBe('old')
     })
   })
 
@@ -227,6 +295,120 @@ describe('stores/user', () => {
       const r = await s.uploadAvatar(new File([''], 'a.png'), 1)
       expect(r).toEqual(mockData)
       expect(post).toHaveBeenCalledWith('/users/1/avatar', expect.any(FormData))
+    })
+  })
+
+  describe('changePassword', () => {
+    it('currentUser 已存在时直接 PUT', async () => {
+      ;(put as any).mockResolvedValue({ code: 200 })
+      const s = useUserStore()
+      s.currentUser = { id: 5 } as any
+      await s.changePassword('old', 'new')
+      expect(put).toHaveBeenCalledWith('/users/5/password', {
+        old_password: 'old',
+        new_password: 'new',
+      })
+    })
+
+    it('currentUser 为空时先加载 profile 再改密', async () => {
+      ;(get as any).mockResolvedValueOnce({ code: 200, data: { id: 7 } })
+      ;(put as any).mockResolvedValue({ code: 200 })
+      const s = useUserStore()
+      await s.changePassword('o', 'n')
+      expect(get).toHaveBeenCalledWith('/users/me')
+      expect(put).toHaveBeenCalledWith('/users/7/password', expect.anything())
+    })
+
+    it('profile 加载失败后抛出错误', async () => {
+      ;(get as any).mockRejectedValue(new Error('401'))
+      const s = useUserStore()
+      await expect(s.changePassword('o', 'n')).rejects.toThrow('无法获取用户信息，请重新登录')
+    })
+
+    it('profile 无有效数据时抛出错误', async () => {
+      ;(get as any).mockResolvedValue({ code: 500 })
+      const s = useUserStore()
+      await expect(s.changePassword('o', 'n')).rejects.toThrow('无法获取用户信息，请重新登录')
+    })
+  })
+
+  describe('getUserProfile / updateUserProfile', () => {
+    it('getUserProfile 带 userId 且接口失败时回退 fetchUser', async () => {
+      ;(get as any).mockResolvedValueOnce({ code: 500 })
+      ;(get as any).mockResolvedValueOnce({ id: 12, username: 'fallback' })
+      const s = useUserStore()
+      const r = await s.getUserProfile(12)
+      expect(r).toEqual({ id: 12, username: 'fallback' })
+      expect(s.currentUser).toEqual({ id: 12, username: 'fallback' })
+    })
+
+    it('updateUserProfile 成功但无 data 时返回 res', async () => {
+      ;(put as any).mockResolvedValue({ code: 200 })
+      const s = useUserStore()
+      const r = await s.updateUserProfile({ name: 'x' })
+      expect(r).toEqual({ code: 200 })
+      expect(s.currentUser).toBeNull()
+    })
+
+    it('updateUserProfile 失败时抛出更新失败', async () => {
+      ;(put as any).mockResolvedValue({ code: 500 })
+      const s = useUserStore()
+      await expect(s.updateUserProfile({ name: 'x' })).rejects.toThrow('更新失败')
+    })
+  })
+
+  describe('uploadAvatar / _getCurrentUserId', () => {
+    it('无 userId 时使用 currentUser.id', async () => {
+      ;(post as any).mockResolvedValue({ code: 200, data: { url: 'u1' } })
+      const s = useUserStore()
+      s.currentUser = { id: 3 } as any
+      const r = await s.uploadAvatar(new File([''], 'a.png'))
+      expect(r).toEqual({ url: 'u1' })
+      expect(post).toHaveBeenCalledWith('/users/3/avatar', expect.any(FormData))
+    })
+
+    it('currentUser 为空但 token 含 user_id 时解析 JWT', async () => {
+      ;(post as any).mockResolvedValue({ data: { url: 'u2' } })
+      const payload = Buffer.from(JSON.stringify({ sub: 'alice', user_id: 21 })).toString('base64')
+      ;(AuthStorage.getToken as any).mockReturnValue(`header.${payload}.sig`)
+      const s = useUserStore()
+      const r = await s.uploadAvatar(new File([''], 'a.png'))
+      expect(r).toEqual({ url: 'u2' })
+      expect(post).toHaveBeenCalledWith('/users/21/avatar', expect.any(FormData))
+    })
+
+    it('token 中无 user_id 时抛出', async () => {
+      const payload = Buffer.from(JSON.stringify({ sub: 'alice' })).toString('base64')
+      ;(AuthStorage.getToken as any).mockReturnValue(`h.${payload}.s`)
+      const s = useUserStore()
+      await expect(s.uploadAvatar(new File([''], 'a.png'))).rejects.toThrow('无法获取用户ID，请重新登录')
+    })
+
+    it('token 无法解析（非法 payload）时抛出', async () => {
+      const payload = Buffer.from('not-json').toString('base64')
+      ;(AuthStorage.getToken as any).mockReturnValue(`h.${payload}.s`)
+      const s = useUserStore()
+      await expect(s.uploadAvatar(new File([''], 'a.png'))).rejects.toThrow('无法获取用户ID，请重新登录')
+    })
+
+    it('token 格式非法（缺少分段）时抛出', async () => {
+      ;(AuthStorage.getToken as any).mockReturnValue('not-a-jwt')
+      const s = useUserStore()
+      await expect(s.uploadAvatar(new File([''], 'a.png'))).rejects.toThrow('无法获取用户ID，请重新登录')
+    })
+
+    it('无任何身份信息时抛出', async () => {
+      ;(AuthStorage.getToken as any).mockReturnValue(null)
+      const s = useUserStore()
+      await expect(s.uploadAvatar(new File([''], 'a.png'))).rejects.toThrow('无法获取用户ID，请重新登录')
+    })
+
+    it('响应无 data 时返回原始 res', async () => {
+      ;(post as any).mockResolvedValue({ code: 200 })
+      const s = useUserStore()
+      s.currentUser = { id: 3 } as any
+      const r = await s.uploadAvatar(new File([''], 'a.png'))
+      expect(r).toEqual({ code: 200 })
     })
   })
 })

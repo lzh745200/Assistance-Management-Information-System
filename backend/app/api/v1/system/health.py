@@ -56,6 +56,27 @@ async def health_database():
         db.close()
 
 
+@router.get("/database-health")
+async def health_database_detail():
+    """数据库健康详情（自检结果 + 统计），供前端启动后提示"""
+    try:
+        from app.services.database_health_service import database_health_service
+
+        info = database_health_service.get_database_info()
+        stats = database_health_service.get_stats()
+        return {
+            "code": 200,
+            "data": {
+                "status": info.get("status", "unknown"),
+                "info": info,
+                "stats": stats,
+                "issues": database_health_service.health_status.get("issues", []),
+            },
+        }
+    except Exception as e:
+        return {"code": 500, "message": str(e), "data": {"status": "error"}}
+
+
 @router.get("/liveness")
 async def health_liveness():
     """Kubernetes-style liveness probe."""

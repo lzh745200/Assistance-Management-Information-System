@@ -236,4 +236,111 @@ describe('api/fundLifecycle (30 methods)', () => {
     await fundLifecycleApi.batchHealth([1, 2])
     expect(mockPost).toHaveBeenCalledWith('/fund-lifecycle/health/batch', { project_ids: [1, 2] })
   })
+
+  it('listAllocationOrders GET', async () => {
+    mockGet.mockResolvedValueOnce({ data: { data: [] } })
+    await fundLifecycleApi.listAllocationOrders({ status: 'issued' })
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/allocation-orders', { status: 'issued' })
+  })
+
+  it('createAllocationOrder POST', async () => {
+    mockPost.mockResolvedValueOnce({ data: { id: 1 } })
+    await fundLifecycleApi.createAllocationOrder({ amount: 100 })
+    expect(mockPost).toHaveBeenCalledWith('/fund-lifecycle/allocation-orders', { amount: 100 })
+  })
+
+  it('issueAllocationOrder POST', async () => {
+    mockPost.mockResolvedValueOnce({ data: { success: true } })
+    await fundLifecycleApi.issueAllocationOrder(9)
+    expect(mockPost).toHaveBeenCalledWith('/fund-lifecycle/allocation-orders/9/issue')
+  })
+
+  it('quotaAdjust PUT', async () => {
+    mockPut.mockResolvedValueOnce({ data: { success: true } })
+    await fundLifecycleApi.quotaAdjust(5, { amount: 50 })
+    expect(mockPut).toHaveBeenCalledWith('/fund-lifecycle/quota-adjust/5', { amount: 50 })
+  })
+
+  it('uploadVoucherAttachment POST FormData', async () => {
+    mockPost.mockResolvedValueOnce({ data: { id: 1 } })
+    const file = new File(['x'], 'v.png')
+    await fundLifecycleApi.uploadVoucherAttachment(9, file)
+    const [url, fd, config] = mockPost.mock.calls[0]
+    expect(url).toBe('/fund-lifecycle/transfer-vouchers/9/attachments')
+    expect(fd).toBeInstanceOf(FormData)
+    expect(fd.get('file')).toBe(file)
+    expect(config.headers['Content-Type']).toBe('multipart/form-data')
+  })
+
+  it('getInspectionClues GET', async () => {
+    mockGet.mockResolvedValueOnce({ data: { data: { clues: [] } } })
+    await fundLifecycleApi.getInspectionClues(1)
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/inspection-clues/1')
+  })
+
+  it('verifyAsset POST', async () => {
+    mockPost.mockResolvedValueOnce({ data: { success: true } })
+    await fundLifecycleApi.verifyAsset(2, { asset_ok: true })
+    expect(mockPost).toHaveBeenCalledWith('/fund-lifecycle/settlement/2/verify-asset', { asset_ok: true })
+  })
+
+  it('getPerformanceReport GET', async () => {
+    mockGet.mockResolvedValueOnce({ data: { data: { report: {} } } })
+    await fundLifecycleApi.getPerformanceReport(1)
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/performance-report/1')
+  })
+
+  it('getFeasibilityReport GET', async () => {
+    mockGet.mockResolvedValueOnce({ data: { data: { report: {} } } })
+    await fundLifecycleApi.getFeasibilityReport(1)
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/feasibility-report/1')
+  })
+
+  it('getFundFlowTree GET', async () => {
+    mockGet.mockResolvedValueOnce({ data: { data: { tree: {} } } })
+    await fundLifecycleApi.getFundFlowTree(1)
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/monitoring/fund-flow-tree/1')
+  })
+})
+
+describe('api/fundLifecycle res.data 回退（响应无 data 字段时原样返回）', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  const cases: Array<[string, () => Promise<any>, string]> = [
+    ['getPhases', () => fundLifecycleApi.getPhases(1), '/fund-lifecycle/phases/1'],
+    ['getReportTemplate', () => fundLifecycleApi.getReportTemplate(1), '/fund-lifecycle/report-template/1'],
+    ['complianceCheck', () => fundLifecycleApi.complianceCheck(1), '/fund-lifecycle/compliance-check/1'],
+    ['budgetAggregation', () => fundLifecycleApi.budgetAggregation(), '/fund-lifecycle/budget-aggregation'],
+    ['allocationPlan', () => fundLifecycleApi.allocationPlan(1), '/fund-lifecycle/allocation-plan/1'],
+    ['listAllocationOrders', () => fundLifecycleApi.listAllocationOrders(), '/fund-lifecycle/allocation-orders'],
+    ['listTransferVouchers', () => fundLifecycleApi.listTransferVouchers(), '/fund-lifecycle/transfer-vouchers'],
+    ['getTransferVoucher', () => fundLifecycleApi.getTransferVoucher(1), '/fund-lifecycle/transfer-vouchers/1'],
+    ['transferLedger', () => fundLifecycleApi.transferLedger(1), '/fund-lifecycle/transfer-ledger/1'],
+    ['listContracts', () => fundLifecycleApi.listContracts(), '/fund-lifecycle/contracts'],
+    ['getContract', () => fundLifecycleApi.getContract(1), '/fund-lifecycle/contracts/1'],
+    ['monitoringDeviation', () => fundLifecycleApi.monitoringDeviation(1), '/fund-lifecycle/monitoring/deviation/1'],
+    ['fundFlow', () => fundLifecycleApi.fundFlow(1), '/fund-lifecycle/monitoring/fund-flow/1'],
+    ['listAnomalies', () => fundLifecycleApi.listAnomalies(), '/fund-lifecycle/anomalies'],
+    ['getInspectionClues', () => fundLifecycleApi.getInspectionClues(1), '/fund-lifecycle/inspection-clues/1'],
+    ['getPerformance', () => fundLifecycleApi.getPerformance(1), '/fund-lifecycle/performance/1'],
+    ['getPerformanceReport', () => fundLifecycleApi.getPerformanceReport(1), '/fund-lifecycle/performance-report/1'],
+    ['getFeasibilityReport', () => fundLifecycleApi.getFeasibilityReport(1), '/fund-lifecycle/feasibility-report/1'],
+    ['getFundFlowTree', () => fundLifecycleApi.getFundFlowTree(1), '/fund-lifecycle/monitoring/fund-flow-tree/1'],
+    ['getHealth', () => fundLifecycleApi.getHealth(1), '/fund-lifecycle/health/1'],
+  ]
+
+  it.each(cases)('%s 响应无 data 字段时返回原始响应', async (_name, fn) => {
+    const raw = { raw: true }
+    mockGet.mockResolvedValueOnce(raw)
+    const r = await fn()
+    expect(mockGet).toHaveBeenCalled()
+    expect(r).toBe(raw)
+  })
+
+  it('batchHealth 响应无 data 字段时返回原始响应', async () => {
+    const raw = { raw: true }
+    mockPost.mockResolvedValueOnce(raw)
+    const r = await fundLifecycleApi.batchHealth([1])
+    expect(r).toBe(raw)
+  })
 })

@@ -3,6 +3,7 @@
  * 兼容 Electron 桌面模式和纯浏览器模式（麒麟 V10 单机版）
  */
 import { onMounted, onUnmounted } from 'vue'
+import { get } from '@/api/request'
 import { getUnreadCount } from '@/api/message'
 
 const POLL_INTERVAL = 60000 // 每 60 秒轮询一次
@@ -66,6 +67,27 @@ export function useMessageNotification() {
     }
   }
 
+  /** 备份到期提醒：距上次备份超过 N 天时提醒一次（每天至多一次，localStorage 去重） */
+  const REMINDER_STORAGE_KEY = 'backup-reminder-notified'
+  const checkBackupReminder = async () => {
+    try {
+      const today = new Date().toISOString().slice(0, 10)
+      if (localStorage.getItem(REMINDER_STORAGE_KEY) === today) return
+      const res = await get('/system/backup/stats')
+      const lastBackup = res?.lastBackup
+      if (!lastBackup) return
+      const lastTs = new Date(lastBackup).getTime()
+      if (Number.isNaN(lastTs)) return
+      const days = Math.floor((Date.now() - lastTs) / 86400000)
+      if (days >= 7) {
+        showNotification('备份提醒', `距上次备份已 ${days} 天，建议立即备份到 U 盘以防数据丢失。`)
+      }
+      localStorage.setItem(REMINDER_STORAGE_KEY, today)
+    } catch {
+      // 网络不可用时静默
+    }
+  }
+
   let initTimer: number | null = null
 
   onMounted(() => {
@@ -73,6 +95,8 @@ export function useMessageNotification() {
     // 延迟首次检查，避免与登录请求竞争
     initTimer = window.setTimeout(checkMessages, 5000)
     timer = window.setInterval(checkMessages, POLL_INTERVAL)
+    // 备份提醒：首次挂载时检查一次
+    window.setTimeout(checkBackupReminder, 8000)
   })
 
   onUnmounted(() => {

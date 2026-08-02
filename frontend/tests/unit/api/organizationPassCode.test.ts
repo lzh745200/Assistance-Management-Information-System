@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockGet = vi.fn()
 const mockPost = vi.fn()
+const mockDel = vi.fn()
 const mockRequestGet = vi.fn()
 
 vi.mock('@/api/request', () => ({
   get: (...args: any[]) => mockGet(...args),
   post: (...args: any[]) => mockPost(...args),
+  del: (...args: any[]) => mockDel(...args),
   // downloadBlobAsFile（src/api/helpers/blobDownload.ts）内部从 '@/api/request'
   // 导入 downloadBlob / parseContentDisposition，需一并提供
   downloadBlob: (blob: Blob, filename: string) => {
@@ -28,6 +30,7 @@ import {
   createOrganizationPassCode,
   getOrganizationPassCodeList,
   exportOrganizationPassCodes,
+  deleteOrganizationPassCode,
 } from '@/api/organizationPassCode'
 
 describe('api/organizationPassCode', () => {
@@ -88,5 +91,10 @@ describe('api/organizationPassCode', () => {
       responseType: 'blob',
     })
     expect(click).toHaveBeenCalled()
+  })
+
+  it('deleteOrganizationPassCode DELETE /machine-code/organization/{id}', () => {
+    deleteOrganizationPassCode(5)
+    expect(mockDel).toHaveBeenCalledWith('/machine-code/organization/5')
   })
 })

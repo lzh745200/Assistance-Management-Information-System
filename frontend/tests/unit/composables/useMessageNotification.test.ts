@@ -6,7 +6,12 @@ vi.mock('@/api/message', () => ({
   getUnreadCount: vi.fn(),
 }))
 
+vi.mock('@/api/request', () => ({
+  get: vi.fn(),
+}))
+
 import { getUnreadCount } from '@/api/message'
+import { get } from '@/api/request'
 
 ;(globalThis as any).window.electronAPI = undefined
 
@@ -46,5 +51,19 @@ describe('composables/useMessageNotification', () => {
     ;(getUnreadCount as any).mockRejectedValue(new Error('net'))
     // Will silently fail in production
     await expect(getUnreadCount()).rejects.toThrow('net')
+  })
+
+  describe('备份提醒 checkBackupReminder', () => {
+    it('使用 request.get 拉取备份统计', async () => {
+      ;(get as any).mockResolvedValue({ lastBackup: new Date(Date.now() - 10 * 86400000).toISOString() })
+      const res = await get('/system/backup/stats')
+      expect(get).toHaveBeenCalledWith('/system/backup/stats')
+      expect(res.lastBackup).toBeTruthy()
+    })
+
+    it('get 失败时静默（catch 分支）', async () => {
+      ;(get as any).mockRejectedValue(new Error('net'))
+      await expect(get('/system/backup/stats')).rejects.toThrow('net')
+    })
   })
 })

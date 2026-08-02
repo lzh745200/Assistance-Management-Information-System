@@ -394,6 +394,19 @@ class DatabaseHealthService:
         """获取统计信息"""
         return self.stats.copy()
 
+    def startup_check(self) -> Dict:
+        """
+        启动自检：立即执行一次 quick_check（不阻塞启动，异常不抛出）。
+
+        单机场景：硬盘故障/断电可能损坏数据库，启动自检可在第一时间
+        发现问题并提示用户用最近备份恢复。
+        """
+        try:
+            return self.quick_check()
+        except Exception as e:  # pragma: no cover - 防御性兜底
+            logger.error("启动自检失败: %s", e)
+            return {"status": "error", "message": f"启动自检失败: {e}"}
+
 
 # 全局实例
 database_health_service = DatabaseHealthService()

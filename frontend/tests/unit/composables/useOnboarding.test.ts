@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { defineComponent, h } from 'vue'
 
 const mockDrive = vi.fn()
 const mockDriver = vi.fn(() => ({ drive: mockDrive }))
@@ -10,6 +12,17 @@ vi.mock('driver.js', () => ({
 vi.mock('driver.js/dist/driver.css', () => ({}))
 
 import { useOnboarding } from '@/composables/useOnboarding'
+
+const makeOnboardingComponent = (opts?: { force?: boolean }) =>
+  defineComponent({
+    name: 'OnboardingHost',
+    setup() {
+      return useOnboarding(opts)
+    },
+    render() {
+      return h('div')
+    },
+  })
 
 describe('useOnboarding', () => {
   beforeEach(() => {
@@ -77,5 +90,66 @@ describe('useOnboarding', () => {
     const { startTour } = useOnboarding()
     startTour()
     expect(mockDrive).toHaveBeenCalled()
+  })
+})
+
+describe('useOnboarding onMounted 行为', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('无完成标记时 onMounted 后延迟启动引导', async () => {
+    const wrapper = mount(makeOnboardingComponent())
+    expect(mockDrive).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mockDrive).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('已标记完成且版本一致时不启动引导', async () => {
+    localStorage.setItem(
+      'onboarding_completed',
+      JSON.stringify({ version: 2, completedAt: Date.now() })
+    )
+    const wrapper = mount(makeOnboardingComponent())
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(mockDrive).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('版本不一致时重新启动引导', async () => {
+    localStorage.setItem(
+      'onboarding_completed',
+      JSON.stringify({ version: 1, completedAt: Date.now() })
+    )
+    const wrapper = mount(makeOnboardingComponent())
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mockDrive).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('完成标记为损坏 JSON 时按未完成处理', async () => {
+    localStorage.setItem('onboarding_completed', '{bad json')
+    const wrapper = mount(makeOnboardingComponent())
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mockDrive).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('force=true 时忽略完成标记强制引导', async () => {
+    localStorage.setItem(
+      'onboarding_completed',
+      JSON.stringify({ version: 2, completedAt: Date.now() })
+    )
+    const wrapper = mount(makeOnboardingComponent({ force: true }))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mockDrive).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
   })
 })

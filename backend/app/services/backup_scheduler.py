@@ -28,7 +28,7 @@ _timers: list[threading.Timer] = []
 
 
 async def auto_backup_job():
-    """自动备份任务"""
+    """自动备份任务（支持自定义目标目录与默认加密，按 backup_interval_days 间隔执行）"""
     with get_db_context() as db:
         try:
             auto_backup_enabled = get_config("auto_backup", "false")
@@ -36,8 +36,43 @@ async def auto_backup_job():
                 logger.info("自动备份已禁用，跳过")
                 return
 
-            backup_service = BackupService(db)
-            backup = backup_service.create_backup(description="自动备份", include_uploads=False)
+            # 间隔检查: 距上次备份不足 interval_days 则跳过
+            from datetime import datetime as _dt, timedelta as _td
+            from app.models.system_config import SystemConfig
+
+            interval_days = int(get_config("backup_interval_days", "30") or 30)
+            last_row = (
+                db.query(SystemConfig)
+                .filter(SystemConfig.key == "last_backup_time")
+                .first()
+            )
+            if last_row and isinstance(getattr(last_row, "value", None), str) and last_row.value:
+                try:
+                    last_ts = _dt.fromisoformat(last_row.value)
+                    if _dt.now() - last_ts < _td(days=interval_days):
+                        logger.info("距上次备份不足 %d 天，跳过自动备份", interval_days)
+                        return
+                except ValueError:
+                    pass
+
+            from app.utils.drive_detect import ensure_target_dir
+
+            target_dir = get_config("backup_target_dir", "") or None
+            encrypt = get_config("backup_encrypt", "false") == "true"
+            if target_dir and not ensure_target_dir(target_dir):
+                logger.warning("备份目标目录不可写: %s，回退默认目录", target_dir)
+                target_dir = None
+
+            backup_service = BackupService(db, backup_dir=target_dir) if target_dir else BackupService(db)
+            if encrypt:
+                backup = backup_service.create_backup(
+                    description="自动备份", include_uploads=False,
+                    password="auto-backup-key",
+                )
+            else:
+                backup = backup_service.create_backup(
+                    description="自动备份", include_uploads=False,
+                )
             logger.info("自动备份完成: %s, 大小: %d 字节", backup.file_name, backup.file_size or 0)
 
             max_count = int(get_config("max_backup_count", "3"))
@@ -235,6 +270,92 @@ async def database_maintenance_job():
         logger.error("数据库维护失败: %s", e, exc_info=True)
 
 
+async def auto_package_job():
+    """定期自动打包数据（单机防丢失）：按 auto_package_interval_months 生成数据包到指定目录。
+
+    单机场景：即使本机损坏，U盘/共享盘里仍保留最近的数据包可恢复。
+    """
+    try:
+        with get_db_context() as db:
+            await _auto_package_with_db(db)
+    except Exception as e:
+        logger.error("自动打包失败: %s", e, exc_info=True)
+
+
+async def _auto_package_with_db(db):
+    """自动打包核心逻辑（独立函数便于测试）"""
+    enabled = get_config("auto_package_enabled", "false")
+    if enabled != "true":
+        return
+
+    from datetime import datetime as _dt
+
+    interval_months = int(get_config("auto_package_interval_months", "1") or 1)
+    target_dir = (get_config("auto_package_dir", "") or "").strip()
+    if not target_dir:
+        logger.info("自动打包未配置目标目录，跳过")
+        return
+    from app.utils.drive_detect import ensure_target_dir
+
+    if not ensure_target_dir(target_dir):
+        logger.warning("自动打包目标目录不可写: %s，跳过", target_dir)
+        return
+
+    # 间隔检查
+    from app.models.system_config import SystemConfig
+
+    last_row = (
+        db.query(SystemConfig)
+        .filter(SystemConfig.key == "last_package_time")
+        .first()
+    )
+    if last_row and isinstance(getattr(last_row, "value", None), str) and last_row.value:
+        try:
+            last_ts = _dt.fromisoformat(last_row.value)
+            months = (datetime.now().year - last_ts.year) * 12 + (datetime.now().month - last_ts.month)
+            if months < interval_months:
+                logger.info("距上次自动打包不足 %d 个月，跳过", interval_months)
+                return
+        except ValueError:
+            pass
+
+    # 打包全部数据类型
+    from app.models.organization import Organization
+    from app.services.data_package_service import DataPackageService
+
+    org = db.query(Organization).order_by(Organization.id).first()
+    if not org:
+        logger.warning("无组织数据，跳过自动打包")
+        return
+
+    from app.services.data_package_service import DATA_TYPE_MODELS
+
+    svc = DataPackageService(db)
+    result = await svc.export_package(
+        org_id=org.id,
+        data_types=list(DATA_TYPE_MODELS.keys()),
+        export_by=0,
+        description="定期自动打包",
+    )
+
+    # 复制到目标目录（U盘/共享盘）
+    import shutil
+
+    src = result.file_path
+    if os.path.exists(src):
+        os.makedirs(target_dir, exist_ok=True)
+        dst = os.path.join(target_dir, os.path.basename(src))
+        shutil.copy2(src, dst)
+        logger.info("自动打包完成: %s (记录 %d 条)", dst, result.total_records or 0)
+    else:
+        logger.warning("自动打包文件未生成: %s", src)
+
+    # 记录上次打包时间
+    from app.services.system_config_service import set_config
+
+    set_config("last_package_time", datetime.now().isoformat(), "最近自动打包时间")
+
+
 def start_backup_scheduler():
     """启动后台调度器（仅轻量任务，不含自动备份和 VACUUM）
 
@@ -295,11 +416,13 @@ def start_backup_scheduler():
 
     _schedule_daily(kpi_precalculate_job, 0, 30, "kpi_precalculate")
     _schedule_daily(anomaly_detection_job, 1, 0, "anomaly_detection")
+    _schedule_daily(auto_backup_job, 2, 0, "auto_backup")
+    _schedule_daily(auto_package_job, 3, 0, "auto_package")
     _schedule_daily(todo_reminder_job, 8, 0, "todo_reminder")
     _schedule_weekly(weekly_report_job, 0, 6, 30, "weekly_report")
 
     _scheduler_started = True
-    logger.info("调度器已启动（KPI预计算 + 异常检测 + 待办提醒 + 周报，自动备份和VACUUM已禁用）")
+    logger.info("调度器已启动（KPI预计算 + 异常检测 + 自动备份 + 自动打包 + 待办提醒 + 周报）")
 
 
 def stop_backup_scheduler():

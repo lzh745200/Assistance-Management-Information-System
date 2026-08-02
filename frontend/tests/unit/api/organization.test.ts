@@ -31,6 +31,9 @@ import {
   moveOrganization,
   activateOrganization,
   deactivateOrganization,
+  getOrganizationStatistics,
+  getOrganizationMembers,
+  getOrganizationDetail,
 } from '@/api/organization'
 
 describe('api/organization', () => {
@@ -148,5 +151,35 @@ describe('api/organization', () => {
     mockPost.mockResolvedValueOnce({ success: true })
     await deactivateOrganization(7)
     expect(mockPost).toHaveBeenCalledWith('/organizations/7/deactivate')
+  })
+
+  it('getOrganizationStatistics GET /organizations/statistics/summary', async () => {
+    const body = { total: 10 }
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getOrganizationStatistics()
+    expect(mockGet).toHaveBeenCalledWith('/organizations/statistics/summary')
+    expect(r).toBe(body)
+  })
+
+  it('getOrganizationMembers GET /organizations/{id}/members 带 params', async () => {
+    const body = { items: [] }
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getOrganizationMembers(8, { page: 1 })
+    expect(mockGet).toHaveBeenCalledWith('/organizations/8/members', { page: 1 })
+    expect(r).toBe(body)
+  })
+
+  it('getOrganizationMembers 无 params', async () => {
+    mockGet.mockResolvedValueOnce({ items: [] })
+    await getOrganizationMembers(8)
+    expect(mockGet).toHaveBeenCalledWith('/organizations/8/members', undefined)
+  })
+
+  it('getOrganizationDetail GET /organizations/{id}/detail', async () => {
+    const body = { id: 8, name: 'X', member_count: 3 }
+    mockGet.mockResolvedValueOnce(body)
+    const r = await getOrganizationDetail(8)
+    expect(mockGet).toHaveBeenCalledWith('/organizations/8/detail')
+    expect(r).toBe(body)
   })
 })

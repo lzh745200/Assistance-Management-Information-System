@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import sys
 import logging
+import threading
 import time as _time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
@@ -65,12 +66,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     _verify_file_integrity()
     _start_resource_monitoring()
     _start_database_health_monitoring()
+    _run_database_startup_check()
     _start_approval_reminder()
     # 每日凌晨 3 点 WAL checkpoint（轻量，不含 VACUUM，防止 -wal 文件膨胀）
     _start_wal_checkpoint_scheduler()
+    # 备份调度器（KPI 预计算/异常检测/自动备份/待办提醒/周报）
+    _start_backup_scheduler()
     # _start_db_maintenance() — 已禁用，VACUUM 会生成大量临时文件
     yield
     # _stop_db_maintenance()
+    _stop_backup_scheduler()
     _stop_wal_checkpoint_scheduler()
     _stop_approval_reminder()
     _stop_resource_monitoring()
@@ -870,6 +875,41 @@ def _stop_wal_checkpoint_scheduler():
         stop_wal_checkpoint_scheduler()
     except Exception as e:
         logger.warning("WAL checkpoint 调度停止失败: %s", e)
+
+
+def _start_backup_scheduler():
+    """启动备份调度器（自动备份/异常检测/待办提醒/周报/KPI 预计算）。"""
+    try:
+        from app.services.backup_scheduler import start_backup_scheduler
+        start_backup_scheduler()
+    except Exception as e:
+        logger.warning("备份调度器启动失败: %s", e)
+
+
+def _run_database_startup_check():
+    """启动时后台执行数据库快速自检（不阻塞启动）。"""
+    def _run():
+        try:
+            from app.services.database_health_service import database_health_service
+            result = database_health_service.startup_check()
+            if result.get("status") != "ok":
+                logger.warning("数据库启动自检异常: %s", result.get("message", "unknown"))
+            else:
+                logger.info("数据库启动自检通过 (%s)", result.get("db_size_mb", "?"))
+        except Exception as e:  # pragma: no cover
+            logger.warning("数据库启动自检失败: %s", e)
+
+    t = threading.Thread(target=_run, name="db-startup-check", daemon=True)
+    t.start()
+
+
+def _stop_backup_scheduler():
+    """停止备份调度器。"""
+    try:
+        from app.services.backup_scheduler import stop_backup_scheduler
+        stop_backup_scheduler()
+    except Exception as e:
+        logger.warning("备份调度器停止失败: %s", e)
 
 
 __all__ = ["app"]

@@ -394,7 +394,7 @@ class TestSchedulerControl:
         bm._timers.clear()
         bm.start_backup_scheduler()
         assert bm._scheduler_started is True
-        assert len(bm._timers) == 4
+        assert len(bm._timers) == 6  # KPI/异常检测/自动备份/自动打包/待办提醒/周报
         bm.stop_backup_scheduler()
 
     def test_stop_backup_scheduler_running(self):

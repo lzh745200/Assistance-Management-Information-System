@@ -39,6 +39,49 @@
       </el-form>
     </el-card>
 
+    <!-- 备份目标（U盘/移动硬盘） -->
+    <el-card class="backup-target-card">
+      <template #header>
+        <div class="card-header">
+          <span class="title">备份目标目录</span>
+          <el-button :loading="targetLoading" @click="loadBackupDirs">刷新磁盘</el-button>
+        </div>
+      </template>
+      <el-alert
+        type="info"
+        show-icon
+        :closable="false"
+        title="建议把备份写到 U 盘或移动硬盘：即使本机硬盘损坏，数据仍可恢复。"
+        class="target-tip"
+      />
+      <el-form label-width="120px" class="target-form">
+        <el-form-item label="当前目标">
+          <el-input
+            v-model="backupTarget"
+            placeholder="留空=应用数据目录；可填 U 盘/共享盘路径，如 E:\backup"
+          >
+            <template #append>
+              <el-button @click="saveBackupTarget">保存目标</el-button>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="检测到的磁盘">
+          <div v-if="backupDirs.length" class="dir-list">
+            <el-tag
+              v-for="d in backupDirs"
+              :key="d.path"
+              :type="d.available ? (d.type === 'removable' ? 'success' : 'info') : 'danger'"
+              class="dir-tag"
+              @click="backupTarget = d.path"
+            >
+              {{ d.path }} ({{ dirTypeLabel(d.type) }}{{ d.available ? '' : '·不可写' }})
+            </el-tag>
+          </div>
+          <span v-else class="dir-empty">未检测到磁盘信息</span>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
     <el-card>
       <template #header>
         <div class="card-header">
@@ -242,6 +285,44 @@ const backupForm = ref({
   password: '',
 })
 const restoreForm = ref({ password: '' })
+
+// ── 备份目标目录（U盘/移动硬盘） ──
+const targetLoading = ref(false)
+const backupTarget = ref('')
+const backupDirs = ref<Array<{ path: string; type: string; available: boolean }>>([])
+
+async function loadBackupDirs() {
+  targetLoading.value = true
+  try {
+    const res = await get('/system/backup/dirs')
+    backupDirs.value = res?.dirs ?? []
+    backupTarget.value = res?.current ?? ''
+  } catch {
+    ElMessage.error('检测备份目录失败')
+  } finally {
+    targetLoading.value = false
+  }
+}
+
+async function saveBackupTarget() {
+  try {
+    await put('/system/backup/target', { target_dir: backupTarget.value.trim() })
+    ElMessage.success('备份目标已保存')
+    await loadBackupDirs()
+  } catch (e: any) {
+    ElMessage.error(e?.detail || '保存备份目标失败')
+  }
+}
+
+function dirTypeLabel(type: string): string {
+  const map: Record<string, string> = {
+    removable: '可移动',
+    fixed: '固定盘',
+    network: '网络盘',
+    configured: '已配置',
+  }
+  return map[type] ?? type
+}
 
 // ── Auto backup settings (localStorage-based) ──
 const AUTO_BACKUP_STORAGE_KEY = 'auto-backup-config'
@@ -521,12 +602,34 @@ function formatTime(time: string | number | Date | null) {
 onMounted(() => {
   refreshAll()
   loadScheduleConfig()
+  loadBackupDirs()
 })
 </script>
 
 <style scoped>
 .backup-management {
   padding: 20px;
+}
+.backup-target-card {
+  margin-bottom: 16px;
+}
+.target-tip {
+  margin-bottom: 12px;
+}
+.target-form {
+  max-width: 720px;
+}
+.dir-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dir-tag {
+  cursor: pointer;
+}
+.dir-empty {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
 }
 .card-header {
   display: flex;

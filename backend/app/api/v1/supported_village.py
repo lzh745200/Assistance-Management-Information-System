@@ -474,6 +474,11 @@ async def batch_delete_villages(
     deleted_count = query.update({"is_active": False}, synchronize_session=False)
     safe_commit(db)
     await _invalidate_village_cache()
+    # 单机防丢失：批量删除后触发一次即时备份
+    if deleted_count:
+        from app.services.immediate_backup import trigger_immediate_backup
+
+        trigger_immediate_backup(description=f"批量删除帮扶村{deleted_count}条后备份", delay=1.0)
     return success_response(message=f"已删除 {deleted_count} 条记录")
 
 

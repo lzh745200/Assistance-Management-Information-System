@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { unwrapList } from '@/utils/unwrapList'
+import { unwrapList, unwrapListTyped } from '@/utils/unwrapList'
 
 describe('utils/unwrapList', () => {
   it('format 1: { items, total }', () => {
@@ -36,5 +36,21 @@ describe('utils/unwrapList', () => {
 
   it('only data without items -> empty', () => {
     expect(unwrapList({ data: {} })).toEqual({ items: [], total: 0 })
+  })
+
+  describe('unwrapListTyped', () => {
+    it('直接分页格式', () => {
+      const r = unwrapListTyped({ items: [1, 2, 3], total: 3 })
+      expect(r).toEqual({ items: [1, 2, 3], total: 3 })
+    })
+
+    it('标准 API 响应格式', () => {
+      const r = unwrapListTyped({ code: 200, data: { items: ['a'], total: 1 } })
+      expect(r).toEqual({ items: ['a'], total: 1 })
+    })
+
+    it('空响应', () => {
+      expect(unwrapListTyped(null)).toEqual({ items: [], total: 0 })
+    })
   })
 })

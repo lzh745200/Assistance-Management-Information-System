@@ -225,8 +225,8 @@ describe('模板 v-model 内联更新函数覆盖', () => {
     await nextTick()
     expect(vm.createDialogVisible).toBe(true)
 
-    // ElInput[0]=备份描述（line 164）
-    wrapper.findAllComponents({ name: 'ElInput' })[0].vm.$emit('update:modelValue', '周末备份')
+    // ElInput[1]=备份描述（备份目标输入框占用 [0]）
+    wrapper.findAllComponents({ name: 'ElInput' })[1].vm.$emit('update:modelValue', '周末备份')
     await nextTick()
     expect(vm.backupForm.description).toBe('周末备份')
 
@@ -235,8 +235,8 @@ describe('模板 v-model 内联更新函数覆盖', () => {
     await nextTick()
     expect(vm.backupForm.include_uploads).toBe(false)
 
-    // ElInput[1]=加密密码（line 171）
-    wrapper.findAllComponents({ name: 'ElInput' })[1].vm.$emit('update:modelValue', 'pw!')
+    // ElInput[2]=加密密码（line 171）
+    wrapper.findAllComponents({ name: 'ElInput' })[2].vm.$emit('update:modelValue', 'pw!')
     await nextTick()
     expect(vm.backupForm.password).toBe('pw!')
     wrapper.unmount()
@@ -252,10 +252,10 @@ describe('模板 v-model 内联更新函数覆盖', () => {
     await nextTick()
     expect(vm.restoreDialogVisible).toBe(true)
 
-    // ElInput[2]=解密密码（line 202）
+    // ElInput[3]=解密密码（备份目标输入框占 [0]，描述 [1]，密码 [2]）
     const inputs = wrapper.findAllComponents({ name: 'ElInput' })
-    expect(inputs.length).toBe(3)
-    inputs[2].vm.$emit('update:modelValue', 'decrypt-pw')
+    expect(inputs.length).toBe(4)
+    inputs[3].vm.$emit('update:modelValue', 'decrypt-pw')
     await nextTick()
     expect(vm.restoreForm.password).toBe('decrypt-pw')
 

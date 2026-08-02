@@ -35,6 +35,9 @@ import {
   batchApprove,
   getTaskDiff,
   getApprovalHistory,
+  getOverview,
+  remindTask,
+  resubmitTask,
   autoApproveSingleTask,
   autoApproveAll,
   submitAndAutoApprove,
@@ -185,6 +188,50 @@ describe('api/approval', () => {
       expect(mockGet).toHaveBeenCalledWith('/approval/history', {
         entity_type: 'project',
       })
+    })
+
+    it('getApprovalHistory 响应非数组时返回 []', async () => {
+      mockGet.mockResolvedValueOnce({ items: [] })
+      const result = await getApprovalHistory()
+      expect(mockGet).toHaveBeenCalledWith('/approval/history', undefined)
+      expect(result).toEqual([])
+    })
+
+    it('getPendingTasks 响应非数组时返回 []', async () => {
+      mockGet.mockResolvedValueOnce({ items: [] })
+      const result = await getPendingTasks()
+      expect(mockGet).toHaveBeenCalledWith('/approval/tasks/pending', undefined)
+      expect(result).toEqual([])
+    })
+
+    it('getOverview GET /approval 返回概览', async () => {
+      const body = { pending_count: 1, approved_count: 2, rejected_count: 3, total_count: 6 }
+      mockGet.mockResolvedValueOnce(body)
+      const result = await getOverview()
+      expect(mockGet).toHaveBeenCalledWith('/approval')
+      expect(result).toBe(body)
+    })
+
+    it('remindTask POST /approval/tasks/{id}/remind', async () => {
+      mockPost.mockResolvedValueOnce({ message: '已发送' })
+      const result = await remindTask(5)
+      expect(mockPost).toHaveBeenCalledWith('/approval/tasks/5/remind', {})
+      expect(result.message).toBe('已发送')
+    })
+
+    it('resubmitTask 带 data POST /approval/tasks/{id}/resubmit', async () => {
+      mockPost.mockResolvedValueOnce({ task_id: 5, status: 'pending' })
+      const result = await resubmitTask(5, { change_data: { name: 'X' } })
+      expect(mockPost).toHaveBeenCalledWith('/approval/tasks/5/resubmit', {
+        change_data: { name: 'X' },
+      })
+      expect(result.status).toBe('pending')
+    })
+
+    it('resubmitTask 无 data 时传空对象', async () => {
+      mockPost.mockResolvedValueOnce({ task_id: 5, status: 'pending' })
+      await resubmitTask(5)
+      expect(mockPost).toHaveBeenCalledWith('/approval/tasks/5/resubmit', {})
     })
   })
 

@@ -808,10 +808,89 @@ describe('模板分支渲染', () => {
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any
-    // 初始 restoreTarget=null → 模板中 restoreTarget?.file_name 等走 nullish 侧
+    // 初始 restoreTarget=null 时模板中 restoreTarget?.file_name 等走 nullish 侧
     await nextTick()
     vm.handleRestore({ file_name: 'nofsize.zip', created_at: null, is_encrypted: false })
-    await nextTick() // file_size 缺失 → formatSize(restoreTarget?.file_size ?? 0)
+    await nextTick() // file_size 缺失时 formatSize(restoreTarget?.file_size ?? 0)
     expect(wrapper.text()).toContain('nofsize.zip')
+  })
+
+  describe('备份目标目录（T1.2）', () => {
+    it('loadBackupDirs 成功填充 dirs 与 current', async () => {
+      mockGet.mockResolvedValueOnce({}) // fetchBackupList
+      mockGet.mockResolvedValueOnce({}) // fetchBackupStats
+      mockGet.mockResolvedValueOnce({}) // loadScheduleConfig
+      mockGet.mockResolvedValueOnce({
+        dirs: [{ path: 'E:\\', type: 'removable', available: true }],
+        current: 'E:\\',
+      }) // loadBackupDirs
+      const wrapper = mountComp()
+      await flushPromises()
+      const vm = wrapper.vm as any
+      expect(vm.backupDirs.length).toBe(1)
+      expect(vm.backupTarget).toBe('E:\\')
+      expect(vm.dirTypeLabel('removable')).toBe('可移动')
+      expect(vm.dirTypeLabel('fixed')).toBe('固定盘')
+      expect(vm.dirTypeLabel('network')).toBe('网络盘')
+      expect(vm.dirTypeLabel('configured')).toBe('已配置')
+      expect(vm.dirTypeLabel('unknown-x')).toBe('unknown-x')
+    })
+
+    it('loadBackupDirs 失败提示 error', async () => {
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockRejectedValueOnce(new Error('net'))
+      const wrapper = mountComp()
+      await flushPromises()
+      expect(ElMessage.error).toHaveBeenCalledWith('检测备份目录失败')
+    })
+
+    it('saveBackupTarget 成功保存并刷新', async () => {
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({ dirs: [], current: 'E:\\bk' })
+      mockPut.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({ dirs: [{ path: 'E:\\bk', type: 'fixed', available: true }], current: 'E:\\bk' })
+      const wrapper = mountComp()
+      await flushPromises()
+      const vm = wrapper.vm as any
+      vm.backupTarget = 'E:\\bk'
+      await vm.saveBackupTarget()
+      expect(mockPut).toHaveBeenCalledWith('/system/backup/target', { target_dir: 'E:\\bk' })
+      expect(ElMessage.success).toHaveBeenCalledWith('备份目标已保存')
+      expect(vm.backupDirs.length).toBe(1)
+    })
+
+    it('saveBackupTarget 失败提示 detail', async () => {
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({ dirs: [], current: '' })
+      mockPut.mockRejectedValueOnce({ detail: '目标目录不可用' })
+      const wrapper = mountComp()
+      await flushPromises()
+      const vm = wrapper.vm as any
+      vm.backupTarget = 'Z:\\x'
+      await vm.saveBackupTarget()
+      expect(ElMessage.error).toHaveBeenCalledWith('目标目录不可用')
+    })
+
+    it('点击磁盘 tag 回填 backupTarget（模板 @click）', async () => {
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({})
+      mockGet.mockResolvedValueOnce({
+        dirs: [{ path: 'D:\\', type: 'removable', available: true }],
+        current: '',
+      })
+      const wrapper = mountComp()
+      await flushPromises()
+      const vm = wrapper.vm as any
+      expect(vm.backupTarget).toBe('')
+      vm.backupTarget = 'D:\\'
+      expect(wrapper.text()).toContain('D:\\')
+    })
   })
 })

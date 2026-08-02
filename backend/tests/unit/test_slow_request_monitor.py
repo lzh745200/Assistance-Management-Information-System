@@ -29,7 +29,7 @@ def _reset_state():
 # ==============================================================================
 
 
-def _make_app(slow_api_ms=500, slow_sql_ms=200):
+def _make_app(slow_api_ms=500, slow_sql_ms=200, slow_sleep=0.01):
     """Build a minimal ASGI app with SlowRequestMiddleware."""
     from starlette.applications import Starlette
     from starlette.responses import PlainTextResponse
@@ -39,7 +39,7 @@ def _make_app(slow_api_ms=500, slow_sql_ms=200):
         return PlainTextResponse("fast")
 
     async def slow_enough(request):
-        time.sleep(0.01)
+        time.sleep(slow_sleep)
         return PlainTextResponse("slowish")
 
     app = Starlette(
@@ -82,7 +82,7 @@ class TestMiddlewareCall:
     def test_slow_request_logs_warning(self):
         # 直接 patch 模块级 logger，避免全量运行时其他测试重配全局 logging
         # 导致 caplog 捕获不到（隔离性修复，生产行为不变）。
-        app = _make_app(slow_api_ms=1)
+        app = _make_app(slow_api_ms=1, slow_sleep=0.05)
         client = TestClient(app)
         with patch.object(srm, "logger") as mock_logger:
             client.get("/slowish")
@@ -92,12 +92,15 @@ class TestMiddlewareCall:
         )
 
     def test_counters_incremented(self):
-        app = _make_app(slow_api_ms=1)
+        # 阈值需留足余量：全量套件运行时 /fast 请求可能因负载超时，若阈值过小
+        # 会把 fast 误判为慢请求导致计数断言 flaky。用 100ms 阈值 + 500ms 慢请求，
+        # 保证 fast 远低于阈值、slowish 远高于阈值，结果确定。
+        app = _make_app(slow_api_ms=100, slow_sleep=0.5)
         client = TestClient(app)
         client.get("/fast")
         client.get("/slowish")
         assert srm._counters["total_requests"] == 2
-        assert srm._counters["slow_api_count"] == 1  # slowish exceeds 1ms
+        assert srm._counters["slow_api_count"] == 1  # slowish exceeds 100ms
 
 
 # ==============================================================================

@@ -98,3 +98,125 @@ describe('useECharts', () => {
     wrapper.unmount()
   })
 })
+
+const makeChartComponent = (opts: any) =>
+  defineComponent({
+    name: 'TestChartAutoResize',
+    setup() {
+      return useECharts(opts)
+    },
+    render() {
+      return h('div', { ref: 'chartRef', style: 'width:400px;height:300px' })
+    },
+  })
+
+describe('useECharts autoResize', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.clearAllMocks()
+  })
+
+  it('autoResize=true 时注册 resize 监听', async () => {
+    const addSpy = vi.spyOn(window, 'addEventListener')
+    const wrapper = mount(makeChartComponent({ autoResize: true }))
+    await vi.advanceTimersByTimeAsync(100)
+    expect(addSpy).toHaveBeenCalledWith('resize', expect.any(Function))
+    addSpy.mockRestore()
+    wrapper.unmount()
+  })
+
+  it('resize 事件防抖后调用实例 resize', async () => {
+    const wrapper = mount(makeChartComponent({ autoResize: true, resizeDebounce: 100 }))
+    await vi.advanceTimersByTimeAsync(100)
+    const vm = wrapper.vm as any
+    expect(vm.instance).not.toBeNull()
+
+    window.dispatchEvent(new Event('resize'))
+    window.dispatchEvent(new Event('resize'))
+    expect(vm.instance.resize).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(50)
+    expect(vm.instance.resize).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(50)
+    expect(vm.instance.resize).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('autoResize=false 时不注册 resize 事件且手动 resize 调用实例', async () => {
+    const addSpy = vi.spyOn(window, 'addEventListener')
+    const wrapper = mount(makeChartComponent({ autoResize: false }))
+    await vi.advanceTimersByTimeAsync(100)
+    expect(addSpy).not.toHaveBeenCalledWith('resize', expect.any(Function))
+
+    const vm = wrapper.vm as any
+    vm.resize()
+    expect(vm.instance.resize).toHaveBeenCalledTimes(1)
+    addSpy.mockRestore()
+    wrapper.unmount()
+  })
+
+  it('setOption 委托给 echarts 实例', async () => {
+    const wrapper = mount(makeChartComponent({ autoResize: false }))
+    await vi.advanceTimersByTimeAsync(100)
+    const vm = wrapper.vm as any
+    const option = { title: { text: 'T' } }
+    vm.setOption(option, { notMerge: true })
+    expect(vm.instance.setOption).toHaveBeenCalledWith(option, { notMerge: true })
+    wrapper.unmount()
+  })
+
+  it('autoResize=true 卸载时移除监听并 dispose', async () => {
+    const removeSpy = vi.spyOn(window, 'removeEventListener')
+    const wrapper = mount(makeChartComponent({ autoResize: true }))
+    await vi.advanceTimersByTimeAsync(100)
+    const vm = wrapper.vm as any
+    const instance = vm.instance
+    expect(instance).not.toBeNull()
+
+    wrapper.unmount()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function))
+    expect(instance.dispose).toHaveBeenCalledTimes(1)
+    expect(vm.instance).toBeNull()
+    removeSpy.mockRestore()
+  })
+
+  it('卸载时清理未触发的 resize 定时器', async () => {
+    const wrapper = mount(makeChartComponent({ autoResize: true, resizeDebounce: 100 }))
+    await vi.advanceTimersByTimeAsync(100)
+    const vm = wrapper.vm as any
+    const inst = vm.instance
+
+    window.dispatchEvent(new Event('resize'))
+    wrapper.unmount()
+    await vi.advanceTimersByTimeAsync(200)
+    expect(inst.resize).not.toHaveBeenCalled()
+  })
+
+  it('chartRef 未绑定时 _init 直接返回不初始化', async () => {
+    const NoRefComponent = defineComponent({
+      setup() {
+        return useECharts()
+      },
+      render() {
+        return h('div')
+      },
+    })
+    const echarts = await import('echarts')
+    vi.clearAllMocks()
+    const wrapper = mount(NoRefComponent)
+    await vi.advanceTimersByTimeAsync(100)
+    expect(echarts.init).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('getDataURL 在实例未初始化时返回空字符串', async () => {
+    const wrapper = mount(makeChartComponent({ autoResize: false }))
+    const vm = wrapper.vm as any
+    expect(vm.instance).toBeNull()
+    expect(vm.getDataURL()).toBe('')
+    wrapper.unmount()
+  })
+})

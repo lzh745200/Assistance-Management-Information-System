@@ -266,6 +266,10 @@ async def _import_entities(
             mode=import_mode,
             entity_type=entity_type,
         )
+        # 单机防丢失：数据导入成功后触发一次即时备份（后台线程，不阻塞响应）
+        from app.services.immediate_backup import trigger_immediate_backup
+
+        trigger_immediate_backup(description=f"导入{entity_type}后备份", delay=1.0)
 
     return ImportResultResponse(**result.to_dict())
 

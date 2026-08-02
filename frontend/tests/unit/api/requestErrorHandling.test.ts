@@ -106,6 +106,7 @@ import {
   unfreezeRequests,
   cancelAllRequests,
   getPendingRequestCount,
+  cancelRequest,
 } from '@/api/request'
 
 const makeConfig = (over: any = {}) => ({
@@ -431,6 +432,112 @@ describe('api/request — 拦截器未覆盖分支', () => {
       expect(errorA.config.headers.Authorization).toBe('Bearer T2')
       expect(errorB.config.headers.Authorization).toBe('Bearer T2')
       expect(mockInst.request).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('request interceptor — 剩余边界分支', () => {
+    it('config 无 method 时回退为 get（不触发 CSRF）', async () => {
+      const config = makeConfig({ method: undefined })
+      await handlers.request(config)
+      expect(config.headers['X-CSRF-Token']).toBeUndefined()
+    })
+  })
+
+  describe('response interceptor — 401 无 url / 404 兜底 / 422 / 400 / 未知错误', () => {
+    it('401 且 config.url 为 undefined → 走非登录端点分支并登出', async () => {
+      const error = { response: { status: 401, data: {} }, config: makeConfig({ url: undefined }) }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockAuthStorage.clear).toHaveBeenCalled()
+    })
+
+    it('404 无 config → 使用空 URL 兜底提示', async () => {
+      const error = { response: { status: 404, data: {} } }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockElMessage.warning).toHaveBeenCalledWith('请求的资源不存在: ')
+    })
+
+    it('404 带 detail → 展示 detail', async () => {
+      const error = { response: { status: 404, data: { detail: '记录已删除' } }, config: makeConfig() }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockElMessage.warning).toHaveBeenCalledWith('记录已删除')
+    })
+
+    it('404 带 message → 展示 message', async () => {
+      const error = { response: { status: 404, data: { message: '资源被移除' } }, config: makeConfig() }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockElMessage.warning).toHaveBeenCalledWith('资源被移除')
+    })
+
+    it('422 detail 为空数组 → 默认校验失败提示', async () => {
+      const error = {
+        response: { status: 422, data: { detail: [] } },
+        config: makeConfig(),
+      }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockElMessage.warning).toHaveBeenCalledWith('输入数据校验失败')
+    })
+
+    it('422 detail 首条无 loc → 仅展示 msg', async () => {
+      const error = {
+        response: { status: 422, data: { detail: [{ msg: '必填' }] } },
+        config: makeConfig(),
+      }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockElMessage.warning).toHaveBeenCalledWith(': 必填')
+    })
+
+    it('422 detail 首条无 msg 但含 message → 展示 message', async () => {
+      const error = {
+        response: { status: 422, data: { detail: [{ loc: ['name'], message: '非法值' }] } },
+        config: makeConfig(),
+      }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockElMessage.warning).toHaveBeenCalledWith('name: 非法值')
+    })
+
+    it('400 detail 为对象 → JSON 序列化展示', async () => {
+      const error = {
+        response: { status: 400, data: { detail: { field: 'x' } } },
+        config: makeConfig(),
+      }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockElMessage.warning).toHaveBeenCalledWith(JSON.stringify({ field: 'x' }))
+    })
+
+    it('400 无 detail 但带 message → 展示 message', async () => {
+      const error = {
+        response: { status: 400, data: { message: '请求被拒绝' } },
+        config: makeConfig(),
+      }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(mockElMessage.warning).toHaveBeenCalledWith('请求被拒绝')
+    })
+
+    it('离线模式命中 mock 且 config 无 method/url → 使用 GET 兜底', async () => {
+      offlineState.offline = true
+      const mockData = { data: { offline: true } }
+      mockGetMockResponse.mockReturnValueOnce(mockData)
+      const error = { code: 'ERR_NETWORK', message: 'NetworkError', config: {} }
+      const result = await handlers.responseR(error)
+      expect(result).toBe(mockData)
+      expect(mockGetMockResponse).toHaveBeenCalledWith('GET', '')
+    })
+
+    it('未知错误无 message → 记录 error 对象', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const error = { code: 'WHATEVER' }
+      await expect(handlers.responseR(error)).rejects.toBe(error)
+      expect(errSpy).toHaveBeenCalled()
+    })
+  })
+
+  describe('cancelRequest 精确匹配', () => {
+    it('取消匹配 URL 段的挂起请求', async () => {
+      await handlers.request(makeConfig({ method: 'GET', url: '/dupx' }))
+      expect(getPendingRequestCount()).toBe(1)
+      cancelRequest('/dupx')
+      expect(getPendingRequestCount()).toBe(0)
+      expect(capturedCancels[0]).toHaveBeenCalled()
     })
   })
 })

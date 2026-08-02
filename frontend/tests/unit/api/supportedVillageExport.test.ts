@@ -75,6 +75,11 @@ import {
   triggerDownload,
   exportReportWord,
   exportReportPdf,
+  exportUsers,
+  exportSchools,
+  exportProjects,
+  exportFunds,
+  exportComprehensive,
 } from '@/api/export'
 
 describe('api/supportedVillage (named)', () => {
@@ -231,6 +236,75 @@ describe('api/export', () => {
     await exportReportPdf('fund_detail', 2025)
     expect(mockGet).toHaveBeenCalledWith('/export/report-pdf', {
       params: { report_type: 'fund_detail', year: 2025 },
+      responseType: 'blob',
+    })
+  })
+
+  it('exportReportWord 无 year 时不带 year 参数', async () => {
+    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    await exportReportWord('summary')
+    expect(mockGet).toHaveBeenCalledWith('/export/report-word', {
+      params: { report_type: 'summary' },
+      responseType: 'blob',
+    })
+  })
+
+  it('exportReportPdf 无 year 时不带 year 参数', async () => {
+    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    await exportReportPdf('summary')
+    expect(mockGet).toHaveBeenCalledWith('/export/report-pdf', {
+      params: { report_type: 'summary' },
+      responseType: 'blob',
+    })
+  })
+
+  it('exportUsers GET /export/users blob', async () => {
+    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    await exportUsers({ type: 'all' })
+    expect(mockGet).toHaveBeenCalledWith('/export/users', {
+      params: { type: 'all' },
+      responseType: 'blob',
+    })
+  })
+
+  it('exportUsers 无参时 params=undefined', async () => {
+    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    await exportUsers()
+    expect(mockGet).toHaveBeenCalledWith('/export/users', { params: undefined, responseType: 'blob' })
+  })
+
+  it('exportSchools GET /export/schools blob', async () => {
+    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    await exportSchools({ format: 'xlsx' })
+    expect(mockGet).toHaveBeenCalledWith('/export/schools', {
+      params: { format: 'xlsx' },
+      responseType: 'blob',
+    })
+  })
+
+  it('exportProjects GET /export/projects blob', async () => {
+    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    await exportProjects({ department: '农办' })
+    expect(mockGet).toHaveBeenCalledWith('/export/projects', {
+      params: { department: '农办' },
+      responseType: 'blob',
+    })
+  })
+
+  it('exportFunds GET /export/funds blob', async () => {
+    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    await exportFunds({ support_unit: 'X' })
+    expect(mockGet).toHaveBeenCalledWith('/export/funds', {
+      params: { support_unit: 'X' },
+      responseType: 'blob',
+    })
+  })
+
+  it('exportComprehensive GET /export/comprehensive blob', async () => {
+    mockGet.mockResolvedValueOnce({ data: new Blob(['x']) })
+    await exportComprehensive({ region_scope: 'county' })
+    expect(mockGet).toHaveBeenCalledWith('/export/comprehensive', {
+      params: { region_scope: 'county' },
       responseType: 'blob',
     })
   })

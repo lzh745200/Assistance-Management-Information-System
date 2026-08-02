@@ -28,6 +28,8 @@ import {
   deleteDataPackage,
   getPackageHistory,
   getDownloadUrl,
+  oneClickReport,
+  previewExport,
 } from '@/api/dataPackage'
 
 describe('api/dataPackage', () => {
@@ -134,5 +136,17 @@ describe('api/dataPackage', () => {
   it('getDownloadUrl 返回 URL 字符串', () => {
     const url = getDownloadUrl(5)
     expect(url).toMatch(/\/api\/v1\/data-packages\/5\/download$/)
+  })
+
+  it('oneClickReport POST /data-packages/one-click-report', async () => {
+    mockPost.mockResolvedValueOnce({ data: { report_url: 'x' } })
+    await oneClickReport({ year: 2025 })
+    expect(mockPost).toHaveBeenCalledWith('/data-packages/one-click-report', { year: 2025 })
+  })
+
+  it('previewExport POST /data-packages/preview', async () => {
+    mockPost.mockResolvedValueOnce({ data: { preview: [] } })
+    await previewExport({ data_types: ['village'] })
+    expect(mockPost).toHaveBeenCalledWith('/data-packages/preview', { data_types: ['village'] })
   })
 })

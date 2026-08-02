@@ -137,6 +137,9 @@ describe('api/message', () => {
   it('formatMessageType task -> 任务提醒 / primary', () => {
     expect(formatMessageType('task')).toEqual({ text: '任务提醒', type: 'primary' })
   })
+  it('formatMessageType 未知类型回退', () => {
+    expect(formatMessageType('unknown' as any)).toEqual({ text: 'unknown', type: 'info' })
+  })
 
   it('formatRelativeTime 刚刚 (< 1 min)', () => {
     const d = new Date(Date.now() - 30_000).toISOString()

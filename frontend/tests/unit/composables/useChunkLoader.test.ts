@@ -53,4 +53,20 @@ describe('useChunkLoader/retryImport', () => {
     expect(calls).toBe(4);
     vi.useRealTimers();
   });
+
+  it('non-Error failure is logged as-is', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fn = () => Promise.reject('string-error');
+    await expect(retryImport(fn, 1, 10)).rejects.toBe('string-error');
+    expect(warnSpy).toHaveBeenCalled();
+    const callArgs = warnSpy.mock.calls[0];
+    expect(callArgs[1]).toBe('string-error');
+    warnSpy.mockRestore();
+  });
+
+  it('negative maxRetries → throws unreachable error', async () => {
+    const fn = vi.fn();
+    await expect(retryImport(fn, -1, 10)).rejects.toThrow('[ChunkLoader] unreachable');
+    expect(fn).not.toHaveBeenCalled();
+  });
 });
