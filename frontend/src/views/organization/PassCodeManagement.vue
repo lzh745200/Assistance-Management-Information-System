@@ -1,5 +1,68 @@
 <template>
   <div class="pass-code-management">
+    <el-card class="generate-card" shadow="hover" style="margin-bottom: 20px">
+      <template #header>
+        <div class="card-header">
+          <span>为指定机器生成通行码（跨机器注册）</span>
+        </div>
+      </template>
+
+      <el-alert type="info" :closable="false" show-icon style="margin-bottom: 16px">
+        用户在新机器上通过「获取机器码」页面复制机器码，管理员在此输入该机器码
+        即可生成通行码。用户凭通行码即可在新机器注册登录，无需共享数据库。
+      </el-alert>
+
+      <el-form ref="machineFormRef" :model="machineForm" :rules="machineRules" label-width="100px">
+        <el-form-item label="机器码" prop="machine_code">
+          <el-input
+            v-model="machineForm.machine_code"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入用户提供的机器码（64位）"
+          />
+          <div class="form-tip">用户在新机器「获取机器码」页面可查看并复制</div>
+        </el-form-item>
+
+        <el-form-item label="备注说明">
+          <el-input
+            v-model="machineForm.description"
+            type="textarea"
+            :rows="2"
+            placeholder="请输入备注说明（可选）"
+            maxlength="500"
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button
+            type="primary"
+            :loading="machineGenerating"
+            @click="handleGenerateMachinePassCode"
+          >
+            生成通行码
+          </el-button>
+          <el-button @click="handleResetMachineForm">重置</el-button>
+        </el-form-item>
+
+        <el-form-item v-if="machineGeneratedPassCode" label="生成结果">
+          <div class="generated-result">
+            <div class="pass-code-display">
+              <span class="pass-code-text">{{ machineGeneratedPassCode }}</span>
+              <el-button
+                type="primary"
+                size="small"
+                :icon="CopyDocument"
+                @click="copyToClipboard(machineGeneratedPassCode, '通行码')"
+              >
+                复制
+              </el-button>
+            </div>
+            <div class="result-tip">请将通行码提供给用户，用于在新机器注册</div>
+          </div>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
     <el-card class="generate-card" shadow="hover">
       <template #header>
         <div class="card-header">
@@ -173,6 +236,20 @@
             {{ formatDateTime(row.created_at) }}
           </template>
         </el-table-column>
+        <el-table-column label="操作" width="120" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              v-if="row.status === 'pending'"
+              type="danger"
+              size="small"
+              text
+              @click="handleDelete(row as OrganizationPassCodeResponse)"
+            >
+              删除
+            </el-button>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
       </el-table>
 
       <el-pagination
@@ -190,7 +267,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { logger } from '@/utils/logger'
 import { Search, Refresh, Download, CopyDocument } from '@element-plus/icons-vue'
 import {
@@ -198,15 +275,86 @@ import {
   createOrganizationPassCode,
   getOrganizationPassCodeList,
   exportOrganizationPassCodes,
+  deleteOrganizationPassCode,
   type CreateOrganizationPassCodeRequest,
   type OrganizationPassCodeResponse,
 } from '@/api/organizationPassCode'
+import { createMachineCode } from '@/api/machineCode'
 import { getOrganizationTree } from '@/api/organization'
 import { copyToClipboard } from '@/utils/clipboard'
 import type { OrganizationTreeNode } from '@/types/organization'
 
 // 表单引用
 const generateFormRef = ref<FormInstance>()
+const machineFormRef = ref<FormInstance>()
+
+// 机器码通行码表单（跨机器注册场景）
+const machineForm = reactive({
+  machine_code: '',
+  description: '',
+})
+const machineGenerating = ref(false)
+const machineGeneratedPassCode = ref('')
+
+const machineRules: FormRules = {
+  machine_code: [
+    { required: true, message: '请输入机器码', trigger: 'blur' },
+    { min: 32, message: '机器码长度不能少于32个字符', trigger: 'blur' },
+  ],
+}
+
+async function handleGenerateMachinePassCode() {
+  if (!machineFormRef.value) return
+  await machineFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    try {
+      machineGenerating.value = true
+      const response = await createMachineCode({
+        machine_code: machineForm.machine_code.trim(),
+        description: machineForm.description.trim() || undefined,
+      })
+      const passCode = (response as any)?.pass_code ?? (response as any)?.data?.pass_code
+      if (passCode) {
+        machineGeneratedPassCode.value = passCode
+        ElMessage.success('通行码生成成功')
+      } else {
+        ElMessage.warning('生成成功但未获取到通行码，请稍后刷新机器码管理页查看')
+      }
+    } catch (error: any) {
+      logger.error('生成机器通行码失败', error)
+      ElMessage.error(error?.response?.data?.detail || error?.message || '生成通行码失败')
+    } finally {
+      machineGenerating.value = false
+    }
+  })
+}
+
+function handleResetMachineForm() {
+  machineFormRef.value?.resetFields()
+  machineGeneratedPassCode.value = ''
+}
+
+async function handleDelete(row: OrganizationPassCodeResponse) {
+  try {
+    await ElMessageBox.confirm(
+      `确定删除该通行证码记录吗？删除后该通行证码将无法再用于注册。`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    await deleteOrganizationPassCode(row.id)
+    ElMessage.success('通行证码记录已删除')
+    await handleQuery()
+  } catch (error: any) {
+    if (error !== 'cancel' && error !== 'close') {
+      logger.error('删除通行证码记录失败', error)
+      ElMessage.error(error?.response?.data?.detail || '删除失败')
+    }
+  }
+}
 
 // 组织列表
 const organizationList = ref<OrganizationTreeNode[]>([])

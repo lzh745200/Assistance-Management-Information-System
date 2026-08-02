@@ -7,7 +7,7 @@
 import logging
 import os
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 
@@ -90,9 +90,11 @@ async def import_permission_package(
     上传权限配置包 ZIP 文件，进行验证并返回预览数据。
 
     此步骤不实际修改数据库，让管理员确认后再执行导入。
+
+    **离线导入场景**: 全新系统在登录前即可导入权限包（管理员在
+    其他机器导出,新机器导入后获得页面访问权限）。此步骤仅做
+    验证预览,不写入数据,因此允许未登录调用。
     """
-    if not is_admin(current_user):
-        raise HTTPException(status_code=403, detail="需要管理员权限")
     if not file.filename or not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="请上传 .zip 格式的权限配置包文件")
 
@@ -127,15 +129,23 @@ def confirm_import_permission_package(
     body: PermissionPackageConfirmRequest = PermissionPackageConfirmRequest(),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    request: Request = None,
 ):
     """
     确认导入权限配置包，将所有权限配置写入数据库。
 
     导入策略: 完全替换（mirror mode）。
     警告: 此操作会删除目标电脑上的现有 RBAC 权限配置（系统角色除外）。
+
+    **离线导入场景**: 与 /import 配套,全新系统登录前即可应用权限包
+    （管理员在其他机器导出,新机器导入后获得页面访问权限）。
+    未登录调用时仅允许本机来源(127.0.0.1/::1),防止远程未授权导入。
     """
     if not is_admin(current_user):
-        raise HTTPException(status_code=403, detail="需要管理员权限")
+        # 登录前离线导入: 仅允许本机来源（桌面应用场景）
+        client_host = request.client.host if request and request.client else ""
+        if client_host not in ("127.0.0.1", "::1", "localhost"):
+            raise HTTPException(status_code=403, detail="仅允许本机导入权限包")
     from app.utils.paths import get_uploads_path
 
     upload_dir = str(get_uploads_path("permission_packages"))

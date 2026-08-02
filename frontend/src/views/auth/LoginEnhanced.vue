@@ -118,7 +118,49 @@
           <a href="/get-machine-code" class="machine-code-link" @click.prevent="goToMachineCode">
             获取机器码
           </a>
+          <a href="#" class="forgot-link" @click.prevent="openPermissionImport"> 导入权限包 </a>
         </div>
+
+        <!-- 权限包导入对话框 -->
+        <el-dialog
+          v-model="permissionImportVisible"
+          title="导入权限配置包"
+          width="520px"
+          :close-on-click-modal="false"
+        >
+          <el-alert type="info" :closable="false" show-icon style="margin-bottom: 16px">
+            选择管理员导出的权限配置包(.zip),导入后即可获得管理员配置的
+            页面访问权限。导入仅需本机操作,无需登录。
+          </el-alert>
+          <div class="permission-import-drop">
+            <el-upload
+              drag
+              :auto-upload="false"
+              :limit="1"
+              accept=".zip"
+              :on-change="onPermissionFileChange"
+              :on-remove="onPermissionFileRemove"
+              :file-list="permissionFileList"
+            >
+              <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+              <div class="el-upload__text">将权限包拖到此处，或<em>点击选择</em></div>
+              <template #tip>
+                <div class="el-upload__tip">仅支持 .zip 格式的权限配置包文件</div>
+              </template>
+            </el-upload>
+          </div>
+          <template #footer>
+            <el-button @click="permissionImportVisible = false">取消</el-button>
+            <el-button
+              type="primary"
+              :loading="permissionImporting"
+              :disabled="!permissionFile"
+              @click="handlePermissionImport"
+            >
+              导入并应用
+            </el-button>
+          </template>
+        </el-dialog>
 
         <div class="card-footer">
           <div v-if="errorMsg" class="error-banner">
@@ -136,8 +178,12 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useAuthStore } from '@/stores/auth'
+import { ElMessage } from 'element-plus'
 import { SYSTEM_VERSION, COPYRIGHT_OWNER } from '@/config/constants'
-import { User, Lock, Key, View, Hide } from '@element-plus/icons-vue'
+import { User, Lock, Key, View, Hide, UploadFilled } from '@element-plus/icons-vue'
+import { logger } from '@/utils/logger'
+import type { UploadFile, UploadUserFile } from 'element-plus'
+import { apiRequest } from '@/api/request'
 
 const router = useRouter()
 const { pushSafe } = useRouterSafe()
@@ -152,6 +198,74 @@ const showPassword = ref(false)
 const showMachineCodeInput = ref(false)
 const systemVersion = SYSTEM_VERSION
 const copyrightOwner = COPYRIGHT_OWNER
+
+// 权限包导入状态
+const permissionImportVisible = ref(false)
+const permissionImporting = ref(false)
+const permissionFileList = ref<UploadUserFile[]>([])
+const permissionFile = ref<File | null>(null)
+
+function openPermissionImport() {
+  permissionImportVisible.value = true
+}
+
+function onPermissionFileChange(file: UploadFile) {
+  const raw = file.raw
+  if (!raw) return
+  if (!raw.name.toLowerCase().endsWith('.zip')) {
+    ElMessage.error('仅支持 .zip 格式的权限配置包')
+    permissionFileList.value = []
+    permissionFile.value = null
+    return
+  }
+  permissionFile.value = raw
+}
+
+function onPermissionFileRemove() {
+  permissionFile.value = null
+}
+
+async function handlePermissionImport() {
+  if (!permissionFile.value) return
+  permissionImporting.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', permissionFile.value)
+    const res = await apiRequest({
+      method: 'POST',
+      url: '/permission-packages/import',
+      data: formData,
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    const body: any = res || {}
+    const success = body.success === true || body.code === 200
+    const message = body.message || body.detail || '权限包导入完成'
+    if (success && body.file_name) {
+      // 预览验证通过 → 确认导入
+      const confirmRes = await apiRequest({
+        method: 'POST',
+        url: `/permission-packages/confirm/${encodeURIComponent(body.file_name)}`,
+        data: { overwrite_existing: true },
+      })
+      const confirmBody: any = confirmRes || {}
+      if (confirmBody.success === true || confirmBody.code === 200) {
+        ElMessage.success('权限包已导入,请重新登录查看权限')
+        permissionImportVisible.value = false
+        permissionFileList.value = []
+        permissionFile.value = null
+      } else {
+        ElMessage.error(confirmBody.message || confirmBody.detail || '权限包应用失败')
+      }
+    } else {
+      ElMessage.error(message)
+    }
+  } catch (err: any) {
+    logger.error('[Login] 导入权限包失败', err)
+    ElMessage.error(err?.response?.data?.detail || err?.message || '导入权限包失败,请检查文件')
+  } finally {
+    permissionImporting.value = false
+  }
+}
 
 // 2FA 状态
 const twoFactorRequired = ref(false)

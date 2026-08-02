@@ -137,7 +137,8 @@ class TestCreateProject:
             m_als.return_value.log = AsyncMock()
             m_aes.record_changes.side_effect = RuntimeError("diff boom")
             result = await pj.create_project(data, MagicMock(), _user(), db)
-        assert result["name"] == "新项目"
+        # create_project 返回 success_response 信封: data.name
+        assert result["data"]["name"] == "新项目"
 
 
 # ==================== 更新辅助函数 ====================
@@ -202,7 +203,9 @@ class TestDeleteProject:
             m_als.return_value.log = AsyncMock()
             m_aes.record_changes.side_effect = RuntimeError("diff boom")
             result = await pj.delete_project(1, MagicMock(), _user(), db)
-        assert result == {"message": "删除成功"}
+        # delete_project 返回 success_response 信封: 断言 message 与 code
+        assert result["message"] == "删除成功"
+        assert result["code"] == 200
         assert project.status == "cancelled"
 
 

@@ -1181,12 +1181,13 @@ describe('模板 v-model 处理器（函数覆盖）', () => {
     expect(vm.pagination.page).toBe(2)
     expect(vm.pagination.size).toBe(20)
 
-    // 两个对话框 + 权限抽屉的 v-model
+    // 三个对话框 + 权限抽屉的 v-model
     const dialogs = wrapper.findAllComponents({ name: 'ElDialog' })
-    expect(dialogs.length).toBe(2)
+    expect(dialogs.length).toBe(3)
     for (const d of dialogs) d.vm.$emit('update:modelValue', false)
     expect(vm.dialogVisible).toBe(false)
     expect(vm.resetPwdDialogVisible).toBe(false)
+    expect(vm.menuPermDialogVisible).toBe(false)
     const drawer = wrapper.findComponent({ name: 'PermissionAssignmentDrawer' })
     drawer.vm.$emit('update:modelValue', true)
     expect(vm.permDrawerVisible).toBe(true)
@@ -1231,11 +1232,13 @@ describe('行操作与内联点击处理器（函数覆盖）', () => {
 
     // 两个“取消”按钮分别关闭两个对话框（两条内联赋值箭头）
     const cancels = wrapper.findAll('el-button-stub').filter((b) => b.text().trim() === '取消')
-    expect(cancels.length).toBe(2)
+    expect(cancels.length).toBe(3)
     vm.dialogVisible = true
     vm.resetPwdDialogVisible = true
+    vm.menuPermDialogVisible = true
     await cancels[0].trigger('click')
     await cancels[1].trigger('click')
+    await cancels[2].trigger('click')
     expect(vm.dialogVisible).toBe(false)
     expect(vm.resetPwdDialogVisible).toBe(false)
   })

@@ -51,6 +51,7 @@ import { logger } from '@/utils/logger'
 const activities = ref<any[]>([])
 const loading = ref(true)
 const error = ref(false)
+const retried = ref(false)
 const editingId = ref<string | null>(null)
 const editForm = ref({ action: '', target: '' })
 
@@ -104,7 +105,13 @@ async function loadActivities() {
     logger.error('近期动态加载失败', e)
     error.value = true
     activities.value = []
-    ElMessage.error('数据加载失败，请稍后重试')
+    // 后端可能仍在冷启动: 2 秒后自动重试一次,避免首次打开即报错
+    if (!retried.value) {
+      retried.value = true
+      setTimeout(() => {
+        if (error.value) loadActivities()
+      }, 2000)
+    }
   } finally {
     loading.value = false
   }

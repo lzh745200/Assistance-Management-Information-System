@@ -1,4 +1,4 @@
-import { get, post } from '@/api/request'
+import { get, post, del } from '@/api/request'
 import request from '@/api/request'
 import { downloadBlobAsFile } from '@/api/helpers/blobDownload'
 
@@ -55,3 +55,7 @@ export const exportOrganizationPassCodes = async (params?: {
     { fallbackFileName: '组织通行证码.xlsx' }
   )
 }
+
+/** 删除组织通行证码记录（管理员） */
+export const deleteOrganizationPassCode = (passCodeId: number) =>
+  del<{ success: boolean; message: string }>(`/machine-code/organization/${passCodeId}`)

@@ -126,11 +126,13 @@ class TestGeneratePassCode:
         assert len(code) == 39
         assert code.count("-") == 7
 
-    def test_not_deterministic(self, mcs):
-        """generate_pass_code uses random salt, so each call differs."""
+    def test_deterministic(self, mcs):
+        """generate_pass_code 为确定性 HMAC(跨机器自验证前提):同输入一致,不同输入不同。"""
         c1 = MachineCodeService.generate_pass_code("same-input")
         c2 = MachineCodeService.generate_pass_code("same-input")
-        assert c1 != c2  # Different due to random salt
+        c3 = MachineCodeService.generate_pass_code("other-input")
+        assert c1 == c2  # 确定性
+        assert c1 != c3  # 不同机器码不同通行码
 
     def test_hyphen_format(self, mcs):
         code = MachineCodeService.generate_pass_code("test")

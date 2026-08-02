@@ -116,9 +116,9 @@ class TestImportSchoolsExcel:
         ):
             result = await sch.import_schools_excel(
                 UploadFile(file=BytesIO(content), filename="t.xlsx"), _user(), MagicMock())
-        assert result["imported"] == 1
-        assert result["failed"] == 1
-        assert "boom" in result["errors"][0]
+        assert result["data"]["imported"] == 1
+        assert result["data"]["failed"] == 1
+        assert "boom" in result["data"]["errors"][0]
 
     async def test_commit_failure_500(self):
         content = _xlsx_bytes([["h"], (0, "学校甲")])
@@ -152,10 +152,10 @@ class TestImportScholarshipStudents:
         ):
             result = await sch.import_scholarship_students(
                 UploadFile(file=BytesIO(content), filename="t.xlsx"), MagicMock(), _user())
-        assert result["imported"] == 1
-        assert result["failed"] == 2
-        assert any("数据格式错误" in e for e in result["errors"])
-        assert any("boom" in e for e in result["errors"])
+        assert result["data"]["imported"] == 1
+        assert result["data"]["failed"] == 2
+        assert any("数据格式错误" in e for e in result["data"]["errors"])
+        assert any("boom" in e for e in result["data"]["errors"])
 
 
 # ==================== import_school_scholarship_students ====================
@@ -172,8 +172,8 @@ class TestImportSchoolScholarshipStudents:
         ):
             result = await sch.import_school_scholarship_students(
                 1, UploadFile(file=BytesIO(content), filename="t.xlsx"), _user(), MagicMock())
-        assert result["imported"] == 0
-        assert any("boom" in e for e in result["errors"])
+        assert result["data"]["imported"] == 0
+        assert any("boom" in e for e in result["data"]["errors"])
 
 
 # ==================== list_schools 缓存分支 ====================

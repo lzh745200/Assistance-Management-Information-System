@@ -29,6 +29,15 @@ from app.services.work_log_service import write_work_log
 router = APIRouter(prefix="/organizations", tags=["组织管理"])
 
 
+def _invalidate_dashboard_cache_safe() -> None:
+    """组织写操作后失效工作台统计缓存，保证删除/新增/停用后总数立即更新。"""
+    try:
+        from app.api.v1.data.data.dashboard import invalidate_dashboard_cache
+        invalidate_dashboard_cache()
+    except Exception:  # pragma: no cover
+        logger.debug("仪表盘缓存失效失败")
+
+
 # ==================== Pydantic模型 ====================
 
 
@@ -553,6 +562,7 @@ async def create_organization(
     except Exception:  # pragma: no cover
         logger.debug("记录工作日志失败", exc_info=True)
     await cache_manager.delete("orgs:list")
+    _invalidate_dashboard_cache_safe()
     return org
 
 
@@ -604,6 +614,7 @@ async def update_organization(
     except Exception:  # pragma: no cover
         logger.debug("记录工作日志失败", exc_info=True)
     await cache_manager.delete("orgs:list")
+    _invalidate_dashboard_cache_safe()
     return org
 
 
@@ -661,6 +672,7 @@ async def delete_organization(
         logger.debug("记录工作日志失败", exc_info=True)
     logger.info(f"删除成功: org_id={org_id}")
     await cache_manager.delete("orgs:list")
+    _invalidate_dashboard_cache_safe()
 
     return {
         "message": "组织已删除",
@@ -747,6 +759,7 @@ async def move_organization(
     org.parent_id = new_parent_id
     safe_commit(db)
     await cache_manager.delete("orgs:list")
+    _invalidate_dashboard_cache_safe()
     return {"message": "移动成功"}
 
 
@@ -783,6 +796,7 @@ async def batch_update_sort_orders(
             raise HTTPException(status_code=500, detail="批量更新排序失败")
 
         await cache_manager.delete("orgs:list")
+        _invalidate_dashboard_cache_safe()
         return {
             "code": 200,
             "data": {"updated_count": updated_count},
@@ -947,6 +961,7 @@ async def activate_organization(
     org.is_active = True
     safe_commit(db)
     await cache_manager.delete("orgs:list")
+    _invalidate_dashboard_cache_safe()
     return {"message": "组织已激活", "id": org_id, "is_active": True}
 
 
@@ -970,4 +985,5 @@ async def deactivate_organization(
     org.is_active = False
     safe_commit(db)
     await cache_manager.delete("orgs:list")
+    _invalidate_dashboard_cache_safe()
     return {"message": "组织已停用", "id": org_id, "is_active": False}

@@ -48,7 +48,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import {
   OfficeBuilding,
   Folder,
@@ -103,6 +102,7 @@ const stats = ref<DashboardStats>({
 })
 const loading = ref(true)
 const error = ref(false)
+const retried = ref(false)
 
 function fmt(v: number | undefined): string {
   return v != null ? v.toLocaleString() : '--'
@@ -203,7 +203,13 @@ async function loadStats() {
   } catch (e) {
     logger.error('KPI 统计数据加载失败', e)
     error.value = true
-    ElMessage.error('数据加载失败，请稍后重试')
+    // 后端可能仍在冷启动: 2 秒后自动重试一次,避免首次打开即报错
+    if (!retried.value) {
+      retried.value = true
+      setTimeout(() => {
+        if (error.value) loadStats()
+      }, 2000)
+    }
   } finally {
     loading.value = false
   }

@@ -25,7 +25,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
 import echarts from '@/utils/echarts'
 import { get, apiRequest } from '@/api/request'
 import { logger } from '@/utils/logger'
@@ -37,6 +36,7 @@ let pieChart: echarts.ECharts | null = null
 
 const loading = ref(true)
 const error = ref(false)
+const retried = ref(false)
 const projects = ref<any[]>([])
 const funds = ref({ allocated: 0, pending: 0, planned: 0 })
 
@@ -61,12 +61,18 @@ async function loadData() {
       planned: fundRes?.funds_planned || 0,
     }
   } catch (e) {
-    // 接口失败时置零（空数据），不展示编造的假数字；同时记录日志并给出重试入口
+    // 接口失败时置零（空数据），不展示编造的假数字；页面内给出重试入口
     logger.error('图表数据加载失败', e)
     error.value = true
     projects.value = []
     funds.value = { allocated: 0, pending: 0, planned: 0 }
-    ElMessage.error('数据加载失败，请稍后重试')
+    // 后端可能仍在冷启动: 2 秒后自动重试一次,避免首次打开即报错
+    if (!retried.value) {
+      retried.value = true
+      setTimeout(() => {
+        if (error.value) loadData()
+      }, 2000)
+    }
   } finally {
     loading.value = false
   }
