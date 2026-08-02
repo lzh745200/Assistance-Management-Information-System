@@ -119,7 +119,9 @@ jobs:
       # 前端静态分析：检查 Pattern A（import request from './request'）残留
       - name: Frontend API pattern audit
         run: |
-          cd frontend && npx vue-tsc --noEmit 2>&1 && echo 'TypeScript check passed'
+          cd frontend
+          npm install --legacy-peer-deps
+          npx vue-tsc --noEmit 2>&1 && echo 'TypeScript check passed'
       # 检查前端 API 调用是否使用具名导入
       - name: Frontend import pattern audit
         run: |
