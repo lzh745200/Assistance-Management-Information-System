@@ -121,6 +121,7 @@ import {
 } from '@/api/policy'
 import { downloadBlob } from '@/api/request'
 import { useAuthStore } from '@/stores/auth'
+import { ADMIN_ROLES, normalizeRole } from '@/utils/roleAccess'
 
 const route = useRoute()
 const router = useRouter()
@@ -131,8 +132,8 @@ const canEdit = computed(() => {
   const user = authStore.user
   if (!user) return false
   if (user.is_superuser) return true
-  const role = (user.role || '').toLowerCase()
-  return role === 'admin' || role === 'super_admin' || role === 'editor'
+  const role = normalizeRole(user.role)
+  return ADMIN_ROLES.includes(role)
 })
 const policy = ref<Policy | null>(null)
 const loading = ref(false)

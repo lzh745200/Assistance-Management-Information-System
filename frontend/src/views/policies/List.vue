@@ -179,6 +179,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Refresh, Upload, Download, Delete } from '@element-plus/icons-vue'
 import { usePolicyStore } from '@/stores/policy'
 import { useAuthStore } from '@/stores/auth'
+import { ADMIN_ROLES, normalizeRole } from '@/utils/roleAccess'
 import {
   getCategoryLabel,
   getLevelLabel as _getLevelLabel,

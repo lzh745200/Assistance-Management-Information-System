@@ -447,7 +447,7 @@ async def revoke_user_session(
     if not revoke_token(session_id, reason="admin_force_logout"):
         raise HTTPException(status_code=400, detail="无效的会话 Token，无法强制登出")
     logger.info("管理员 %s 强制登出用户 %s (session: %s)", current_user.username, user.username, session_id)
-    return {"code": 200, "message": f"已强制登出用户 {user.username}"}
+    return success_response(message=f"已强制登出用户 {user.username}")
 
 
 @router.post("/users/{user_id}/two-factor/reset")
@@ -472,6 +472,6 @@ async def reset_user_two_factor(
         tfa.verified_at = None
         db.commit()
         logger.info("管理员 %s 重置用户 %s 的双因素认证", current_user.username, user.username)
-        return {"code": 200, "message": f"已重置用户 {user.username} 的双因素认证"}
+        return success_response(message=f"已重置用户 {user.username} 的双因素认证")
 
-    return {"code": 200, "message": f"用户 {user.username} 未启用双因素认证，无需重置"}
+    return success_response(message=f"用户 {user.username} 未启用双因素认证，无需重置")

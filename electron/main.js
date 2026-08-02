@@ -100,12 +100,20 @@ function getOrCreateSecrets() {
       } else {
         data = JSON.parse(raw.toString('utf-8'));
       }
-      if (data.SECRET_KEY && data.CSRF_SECRET_KEY) return data;
+      if (data.SECRET_KEY && data.CSRF_SECRET_KEY) {
+        // 确保旧版本密钥文件也有 ENCRYPTION_KEY
+        if (!data.ENCRYPTION_KEY) {
+          data.ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+          _writeSecrets(data, canEncrypt);
+        }
+        return data;
+      }
     }
   } catch (e) { console.warn('[Secrets] 读取失败:', e.message); }
   const secrets = {
     SECRET_KEY: crypto.randomBytes(32).toString('hex'),
     CSRF_SECRET_KEY: crypto.randomBytes(32).toString('hex'),
+    ENCRYPTION_KEY: crypto.randomBytes(32).toString('base64'),
   };
   _writeSecrets(secrets, canEncrypt);
   return secrets;
