@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from ...core.database import get_db
 from ...core.security import get_current_user
 from ...models.validation_rule import RuleType, ValidationRule
+from app.core.response import success_response
 from app.core.transaction import safe_commit
 
 router = APIRouter(prefix="/validation", tags=["数据校验"])
@@ -147,7 +148,7 @@ async def delete_rule(
         raise HTTPException(status_code=404, detail="规则不存在")
     db.delete(rule)
     safe_commit(db)
-    return {"message": "规则已删除"}
+    return success_response(message="规则已删除")
 
 
 # 字段中文标签映射（覆盖常用模块字段）

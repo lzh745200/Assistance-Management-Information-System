@@ -122,7 +122,7 @@ class TestDeleteTodo:
         mock_db.first.return_value = make_mock_todo()
         resp = client.delete("/todos/1")
         assert resp.status_code == 200
-        assert resp.json()["id"] == 1
+        assert resp.json()["data"]["id"] == 1
 
     def test_not_found(self, client, mock_db):
         mock_db.first.return_value = None

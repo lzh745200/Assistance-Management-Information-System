@@ -295,7 +295,7 @@ class TestImportVillages:
         })
         assert resp.status_code == 200
         data = resp.json()
-        assert data["imported"] == 1
+        assert data["data"]["imported"] == 1
 
     def test_duplicate_village(self, client, mock_db):
         import openpyxl
@@ -314,7 +314,7 @@ class TestImportVillages:
             "file": ("test.xlsx", buf, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         })
         assert resp.status_code == 200
-        assert "已存在" in resp.json()["errors"][0]
+        assert "已存在" in resp.json()["data"]["errors"][0]
 
     def test_empty_row_skipped(self, client, mock_db):
         import openpyxl
@@ -334,7 +334,7 @@ class TestImportVillages:
             "file": ("test.xlsx", buf, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         })
         assert resp.status_code == 200
-        assert resp.json()["imported"] == 1
+        assert resp.json()["data"]["imported"] == 1
 
     def test_import_empty_village_name(self, client, mock_db):
         import openpyxl
@@ -351,7 +351,7 @@ class TestImportVillages:
             "file": ("test.xlsx", buf, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         })
         assert resp.status_code == 200
-        assert resp.json()["imported"] == 0
+        assert resp.json()["data"]["imported"] == 0
 
     def test_import_exception_during_processing(self, client, mock_db):
         import openpyxl
@@ -370,7 +370,7 @@ class TestImportVillages:
             "file": ("test.xlsx", buf, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         })
         assert resp.status_code == 200
-        assert len(resp.json()["errors"]) >= 1
+        assert len(resp.json()["data"]["errors"]) >= 1
 
 
 # ---------------------------------------------------------------------------

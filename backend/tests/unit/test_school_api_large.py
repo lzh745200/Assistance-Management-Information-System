@@ -203,8 +203,8 @@ class TestImportExcel:
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["success"] is True
-        assert data["imported"] >= 1
+        assert data["code"] == 200
+        assert data["data"]["imported"] >= 1
 
     def test_import_empty_skip(self, auth_setup, school):
         from openpyxl import Workbook
@@ -221,7 +221,7 @@ class TestImportExcel:
             files={"file": ("empty.xlsx", io.BytesIO(xlsx_bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
         assert resp.status_code == 200
-        assert resp.json()["imported"] == 0
+        assert resp.json()["data"]["imported"] == 0
 
     def test_import_parse_error(self, auth_setup):
         from openpyxl import Workbook
@@ -241,8 +241,8 @@ class TestImportExcel:
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["failed"] >= 1
-        assert len(data["errors"]) >= 1
+        assert data["data"]["failed"] >= 1
+        assert len(data["data"]["errors"]) >= 1
 
     @patch("app.api.v1.school.os.unlink")
     def test_import_unlink_filenotfound(self, mock_unlink, auth_setup):
@@ -292,7 +292,7 @@ class TestStatistics:
         resp = auth_setup.get(P("/schools/statistics"))
         assert resp.status_code == 200
         data = resp.json()
-        assert data["total_schools"] >= 1
+        assert data["data"]["total_schools"] >= 1
 
     def test_statistics_with_projects_and_scholarships(self, auth_setup, school, db_session):
         p = SchoolProject(school_id=school.id, name="Proj1", budget=100.0)
@@ -303,8 +303,8 @@ class TestStatistics:
         resp = auth_setup.get(P("/schools/statistics"))
         assert resp.status_code == 200
         data = resp.json()
-        assert data["project_count"] >= 1
-        assert data["scholarship_count"] >= 1
+        assert data["data"]["project_count"] >= 1
+        assert data["data"]["scholarship_count"] >= 1
 
     def test_statistics_no_schools(self, auth_setup, db_session):
         db_session.query(School).delete()
@@ -917,7 +917,7 @@ class TestImportScholarshipStudents:
             files={"file": ("stu.xlsx", io.BytesIO(xlsx_bytes), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
         assert resp.status_code == 200
-        assert resp.json()["imported"] >= 1
+        assert resp.json()["data"]["imported"] >= 1
 
     def test_import_bad_year_triggers_exception(self, auth_setup, school):
         from openpyxl import Workbook
@@ -935,8 +935,8 @@ class TestImportScholarshipStudents:
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["imported"] == 0
-        assert len(data["errors"]) >= 1
+        assert data["data"]["imported"] == 0
+        assert len(data["data"]["errors"]) >= 1
 
     @patch("app.api.v1.school.os.unlink")
     def test_import_unlink_error(self, mock_unlink_inner, auth_setup, school):

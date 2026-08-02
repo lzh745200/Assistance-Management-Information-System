@@ -102,7 +102,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getPolicy,
@@ -124,7 +125,7 @@ import { useAuthStore } from '@/stores/auth'
 import { ADMIN_ROLES, normalizeRole } from '@/utils/roleAccess'
 
 const route = useRoute()
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 
 // 政策写操作（编辑/发布/归档）仅管理员可见，与 List.vue canEdit 规则一致
 const authStore = useAuthStore()
@@ -167,15 +168,15 @@ async function loadRelated() {
 }
 
 function goBack() {
-  router.push('/policies')
+  pushSafe('/policies')
 }
 
 function goEdit() {
-  router.push(`/policies/${policyId}/edit`)
+  pushSafe(`/policies/${policyId}/edit`)
 }
 
 function goDetail(id: number) {
-  router.push(`/policies/${id}`)
+  pushSafe(`/policies/${id}`)
 }
 
 async function handlePublish() {

@@ -284,7 +284,7 @@ class TestProjectsAPI:
                 "start_date": "2026-03-01", "end_date": "2026-10-31",
                 "type": "infrastructure",
             })
-        assert resp.status_code == 201 and resp.json()["name"] == "新建项目"
+        assert resp.status_code == 201 and resp.json()["data"]["name"] == "新建项目"
 
     def test_create_project_duplicate_code(self, client, mock_db, admin_user):
         _setup_client(client, mock_db, admin_user)

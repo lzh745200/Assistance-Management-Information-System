@@ -205,6 +205,7 @@ async function handleRegister() {
       license_expiry: null,
       remark: '',
     }
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: unknown) {
     ElMessage.error(e instanceof Error ? e.message : '注册失败')
@@ -220,6 +221,7 @@ async function handleToggleLicense(row: SubordinateInstance) {
     await ElMessageBox.confirm(`确认${action}该下级单位？`, '提示', { type: 'warning' })
     await post(`/subordinates/${row.id}`, { license_status: newStatus })
     ElMessage.success(`${action}成功`)
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch {
     // 用户取消
@@ -251,6 +253,7 @@ async function handleFileSelected(event: Event) {
     const res = await post('/subordinate-reports/import', formData)
     const data = res.data || res
     ElMessage.success(data.message || '上报包导入成功')
+    page.value = 1 // 重置到第1页，确保新建/编辑后的数据可见
     await loadData()
   } catch (e: unknown) {
     ElMessage.error(e instanceof Error ? e.message : '导入失败')

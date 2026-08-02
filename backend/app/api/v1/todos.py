@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.todo import Todo
+from app.core.response import success_response
 from app.core.transaction import safe_commit
 from app.services.work_log_service import write_work_log
 
@@ -290,7 +291,7 @@ async def delete_todo(
         except Exception:
             logger.debug("记录工作日志失败")
 
-        return {"message": "待办事项已删除", "id": todo_id}
+        return success_response(data={"id": todo_id}, message="待办事项已删除")
     except HTTPException:
         raise
     except Exception as e:

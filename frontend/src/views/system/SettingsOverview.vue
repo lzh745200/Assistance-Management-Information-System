@@ -126,7 +126,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import type { Component } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouterSafe } from '@/composables/useRouterSafe'
 import {
   Refresh,
   Clock,
@@ -224,7 +224,7 @@ interface AuditLogListResponse {
 }
 
 // ── 状态 ──
-const router = useRouter()
+const { pushSafe } = useRouterSafe()
 const loading = ref(false)
 const auditLoading = ref(false)
 const lastUpdated = ref('')
@@ -318,7 +318,7 @@ function actionTagType(action?: string): 'success' | 'warning' | 'danger' | 'inf
 }
 
 function goTo(path: string): void {
-  router.push(path)
+  pushSafe(path)
 }
 
 // ── 健康卡片 ──

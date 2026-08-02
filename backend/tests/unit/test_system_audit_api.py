@@ -185,7 +185,7 @@ class TestBatchDeleteAuditLogs:
         session.commit()
         resp = _delete_json(client, self.URL, {"ids": [1, 3]})
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 2
+        assert resp.json()["data"]["deleted_count"] == 2
 
     def test_delete_by_actions(self, db_client):
         client, session = db_client
@@ -195,7 +195,7 @@ class TestBatchDeleteAuditLogs:
         session.commit()
         resp = _delete_json(client, self.URL, {"actions": ["create"]})
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 2
+        assert resp.json()["data"]["deleted_count"] == 2
 
     def test_delete_by_single_action(self, db_client):
         client, session = db_client
@@ -205,13 +205,13 @@ class TestBatchDeleteAuditLogs:
         session.commit()
         resp = _delete_json(client, self.URL, {"action": "delete"})
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 1
+        assert resp.json()["data"]["deleted_count"] == 1
 
     def test_no_filters_returns_zero(self, db_client):
         client, _ = db_client
         resp = _delete_json(client, self.URL, {})
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 0
+        assert resp.json()["data"]["deleted_count"] == 0
 
     def test_delete_with_before_date(self, db_client):
         client, session = db_client
@@ -222,7 +222,7 @@ class TestBatchDeleteAuditLogs:
             "action": "create", "before_date": "2099-01-01T00:00:00",
         })
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 1
+        assert resp.json()["data"]["deleted_count"] == 1
 
     def test_invalid_before_date_still_deletes_by_action(self, db_client):
         client, session = db_client
@@ -234,7 +234,7 @@ class TestBatchDeleteAuditLogs:
             "action": "create", "before_date": "not-a-date",
         })
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 1
+        assert resp.json()["data"]["deleted_count"] == 1
 
     def test_ids_rejects_bad_string(self, client_with_mocked_auth):
         resp = _delete_json(client_with_mocked_auth, self.URL, {"ids": ["abc"]})
@@ -247,12 +247,12 @@ class TestBatchDeleteAuditLogs:
         session.commit()
         resp = _delete_json(client, self.URL, {"actions": [" create "]})
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 1
+        assert resp.json()["data"]["deleted_count"] == 1
 
     def test_only_before_date_without_action_returns_zero(self, client_with_mocked_auth):
         resp = _delete_json(client_with_mocked_auth, self.URL, {"before_date": "2020-01-01T00:00:00"})
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 0
+        assert resp.json()["data"]["deleted_count"] == 0
 
     def test_explicit_null_ids(self, client_with_mocked_auth):
         resp = _delete_json(client_with_mocked_auth, self.URL, {"ids": None, "action": "create"})
@@ -305,7 +305,7 @@ class TestUpdateAuditLogRemark:
         session.commit()
         resp = client.patch(f"{self.URL}/1/remark", json={"remark": "test note"})
         assert resp.status_code == 200
-        assert resp.json()["remark"] == "test note"
+        assert resp.json()["data"]["remark"] == "test note"
 
     def test_404_when_not_found(self, client_with_mocked_auth):
         resp = client_with_mocked_auth.patch(f"{self.URL}/999/remark", json={"remark": "test"})

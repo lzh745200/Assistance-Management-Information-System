@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from app.models.project import Project
 from app.core.transaction import safe_commit
 from app.core.data_permission import filter_by_data_scope
@@ -198,7 +198,7 @@ async def delete_milestone(
     # 自动更新项目进度
     _auto_update_project_progress(db, project_id)
 
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 # ==================== 状态流转 API ====================

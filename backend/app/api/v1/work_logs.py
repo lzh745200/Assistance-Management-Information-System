@@ -10,7 +10,7 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from app.core.security import get_current_user
 from app.models.work_log import WorkLog
 from app.core.transaction import safe_commit
@@ -293,7 +293,7 @@ async def delete_work_log(
 
     db.delete(log)
     safe_commit(db)
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 @router.get("/calendar")

@@ -198,7 +198,7 @@ class TestBatchDeleteByActions:
         )
         assert resp.status_code == 200, resp.text
         data = resp.json()
-        assert data["deleted_count"] >= 3
+        assert data["data"]["deleted_count"] >= 3
 
     def test_clear_single_action_type_via_actions(self, _client, _db, admin_headers, admin_user):
         """actions 列表中只有一个类型"""
@@ -213,7 +213,7 @@ class TestBatchDeleteByActions:
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["deleted_count"] >= 1
+        assert data["data"]["deleted_count"] >= 1
 
     def test_clear_with_empty_actions_deletes_nothing(self, _client, _db, admin_headers, admin_user):
         """actions 为空列表时，不删除任何记录"""
@@ -226,7 +226,7 @@ class TestBatchDeleteByActions:
             headers=admin_headers,
         )
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 0
+        assert resp.json()["data"]["deleted_count"] == 0
 
 
 # ─── 测试：按 ids 批量删除 ──────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ class TestBatchDeleteByIds:
             headers=admin_headers,
         )
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 2
+        assert resp.json()["data"]["deleted_count"] == 2
 
     def test_delete_by_string_ids_coerced(self, _client, _db, admin_headers, admin_user):
         """
@@ -261,7 +261,7 @@ class TestBatchDeleteByIds:
             headers=admin_headers,
         )
         assert resp.status_code == 200, resp.text
-        assert resp.json()["deleted_count"] == 1
+        assert resp.json()["data"]["deleted_count"] == 1
 
     def test_delete_with_nonexistent_ids_returns_zero(self, _client, _db, admin_headers, admin_user):
         """不存在的 ID 列表：删除 0 条，不报错"""
@@ -272,7 +272,7 @@ class TestBatchDeleteByIds:
             headers=admin_headers,
         )
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 0
+        assert resp.json()["data"]["deleted_count"] == 0
 
     def test_delete_with_invalid_string_id_returns_422(self, _client, admin_headers, admin_user):
         """
@@ -300,7 +300,7 @@ class TestBatchDeleteByIds:
             headers=admin_headers,
         )
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] == 1
+        assert resp.json()["data"]["deleted_count"] == 1
 
 
 # ─── 测试：向后兼容 action 单字段 ─────────────────────────────────────────────
@@ -318,7 +318,7 @@ class TestBatchDeleteBackwardCompat:
             headers=admin_headers,
         )
         assert resp.status_code == 200
-        assert resp.json()["deleted_count"] >= 1
+        assert resp.json()["data"]["deleted_count"] >= 1
 
 
 # ─── 测试：单条删除 ──────────────────────────────────────────────────────────

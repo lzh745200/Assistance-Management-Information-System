@@ -7,7 +7,7 @@ from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from app.core.security import get_current_user
 from app.models.audit import AuditAction, AuditLevel, AuditStatus
 from app.services.audit_service import AuditService, SecurityEventService
@@ -122,7 +122,7 @@ async def batch_delete_audit_logs(
         elif not body.before_date:
             # 无任何过滤条件时不删除任何记录，防止误删全表
             logger.info("批量删除: 无有效过滤条件，跳过删除")
-            return {"message": "已删除 0 条日志记录", "deleted_count": 0}
+            return success_response(data={"deleted_count": 0}, message="已删除 0 条日志记录")
 
         if body.before_date:
             try:
@@ -137,7 +137,7 @@ async def batch_delete_audit_logs(
     deleted = query.delete(synchronize_session=False)
     safe_commit(db)
     logger.info("批量删除审计日志完成: 删除 %d 条", deleted)
-    return {"message": f"已删除 {deleted} 条日志记录", "deleted_count": deleted}
+    return success_response(data={"deleted_count": deleted}, message=f"已删除 {deleted} 条日志记录")
 
 
 # ─── 注意：含路径参数的路由必须在所有同前缀静态路由之后注册 ───────────────────
@@ -164,7 +164,7 @@ async def delete_audit_log(
     db.delete(log)
     safe_commit(db)
     logger.info("删除审计日志成功 id=%d", log_id)
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 @router.patch("/logs/{log_id}/remark")
@@ -198,7 +198,7 @@ async def update_audit_log_remark(
     meta["remark"] = remark
     log.metadata_ = meta
     safe_commit(db)
-    return {"message": "备注更新成功", "id": log_id, "remark": remark}
+    return success_response(data={"id": log_id, "remark": remark}, message="备注更新成功")
 
 
 @router.get("/logs/export")
@@ -471,7 +471,7 @@ async def resolve_security_event(
     if not event:
         raise HTTPException(status_code=404, detail="Security event not found")
 
-    return {"message": "Event resolved", "event": event}
+    return success_response(data={"event": event}, message="Event resolved")
 
 
 @router.get("/login-attempts")

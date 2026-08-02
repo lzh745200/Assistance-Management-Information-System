@@ -852,7 +852,7 @@ async def create_project(
     except Exception:
         logger.debug("仪表盘缓存失效失败")
     logger.info(f"项目创建成功: id={project.id}, name={project.name}")
-    return {"id": project.id, "name": project.name, "code": project.code}
+    return success_response(data={"id": project.id, "name": project.name, "code": project.code}, message="创建成功")
 
 
 # ── 项目更新辅助函数 ──
@@ -1002,7 +1002,7 @@ async def update_project(
     db.refresh(project)
     _invalidate_project_cache()
 
-    return {"message": "更新成功", "data": _project_to_dict(project)}
+    return success_response(data=_project_to_dict(project), message="更新成功")
 
 
 @router.delete("/{project_id}", summary="删除项目")
@@ -1081,7 +1081,7 @@ async def delete_project(
     except Exception:
         logger.debug("仪表盘缓存失效失败")
 
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 @router.get("/{project_id}/history/changes", summary="获取项目变更历史")

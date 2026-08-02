@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from app.core.security import get_current_user
 from app.models.user import User
 from app.utils.common import dict_keys_to_camel, StringHelper
@@ -451,11 +451,10 @@ async def import_villages(
             errors.append(f"第{row_idx}行: {str(e)}")
     safe_commit(db)
     await _invalidate_village_cache()
-    return {
-        "message": f"成功导入 {imported} 条记录" + (f"，{len(errors)} 条跳过" if errors else ""),
-        "imported": imported,
-        "errors": errors[:20],
-    }
+    return success_response(
+        data={"imported": imported, "errors": errors[:20]},
+        message=f"成功导入 {imported} 条记录" + (f"，{len(errors)} 条跳过" if errors else ""),
+    )
 
 
 @router.post("/batch-delete")
@@ -473,7 +472,7 @@ async def batch_delete_villages(
     deleted_count = query.update({"is_active": False}, synchronize_session=False)
     safe_commit(db)
     await _invalidate_village_cache()
-    return {"message": f"已删除 {deleted_count} 条记录"}
+    return success_response(message=f"已删除 {deleted_count} 条记录")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -550,7 +549,7 @@ async def update_village(
             setattr(village, key, value)
     safe_commit(db)
     await _invalidate_village_cache()
-    return {"message": "更新成功"}
+    return success_response(message="更新成功")
 
 
 @router.delete("/{village_id}")
@@ -565,7 +564,7 @@ async def delete_village(
     village.is_active = False
     safe_commit(db)
     await _invalidate_village_cache()
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -606,7 +605,7 @@ async def copy_year_data(
         if _copy_section_data(db, model, village_id, data.fromYear, data.toYear):
             copied += 1
     safe_commit(db)
-    return {"message": f"年度数据复制成功，已复制 {copied} 个数据组"}
+    return success_response(message=f"年度数据复制成功，已复制 {copied} 个数据组")
 
 
 @router.post("/{village_id}/yearly/{year}/{section}")
@@ -625,7 +624,7 @@ async def save_yearly_section(
     model = _SECTION_MODEL[section]
     _save_section_data(db, model, village_id, year, data.model_dump())
     safe_commit(db)
-    return {"message": f"保存成功: {section}"}
+    return success_response(message=f"保存成功: {section}")
 
 
 @router.post("/{village_id}/yearly/{year}/validate")

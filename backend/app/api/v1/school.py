@@ -265,13 +265,10 @@ async def import_schools_excel(
                 errors.append(_fmt_row_error(row_idx, e, str(e),
                                              row[1] if row and len(row) > 1 else "?"))
         safe_commit(db)
-        return {
-            "success": True,
-            "message": f"成功导入 {imported} 所学校",
-            "imported": imported,
-            "failed": len(errors),
-            "errors": errors,
-        }
+        return success_response(
+            data={"imported": imported, "failed": len(errors), "errors": errors},
+            message=f"成功导入 {imported} 所学校",
+        )
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"导入失败: {str(e)}")
@@ -321,13 +318,10 @@ async def import_scholarship_students(
                 errors.append(_fmt_row_error(row_idx, e, str(e),
                                              row[0] if row and len(row) > 0 else "?"))
         safe_commit(db)
-        return {
-            "success": True,
-            "message": f"成功导入 {imported} 名资助学生",
-            "imported": imported,
-            "failed": len(errors),
-            "errors": errors,
-        }
+        return success_response(
+            data={"imported": imported, "failed": len(errors), "errors": errors},
+            message=f"成功导入 {imported} 名资助学生",
+        )
     finally:
         try:
             os.unlink(tmp_path)
@@ -457,17 +451,19 @@ async def get_school_statistics(
         )
         scholarship_total_amount = float(amount_row or 0)
 
-    return {
-        "total_schools": total_schools,
-        "active": active,
-        "completed": completed,
-        "total_students": total_students,
-        "total_teachers": total_teachers,
-        "project_count": project_count,
-        "project_total_budget": project_total_budget,
-        "scholarship_count": scholarship_count,
-        "scholarship_total_amount": scholarship_total_amount,
-    }
+    return success_response(
+        data={
+            "total_schools": total_schools,
+            "active": active,
+            "completed": completed,
+            "total_students": total_students,
+            "total_teachers": total_teachers,
+            "project_count": project_count,
+            "project_total_budget": project_total_budget,
+            "scholarship_count": scholarship_count,
+            "scholarship_total_amount": scholarship_total_amount,
+        }
+    )
 
 
 @router.get("/options/types")
@@ -549,7 +545,7 @@ async def delete_attachment(
 
     db.delete(att)
     safe_commit(db)
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 # ==================== CRUD API ====================
@@ -719,7 +715,7 @@ async def create_school(
     except Exception:
         logger.debug("仪表盘缓存失效失败")
 
-    return {"message": "创建成功", "data": school.to_dict()}
+    return success_response(data=school.to_dict(), message="创建成功")
 
 
 @router.put("/{school_id}")
@@ -784,7 +780,7 @@ async def update_school(
     except Exception:
         logger.debug("仪表盘缓存失效失败")
 
-    return {"message": "更新成功", "data": school.to_dict()}
+    return success_response(data=school.to_dict(), message="更新成功")
 
 
 @router.delete("/{school_id}")
@@ -827,7 +823,7 @@ async def delete_school(
     except Exception:
         logger.debug("仪表盘缓存失效失败")
 
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 # ==================== 学校附件管理 ====================
@@ -909,7 +905,7 @@ async def upload_attachment(
     safe_commit(db)
     db.refresh(attachment)
 
-    return {"message": "上传成功", "data": attachment.to_dict()}
+    return success_response(data=attachment.to_dict(), message="上传成功")
 
 
 # ==================== 学校帮扶项目 CRUD ====================
@@ -973,7 +969,7 @@ async def create_project(
     db.add(project)
     safe_commit(db)
     db.refresh(project)
-    return {"message": "创建成功", "data": project.to_dict()}
+    return success_response(data=project.to_dict(), message="创建成功")
 
 
 @router.put("/{school_id}/projects/{project_id}")
@@ -998,7 +994,7 @@ async def update_project(
         setattr(project, key, val)
     safe_commit(db)
     db.refresh(project)
-    return {"message": "更新成功", "data": project.to_dict()}
+    return success_response(data=project.to_dict(), message="更新成功")
 
 
 @router.delete("/{school_id}/projects/{project_id}")
@@ -1017,7 +1013,7 @@ async def delete_project(
         raise AppError.not_found("项目")
     db.delete(project)
     safe_commit(db)
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 # ==================== 资助学生 CRUD ====================
@@ -1077,7 +1073,7 @@ async def create_scholarship_student(
     db.add(student)
     safe_commit(db)
     db.refresh(student)
-    return {"message": "创建成功", "data": student.to_dict()}
+    return success_response(data=student.to_dict(), message="创建成功")
 
 
 @router.put("/{school_id}/scholarship-students/{student_id}")
@@ -1107,7 +1103,7 @@ async def update_scholarship_student(
         setattr(stu, key, val)
     safe_commit(db)
     db.refresh(stu)
-    return {"message": "更新成功", "data": stu.to_dict()}
+    return success_response(data=stu.to_dict(), message="更新成功")
 
 
 @router.delete("/{school_id}/scholarship-students/{student_id}")
@@ -1131,7 +1127,7 @@ async def delete_scholarship_student(
         raise AppError.not_found("资助学生记录")
     db.delete(stu)
     safe_commit(db)
-    return {"message": "删除成功"}
+    return success_response(message="删除成功")
 
 
 @router.post("/{school_id}/scholarship-students/import")
@@ -1189,12 +1185,10 @@ async def import_school_scholarship_students(
                 errors.append(_fmt_row_error(row_idx, e, str(e),
                                              row[0] if row and len(row) > 0 else "?"))
         safe_commit(db)
-        return {
-            "success": True,
-            "message": f"成功导入 {imported} 名资助学生",
-            "imported": imported,
-            "errors": errors,
-        }
+        return success_response(
+            data={"imported": imported, "errors": errors},
+            message=f"成功导入 {imported} 名资助学生",
+        )
     finally:
         try:
             os.unlink(tmp_path)
