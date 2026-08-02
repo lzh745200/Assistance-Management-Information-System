@@ -64,6 +64,61 @@ class TestVerifyPassCode:
         assert record.status == "pending"
         mock_commit.assert_not_called()
 
+    def test_hmac_self_verify_cross_machine_creates_local_record(self):
+        # 跨机器场景：数据库无任何记录（first 恒为 None）→ HMAC 自验证通过
+        # → 在本机创建绑定当前机器码的记录并返回
+        machine_code = "B" + "0" * 63
+        pass_code = MachineCodeService.generate_pass_code(machine_code)
+
+        db = MagicMock()
+        q = db.query.return_value
+        q.filter.return_value = q
+        q.first.side_effect = [None, None, None]  # 三个查询分支均未命中
+
+        svc = MachineCodeService(db)
+
+        with patch(f"{_MOD}.safe_commit") as mock_commit:
+            result = svc.verify_pass_code(pass_code, machine_code)
+
+        assert result is not None
+        assert result.machine_code == machine_code
+        assert result.status == "pending"
+        db.add.assert_called_once()
+        mock_commit.assert_called()
+
+    def test_hmac_self_verify_rejects_wrong_machine(self):
+        # 错误机器码 → HMAC 不匹配 → 返回 None（"通行码无效或已被使用"）
+        machine_b = "B" + "0" * 63
+        pass_code = MachineCodeService.generate_pass_code(machine_b)
+
+        db = MagicMock()
+        q = db.query.return_value
+        q.filter.return_value = q
+        q.first.side_effect = [None, None, None]
+
+        svc = MachineCodeService(db)
+        result = svc.verify_pass_code(pass_code, "A" + "0" * 63)
+
+        assert result is None
+
+    def test_hmac_accepts_input_without_dashes(self):
+        # 用户输入去掉连字符的通行码 → 归一化后仍匹配
+        machine_code = "C" + "0" * 63
+        pass_code = MachineCodeService.generate_pass_code(machine_code)
+
+        assert MachineCodeService.verify_pass_code_hmac(
+            pass_code.replace("-", ""), machine_code
+        ) is True
+
+    def test_generate_pass_code_deterministic(self):
+        # 确定性：同一机器码两次生成结果一致（跨机器可重算验证的前提）
+        machine_code = "D" + "0" * 63
+        pc1 = MachineCodeService.generate_pass_code(machine_code)
+        pc2 = MachineCodeService.generate_pass_code(machine_code)
+
+        assert pc1 == pc2
+        assert len(pc1.replace("-", "")) == 32
+
 
 class TestDeleteOrganizationPassCode:
     def test_no_db_session_raises_value_error(self):

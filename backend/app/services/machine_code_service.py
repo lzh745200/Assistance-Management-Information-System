@@ -5,7 +5,9 @@
 """
 
 import hashlib
+import hmac
 import logging
+import os
 import platform
 import secrets
 import subprocess
@@ -20,6 +22,14 @@ from app.models.machine_code import MachineCode
 from app.core.transaction import safe_commit
 
 logger = logging.getLogger(__name__)
+
+# 通行码 HMAC 密钥：用于跨机器自验证（管理员在 A 机为 B 机生成通行码，
+# B 机注册时无需共享数据库，仅凭 HMAC(machine_code) 即可独立验证）。
+# 可通过环境变量 PASS_CODE_SECRET 覆盖；未配置时使用内置默认值。
+_PASS_CODE_SECRET = os.environ.get(
+    "PASS_CODE_SECRET",
+    "bumofu-assistance-passcode-v1",
+).encode("utf-8")
 
 
 class MachineCodeService:
@@ -255,25 +265,51 @@ class MachineCodeService:
     def generate_pass_code(machine_code: str) -> str:
         """为指定机器码生成通行码（激活码）
 
-        通行码是基于机器码和随机盐生成的激活码。
+        通行码 = HMAC-SHA256(PASS_CODE_SECRET, machine_code) 截断 32 位，
+        格式化为 XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX。
+
+        **确定性设计（跨机器自验证）**：
+        任意机器只要知道目标机器码和共享密钥，就能独立重算并验证该通行码，
+        无需访问生成机器的数据库。这使"管理员在 A 机为 B 机生成通行码、
+        用户在 B 机注册"成为可能——B 机注册时用自身机器码重算 HMAC 即可验证。
 
         Args:
-            machine_code: 机器码
+            machine_code: 目标机器的机器码
 
         Returns:
             str: 通行码（格式化为 XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX）
         """
-        # 生成随机盐
-        salt = secrets.token_hex(16)
-
-        # 组合机器码和盐生成通行码
-        combined = f"{machine_code}:{salt}"
-        pass_code = hashlib.sha256(combined.encode()).hexdigest()[:32]
+        digest = hmac.new(
+            _PASS_CODE_SECRET,
+            (machine_code or "").encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()[:32]
 
         # 格式化为易读格式：XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX
-        formatted = "-".join([pass_code[i: i + 4] for i in range(0, 32, 4)])
+        formatted = "-".join([digest[i: i + 4] for i in range(0, 32, 4)])
 
         return formatted
+
+    @staticmethod
+    def verify_pass_code_hmac(pass_code: str, machine_code: str) -> bool:
+        """独立验证通行码是否匹配指定机器码（HMAC 自验证，不依赖数据库）
+
+        用于跨机器场景：通行码在系统 A 生成（绑定系统 B 的机器码），
+        用户在系统 B 注册时，仅凭自身机器码重算 HMAC 即可验证通行码真伪。
+
+        Args:
+            pass_code: 用户输入的通行码（允许带/不带连字符）
+            machine_code: 当前机器的机器码
+
+        Returns:
+            bool: 是否匹配
+        """
+        expected = MachineCodeService.generate_pass_code(machine_code)
+        # 兼容用户去掉连字符的输入
+        normalized_input = (pass_code or "").strip().replace("-", "").lower()
+        normalized_expected = expected.replace("-", "").lower()
+        # 常量时间比较，避免时序侧信道
+        return hmac.compare_digest(normalized_input, normalized_expected)
 
     def create_machine_code_record(
         self,
@@ -468,6 +504,42 @@ class MachineCodeService:
                 machine_code[:16],
             )
             return record
+
+        # 4. HMAC 自验证（跨机器场景）：
+        #    管理员在系统 A 为目标机器 B 生成通行码（录入 B 的机器码），
+        #    用户在 B 注册时数据库中没有该记录——此时用 B 的机器码重算
+        #    HMAC 独立验证通行码真伪，验证通过后在本机创建并激活记录。
+        if MachineCodeService.verify_pass_code_hmac(pass_code, machine_code):
+            try:
+                # 在本机数据库创建一条绑定当前机器的记录（供后续登录
+                # verify_user_machine 使用），并立即标记为激活（user 由
+                # 调用方 activate_machine_code 绑定，这里先创建 pending）。
+                record = MachineCode(
+                    machine_code=machine_code,
+                    pass_code=machine_code[:32],  # 占位：本机记录不以 HMAC 全文存储
+                    status="pending",
+                    created_by=None,
+                    description="跨机器通行码验证（HMAC 自验证）",
+                )
+                self.db.add(record)
+                safe_commit(self.db)
+                self.db.refresh(record)
+                logger.info(
+                    "通行码 HMAC 自验证成功（跨机器）: machine_code=%s..., "
+                    "已在本机创建绑定记录 id=%s",
+                    machine_code[:16],
+                    record.id,
+                )
+                return record
+            except Exception as e:  # pragma: no cover
+                logger.warning("HMAC 自验证后创建本地记录失败: %s", e)
+                # 记录创建失败不阻断验证——调用方后续激活会重试
+                return MachineCode(
+                    machine_code=machine_code,
+                    pass_code=machine_code[:32],
+                    status="pending",
+                    created_by=None,
+                )
 
         logger.warning(
             "通行码验证失败: pass_code=%s..., machine_code=%s...",

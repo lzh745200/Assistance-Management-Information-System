@@ -127,9 +127,12 @@ class TestMachineCodeServiceStatic:
 
     def test_generate_pass_code_different_each_time(self):
         from app.services.machine_code_service import MachineCodeService
+        # 确定性生成：同一机器码结果一致（跨机器自验证的前提），不同机器码结果不同
         pc1 = MachineCodeService.generate_pass_code("abc")
         pc2 = MachineCodeService.generate_pass_code("abc")
-        assert pc1 != pc2
+        pc3 = MachineCodeService.generate_pass_code("def")
+        assert pc1 == pc2
+        assert pc1 != pc3
 
 
 class TestMachineCodeServiceDB:
