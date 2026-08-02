@@ -116,12 +116,7 @@ jobs:
       # 后端综合安全审计：裸 db.commit()、跨组织删除、缺 ok_list/write_work_log/filter_by_data_scope
       - name: Backend comprehensive security audit
         run: python scripts/security_audit.py --verbose
-      # 前端静态分析：检查 Pattern A（import request from './request'）残留
-      - name: Frontend API pattern audit
-        run: |
-          cd frontend
-          npm install --legacy-peer-deps
-          npx vue-tsc --noEmit 2>&1 && echo 'TypeScript check passed'
+      # 前端 API 静态分析：vue-tsc 由 frontend-check job 执行,此处只做脚本检查
       # 检查前端 API 调用是否使用具名导入
       - name: Frontend import pattern audit
         run: |
