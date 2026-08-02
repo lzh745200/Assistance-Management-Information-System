@@ -13,28 +13,38 @@ describe('roleAccess utility', () => {
   it('ROLE_PRIORITY includes expected roles', () => {
     expect(ROLE_PRIORITY.super_admin).toBe(0)
     expect(ROLE_PRIORITY.admin).toBe(1)
-    expect(ROLE_PRIORITY.approval_leader).toBe(2)
-    expect(ROLE_PRIORITY.manager).toBe(2)
-    expect(ROLE_PRIORITY.operator).toBe(3)
-    expect(ROLE_PRIORITY.viewer).toBe(4)
+    // 历史角色归一化到精简角色（approval_leader/manager → admin, operator → user）
+    expect(ROLE_PRIORITY.approval_leader).toBe(1)
+    expect(ROLE_PRIORITY.manager).toBe(1)
+    expect(ROLE_PRIORITY.user).toBe(2)
+    expect(ROLE_PRIORITY.operator).toBe(2)
+    expect(ROLE_PRIORITY.viewer).toBe(3)
   })
 
-  it('normalizeRole returns viewer when role is empty', () => {
-    expect(normalizeRole(undefined)).toBe('viewer')
-    expect(normalizeRole(null)).toBe('viewer')
-    expect(normalizeRole('')).toBe('viewer')
+  it('normalizeRole returns user when role is empty', () => {
+    expect(normalizeRole(undefined)).toBe('user')
+    expect(normalizeRole(null)).toBe('user')
+    expect(normalizeRole('')).toBe('user')
   })
 
   it('normalizeRole keeps valid role', () => {
     expect(normalizeRole('admin')).toBe('admin')
   })
 
+  it('normalizeRole maps legacy roles to simplified roles', () => {
+    expect(normalizeRole('manager')).toBe('admin')
+    expect(normalizeRole('approval_leader')).toBe('admin')
+    expect(normalizeRole('operator')).toBe('user')
+    expect(normalizeRole('editor')).toBe('admin')
+  })
+
   it('getEffectiveRoles maps super_admin to include admin', () => {
     expect(getEffectiveRoles('super_admin')).toEqual(['super_admin', 'admin'])
   })
 
-  it('getEffectiveRoles keeps non-super_admin as single role', () => {
-    expect(getEffectiveRoles('manager')).toEqual(['manager'])
+  it('getEffectiveRoles normalizes legacy roles', () => {
+    expect(getEffectiveRoles('manager')).toEqual(['admin'])
+    expect(getEffectiveRoles('operator')).toEqual(['user'])
   })
 
   it('hasAllowedRole passes when no allowedRoles', () => {
