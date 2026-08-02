@@ -786,7 +786,12 @@ async def upload_section_attachment(
     db.add(attachment)
     safe_commit(db)
     db.refresh(attachment)
-    return {"code": 200, "success": True, "data": {"id": attachment.id, "filename": attachment.file_name}, "message": "上传成功"}
+    return {
+        "code": 200,
+        "success": True,
+        "data": {"id": attachment.id, "filename": attachment.file_name},
+        "message": "上传成功",
+    }
 
 
 @router.get("/{village_id}/sections/{section}/attachments/{attachment_id}")

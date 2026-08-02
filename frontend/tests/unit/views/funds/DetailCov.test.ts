@@ -467,7 +467,7 @@ describe('页面模式与数据加载', () => {
 })
 
 describe('权限 computed', () => {
-  it('isManager：admin/super_admin/manager 为真，其余为假（含 user 为空）', async () => {
+  it('isManager：admin/super_admin 为真，manager/user/viewer 为假（含 user 为空）', async () => {
     setRoute('/funds/create')
     let wrapper = mountComp()
     expect((wrapper.vm as any).isManager).toBe(true)
@@ -480,7 +480,7 @@ describe('权限 computed', () => {
 
     authState.user = { role: 'manager', id: 1 }
     wrapper = mountComp()
-    expect((wrapper.vm as any).isManager).toBe(true)
+    expect((wrapper.vm as any).isManager).toBe(false)
     wrapper.unmount()
 
     authState.user = { role: 'user', id: 1 }

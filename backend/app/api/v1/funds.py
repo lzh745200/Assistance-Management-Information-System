@@ -746,8 +746,13 @@ def fund_stats_utilization(
     planned = float(row.planned)
     actual = float(row.actual)
     rate = round((actual / planned * 100), 1) if planned > 0 else 0
-    return success_response(data={"overall_utilization_rate": rate,
-            "total_actual_investment": actual, "total_planned_investment": planned})
+    return success_response(
+        data={
+            "overall_utilization_rate": rate,
+            "total_actual_investment": actual,
+            "total_planned_investment": planned,
+        }
+    )
 
 
 @router.get("/supported-village/statistics/summary")

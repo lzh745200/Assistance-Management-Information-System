@@ -73,7 +73,8 @@ describe('desensitize additional coverage', () => {
     expect(getDesensitizeLevel('admin')).toBe(DesensitizeLevel.FULL)
     expect(getDesensitizeLevel('viewer')).toBe(DesensitizeLevel.HIDDEN)
     expect(getDesensitizeLevel('operator')).toBe(DesensitizeLevel.PARTIAL)
-    expect(getDesensitizeLevel('manager')).toBe(DesensitizeLevel.PARTIAL)
+    expect(getDesensitizeLevel('manager')).toBe(DesensitizeLevel.FULL)
+    expect(getDesensitizeLevel('approval_leader')).toBe(DesensitizeLevel.FULL)
   })
 
   it('desensitizes by level', async () => {

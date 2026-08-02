@@ -136,8 +136,9 @@ describe('desensitize', () => {
     it('viewer -> HIDDEN', () => {
       expect(getDesensitizeLevel('viewer')).toBe(DesensitizeLevel.HIDDEN)
     })
-    it('其他角色 -> PARTIAL', () => {
-      expect(getDesensitizeLevel('manager')).toBe(DesensitizeLevel.PARTIAL)
+    it('历史角色归一化: manager/approval_leader->FULL, operator->PARTIAL', () => {
+      expect(getDesensitizeLevel('manager')).toBe(DesensitizeLevel.FULL)
+      expect(getDesensitizeLevel('approval_leader')).toBe(DesensitizeLevel.FULL)
       expect(getDesensitizeLevel('operator')).toBe(DesensitizeLevel.PARTIAL)
       expect(getDesensitizeLevel('unknown')).toBe(DesensitizeLevel.PARTIAL)
     })
@@ -166,24 +167,23 @@ describe('desensitize', () => {
     it('viewer 角色完全隐藏', () => {
       expect(desensitizeByRole('13812341234', 'phone', 'viewer')).toBe('****')
     })
-    it('manager 角色部分脱敏', () => {
-      const result = desensitizeByRole('13812341234', 'phone', 'manager')
-      expect(result).toContain('*')
+    it('manager 历史角色归一化为 admin -> 不脱敏', () => {
+      expect(desensitizeByRole('13812341234', 'phone', 'manager')).toBe('13812341234')
     })
   })
 
   describe('autoDesensitize', () => {
     it('phone 字段脱敏', () => {
-      const result = autoDesensitize('13812341234', 'user_phone', 'manager')
+      const result = autoDesensitize('13812341234', 'user_phone', 'operator')
       expect(result).toContain('*')
     })
     it('email 字段脱敏', () => {
-      const result = autoDesensitize('alice@example.com', 'user_email', 'manager')
+      const result = autoDesensitize('alice@example.com', 'user_email', 'operator')
       expect(result).toContain('@')
       expect(result).toContain('*')
     })
     it('未识别字段名原样返回', () => {
-      expect(autoDesensitize('some text', 'description', 'manager')).toBe('some text')
+      expect(autoDesensitize('some text', 'description', 'operator')).toBe('some text')
     })
     it('null 返回空', () => {
       expect(autoDesensitize(null, 'phone')).toBe('')
@@ -198,14 +198,14 @@ describe('desensitize', () => {
     it('批量脱敏多个字段', () => {
       const result = desensitizeObject(
         { phone: '13812341234', name: '张三', count: 100 },
-        'manager',
+        'operator',
       )
       expect(result.phone).toContain('*')
       expect(result.name).toContain('*')
       expect(result.count).toBe(100)
     })
     it('非对象返回原值', () => {
-      expect(desensitizeObject(null as any, 'manager')).toBeNull()
+      expect(desensitizeObject(null as any, 'operator')).toBeNull()
     })
   })
 })
