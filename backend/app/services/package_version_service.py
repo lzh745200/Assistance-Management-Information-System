@@ -7,7 +7,7 @@
 """
 
 import logging
-from typing import Optional, Tuple, Union
+from typing import Tuple, Union
 
 logger = logging.getLogger(__name__)
 

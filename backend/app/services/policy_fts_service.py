@@ -138,9 +138,10 @@ def sync_policy_to_fts(db: Session, policy_id: int) -> None:
             return
         # 先删除旧记录再插入（INSERT OR REPLACE 在 FTS5 中不支持）
         db.execute(text(f"DELETE FROM {FTS_TABLE} WHERE rowid = :id"), {"id": policy_id})  # nosec B608
+        # nosec B608 — FTS_TABLE 为模块级常量（非用户输入），数据均经 :param 参数化绑定
         insert_sql = (
             f"INSERT INTO {FTS_TABLE}(rowid, title, content, summary, keywords)"
-            " VALUES (:id, :title, :content, :summary, :keywords)"
+            " VALUES (:id, :title, :content, :summary, :keywords)"  # nosec B608
         )
         db.execute(
             text(insert_sql),  # nosec B608

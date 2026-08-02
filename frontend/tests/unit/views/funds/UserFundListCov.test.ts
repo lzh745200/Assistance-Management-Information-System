@@ -293,6 +293,23 @@ describe('统计回退与加载分支', () => {
     wrapper.unmount()
   })
 
+  it('回退统计：allocated 行金额缺失时按 0 计入 allocatedAmount', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/funds/statistics/overview') return Promise.reject(new Error('net'))
+      return defaultGetImpl(url)
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.tableData = [
+      { amount: 100, status: 'allocated' },
+      { status: 'audited' }, // amount 缺失 → Number(undefined)=NaN → || 0
+    ]
+    await nextTick()
+    expect(vm.stats.allocatedAmount).toBe('100.00')
+    wrapper.unmount()
+  })
+
   it('loadFundStats：res.data||res 右侧、d 为空对象（?? 回退）与 {data:null}（不赋值）', async () => {
     const wrapper = mountComp()
     await flushPromises()
@@ -678,6 +695,18 @@ describe('村校选项加载分支', () => {
     schoolsListMock.mockResolvedValueOnce({ data: { data: { items: [{ id: 10, name: '嵌套校' }] } } })
     await vm.loadSchoolOptions()
     expect(vm.schoolOptions[0].name).toBe('嵌套校')
+    // 学校：无 data 字段 → res.data || res 右侧
+    schoolsListMock.mockResolvedValueOnce({ items: [{ id: 11, name: '直返校' }] })
+    await vm.loadSchoolOptions()
+    expect(vm.schoolOptions[0].name).toBe('直返校')
+    // 学校：裸数组 → Array.isArray 分支
+    schoolsListMock.mockResolvedValueOnce([{ id: 12, name: '数组校' }])
+    await vm.loadSchoolOptions()
+    expect(vm.schoolOptions[0].name).toBe('数组校')
+    // 学校：空对象 → 回退空数组（: [] 侧）
+    schoolsListMock.mockResolvedValueOnce({ data: {} })
+    await vm.loadSchoolOptions()
+    expect(vm.schoolOptions).toEqual([])
     wrapper.unmount()
   })
 })

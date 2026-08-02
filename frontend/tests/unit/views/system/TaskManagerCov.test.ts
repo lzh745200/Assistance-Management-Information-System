@@ -170,6 +170,17 @@ describe('挂载与数据加载', () => {
     expect(wrapper.text()).toContain('export: 3')
   })
 
+  it('统计卡片：by_type 缺失时渲染空占位', async () => {
+    tasksApi.getStats.mockResolvedValue({
+      success: true,
+      data: { total: 2, by_status: {}, active_count: 0 },
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    expect(wrapper.find('.stat-empty').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
   it('fetchStats / fetchRunningCount：success=false 不更新；异常静默', async () => {
     const wrapper = mountComp()
     await flushPromises()

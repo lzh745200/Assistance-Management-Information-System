@@ -6,16 +6,18 @@
           <span class="title">{{ policy?.title || '政策详情' }}</span>
           <div class="header-actions">
             <el-button size="small" @click="goBack">返回</el-button>
-            <el-button v-if="policy" size="small" type="primary" @click="goEdit">编辑</el-button>
+            <el-button v-if="policy && canEdit" size="small" type="primary" @click="goEdit"
+              >编辑</el-button
+            >
             <el-button
-              v-if="policy?.status === 'draft'"
+              v-if="canEdit && policy?.status === 'draft'"
               size="small"
               type="success"
               @click="handlePublish"
               >发布</el-button
             >
             <el-button
-              v-if="policy?.status === 'active'"
+              v-if="canEdit && policy?.status === 'active'"
               size="small"
               type="warning"
               @click="handleArchive"
@@ -99,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -118,10 +120,20 @@ import {
   type Policy,
 } from '@/api/policy'
 import { downloadBlob } from '@/api/request'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 
+// 政策写操作（编辑/发布/归档）仅管理员可见，与 List.vue canEdit 规则一致
+const authStore = useAuthStore()
+const canEdit = computed(() => {
+  const user = authStore.user
+  if (!user) return false
+  if (user.is_superuser) return true
+  const role = (user.role || '').toLowerCase()
+  return role === 'admin' || role === 'super_admin' || role === 'editor'
+})
 const policy = ref<Policy | null>(null)
 const loading = ref(false)
 const previewLoading = ref(false)

@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.permission_utils import require_admin
-from app.core.response import ok_list
+from app.core.response import ok_list, success_response
 from app.core.security import get_current_user
 from app.models.user import User
 from app.utils.paths import get_backup_directory, get_database_path
@@ -409,18 +409,24 @@ async def list_user_sessions(
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
 
-    from app.core.token_blacklist import count as blacklist_count
+    # 安全获取黑名单计数：优先用内存计数，失败时回退到 DB 查询
+    try:
+        from app.core.token_blacklist import count as blacklist_count_fn
+        blacklisted = blacklist_count_fn()
+    except Exception:
+        try:
+            from app.models.token_blacklist import TokenBlacklist
+            blacklisted = db.query(TokenBlacklist).count()
+        except Exception:
+            blacklisted = 0
 
-    return {
-        "code": 200,
-        "data": {
-            "user_id": user_id,
-            "username": user.username,
-            "blacklisted_tokens": blacklist_count(),
-            "sessions": [],
-            "message": "单机部署模式下会话信息有限，仅显示 token 黑名单统计",
-        },
-    }
+    return success_response(data={
+        "user_id": user_id,
+        "username": user.username,
+        "blacklisted_tokens": blacklisted,
+        "sessions": [],
+        "message": "单机部署模式下会话信息有限，仅显示 token 黑名单统计",
+    })
 
 
 @router.post("/users/{user_id}/sessions/{session_id}/revoke")

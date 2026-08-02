@@ -377,7 +377,9 @@ function waitForBackend(stderrCapture = []) {
     const startTime = Date.now();
     let checkCount = 0;
     let lastLogTime = 0;
+    let done = false;  // 防止 resolve 后继续检查
     function check() {
+      if (done) return;  // 已完成，不再检查
       const elapsed = Date.now() - startTime;
       checkCount++;
       // 每5秒打印一次进度日志
@@ -386,25 +388,33 @@ function waitForBackend(stderrCapture = []) {
         lastLogTime = elapsed;
       }
       if (elapsed > BACKEND_READY_TIMEOUT) {
+        done = true;
         const recent = stderrCapture.slice(-10).join('\n');
         reject(new Error(`后端启动超时 (${(elapsed / 1000).toFixed(0)}秒)\n日志:\n${recent || '无日志'}`));
         return;
       }
       const req = http.get(`http://127.0.0.1:${backendPort}/health`, (res) => {
+        if (done) return;  // 防止重复处理
         if (res.statusCode === 200) {
+          done = true;  // 标记完成，阻止后续 check
           console.log(`[Backend] 就绪，耗时 ${(elapsed / 1000).toFixed(1)}s`);
           writeDiagnosticLog(`后端就绪，耗时 ${(elapsed / 1000).toFixed(1)}s`);
           resolve();
-        } else setTimeout(check, 500);
+        } else if (!done) setTimeout(check, 500);
       });
       req.on('error', () => {
+        if (done) return;  // 已完成，忽略错误
         // 前3次和10秒后打印错误日志
         if (checkCount <= 3 || elapsed > 10000) {
           console.log(`[Backend] 健康检查失败 (${(elapsed / 1000).toFixed(1)}s)`);
         }
         setTimeout(check, 500);
       });
-      req.setTimeout(3000, () => { req.destroy(); setTimeout(check, 500); });
+      req.setTimeout(3000, () => {
+        if (done) return;  // 已完成，不重启检查
+        req.destroy();
+        setTimeout(check, 500);
+      });
     }
     // 首次检查延迟500ms（比原来1s更快开始探测）
     setTimeout(check, 500);
@@ -417,17 +427,23 @@ function waitForBackend(stderrCapture = []) {
 function waitForBackendReady(timeoutMs) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
+    let done = false;  // 防止 resolve 后继续检查
     function probe() {
+      if (done) return;
       if (Date.now() - startTime > timeoutMs) {
+        done = true;
         reject(new Error('backend not ready'));
         return;
       }
       const req = http.get(`http://127.0.0.1:${backendPort}/health`, (res) => {
-        if (res.statusCode === 200) resolve();
-        else setTimeout(probe, 1000);
+        if (done) return;
+        if (res.statusCode === 200) {
+          done = true;
+          resolve();
+        } else setTimeout(probe, 1000);
       });
-      req.on('error', () => setTimeout(probe, 1000));
-      req.setTimeout(3000, () => { req.destroy(); setTimeout(probe, 1000); });
+      req.on('error', () => { if (!done) setTimeout(probe, 1000); });
+      req.setTimeout(3000, () => { if (!done) { req.destroy(); setTimeout(probe, 1000); } });
     }
     probe();
   });
@@ -735,7 +751,21 @@ function setupIpcHandlers() {
 }
 
 // ─── 应用生命周期 ───
+// 单实例锁必须在 whenReady 注册之前获取：否则第二个实例（如重复双击、安装后
+// 自动启动+手动启动）会绕过锁检查执行 whenReady 回调，同时拉起两个后端进程，
+// 争抢端口与 SQLite 数据库导致闪退/崩溃（生产 crash.log 中 1 秒内两条"后端路径"）。
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show(); mainWindow.focus(); }
+  });
+}
+
 app.whenReady().then(async () => {
+  // 防御：即使 app.quit() 与 ready 事件存在竞态，未获锁的实例也不启动后端
+  if (!gotLock) { app.exit(0); return; }
   console.log('[App] 启动...');
   setupIpcHandlers();
 
@@ -823,12 +853,5 @@ process.on('unhandledRejection', (reason) => {
   console.error('[Main] 未处理的拒绝:', reason);
   writeDiagnosticLog(`未处理的拒绝: ${String(reason)}`);
 });
-
-const gotLock = app.requestSingleInstanceLock();
-if (!gotLock) { app.quit(); } else {
-  app.on('second-instance', () => {
-    if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show(); mainWindow.focus(); }
-  });
-}
 
 console.log('[Main] 主进程加载完成');

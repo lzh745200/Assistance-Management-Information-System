@@ -74,7 +74,7 @@
               <el-icon><Download /></el-icon>
               下载模板
             </el-button>
-            <el-button @click="handleImport">
+            <el-button v-if="canEdit" @click="handleImport">
               <el-icon><Upload /></el-icon>
               导入
             </el-button>
@@ -234,16 +234,16 @@ const canEdit = computed(() => {
   const user = authStore.user
   if (!user) return false
   if (user.is_superuser) return true
-  const role = (user.role || '').toLowerCase()
-  return role === 'admin' || role === 'super_admin' || role === 'editor'
+  const role = normalizeRole(user.role)
+  return ADMIN_ROLES.includes(role)
 })
 
 const canDelete = computed(() => {
   const user = authStore.user
   if (!user) return false
   if (user.is_superuser) return true
-  const role = (user.role || '').toLowerCase()
-  return role === 'admin' || role === 'super_admin'
+  const role = normalizeRole(user.role)
+  return ADMIN_ROLES.includes(role)
 })
 
 // 层级选项（根据分类动态变化）

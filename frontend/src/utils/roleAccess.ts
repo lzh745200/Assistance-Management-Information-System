@@ -8,21 +8,34 @@ import { AuthStorage } from './authStorage'
 /** 管理员角色列表（唯一来源） */
 export const ADMIN_ROLES: readonly string[] = ['admin', 'super_admin']
 
+/** 旧角色 → 新角色归一化映射（与后端 constants.normalize_role 一致） */
+const ROLE_NORMALIZE_MAP: Record<string, string> = {
+  approval_leader: 'admin',
+  manager: 'admin',
+  operator: 'user',
+  editor: 'admin', // 历史残留的 editor 视为 admin
+}
+
 /** 角色优先级（数字越小权限越高） */
 export const ROLE_PRIORITY: Record<string, number> = {
   super_admin: 0,
   admin: 1,
-  approval_leader: 2,
-  manager: 2,
-  operator: 3,
-  viewer: 4,
+  user: 2,
+  viewer: 3,
+  // 旧角色兼容（归一化后查表）
+  approval_leader: 1,
+  manager: 1,
+  operator: 2,
 }
 
 /**
- * 标准化角色
+ * 标准化角色：旧角色映射到精简后的角色
+ * 与后端 app/core/constants.py normalize_role() 保持一致。
  */
 export function normalizeRole(role?: string | null): string {
-  return role || 'viewer'
+  if (!role) return 'user'
+  const r = role.toLowerCase()
+  return ROLE_NORMALIZE_MAP[r] || r
 }
 
 /**
