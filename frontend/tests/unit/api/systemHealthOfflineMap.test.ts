@@ -16,7 +16,7 @@ vi.mock('@/api/request', () => ({
   get: (...args: any[]) => mockGet(...args),
   post: (...args: any[]) => mockPost(...args),
   del: (...args: any[]) => mockDelete(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   offlineMapApi,

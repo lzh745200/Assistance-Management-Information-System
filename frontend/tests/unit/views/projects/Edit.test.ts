@@ -69,7 +69,8 @@ vi.mock('@/utils/logger', () => ({
 
 vi.mock('@/api/projects', () => ({ projectApi: api }))
 
-vi.mock('@/api/request', () => ({ get: getMock }))
+vi.mock('@/api/request', () => ({ get: getMock,
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/authStorage', () => ({
   AuthStorage: { getToken: getTokenMock },

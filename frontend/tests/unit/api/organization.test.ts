@@ -13,7 +13,7 @@ vi.mock('@/api/request', () => ({
   post: (...args: any[]) => mockPost(...args),
   put: (...args: any[]) => mockPut(...args),
   del: (...args: any[]) => mockDel(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   getOrganizations,
@@ -86,6 +86,12 @@ describe('api/organization', () => {
     const r = await deleteOrganization(4)
     expect(mockDel).toHaveBeenCalledWith('/organizations/4')
     expect(r).toBe(body)
+  })
+
+  it('deleteOrganization 携带 confirm_password 二次确认', async () => {
+    mockDel.mockResolvedValueOnce({ success: true })
+    await deleteOrganization(4, 'pass123')
+    expect(mockDel).toHaveBeenCalledWith('/organizations/4?confirm_password=pass123')
   })
 
   it('batchUpdateSortOrders POST /organizations/batch-update-sort', async () => {

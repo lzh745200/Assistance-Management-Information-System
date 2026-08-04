@@ -21,7 +21,7 @@ const mockMessage = mocks.message
 vi.mock('@/api/request', () => ({
   get: (...a: any[]) => mocks.get(...a),
   put: (...a: any[]) => mocks.put(...a),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('element-plus', () => ({ ElMessage: mocks.message }))
 

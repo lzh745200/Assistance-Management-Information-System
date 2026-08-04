@@ -50,7 +50,7 @@ vi.mock('@/api/request', () => ({
   put: mockPut,
   del: mockDel,
   apiRequest: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import List from '@/views/ruralWorks/List.vue'
 

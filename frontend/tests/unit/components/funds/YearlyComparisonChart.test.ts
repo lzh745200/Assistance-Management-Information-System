@@ -17,7 +17,8 @@ vi.mock('@/utils/echarts', () => ({
 }))
 
 const mockGet = vi.hoisted(() => vi.fn())
-vi.mock('@/api/request', () => ({ get: mockGet }))
+vi.mock('@/api/request', () => ({ get: mockGet,
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 const stubs = {
   'el-card': {

@@ -29,7 +29,7 @@ vi.mock('@/api/request', () => ({
   // @/api/helpers/blobDownload 依赖的两个工具
   parseContentDisposition: vi.fn(),
   downloadBlob: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { projectsApi, projectApi } from '@/api/projects'
 import { schoolsApi, schoolApi } from '@/api/schools'

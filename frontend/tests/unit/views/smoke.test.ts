@@ -19,7 +19,7 @@ vi.mock('@/api/request', () => ({
   freezeRequests: vi.fn(),
   unfreezeRequests: vi.fn(),
   cancelAllRequests: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 // src/utils/echarts.ts <-> src/utils/echarts-theme.ts 存在循环导入：
 // echarts.ts 顶层调用 registerMilitaryTheme() 时其 default 导出尚未初始化，

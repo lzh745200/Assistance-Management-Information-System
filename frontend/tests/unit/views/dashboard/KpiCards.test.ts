@@ -9,7 +9,7 @@ const mockGet = vi.hoisted(() => vi.fn())
 vi.mock('@/api/request', () => ({
   get: mockGet,
   default: { get: mockGet },
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 const statsPayload = {
   data: {

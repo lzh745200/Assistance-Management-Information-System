@@ -9,7 +9,7 @@ vi.mock('@/api/message', () => ({
 
 vi.mock('@/api/request', () => ({
   get: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { getUnreadCount } from '@/api/message'
 import { get } from '@/api/request'

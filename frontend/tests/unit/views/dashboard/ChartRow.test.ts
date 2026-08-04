@@ -32,7 +32,7 @@ vi.mock('@/api/request', () => ({
   apiRequest: mockApiRequest,
   get: mockGet,
   default: { get: mockGet },
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 function mountChartRow() {
   return mount(ChartRow, {

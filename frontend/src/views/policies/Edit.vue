@@ -183,9 +183,9 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRouterSafe, safeRouteParam } from '@/composables/useRouterSafe'
+import { useUploadHeaders } from '@/composables/useUploadHeaders'
 import { ElMessage, type FormInstance, type FormRules, type UploadFile } from 'element-plus'
 import { Back, Upload, Check } from '@element-plus/icons-vue'
-import { AuthStorage } from '@/utils/authStorage'
 import { usePolicyStore } from '@/stores/policy'
 import { getLevelOptions, type PolicyCategory, type PolicyStatus } from '@/api/policy'
 
@@ -195,12 +195,9 @@ const route = useRoute()
 const { pushSafe } = useRouterSafe()
 const policyStore = usePolicyStore()
 
-// 上传配置：通用文件上传端点 + 认证头
+// 上传配置：通用文件上传端点 + 认证/CSRF 头
 const uploadAction = ref(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/files/upload`)
-const uploadHeaders = computed(() => {
-  const token = AuthStorage.getToken() || ''
-  return { Authorization: token ? `Bearer ${token}` : '' }
-})
+const { uploadHeaders } = useUploadHeaders()
 
 const loading = ref(false)
 const submitLoading = ref(false)

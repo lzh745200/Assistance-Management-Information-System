@@ -28,7 +28,7 @@ vi.mock('@/api/request', () => ({
   default: {
     get: (url: string, config?: any) => mockGet(url, config),
   },
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { schoolsApi } from '@/api/schools'
 

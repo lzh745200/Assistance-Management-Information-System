@@ -51,7 +51,7 @@ vi.mock('@/api/request', () => ({
   del: (...args: any[]) => mockDel(...args),
   apiRequest: (...args: any[]) => mockApiRequest(...args),
   put: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/errorHandler', () => ({
   handleApiError: (...args: any[]) => handleError(...args),

@@ -43,7 +43,7 @@ vi.mock('@/api/request', () => ({
   put: mockPut,
   del: mockDel,
   apiRequest: mockApiRequest,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import Templates from '@/views/reportTemplates/Index.vue'
 

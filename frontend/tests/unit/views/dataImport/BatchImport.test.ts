@@ -28,7 +28,7 @@ vi.mock('@/api/request', () => ({
   default: { get: (...args: any[]) => mockRequestGet(...args) },
   post: (...args: any[]) => mockPost(...args),
   get: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 // downloadBlobAsFile 默认实现：真正调用传入的 requestFn，覆盖组件内的 request.get 闭包
 const mockDownloadBlobAsFile = vi.fn(async (requestFn: () => Promise<any>) => {

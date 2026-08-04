@@ -36,7 +36,7 @@ vi.mock('@/api/request', () => ({
   apiRequest: (...args: any[]) => mockApiRequest(...args),
   parseContentDisposition: (_headers: any, fallback: string) => fallback,
   downloadBlob: (...args: any[]) => mockDownloadBlob(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   getLevelOptions,

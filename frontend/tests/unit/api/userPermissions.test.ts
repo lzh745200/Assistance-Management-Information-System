@@ -13,7 +13,7 @@ vi.mock('@/api/request', () => ({
   post: mockPost,
   del: mockDel,
   apiRequest: mockApiRequest,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   assignUserToOrganization,

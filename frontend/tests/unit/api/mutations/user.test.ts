@@ -9,7 +9,7 @@ vi.mock('@/api/request', () => ({
   post: mockPost,
   put: mockPut,
   del: mockDel,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { createUser, updateUser, deleteUser, resetPassword } from '@/api/mutations/user'
 

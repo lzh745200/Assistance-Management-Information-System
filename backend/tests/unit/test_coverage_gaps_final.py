@@ -199,7 +199,7 @@ class TestOrganizationEndpoints:
         org = _make_org(1)
         # 二次确认所需: User 记录带 password_hash
         user_row = MagicMock()
-        user_row.password_hash = hash_password("pass123")
+        user_row.hashed_password = hash_password("pass123")
         call_count = [0]
 
         def query_side_effect(model):

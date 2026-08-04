@@ -4,7 +4,7 @@ import { setActivePinia, createPinia } from 'pinia'
 vi.mock('@/api/request', () => ({
   default: vi.fn(),
   get: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { get } from '@/api/request'
 import { useRbacStore } from '@/stores/rbac'

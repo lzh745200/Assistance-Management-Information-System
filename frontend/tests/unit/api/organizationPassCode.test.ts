@@ -23,7 +23,7 @@ vi.mock('@/api/request', () => ({
   default: {
     get: (...args: any[]) => mockRequestGet(...args),
   },
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   getOrganizationVerificationCode,

@@ -15,7 +15,8 @@ const { mockGet, pushSafeMock } = vi.hoisted(() => ({
   pushSafeMock: vi.fn(),
 }))
 
-vi.mock('@/api/request', () => ({ get: mockGet }))
+vi.mock('@/api/request', () => ({ get: mockGet,
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/composables/useRouterSafe', () => ({
   useRouterSafe: () => ({ pushSafe: pushSafeMock }),

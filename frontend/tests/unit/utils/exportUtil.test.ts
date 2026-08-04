@@ -5,7 +5,7 @@ const { downloadBlobMock } = vi.hoisted(() => ({ downloadBlobMock: vi.fn() }))
 vi.mock('@/api/request', () => ({
   downloadBlob: downloadBlobMock,
   default: {},
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { exportUtil } from '@/utils/exportUtil'
 

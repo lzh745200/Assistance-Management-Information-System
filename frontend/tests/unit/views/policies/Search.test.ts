@@ -29,7 +29,7 @@ vi.mock('element-plus', () => ({ ElMessage }))
 vi.mock('@/api/request', () => ({
   get: getMock,
   apiRequest: apiRequestMock,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import Search from '@/views/policies/Search.vue'
 

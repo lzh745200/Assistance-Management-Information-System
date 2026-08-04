@@ -29,7 +29,7 @@ vi.mock('@/api/request', () => ({
   apiRequest: requestMock.apiRequest,
   downloadBlob: requestMock.downloadBlob,
   parseContentDisposition: requestMock.parseContentDisposition,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/composables/useDesensitize', () => ({
   useDesensitize: () => ({

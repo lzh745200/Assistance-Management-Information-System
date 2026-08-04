@@ -5,7 +5,7 @@ const mockGet = vi.fn()
 
 vi.mock('@/api/request', () => ({
   get: (...args: any[]) => mockGet(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { useRbacStore } from '@/stores/rbac'
 import { useAuthStore } from '@/stores/auth'

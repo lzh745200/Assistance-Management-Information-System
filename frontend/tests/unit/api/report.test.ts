@@ -20,7 +20,7 @@ vi.mock('@/api/request', () => ({
   apiRequest: mockApiRequest,
   parseContentDisposition: vi.fn(() => 'download.xlsx'),
   downloadBlob: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { reportApi } from '@/api/report'
 

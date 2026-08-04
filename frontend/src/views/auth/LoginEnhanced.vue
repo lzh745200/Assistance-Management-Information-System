@@ -715,7 +715,7 @@ const goToMachineCode = () => {
   gap: 6px;
   margin-top: 10px;
   font-size: 13px;
-  color: var(--el-text-color-secondary, #8a8a8a);
+  color: var(--military-gold-light, #f5d76e);
   cursor: pointer;
   user-select: none;
 }

@@ -266,6 +266,7 @@
 <script setup lang="ts">
 import { logger } from '@/utils/logger'
 import { AuthStorage } from '@/utils/authStorage'
+import { useUploadHeaders } from '@/composables/useUploadHeaders'
 
 import { ref, reactive, computed, onMounted, onActivated, onUnmounted, watch, nextTick } from 'vue'
 import { useRouterSafe } from '@/composables/useRouterSafe'
@@ -299,10 +300,7 @@ const filterForm = reactive({
 // 上传相关
 const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 const importUrl = `${baseUrl}/schools/import/excel`
-const uploadHeaders = computed(() => {
-  const token = AuthStorage.getToken() || ''
-  return { Authorization: token ? `Bearer ${token}` : '' }
-})
+const { uploadHeaders } = useUploadHeaders()
 
 const typeMap: Record<string, string> = {
   primary: '小学',

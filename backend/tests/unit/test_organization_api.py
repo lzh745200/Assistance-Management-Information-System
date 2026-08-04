@@ -407,7 +407,7 @@ class TestDeleteOrganization:
             if model is User:
                 q = MagicMock(name="user_q")
                 q.filter.return_value.first.return_value = SimpleNamespace(
-                    id=1, password_hash=password_hash,
+                    id=1, hashed_password=password_hash,
                 )
                 return q
             return mock_db.query.return_value

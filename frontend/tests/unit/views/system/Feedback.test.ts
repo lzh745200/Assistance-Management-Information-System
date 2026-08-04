@@ -20,7 +20,7 @@ vi.mock('@/api/request', () => ({
   post: vi.fn(),
   put: vi.fn(),
   del: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/composables/useDesensitize', () => ({
   useDesensitize: () => ({ ds: dsMock }),

@@ -30,7 +30,7 @@ vi.mock('element-plus', () => ({ ElMessage, ElMessageBox: { confirm: confirmMock
 vi.mock('@/api/request', () => ({
   get: getMock,
   del: delMock,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/api/schools', () => ({ schoolApi: schoolApiMock }))
 

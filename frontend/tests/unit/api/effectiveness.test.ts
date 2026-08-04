@@ -8,7 +8,7 @@ const { mockPost, mockApiRequest } = vi.hoisted(() => ({
 vi.mock('@/api/request', () => ({
   post: mockPost,
   apiRequest: mockApiRequest,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   evaluateVillage,

@@ -10,7 +10,7 @@ vi.mock('@/api/request', () => ({
   get: mockGet,
   post: mockPost,
   apiRequest: mockApiRequest,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   collectNews,

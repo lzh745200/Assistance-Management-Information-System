@@ -63,11 +63,11 @@ const mockHealthData = {
 };
 
 // ── Mock request module ──
-vi.mock("@/api/request", () => ({
+vi.mock('@/api/request', () => ({
   default: { get: mockGet },
   get: mockGet,
   apiRequest: mockApiRequest,
-}));
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}));
 
 // ── Mock echarts — component imports default from @/utils/echarts ──
 mockEchartsInit.mockReturnValue(echartsInstance);

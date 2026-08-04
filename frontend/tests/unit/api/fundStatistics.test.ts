@@ -8,7 +8,7 @@ vi.mock('@/api/request', () => ({
   default: {
     get: (...args: any[]) => mockGet(...args),
   },
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   getFundStatisticsByType,

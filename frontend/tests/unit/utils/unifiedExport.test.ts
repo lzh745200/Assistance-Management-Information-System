@@ -9,7 +9,7 @@ vi.mock('@/api/helpers/blobDownload', () => ({ downloadBlobAsFile }))
 
 vi.mock('@/api/request', () => ({
   default: { get: (...args: any[]) => requestGet(...args) },
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { unifiedExport, exportUtil } from '@/utils/unifiedExport'
 

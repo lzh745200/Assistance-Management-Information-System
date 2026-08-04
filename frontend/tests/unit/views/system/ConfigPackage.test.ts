@@ -29,7 +29,7 @@ vi.mock('@/api/request', () => ({
   put: mockPut,
   del: vi.fn(),
   apiRequest: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/stores/config', () => ({
   useConfigStore: () => configStore,

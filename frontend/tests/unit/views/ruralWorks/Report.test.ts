@@ -14,7 +14,8 @@ const { ElMessage, getMock } = vi.hoisted(() => ({
 
 vi.mock('element-plus', () => ({ ElMessage }))
 
-vi.mock('@/api/request', () => ({ get: getMock }))
+vi.mock('@/api/request', () => ({ get: getMock,
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import Report from '@/views/ruralWorks/Report.vue'
 

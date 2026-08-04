@@ -649,7 +649,7 @@ async def delete_organization(
     from app.core.security import verify_password
 
     user_row = db.query(User).filter(User.id == current_user.id).first()
-    if not user_row or not verify_password(confirm_password, user_row.password_hash or ""):
+    if not user_row or not verify_password(confirm_password, user_row.hashed_password or ""):
         raise HTTPException(status_code=400, detail="二次确认失败：密码不正确")
 
     logger.info(f"=== 开始删除组织 === org_id={org_id}, user={current_user.id}")

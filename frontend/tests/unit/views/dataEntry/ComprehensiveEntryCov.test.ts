@@ -31,7 +31,7 @@ vi.mock('element-plus', () => ({
 
 vi.mock('@/api/request', () => ({
   post: mockPost,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import ComprehensiveEntry from '@/views/dataEntry/ComprehensiveEntry.vue'
 

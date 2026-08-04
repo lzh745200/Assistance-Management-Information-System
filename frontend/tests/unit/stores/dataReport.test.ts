@@ -5,7 +5,7 @@ const mockApiRequest = vi.fn()
 
 vi.mock('@/api/request', () => ({
   apiRequest: (...args: any[]) => mockApiRequest(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/unwrapList', () => ({
   unwrapList: (res: any) => {

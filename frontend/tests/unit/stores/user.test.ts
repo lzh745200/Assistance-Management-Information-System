@@ -15,7 +15,7 @@ vi.mock('@/api/request', () => ({
   createCancelableRequest: vi.fn(),
   requestWithTimeout: vi.fn(),
   isSuccess: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/authStorage', () => ({
   AuthStorage: { clear: vi.fn(), getToken: vi.fn(), setToken: vi.fn(), getUser: vi.fn(() => null) },

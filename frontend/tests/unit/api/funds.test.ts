@@ -32,7 +32,7 @@ vi.mock('@/api/request', () => ({
     put: (url: string, data?: any) => mockPut(url, data),
     delete: (url: string) => mockDelete(url),
   },
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { fundApi } from '@/api/funds'
 

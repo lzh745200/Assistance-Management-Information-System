@@ -27,7 +27,7 @@ vi.mock('element-plus', () => ({ ElMessage }))
 vi.mock('@/api/request', () => ({
   post: postMock,
   apiRequest: apiRequestMock,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/logger', () => ({
   logger: { error: logError, warn: logWarn, info: vi.fn(), debug: vi.fn() },

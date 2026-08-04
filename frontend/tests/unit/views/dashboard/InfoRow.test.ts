@@ -26,7 +26,7 @@ vi.mock('@/api/request', () => ({
   put: vi.fn(),
   del: vi.fn(),
   default: {},
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 function mountInfoRow() {
   return mount(InfoRow, {

@@ -6,7 +6,7 @@ const mockGetToken = vi.fn()
 
 vi.mock('@/api/request', () => ({
   get: (...args: any[]) => mockGet(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/authStorage', () => ({
   AuthStorage: {

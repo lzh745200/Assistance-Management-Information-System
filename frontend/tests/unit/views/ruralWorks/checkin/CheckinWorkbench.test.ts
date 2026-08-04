@@ -12,7 +12,8 @@ function localToday(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-vi.mock('@/api/request', () => ({ get: mocks.get, post: mocks.post }))
+vi.mock('@/api/request', () => ({ get: mocks.get, post: mocks.post,
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 vi.mock('element-plus', () => ({ ElMessage: mocks.message }))
 
 import CheckinWorkbench from '@/views/ruralWorks/checkin/Index.vue'

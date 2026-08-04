@@ -62,6 +62,7 @@ vi.mock('element-plus', () => ({
 vi.mock('@/api/request', () => ({
   del: delMock,
   apiRequest: apiRequestMock,
+  getCsrfToken: vi.fn(() => Promise.resolve('test-csrf')),
 }))
 
 vi.mock('@/api/schools', () => ({
@@ -244,7 +245,7 @@ describe('挂载与初始化', () => {
       totalTeachers: 60,
     })
     // 上传头携带 token
-    expect(vm.uploadHeaders).toEqual({ Authorization: 'Bearer tok' })
+    expect(vm.uploadHeaders).toMatchObject({ Authorization: 'Bearer tok', 'X-CSRF-Token': 'test-csrf' })
     // 图表已初始化并 setOption
     expect(echartsInit).toHaveBeenCalledTimes(2)
     expect(chartSetOption).toHaveBeenCalled()
@@ -702,7 +703,7 @@ describe('特殊挂载路径', () => {
     getTokenMock.mockReturnValue('')
     const wrapper = mountComp()
     await flushPromises()
-    expect((wrapper.vm as any).uploadHeaders).toEqual({ Authorization: '' })
+    expect((wrapper.vm as any).uploadHeaders).toMatchObject({ 'X-CSRF-Token': 'test-csrf' })
   })
 
   it('KeepAlive 包裹：onActivated 刷新数据并重绘图表', async () => {

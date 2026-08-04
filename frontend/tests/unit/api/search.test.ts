@@ -5,7 +5,7 @@ const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn().mockResolvedValue({}) }
 
 vi.mock('@/api/request', () => ({
   get: (...args: any[]) => mockGet(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { globalSearch, SEARCH_TYPE_LABELS, SEARCH_TYPE_ICONS } from '@/api/search'
 

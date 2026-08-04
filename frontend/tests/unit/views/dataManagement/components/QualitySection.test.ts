@@ -24,7 +24,7 @@ vi.mock('element-plus', () => ({
 
 vi.mock('@/api/request', () => ({
   post: mockPost,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import QualitySection from '@/views/dataManagement/components/QualitySection.vue'
 

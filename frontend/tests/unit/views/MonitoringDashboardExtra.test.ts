@@ -50,7 +50,7 @@ vi.mock('@/api/request', () => ({
   default: { get: mockGet },
   get: mockGet,
   apiRequest: mockApiRequest,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/echarts', () => ({
   __esModule: true,

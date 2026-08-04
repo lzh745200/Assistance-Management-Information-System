@@ -8,7 +8,7 @@ vi.mock('@/api/request', () => ({
   put: vi.fn(),
   del: vi.fn(),
   apiRequest: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/unwrapList', () => ({
   unwrapList: vi.fn((r: any) => ({ items: r?.items ?? [], total: r?.total ?? 0 })),

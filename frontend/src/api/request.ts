@@ -439,6 +439,14 @@ export async function prefetchCsrfToken(): Promise<string | null> {
   return _ensureCsrfToken()
 }
 
+/**
+ * 获取 CSRF token（供 el-upload 等原生 XHR/FormData 上传使用——
+ * 这些请求不走 axios 拦截器，必须手动携带 X-CSRF-Token 头）
+ */
+export async function getCsrfToken(): Promise<string | null> {
+  return _ensureCsrfToken()
+}
+
 // ── 泛型核心请求函数 ──
 
 /**

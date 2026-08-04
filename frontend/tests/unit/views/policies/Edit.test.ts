@@ -50,6 +50,10 @@ vi.mock('@/api/policy', () => ({
   getLevelOptions: getLevelOptionsMock,
 }))
 
+vi.mock('@/api/request', () => ({
+  getCsrfToken: vi.fn(() => Promise.resolve('test-csrf')),
+}))
+
 vi.mock('@/utils/authStorage', () => ({
   AuthStorage: authStorageMock,
 }))
@@ -462,12 +466,12 @@ describe('导航与模板', () => {
     await flushPromises()
     const vm = wrapper.vm as any
     expect(vm.uploadAction).toBe('/api/v1/files/upload')
-    expect(vm.uploadHeaders).toEqual({ Authorization: 'Bearer token-123' })
+    expect(vm.uploadHeaders).toMatchObject({ Authorization: 'Bearer token-123', 'X-CSRF-Token': 'test-csrf' })
 
     authStorageMock.getToken.mockReturnValue('')
     const w2 = mountComp()
     await flushPromises()
-    expect((w2.vm as any).uploadHeaders).toEqual({ Authorization: '' })
+    expect((w2.vm as any).uploadHeaders).toMatchObject({ 'X-CSRF-Token': 'test-csrf' })
   })
 
   it('表单 v-model 更新', async () => {

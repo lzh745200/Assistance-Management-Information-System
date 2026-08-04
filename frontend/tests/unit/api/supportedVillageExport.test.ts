@@ -47,7 +47,7 @@ vi.mock('@/api/request', () => ({
     return fallback
   },
   downloadBlob: (...args: any[]) => mockDownloadBlob(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   getSupportedVillages,

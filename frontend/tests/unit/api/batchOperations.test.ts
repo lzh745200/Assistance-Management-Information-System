@@ -8,7 +8,7 @@ const { mockGet, mockPost } = vi.hoisted(() => ({
 vi.mock('@/api/request', () => ({
   get: mockGet,
   post: mockPost,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   batchUpdate,

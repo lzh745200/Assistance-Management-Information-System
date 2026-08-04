@@ -6,7 +6,7 @@ vi.mock('@/api/request', () => ({
   post: vi.fn(),
   put: vi.fn(),
   del: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { usePolicyStore } from '@/stores/policy'
 import { get, post, put, del } from '@/api/request'

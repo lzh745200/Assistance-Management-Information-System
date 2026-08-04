@@ -14,7 +14,7 @@ vi.mock('@/api/request', () => ({
   post: mockPost,
   put: mockPut,
   del: mockDelete,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { fundLifecycleApi } from '@/api/fundLifecycle'
 

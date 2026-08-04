@@ -5,7 +5,12 @@ export const getOrganization = (id: number) => get('/organizations/' + id)
 export const getOrganizationTree = () => get('/organizations/tree')
 export const createOrganization = (data: any) => post('/organizations', data)
 export const updateOrganization = (id: number, data: any) => put('/organizations/' + id, data)
-export const deleteOrganization = (id: number) => del('/organizations/' + id)
+export const deleteOrganization = (id: number, confirmPassword?: string) =>
+  del(
+    '/organizations/' +
+      id +
+      (confirmPassword ? `?confirm_password=${encodeURIComponent(confirmPassword)}` : '')
+  )
 export const batchUpdateSortOrders = (d: any[]) => post('/organizations/batch-update-sort', d)
 
 export const getMyOrganization = () => get('/organizations/my-organization')

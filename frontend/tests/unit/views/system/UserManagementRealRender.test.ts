@@ -21,7 +21,7 @@ vi.mock('@/api/request', () => ({
   put: mockPut,
   del: mockDel,
   apiRequest: mockApiRequest,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/stores/auth', () => ({
   useAuthStore: () => authState,

@@ -17,7 +17,7 @@ vi.mock('@/api/request', () => ({
   apiRequest: (...args: any[]) => mockApiRequest(...args),
   _setCachedToken: (...args: any[]) => mockSetCachedToken(...args),
   prefetchCsrfToken: () => mockPrefetchCsrf(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/api/queries/user', () => ({
   getCurrentUser: (...args: any[]) => mockGetCurrentUser(...args),

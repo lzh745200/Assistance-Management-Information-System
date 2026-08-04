@@ -117,6 +117,7 @@ import {
   cancelAllRequests,
   _setCachedToken,
   prefetchCsrfToken,
+  getCsrfToken,
   apiRequest,
   get,
   post,
@@ -180,6 +181,11 @@ describe('api/request — utility', () => {
     const result = await prefetchCsrfToken()
     expect(result).toBeNull()
     expect(mockAxiosGet).not.toHaveBeenCalled()
+  })
+
+  it('getCsrfToken 与 prefetchCsrfToken 行为一致（测试环境 null）', async () => {
+    const result = await getCsrfToken()
+    expect(result).toBeNull()
   })
 })
 

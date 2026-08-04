@@ -24,7 +24,7 @@ vi.mock('@/api/request', () => ({
   default: { get: (...a: any[]) => mocks.get(...a) },
   downloadBlob: (...a: any[]) => mocks.downloadBlob(...a),
   parseContentDisposition: (...a: any[]) => mocks.parseContentDisposition(...a),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('element-plus', () => ({ ElMessage: mocks.message }))
 

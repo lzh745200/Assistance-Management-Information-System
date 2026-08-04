@@ -10,7 +10,8 @@ import { nextTick } from 'vue'
 
 const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }))
 
-vi.mock('@/api/request', () => ({ get: mockGet }))
+vi.mock('@/api/request', () => ({ get: mockGet,
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import Assessment from '@/views/analytics/Assessment.vue'
 

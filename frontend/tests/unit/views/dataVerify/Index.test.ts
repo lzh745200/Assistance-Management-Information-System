@@ -23,7 +23,7 @@ vi.mock('@/api/request', () => ({
   get: vi.fn(),
   put: vi.fn(),
   del: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import Index from '@/views/dataVerify/Index.vue'
 

@@ -31,6 +31,7 @@ vi.mock('@/api/request', () => ({
   post: postMock,
   put: putMock,
   del: delMock,
+  getCsrfToken: vi.fn(() => Promise.resolve('test-csrf')),
 }))
 
 vi.mock('@/composables/useRouterSafe', () => ({
@@ -296,7 +297,7 @@ describe('挂载与模式', () => {
     authBox.token = ''
     const wrapper = mountComp()
     await flushPromises()
-    expect((wrapper.vm as any).uploadHeaders).toEqual({ Authorization: '' })
+    expect((wrapper.vm as any).uploadHeaders).toMatchObject({ 'X-CSRF-Token': 'test-csrf' })
   })
 })
 

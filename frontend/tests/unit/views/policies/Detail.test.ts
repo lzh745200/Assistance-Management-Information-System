@@ -45,7 +45,8 @@ vi.mock('element-plus', () => ({ ElMessage, ElMessageBox: { confirm: confirmMock
 
 vi.mock('@/api/policy', () => policyApiMock)
 
-vi.mock('@/api/request', () => ({ downloadBlob: downloadBlobMock }))
+vi.mock('@/api/request', () => ({ downloadBlob: downloadBlobMock,
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/stores/auth', () => ({ useAuthStore: () => authState }))
 

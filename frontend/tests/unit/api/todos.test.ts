@@ -14,7 +14,7 @@ vi.mock('@/api/request', () => ({
   put: mockPut,
   del: mockDel,
   patch: mockPatch,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import { listTodos, getTodo, createTodo, updateTodo, deleteTodo, toggleTodo } from '@/api/todos'
 

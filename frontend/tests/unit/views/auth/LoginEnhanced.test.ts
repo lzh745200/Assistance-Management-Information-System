@@ -53,7 +53,7 @@ vi.mock('@/api/request', () => ({
   post: vi.fn(),
   put: vi.fn(),
   del: vi.fn(),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/utils/logger', () => ({
   logger: { error: logError, warn: vi.fn(), info: vi.fn(), debug: vi.fn(), log: vi.fn() },

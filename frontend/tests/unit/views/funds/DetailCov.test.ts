@@ -69,7 +69,7 @@ vi.mock('@/api/request', () => ({
   post: mockPost,
   put: mockPut,
   del: mockDel,
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 vi.mock('@/api/funds', () => ({
   fundApi: {

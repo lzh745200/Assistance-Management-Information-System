@@ -17,7 +17,7 @@ vi.mock('@/api/request', () => ({
   post: (...args: any[]) => mockPost(...args),
   put: (...args: any[]) => mockPut(...args),
   del: (...args: any[]) => mockDel(...args),
-}))
+  getCsrfToken: vi.fn(() => Promise.resolve("test-csrf"))}))
 
 import {
   createWorkflow,
