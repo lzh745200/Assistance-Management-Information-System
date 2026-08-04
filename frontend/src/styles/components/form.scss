@@ -152,6 +152,66 @@
   width: 120px;
 }
 
+// 固定宽度（年度数据等定宽录入表单）
+.input-fixed-width {
+  width: 160px;
+}
+
+// 年份选择器宽度
+.input-year-width {
+  width: 200px;
+}
+
+// ========== 表单间距工具类 ==========
+// 提交按钮区与表单主体的间距
+.form-item-actions {
+  margin-top: 30px;
+}
+
+// 块级元素下方间距（按钮行等）
+.form-block-gap {
+  margin-bottom: 12px;
+}
+
+// 内嵌表格下方间距
+.form-table-gap {
+  margin-bottom: 16px;
+}
+
+// 表单行上方间距
+.form-row-mt {
+  margin-top: 12px;
+}
+
+// 表单行上方间距（大）
+.form-row-mt-lg {
+  margin-top: 16px;
+}
+
+// 表单行下方间距
+.form-row-mb {
+  margin-bottom: 12px;
+}
+
+// 并排按钮间距
+.form-btn-offset {
+  margin-left: 12px;
+}
+
+// 帮助图标（tooltip 触发器）
+.form-help-icon {
+  margin-left: 6px;
+  color: var(--color-text-placeholder);
+  cursor: help;
+}
+
+// 子区块标题（大区块内的小分组）
+.form-subsection-title {
+  font-size: 14px;
+  color: var(--color-primary-dark-1);
+  margin: 16px 0 8px;
+}
+
 // ========== 搜索表单样式 ==========
 .search-form {
   padding: 16px;

@@ -3,7 +3,7 @@
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
       <!-- 年份选择 -->
       <el-form-item label="数据年份">
-        <el-select v-model="selectedYear" style="width: 160px" @change="loadYearlyData">
+        <el-select v-model="selectedYear" class="input-fixed-width" @change="loadYearlyData">
           <el-option
             v-for="year in availableYears"
             :key="year"
@@ -12,7 +12,7 @@
           />
         </el-select>
         <el-button
-          style="margin-left: 12px"
+          class="form-btn-offset"
           :loading="copying"
           :disabled="selectedYear <= availableYears[availableYears.length - 1]"
           @click="handleCopyFromLastYear"
@@ -23,9 +23,7 @@
           content="将上一年度已录入数据复制到当前选中年份，便于在历史数据基础上修改"
           placement="top"
         >
-          <el-icon style="margin-left: 6px; color: #909399; cursor: help"
-            ><QuestionFilled
-          /></el-icon>
+          <el-icon class="form-help-icon"><QuestionFilled /></el-icon>
         </el-tooltip>
       </el-form-item>
 
@@ -37,7 +35,7 @@
             <el-input-number
               v-model="formData.population.totalHouseholds"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -46,7 +44,7 @@
             <el-input-number
               v-model="formData.population.totalPopulation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -55,7 +53,7 @@
             <el-input-number
               v-model="formData.population.residentPopulation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -67,7 +65,7 @@
             <el-input-number
               v-model="formData.population.unstablePovertyHouseholds"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -76,7 +74,7 @@
             <el-input-number
               v-model="formData.population.unstablePovertyPopulation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -88,7 +86,7 @@
             <el-input-number
               v-model="formData.population.marginalPovertyHouseholds"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -97,7 +95,7 @@
             <el-input-number
               v-model="formData.population.marginalPovertyPopulation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -109,7 +107,7 @@
             <el-input-number
               v-model="formData.population.suddenDifficultyHouseholds"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -118,7 +116,7 @@
             <el-input-number
               v-model="formData.population.suddenDifficultyPopulation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -130,7 +128,7 @@
             <el-input-number
               v-model="formData.population.veteranVillageSecretary"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -139,7 +137,7 @@
             <el-input-number
               v-model="formData.population.veteranVillageCommittee"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -154,7 +152,7 @@
               v-model="formData.income.perCapitaIncome"
               :min="0"
               :precision="4"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -164,7 +162,7 @@
               v-model="formData.income.countyPerCapitaIncome"
               :min="0"
               :precision="4"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -174,7 +172,7 @@
               v-model="formData.income.collectiveIncome"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -188,7 +186,7 @@
             <el-input-number
               v-model="formData.forceInvestment.seniorLeaderVisits"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -197,7 +195,7 @@
             <el-input-number
               v-model="formData.forceInvestment.unitSoldierVisits"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -212,7 +210,7 @@
               v-model="formData.industry.investment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -222,7 +220,7 @@
               v-model="formData.industry.plannedInvestment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -233,13 +231,17 @@
             <el-input-number
               v-model="formData.industry.plantingBreeding"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
         <el-col :span="6">
           <el-form-item label="帮扶车间(个)">
-            <el-input-number v-model="formData.industry.workshop" :min="0" style="width: 160px" />
+            <el-input-number
+              v-model="formData.industry.workshop"
+              :min="0"
+              class="input-fixed-width"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="6">
@@ -247,7 +249,7 @@
             <el-input-number
               v-model="formData.industry.ruralTourism"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -256,7 +258,7 @@
             <el-input-number
               v-model="formData.industry.otherIndustry"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -271,7 +273,7 @@
               v-model="formData.infrastructure.investment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -281,7 +283,7 @@
               v-model="formData.infrastructure.plannedInvestment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -293,7 +295,7 @@
               v-model="formData.infrastructure.roadKm"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -302,7 +304,7 @@
             <el-input-number
               v-model="formData.infrastructure.housingRenovation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -311,7 +313,7 @@
             <el-input-number
               v-model="formData.infrastructure.waterFacilities"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -320,7 +322,7 @@
             <el-input-number
               v-model="formData.infrastructure.culturalPlaza"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -331,7 +333,7 @@
             <el-input-number
               v-model="formData.infrastructure.libraryCafe"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -346,7 +348,7 @@
               v-model="formData.partyBuilding.investment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -356,7 +358,7 @@
               v-model="formData.partyBuilding.plannedInvestment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -367,7 +369,7 @@
             <el-input-number
               v-model="formData.partyBuilding.pairedBranches"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -376,7 +378,7 @@
             <el-input-number
               v-model="formData.partyBuilding.partyInstructors"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -385,7 +387,7 @@
             <el-input-number
               v-model="formData.partyBuilding.jointActivities"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -394,7 +396,7 @@
             <el-input-number
               v-model="formData.partyBuilding.civilizationActivities"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -409,7 +411,7 @@
               v-model="formData.medical.investment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -419,7 +421,7 @@
               v-model="formData.medical.plannedInvestment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -430,7 +432,7 @@
             <el-input-number
               v-model="formData.medical.clinicsBuilt"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -439,7 +441,7 @@
             <el-input-number
               v-model="formData.medical.patientsServed"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -454,7 +456,7 @@
               v-model="formData.consumption.villageProductsPurchase"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -464,7 +466,7 @@
               v-model="formData.consumption.otherProductsPurchase"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -473,7 +475,7 @@
             <el-input-number
               v-model="formData.consumption.salesCounters"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -482,7 +484,7 @@
             <el-input-number
               v-model="formData.consumption.benefitedPopulation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -496,7 +498,7 @@
             <el-input-number
               v-model="formData.employment.hiredPopulation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -505,7 +507,7 @@
             <el-input-number
               v-model="formData.employment.trainedPopulation"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -514,7 +516,7 @@
             <el-input-number
               v-model="formData.employment.recommendedEmployment"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -529,7 +531,7 @@
               v-model="formData.education.investment"
               :min="0"
               :precision="2"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -540,7 +542,7 @@
             <el-input-number
               v-model="formData.education.donatedSchools"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -549,7 +551,7 @@
             <el-input-number
               v-model="formData.education.aidedExternalSchools"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -558,7 +560,7 @@
             <el-input-number
               v-model="formData.education.educationActivities"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -567,7 +569,7 @@
             <el-input-number
               v-model="formData.education.aidedStudents"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
@@ -578,13 +580,13 @@
             <el-input-number
               v-model="formData.education.volunteerCounselors"
               :min="0"
-              style="width: 160px"
+              class="input-fixed-width"
             />
           </el-form-item>
         </el-col>
       </el-row>
 
-      <el-form-item style="margin-top: 30px">
+      <el-form-item class="form-item-actions">
         <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
         <el-button @click="handleClose">取消</el-button>
       </el-form-item>

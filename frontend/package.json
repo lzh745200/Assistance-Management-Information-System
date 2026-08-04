@@ -16,7 +16,7 @@
     "lint": "eslint src --ext .vue,.ts,.tsx --fix --max-warnings=0",
     "lint:check": "eslint src --ext .vue,.ts,.tsx --max-warnings=0",
     "type-check": "vue-tsc --noEmit",
-    "prepare": "cd .. && python scripts/pre_commit_hooks.py install 2>nul || true"
+    "prepare": "python scripts/pre_commit_hooks.py install || true"
   },
   "lint-staged": {
     "*.{vue,ts,tsx}": [

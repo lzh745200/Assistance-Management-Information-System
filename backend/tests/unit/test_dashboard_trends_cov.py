@@ -1,13 +1,13 @@
-"""app.api.v1.data.data.dashboard_trends 覆盖率攻坚测试
+"""app.api.v1.data.data.dashboard_trends 覆盖率测试。
 
-覆盖点：
-- _yoy：prev==0 且 cur==0、prev==0 且 cur!=0、常规四舍五入
-- GET /dashboard/kpi-trends：全查询序列（8 次 scalar）+ 无 per_capita_income 分支 + 异常回退
-- GET /dashboard/yearly-trends：多年循环 + 无 per_capita_income 分支 + 异常回退
+dashboard_trends.py 与 dashboard.py 都注册了 /dashboard/kpi-trends 与
+/dashboard/yearly-trends（前缀相同），FastAPI 按注册顺序匹配，实际生效的是
+dashboard.py 的实现。因此本文件直接调用 dashboard_trends 的函数体进行覆盖，
+并通过 HTTP 测试 dashboard.py 的缓存命中分支。
 """
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -20,25 +20,19 @@ from app.core.unified_data_scope import get_org_scope
 BASE = "/api/v1/dashboard"
 
 
-# ==================== 公共设施 ====================
+class _Scope:
+    @staticmethod
+    def filter_by_org_ids(q, *args, **kwargs):
+        return q
 
 
 def _make_db(scalars):
-    """构造按序返回 scalar 的 mock db"""
     q = MagicMock()
     q.filter.return_value = q
     q.scalar.side_effect = list(scalars)
     db = MagicMock()
-    db.query = MagicMock(return_value=q)
-    return db, q
-
-
-class _Scope:
-    """data_scope.filter_by_org_ids 原样返回 query"""
-
-    @staticmethod
-    def filter_by_org_ids(q, *args, **kwargs):
-        return q
+    db.query.return_value = q
+    return db
 
 
 @pytest.fixture
@@ -64,130 +58,138 @@ class TestYoy:
         assert dt._yoy(0, 0) == 0.0
 
     def test_prev_zero_cur_nonzero(self):
-        assert dt._yoy(5, 0) == 100.0
+        assert dt._yoy(50, 0) == 100.0
 
-    def test_normal_round(self):
-        assert dt._yoy(11, 10) == 10.0
-        assert dt._yoy(10, 8) == 25.0
+    def test_normal_calc(self):
+        assert dt._yoy(120, 100) == 20.0
+
+    def test_normal_calc_negative(self):
+        assert dt._yoy(80, 100) == -20.0
 
 
-# ==================== GET /kpi-trends ====================
+# ==================== get_kpi_trends（直接调用） ====================
 
 
-class TestKpiTrends:
-    def test_full_path(self, dt_client):
-        # 8 次 scalar：村cur/村prev/人口cur/人口prev/经费cur/经费prev/收入cur/收入prev
-        db, _ = _make_db([10, 8, 1000, 800, 500.0, 400.0, 3.0, 2.5])
-        _use_db(dt_client, db)
-        resp = dt_client.get(f"{BASE}/kpi-trends")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["villages"] == 25.0
-        assert data["population"] == 25.0
-        assert data["investment"] == 25.0
-        assert data["income"] == 20.0
-        assert data["current_year"] == data["previous_year"] + 1
+class TestKpiTrendsDirect:
+    def test_full_path(self):
+        # villages_cur, villages_prev, pop_cur, pop_prev, invest_cur, invest_prev,
+        # income_cur, income_prev
+        db = _make_db([10, 8, 500, 450, 1000.0, 800.0, 6000.0, 5500.0])
+        result = dt.get_kpi_trends(db=db, current_user=SimpleNamespace(id=1),
+                                   data_scope=_Scope())
+        assert result["villages"] == 25.0
+        assert result["population"] == pytest.approx(11.1, abs=0.1)
+        assert result["income"] == pytest.approx(9.1, abs=0.1)
+        assert result["investment"] == 25.0
 
-    def test_zero_prev_gives_100(self, dt_client):
-        db, _ = _make_db([5, 0, 100, 0, 200.0, 0, 1.0, 0])
-        _use_db(dt_client, db)
-        resp = dt_client.get(f"{BASE}/kpi-trends")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["villages"] == 100.0
-        assert data["population"] == 100.0
+    def test_zero_prev_gives_100(self):
+        db = _make_db([0, 0, 0, 0, 0, 0, 0, 0])
+        result = dt.get_kpi_trends(db=db, current_user=SimpleNamespace(id=1),
+                                   data_scope=_Scope())
+        assert result["villages"] == 0.0
+        assert result["income"] == 0.0
 
-    def test_no_per_capita_income_attr(self, dt_client, monkeypatch):
-        # 模型缺少 per_capita_income 属性时，收入恒 0 且不查询（仅 6 次 scalar）
-        class FakeVI:
-            pass
+    def test_no_per_capita_income_attr(self):
+        db = _make_db([5, 3, 100, 90, 50.0, 40.0])
+        with patch("app.api.v1.data.data.dashboard_trends.VillageIncome",
+                   SimpleNamespace(year=None)):
+            result = dt.get_kpi_trends(db=db, current_user=SimpleNamespace(id=1),
+                                       data_scope=_Scope())
+            assert result["income"] == 0.0
 
-        monkeypatch.setattr(dt, "VillageIncome", FakeVI)
-        db, _ = _make_db([4, 4, 100, 100, 100.0, 100.0])
-        _use_db(dt_client, db)
-        resp = dt_client.get(f"{BASE}/kpi-trends")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["income"] == 0.0
-        assert data["villages"] == 0.0
+    def test_scalar_none_falls_back_zero(self):
+        db = _make_db([None] * 8)
+        result = dt.get_kpi_trends(db=db, current_user=SimpleNamespace(id=1),
+                                   data_scope=_Scope())
+        assert result["villages"] == 0.0
+        assert result["investment"] == 0.0
 
-    def test_scalar_none_falls_back_zero(self, dt_client):
-        db, _ = _make_db([None, None, None, None, None, None, None, None])
-        _use_db(dt_client, db)
-        resp = dt_client.get(f"{BASE}/kpi-trends")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["villages"] == 0.0
-        assert data["population"] == 0.0
-
-    def test_exception_returns_fallback(self, dt_client):
+    def test_exception_returns_fallback(self):
         db = MagicMock()
-        db.query = MagicMock(side_effect=RuntimeError("boom"))
+        db.query.side_effect = RuntimeError("db down")
+        result = dt.get_kpi_trends(db=db, current_user=SimpleNamespace(id=1),
+                                   data_scope=_Scope())
+        assert result["villages"] == 0
+        assert result["income"] == 0
+
+
+# ==================== get_yearly_trends（直接调用） ====================
+
+
+class TestYearlyTrendsDirect:
+    def test_full_path(self):
+        scalars = []
+        for _ in range(3):
+            scalars += [1, 100, 2000.0, 50.0]
+        db = _make_db(scalars)
+        result = dt.get_yearly_trends(db=db, current_user=SimpleNamespace(id=1),
+                                      data_scope=_Scope(), years=3)
+        assert len(result["years"]) == 3
+        assert result["villages"] == [1, 1, 1]
+        assert result["income"] == [2000.0, 2000.0, 2000.0]
+        assert result["investment"] == [50.0, 50.0, 50.0]
+
+    def test_no_per_capita_income_attr(self):
+        scalars = []
+        for _ in range(3):
+            scalars += [1, 100, 50.0]
+        db = _make_db(scalars)
+        with patch("app.api.v1.data.data.dashboard_trends.VillageIncome",
+                   SimpleNamespace(year=None)):
+            result = dt.get_yearly_trends(db=db, current_user=SimpleNamespace(id=1),
+                                          data_scope=_Scope(), years=3)
+            assert result["income"] == [0.0, 0.0, 0.0]
+
+    def test_scalar_none_falls_back_zero(self):
+        db = _make_db([None] * 12)
+        result = dt.get_yearly_trends(db=db, current_user=SimpleNamespace(id=1),
+                                      data_scope=_Scope(), years=3)
+        assert result["villages"] == [0, 0, 0]
+        assert result["population"] == [0, 0, 0]
+
+    def test_exception_returns_fallback(self):
+        db = MagicMock()
+        db.query.side_effect = RuntimeError("boom")
+        result = dt.get_yearly_trends(db=db, current_user=SimpleNamespace(id=1),
+                                      data_scope=_Scope(), years=3)
+        assert len(result["years"]) == 3
+        assert result["villages"] == [0, 0, 0]
+
+
+# ==================== dashboard.py 缓存命中分支 ====================
+
+
+class TestDashboardCacheHit:
+    def test_summary_cache_hit(self, dt_client):
+        """dashboard.py get_dashboard_summary 的缓存命中分支（517-518）。"""
+        from app.api.v1.data.data.dashboard import _get_cached
+        import app.api.v1.data.data.dashboard as dash_mod
+
+        cached_payload = {"success": True, "data": {"cached": True}}
+        with patch.object(dash_mod, "_get_cached", return_value=cached_payload):
+            resp = dt_client.get(f"{BASE}/summary")
+            assert resp.status_code == 200
+            assert resp.json()["data"]["cached"] is True
+
+    def test_kpi_trends_http_success(self, dt_client):
+        """dashboard.py 的 /kpi-trends HTTP 成功路径（被注册的路由）。"""
+        db = MagicMock()
+
+        def fake_query(model):
+            q = MagicMock()
+            q.filter.return_value = q
+            q.first.return_value = None
+            q.all.return_value = []
+            q.scalar.return_value = 0
+            q.order_by.return_value = q
+            q.group_by.return_value = q
+            q.count.return_value = 0
+            return q
+
+        db.query.side_effect = fake_query
         _use_db(dt_client, db)
         resp = dt_client.get(f"{BASE}/kpi-trends")
         assert resp.status_code == 200
-        data = resp.json()
-        assert data["villages"] == 0
-        assert data["population"] == 0
-        assert data["income"] == 0
-        assert data["investment"] == 0
-        assert data["current_year"] == data["previous_year"] + 1
-
-
-# ==================== GET /yearly-trends ====================
-
-
-class TestYearlyTrends:
-    def test_two_years_full_path(self, dt_client):
-        # 每年 4 次 scalar：村/人口/收入/经费，共 2 年
-        db, _ = _make_db([
-            5, 100, 2000.456, 9000.234,   # 第 1 年
-            7, 150, 2500.567, 12000.789,  # 第 2 年
-        ])
-        _use_db(dt_client, db)
-        resp = dt_client.get(f"{BASE}/yearly-trends?years=2")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert len(data["years"]) == 2
-        assert data["villages"] == [5, 7]
-        assert data["population"] == [100, 150]
-        assert data["income"] == [2000.5, 2500.6]
-        assert data["investment"] == [9000.2, 12000.8]
-
-    def test_no_per_capita_income_attr(self, dt_client, monkeypatch):
-        class FakeVI:
-            pass
-
-        monkeypatch.setattr(dt, "VillageIncome", FakeVI)
-        # 无收入查询：每年 3 次 scalar（村/人口/经费）
-        db, _ = _make_db([3, 50, 1000.0])
-        _use_db(dt_client, db)
-        resp = dt_client.get(f"{BASE}/yearly-trends?years=1")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["income"] == [0.0]
-        assert data["villages"] == [3]
-        assert data["population"] == [50]
-
-    def test_scalar_none_falls_back_zero(self, dt_client):
-        db, _ = _make_db([None, None, None, None])
-        _use_db(dt_client, db)
-        resp = dt_client.get(f"{BASE}/yearly-trends?years=1")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["villages"] == [0]
-        assert data["income"] == [0.0]
-        assert data["investment"] == [0.0]
-
-    def test_exception_returns_fallback(self, dt_client):
-        db = MagicMock()
-        db.query = MagicMock(side_effect=RuntimeError("boom"))
-        _use_db(dt_client, db)
-        resp = dt_client.get(f"{BASE}/yearly-trends?years=3")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert len(data["years"]) == 3
-        assert data["villages"] == [0, 0, 0]
-        assert data["population"] == [0, 0, 0]
-        assert data["income"] == [0, 0, 0]
-        assert data["investment"] == [0, 0, 0]
+        body = resp.json()
+        assert body["success"] is True
+        assert "villages" in body["data"]

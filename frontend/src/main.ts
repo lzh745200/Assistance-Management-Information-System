@@ -41,6 +41,12 @@ import '@/styles/components/list-page.scss'
 import '@/styles/components/form-page.scss'
 // 打印样式（A4适配，隐藏非内容区域）
 import '@/styles/print.scss'
+// 无障碍增强（焦点环/skip-link/reduced-motion/high-contrast 主题补全）
+import '@/styles/accessibility.css'
+
+// 挂载前应用已记忆的主题，避免首屏主题闪烁（FOUC）
+import { applyThemeToDom, THEME_STORAGE_KEY, DEFAULT_THEME } from '@/stores/config'
+applyThemeToDom(localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME)
 
 // 一次性将旧版 localStorage token 迁移到 sessionStorage
 AuthStorage.migrateFromLocalStorage()

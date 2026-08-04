@@ -9,7 +9,7 @@
       label-position="left"
     >
       <el-form-item label="数据年份">
-        <el-select v-model="selectedYear" style="width: 200px" @change="handleYearChange">
+        <el-select v-model="selectedYear" class="input-year-width" @change="handleYearChange">
           <el-option
             v-for="year in availableYears"
             :key="year"
@@ -25,41 +25,65 @@
         <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="总户数" prop="totalHouseholds">
-              <el-input-number v-model="formData.totalHouseholds" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.totalHouseholds"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="总人数" prop="totalPopulation">
-              <el-input-number v-model="formData.totalPopulation" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.totalPopulation"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="常住人口数" prop="residentPopulation">
-              <el-input-number v-model="formData.residentPopulation" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.residentPopulation"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="劳动力(人)" prop="laborForce">
-              <el-input-number v-model="formData.laborForce" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.laborForce" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="外出务工(人)" prop="migrantWorkers">
-              <el-input-number v-model="formData.migrantWorkers" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.migrantWorkers"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="脱贫人口(人)" prop="povertyPopulation">
-              <el-input-number v-model="formData.povertyPopulation" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.povertyPopulation"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="脱贫户数(户)" prop="povertyHouseholds">
-              <el-input-number v-model="formData.povertyHouseholds" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.povertyHouseholds"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -69,7 +93,7 @@
               <el-input-number
                 v-model="formData.unstablePovertyHouseholds"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -78,7 +102,7 @@
               <el-input-number
                 v-model="formData.unstablePovertyPopulation"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -89,7 +113,7 @@
               <el-input-number
                 v-model="formData.marginalPovertyHouseholds"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -98,7 +122,7 @@
               <el-input-number
                 v-model="formData.marginalPovertyPopulation"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -109,7 +133,7 @@
               <el-input-number
                 v-model="formData.suddenDifficultyHouseholds"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -118,7 +142,7 @@
               <el-input-number
                 v-model="formData.suddenDifficultyPopulation"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -129,7 +153,7 @@
               <el-input-number
                 v-model="formData.veteranVillageSecretary"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -138,7 +162,7 @@
               <el-input-number
                 v-model="formData.veteranVillageCommittee"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -155,7 +179,7 @@
                 v-model="formData.perCapitaIncome"
                 :min="0"
                 :precision="4"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -165,7 +189,7 @@
                 v-model="formData.countyPerCapitaIncome"
                 :min="0"
                 :precision="4"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -177,7 +201,7 @@
                 v-model="formData.collectiveIncome"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -190,12 +214,20 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="上级领导到村(人次)" prop="seniorLeaderVisits">
-              <el-input-number v-model="formData.seniorLeaderVisits" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.seniorLeaderVisits"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="帮扶单位人员到村(人次)" prop="unitSoldierVisits">
-              <el-input-number v-model="formData.unitSoldierVisits" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.unitSoldierVisits"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -211,7 +243,7 @@
                 v-model="formData.investment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -221,7 +253,7 @@
                 v-model="formData.plannedInvestment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -229,24 +261,28 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="种植养殖(个)" prop="plantingBreeding">
-              <el-input-number v-model="formData.plantingBreeding" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.plantingBreeding"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="帮扶车间(个)" prop="workshop">
-              <el-input-number v-model="formData.workshop" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.workshop" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="乡村旅游(个)" prop="ruralTourism">
-              <el-input-number v-model="formData.ruralTourism" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.ruralTourism" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="其他(个)" prop="otherIndustry">
-              <el-input-number v-model="formData.otherIndustry" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.otherIndustry" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -262,7 +298,7 @@
                 v-model="formData.investment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -272,7 +308,7 @@
                 v-model="formData.plannedInvestment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -284,32 +320,40 @@
                 v-model="formData.roadKm"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="住房改造(户)" prop="housingRenovation">
-              <el-input-number v-model="formData.housingRenovation" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.housingRenovation"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="水利设施(个)" prop="waterFacilities">
-              <el-input-number v-model="formData.waterFacilities" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.waterFacilities"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="文化广场(个)" prop="culturalPlaza">
-              <el-input-number v-model="formData.culturalPlaza" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.culturalPlaza" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="书屋网吧(个)" prop="libraryCafe">
-              <el-input-number v-model="formData.libraryCafe" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.libraryCafe" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -325,7 +369,7 @@
                 v-model="formData.investment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -335,7 +379,7 @@
                 v-model="formData.plannedInvestment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -343,19 +387,31 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="结对帮扶党支部(个)" prop="pairedBranches">
-              <el-input-number v-model="formData.pairedBranches" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.pairedBranches"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="党建指导员(人)" prop="partyInstructors">
-              <el-input-number v-model="formData.partyInstructors" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.partyInstructors"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="联建共促活动(次)" prop="jointActivities">
-              <el-input-number v-model="formData.jointActivities" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.jointActivities"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -363,7 +419,7 @@
               <el-input-number
                 v-model="formData.civilizationActivities"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -380,7 +436,7 @@
                 v-model="formData.investment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -390,7 +446,7 @@
                 v-model="formData.plannedInvestment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -398,12 +454,16 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="帮建卫生院室(个)" prop="clinicsBuilt">
-              <el-input-number v-model="formData.clinicsBuilt" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.clinicsBuilt" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="巡诊群众(人次)" prop="patientsServed">
-              <el-input-number v-model="formData.patientsServed" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.patientsServed"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -419,7 +479,7 @@
                 v-model="formData.villageProductsPurchase"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -429,7 +489,7 @@
                 v-model="formData.otherProductsPurchase"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -437,7 +497,7 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="营区销售专柜(个)" prop="salesCounters">
-              <el-input-number v-model="formData.salesCounters" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.salesCounters" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -445,7 +505,7 @@
               <el-input-number
                 v-model="formData.benefitedPopulation"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -458,12 +518,20 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="聘用脱贫群众(人)" prop="hiredPopulation">
-              <el-input-number v-model="formData.hiredPopulation" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.hiredPopulation"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="技能培训(人次)" prop="trainedPopulation">
-              <el-input-number v-model="formData.trainedPopulation" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.trainedPopulation"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -473,7 +541,7 @@
               <el-input-number
                 v-model="formData.recommendedEmployment"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -490,7 +558,7 @@
                 v-model="formData.investment"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -498,7 +566,11 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="捐赠帮扶村学校(所)" prop="donatedSchools">
-              <el-input-number v-model="formData.donatedSchools" :min="0" style="width: 100%" />
+              <el-input-number
+                v-model="formData.donatedSchools"
+                :min="0"
+                class="input-full-width"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -506,7 +578,7 @@
               <el-input-number
                 v-model="formData.aidedExternalSchools"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -517,13 +589,13 @@
               <el-input-number
                 v-model="formData.educationActivities"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="资助困难学生(人)" prop="aidedStudents">
-              <el-input-number v-model="formData.aidedStudents" :min="0" style="width: 100%" />
+              <el-input-number v-model="formData.aidedStudents" :min="0" class="input-full-width" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -533,7 +605,7 @@
               <el-input-number
                 v-model="formData.volunteerCounselors"
                 :min="0"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
@@ -571,16 +643,16 @@
                 v-model="formData.collectiveIncomeAmount"
                 :min="0"
                 :precision="2"
-                style="width: 100%"
+                class="input-full-width"
               />
             </el-form-item>
           </el-col>
         </el-row>
         <el-divider content-position="left">村委会成员</el-divider>
-        <div style="margin-bottom: 12px">
+        <div class="form-block-gap">
           <el-button type="primary" size="small" @click="addCommitteeMember">新增成员</el-button>
         </div>
-        <el-table :data="committeeMembers" border size="small" style="margin-bottom: 16px">
+        <el-table :data="committeeMembers" border size="small" class="form-table-gap">
           <el-table-column label="姓名" min-width="100">
             <template #default="{ row }">
               <el-input v-model="row.name" size="small" placeholder="姓名" />
@@ -670,7 +742,7 @@
       </div>
 
       <!-- 操作按钮 -->
-      <el-form-item style="margin-top: 30px">
+      <el-form-item class="form-item-actions">
         <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
         <el-button @click="handleClose">取消</el-button>
       </el-form-item>
