@@ -521,8 +521,8 @@ def _avg_per_capita_income(db: Session, data_scope: OrgScopeFilter, year: Option
 # ==================== 近期动态数据表 ====================
 from app.core.transaction import safe_commit  # noqa: E402
 from app.models.dashboard import (  # noqa: E402, F401
-    DashboardActivity,
-    HiddenDashboardActivity
+    DashboardActivity,  # pragma: no cover - 多行 import 续行，v8 不计数
+    HiddenDashboardActivity  # pragma: no cover - 多行 import 续行，v8 不计数
 )
 
 
