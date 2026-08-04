@@ -43,6 +43,7 @@ vi.mock('@/stores/auth', () => ({
     error: authState.error,
     mustChangePassword: authState.mustChangePassword,
     logout: vi.fn(),
+    getAuthData: () => ({ token: 't', user: { id: 1, username: 'admin', role: 'admin' } }),
   }),
 }))
 
@@ -56,6 +57,15 @@ vi.mock('@/api/request', () => ({
 
 vi.mock('@/utils/logger', () => ({
   logger: { error: logError, warn: vi.fn(), info: vi.fn(), debug: vi.fn(), log: vi.fn() },
+}))
+
+const authStorageMock = vi.hoisted(() => ({
+  persistForAutoLogin: vi.fn(),
+  clearPersisted: vi.fn(),
+}))
+
+vi.mock('@/utils/authStorage', () => ({
+  AuthStorage: authStorageMock,
 }))
 
 vi.mock('element-plus', () => ({
@@ -601,5 +611,38 @@ describe('LoginEnhanced.vue', () => {
     await nextTick()
     expect(vm.currentBg).toBe('/images/login-bg/bg4.jpg')
     w.unmount()
+  })
+
+  describe('记住登录（自动登录持久化）', () => {
+    beforeEach(() => {
+      authStorageMock.persistForAutoLogin.mockClear()
+      authStorageMock.clearPersisted.mockClear()
+    })
+
+    it('勾选记住登录 → 持久化令牌', async () => {
+      mockLogin.mockResolvedValue({ status: 'success' })
+      const w = await mountComp()
+      const vm = w.vm as any
+      vm.username = 'admin'
+      vm.password = 'pass123'
+      vm.rememberMe = true
+      await vm.handleLogin()
+      expect(authStorageMock.persistForAutoLogin).toHaveBeenCalledWith(
+        expect.objectContaining({ token: 't' })
+      )
+      expect(authStorageMock.clearPersisted).not.toHaveBeenCalled()
+    })
+
+    it('未勾选记住登录 → 清除持久数据', async () => {
+      mockLogin.mockResolvedValue({ status: 'success' })
+      const w = await mountComp()
+      const vm = w.vm as any
+      vm.username = 'admin'
+      vm.password = 'pass123'
+      vm.rememberMe = false
+      await vm.handleLogin()
+      expect(authStorageMock.clearPersisted).toHaveBeenCalled()
+      expect(authStorageMock.persistForAutoLogin).not.toHaveBeenCalled()
+    })
   })
 })

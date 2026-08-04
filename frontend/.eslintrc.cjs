@@ -19,7 +19,7 @@ module.exports = {
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrors: 'none' }],
     'vue/multi-word-component-names': 'off',
     'vue/require-default-prop': 'off', // Vue 3 中可选props不需要默认值
     // 禁止 response.data.success 双重解包：

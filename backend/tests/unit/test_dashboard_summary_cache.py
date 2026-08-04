@@ -1,20 +1,9 @@
-"""dashboard.py /summary 缓存命中分支隔离测试。
-
-全量运行中其他测试会先调用 /summary 或修改 dependency_overrides，
-导致本分支覆盖不稳定。此文件独立验证缓存命中路径。
-"""
+"""dashboard.py get_dashboard_summary 缓存分支隔离测试（单元级，不依赖路由）。"""
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-
-from app.core.database import get_db
-from app.core.security import get_current_user
-from app.core.unified_data_scope import get_org_scope
-
-BASE = "/api/v1/dashboard"
 
 
 class _Scope:
@@ -28,28 +17,23 @@ class _Scope:
         return True
 
 
-@pytest.fixture
-def client():
-    from app.main import app
-
-    original = app.dependency_overrides.copy()
-    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1, username="root")
-    app.dependency_overrides[get_org_scope] = lambda: _Scope()
-    yield TestClient(app, raise_server_exceptions=False)
-    app.dependency_overrides = original
-
-
-class TestDashboardSummaryCache:
-    def test_cache_hit_returns_cached(self, client):
+class TestDashboardSummaryUnit:
+    def test_cache_hit_returns_cached(self):
         import app.api.v1.data.data.dashboard as dash_mod
 
-        cached_payload = {"success": True, "data": {"cached_marker": 1}}
+        cached_payload = {"stats": {"x": 1}, "recent_activities": []}
         with patch.object(dash_mod, "_get_cached", return_value=cached_payload):
-            resp = client.get(f"{BASE}/summary")
-            assert resp.status_code == 200
-            assert resp.json()["data"]["cached_marker"] == 1
+            import asyncio
 
-    def test_cache_miss_then_queries(self, client):
+            result = asyncio.run(dash_mod.get_dashboard_summary(
+                current_user=SimpleNamespace(id=1),
+                data_scope=_Scope(),
+                db=MagicMock(),
+            ))
+        assert result is cached_payload
+
+    def test_cache_miss_queries_and_sets(self):
+        import asyncio
         import app.api.v1.data.data.dashboard as dash_mod
 
         db = MagicMock()
@@ -66,11 +50,17 @@ class TestDashboardSummaryCache:
             return q
 
         db.query.side_effect = fake_query
-        client.app.dependency_overrides[get_db] = lambda: db
+
+        activities_payload = {"items": [{"id": 1, "type": "project"}]}
         with patch.object(dash_mod, "_get_cached", return_value=None), \
-             patch.object(dash_mod, "_set_cached"):
-            resp = client.get(f"{BASE}/summary")
-            assert resp.status_code == 200
-            body = resp.json()
-            assert "stats" in body
-            assert "recent_activities" in body
+             patch.object(dash_mod, "_set_cached") as mock_set, \
+             patch.object(dash_mod, "get_recent_activities",
+                          new=AsyncMock(return_value=activities_payload)):
+            result = asyncio.run(dash_mod.get_dashboard_summary(
+                current_user=SimpleNamespace(id=1),
+                data_scope=_Scope(),
+                db=db,
+            ))
+        assert "stats" in result
+        assert result["recent_activities"] == activities_payload["items"]
+        mock_set.assert_called_once()

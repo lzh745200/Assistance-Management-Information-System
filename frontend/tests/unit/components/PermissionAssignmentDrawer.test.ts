@@ -314,6 +314,18 @@ describe('PermissionAssignmentDrawer.vue', () => {
     expect(wrapper.emitted('saved')).toHaveLength(1)
   })
 
+  it('保存权限成功：granted/revoked/skipped 缺省时默认空数组', async () => {
+    mockPost.mockResolvedValue({
+      data: { success: true, failed: [] },
+    })
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+    await btn(wrapper, '保存权限')!.trigger('click')
+    await flushPromises()
+    expect(mockMessage.success).toHaveBeenCalledWith('权限保存成功')
+    expect(wrapper.emitted('saved')).toHaveLength(1)
+  })
+
   it('保存权限部分失败：warning 消息', async () => {
     mockPost.mockResolvedValue({
       data: { success: true, granted: [], revoked: [], skipped: [], failed: ['x', 'y'] },
@@ -450,5 +462,51 @@ describe('PermissionAssignmentDrawer.vue', () => {
     await flushPromises()
     expect(mockGet).toHaveBeenCalledWith('/rbac/user/1/permissions')
     expect(mockGet).toHaveBeenCalledWith('/menus/user-menus/1')
+  })
+
+  it('loadAllRoles 失败 → 空列表兜底', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/rbac/roles') return Promise.reject(new Error('boom'))
+      return Promise.resolve({ data: [] })
+    })
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.allRoles).toEqual([])
+  })
+
+  it('user 缺 role/data_scope → 默认 user/org（watch 分支）', async () => {
+    vi.useFakeTimers()
+    mockGet.mockImplementation(() => Promise.resolve({ data: [] }))
+    const wrapper = mountDrawer({ user: { id: 2, username: 'lisi' } })
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.legacyForm.role).toBe('user')
+    expect(vm.legacyForm.data_scope).toBe('org')
+    // 推进 200ms 触发 loadAssignedRoles 回调
+    await vi.advanceTimersByTimeAsync(200)
+    vi.useRealTimers()
+  })
+
+  it('user 无 id → 权限/菜单加载早退', async () => {
+    mockGet.mockImplementation(() => Promise.resolve({ data: [] }))
+    const wrapper = mountDrawer({ user: { username: 'noid' } })
+    await flushPromises()
+    expect(mockGet).not.toHaveBeenCalledWith('/rbac/user/undefined/permissions')
+    const vm = wrapper.vm as any
+    expect(vm.currentPermissions).toEqual([])
+    expect(vm.currentMenuKeys).toEqual([])
+  })
+
+  it('权限响应无 permissions 字段 → 空数组', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/permissions')) return Promise.resolve({ data: { foo: 1 } })
+      if (url.includes('/user-menus')) return Promise.resolve({ data: { menu_keys: ['a'] } })
+      return Promise.resolve({ data: [] })
+    })
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.currentPermissions).toEqual([])
   })
 })
