@@ -104,16 +104,6 @@
   text-decoration: underline;
 }
 
-/* ── 可点击区域最小尺寸（WCAG 2.5.5） ── */
-.el-button--small {
-  min-height: 32px;
-  min-width: 32px;
-}
-.el-icon {
-  min-width: 24px;
-  min-height: 24px;
-}
-
 /* ── 表单错误提示关联 ── */
 [aria-invalid="true"] {
   border-color: var(--el-color-danger) !important;

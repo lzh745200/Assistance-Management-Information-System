@@ -330,6 +330,23 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
+          <!-- 主题切换器 -->
+          <el-dropdown trigger="click" class="theme-switcher" @command="handleThemeChange">
+            <span class="theme-trigger" role="button" tabindex="0" aria-label="切换外观主题">
+              <el-icon><Brush /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="t in headerThemeOptions" :key="t.value" :command="t.value">
+                  <el-icon class="theme-check">
+                    <Check v-if="configStore.theme === t.value" />
+                  </el-icon>
+                  {{ t.label }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
           <el-dropdown trigger="click" @command="handleCommand">
             <span class="user-info">
               <el-avatar :size="30" class="header-avatar">
@@ -382,6 +399,7 @@ import { useRouterSafe } from '@/composables/useRouterSafe'
 import { useKeyboardShortcuts, type Shortcut } from '@/composables/useKeyboardShortcuts'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
+import { useConfigStore, THEME_OPTIONS } from '@/stores/config'
 import { cancelAllRequests, freezeRequests } from '@/api/request'
 import MobileBottomNav from '@/components/layout/MobileBottomNav.vue'
 import {
@@ -406,12 +424,24 @@ import {
   Lock,
   SwitchButton,
   Select,
+  Brush,
+  Check,
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const { pushSafe } = useRouterSafe()
 const authStore = useAuthStore()
 const menuStore = useMenuStore()
+const configStore = useConfigStore()
+
+// ── 主题切换 ──
+// 顶栏仅开放已完成适配的主题；dark/military 待全站硬编码 Token 化后开放（见 UI 设计方案 §3）
+const HEADER_THEME_VALUES = ['default', 'light', 'outdoor', 'high-contrast']
+const headerThemeOptions = THEME_OPTIONS.filter((t) => HEADER_THEME_VALUES.includes(t.value))
+
+function handleThemeChange(command: string) {
+  configStore.setTheme(command)
+}
 
 // 挂载时加载用户可见菜单（若未加载）
 onMounted(async () => {
@@ -887,6 +917,35 @@ function handleCommand(command: string) {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 6px;
+}
+
+/* ── 主题切换器 ── */
+.theme-switcher {
+  outline: none;
+}
+.theme-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease;
+}
+.theme-trigger:hover,
+.theme-trigger:focus-visible {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #d4af37;
+}
+.theme-check {
+  margin-right: 4px;
+  color: var(--color-primary);
 }
 
 .user-info {

@@ -36,7 +36,7 @@ describe('stores/app + stores/config', () => {
       const c = useConfigStore()
       expect(c.appName).toBe('帮扶管理信息系统')
       expect(c.version).toBe('1.5.0')
-      expect(c.theme).toBe('light')  // localStorage empty
+      expect(c.theme).toBe('default')  // localStorage empty → 军绿默认主题
     })
 
     it('从 localStorage 读取 theme', () => {

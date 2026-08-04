@@ -38,6 +38,7 @@
         <span>外观主题</span>
       </template>
       <el-radio-group v-model="currentTheme" @change="applyTheme">
+        <el-radio-button value="default">军绿</el-radio-button>
         <el-radio-button value="light">明亮</el-radio-button>
         <el-radio-button value="dark">深色</el-radio-button>
         <el-radio-button value="military">军旅</el-radio-button>
@@ -125,12 +126,16 @@ const loading = ref(false)
 // ── 外观主题 ──
 const configStore = useConfigStore()
 const currentTheme = ref(configStore.theme || 'light')
-const THEMES = ['light', 'dark', 'military', 'outdoor', 'high-contrast']
+const THEMES = ['default', 'light', 'dark', 'military', 'outdoor', 'high-contrast']
 
 function applyTheme(t: string | number | boolean | undefined) {
   const theme = THEMES.includes(String(t)) ? String(t) : 'light'
   currentTheme.value = theme
-  document.documentElement.setAttribute('data-theme', theme)
+  if (theme === 'default') {
+    document.documentElement.removeAttribute('data-theme')
+  } else {
+    document.documentElement.setAttribute('data-theme', theme)
+  }
   configStore.setTheme(theme)
 }
 const configList = ref<ConfigItem[]>([])

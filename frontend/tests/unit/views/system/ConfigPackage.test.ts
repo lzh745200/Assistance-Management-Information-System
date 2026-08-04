@@ -383,5 +383,15 @@ describe('ConfigPackage.vue', () => {
       expect(document.documentElement.getAttribute('data-theme')).toBe('light')
       expect(vm.currentTheme).toBe('light')
     })
+
+    it('applyTheme default 移除 data-theme 属性（回到军绿默认）', async () => {
+      const w = await mountComp()
+      const vm = w.vm as any
+      document.documentElement.setAttribute('data-theme', 'outdoor')
+      vm.applyTheme('default')
+      expect(document.documentElement.hasAttribute('data-theme')).toBe(false)
+      expect(configStore.setTheme).toHaveBeenCalledWith('default')
+      expect(vm.currentTheme).toBe('default')
+    })
   })
 })

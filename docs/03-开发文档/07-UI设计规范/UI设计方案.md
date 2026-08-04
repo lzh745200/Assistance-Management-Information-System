@@ -137,20 +137,24 @@
 
 | 主题 | 选择器 | 定位 | 启用状态 |
 |------|--------|------|---------|
-| **军绿（默认）** | `:root`（无 data-theme） | 全局默认主题，庄重政务风 | ✅ 当前实际渲染 |
-| **浅色** | `[data-theme="light"]` | Element Plus 原生蓝，兼容回退/对照用 | 可选 |
-| **暗色** | `[data-theme="dark"]` | 夜间办公，低亮度环境 | 二期（依赖硬编码 Token 化完成） |
-| **军事风** | `[data-theme="military"]` | 深绿渐变+金色徽章，大屏/汇报场景 | 大屏专用（bigscreen 可局部应用） |
-| **户外/长辈** | `[data-theme="outdoor"]` | 高对比深蓝+亮黄，字号×1.5，户外强光与老年用户 | ✅ 首批开放 |
+| **军绿（默认）** | `:root`（无 data-theme） | 全局默认主题，庄重政务风 | ✅ 默认渲染，顶栏可切回 |
+| **浅色** | `[data-theme="light"]` | Element Plus 原生蓝，兼容回退/对照用 | ✅ 顶栏可选 |
+| **暗色** | `[data-theme="dark"]` | 夜间办公，低亮度环境 | 仅系统设置页（二期进顶栏，依赖硬编码 Token 化） |
+| **军事风** | `[data-theme="military"]` | 深绿渐变+金色徽章，大屏/汇报场景 | 仅系统设置页（bigscreen 可局部应用） |
+| **户外/长辈** | `[data-theme="outdoor"]` | 高对比深蓝+亮黄，字号×1.5，户外强光与老年用户 | ✅ 顶栏可选 |
+| **高对比** | `[data-theme="high-contrast"]`（accessibility.css） | 黑白高对比无障碍模式 | ✅ 顶栏可选 |
 
 ### 3.2 切换机制
 
 - **状态源**：`stores/config.ts` 的 `theme`（唯一数据源；`stores/app.ts` 不再持有 theme）。
-- **DOM 接线**：`setTheme(t)` 同时写 localStorage 与 `document.documentElement.dataset.theme`；`'default'` 表示移除 data-theme 属性（渲染 :root 军绿）。
+- **DOM 接线**：`setTheme(t)` 同时写 localStorage 与 `document.documentElement.dataset.theme`；`'default'` 表示移除 data-theme 属性（渲染 :root 军绿）。`applyThemeToDom()` 为共享工具函数。
 - **启动应用**：`main.ts` 在 createApp 之前读取 localStorage 并应用到 DOM，避免主题闪烁（FOUC）。
-- **切换入口**：`DefaultLayoutSafe.vue` header-right 区，用户下拉左侧，`el-dropdown` 形式。
-- **默认值**：`'default'`（军绿）。历史遗留 `'light'` 值在启动时归一化为 `'default'`。
-- **开放节奏**：首批开放 default / outdoor；light 作为隐藏回退保留；dark 与 military 待二期（先完成全站硬编码 Token 化，再引入 `element-plus/theme-chalk/dark/css-vars.css`）。
+- **切换入口（双通道）**：
+  - **顶栏切换器**（DefaultLayoutSafe header-right，全体用户）：仅开放已完成适配的 4 套 — 军绿（default）/ 明亮（light）/ 户外（outdoor）/ 高对比（high-contrast）。
+  - **系统设置页**（ConfigPackage，管理员）：开放全部 6 套（含深色 dark / 军旅 military，供调试与汇报场景）。
+- **默认值**：`'default'`（军绿）。
+- **开放节奏**：dark 与 military 待二期全站硬编码 Token 化后再进入顶栏切换器（military 的 `--color-bg-page` 为渐变值，用于 `background-color` 时失效，需先治理）。
+- **无障碍接入**：`styles/accessibility.css` 已由 main.ts 全局引入 — high-contrast 主题补全、outdoor 触控增强、焦点环、prefers-reduced-motion；其中会改变全站既有布局的两条全局尺寸规则（el-icon 最小 24px / el-button--small 最小 32px）已移除。
 
 ### 3.3 主题适配验收标准
 
@@ -279,8 +283,8 @@ KPI 卡（可点卡必须 `role="button" tabindex="0"` + 键盘事件）+ 图表
 | # | 事项 | 内容 |
 |---|------|------|
 | 1 | UI 设计方案文档 | 本文档 |
-| 2 | 表单布局规范化 | SectionDataForm / YearlyDataForm / ComprehensiveEntry 内联 style 清理 + form-page.scss 控件撑满全局规则 |
-| 3 | 主题切换接线 | config store 统一（合并 app.ts 冗余 theme）+ main.ts 启动应用 + header 切换器 + 首批 default/outdoor + 孤儿样式文件清理 |
+| 2 | 表单布局规范化 | SectionDataForm / YearlyDataForm / ComprehensiveEntry 内联 style 清理（171 处→0）+ form.scss 宽度/间距工具类（input-full-width / input-fixed-width / input-year-width / form-item-actions 等） |
+| 3 | 主题切换接线 | config store 升级为唯一数据源（THEME_OPTIONS / applyThemeToDom / 默认 default 军绿）+ main.ts 启动应用（防 FOUC）+ 顶栏切换器（default/light/outdoor/high-contrast）+ ConfigPackage 增加军绿选项 + accessibility.css 接入（移除 2 条布局破坏性规则）+ 删除冗余 print.css |
 
 ### 二期（P1，需产品决策或前置条件）
 
@@ -312,6 +316,7 @@ KPI 卡（可点卡必须 `role="button" tabindex="0"` + 键盘事件）+ 图表
 | `styles/components/table.scss` / `form.scss` / `layout.scss` / `enhanced.scss` / `prompt.scss` | 组件级规范 | index.scss @use |
 | `styles/dashboard-theme.scss` | 工作台深度视觉主题 | main.ts |
 | `styles/print.scss` | 打印样式（A4 适配） | main.ts |
+| `styles/accessibility.css` | 无障碍增强（焦点环/skip-link/reduced-motion/high-contrast 主题） | main.ts |
 | `styles/responsive.scss` | 响应式断点 mixin | index.scss @use |
 
 ## 附录 B：开发纪律
