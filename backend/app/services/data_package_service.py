@@ -109,8 +109,9 @@ class DataPackageService:
         package_type: PackageType = PackageType.report,
         incremental: bool = False,
         since_sync_version: Optional[int] = None,
+        since_time: Optional[datetime] = None,
     ) -> DataPackageExportResult:
-        """导出数据包（incremental=True 时仅导出 sync_version 大于 since_sync_version 的记录）"""
+        """导出数据包（incremental=True 时按 sync_version 或 updated_at 时间过滤变更记录）"""
         org = self.org_service.get_organization(org_id)
         if not org:
             raise BusinessError(f"组织不存在: {org_id}")
@@ -125,6 +126,7 @@ class DataPackageService:
                 records = self._export_data_type(
                     org_id, model,
                     since_sync_version=since_sync_version if incremental else None,
+                    since_time=since_time if incremental else None,
                 )
                 data_dict[data_type] = records
                 record_counts[data_type] = len(records)
@@ -173,8 +175,12 @@ class DataPackageService:
             download_url=f"/api/v1/data-packages/{package.id}/download",
         )
 
-    def _export_data_type(self, org_id: int, model: Any, since_sync_version: Optional[int] = None) -> List[Dict]:
-        """导出指定类型的数据（增量模式按 sync_version 过滤）"""
+    def _export_data_type(
+        self, org_id: int, model: Any,
+        since_sync_version: Optional[int] = None,
+        since_time: Optional[datetime] = None,
+    ) -> List[Dict]:
+        """导出指定类型的数据（增量模式: 按 sync_version 或 updated_at 时间过滤）"""
         query = self.db.query(model)
         if hasattr(model, "org_id"):
             query = query.filter(model.org_id == org_id)
@@ -183,6 +189,9 @@ class DataPackageService:
 
         if since_sync_version is not None and hasattr(model, "sync_version"):
             query = query.filter(model.sync_version > since_sync_version)
+
+        if since_time is not None and hasattr(model, "updated_at"):
+            query = query.filter(model.updated_at > since_time)
 
         records = query.all()
         result = []

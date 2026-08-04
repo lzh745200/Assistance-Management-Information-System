@@ -36,7 +36,8 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      // 使用系统 Edge 内核（避免下载 Playwright chromium 浏览器包）
+      use: { ...devices['Desktop Chrome'], channel: 'msedge' },
     },
   ],
 
@@ -48,6 +49,11 @@ export default defineConfig({
       url: 'http://127.0.0.1:8000/api/v1/health',
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
+      env: {
+        ...process.env,
+        // E2E 使用独立测试数据库，避免污染生产数据（备份自 rural_revitalization.db）
+        DATABASE_URL: 'sqlite:///C:/military-Rural%20Revitalization-system/backend/data/e2e_test.db',
+      },
     },
     {
       command: 'npm run dev',

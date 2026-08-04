@@ -192,9 +192,9 @@ async function handleBatchApprove() {
       type: 'success',
     })
     batchLoading.value = true
-    await post('/approval/tasks/batch-approve', {
+    await post('/approval/tasks/batch', {
       task_ids: selectedIds.value,
-      comment: '批量通过',
+      opinion: '批量通过',
     })
     ElMessage.success('批量审批通过')
     selectedIds.value = []

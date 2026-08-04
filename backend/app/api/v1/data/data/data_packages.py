@@ -6,7 +6,8 @@ import logging
 import os
 import tempfile
 import time
-from typing import List, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
 from fastapi import (APIRouter, Depends, File, Form, HTTPException, Query,
                      Request, UploadFile, status)
@@ -455,6 +456,162 @@ async def import_data_package(
             temp_file.close()
         if os.path.exists(temp_file.name):
             os.unlink(temp_file.name)
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 增量数据包端点（前端 IncrementalUpdate.vue 使用）
+# ══════════════════════════════════════════════════════════════════════
+
+class IncrementalDetectRequest(BaseModel):
+    """增量变更检测请求"""
+    org_id: Optional[int] = None
+    data_types: List[str] = []
+    base_package_id: int
+
+
+class IncrementalExportRequest(BaseModel):
+    """增量包导出请求"""
+    org_id: Optional[int] = None
+    data_types: List[str] = []
+    base_package_id: int
+    description: Optional[str] = None
+
+
+class IncrementalImportRequest(BaseModel):
+    """增量包导入请求"""
+    package_id: int
+    apply_changes: bool = False
+
+
+def _get_base_package_time(service: DataPackageService, base_package_id: int) -> datetime:
+    """获取基准数据包的导出时间（增量基准）"""
+    package = service.get_package(base_package_id)
+    if not package:
+        raise NotFoundException("基准数据包不存在")
+    base_time = getattr(package, "created_at", None)
+    if not base_time:
+        from datetime import datetime as _dt
+        from datetime import timezone as _tz
+
+        base_time = _dt.now(_tz.utc)
+    return base_time
+
+
+@router.post("/incremental/detect-changes", summary="增量变更检测")
+async def incremental_detect_changes(
+    data: IncrementalDetectRequest,
+    current_user=Depends(get_current_user),
+    service: DataPackageService = Depends(get_package_service),
+    permission_service: OrganizationPermissionService = Depends(get_permission_service),
+):
+    """检测基准包之后各数据类型的变更记录数（按 updated_at 时间基准）"""
+    org_id = get_org_with_fallback(
+        current_user=current_user,
+        requested_org_id=data.org_id,
+        get_first_org_callback=lambda: _get_first_active_org(service.db),
+    )
+    if not org_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ORG_NOT_BOUND_ERROR)
+    if not permission_service.can_access_organization(current_user.id, org_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权访问该组织的数据")
+
+    base_time = _get_base_package_time(service, data.base_package_id)
+
+    from sqlalchemy import func as sa_func
+    from app.services.data_package_service import DATA_TYPE_MODELS
+
+    summary: Dict[str, int] = {}
+    for dtype in data.data_types:
+        model = DATA_TYPE_MODELS.get(dtype)
+        if not model:
+            continue
+        query = service.db.query(sa_func.count(model.id))
+        if hasattr(model, "organization_id"):
+            query = query.filter(model.organization_id == org_id)
+        elif hasattr(model, "org_id"):
+            query = query.filter(model.org_id == org_id)
+        if hasattr(model, "updated_at"):
+            query = query.filter(model.updated_at > base_time)
+        summary[dtype] = query.scalar() or 0
+
+    return success_response(
+        data={"summary": summary, "base_package_id": data.base_package_id},
+        message="变更检测完成",
+    )
+
+
+@router.post("/incremental/export", summary="导出增量数据包")
+async def incremental_export(
+    data: IncrementalExportRequest,
+    current_user=Depends(get_current_user),
+    service: DataPackageService = Depends(get_package_service),
+    permission_service: OrganizationPermissionService = Depends(get_permission_service),
+):
+    """基于基准包时间导出增量数据包（仅变更记录），返回下载地址"""
+    org_id = get_org_with_fallback(
+        current_user=current_user,
+        requested_org_id=data.org_id,
+        get_first_org_callback=lambda: _get_first_active_org(service.db),
+    )
+    if not org_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ORG_NOT_BOUND_ERROR)
+    if not permission_service.can_access_organization(current_user.id, org_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权访问该组织的数据")
+
+    base_time = _get_base_package_time(service, data.base_package_id)
+    result = await service.export_package(
+        org_id=org_id,
+        data_types=data.data_types,
+        export_by=current_user.id,
+        description=data.description or "增量更新包",
+        incremental=True,
+        since_time=base_time,
+    )
+
+    return success_response(
+        data={
+            "package_id": result.package_id,
+            "download_url": f"/api/v1/data-packages/{result.package_id}/download",
+            "filename": result.file_name,
+            "record_counts": result.record_counts,
+            "total_records": result.total_records,
+        },
+        message="增量包导出成功",
+    )
+
+
+@router.post("/incremental/import", summary="导入增量数据包")
+async def incremental_import(
+    data: IncrementalImportRequest,
+    current_user=Depends(get_current_user),
+    service: DataPackageService = Depends(get_package_service),
+    permission_service: OrganizationPermissionService = Depends(get_permission_service),
+):
+    """导入已存在于服务器上的数据包（增量或全量）"""
+    package = service.get_package(data.package_id)
+    if not package:
+        raise NotFoundException("数据包不存在")
+
+    org_id = getattr(package, "org_id", None)
+    if org_id and not permission_service.can_access_organization(current_user.id, org_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权导入该数据包")
+
+    result = await service.import_package(
+        file_path=package.file_path,
+        file_name=package.file_name or "package.zip",
+        org_id=org_id or 0,
+        imported_by=current_user.id,
+    )
+
+    return success_response(
+        data={
+            "valid": getattr(result, "is_valid", True),
+            "imported": getattr(result, "imported_count", 0),
+            "applied": bool(data.apply_changes),
+            "message": getattr(result, "message", ""),
+        },
+        message="导入成功" if data.apply_changes else "预览完成",
+    )
 
 
 @router.post("/{package_id}/validate", response_model=DataPackageValidationResult)
