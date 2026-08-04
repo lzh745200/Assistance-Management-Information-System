@@ -135,4 +135,91 @@ describe('logger', () => {
       expect(logger.getLogs(LogLevel.ERROR)).toHaveLength(1)
     })
   })
+
+  describe('logger 补充分支', () => {
+    it('info/warn 带 context 命中 console 展开 true 分支', () => {
+      logger.info('info with ctx', { a: 1 })
+      logger.warn('warn with ctx', { b: 2 })
+      expect(logger.getLogs(LogLevel.INFO)[0].context).toEqual({ a: 1 })
+      expect(logger.getLogs(LogLevel.WARN)[0].context).toEqual({ b: 2 })
+    })
+
+    it('error/fatal 不带 error 参数 → stack undefined 且 console 不带 error', () => {
+      logger.error('no error arg')
+      logger.fatal('no error arg')
+      expect(logger.getLogs(LogLevel.ERROR)[0].stack).toBeUndefined()
+      expect(logger.getLogs(LogLevel.FATAL)[0].stack).toBeUndefined()
+      expect(logger.getLogs(LogLevel.ERROR)[0].context).toBeUndefined()
+    })
+
+    it('超过 MAX_LOGS(500) 截断旧日志', () => {
+      for (let i = 0; i < 501; i++) logger.info(`m${i}`)
+      const logs = logger.getLogs()
+      expect(logs).toHaveLength(500)
+      expect(logs[0].message).toBe('m1')
+      expect(logs[499].message).toBe('m500')
+    })
+  })
+
+  describe('tryCatch 补充分支', () => {
+    it('无 errorMessage + 非 Error 抛出 → 默认文案 + new Error 包装', () => {
+      const errorSpy = vi.spyOn(console, 'error')
+      const r = tryCatch(() => { throw 'boom' })
+      expect(r).toBeUndefined()
+      expect(errorSpy).toHaveBeenCalledWith('An error occurred', expect.any(Error))
+    })
+  })
+
+  describe('tryCatchAsync 补充分支', () => {
+    it('无 errorMessage + 非 Error 抛出 → 默认文案 + new Error 包装', async () => {
+      const errorSpy = vi.spyOn(console, 'error')
+      const r = await tryCatchAsync(async () => { throw 'async-boom' })
+      expect(r).toBeUndefined()
+      expect(errorSpy).toHaveBeenCalledWith('An async error occurred', expect.any(Error))
+    })
+  })
+
+  describe('withErrorBoundary 补充分支', () => {
+    it('无 errorMessage + 非 Error 抛出 → 默认文案 + new Error 包装 + rethrow', async () => {
+      const errorSpy = vi.spyOn(console, 'error')
+      const wrapped = withErrorBoundary(async () => { throw 'str-boom' })
+      await expect(wrapped()).rejects.toBe('str-boom')
+      expect(errorSpy).toHaveBeenCalledWith('Error in wrapped function', expect.any(Error))
+    })
+  })
+
+  describe('生产模式分支 (stubEnv + resetModules)', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    })
+
+    it('MODE=production 且无 VITE_DEBUG → debug/info 不输出 console', async () => {
+      vi.restoreAllMocks()
+      vi.stubEnv('MODE', 'production')
+      vi.resetModules()
+      const { logger: prodLogger } = await import('@/utils/logger')
+      const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      prodLogger.debug('in prod')
+      prodLogger.info('in prod')
+      expect(debugSpy).not.toHaveBeenCalled()
+      expect(logSpy).not.toHaveBeenCalled()
+      expect(prodLogger.getLogs()).toHaveLength(2)
+    })
+
+    it('MODE=production 且 VITE_DEBUG=true → debug/info 仍输出 console', async () => {
+      vi.restoreAllMocks()
+      vi.stubEnv('MODE', 'production')
+      vi.stubEnv('VITE_DEBUG', 'true')
+      vi.resetModules()
+      const { logger: prodLogger } = await import('@/utils/logger')
+      const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {})
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+      prodLogger.debug('in prod debug')
+      prodLogger.info('in prod debug')
+      expect(debugSpy).toHaveBeenCalled()
+      expect(logSpy).toHaveBeenCalled()
+    })
+  })
 })

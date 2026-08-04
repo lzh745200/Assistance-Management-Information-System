@@ -192,7 +192,19 @@ describe('SystemStatus.vue', () => {
     await flushPromises()
     expect(mocks.getMonitorSnapshot).toHaveBeenCalled()
     expect(mocks.getDatabaseFileSize).toHaveBeenCalled()
-    expect(wrapper.text()).toContain('在线')
+    expect(wrapper.text()).toContain('同步')
+  })
+
+  it('refresh 的 Promise.all 拒绝时记录错误日志（防御性 catch 分支）', async () => {
+    const allSpy = vi.spyOn(Promise, 'all').mockRejectedValueOnce(new Error('boom'))
+    try {
+      const wrapper = mountStatus({ pollInterval: 0 })
+      await flushPromises()
+      expect(mocks.logger.error).toHaveBeenCalledWith('[SystemStatus] 刷新失败:', expect.any(Error))
+      wrapper.unmount()
+    } finally {
+      allSpy.mockRestore()
+    }
   })
 
   it('showRefresh prop 声明存在但模板未使用（死 props，仅验证挂载）', () => {

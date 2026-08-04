@@ -18,10 +18,7 @@ const { mockPushSafe, ElMessage, logError, mockGet, mockPost, clipWrite } = vi.h
 }))
 
 vi.mock('vue-router', () => ({
-  useRouter: () => ({
-    push: vi.fn(() => Promise.resolve()),
-    resolve: vi.fn(() => ({ name: 'x', matched: [{ path: '/x' }] })),
-  }),
+  useRouter: () => ({ push: vi.fn(() => Promise.resolve()), resolve: vi.fn(() => ({ name: 'x', matched: [{ path: '/x' }] })) }),
   useRoute: () => ({ params: {}, query: {} }),
 }))
 
@@ -68,7 +65,8 @@ async function mountComp() {
         },
         'el-button': {
           name: 'ElButton',
-          template: '<button class="el-button-stub"><slot /></button>',
+          template: '<button @click="$emit(\'click\')"><slot /></button>',
+          emits: ['click'],
         },
         'el-alert': {
           name: 'ElAlert',
@@ -162,6 +160,14 @@ describe('ForgotPassword.vue', () => {
     expect(vm.resetForm.verification_code).toBe('')
   })
 
+  it('使用当前机器码：无 message → 默认报错', async () => {
+    mockGet.mockResolvedValue({ data: {} })
+    const w = await mountComp()
+    const vm = w.vm as any
+    await vm.useCurrentMachineCode()
+    expect(ElMessage.error).toHaveBeenCalledWith('获取机器码失败，请重试')
+  })
+
   it('使用当前机器码：请求失败 → 日志 + detail 优先', async () => {
     mockGet.mockRejectedValue({ response: { data: { detail: '服务不可用' } } })
     const w = await mountComp()
@@ -202,11 +208,9 @@ describe('ForgotPassword.vue', () => {
     vm.resetForm.machine_code = 'mc'
     vm.resetForm.verification_code = '1234'
     await vm.handleResetPassword()
-    expect(mockPost).toHaveBeenCalledWith(
-      '/machine-code/reset-password-with-machine-code',
-      undefined,
-      { params: vm.resetForm }
-    )
+    expect(mockPost).toHaveBeenCalledWith('/machine-code/reset-password-with-machine-code', undefined, {
+      params: vm.resetForm,
+    })
     expect(vm.newPassword).toBe('New#Pass1')
     expect(vm.currentStep).toBe(1)
     expect(ElMessage.success).toHaveBeenCalledWith('密码重置成功')
@@ -236,6 +240,17 @@ describe('ForgotPassword.vue', () => {
     expect(ElMessage.success).toHaveBeenCalledWith('密码重置成功')
   })
 
+  it('重置密码：业务失败无任何信息 → 默认文案', async () => {
+    mockPost.mockResolvedValue({ code: 400 })
+    const w = await mountComp()
+    const vm = w.vm as any
+    vm.resetForm.username = 'u'
+    vm.resetForm.machine_code = 'mc'
+    vm.resetForm.verification_code = '1234'
+    await vm.handleResetPassword()
+    expect(ElMessage.error).toHaveBeenCalledWith('重置密码失败，请检查填写信息')
+  })
+
   it('重置密码：业务失败 → 展示 message', async () => {
     mockPost.mockResolvedValue({ code: 400, message: '机器码不匹配' })
     const w = await mountComp()
@@ -256,17 +271,6 @@ describe('ForgotPassword.vue', () => {
     vm.resetForm.verification_code = '1234'
     await vm.handleResetPassword()
     expect(ElMessage.error).toHaveBeenCalledWith('校验码错误')
-  })
-
-  it('重置密码：业务失败无任何信息 → 默认文案', async () => {
-    mockPost.mockResolvedValue({ code: 400 })
-    const w = await mountComp()
-    const vm = w.vm as any
-    vm.resetForm.username = 'u'
-    vm.resetForm.machine_code = 'mc'
-    vm.resetForm.verification_code = '1234'
-    await vm.handleResetPassword()
-    expect(ElMessage.error).toHaveBeenCalledWith('重置密码失败，请检查填写信息')
   })
 
   it('重置密码：请求异常 → 日志 + 错误提示', async () => {

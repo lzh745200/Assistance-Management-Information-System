@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { sanitizeHtml, stripHtml, escapeHtml } from '@/utils/sanitize'
+import sanitizeDefault from '@/utils/sanitize'
 
 describe('sanitize', () => {
   describe('sanitizeHtml', () => {
@@ -119,6 +120,69 @@ describe('sanitize', () => {
 
     it('无特殊字符时不变', () => {
       expect(escapeHtml('hello world')).toBe('hello world')
+    })
+  })
+
+  describe('危险协议补充（hook 分支）', () => {
+    it('vbscript: / file: 协议被移除', () => {
+      expect(sanitizeHtml('<a href="vbscript:msgbox(1)">x</a>')).not.toContain('vbscript:')
+      expect(sanitizeHtml('<a href="file:///etc/passwd">x</a>')).not.toContain('file:')
+    })
+
+    it('协议大小写混合同样被拦截', () => {
+      expect(sanitizeHtml('<a href="JaVaScRiPt:alert(1)">x</a>')).not.toContain('JaVaScRiPt')
+      expect(sanitizeHtml('<a href="JaVaScRiPt:alert(1)">x</a>')).not.toContain('href=')
+    })
+
+    it('带前导空格的危险协议（DOMPurify 放行，自定义 hook 拦截）', () => {
+      const a = sanitizeHtml('<a href=" file:///etc/passwd">x</a>')
+      expect(a).not.toContain('href')
+      const b = sanitizeHtml('<a href=" javascript:alert(1)">x</a>')
+      expect(b).not.toContain('href')
+      const c = sanitizeHtml('<img src=" vbscript:msgbox(1)" alt="i">')
+      expect(c).not.toContain('src=')
+    })
+
+    it('img src data: URI（DOMPurify 默认放行 data URI 标签）被自定义 hook 移除', () => {
+      const r = sanitizeHtml('<img src="data:image/png;base64,iVBORw0KGgo=" alt="x">')
+      expect(r).not.toContain('src=')
+    })
+
+    it('img src 危险协议移除、正常 src 保留', () => {
+      const evil = sanitizeHtml('<img src="javascript:alert(1)" alt="x">')
+      expect(evil).not.toContain('javascript:')
+      const ok = sanitizeHtml('<img src="/static/a.png" alt="y">')
+      expect(ok).toContain('/static/a.png')
+    })
+
+    it('无 href 的 a 标签只加 rel，不加 target', () => {
+      const r = sanitizeHtml('<a>plain</a>')
+      expect(r).toContain('rel="noopener noreferrer"')
+      expect(r).not.toContain('target="_blank"')
+    })
+
+    it('外部链接（非 # 非 /）加 target=_blank', () => {
+      expect(sanitizeHtml('<a href="https://example.com/x">x</a>')).toContain(
+        'target="_blank"'
+      )
+    })
+  })
+
+  describe('stripHtml 兜底分支', () => {
+    it('无可见文本时 textContent 为空 → innerText 兜底，不抛错', () => {
+      const r = stripHtml('<div></div>')
+      expect(r).toBeFalsy()
+    })
+  })
+
+  describe('default export', () => {
+    it('包含三个函数', () => {
+      expect(typeof sanitizeDefault.sanitizeHtml).toBe('function')
+      expect(typeof sanitizeDefault.stripHtml).toBe('function')
+      expect(typeof sanitizeDefault.escapeHtml).toBe('function')
+      expect(sanitizeDefault.sanitizeHtml('<script>x</script>')).not.toContain('<script>')
+      expect(sanitizeDefault.stripHtml('<b>t</b>')).toContain('t')
+      expect(sanitizeDefault.escapeHtml('<')).toBe('&lt;')
     })
   })
 })

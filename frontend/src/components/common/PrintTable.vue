@@ -78,6 +78,7 @@ const getCellValue = (item: any, key: string) => {
 }
 
 const handlePrint = () => {
+  /* c8 ignore next */ // printContent 由模板 ref 绑定, visible 时恒存在
   if (!printContent.value) return
 
   const printWindow = window.open('', '_blank')

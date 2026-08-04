@@ -354,11 +354,13 @@ describe('模板分支与 v-model', () => {
     expect(wrapper.text()).toContain('已确认')
     expect(wrapper.text()).toContain('已拒绝')
 
+    // 确认按钮 → handleConfirm(row.id)
     const confirmBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('确认'))
     await confirmBtn!.trigger('click')
     await flushPromises()
     expect(lifecycleApi.confirmTransferVoucher).toHaveBeenCalled()
 
+    // 删除按钮 → handleDelete(row.id)
     const delBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('删除'))
     lifecycleApi.deleteTransferVoucher.mockClear()
     await delBtn!.trigger('click')

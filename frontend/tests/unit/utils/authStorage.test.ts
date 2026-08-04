@@ -239,5 +239,14 @@ describe('utils/authStorage', () => {
       AuthStorage.clearPersisted()
       expect(AuthStorage.hasPersistedAuth()).toBe(false)
     })
+
+    it('clear 同时清除记住登录持久数据（退出登录彻底失效）', () => {
+      AuthStorage.persistForAutoLogin({ token: 't6', user: USER })
+      AuthStorage.setToken('session-t')
+      AuthStorage.clear()
+      expect(AuthStorage.hasPersistedAuth()).toBe(false)
+      expect(AuthStorage.getToken()).toBeNull()
+      expect(localStorage.getItem('auth_persist_token')).toBeNull()
+    })
   })
 })

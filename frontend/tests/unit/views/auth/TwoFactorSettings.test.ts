@@ -54,13 +54,11 @@ async function mountComp() {
           template: '<div class="el-desc-item-stub"><slot /></div>',
         },
         'el-tag': { name: 'ElTag', template: '<span class="el-tag-stub"><slot /></span>' },
-        'el-alert': {
-          name: 'ElAlert',
-          template: '<div class="el-alert-stub"><slot /><slot name="title" /></div>',
-        },
+        'el-alert': { name: 'ElAlert', template: '<div class="el-alert-stub"><slot /><slot name="title" /></div>' },
         'el-button': {
           name: 'ElButton',
-          template: '<button class="el-button-stub"><slot /></button>',
+          template: '<button @click="$emit(\'click\')"><slot /></button>',
+          emits: ['click'],
         },
         'el-form': { name: 'ElForm', template: '<form class="el-form-stub"><slot /></form>' },
         'el-form-item': { name: 'ElFormItem', template: '<div><slot /></div>' },

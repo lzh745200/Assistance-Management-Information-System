@@ -332,4 +332,227 @@ describe('utils/LocalDatabase', () => {
       expect(r).toEqual([])
     })
   })
+
+  describe('query filter 空字符串跳过', () => {
+    it('value === "" 视为无条件', async () => {
+      ;(globalThis as any).indexedDB.open = () => {
+        const req = new FakeOpenReq(new FakeDB())
+        setTimeout(() => req.onerror?.({ target: req }), 0)
+        return req
+      }
+      await localDatabase.add('users', { name: 'A', role: 'admin' })
+      await localDatabase.add('users', { name: 'B', role: 'user' })
+      const r = await localDatabase.query('users', { role: '' })
+      expect(r).toHaveLength(2)
+    })
+  })
+
+  describe('IDB 请求 onerror → localStorage 后备', () => {
+    function failingStore(method: string) {
+      const store = new FakeIDBStore()
+      ;(store as any)[method] = () => {
+        const r = new FakeReq<any>(null)
+        setTimeout(() => r.onerror?.({ target: r }), 0)
+        return r
+      }
+      return store
+    }
+
+    function openWithStore(store: FakeIDBStore) {
+      ;(globalThis as any).indexedDB.open = () => {
+        const db = new FakeDB()
+        db.stores.set('users', store)
+        const req = new FakeOpenReq(db)
+        setTimeout(() => {
+          req.onupgradeneeded?.({ target: req })
+          req.fireSuccess()
+        }, 0)
+        return req
+      }
+    }
+
+    it('get onerror → localStorage 后备', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: 1, name: 'LS' }]))
+      openWithStore(failingStore('get'))
+      const r = await localDatabase.get('users', 1)
+      expect((r as any).name).toBe('LS')
+    })
+
+    it('getAll onerror → localStorage 后备', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: 1, name: 'A' }]))
+      openWithStore(failingStore('getAll'))
+      const r = await localDatabase.getAll('users')
+      expect(r).toHaveLength(1)
+    })
+
+    it('add onerror → localStorage 后备', async () => {
+      openWithStore(failingStore('add'))
+      const r = await localDatabase.add('users', { name: 'X' })
+      expect(r.id).toBe(1)
+    })
+
+    it('update onerror → localStorage 后备', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: 1, name: 'A' }]))
+      openWithStore(failingStore('put'))
+      const r = await localDatabase.update('users', { id: 1, name: 'B' })
+      expect((r as any).name).toBe('B')
+      expect(JSON.parse(localStorage.getItem('mrs_local_data_users')!)[0].name).toBe('B')
+    })
+
+    it('delete onerror → localStorage 后备', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: 1, name: 'A' }]))
+      openWithStore(failingStore('delete'))
+      const ok = await localDatabase.delete('users', 1)
+      expect(ok).toBe(true)
+      expect(JSON.parse(localStorage.getItem('mrs_local_data_users')!)).toHaveLength(0)
+    })
+  })
+
+  describe('IDB 事务抛错（catch 分支）→ localStorage 后备', () => {
+    function openWithThrowingTransaction() {
+      ;(globalThis as any).indexedDB.open = () => {
+        const db = new FakeDB() as any
+        db.transaction = () => {
+          throw new Error('boom')
+        }
+        const req = new FakeOpenReq(db)
+        setTimeout(() => {
+          req.onupgradeneeded?.({ target: req })
+          req.fireSuccess()
+        }, 0)
+        return req
+      }
+    }
+
+    it('getAll 事务抛错 → localStorage', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: 1, name: 'A' }]))
+      openWithThrowingTransaction()
+      expect(await localDatabase.getAll('users')).toHaveLength(1)
+    })
+
+    it('get 事务抛错 → localStorage', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: 1, name: 'A' }]))
+      openWithThrowingTransaction()
+      expect((await localDatabase.get('users', 1) as any).name).toBe('A')
+    })
+
+    it('add 事务抛错 → localStorage', async () => {
+      openWithThrowingTransaction()
+      const r = await localDatabase.add('users', { name: 'X' })
+      expect(r.id).toBe(1)
+    })
+
+    it('update 事务抛错 → localStorage', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: 1, name: 'A' }]))
+      openWithThrowingTransaction()
+      const r = await localDatabase.update('users', { id: 1, name: 'B' })
+      expect((r as any).name).toBe('B')
+    })
+
+    it('delete 事务抛错 → localStorage', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: 1, name: 'A' }]))
+      openWithThrowingTransaction()
+      expect(await localDatabase.delete('users', 1)).toBe(true)
+    })
+  })
+
+  describe('onupgradeneeded 已存在 store 跳过创建', () => {
+    it('contains true 时不重复 createObjectStore', async () => {
+      let created = 0
+      ;(globalThis as any).indexedDB.open = () => {
+        const db = new FakeDB()
+        db.stores.set('users', new FakeIDBStore())
+        const origCreate = db.createObjectStore.bind(db)
+        db.createObjectStore = ((...args: any[]) => {
+          created++
+          return origCreate(...args)
+        }) as any
+        const req = new FakeOpenReq(db)
+        setTimeout(() => {
+          req.onupgradeneeded?.({ target: req })
+          req.fireSuccess()
+        }, 0)
+        return req
+      }
+      await localDatabase.init()
+      expect(created).toBe(8) // 9 个 store - users 已存在
+    })
+  })
+
+  describe('getByIdFromLocalStorage 字符串 id 匹配', () => {
+    it('存储为字符串 id 时用数字查询可匹配（i.id === String(id)）', async () => {
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ id: '5', name: 'A' }]))
+      ;(globalThis as any).indexedDB.open = () => {
+        const req = new FakeOpenReq(new FakeDB())
+        setTimeout(() => req.onerror?.({ target: req }), 0)
+        return req
+      }
+      const r = await localDatabase.get('users', 5)
+      expect((r as any).name).toBe('A')
+    })
+  })
+
+  describe('IDB getAll 成功但 result 为空 → request.result || []', () => {
+    it('falsy result 回退空数组', async () => {
+      const store = new FakeIDBStore()
+      ;(store as any).getAll = () => {
+        const r = new FakeReq<any>(null)
+        r.fireSuccess()
+        return r
+      }
+      ;(globalThis as any).indexedDB.open = () => {
+        const db = new FakeDB()
+        db.stores.set('users', store)
+        const req = new FakeOpenReq(db)
+        setTimeout(() => {
+          req.onupgradeneeded?.({ target: req })
+          req.fireSuccess()
+        }, 0)
+        return req
+      }
+      expect(await localDatabase.getAll('users')).toEqual([])
+    })
+  })
+
+  describe('checkStorage estimate 字段缺失兜底', () => {
+    beforeEach(() => {
+      ;(globalThis as any).navigator.storage = { estimate: mockStorageEstimate }
+    })
+
+    it('usage 缺失 → used 0', async () => {
+      mockStorageEstimate.mockResolvedValueOnce({ quota: 1000 })
+      const r = await localDatabase.checkStorage()
+      expect(r.used).toBe(0)
+      expect(r.total).toBe(1000)
+    })
+
+    it('quota 缺失 → total 0', async () => {
+      mockStorageEstimate.mockResolvedValueOnce({ usage: 100 })
+      const r = await localDatabase.checkStorage()
+      expect(r.used).toBe(100)
+      expect(r.total).toBe(0)
+    })
+
+    it('estimate 拒绝且 error 非 Error 实例 → new Error(String(error))', async () => {
+      const warnSpy = vi.spyOn((await import('@/utils/logger')).logger, 'warn')
+      mockStorageEstimate.mockRejectedValueOnce('quota-exceeded-string')
+      const r = await localDatabase.checkStorage()
+      expect(r.total).toBe(50 * 1024 * 1024)
+      expect(warnSpy).toHaveBeenCalled()
+      warnSpy.mockRestore()
+    })
+  })
+
+  describe('addToLocalStorage 已有条目缺 id 字段 → i.id || 0', () => {
+    it('无 id 的既有条目按 0 参与 max', async () => {
+      ;(globalThis as any).indexedDB.open = () => {
+        const req = new FakeOpenReq(new FakeDB())
+        setTimeout(() => req.onerror?.({ target: req }), 0)
+        return req
+      }
+      localStorage.setItem('mrs_local_data_users', JSON.stringify([{ name: 'no-id' }]))
+      const r = await localDatabase.add('users', { name: 'B' })
+      expect(r.id).toBe(1) // Math.max(0) + 1
+    })
+  })
 })

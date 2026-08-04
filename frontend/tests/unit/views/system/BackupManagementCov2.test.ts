@@ -297,4 +297,52 @@ describe('分支补满', () => {
     })
     wrapper.unmount()
   })
+
+  it('saveBackupTarget 失败无 detail / 异常为 null → e?.detail || 兜底文案', async () => {
+    mockGet.mockResolvedValueOnce({})
+    mockGet.mockResolvedValueOnce({})
+    mockGet.mockResolvedValueOnce({})
+    mockGet.mockResolvedValueOnce({ dirs: [], current: '' })
+    mockPut.mockRejectedValueOnce({})
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.saveBackupTarget()
+    expect(ElMessage.error).toHaveBeenCalledWith('保存备份目标失败')
+    mockPut.mockRejectedValueOnce(null)
+    await vm.saveBackupTarget()
+    expect(ElMessage.error).toHaveBeenCalledWith('保存备份目标失败')
+    wrapper.unmount()
+  })
+
+  it('备份目标目录：不可写/非移动盘渲染（L73/77 假侧）+ tag 点击回填 + 目标输入框 v-model（L60/75 处理器）', async () => {
+    mockGet.mockResolvedValueOnce({})
+    mockGet.mockResolvedValueOnce({})
+    mockGet.mockResolvedValueOnce({})
+    mockGet.mockResolvedValueOnce({
+      dirs: [
+        { path: 'C:\\', type: 'fixed', available: true },
+        { path: 'D:\\', type: 'removable', available: false },
+      ],
+      current: '',
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    // 模板 L73/77：available 假侧（danger 类型 + '·不可写'）与 type!=='removable' 侧
+    expect(wrapper.text()).toContain('·不可写')
+    // L75 磁盘 tag @click → 回填 backupTarget
+    const dirTag = wrapper
+      .findAllComponents({ name: 'ElTag' })
+      .find((t: any) => t.text().includes('D:\\'))
+    expect(dirTag, '磁盘目录 tag').toBeTruthy()
+    dirTag!.vm.$emit('click')
+    await nextTick()
+    expect(vm.backupTarget).toBe('D:\\')
+    // L60 备份目标输入框 v-model（ElInput[0]）
+    wrapper.findAllComponents({ name: 'ElInput' })[0].vm.$emit('update:modelValue', 'E:\\bk')
+    await nextTick()
+    expect(vm.backupTarget).toBe('E:\\bk')
+    wrapper.unmount()
+  })
 })

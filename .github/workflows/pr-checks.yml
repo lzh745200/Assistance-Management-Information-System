@@ -41,7 +41,7 @@ jobs:
         with: { node-version: '22' }
       - run: |
           cd frontend
-          npm install --legacy-peer-deps
+          npm ci --legacy-peer-deps
       - run: cd frontend && npx vue-tsc --noEmit 2>&1
       - run: cd frontend && npm run lint 2>&1
       # 前端测试带覆盖率报告（vitest run --coverage）
@@ -150,4 +150,3 @@ jobs:
           } else {
             console.log("All API files use Pattern B (named imports)");
           }
-          "

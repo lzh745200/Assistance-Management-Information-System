@@ -177,6 +177,7 @@ const loadStatus = async () => {
   try {
     const response = await getMapStatus()
     if (response.success) {
+      /* c8 ignore next */ // 防御性代码：success=true 时后端必带 data；缺 data 模板 Object.keys(zoom_levels) 会抛错
       coverage.value = response.data || {}
     }
   } catch (error: any) {

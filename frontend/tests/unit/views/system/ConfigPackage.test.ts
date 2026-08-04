@@ -8,12 +8,19 @@ import { nextTick } from 'vue'
 
 enableAutoUnmount(afterEach)
 
-const { ElMessage, ElMessageBox, mockGet, mockPost, mockPut } = vi.hoisted(() => ({
+const { ElMessage, ElMessageBox, mockGet, mockPost, mockPut, configStore } = vi.hoisted(() => ({
   ElMessage: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
   ElMessageBox: { confirm: vi.fn(), alert: vi.fn() },
   mockGet: vi.fn(),
   mockPost: vi.fn(),
   mockPut: vi.fn(),
+  configStore: { theme: 'light', setTheme: vi.fn() },
+}))
+
+vi.mock('element-plus', () => ({
+  ElMessage,
+  ElMessageBox,
+  ElNotification: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
 }))
 
 vi.mock('@/api/request', () => ({
@@ -24,16 +31,8 @@ vi.mock('@/api/request', () => ({
   apiRequest: vi.fn(),
 }))
 
-vi.mock('element-plus', () => ({
-  ElMessage,
-  ElMessageBox,
-  ElNotification: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
-}))
-
-const { mockSetTheme } = vi.hoisted(() => ({ mockSetTheme: vi.fn() }))
-
 vi.mock('@/stores/config', () => ({
-  useConfigStore: () => ({ theme: 'light', setTheme: mockSetTheme }),
+  useConfigStore: () => configStore,
 }))
 
 import ConfigPackage from '@/views/system/ConfigPackage.vue'
@@ -88,6 +87,17 @@ async function mountComp() {
           template:
             '<input :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
         },
+        'el-radio-group': {
+          name: 'ElRadioGroup',
+          props: ['modelValue'],
+          emits: ['update:modelValue', 'change'],
+          template:
+            '<div class="el-radio-group-stub" @click="$emit(\'update:modelValue\', \'dark\'); $emit(\'change\', \'dark\')"><slot /></div>',
+        },
+        'el-radio-button': {
+          name: 'ElRadioButton',
+          template: '<span class="el-radio-button-stub"><slot /></span>',
+        },
       },
     },
   })
@@ -102,6 +112,9 @@ beforeEach(() => {
   mockPost.mockResolvedValue({})
   mockPut.mockResolvedValue({})
   ElMessageBox.confirm.mockResolvedValue('confirm')
+  configStore.theme = 'light'
+  configStore.setTheme = vi.fn()
+  document.documentElement.removeAttribute('data-theme')
 })
 
 describe('ConfigPackage.vue', () => {
@@ -115,6 +128,32 @@ describe('ConfigPackage.vue', () => {
     expect(vm.configList[1].sensitive).toBe(true)
     // 非字符串值 JSON 序列化
     expect(vm.configList[2].value).toBe('5')
+  })
+
+  it('主题应用：合法/非法主题', async () => {
+    const w = await mountComp()
+    const vm = w.vm as any
+    vm.applyTheme('military')
+    expect(vm.currentTheme).toBe('military')
+    expect(configStore.setTheme).toHaveBeenCalledWith('military')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('military')
+    vm.applyTheme('bogus-theme')
+    expect(vm.currentTheme).toBe('light')
+    expect(configStore.setTheme).toHaveBeenLastCalledWith('light')
+  })
+
+  it('主题为空 → 回退 light', async () => {
+    configStore.theme = ''
+    const w = await mountComp()
+    expect((w.vm as any).currentTheme).toBe('light')
+  })
+
+  it('主题选择器（radio-group）→ 应用主题', async () => {
+    const w = await mountComp()
+    const vm = w.vm as any
+    await w.find('.el-radio-group-stub').trigger('click')
+    expect(vm.currentTheme).toBe('dark')
+    expect(configStore.setTheme).toHaveBeenCalledWith('dark')
   })
 
   it('加载配置失败 → 空列表', async () => {
@@ -175,6 +214,20 @@ describe('ConfigPackage.vue', () => {
     expect(clickSpy).toHaveBeenCalled()
     expect(ElMessage.success).toHaveBeenCalledWith('配置已导出')
     vi.restoreAllMocks()
+  })
+
+  it('刷新按钮点击 → loadConfig', async () => {
+    const w = await mountComp()
+    const vm = w.vm as any
+    const before = mockGet.mock.calls.length
+    const refreshBtn = w
+      .findAll('button')
+      .find((b) => b.text().includes('刷新'))
+    expect(refreshBtn).toBeTruthy()
+    await refreshBtn!.trigger('click')
+    await flushPromises()
+    expect(mockGet.mock.calls.length).toBeGreaterThan(before)
+    expect(vm.loading).toBe(false)
   })
 
   it('triggerImport 触发文件选择', async () => {
@@ -319,7 +372,7 @@ describe('ConfigPackage.vue', () => {
       const vm = w.vm as any
       vm.applyTheme('dark')
       expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
-      expect(mockSetTheme).toHaveBeenCalledWith('dark')
+      expect(configStore.setTheme).toHaveBeenCalledWith('dark')
       expect(vm.currentTheme).toBe('dark')
     })
 

@@ -415,4 +415,21 @@ describe('useAuthStore', () => {
     const store = useAuthStore()
     await expect(store.fetchUser()).resolves.toBeUndefined()
   })
+
+  it('getAuthData 返回当前 token + user', () => {
+    mockAuthStorageGetToken.mockReturnValue('tok-gd')
+    mockAuthStorageGetUser.mockReturnValue({ id: 1, username: 'gd' })
+    setActivePinia(createPinia())
+    const store = useAuthStore()
+    expect(store.getAuthData()).toEqual({
+      token: 'tok-gd',
+      user: { id: 1, username: 'gd' },
+      refreshToken: undefined,
+    })
+  })
+
+  it('getAuthData 无认证数据时返回 token 空字符串 + user null', () => {
+    const store = useAuthStore()
+    expect(store.getAuthData()).toEqual({ token: '', user: null, refreshToken: undefined })
+  })
 })

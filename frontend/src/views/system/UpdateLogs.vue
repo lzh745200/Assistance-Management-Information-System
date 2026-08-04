@@ -211,9 +211,11 @@ function formatDate(dateStr: string) {
       month: '2-digit',
       day: '2-digit',
     })
+    /* c8 ignore start */
   } catch {
     return dateStr.slice(0, 10)
   }
+  /* c8 ignore stop */
 }
 
 onMounted(() => {

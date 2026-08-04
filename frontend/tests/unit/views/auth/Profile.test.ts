@@ -66,10 +66,7 @@ async function mountComp() {
       renderStubDefaultSlot: true,
       stubs: {
         'el-form': ElFormStub,
-        'el-form-item': {
-          name: 'ElFormItem',
-          template: '<div class="el-form-item-stub"><slot /></div>',
-        },
+        'el-form-item': { name: 'ElFormItem', template: '<div class="el-form-item-stub"><slot /></div>' },
         'el-input': {
           name: 'ElInput',
           props: ['modelValue'],
@@ -94,7 +91,8 @@ async function mountComp() {
         },
         'el-button': {
           name: 'ElButton',
-          template: '<button class="el-button-stub"><slot /></button>',
+          template: '<button @click="$emit(\'click\')"><slot /></button>',
+          emits: ['click'],
         },
         'el-card': {
           name: 'ElCard',
@@ -200,9 +198,7 @@ describe('Profile.vue', () => {
     const w = await mountComp()
     const vm = w.vm as any
     await vm.saveProfile()
-    expect(userStore.updateUserProfile).toHaveBeenCalledWith(
-      expect.objectContaining({ username: 'admin' })
-    )
+    expect(userStore.updateUserProfile).toHaveBeenCalledWith(expect.objectContaining({ username: 'admin' }))
     expect(vm.editing).toBe(false)
     expect(vm.userInfo.name).toBe('新名字')
     expect(ElMessage.success).toHaveBeenCalledWith('个人资料保存成功')
@@ -286,6 +282,15 @@ describe('Profile.vue', () => {
     expect(vm.uploadingAvatar).toBe(false)
   })
 
+  it('导航：修改密码 / 绑定 MFA', async () => {
+    const w = await mountComp()
+    const vm = w.vm as any
+    vm.navigateToChangePassword()
+    expect(mockPushSafe).toHaveBeenCalledWith('/change-password')
+    vm.bindMfa()
+    expect(mockPushSafe).toHaveBeenCalledWith('/profile/two-factor')
+  })
+
   it('加载资料：字段为空 → 回退空串', async () => {
     userStore.getUserProfile.mockResolvedValue({
       id: '2',
@@ -353,15 +358,6 @@ describe('Profile.vue', () => {
     await w.find('.el-date-stub').trigger('click')
     expect(vm.profileForm.birthday).toBe('2020-01-01')
     expect(w.exists()).toBe(true)
-  })
-
-  it('导航：修改密码 / 绑定 MFA', async () => {
-    const w = await mountComp()
-    const vm = w.vm as any
-    vm.navigateToChangePassword()
-    expect(mockPushSafe).toHaveBeenCalledWith('/change-password')
-    vm.bindMfa()
-    expect(mockPushSafe).toHaveBeenCalledWith('/profile/two-factor')
   })
 
   it('密码强度计算属性', async () => {

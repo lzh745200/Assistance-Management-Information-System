@@ -45,12 +45,7 @@ const ElInputStub = {
 }
 
 const ElButtonStub = {
-  props: {
-    disabled: { type: Boolean, default: false },
-    loading: { type: Boolean, default: false },
-    type: String,
-    icon: Object,
-  },
+  props: ['disabled', 'loading', 'type', 'icon'],
   emits: ['click'],
   template: '<button class="stub-btn" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
 }

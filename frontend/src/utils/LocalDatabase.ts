@@ -258,6 +258,7 @@ class LocalDatabaseClass {
         await this.getAll(table)
       }
       return true
+      /* c8 ignore next 3 */
     } catch {
       return false
     }

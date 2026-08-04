@@ -127,7 +127,10 @@ function mountComponent() {
     global: {
       stubs: {
         'el-icon': true,
-        'el-button': true,
+        'el-button': {
+          name: 'ElButton',
+          template: '<el-button-stub><slot /></el-button-stub>',
+        },
         'el-tag': true,
         'el-empty': true,
         'el-radio-group': {
@@ -364,12 +367,150 @@ describe('MonitoringDashboard.vue 补充', () => {
     await advanceFakeTimersAndFlush()
     const vm = wrapper.vm as any
     const before = mockGet.mock.calls.length
-    // el-button stub(true) 渲染为 <el-button-stub> 元素
+    // el-button stub 渲染 <el-button-stub> 元素
     const refreshBtn = wrapper.findAll('el-button-stub')[0]
     expect(refreshBtn.exists()).toBe(true)
     await refreshBtn.trigger('click')
     await flushPromises()
     expect(mockGet.mock.calls.length).toBeGreaterThan(before)
     expect(vm.loading).toBe(false)
+  })
+
+  it('快照字段全部缺失 → ?? 兜底路径', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/system/monitor/snapshot') {
+        return Promise.resolve({ data: { success: true, data: {} } })
+      }
+      if (url === '/health/full') return Promise.resolve({ data: mockHealthData })
+      if (url === '/system/health/full') return Promise.resolve({ data: { data: { status: 'ok' } } })
+      return Promise.reject(new Error('Unknown URL'))
+    })
+    const wrapper = mountComponent()
+    await advanceFakeTimersAndFlush()
+    const vm = wrapper.vm as any
+    expect(vm.primaryCards[0].value).toBe('0.0')
+    expect(vm.primaryCards[0].detail).toBe('0 核 · 0 线程')
+    expect(vm.primaryCards[0].percent).toBeUndefined()
+    expect(vm.secondaryCards[0].value).toBe('0.0')
+    expect(vm.secondaryCards[1].value).toBe('0.0')
+    expect(vm.basicChecks[3].passed).toBe(true)
+    expect(vm.performanceChecks[0].passed).toBe(false)
+  })
+
+  it('健康分数 60-79 → score-warning 徽章', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/system/monitor/snapshot') {
+        return Promise.resolve({
+          data: { success: true, data: { ...mockSnapshotData, cpu_usage: 75, memory_usage: 80, disk_usage: 85 } },
+        })
+      }
+      if (url === '/health/full') return Promise.resolve({ data: mockHealthData })
+      if (url === '/system/health/full') return Promise.resolve({ data: { data: { status: 'ok' } } })
+      return Promise.reject(new Error('Unknown URL'))
+    })
+    const wrapper = mountComponent()
+    await advanceFakeTimersAndFlush()
+    const vm = wrapper.vm as any
+    expect(vm.healthScore).toBe(70)
+    expect(vm.scoreBadgeClass).toBe('score-warning')
+  })
+
+  it('fetchSnapshot 响应形态：扁平 data / 无 data', async () => {
+    const wrapper = mountComponent()
+    await advanceFakeTimersAndFlush()
+    const vm = wrapper.vm as any
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/system/monitor/snapshot') return Promise.resolve({ data: mockSnapshotData })
+      if (url === '/health/full') return Promise.resolve({ data: mockHealthData })
+      if (url === '/system/health/full') return Promise.resolve({ data: { data: { status: 'ok' } } })
+      return Promise.reject(new Error('Unknown URL'))
+    })
+    await vm.fetchSnapshot()
+    expect(vm.snapshot?.cpu_usage).toBe(23.5)
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/system/monitor/snapshot') return Promise.resolve({})
+      if (url === '/health/full') return Promise.resolve({ data: mockHealthData })
+      if (url === '/system/health/full') return Promise.resolve({ data: { data: { status: 'ok' } } })
+      return Promise.reject(new Error('Unknown URL'))
+    })
+    await vm.fetchSnapshot()
+    expect(vm.snapshot).toEqual({})
+  })
+
+  it('fetchApiStats 响应形态与 top_endpoints 兜底', async () => {
+    const wrapper = mountComponent()
+    await advanceFakeTimersAndFlush()
+    const vm = wrapper.vm as any
+    mockApiRequest.mockResolvedValue({ data: mockApiStatsData })
+    await vm.fetchApiStats()
+    expect(vm.apiStats).toHaveLength(2)
+    mockApiRequest.mockResolvedValue({ data: { success: true, data: {} } })
+    await vm.fetchApiStats()
+    expect(vm.apiStats).toEqual([])
+    mockApiRequest.mockResolvedValue({})
+    await vm.fetchApiStats()
+    expect(vm.apiStats).toEqual([])
+  })
+
+  it('fetchHealth 响应无 data → 空对象', async () => {
+    const wrapper = mountComponent()
+    await advanceFakeTimersAndFlush()
+    const vm = wrapper.vm as any
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/system/monitor/snapshot') return Promise.resolve({ data: { success: true, data: mockSnapshotData } })
+      if (url === '/health/full') return Promise.resolve({})
+      if (url === '/system/health/full') return Promise.resolve({ data: { data: { status: 'ok' } } })
+      return Promise.reject(new Error('Unknown URL'))
+    })
+    await vm.fetchHealth()
+    expect(vm.healthData).toEqual({})
+  })
+
+  it('fetchHealthChecks 响应形态：扁平 data / 无 data', async () => {
+    const wrapper = mountComponent()
+    await advanceFakeTimersAndFlush()
+    const vm = wrapper.vm as any
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/system/monitor/snapshot') return Promise.resolve({ data: { success: true, data: mockSnapshotData } })
+      if (url === '/health/full') return Promise.resolve({ data: mockHealthData })
+      if (url === '/system/health/full') return Promise.resolve({ data: { status: 'ok' } })
+      return Promise.reject(new Error('Unknown URL'))
+    })
+    await vm.fetchHealthChecks()
+    expect(vm.healthChecksData).toEqual({ status: 'ok' })
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/system/monitor/snapshot') return Promise.resolve({ data: { success: true, data: mockSnapshotData } })
+      if (url === '/health/full') return Promise.resolve({ data: mockHealthData })
+      if (url === '/system/health/full') return Promise.resolve({})
+      return Promise.reject(new Error('Unknown URL'))
+    })
+    await vm.fetchHealthChecks()
+    expect(vm.healthChecksData).toEqual({})
+  })
+
+  it('buildChart chartRef 为空 → 直接返回', async () => {
+    const wrapper = mountComponent()
+    await advanceFakeTimersAndFlush()
+    const vm = wrapper.vm as any
+    const callsBefore = mockEchartsInit.mock.calls.length
+    vm.chartRef = null
+    await vm.buildChart()
+    expect(mockEchartsInit.mock.calls.length).toBe(callsBefore)
+  })
+
+  it('API 端点字段缺失 → ?? 兜底', async () => {
+    const wrapper = mountComponent()
+    await advanceFakeTimersAndFlush()
+    const vm = wrapper.vm as any
+    vm.apiStats = [
+      { endpoint: '/no-method', count: 1, avg_time_ms: 1, error_rate: 1 },
+      { endpoint: '/tr', method: 'GET', total_requests: 5, avg_time_ms: 1, error_rate: 1 },
+      { endpoint: '/no-count', method: 'GET', avg_time_ms: 1, error_rate: 1 },
+      { endpoint: '/at', method: 'GET', count: 1, avg_time_ms: 2.5, error_rate: 1 },
+      { endpoint: '/er', method: 'GET', count: 1, avg_time_ms: 1 },
+      { endpoint: '/no-avg', method: 'GET', count: 1, error_rate: 1 },
+    ]
+    await vm.buildChart()
+    expect(mockSetOption).toHaveBeenCalled()
   })
 })

@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { mockGet, mockPost, mockDel } = vi.hoisted(() => ({
+const { mockGet, mockPost, mockDel, mockPut } = vi.hoisted(() => ({
   mockGet: vi.fn(),
   mockPost: vi.fn(),
   mockDel: vi.fn(),
+  mockPut: vi.fn(),
 }))
 
-// src/api/backup.ts 实际 import：import { get, post, del } from '@/api/request'
+// src/api/backup.ts 实际 import：import { get, post, del, put } from '@/api/request'
 vi.mock('@/api/request', () => ({
   get: mockGet,
   post: mockPost,
   del: mockDel,
+  put: mockPut,
 }))
 
 import {
@@ -19,6 +21,8 @@ import {
   restoreBackup,
   deleteBackup,
   getBackupStats,
+  getBackupDirs,
+  setBackupTarget,
 } from '@/api/backup'
 
 describe('api/backup', () => {
@@ -66,5 +70,32 @@ describe('api/backup', () => {
     const result = await getBackupStats()
     expect(mockGet).toHaveBeenCalledWith('/system/backup/stats')
     expect(result).toBe(body)
+  })
+
+  it('getBackupDirs 调用 GET /system/backup/dirs 并透传返回值', async () => {
+    const body = {
+      dirs: [{ path: '/mnt/usb', type: 'usb', available: true }],
+      current: '/mnt/usb',
+      default_dir: '/data/backup',
+    }
+    mockGet.mockResolvedValue(body)
+    const result = await getBackupDirs()
+    expect(mockGet).toHaveBeenCalledWith('/system/backup/dirs')
+    expect(result).toBe(body)
+  })
+
+  it('setBackupTarget 调用 PUT /system/backup/target 携带 target_dir', async () => {
+    mockPut.mockResolvedValue({ success: true })
+    await setBackupTarget('/mnt/usb')
+    expect(mockPut).toHaveBeenCalledWith('/system/backup/target', { target_dir: '/mnt/usb' })
+  })
+
+  it('restoreBackup 无 password 时仍调用 restore 端点', async () => {
+    mockPost.mockResolvedValue({ success: true })
+    await restoreBackup('backup-2024.zip')
+    expect(mockPost).toHaveBeenCalledWith('/system/backup/restore', {
+      filename: 'backup-2024.zip',
+      password: undefined,
+    })
   })
 })

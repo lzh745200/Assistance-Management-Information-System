@@ -125,6 +125,7 @@ async function _ensureCsrfToken(): Promise<string | null> {
       } catch {
         // 获取失败不阻断请求；服务端会返回 403 由响应拦截器处理
         return null
+        /* c8 ignore next -- finally 分支为 v8 计数伪影（try 必定走到 finally） */
       } finally {
         _csrfFetchInFlight = null
       }
@@ -354,6 +355,7 @@ request.interceptors.response.use(
             window.location.href = '/login'
           }
           return Promise.reject(refreshError)
+          /* c8 ignore next -- finally 分支为 v8 计数伪影（try/catch 必定走到 finally） */
         } finally {
           _isRefreshing = false
         }

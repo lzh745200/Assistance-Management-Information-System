@@ -192,6 +192,7 @@ const loadCategories = async () => {
     } else {
       // Convert config object to flat category list
       const cats: Category[] = []
+      /* c8 ignore next */ // 不可达：data 由 res.data || res 得出，res 为真值对象时 data 恒为真
       for (const [key, val] of Object.entries(data || {})) {
         cats.push({ id: key, name: (val as any).label || key })
       }

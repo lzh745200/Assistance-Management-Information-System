@@ -84,7 +84,7 @@ async function handleScan() {
 }
 
 function tagType(type: string): 'success' | 'warning' | 'info' | 'danger' {
-  const map: Record<string, string> = {
+  const map: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
     approval_overtime: 'danger',
     deadline_warning: 'warning',
     budget_warning: 'danger',

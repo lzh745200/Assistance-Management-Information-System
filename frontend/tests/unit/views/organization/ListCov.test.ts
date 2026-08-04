@@ -15,6 +15,7 @@ const {
   authState,
   ElMessage,
   confirmMock,
+  promptMock,
   mockPost,
   mockPut,
   mockDel,
@@ -29,6 +30,7 @@ const {
     authState: { isAdmin: true },
     ElMessage: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
     confirmMock: vi.fn(),
+    promptMock: vi.fn(),
     mockPost: vi.fn(),
     mockPut: vi.fn(),
     mockDel: vi.fn(),
@@ -43,7 +45,7 @@ const {
 
 vi.mock('element-plus', () => ({
   ElMessage,
-  ElMessageBox: { confirm: confirmMock },
+  ElMessageBox: { confirm: confirmMock, prompt: promptMock },
 }))
 
 vi.mock('@/api/request', () => ({
@@ -199,6 +201,7 @@ beforeEach(() => {
   mockPut.mockResolvedValue({ data: {} })
   mockDel.mockResolvedValue({ data: { message: '组织已删除' } })
   confirmMock.mockResolvedValue(undefined)
+  promptMock.mockResolvedValue({ value: 'pass123' })
   mockBatchSort.mockResolvedValue({ data: {} })
   mockPushSafe.mockResolvedValue(undefined)
   sortableBox.opts = null
@@ -411,13 +414,22 @@ describe('表格列插槽与行交互', () => {
     })
   })
 
-  it('点击「删除」弹确认框', async () => {
+  it('点击「删除」弹密码确认框并携带 confirm_password', async () => {
     const wrapper = mountComp()
     await flushPromises()
     await findBtn(wrapper, '删除').trigger('click')
     await flushPromises()
-    expect(confirmMock).toHaveBeenCalled()
-    expect(mockDel).toHaveBeenCalledWith('/organizations/1')
+    expect(promptMock).toHaveBeenCalled()
+    expect(mockDel).toHaveBeenCalledWith('/organizations/1?confirm_password=pass123')
+  })
+
+  it('删除时密码前后空白会被 trim 后传递', async () => {
+    promptMock.mockResolvedValue({ value: '  pass123  ' })
+    const wrapper = mountComp()
+    await flushPromises()
+    await findBtn(wrapper, '删除').trigger('click')
+    await flushPromises()
+    expect(mockDel).toHaveBeenCalledWith('/organizations/1?confirm_password=pass123')
   })
 
   it('非 admin：无导出/新增按钮，操作列仅详情，initSortable 早退（!isAdmin 侧）', async () => {
@@ -615,7 +627,7 @@ describe('对话框与表单提交', () => {
 
 describe('删除组织全分支', () => {
   it('确认取消（reject "cancel" 字符串）→ 不发请求不报错', async () => {
-    confirmMock.mockRejectedValue('cancel')
+    promptMock.mockRejectedValue('cancel')
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any
@@ -625,7 +637,7 @@ describe('删除组织全分支', () => {
   })
 
   it('确认取消（toString()==="cancel" 对象）→ 第二条件短路不报错', async () => {
-    confirmMock.mockRejectedValue({ toString: () => 'cancel' })
+    promptMock.mockRejectedValue({ toString: () => 'cancel' })
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any

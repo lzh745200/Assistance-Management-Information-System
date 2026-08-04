@@ -321,6 +321,28 @@ describe('AuditManagement.vue', () => {
     expect(auditApi.resolveSecurityEvent).not.toHaveBeenCalled()
   })
 
+  it('日志响应缺失 items → || [] 兜底为空列表', async () => {
+    auditApi.getLogs.mockResolvedValue({})
+    const w = await mountComp()
+    expect((w.vm as any).auditLogs).toEqual([])
+  })
+
+  it('登录日志响应缺失 items → || [] 兜底为空列表', async () => {
+    auditApi.getLoginAttempts.mockResolvedValue({})
+    const w = await mountComp()
+    const vm = w.vm as any
+    await vm.loadLoginLogs()
+    expect(vm.loginLogs).toEqual([])
+  })
+
+  it('告警响应缺失 items → || [] 兜底为空列表', async () => {
+    auditApi.getSecurityEvents.mockResolvedValue({})
+    const w = await mountComp()
+    const vm = w.vm as any
+    await vm.loadAlerts()
+    expect(vm.alerts).toEqual([])
+  })
+
   it('工具函数：actionTagType / actionName / getLevelText', async () => {
     const w = await mountComp()
     const vm = w.vm as any

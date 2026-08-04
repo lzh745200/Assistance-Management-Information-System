@@ -72,7 +72,8 @@ async function mountComp() {
       stubs: {
         'el-button': {
           name: 'ElButton',
-          template: '<button class="el-button-stub"><slot /></button>',
+          template: '<button @click="$emit(\'click\')"><slot /></button>',
+          emits: ['click'],
         },
         'el-alert': {
           name: 'ElAlert',
@@ -177,7 +178,10 @@ describe('GetMachineCode.vue', () => {
     const vm = w.vm as any
     vm.machineData = machineData
     vm.copyAllInfo()
-    expect(copyMock).toHaveBeenCalledWith('机器码：MC-ABCD-1234\n校验码：5678', '全部信息')
+    expect(copyMock).toHaveBeenCalledWith(
+      '机器码：MC-ABCD-1234\n校验码：5678',
+      '全部信息'
+    )
   })
 
   it('一键复制全部信息：无数据 → 直接返回', async () => {

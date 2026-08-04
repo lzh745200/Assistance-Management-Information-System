@@ -373,7 +373,7 @@ def start_backup_scheduler():
 
     使用 threading.Timer 实现简易定时调度，替代已移除的 APScheduler。
     """
-    global _scheduler_started
+    global _scheduler_started  # pragma: no cover - global 声明行，无执行语义
     if _scheduler_started:
         logger.info("调度器已在运行，跳过重复启动")
         return
@@ -427,7 +427,9 @@ def start_backup_scheduler():
         _timers.append(t)
 
     def _schedule_interval(coro_func, interval_seconds, task_name):
-        """按固定间隔调度（首次延迟 interval 秒）"""
+        """按固定间隔调度（首次延迟 interval 秒）。
+        递归 Timer 不加入 _timers（daemon 线程随进程退出），避免列表无限增长。
+        """
 
         def _job():
             _run_async_job(coro_func)
@@ -435,7 +437,6 @@ def start_backup_scheduler():
             t.daemon = True
             t.name = f"scheduler-{task_name}"
             t.start()
-            _timers.append(t)
 
         t = threading.Timer(interval_seconds, _job)
         t.daemon = True

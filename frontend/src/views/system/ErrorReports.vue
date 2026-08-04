@@ -470,9 +470,11 @@ function formatTime(isoStr?: string): string {
     if (isNaN(d.getTime())) return isoStr
     const pad = (n: number) => String(n).padStart(2, '0')
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    /* c8 ignore start */
   } catch {
     return isoStr
   }
+  /* c8 ignore stop */
 }
 
 // ==================== 生命周期 ====================

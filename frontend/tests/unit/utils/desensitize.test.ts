@@ -189,6 +189,22 @@ describe('desensitize', () => {
     it('manager 历史角色归一化为 admin -> 不脱敏', () => {
       expect(desensitizeByRole('13812341234', 'phone', 'manager')).toBe('13812341234')
     })
+    it('空角色字符串 → normalizeRoleLocal falsy 分支 → PARTIAL 脱敏', () => {
+      expect(desensitizeByRole('13812341234', 'phone', '')).toBe('138****1234')
+    })
+  })
+
+  describe('desensitize 补充分支', () => {
+    it('maskEmail 单字符 local → *@domain', () => {
+      expect(maskEmail('a@example.com')).toBe('*@example.com')
+    })
+    it('FULL 级别 + null 值 → 空串 (value?.toString() ?? \'\')', () => {
+      expect(desensitizeByLevel(null, 'phone', DesensitizeLevel.FULL)).toBe('')
+    })
+    it('PARTIAL + 未知类型 → rule 兜底原样返回', () => {
+      expect(desensitizeByLevel('123', 'unknown' as any, DesensitizeLevel.PARTIAL)).toBe('123')
+      expect(desensitizeByLevel(null, 'unknown' as any, DesensitizeLevel.PARTIAL)).toBe('')
+    })
   })
 
   describe('autoDesensitize', () => {

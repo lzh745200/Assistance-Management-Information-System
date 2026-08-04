@@ -74,7 +74,7 @@ const contractTerminated = {
   status_label: '已终止',
 }
 
-function mountComp() {
+function mountComp(query: Record<string, any> = {}) {
   return mount(ContractManage, {
     global: {
       renderStubDefaultSlot: true,
@@ -137,7 +137,19 @@ function mountComp() {
         },
       },
     },
+    ...(query && Object.keys(query).length ? { mocks: {} } : {}),
   })
+}
+
+function getRouteQuery(query: Record<string, any> = {}) {
+  const q = { project_id: '7', ...query }
+  return q
+}
+
+function mountWithQuery(query: Record<string, any> = {}) {
+  const q = getRouteQuery(query)
+  routeBox.query = q
+  return mountComp()
 }
 
 beforeEach(() => {
@@ -173,8 +185,7 @@ describe('挂载与列表加载', () => {
   })
 
   it('onMounted 带 project_id 查询参数', async () => {
-    routeBox.query = { project_id: '7' }
-    const wrapper = mountComp()
+    const wrapper = mountWithQuery({})
     await flushPromises()
     expect(lifecycleApi.listContracts).toHaveBeenCalledWith(
       expect.objectContaining({ project_id: 7 })
@@ -401,6 +412,7 @@ describe('补缺：模板内联处理器（v-model/创建/提交/删除/分页�
     await flushPromises()
     const vm = wrapper.vm as any
 
+    // 新建合同对话框控件
     for (const el of wrapper.findAll('.el-input-stub')) {
       await el.trigger('click')
     }
@@ -418,6 +430,7 @@ describe('补缺：模板内联处理器（v-model/创建/提交/删除/分页�
     expect(vm.paymentForm.amount).toBe(5)
     expect(vm.paymentForm.payment_date).toBe('2024-01-01')
 
+    // 创建/提交按钮（含 loading 内联）
     vm.contractForm.contract_no = 'HT-X'
     vm.contractForm.contract_name = '新合同'
     const createBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('创建'))
@@ -435,17 +448,20 @@ describe('补缺：模板内联处理器（v-model/创建/提交/删除/分页�
     await flushPromises()
     expect(lifecycleApi.createContractPayment).toHaveBeenCalled()
 
+    // 删除按钮（草稿行）
     const delBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('删除'))
     lifecycleApi.deleteContract.mockClear()
     await delBtn!.trigger('click')
     await flushPromises()
     expect(lifecycleApi.deleteContract).toHaveBeenCalledWith(1)
 
+    // 分页 update:currentPage
     vm.page = 2
     await wrapper.find('.el-pagination-stub').trigger('click')
     await flushPromises()
     expect(vm.page).toBe(2)
 
+    // 弹窗 v-model 关闭
     vm.showCreateDialog = true
     vm.paymentDialogVisible = true
     for (const dlg of wrapper.findAll('.el-dialog-stub')) {
@@ -454,6 +470,7 @@ describe('补缺：模板内联处理器（v-model/创建/提交/删除/分页�
     expect(vm.showCreateDialog).toBe(false)
     expect(vm.paymentDialogVisible).toBe(false)
 
+    // 取消按钮
     vm.showCreateDialog = true
     const cancelBtns = wrapper.findAll('.el-button-stub').filter((b) => b.text().includes('取消'))
     for (const cb of cancelBtns) {

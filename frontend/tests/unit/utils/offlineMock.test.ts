@@ -132,6 +132,9 @@ describe('utils/offlineMock', () => {
       it('/approval/workflows/1', () => {
         expect(getMockResponse('GET', '/api/v1/approval/workflows/1').data.name).toBe('经费审批流程')
       })
+      it('/approval/workflows/999 未命中回退第一个流程', () => {
+        expect(getMockResponse('GET', '/api/v1/approval/workflows/999').data.name).toBe('经费审批流程')
+      })
       it('/approval/tasks/pending', () => {
         const r = getMockResponse('GET', '/api/v1/approval/tasks/pending')
         expect(r.data.every((t: any) => t.status === 'pending')).toBe(true)

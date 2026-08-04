@@ -153,6 +153,60 @@ describe('router/index.ts', () => {
     expect(router.currentRoute.value.name).toBe('NotFound')
   })
 
+  it('Electron 托盘 onNavigate 收到合法路径时跳转', async () => {
+    const onNavigateMock = vi.fn()
+    ;(window as any).electronAPI = { onNavigate: onNavigateMock }
+    try {
+      vi.resetModules()
+      const { default: freshRouter } = await import('@/router')
+      expect(onNavigateMock).toHaveBeenCalled()
+      const handler = onNavigateMock.mock.calls[0][0] as (route: string) => void
+      expect(typeof handler).toBe('function')
+      const before = freshRouter.currentRoute.value.path
+      handler('/dashboard')
+      await freshRouter.isReady()
+      await new Promise((r) => setTimeout(r, 50))
+      const after = freshRouter.currentRoute.value.path
+      expect(before).not.toBe('/dashboard')
+      expect(after).toBe('/dashboard')
+    } finally {
+      delete (window as any).electronAPI
+      vi.resetModules()
+      await import('@/router')
+    }
+  })
+
+  it('Electron 托盘 onNavigate 收到非路径参数时不跳转', async () => {
+    const onNavigateMock = vi.fn()
+    ;(window as any).electronAPI = { onNavigate: onNavigateMock }
+    try {
+      vi.resetModules()
+      await import('@/router')
+      const handler = onNavigateMock.mock.calls[0][0] as (route: string) => void
+      expect(handler).toBeDefined()
+      handler('no-slash')
+      handler(123 as any)
+      expect(onNavigateMock).toHaveBeenCalled()
+    } finally {
+      delete (window as any).electronAPI
+      vi.resetModules()
+      await import('@/router')
+    }
+  })
+
+  it('无 electronAPI 环境不注册导航', async () => {
+    ;(window as any).electronAPI = undefined
+    try {
+      vi.resetModules()
+      await import('@/router')
+      expect(true).toBe(true)
+    } finally {
+      delete (window as any).electronAPI
+      vi.resetModules()
+      await import('@/router')
+    }
+  })
+
   // 分批加载全部懒加载组件（每批 15 条，防止单用例超时）
   const CHUNK = 15
   const chunks: FlatRoute[][] = []

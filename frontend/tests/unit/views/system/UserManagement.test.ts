@@ -791,6 +791,30 @@ describe('会话管理', () => {
     await nextTick() // 渲染“无活跃会话”空态
   })
 
+  it('loadUserSessions：错误带 detail / 异常为 null → 文案两侧', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/sessions')) {
+        return Promise.reject({ response: { data: { detail: '会话服务异常' } } })
+      }
+      return defaultGetImpl(url)
+    })
+    vm.handleEdit({ ...sampleUser })
+    await flushPromises()
+    expect(ElMessage.error).toHaveBeenCalledWith('会话服务异常')
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/sessions')) return Promise.reject(null)
+      return defaultGetImpl(url)
+    })
+    ElMessage.error.mockClear()
+    vm.handleEdit({ ...sampleUser })
+    await flushPromises()
+    expect(ElMessage.error).toHaveBeenCalledWith('会话信息加载失败，请检查后端服务')
+    expect(vm.userSessions).toEqual([])
+  })
+
   it('revokeSession：currentUser 为空 → 直接返回', async () => {
     const wrapper = mountComp()
     await flushPromises()

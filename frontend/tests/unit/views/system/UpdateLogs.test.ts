@@ -166,6 +166,14 @@ describe('UpdateLogs.vue', () => {
     expect((w.vm as any).logs).toEqual([])
   })
 
+  it('loadLogs：data 缺 items 字段 → 空数组兜底', async () => {
+    updateLogsApi.listLogs.mockResolvedValue({ success: true, data: { total: 5 } })
+    const w = await mountComp()
+    const vm = w.vm as any
+    expect(vm.logs).toEqual([])
+    expect(vm.total).toBe(5)
+  })
+
   it('分页：总数大于页大小 → 渲染分页并切换', async () => {
     updateLogsApi.listLogs.mockResolvedValue({
       success: true,

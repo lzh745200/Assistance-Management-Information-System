@@ -40,11 +40,13 @@ const formattedValue = computed(() => {
 })
 
 const trendClass = computed(() => {
+  /* c8 ignore next */ // trend 为 undefined 时模板 v-if 不渲染, computed 恒不被求值
   if (props.trend === undefined) return ''
   return props.trend >= 0 ? 'stats-card__trend--up' : 'stats-card__trend--down'
 })
 
 const trendText = computed(() => {
+  /* c8 ignore next */ // trend 为 undefined 时模板 v-if 不渲染, computed 恒不被求值
   if (props.trend === undefined) return ''
   const sign = props.trend >= 0 ? '+' : ''
   return `${sign}${props.trend}%`

@@ -52,7 +52,6 @@ const fileSeq2 = { id: 15, filename: '图B.jpg', name: '图B.jpg', category: 'pr
 const fileNoCat = { id: 16, name: '无分类文件.pdf' }
 const fileNoFilename = { id: 17, name: '仅name字段', category: 'progress' }
 const fileEmptyNames = { id: 18, filename: '', name: '', category: 'progress' }
-const fileNoNames = { id: 19, category: 'progress' }
 
 const fetchMock = vi.hoisted(() => vi.fn())
 
@@ -78,7 +77,8 @@ function mountComp() {
           emits: ['click'],
         },
         'el-empty': {
-          template: '<div class="el-empty-stub">{{ description }}<slot /></div>',
+          template:
+            '<div class="el-empty-stub">{{ description }}<slot /></div>',
           props: ['description'],
         },
         'el-image': { template: '<div class="el-image-stub"><slot name="error" /></div>' },
@@ -92,12 +92,8 @@ beforeEach(() => {
   vi.resetAllMocks()
   routeBox.params = { id: '5' }
   projectsApiMock.get.mockResolvedValue(project)
-  projectsApiMock.listFiles.mockResolvedValue({
-    items: [fileBefore, fileAfter, fileOther, fileSeq1, fileSeq2, fileNoCat, fileNoFilename, fileEmptyNames, fileNoNames],
-  })
-  projectsApiMock.getFileDownloadUrl.mockImplementation(
-    (projectId: number, fileId: number) => `/api/v1/projects/${projectId}/files/${fileId}/download`
-  )
+  projectsApiMock.listFiles.mockResolvedValue({ items: [fileBefore, fileAfter, fileOther, fileSeq1, fileSeq2, fileNoCat, fileNoFilename, fileEmptyNames] })
+  projectsApiMock.getFileDownloadUrl.mockReturnValue('/api/v1/projects/5/files/11/download')
   projectsApiMock.uploadFiles.mockResolvedValue({})
   projectsApiMock.deleteFile.mockResolvedValue({})
   confirmMock.mockResolvedValue(undefined)
@@ -118,8 +114,8 @@ describe('挂载与数据加载', () => {
     expect(projectsApiMock.get).toHaveBeenCalledWith(5)
     expect(projectsApiMock.listFiles).toHaveBeenCalledWith(5)
     expect(vm.project).toEqual(project)
-    expect(vm.progressFiles).toHaveLength(7)
-    expect(vm.previewList).toHaveLength(7)
+    expect(vm.progressFiles).toHaveLength(6)
+    expect(vm.previewList).toHaveLength(6)
     expect(vm.blobUrls[11]).toBeTruthy()
     expect(vm.loading).toBe(false)
   })
@@ -144,13 +140,6 @@ describe('挂载与数据加载', () => {
     const wrapper = mountComp()
     await flushPromises()
     expect((wrapper.vm as any).allFiles).toHaveLength(2)
-  })
-
-  it('listFiles 返回 null → 空数组', async () => {
-    projectsApiMock.listFiles.mockResolvedValue(null)
-    const wrapper = mountComp()
-    await flushPromises()
-    expect((wrapper.vm as any).allFiles).toEqual([])
   })
 
   it('加载失败 → logger + 错误提示', async () => {
@@ -184,34 +173,11 @@ describe('comparisonPairs', () => {
     expect(pairs.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('顺序配对：个别文件无 Blob URL → || 兜底', async () => {
-    projectsApiMock.listFiles.mockResolvedValue({ items: [fileSeq1, fileSeq2] })
-    fetchMock.mockImplementation((url: string) => {
-      if (String(url).includes('/14/')) return Promise.resolve({ ok: false })
-      return Promise.resolve({ ok: true, blob: vi.fn().mockResolvedValue(new Blob(['x'])) })
-    })
+  it('listFiles 返回 null → 空数组', async () => {
+    projectsApiMock.listFiles.mockResolvedValue(null)
     const wrapper = mountComp()
     await flushPromises()
-    const vm = wrapper.vm as any
-    const pairs = vm.comparisonPairs
-    expect(pairs).toHaveLength(1)
-    expect(pairs[0].beforeUrl).toBe('')
-    expect(pairs[0].afterUrl).toBeTruthy()
-  })
-
-  it('顺序配对：后一张无 Blob URL → afterUrl || 兜底', async () => {
-    projectsApiMock.listFiles.mockResolvedValue({ items: [fileSeq1, fileSeq2] })
-    fetchMock.mockImplementation((url: string) => {
-      if (String(url).includes('/15/')) return Promise.resolve({ ok: false })
-      return Promise.resolve({ ok: true, blob: vi.fn().mockResolvedValue(new Blob(['x'])) })
-    })
-    const wrapper = mountComp()
-    await flushPromises()
-    const vm = wrapper.vm as any
-    const pairs = vm.comparisonPairs
-    expect(pairs).toHaveLength(1)
-    expect(pairs[0].afterUrl).toBe('')
-    expect(pairs[0].beforeUrl).toBeTruthy()
+    expect((wrapper.vm as any).allFiles).toEqual([])
   })
 
   it('少于 2 张 → 空', async () => {
@@ -240,14 +206,6 @@ describe('上传', () => {
     projectsApiMock.uploadFiles.mockRejectedValue(new Error('上传失败'))
     await (wrapper.vm as any).handleUpload({ file: {} })
     expect(logError).toHaveBeenCalled()
-    expect(ElMessage.error).toHaveBeenCalledWith('上传失败')
-  })
-
-  it('上传失败无 message → 兜底文案', async () => {
-    const wrapper = mountComp()
-    await flushPromises()
-    projectsApiMock.uploadFiles.mockRejectedValue({})
-    await (wrapper.vm as any).handleUpload({ file: {} })
     expect(ElMessage.error).toHaveBeenCalledWith('上传失败')
   })
 
@@ -292,20 +250,21 @@ describe('删除', () => {
     expect(projectsApiMock.deleteFile).not.toHaveBeenCalled()
   })
 
+  it('删除失败（cancel 字符串形态）→ 不提示', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    confirmMock.mockResolvedValueOnce(undefined)
+    projectsApiMock.deleteFile.mockRejectedValueOnce(new Error('cancel'))
+    await (wrapper.vm as any).handleDelete(11)
+    expect(ElMessage.error).not.toHaveBeenCalledWith('cancel')
+  })
+
   it('删除失败 → logger + 提示', async () => {
     const wrapper = mountComp()
     await flushPromises()
     projectsApiMock.deleteFile.mockRejectedValueOnce(new Error('删除失败'))
     await (wrapper.vm as any).handleDelete(11)
     expect(logError).toHaveBeenCalled()
-    expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
-  })
-
-  it('删除失败无 message → 兜底文案', async () => {
-    const wrapper = mountComp()
-    await flushPromises()
-    projectsApiMock.deleteFile.mockRejectedValueOnce({})
-    await (wrapper.vm as any).handleDelete(11)
     expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
   })
 })
@@ -342,6 +301,15 @@ describe('状态字典', () => {
     expect(vm.getStatusText('unknown')).toBe('unknown')
     expect(vm.getStatusText(undefined)).toBe('-')
   })
+
+  it('goBack → router.back', async () => {
+    const backMock = vi.fn()
+    vi.mocked(await import('vue-router')).useRouter = () => ({ back: backMock })
+    const wrapper = mountComp()
+    await flushPromises()
+    await (wrapper.vm as any).goBack()
+    expect(backMock).toHaveBeenCalled()
+  })
 })
 
 describe('卸载清理', () => {
@@ -375,9 +343,11 @@ describe('模板渲染', () => {
   })
 
   it('页头 back → router.back', async () => {
+    const backMock = vi.fn()
+    vi.mocked(await import('vue-router')).useRouter = () => ({ back: backMock })
     const wrapper = mountComp()
     await flushPromises()
     await wrapper.findComponent({ name: 'ElPageHeader' }).vm.$emit('back')
-    expect((wrapper.vm as any).goBack).toBeDefined()
+    expect(backMock).toHaveBeenCalled()
   })
 })

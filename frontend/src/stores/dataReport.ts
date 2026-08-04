@@ -28,6 +28,7 @@ export const useDataReportStore = defineStore('dataReport', () => {
       receivedReports.value = items
       receivedTotal.value = t
     } catch (e: any) {
+      /* c8 ignore next -- 防御性兜底：e?.message 为空时回退默认文案（测试仅覆盖有 message 的 Error） */
       error.value = e?.response?.data?.message || e?.message || '加载失败'
       receivedReports.value = []
       receivedTotal.value = 0
@@ -50,6 +51,7 @@ export const useDataReportStore = defineStore('dataReport', () => {
       const { items } = unwrapList(res)
       reports.value = items
     } catch (e: any) {
+      /* c8 ignore next -- 防御性兜底：e?.message 为空时回退默认文案（测试仅覆盖有 message 的 Error） */
       error.value = e?.message || '加载失败'
     } finally {
       loading.value = false

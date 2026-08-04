@@ -73,10 +73,7 @@ async function mountComp() {
           template: '<div class="el-card-stub"><slot /><slot name="header" /></div>',
         },
         'el-form': ElFormStub,
-        'el-form-item': {
-          name: 'ElFormItem',
-          template: '<div class="el-form-item-stub"><slot /></div>',
-        },
+        'el-form-item': { name: 'ElFormItem', template: '<div class="el-form-item-stub"><slot /></div>' },
         'el-input': {
           name: 'ElInput',
           props: ['modelValue'],
@@ -86,7 +83,8 @@ async function mountComp() {
         },
         'el-button': {
           name: 'ElButton',
-          template: '<button class="el-button-stub"><slot /></button>',
+          template: '<button @click="$emit(\'click\')"><slot /></button>',
+          emits: ['click'],
         },
         'el-dialog': {
           name: 'ElDialog',

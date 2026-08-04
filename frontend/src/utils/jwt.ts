@@ -64,6 +64,9 @@ function cachePayload(token: string, payload: JWTPayload): void {
   const key = getCacheKey(token)
 
   // 如果已存在，先删除以更新插入顺序（LRU）
+  // decodeJwtPayload 先查缓存且过期条目已由 getCachedPayload 删除，
+  // 调用 cachePayload 时 key 必不在缓存中 —— 该分支结构性不可达
+  /* c8 ignore next 3 */
   if (jwtCache.has(key)) {
     jwtCache.delete(key)
   }

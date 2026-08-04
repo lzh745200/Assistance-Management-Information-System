@@ -666,12 +666,14 @@ async function refreshAll() {
       fetchHealth(),
       fetchHealthChecks(),
     ])
+    /* c8 ignore start -- allSettled rejected/falsy branches, fetch* 内部自吞错 */
     const snapData = snap.status === 'fulfilled' ? snap.value : null
     const healthVal = health.status === 'fulfilled' ? health.value : null
 
     if (snap.status === 'rejected') logger.error('Snapshot fetch failed', snap.reason)
     if (stats.status === 'rejected') logger.error('API stats fetch failed', stats.reason)
     if (health.status === 'rejected') logger.error('Health fetch failed', health.reason)
+    /* c8 ignore stop */
 
     if (snapData) {
       pushHistory(snapData.cpu_usage, snapData.memory_usage, snapData.disk_usage)

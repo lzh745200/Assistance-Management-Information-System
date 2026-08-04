@@ -389,6 +389,43 @@ describe('UserManagement.vue 菜单权限配置', () => {
     expect(vm.menuPermSaving).toBe(false)
   })
 
+  it('handleMenuPermission：菜单树响应为对象（非数组）→ Array.isArray 假侧 []', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/menus/user-menus/')) return Promise.resolve({ data: { menu_keys: ['a'] } })
+      if (url === '/menus/all') return Promise.resolve({ data: { tree: [{ key: 'x' }] } })
+      return Promise.resolve({ data: [] })
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.handleMenuPermission({ id: 7 })
+    expect(vm.menuPermTree).toEqual([])
+  })
+
+  it('updateMenuPermAllState：无树实例 → 直接返回', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.menuPermTreeRef = null
+    vm.updateMenuPermAllState()
+    expect(vm.menuPermAllChecked).toBe(false)
+    expect(vm.menuPermIndeterminate).toBe(false)
+  })
+
+  it('saveMenuPermission：失败无 detail / 异常为 null → 默认文案', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.handleMenuPermission({ id: 7 })
+    mockPut.mockRejectedValueOnce({})
+    await vm.saveMenuPermission()
+    expect(ElMessage.error).toHaveBeenCalledWith('保存菜单权限失败')
+    mockPut.mockRejectedValueOnce(null)
+    await vm.saveMenuPermission()
+    expect(ElMessage.error).toHaveBeenCalledWith('保存菜单权限失败')
+    expect(vm.menuPermSaving).toBe(false)
+  })
+
   it('菜单权限对话框：全选复选框点击与关闭', async () => {
     const wrapper = mountComp()
     await flushPromises()

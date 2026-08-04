@@ -158,7 +158,10 @@ function mountComponent(overrides?: { theme?: string }) {
           template: '<div class="el-popover-stub"><slot name="reference" /><slot /></div>',
         },
         "el-icon": true,
-        "el-button": true,
+        "el-button": {
+          name: "ElButton",
+          template: "<el-button-stub><slot /></el-button-stub>",
+        },
         "el-tag": true,
         "el-empty": true,
       },

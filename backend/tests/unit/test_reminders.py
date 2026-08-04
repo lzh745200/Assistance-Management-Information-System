@@ -132,6 +132,25 @@ def test_reminders_api_scan():
         app.dependency_overrides.clear()
 
 
+def test_reminders_scan_requires_admin():
+    from app.main import app
+    from fastapi.testclient import TestClient
+
+    from app.core.security import get_current_user
+
+    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=2, role="user")
+    client = TestClient(app, raise_server_exceptions=False)
+    try:
+        with patch(
+            "app.services.reminder_orchestrator.run_reminder_scans",
+            return_value=[],
+        ):
+            resp = client.post("/api/v1/reminders/scan")
+        assert resp.status_code == 403
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_reminder_scan_job_registered():
     import app.services.backup_scheduler as bm
 

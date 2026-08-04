@@ -105,7 +105,8 @@ async function mountComp() {
         'el-input': ElInputStub,
         'el-button': {
           name: 'ElButton',
-          template: '<button class="el-button-stub"><slot /></button>',
+          template: '<button @click="$emit(\'click\')"><slot /></button>',
+          emits: ['click'],
         },
         'el-card': {
           name: 'ElCard',

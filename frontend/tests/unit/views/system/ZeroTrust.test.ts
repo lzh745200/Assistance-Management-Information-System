@@ -123,6 +123,7 @@ async function mountComp() {
               rowA: {
                 factor: '设备', score: 90, status: 'pass', detail: '正常',
                 name: '策略1', category: 'authentication', severity: 'critical', enabled: true, description: '描述',
+                conditions: { ip: '1.1.1.1' }, actions: ['allow'],
                 event_type: 'auth_failure', source: '10.0.0.1', message: '多次失败', timestamp: '2024-01-01T10:00:00Z',
               },
               rowB: {
@@ -153,7 +154,7 @@ async function mountComp() {
           props: ['modelValue'],
           emits: ['update:modelValue', 'change'],
           template:
-            '<input type="checkbox" class="el-checkbox-stub" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked); $emit(\'change\', $event.target.checked)" />',
+            '<label class="el-checkbox-stub"><input type="checkbox" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked); $emit(\'change\', $event.target.checked)" /><slot /></label>',
         },
         'el-form': ElFormStub,
         'el-form-item': { name: 'ElFormItem', template: '<div><slot /></div>' },
@@ -379,10 +380,58 @@ describe('ZeroTrust.vue', () => {
     expect(vm.policyFilterCategory).toBe('network')
     vi.clearAllMocks()
     zeroTrustApi.listPolicies.mockResolvedValue(policiesData)
-    const checkbox = w.find('.el-checkbox-stub')
+    const checkbox = w.find('.el-checkbox-stub input')
     await checkbox.setValue(true)
+    await nextTick()
+    await checkbox.setValue(false)
+    await nextTick()
+    expect(vm.policyFilterEnabledOnly).toBe(false)
+    checkbox.setValue(true)
+    await nextTick()
     expect(vm.policyFilterEnabledOnly).toBe(true)
     expect(zeroTrustApi.listPolicies).toHaveBeenCalledWith({ category: 'network', enabled_only: true })
+  })
+
+  it('loadStats：异常带 response.detail → 展示 detail', async () => {
+    zeroTrustApi.getEventStats.mockRejectedValue({ response: { data: { detail: '统计服务拒绝' } } })
+    const w = await mountComp()
+    expect(ElMessage.error).toHaveBeenCalledWith('统计服务拒绝')
+  })
+
+  it('loadPolicies：异常带 response.detail → 展示 detail', async () => {
+    zeroTrustApi.listPolicies.mockRejectedValue({ response: { data: { detail: '策略服务拒绝' } } })
+    const w = await mountComp()
+    expect(ElMessage.error).toHaveBeenCalledWith('策略服务拒绝')
+  })
+
+  it('handleEvaluate：异常带 response.detail → 展示 detail', async () => {
+    zeroTrustApi.evaluateAccess.mockRejectedValue({ response: { data: { detail: '评估服务拒绝' } } })
+    const w = await mountComp()
+    const vm = w.vm as any
+    vm.evaluateForm.resource = '/api'
+    vm.evaluateForm.action = 'read'
+    await vm.handleEvaluate()
+    expect(ElMessage.error).toHaveBeenCalledWith('评估服务拒绝')
+  })
+
+  it('loadEvents：异常带 response.detail → 展示 detail', async () => {
+    zeroTrustApi.listEvents.mockRejectedValue({ response: { data: { detail: '事件服务拒绝' } } })
+    const w = await mountComp()
+    expect(ElMessage.error).toHaveBeenCalledWith('事件服务拒绝')
+  })
+
+  it('handleEvaluate：拒绝结果 → 告警类型走拒绝分支', async () => {
+    zeroTrustApi.evaluateAccess.mockResolvedValue({
+      success: true,
+      data: { resource: '/api', action: 'write', username: 'admin', result: 'denied', message: '拒绝', evaluated_at: '2024-01-01T10:00:00Z' },
+    })
+    const w = await mountComp()
+    const vm = w.vm as any
+    vm.evaluateForm.resource = '/api'
+    vm.evaluateForm.action = 'write'
+    await vm.handleEvaluate()
+    await nextTick()
+    expect(vm.evaluateResult?.result).toBe('denied')
   })
 
   it('handleEvaluate：校验失败 → 返回', async () => {

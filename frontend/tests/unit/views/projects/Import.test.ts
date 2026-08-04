@@ -186,6 +186,22 @@ describe('步骤向导', () => {
     await btn!.trigger('click')
     expect((wrapper.vm as any).currentStep).toBe(1)
   })
+
+  it('步骤3 校验失败视图的返回修改按钮 → 步骤 2（L168 内联处理器）', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.currentStep = 3
+    vm.loading = false
+    vm.validationFailed = true
+    vm.validationErrors = [{ index: 1, message: '名称必填' }]
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('名称必填')
+    const btn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('返回修改'))
+    expect(btn, '校验失败返回修改按钮').toBeTruthy()
+    await btn!.trigger('click')
+    expect(vm.currentStep).toBe(2)
+  })
 })
 
 describe('downloadTemplate', () => {

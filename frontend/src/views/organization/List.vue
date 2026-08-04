@@ -445,20 +445,28 @@ async function handleSubmit() {
 }
 
 async function handleDelete(row: any) {
+  let confirmPassword = ''
   try {
-    await ElMessageBox.confirm(
+    const { value } = await ElMessageBox.prompt(
       `确认删除组织"${row.name}"？\n\n` +
         '删除后该组织将被停用，不再显示在系统中。\n' +
-        '如有子组织，请先删除子组织。',
+        '如有子组织，请先删除子组织。\n\n' +
+        '⚠️ 敏感操作：请输入当前登录用户的密码进行二次确认。',
       '删除组织',
       {
         type: 'warning',
         confirmButtonText: '确认删除',
         cancelButtonText: '取消',
+        inputType: 'password',
+        inputPlaceholder: '请输入当前用户密码',
+        inputValidator: (v: string) => (v && v.trim() ? true : '请输入密码'),
       }
     )
+    confirmPassword = value?.trim() ?? ''
 
-    const response = await del(`/organizations/${row.id}`)
+    const response = await del(
+      `/organizations/${row.id}?confirm_password=${encodeURIComponent(confirmPassword)}`
+    )
     ElMessage.success(response.data?.message || '组织已删除')
     currentPage.value = 1
     await fetchDataWithSort()

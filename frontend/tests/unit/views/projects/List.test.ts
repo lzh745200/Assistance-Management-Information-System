@@ -91,6 +91,8 @@ const projectRow3 = {
   budget: 0,
 }
 
+const projectRow4 = { id: 4, code: 'XM-004', name: '缺字段项目', type: 'unknown', status: 'suspended' }
+
 function mountComp() {
   return mount(List, {
     global: {
@@ -109,12 +111,13 @@ function mountComp() {
         'el-table-column': {
           name: 'ElTableColumn',
           template:
-            '<div class="el-table-column-stub"><slot :row="rowA" /><slot :row="rowB" /><slot :row="rowC" /></div>',
+            '<div class="el-table-column-stub"><slot :row="rowA" /><slot :row="rowB" /><slot :row="rowC" /><slot :row="rowD" /></div>',
           data() {
             return {
               rowA: { ...projectRow },
               rowB: { ...projectRow2 },
               rowC: { ...projectRow3 },
+              rowD: { ...projectRow4 },
             }
           },
         },
@@ -203,6 +206,16 @@ describe('挂载与加载', () => {
     expect((wrapper.vm as any).stats.total).toBe(1)
   })
 
+  it('getStats 缺字段 → ?? 0 兜底', async () => {
+    projectApiMock.getStats.mockResolvedValue({ data: {} })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.stats.inProgress).toBe(0)
+    expect(vm.stats.completed).toBe(0)
+    expect(vm.stats.totalBudget).toBe(0)
+  })
+
   it('getStats 失败 → 不阻塞', async () => {
     projectApiMock.getStats.mockRejectedValue(new Error('net'))
     const wrapper = mountComp()
@@ -225,6 +238,14 @@ describe('挂载与加载', () => {
     const wrapper = mountComp()
     await flushPromises()
     expect((wrapper.vm as any).projectList).toHaveLength(1)
+  })
+
+  it('list 响应空对象 → total 0 兜底', async () => {
+    projectApiMock.list.mockResolvedValue({})
+    const wrapper = mountComp()
+    await flushPromises()
+    expect((wrapper.vm as any).projectList).toEqual([])
+    expect((wrapper.vm as any).pagination.total).toBe(0)
   })
 
   it('筛选参数组装（含 cancelled include_cancelled）', async () => {
@@ -539,17 +560,20 @@ describe('批量操作', () => {
     vm.selectedRows = [projectRow, projectRow2]
     await wrapper.vm.$nextTick()
     const btns = wrapper.findAll('.el-button-stub')
-    const del = btns.find((b) => b.text().includes('批量删除'))
-    await del!.trigger('click')
-    await flushPromises()
-    expect(confirmMock).toHaveBeenCalled()
 
     const exp = btns.find((b) => b.text().includes('批量导出'))
     await exp!.trigger('click')
     await flushPromises()
     expect(projectApiMock.exportList).toHaveBeenCalled()
 
-    const cancel = btns.find((b) => b.text().includes('取消选择'))
+    const del = btns.find((b) => b.text().includes('批量删除'))
+    await del!.trigger('click')
+    await flushPromises()
+    expect(confirmMock).toHaveBeenCalled()
+
+    vm.selectedRows = [projectRow, projectRow2]
+    await wrapper.vm.$nextTick()
+    const cancel = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('取消选择'))
     await cancel!.trigger('click')
     expect(vm.selectedRows).toEqual([])
   })
@@ -623,5 +647,39 @@ describe('字典与统计卡片', () => {
     vm.handleStatClick('')
     await flushPromises()
     expect(projectApiMock.list).toHaveBeenCalled()
+
+    const cards = wrapper.findAll('.stat-clickable')
+    expect(cards.length).toBe(3)
+    projectApiMock.list.mockClear()
+    await cards[0].trigger('click')
+    await flushPromises()
+    expect(vm.filterForm.status).toBe('')
+    expect(projectApiMock.list).toHaveBeenCalled()
+
+    projectApiMock.list.mockClear()
+    await cards[1].trigger('click')
+    await flushPromises()
+    expect(vm.filterForm.status).toBe('in_progress')
+
+    projectApiMock.list.mockClear()
+    await cards[2].trigger('click')
+    await flushPromises()
+    expect(vm.filterForm.status).toBe('completed')
+  })
+
+  it('行内 查看/编辑 按钮点击', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    pushSafeMock.mockClear()
+    const viewBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('查看'))
+    await viewBtn!.trigger('click')
+    expect(pushSafeMock).toHaveBeenCalledWith('/projects/1')
+
+    pushSafeMock.mockClear()
+    const editBtns = wrapper.findAll('.el-button-stub').filter((b) => b.text().includes('编辑'))
+    await editBtns[0].trigger('click')
+    expect(pushSafeMock).toHaveBeenCalledWith('/projects/1/edit')
+    await editBtns[editBtns.length - 1].trigger('click')
+    expect(pushSafeMock).toHaveBeenCalledWith('/projects/4/edit')
   })
 })

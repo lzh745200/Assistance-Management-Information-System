@@ -158,4 +158,44 @@ describe('utils/jwt', () => {
       expect(r).toBe(60 * 1000)  // 1 min remaining
     })
   })
+
+  describe('缓存过期与清理（fake timers）', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('缓存条目超过 TTL（5min）后重新解析', () => {
+      const tok = makeToken({ sub: 'ttl', exp: 9999 })
+      const a = decodeJwtPayload(tok)!
+      expect(a.sub).toBe('ttl')
+      vi.advanceTimersByTime(6 * 60 * 1000)
+      const b = decodeJwtPayload(tok)!
+      expect(b).toEqual(a)
+    })
+
+    it('缓存满且全部过期 → cleanupExpiredEntries 清空后再插入（不复用最旧槽位）', () => {
+      for (let i = 0; i < 50; i++) {
+        decodeJwtPayload(makeToken({ sub: `x${i}`, exp: 1000 }, { alg: `X${i}` }))
+      }
+      vi.advanceTimersByTime(6 * 60 * 1000)
+      const fresh = makeToken({ sub: 'fresh', exp: 2000 }, { alg: 'F' })
+      expect(decodeJwtPayload(fresh)?.sub).toBe('fresh')
+    })
+
+    it('缓存满且有过期条目 + 未过期条目 → 清理后仍满则移除最旧', () => {
+      // 第 0 条在 T0 入缓存；其余 49 条在 T0+1s 入缓存
+      decodeJwtPayload(makeToken({ sub: 'oldest', exp: 1000 }, { alg: 'O' }))
+      vi.advanceTimersByTime(1000)
+      for (let i = 0; i < 49; i++) {
+        decodeJwtPayload(makeToken({ sub: `y${i}`, exp: 1000 }, { alg: `Y${i}` }))
+      }
+      // 推进 5min+500ms：第 0 条过期（age=300500ms > TTL），其余未过期（age=299500ms）
+      vi.advanceTimersByTime(299500)
+      const fresh = makeToken({ sub: 'fresh2', exp: 2000 }, { alg: 'F2' })
+      expect(decodeJwtPayload(fresh)?.sub).toBe('fresh2')
+    })
+  })
 })

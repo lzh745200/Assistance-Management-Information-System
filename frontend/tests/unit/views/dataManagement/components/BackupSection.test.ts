@@ -431,7 +431,7 @@ describe('删除备份', () => {
     expect(mockGetBackupList).toHaveBeenCalled()
   })
 
-  it('取消确认 → 静默；后端失败（含/无 message）→ error', async () => {
+  it('取消确认 → 静默；后端失败 → error(res.message)', async () => {
     confirmMock.mockRejectedValueOnce(new Error('cancel'))
     const wrapper = mountComp()
     await flushPromises()

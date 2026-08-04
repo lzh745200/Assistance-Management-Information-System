@@ -129,6 +129,7 @@ const handleClose = () => {
 }
 
 const handleSubmit = async () => {
+  /* c8 ignore next */ // formRef 由模板 ref 绑定, 渲染后恒存在
   if (!formRef.value) return
 
   const valid = await formRef.value.validate()

@@ -56,7 +56,18 @@ describe('useAccessibility', () => {
       const addEventListenerSpy = vi.spyOn(document, 'addEventListener')
       trap.activate()
       expect(addEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function))
+      expect(document.activeElement).toBe(document.getElementById('b1'))
       addEventListenerSpy.mockRestore()
+    })
+
+    it('activate 无 focusable 元素时不聚焦（仅监听）', () => {
+      const div = document.createElement('div')
+      div.innerHTML = '<div>no buttons</div>'
+      document.body.appendChild(div)
+      const containerRef = ref<HTMLElement | null>(div)
+      const trap = useFocusTrap(containerRef)
+      trap.activate()
+      expect(document.activeElement).not.toBe(div)
     })
 
     it('deactivate 移除 keydown listener', () => {
@@ -69,6 +80,89 @@ describe('useAccessibility', () => {
       trap.deactivate()
       expect(removeEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function))
       removeEventListenerSpy.mockRestore()
+    })
+
+    it('deactivate 恢复之前的焦点元素', () => {
+      const outside = document.createElement('button')
+      outside.textContent = 'outside'
+      document.body.appendChild(outside)
+      outside.focus()
+      const div = document.createElement('div')
+      div.innerHTML = '<button id="b1">1</button>'
+      document.body.appendChild(div)
+      const containerRef = ref<HTMLElement | null>(div)
+      const trap = useFocusTrap(containerRef)
+      trap.activate()
+      expect(document.activeElement).toBe(document.getElementById('b1'))
+      trap.deactivate()
+      expect(document.activeElement).toBe(outside)
+    })
+
+    describe('trapFocus 键盘事件', () => {
+      function setupTrap(html: string) {
+        const div = document.createElement('div')
+        div.innerHTML = html
+        document.body.appendChild(div)
+        const containerRef = ref<HTMLElement | null>(div)
+        const trap = useFocusTrap(containerRef)
+        trap.activate()
+        return { div, containerRef, trap }
+      }
+
+      const tabEvent = (init: KeyboardEventInit = {}) =>
+        new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true, ...init })
+
+      it('Tab 在最后一个元素 → 回绕到第一个 + preventDefault', () => {
+        setupTrap('<button id="b1">1</button><button id="b2">2</button>')
+        const b1 = document.getElementById('b1')!
+        const b2 = document.getElementById('b2')!
+        b2.focus()
+        const ev = tabEvent()
+        document.dispatchEvent(ev)
+        expect(document.activeElement).toBe(b1)
+        expect(ev.defaultPrevented).toBe(true)
+      })
+
+      it('Shift+Tab 在第一个元素 → 回绕到最后一个 + preventDefault', () => {
+        setupTrap('<button id="b1">1</button><button id="b2">2</button>')
+        const b1 = document.getElementById('b1')!
+        const b2 = document.getElementById('b2')!
+        b1.focus()
+        const ev = tabEvent({ shiftKey: true })
+        document.dispatchEvent(ev)
+        expect(document.activeElement).toBe(b2)
+        expect(ev.defaultPrevented).toBe(true)
+      })
+
+      it('Tab 在中间元素 → 不干预', () => {
+        setupTrap('<button id="b1">1</button><button id="b2">2</button><button id="b3">3</button>')
+        const b2 = document.getElementById('b2')!
+        b2.focus()
+        const ev = tabEvent()
+        document.dispatchEvent(ev)
+        expect(document.activeElement).toBe(b2)
+        expect(ev.defaultPrevented).toBe(false)
+      })
+
+      it('非 Tab 键直接忽略', () => {
+        setupTrap('<button id="b1">1</button>')
+        document.getElementById('b1')!.focus()
+        const ev = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+        document.dispatchEvent(ev)
+        expect(ev.defaultPrevented).toBe(false)
+      })
+
+      it('container 为空时 Tab 不报错', () => {
+        const containerRef = ref<HTMLElement | null>(null)
+        const trap = useFocusTrap(containerRef)
+        trap.activate()
+        expect(() => document.dispatchEvent(tabEvent())).not.toThrow()
+      })
+
+      it('无 focusable 元素时 Tab 不报错', () => {
+        setupTrap('<div>no buttons</div>')
+        expect(() => document.dispatchEvent(tabEvent())).not.toThrow()
+      })
     })
   })
 
@@ -161,6 +255,17 @@ describe('useAccessibility', () => {
       expect(field.hasAttribute('aria-invalid')).toBe(false)
       expect(field.hasAttribute('aria-describedby')).toBe(false)
       expect(document.getElementById('phone-error')).toBeNull()
+    })
+
+    it('reportFieldError 字段不存在时不抛错（error 元素在内存中创建，field?.parentNode 跳过）', () => {
+      const { reportFieldError } = useAccessibleForm()
+      expect(() => reportFieldError('ghost-field', '未找到字段')).not.toThrow()
+      expect(document.getElementById('ghost-field-error')).toBeNull()
+    })
+
+    it('clearFieldError 字段/错误元素不存在时不报错', () => {
+      const { clearFieldError } = useAccessibleForm()
+      expect(() => clearFieldError('nonexistent')).not.toThrow()
     })
   })
 

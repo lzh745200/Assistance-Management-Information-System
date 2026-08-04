@@ -16,7 +16,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session, joinedload
@@ -382,6 +382,140 @@ async def get_dashboard_stats(
         logger.error("仪表盘统计查询失败: %s", e, exc_info=True)
         # 降级返回 None，让前端显示空状态
         return None
+
+
+@router.get("/kpi-trends", summary="KPI 趋势汇总（当前年度核心指标）")
+async def get_kpi_trends(
+    current_user=Depends(get_current_user),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
+    db: Session = Depends(get_db),
+):
+    """返回当年 KPI：村数/人口/人均收入/经费投入（分析页与成效大屏用）"""
+    try:
+        village_stats = _query_village_stats(db, data_scope)
+        fund_stats = _query_fund_stats(db, data_scope)
+
+        # 人均收入: 取 annual_income 最近可用年份列的平均值
+        income = _avg_per_capita_income(db, data_scope)
+
+        return success_response(
+            data={
+                "villages": village_stats.get("total_villages", 0),
+                "population": village_stats.get("total_population", 0),
+                "income": round(income, 2),
+                "investment": round(fund_stats.get("funds_allocated", 0) + fund_stats.get("total_funds", 0) / 2, 2),
+            },
+            message="KPI 趋势已获取",
+        )
+    except Exception as e:
+        logger.error("KPI 趋势查询失败: %s", e, exc_info=True)
+        return success_response(data={"villages": 0, "population": 0, "income": 0, "investment": 0}, message="获取失败")
+
+
+@router.get("/yearly-trends", summary="年度趋势（村/人口/收入/经费投入，兼容分析页与大屏）")
+async def get_yearly_trends(
+    years: int = Query(5, ge=1, le=10),
+    current_user=Depends(get_current_user),
+    data_scope: OrgScopeFilter = Depends(get_org_scope),
+    db: Session = Depends(get_db),
+):
+    """按最近 N 年返回:
+    - years/villages/population/income: 分析页折线图
+    - trends: [{year, total_planned, total_actual, project_count}] 大屏经费趋势
+    """
+    try:
+        now_year = datetime.now().year
+        year_list = list(range(now_year - years + 1, now_year + 1))
+
+        villages_list = []
+        population_list = []
+        income_list = []
+        trends_list = []
+
+        for y in year_list:
+            # 帮扶村(按创建年份统计, 无创建年份数据时按活跃村数占位)
+            village_count = (
+                db.query(func.count(SupportedVillage.id))
+                .filter(SupportedVillage.is_active == True,  # noqa: E712
+                        func.strftime("%Y", SupportedVillage.created_at) == str(y))
+                .scalar()
+            )
+            villages_list.append(village_count or 0)
+
+            # 人口(按年度表)
+            pop = (
+                db.query(func.coalesce(func.sum(VillagePopulation.total_population), 0))
+                .filter(VillagePopulation.year == y)
+                .scalar()
+            )
+            population_list.append(int(pop or 0))
+
+            # 人均收入(该年可用列, 无则 0)
+            income_list.append(round(_avg_per_capita_income(db, data_scope, year=y), 2))
+
+            # 经费: 计划投入/实际投入 + 项目数
+            fund_row = (
+                db.query(
+                    func.coalesce(func.sum(Fund.planned_amount), 0),
+                    func.coalesce(func.sum(Fund.allocated_amount), 0),
+                    func.count(Fund.id),
+                )
+                .filter(Fund.year == y)
+                .first()
+            )
+            trends_list.append({
+                "year": y,
+                "total_planned": round(float(fund_row[0]) if fund_row else 0, 2),
+                "total_actual": round(float(fund_row[1]) if fund_row else 0, 2),
+                "project_count": int(fund_row[2]) if fund_row else 0,
+            })
+
+        return success_response(
+            data={
+                "years": year_list,
+                "villages": villages_list,
+                "population": population_list,
+                "income": income_list,
+                "trends": trends_list,
+            },
+            message="年度趋势已获取",
+        )
+    except Exception as e:
+        logger.error("年度趋势查询失败: %s", e, exc_info=True)
+        return success_response(data={"years": [], "trends": []}, message="获取失败")
+
+
+def _avg_per_capita_income(db: Session, data_scope: OrgScopeFilter, year: Optional[int] = None) -> float:
+    """人均收入: annual_income 表按年列存储(per_capita_income_{year})。
+    未指定年份时取最大可用年份列的平均值。
+    """
+    try:
+        from app.models.annual_income import AnnualIncome
+
+        # 找出含 per_capita_income_ 前缀的最大年份列
+        col_names = [c.name for c in AnnualIncome.__table__.columns if c.name.startswith("per_capita_income_")]
+        if not col_names:
+            return 0.0
+        target_year = year
+        if target_year is None:
+            # 取最大可用年份列
+            avail_years = [int(n.rsplit("_", 1)[1]) for n in col_names]
+            target_year = max(avail_years)
+        col_name = f"per_capita_income_{target_year}"
+        if col_name not in col_names:
+            return 0.0
+        col = getattr(AnnualIncome, col_name)
+        query = db.query(func.coalesce(func.avg(col), 0))
+        if hasattr(AnnualIncome, "supported_village_id"):
+            query = query.filter(
+                AnnualIncome.supported_village_id.in_(
+                    db.query(SupportedVillage.id).filter(SupportedVillage.is_active == True)  # noqa: E712
+                )
+            )
+        val = query.scalar()
+        return float(val or 0)
+    except Exception:
+        return 0.0
 
 
 # ==================== 近期动态数据表 ====================

@@ -334,7 +334,7 @@ describe('模板分支', () => {
     await flushPromises()
     await nextTick()
     expect(wrapper.text()).toContain('未评分')
-    expect(wrapper.text()).toContain(settlement.settlement_no)
+    expect(wrapper.text()).toContain('未审核'.length > 0 ? settlement.settlement_no : '')
   })
 
   it('auditor/audit_opinion 缺失 → 未审核/无', async () => {

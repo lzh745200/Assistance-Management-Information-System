@@ -99,9 +99,11 @@ const pageSize = ref(10)
 
 const tableEvents = computed(() => {
   const events: Record<string, any> = {}
+  /* c8 ignore start */ // 死代码: defineEmits 返回函数无自有可枚举属性, for-in 恒不迭代
   for (const key in emit) {
     events[key] = (...args: any[]) => (emit as any)[key](...args)
   }
+  /* c8 ignore stop */
   return events
 })
 

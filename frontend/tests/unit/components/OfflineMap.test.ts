@@ -54,14 +54,7 @@ const mocks = vi.hoisted(() => {
     registerMap: vi.fn(),
   }
 
-  return {
-    mockChart,
-    mockEcharts,
-    get seriesClickHandler() { return seriesClickHandler },
-    set seriesClickHandler(v: any) { seriesClickHandler = v },
-    get zrClickHandler() { return zrClickHandler },
-    set zrClickHandler(v: any) { zrClickHandler = v },
-  }
+  return { mockChart, mockEcharts, get seriesClickHandler() { return seriesClickHandler }, set seriesClickHandler(v: any) { seriesClickHandler = v }, get zrClickHandler() { return zrClickHandler }, set zrClickHandler(v: any) { zrClickHandler = v } }
 })
 
 const { mockChart, mockEcharts } = mocks

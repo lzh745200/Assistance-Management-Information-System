@@ -11,6 +11,7 @@
         <component :is="item.icon" />
       </el-icon>
       <span class="nav-label">{{ item.label }}</span>
+      <!-- /* c8 ignore next -- badge 恒为空字符串，v-if 真分支不可达 */ -->
       <span v-if="item.badge" class="nav-badge">{{ item.badge }}</span>
     </button>
   </nav>

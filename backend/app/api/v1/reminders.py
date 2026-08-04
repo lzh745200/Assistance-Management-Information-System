@@ -31,7 +31,10 @@ async def list_reminders(
 async def trigger_scan(
     current_user=Depends(get_current_user),
 ):
-    """立即执行一次提醒扫描（审批超时/项目截止/预算预警）"""
+    """立即执行一次提醒扫描（审批超时/项目截止/预算预警）——仅管理员"""
+    from app.api.v1.deps import require_manager_role
+
+    require_manager_role(current_user)
     try:
         from app.services.reminder_orchestrator import run_reminder_scans
 

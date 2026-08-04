@@ -167,7 +167,7 @@ export class AuthStorage {
   }
 
   /**
-   * 清除所有认证数据
+   * 清除所有认证数据（含记住登录的持久数据——退出登录必须彻底清除）
    */
   static clear(): void {
     // 清除 sessionStorage
@@ -179,6 +179,9 @@ export class AuthStorage {
     Object.values(LEGACY_KEYS)
       .flat()
       .forEach((key) => localStorage.removeItem(key))
+
+    // 清除记住登录的持久数据（防止退出后仍自动登录）
+    this.clearPersisted()
   }
 
   /**

@@ -118,7 +118,7 @@ try:
     from app.api.v1.reminders import router as reminders_router
     api_v1_router.include_router(reminders_router)
     logger.debug("已加载路由: reminders")
-except Exception as e:
+except Exception as e:  # pragma: no cover - 防御性分支：reminders 模块随包安装必然存在
     logger.warning("加载 reminders 路由失败: %s", e, exc_info=True)
 
 # ---- 业务模块 ----

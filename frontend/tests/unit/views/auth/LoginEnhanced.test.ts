@@ -164,15 +164,6 @@ describe('LoginEnhanced.vue', () => {
     expect((w.vm as any).errorMsg).toBe('系统错误')
   })
 
-  it('登录失败（无任何提示）→ 默认"登录失败"', async () => {
-    mockLogin.mockResolvedValue({ status: 'error' })
-    const w = await mountComp()
-    ;(w.vm as any).username = 'admin'
-    ;(w.vm as any).password = 'wrong'
-    await (w.vm as any).handleLogin()
-    expect((w.vm as any).errorMsg).toBe('登录失败')
-  })
-
   it('登录异常（reject）→ 展示异常信息', async () => {
     mockLogin.mockRejectedValue(new Error('network down'))
     const w = await mountComp()
@@ -180,15 +171,6 @@ describe('LoginEnhanced.vue', () => {
     ;(w.vm as any).password = 'wrong'
     await (w.vm as any).handleLogin()
     expect((w.vm as any).errorMsg).toContain('登录系统异常')
-  })
-
-  it('登录异常（无 message）→ 默认文案', async () => {
-    mockLogin.mockRejectedValue({})
-    const w = await mountComp()
-    ;(w.vm as any).username = 'admin'
-    ;(w.vm as any).password = 'wrong'
-    await (w.vm as any).handleLogin()
-    expect((w.vm as any).errorMsg).toBe('登录系统异常: 未知错误')
   })
 
   it('登录要求 2FA → 切换到验证码模式', async () => {
@@ -257,6 +239,49 @@ describe('LoginEnhanced.vue', () => {
     expect((w.vm as any).errorMsg).toBe('2FA验证异常: 未知错误')
   })
 
+  it('登录失败（无任何提示）→ 默认"登录失败"', async () => {
+    mockLogin.mockResolvedValue({ status: 'error' })
+    const w = await mountComp()
+    ;(w.vm as any).username = 'admin'
+    ;(w.vm as any).password = 'wrong'
+    await (w.vm as any).handleLogin()
+    expect((w.vm as any).errorMsg).toBe('登录失败')
+  })
+
+  it('登录异常（无 message）→ 默认文案', async () => {
+    mockLogin.mockRejectedValue({})
+    const w = await mountComp()
+    ;(w.vm as any).username = 'admin'
+    ;(w.vm as any).password = 'wrong'
+    await (w.vm as any).handleLogin()
+    expect((w.vm as any).errorMsg).toBe('登录系统异常: 未知错误')
+  })
+
+  it('startCarousel 重复调用安全（幂等）', async () => {
+    vi.useFakeTimers()
+    const origImage = (globalThis as any).Image
+    class FakeImage {
+      onload: (() => void) | null = null
+      onerror: (() => void) | null = null
+      src = ''
+      constructor() {
+        setTimeout(() => {
+          if (this.onload) this.onload()
+        }, 0)
+      }
+    }
+    ;(globalThis as any).Image = FakeImage
+    const w = mount(LoginEnhanced)
+    await vi.advanceTimersByTimeAsync(10)
+    const vm = w.vm as any
+    vm.startCarousel()
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(vm.currentBgIndex).toBe(1)
+    w.unmount()
+    ;(globalThis as any).Image = origImage
+    vi.useRealTimers()
+  })
+
   it('resetTwoFactor 清空状态', async () => {
     const w = await mountComp()
     const vm = w.vm as any
@@ -280,6 +305,55 @@ describe('LoginEnhanced.vue', () => {
     expect(vm.showPassword).toBe(true)
     await w.find('.toggle-password').trigger('click')
     expect(vm.showPassword).toBe(false)
+  })
+
+  it('el-dialog 关闭（update:modelValue）→ 关闭导入对话框', async () => {
+    const w = mount(LoginEnhanced, {
+      global: {
+        stubs: {
+          'el-dialog': {
+            name: 'ElDialog',
+            template: '<div class="el-dialog-stub"><slot /><slot name="footer" /></div>',
+            emits: ['update:modelValue'],
+          },
+          'el-button': { name: 'ElButton', template: '<button @click="$emit(\'click\')"><slot /></button>', emits: ['click'] },
+        },
+      },
+    })
+    await flushPromises()
+    const vm = w.vm as any
+    vm.permissionImportVisible = true
+    await nextTick()
+    const dialog = w.findComponent({ name: 'ElDialog' })
+    dialog.vm.$emit('update:modelValue', false)
+    await nextTick()
+    expect(vm.permissionImportVisible).toBe(false)
+  })
+
+  it('导入对话框：点击取消按钮关闭', async () => {
+    const w = mount(LoginEnhanced, {
+      global: {
+        stubs: {
+          'el-dialog': {
+            name: 'ElDialog',
+            template: '<div class="el-dialog-stub"><slot /><slot name="footer" /></div>',
+            emits: ['update:modelValue'],
+          },
+          'el-button': { name: 'ElButton', template: '<button @click="$emit(\'click\')"><slot /></button>', emits: ['click'] },
+        },
+      },
+    })
+    await flushPromises()
+    const vm = w.vm as any
+    vm.permissionImportVisible = true
+    await nextTick()
+    const cancelBtn = w
+      .findAll('button')
+      .find((b) => b.text().includes('取消'))
+    expect(cancelBtn).toBeTruthy()
+    await cancelBtn!.trigger('click')
+    await nextTick()
+    expect(vm.permissionImportVisible).toBe(false)
   })
 
   it('跳转辅助函数', async () => {
@@ -516,88 +590,6 @@ describe('LoginEnhanced.vue', () => {
     w.unmount()
     ;(globalThis as any).Image = origImage
     vi.useRealTimers()
-  })
-
-  it('startCarousel 重复调用安全（幂等）', async () => {
-    vi.useFakeTimers()
-    const origImage = (globalThis as any).Image
-    class FakeImage {
-      onload: (() => void) | null = null
-      onerror: (() => void) | null = null
-      src = ''
-      constructor() {
-        setTimeout(() => {
-          if (this.onload) this.onload()
-        }, 0)
-      }
-    }
-    ;(globalThis as any).Image = FakeImage
-    const w = mount(LoginEnhanced)
-    await vi.advanceTimersByTimeAsync(10)
-    const vm = w.vm as any
-    vm.startCarousel()
-    await vi.advanceTimersByTimeAsync(5000)
-    expect(vm.currentBgIndex).toBe(1)
-    w.unmount()
-    ;(globalThis as any).Image = origImage
-    vi.useRealTimers()
-  })
-
-  it('el-dialog 关闭（update:modelValue）→ 关闭导入对话框', async () => {
-    const w = mount(LoginEnhanced, {
-      global: {
-        stubs: {
-          'el-dialog': {
-            name: 'ElDialog',
-            template: '<div class="el-dialog-stub"><slot /><slot name="footer" /></div>',
-            emits: ['update:modelValue'],
-          },
-          'el-button': {
-            name: 'ElButton',
-            template: '<button @click="$emit(\'click\')"><slot /></button>',
-            emits: ['click'],
-          },
-        },
-      },
-    })
-    await flushPromises()
-    const vm = w.vm as any
-    vm.permissionImportVisible = true
-    await nextTick()
-    const dialog = w.findComponent({ name: 'ElDialog' })
-    dialog.vm.$emit('update:modelValue', false)
-    await nextTick()
-    expect(vm.permissionImportVisible).toBe(false)
-  })
-
-  it('导入对话框：点击取消按钮关闭', async () => {
-    const w = mount(LoginEnhanced, {
-      global: {
-        stubs: {
-          'el-dialog': {
-            name: 'ElDialog',
-            template: '<div class="el-dialog-stub"><slot /><slot name="footer" /></div>',
-            emits: ['update:modelValue'],
-          },
-          'el-button': {
-            name: 'ElButton',
-            template: '<button @click="$emit(\'click\')"><slot /></button>',
-            emits: ['click'],
-          },
-        },
-      },
-    })
-    await flushPromises()
-    const vm = w.vm as any
-    vm.permissionImportVisible = true
-    await nextTick()
-    const cancelBtn = w
-      .findAll('button')
-      .find((b) => b.text().includes('取消'))
-    expect(cancelBtn).toBeTruthy()
-    await cancelBtn!.trigger('click')
-    await nextTick()
-    expect(vm.permissionImportVisible).toBe(false)
   })
 
   it('轮播：currentBg 计算与卸载清理', async () => {

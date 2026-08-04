@@ -69,6 +69,16 @@ describe('utils/permissionGuard', () => {
       guard(mkRoute('/a'), mkRoute('/b'), next)
       expect(next).toHaveBeenCalledWith()
     })
+
+    it('authStore.user 为空 → 角色空串 (user?.role || \'\' 分支) → 无权限跳 /403', () => {
+      ;(mockAuth as any).user = null
+      mockRbac.hasPermission.mockReturnValue(false)
+      const guard = createPermissionGuard({ '/a': ['p1'] })
+      const next = vi.fn()
+      guard(mkRoute('/a', '/a?x=1'), mkRoute('/b'), next)
+      expect(next).toHaveBeenCalledWith({ path: '/403', query: { redirect: '/a?x=1' } })
+      ;(mockAuth as any).user = { role: 'admin' }
+    })
   })
 
   describe('createAsyncPermissionGuard', () => {

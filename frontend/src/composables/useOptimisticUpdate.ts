@@ -88,6 +88,7 @@ export function useOptimisticUpdate<T = any>(
       ElMessage.error(errorMessage)
       onError?.(err, data)
       return false
+      /* c8 ignore next */
     } finally {
       isPending.value = false
     }

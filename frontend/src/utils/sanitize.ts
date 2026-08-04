@@ -121,6 +121,8 @@ export function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#39;',
   }
+  // 正则仅匹配 5 个已映射字符，|| char 兜底结构性不可达
+  /* c8 ignore next */
   return text.replace(/[&<>"']/g, (char) => escapeMap[char] || char)
 }
 

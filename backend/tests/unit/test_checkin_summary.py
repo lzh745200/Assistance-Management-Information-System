@@ -59,6 +59,8 @@ def test_create_checkin_first_time_ok(monkeypatch):
     app.dependency_overrides[get_db] = lambda: mock_db
     with patch("app.core.database.SessionLocal") as mk_sl:
         mk_sl.return_value = MagicMock()
+    with patch("app.core.database.SessionLocal") as mk_sl:
+        mk_sl.return_value = MagicMock()
     app.dependency_overrides[get_current_user] = lambda: _user()
     client = TestClient(app, raise_server_exceptions=False)
     try:

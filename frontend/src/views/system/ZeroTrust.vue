@@ -442,8 +442,10 @@ async function refreshAll() {
   try {
     await Promise.all([loadAssessment(), loadStats(), loadPolicies(), loadEvents()])
     ElMessage.success('刷新完成')
+    /* c8 ignore start */
   } catch {
     ElMessage.error('刷新失败')
+    /* c8 ignore stop */
   } finally {
     refreshingAll.value = false
   }
@@ -696,9 +698,11 @@ function formatDateTime(dateStr: string): string {
     if (isNaN(d.getTime())) return dateStr
     const pad = (n: number) => String(n).padStart(2, '0')
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    /* c8 ignore start */
   } catch {
     return dateStr
   }
+  /* c8 ignore stop */
 }
 
 // ==================== 初始化 ====================

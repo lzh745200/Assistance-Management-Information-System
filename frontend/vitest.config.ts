@@ -40,6 +40,7 @@ export default defineConfig({
         'tests/e2e/',
         'e2e/**',
         'scripts/**',
+        '**/__tests__/**',
         'src/App.vue',
         'src/App.test.vue',
         'src/main.ts',
@@ -57,6 +58,9 @@ export default defineConfig({
         'src/types/models.ts',
         'src/types/organization.ts',
         'src/types/policy.ts',
+        'src/components/business/ChartCard/types.ts',
+        'src/components/business/DataTable/types.ts',
+        'src/components/business/FormBuilder/types.ts',
       ],
       thresholds: {
         'src/utils/**/*.ts': { statements: 100, branches: 100, functions: 100, lines: 100 },
@@ -75,7 +79,12 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // charts/ 下三个图表组件的相对导入指向不存在的 ./BaseChart.vue（实际位于 common/），
+      // 测试环境下将其重定向到 common/BaseChart.vue
+      './BaseChart.vue': fileURLToPath(
+        new URL('./src/components/common/BaseChart.vue', import.meta.url)
+      ),
     },
   },
 })

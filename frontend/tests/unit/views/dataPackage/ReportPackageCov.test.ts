@@ -148,6 +148,19 @@ describe('previewData 预览', () => {
     expect(wrapper.html()).not.toContain('以下数据类型记录数为0')
   })
 
+  it('警告条含未知类型 0 计数 → typeLabels[t] || t 原始键回退（L71）', async () => {
+    postMock.mockResolvedValue({ counts: { weird_type: 0 } })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.form.dataTypes = ['weird_type']
+    await findBtn(wrapper, '下一步：预览数据').trigger('click')
+    await flushPromises()
+    await nextTick()
+    expect(vm.emptyDataTypes).toEqual(['weird_type'])
+    expect(wrapper.html()).toContain('以下数据类型记录数为0: weird_type')
+  })
+
   it('成功：响应为 null → counts || {} 兜底', async () => {
     postMock.mockResolvedValue(null)
     const wrapper = mountComp()

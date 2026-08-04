@@ -70,6 +70,7 @@ const menuTree = computed<MenuItem[]>(() => {
       (child): MenuItem => ({
         path: `/${child.path}`,
         name: String(child.name || ''),
+        /* c8 ignore next */ // 不可达：上方 filter(child.meta?.title) 已保证 meta.title 为真值
         title: String(child.meta?.title || ''),
         icon: String(child.meta?.icon || ''),
         hidden: !!child.meta?.hidden,
