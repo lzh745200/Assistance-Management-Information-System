@@ -160,6 +160,9 @@ RUN mkdir -p \
     opt/assistance-management-system/systemd \
     opt/assistance-management-system/desktop \
     opt/assistance-management-system/polkit \
+    opt/assistance-management-system/icons \
+    usr/share/pixmaps \
+    usr/share/icons/hicolor/512x512/apps \
     var/lib/assistance-management-system/database \
     var/lib/assistance-management-system/uploads \
     var/lib/assistance-management-system/exports \
@@ -178,6 +181,12 @@ COPY deploy/kylin/scripts/start-kylin.sh ./opt/assistance-management-system/scri
 COPY deploy/kylin/systemd/assistance-management-system.service ./opt/assistance-management-system/systemd/
 COPY deploy/kylin/desktop/assistance-management-system.desktop ./opt/assistance-management-system/desktop/
 COPY deploy/kylin/polkit/49-assistance-management-system.rules ./opt/assistance-management-system/polkit/
+
+# 复制应用图标（桌面快捷方式与开始菜单图标使用）
+COPY resources/icons/app-circle-256.png ./opt/assistance-management-system/icons/app-circle-256.png
+# 同时安装到系统图标目录，供 .desktop 菜单项与桌面快捷方式引用
+COPY resources/icons/app-circle-256.png ./usr/share/pixmaps/assistance-management-system.png
+COPY resources/icons/app-circle-256.png ./usr/share/icons/hicolor/512x512/apps/assistance-management-system.png
 
 # 复制 DEBIAN 控制脚本
 COPY deploy/kylin/DEBIAN/postinst ./DEBIAN/
@@ -213,6 +222,8 @@ RUN mkdir -p /output && \
     dpkg-deb -I /output/assistance-management-system_${VERSION}_arm64.deb && \
     echo "=== 验证关键文件存在 ===" && \
     dpkg-deb -c /output/assistance-management-system_${VERSION}_arm64.deb | grep -E "assistance-management-backend$|start-kylin.sh|\.desktop|\.service|kylin.env|polkit" | head -10 && \
+    echo "=== 验证图标与桌面快捷方式 ===" && \
+    dpkg-deb -c /output/assistance-management-system_${VERSION}_arm64.deb | grep -E "icons/app-circle-256.png|usr/share/pixmaps/assistance|usr/share/icons/hicolor/512x512/apps/assistance" && \
     echo "=== DEB 包验证通过 ==="
 
 

@@ -5,6 +5,17 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.5.1] - 2026-08-04
+
+### 修复
+- 🐛 **麒麟 V10 桌面快捷方式缺失**：DEB 安装后未在用户桌面创建启动图标。`postinst` 现为每个 `/home` 用户创建桌面快捷方式（自动检测 `Desktop`/`桌面` 目录并设置 gio 信任标记），安装后桌面即出现图标
+- 🐛 **麒麟 V10 开始菜单图标不显示**：`.desktop` 文件 `Icon` 引用系统通用图标且图标未打入 DEB 包。现打包应用图标到 `/opt/assistance-management-system/icons/`、`/usr/share/pixmaps` 与 hicolor 多尺寸主题目录，菜单图标正常显示
+- 🧹 卸载时（`postrm`）清理系统图标、应用菜单项与各用户桌面快捷方式
+
+### 构建
+- `docker/Dockerfile.kylin-standalone`：DEB 包新增图标文件与系统图标目录安装
+- `deploy/kylin/desktop/assistance-management-system.desktop`：Icon 指向应用图标绝对路径
+
 ## [未发布] - 2026-08-01
 
 ### 关键 Bug 修复
