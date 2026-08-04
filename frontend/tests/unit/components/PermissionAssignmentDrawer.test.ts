@@ -509,4 +509,43 @@ describe('PermissionAssignmentDrawer.vue', () => {
     const vm = wrapper.vm as any
     expect(vm.currentPermissions).toEqual([])
   })
+
+  it('模板 v-model 内联 handler：el-drawer / el-tabs 触发 update:modelValue', async () => {
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+
+    await wrapper.findComponent(ElDrawerStub).vm.$emit('update:modelValue', false)
+    expect(wrapper.emitted('update:modelValue')!.at(-1)![0]).toBe(false)
+
+    await wrapper.findComponent(ElTabsStub).vm.$emit('update:modelValue', 'menus')
+    expect((wrapper.vm as any).activeTab).toBe('menus')
+  })
+
+  it('loadCurrentPermissions：权限响应为 0 → payload 两假侧兜底空数组', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/permissions')) return Promise.resolve(0)
+      return Promise.resolve({ data: [] })
+    })
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+    expect((wrapper.vm as any).currentPermissions).toEqual([])
+  })
+
+  it('保存权限：res 无 data 字段 → res.data || {} 兜底 + 默认错误提示', async () => {
+    mockPost.mockResolvedValueOnce({})
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+    await btn(wrapper, '保存权限')!.trigger('click')
+    await flushPromises()
+    expect(mockMessage.error).toHaveBeenCalledWith('权限保存失败')
+  })
+
+  it('保存权限成功：failed 字段缺失 → data.failed || [] 兜底', async () => {
+    mockPost.mockResolvedValueOnce({ data: { success: true, granted: [], revoked: [], skipped: [] } })
+    const wrapper = mountDrawer({ user })
+    await flushPromises()
+    await btn(wrapper, '保存权限')!.trigger('click')
+    await flushPromises()
+    expect(mockMessage.success).toHaveBeenCalledWith('权限保存成功')
+  })
 })

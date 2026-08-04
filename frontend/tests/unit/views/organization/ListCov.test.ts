@@ -678,6 +678,33 @@ describe('删除组织全分支', () => {
     await vm.handleDelete(orgRow1)
     expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
   })
+
+  it('删除确认框 inputValidator：空值 / 纯空白 / 合法输入 全分支', async () => {
+    let validator: any = null
+    promptMock.mockImplementation((_msg: any, _title: any, opts: any) => {
+      validator = opts?.inputValidator
+      return Promise.resolve({ value: 'pass123' })
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    await findBtn(wrapper, '删除').trigger('click')
+    await flushPromises()
+
+    expect(validator).toBeDefined()
+    expect(validator('')).toBe('请输入密码') // v 空串 → && 短路
+    expect(validator('   ')).toBe('请输入密码') // v 有值但 trim 后为空
+    expect(validator('pass')).toBe(true) // 合法输入
+    expect(mockDel).toHaveBeenCalledWith('/organizations/1?confirm_password=pass123')
+  })
+
+  it('删除时密码 value 为 null → value?.trim() ?? \'\' 兜底空串', async () => {
+    promptMock.mockResolvedValueOnce({ value: null })
+    const wrapper = mountComp()
+    await flushPromises()
+    await findBtn(wrapper, '删除').trigger('click')
+    await flushPromises()
+    expect(mockDel).toHaveBeenCalledWith('/organizations/1?confirm_password=')
+  })
 })
 
 describe('导出', () => {

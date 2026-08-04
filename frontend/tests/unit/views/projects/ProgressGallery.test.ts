@@ -186,6 +186,34 @@ describe('comparisonPairs', () => {
     await flushPromises()
     expect((wrapper.vm as any).comparisonPairs).toEqual([])
   })
+
+  it('文件缺 filename 与 name → ?? 链兜底为空串（不匹配 before/after 分组）', async () => {
+    projectsApiMock.listFiles.mockResolvedValue({
+      items: [
+        { id: 20, category: 'progress' },
+        { id: 21, filename: null, category: 'progress' },
+      ],
+    })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.progressFiles).toHaveLength(2)
+    // 两个文件均不匹配 before/after 正则 → 走顺序配对兜底
+    expect(vm.comparisonPairs).toHaveLength(1)
+  })
+
+  it('顺序配对但 Blob URL 缺失 → beforeUrl/afterUrl 空串兜底', async () => {
+    fetchMock.mockResolvedValue({ ok: false })
+    projectsApiMock.listFiles.mockResolvedValue({ items: [fileSeq1, fileSeq2] })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(vm.blobUrls).toEqual({})
+    const pairs = vm.comparisonPairs
+    expect(pairs).toHaveLength(1)
+    expect(pairs[0].beforeUrl).toBe('')
+    expect(pairs[0].afterUrl).toBe('')
+  })
 })
 
 describe('上传', () => {
@@ -204,6 +232,15 @@ describe('上传', () => {
     const wrapper = mountComp()
     await flushPromises()
     projectsApiMock.uploadFiles.mockRejectedValue(new Error('上传失败'))
+    await (wrapper.vm as any).handleUpload({ file: {} })
+    expect(logError).toHaveBeenCalled()
+    expect(ElMessage.error).toHaveBeenCalledWith('上传失败')
+  })
+
+  it('上传失败（err 为 null）→ e?.message 兜底「上传失败」', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    projectsApiMock.uploadFiles.mockRejectedValue(null)
     await (wrapper.vm as any).handleUpload({ file: {} })
     expect(logError).toHaveBeenCalled()
     expect(ElMessage.error).toHaveBeenCalledWith('上传失败')
@@ -263,6 +300,16 @@ describe('删除', () => {
     const wrapper = mountComp()
     await flushPromises()
     projectsApiMock.deleteFile.mockRejectedValueOnce(new Error('删除失败'))
+    await (wrapper.vm as any).handleDelete(11)
+    expect(logError).toHaveBeenCalled()
+    expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
+  })
+
+  it('删除失败（err 为 null）→ e?.message 兜底「删除失败」', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    confirmMock.mockResolvedValueOnce(undefined)
+    projectsApiMock.deleteFile.mockRejectedValueOnce(null)
     await (wrapper.vm as any).handleDelete(11)
     expect(logError).toHaveBeenCalled()
     expect(ElMessage.error).toHaveBeenCalledWith('删除失败')
