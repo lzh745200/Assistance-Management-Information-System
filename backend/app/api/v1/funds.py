@@ -456,21 +456,21 @@ def fund_statistics_overview(
     total_amount = float(row.total_amount)
 
     return success_response(data={
-            "year": year,
-            "total_count": row.total_count,
-            "total_amount": total_amount,
-            "pending_count": row.pending_count,
-            "approved_count": row.approved_count,
-            "allocated_count": row.allocated_count,
-            "in_use_count": row.in_use_count,
-            "completed_count": row.completed_count,
-            "used_amount": float(row.used_amount or 0),
-            "allocated_amount": float(row.allocated_amount or 0),
-            "budget_total": budget_total,
-            "budget_executed": budget_executed,
-            "budget_remaining": round(budget_total - budget_executed, 2),
-            "usage_rate": round((budget_executed / budget_total * 100), 1) if budget_total > 0 else 0,
-        })
+        "year": year,
+        "total_count": row.total_count,
+        "total_amount": total_amount,
+        "pending_count": row.pending_count,
+        "approved_count": row.approved_count,
+        "allocated_count": row.allocated_count,
+        "in_use_count": row.in_use_count,
+        "completed_count": row.completed_count,
+        "used_amount": float(row.used_amount or 0),
+        "allocated_amount": float(row.allocated_amount or 0),
+        "budget_total": budget_total,
+        "budget_executed": budget_executed,
+        "budget_remaining": round(budget_total - budget_executed, 2),
+        "usage_rate": round((budget_executed / budget_total * 100), 1) if budget_total > 0 else 0,
+    })
 
 
 @router.get("/statistics/multi-dimension")
@@ -839,15 +839,15 @@ def village_fund_summary(
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
     return success_response(data={
-            "village_id": village_id,
-            "year": year,
-            "fund_count": row.count,
-            "planned_amount": float(row.planned),
-            "approved_amount": float(row.approved),
-            "allocated_amount": float(row.allocated),
-            "used_amount": float(row.used),
-            "remaining_amount": float(row.approved) - float(row.used),
-        })
+        "village_id": village_id,
+        "year": year,
+        "fund_count": row.count,
+        "planned_amount": float(row.planned),
+        "approved_amount": float(row.approved),
+        "allocated_amount": float(row.allocated),
+        "used_amount": float(row.used),
+        "remaining_amount": float(row.approved) - float(row.used),
+    })
 
 
 @router.get("/school/{school_id}/summary")
@@ -870,15 +870,15 @@ def school_fund_summary(
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
     row = db.execute(stmt).one()
     return success_response(data={
-            "school_id": school_id,
-            "year": year,
-            "fund_count": row.count,
-            "planned_amount": float(row.planned),
-            "approved_amount": float(row.approved),
-            "allocated_amount": float(row.allocated),
-            "used_amount": float(row.used),
-            "remaining_amount": float(row.approved) - float(row.used),
-        })
+        "school_id": school_id,
+        "year": year,
+        "fund_count": row.count,
+        "planned_amount": float(row.planned),
+        "approved_amount": float(row.approved),
+        "allocated_amount": float(row.allocated),
+        "used_amount": float(row.used),
+        "remaining_amount": float(row.approved) - float(row.used),
+    })
 
 
 @router.get("/{fund_id}/history/status")

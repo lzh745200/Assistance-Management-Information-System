@@ -1048,6 +1048,26 @@ async def create_policy(
         raise HTTPException(status_code=500, detail=f"创建政策失败: {str(e)}")
 
 
+def _coerce_date_fields(update_data: dict) -> None:
+    """将字符串日期字段转换为 datetime; 非法值移除"""
+    for date_field in ["issue_date", "effective_date"]:
+        if date_field in update_data and isinstance(update_data[date_field], str):
+            try:
+                update_data[date_field] = datetime.fromisoformat(update_data[date_field])
+            except (ValueError, TypeError):
+                update_data.pop(date_field)
+
+
+def _filter_valid_columns(policy_cls, update_data: dict):
+    """剔除模型不存在的字段; 返回 attachment_urls"""
+    attachment_urls = update_data.pop("attachment_urls", None)
+    valid_columns = {col.name for col in policy_cls.__table__.columns}
+    for key in list(update_data.keys()):
+        if key not in valid_columns:
+            update_data.pop(key)
+    return attachment_urls
+
+
 @router.put("/{policy_id}")
 async def update_policy(
     policy_id: int,
@@ -1075,19 +1095,10 @@ async def update_policy(
                 update_data[db_key] = update_data.pop(frontend_key)
 
         # 处理日期字段
-        for date_field in ["issue_date", "effective_date"]:
-            if date_field in update_data and isinstance(update_data[date_field], str):
-                try:
-                    update_data[date_field] = datetime.fromisoformat(update_data[date_field])
-                except (ValueError, TypeError):
-                    update_data.pop(date_field)
+        _coerce_date_fields(update_data)
 
-        # 移除不属于模型的字段（附件 URL 单独处理）
-        attachment_urls = update_data.pop("attachment_urls", None)
-        valid_columns = {c.name for c in Policy.__table__.columns}
-        for key in list(update_data.keys()):
-            if key not in valid_columns:
-                update_data.pop(key)
+        # 移除模型不存在的字段（如 URL 预处理的 attachment_urls）
+        attachment_urls = _filter_valid_columns(Policy, update_data)
         if attachment_urls is not None:
             _apply_attachments(policy, attachment_urls)
 
@@ -1260,4 +1271,3 @@ def _attachment_urls_of(policy: Policy) -> list:
         rel = _os.path.relpath(normalized, base).replace(_os.sep, "/")
         return [f"/uploads/{rel}"]
     return [fp]
-

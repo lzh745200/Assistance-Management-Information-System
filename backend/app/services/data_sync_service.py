@@ -25,24 +25,23 @@ _TABLE_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 # 允许同步的表名白名单（防止 SQL 注入）
 _ALLOWED_TABLES = frozenset({
-        "users",
-        "organizations",
-        "projects",
-        "funds",
-        "work_logs",
-        "supported_villages",
-        "schools",
-        "policies",
-        "attachments",
-        "audit_logs",
-        "data_packages",
-        "sync_logs",
-        "data_conflicts",
-        "machine_codes",
-        "update_logs",
-        "fund_budgets",
-    }
-)
+    "users",
+    "organizations",
+    "projects",
+    "funds",
+    "work_logs",
+    "supported_villages",
+    "schools",
+    "policies",
+    "attachments",
+    "audit_logs",
+    "data_packages",
+    "sync_logs",
+    "data_conflicts",
+    "machine_codes",
+    "update_logs",
+    "fund_budgets",
+})
 
 # 敏感表: 禁止导入(防提权/数据篡改)
 _SENSITIVE_TABLES = frozenset({"users", "machine_codes", "audit_logs"})

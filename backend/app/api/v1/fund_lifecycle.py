@@ -2308,4 +2308,3 @@ def _contract_attachments(contract) -> list:
     except (ValueError, TypeError):
         pass
     return []
-
