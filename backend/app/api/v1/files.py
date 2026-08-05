@@ -19,8 +19,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/files", tags=["文件上传"])
 
 # 允许的文件扩展名（按类别分组）
+# 注意: svg 不在白名单（可含脚本导致存储型 XSS）
 _ALLOWED_EXTS = {
-    "image": {"jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "ico"},
+    "image": {"jpg", "jpeg", "png", "gif", "bmp", "webp", "ico"},
     "document": {"pdf", "doc", "docx", "ppt", "pptx", "txt", "xls", "xlsx", "csv"},
     "archive": {"zip", "rar", "7z", "tar", "gz"},
     "audio": {"mp3", "wav", "ogg"},
@@ -67,6 +68,19 @@ async def upload_file(
             allowed |= _exts
         if ext not in allowed:
             raise HTTPException(status_code=400, detail=f"不支持的文件类型: .{ext}")
+
+    # 内容嗅探: 图片扩展名必须匹配真实文件头(防改名绕过)
+    _MAGIC = {
+        "jpg": [b"\xff\xd8\xff"],
+        "png": [b"\x89PNG\r\n\x1a\n"],
+        "gif": [b"GIF87a", b"GIF89a"],
+        "bmp": [b"BM"],
+        "webp": [b"RIFF"],
+    }
+    if ext in _MAGIC:
+        head = content[:16]
+        if not any(head.startswith(magic) for magic in _MAGIC[ext]):
+            raise HTTPException(status_code=400, detail=f"文件内容与扩展名 .{ext} 不匹配")
 
     # 存储目录：uploads/generic[/category]
     base_upload = os.path.abspath(settings.UPLOAD_DIR)

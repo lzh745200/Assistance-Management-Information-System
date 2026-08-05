@@ -158,9 +158,6 @@ describe('common/VirtualList.vue', () => {
 describe('common/VirtualTable.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/components/common/VirtualTable.vue'); const w = mount(C, { props: { data: [], columns: [] } }); expect(w.exists()).toBe(true) })
 })
-describe('common/A11yDialog.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/components/common/A11yDialog.vue'); const w = mount(C, { props: { modelValue: false } }); expect(w.exists()).toBe(true) })
-})
 describe('common/BaseButton.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/components/common/BaseButton.vue'); const w = mount(C, { slots: { default: 'Click' } }); expect(w.exists()).toBe(true) })
 })
@@ -172,9 +169,6 @@ describe('common/BaseForm.vue', () => {
 })
 describe('common/BaseInput.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/components/common/BaseInput.vue'); const w = mount(C, { props: { modelValue: '' } }); expect(w.exists()).toBe(true) })
-})
-describe('common/BaseModal.vue', () => {
-  it('渲染', async () => { const { default: C } = await import('@/components/common/BaseModal.vue'); const w = mount(C, { props: { modelValue: false } }); expect(w.exists()).toBe(true) })
 })
 describe('common/BaseTable.vue', () => {
   it('渲染', async () => { const { default: C } = await import('@/components/common/BaseTable.vue'); const w = mount(C, { props: { data: [], columns: [] } }); expect(w.exists()).toBe(true) })
@@ -194,13 +188,7 @@ describe('layout/MobileBottomNav.vue', () => { it('渲染', async () => { const 
 // --- dashboard/ components ---
 describe('dashboard/ActivityFeed.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/ActivityFeed.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) }) })
 describe('dashboard/BackupRestoreModal.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/BackupRestoreModal.vue'); const w = mount(C, { props: { modelValue: false } }); await flushPromises(); expect(w.exists()).toBe(true) }) })
-describe('dashboard/DataOverview.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/DataOverview.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) }) })
-describe('dashboard/FundOverview.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/FundOverview.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) }) })
-describe('dashboard/LayoutEditor.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/LayoutEditor.vue'); const w = mount(C, { props: { modelValue: false } }); await flushPromises(); expect(w.exists()).toBe(true) }) })
 describe('dashboard/ProjectProgress.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/ProjectProgress.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) }) })
-describe('dashboard/QuickNav.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/QuickNav.vue'); const w = mount(C); expect(w.exists()).toBe(true) }) })
-describe('dashboard/StatsSection.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/StatsSection.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) }) })
-describe('dashboard/TodoList.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/dashboard/TodoList.vue'); const w = mount(C); await flushPromises(); expect(w.exists()).toBe(true) }) })
 
 // --- business/ components ---
 describe('business/DataStatistics.vue', () => { it('渲染', async () => { const { default: C } = await import('@/components/business/DataStatistics.vue'); const w = mount(C, { props: { data: [] } }); expect(w.exists()).toBe(true) }) })

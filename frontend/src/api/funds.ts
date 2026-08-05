@@ -125,8 +125,10 @@ export const fundApi = {
   },
 
   // ========== 统计 ==========
-  async statisticsOverview() {
-    const response = await get(`${FUNDS_BASE}/statistics/overview`)
+  async statisticsOverview(year?: number) {
+    const response = year
+      ? await get(`${FUNDS_BASE}/statistics/overview`, { year })
+      : await get(`${FUNDS_BASE}/statistics/overview`)
     return response.data
   },
   async statisticsMultiDimension(params?: Record<string, string | number | boolean>) {

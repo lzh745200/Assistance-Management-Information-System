@@ -1083,3 +1083,16 @@ describe('补缺：模板内联按钮点击', () => {
     expect(vm.error).toBe(false)
   })
 })
+
+
+  it('overview 卡片点击导航(5 个卡片)', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const cards = wrapper.findAll('.overview-item')
+    expect(cards.length).toBeGreaterThanOrEqual(5)
+    for (const card of cards) {
+      await card.trigger('click')
+    }
+    expect(pushSafeMock).toHaveBeenCalled()
+    wrapper.unmount()
+  })

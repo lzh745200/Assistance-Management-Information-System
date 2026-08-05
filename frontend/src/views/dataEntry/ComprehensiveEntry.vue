@@ -1100,6 +1100,92 @@ function validateCurrentStep(): boolean {
       return false
     }
   }
+  if (currentStep.value === 1) {
+    // 投资数据: 任一年度填写了数据即认为有效(校验数据结构合法性)
+    const hasAny = formData.investmentData.some(
+      (d) =>
+        d.militaryInvestment > 0 ||
+        d.localInvestment > 0 ||
+        d.leaderVisits > 0 ||
+        d.soldierVisits > 0
+    )
+    const hasPartial = formData.investmentData.some((d) => {
+      const filled = [
+        d.militaryInvestment,
+        d.localInvestment,
+        d.leaderVisits,
+        d.soldierVisits,
+      ].filter((v) => v > 0)
+      return filled.length > 0 && filled.length < 4
+    })
+    if (hasPartial) {
+      ElMessage.warning('投资数据填写不完整：请补全已填写年度的各项数据')
+      return false
+    }
+    if (!hasAny) {
+      ElMessage.warning('请至少填写一个年度的投资数据')
+      return false
+    }
+  }
+  if (currentStep.value === 2) {
+    // 专项板块: 填写了项目类型就必须填写投资额/数量
+    const checks: Array<[string, string, number]> = [
+      ['产业帮扶', formData.industryHelp.projectType, formData.industryHelp.investment],
+      [
+        '基础设施帮扶',
+        formData.infrastructureHelp.projectType,
+        formData.infrastructureHelp.investment,
+      ],
+    ]
+    for (const [label, projectType, investment] of checks) {
+      if (projectType?.trim() && !(investment > 0)) {
+        ElMessage.warning(`请填写${label}的投资额`)
+        return false
+      }
+      if (investment > 0 && !projectType?.trim()) {
+        ElMessage.warning(`请填写${label}的项目类型`)
+        return false
+      }
+    }
+    const activityChecks: Array<[string, string, number]> = [
+      ['党建帮扶', formData.partyBuildingHelp.activityType, formData.partyBuildingHelp.investment],
+      ['医疗帮扶', formData.medicalHelp.activityType, formData.medicalHelp.investment],
+    ]
+    for (const [label, activityType, investment] of activityChecks) {
+      if (activityType?.trim() && !(investment > 0)) {
+        ElMessage.warning(`请填写${label}的投入金额`)
+        return false
+      }
+      if (investment > 0 && !activityType?.trim()) {
+        ElMessage.warning(`请填写${label}的活动类型`)
+        return false
+      }
+    }
+  }
+  if (currentStep.value === 3) {
+    // 消费帮扶与单位协作: 采购金额与销售额需同时填写或同时为空
+    const c = formData.consumptionHelp
+    if (c.purchaseAmount > 0 && !(c.salesAmount > 0)) {
+      ElMessage.warning('请填写消费帮扶的销售额')
+      return false
+    }
+    if (c.salesAmount > 0 && !(c.purchaseAmount > 0)) {
+      ElMessage.warning('请填写消费帮扶的采购金额')
+      return false
+    }
+  }
+  return true
+}
+
+function validateAllSteps(): boolean {
+  for (let step = 0; step < 5; step++) {
+    const prev = currentStep.value
+    currentStep.value = step
+    if (!validateCurrentStep()) {
+      return false
+    }
+    currentStep.value = prev
+  }
   return true
 }
 
@@ -1129,10 +1215,8 @@ const handleSaveDraft = async () => {
 }
 
 const handleSubmit = async () => {
-  // 提交前校验基础信息
-  if (!formData.basicInfo.department?.trim() || !formData.basicInfo.villageName?.trim()) {
-    ElMessage.warning('请先完善基础信息（部门和帮扶村名称为必填项）')
-    currentStep.value = 0
+  // 提交前校验全部步骤
+  if (!validateAllSteps()) {
     return
   }
   try {

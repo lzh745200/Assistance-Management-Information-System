@@ -6,14 +6,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 
-const { ElMessage, confirmMock, lifecycleApi, pushSafeMock, routeBox } = vi.hoisted(() => ({
+const { ElMessage, confirmMock, lifecycleApi, pushSafeMock, routeBox, formValidateMock } = vi.hoisted(() => ({
   ElMessage: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
   confirmMock: vi.fn(),
+  formValidateMock: vi.fn(() => Promise.resolve(true)),
   lifecycleApi: {
     listContracts: vi.fn(),
     createContract: vi.fn(),
     createContractPayment: vi.fn(),
     deleteContract: vi.fn(),
+    listContractAttachments: vi.fn(),
+    uploadContractAttachment: vi.fn(),
   },
   pushSafeMock: vi.fn(),
   routeBox: { query: {} as Record<string, any> },
@@ -102,7 +105,15 @@ function mountComp(query: Record<string, any> = {}) {
             }
           },
         },
-        'el-form': { template: '<div class="el-form-stub"><slot /></div>' },
+        'el-form': {
+          name: 'ElForm',
+          template: '<div class="el-form-stub"><slot /></div>',
+          methods: { validate: formValidateMock },
+        },
+        'el-upload': {
+          name: 'ElUpload',
+          template: '<div class="el-upload-stub"><slot /></div>',
+        },
         'el-form-item': { template: '<div class="el-form-item-stub"><slot /></div>' },
         'el-input': {
           template:
@@ -154,6 +165,7 @@ function mountWithQuery(query: Record<string, any> = {}) {
 
 beforeEach(() => {
   vi.resetAllMocks()
+  formValidateMock.mockResolvedValue(true)
   routeBox.query = {}
   lifecycleApi.listContracts.mockResolvedValue({
     items: [contractDraft, contractActive, contractCompleted, contractTerminated],
@@ -162,6 +174,8 @@ beforeEach(() => {
   lifecycleApi.createContract.mockResolvedValue({})
   lifecycleApi.createContractPayment.mockResolvedValue({})
   lifecycleApi.deleteContract.mockResolvedValue({})
+  lifecycleApi.listContractAttachments.mockResolvedValue({ items: [] })
+  lifecycleApi.uploadContractAttachment.mockResolvedValue({})
   confirmMock.mockResolvedValue(undefined)
 })
 
@@ -242,11 +256,11 @@ describe('挂载与列表加载', () => {
 })
 
 describe('新建合同', () => {
-  it('校验失败（缺编号/名称）→ warning', async () => {
+  it('校验失败 → 不提交', async () => {
     const wrapper = mountComp()
     await flushPromises()
+    formValidateMock.mockRejectedValueOnce(new Error('invalid'))
     await (wrapper.vm as any).handleCreateContract()
-    expect(ElMessage.warning).toHaveBeenCalledWith('请填写合同编号和名称')
     expect(lifecycleApi.createContract).not.toHaveBeenCalled()
   })
 
@@ -478,5 +492,213 @@ describe('补缺：模板内联处理器（v-model/创建/提交/删除/分页�
     }
     expect(vm.showCreateDialog).toBe(false)
     expect(vm.paymentDialogVisible).toBe(false)
+  })
+})
+
+describe('合同附件', () => {
+  it('showAttachmentDialog 加载附件列表(含 file_size 回退)', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    lifecycleApi.listContractAttachments.mockResolvedValue({
+      items: [{ url: '/u/a.pdf', file_name: 'a.pdf', fileSize: 1024 }],
+    })
+    await vm.showAttachmentDialog({ id: 9, contract_name: '附件合同' })
+    expect(vm.currentContractId).toBe(9)
+    expect(vm.currentContractName).toBe('附件合同')
+    expect(vm.attachmentDialogVisible).toBe(true)
+    expect(vm.attachmentList[0].file_size).toBe(1024)
+  })
+
+  it('showAttachmentDialog 列表失败不阻塞', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    lifecycleApi.listContractAttachments.mockRejectedValue(new Error('net'))
+    await vm.showAttachmentDialog({ id: 1, contract_no: 'HT-001' })
+    expect(vm.attachmentDialogVisible).toBe(true)
+    expect(vm.attachmentList).toEqual([])
+  })
+
+  it('beforeUpload 校验类型与大小', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    expect(await vm.beforeUpload({ type: 'text/html', size: 100 })).toBe(false)
+    expect(ElMessage.error).toHaveBeenCalledWith('只能上传 pdf/doc/docx/jpg/png 文件!')
+    expect(await vm.beforeUpload({ type: 'application/pdf', size: 11 * 1024 * 1024 })).toBe(false)
+    expect(ElMessage.error).toHaveBeenCalledWith('文件大小不能超过 10MB!')
+  })
+
+  it('handleUploadSuccess: 有 url 时关联附件', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.currentContractId = 1
+    lifecycleApi.uploadContractAttachment.mockResolvedValue({
+      items: [{ url: '/u/b.pdf', file_size: 2048 }],
+    })
+    await vm.handleUploadSuccess({ data: { url: '/u/b.pdf', file_name: 'b.pdf' } })
+    expect(lifecycleApi.uploadContractAttachment).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ url: '/u/b.pdf' })
+    )
+    expect(ElMessage.success).toHaveBeenCalledWith('附件上传成功')
+    expect(vm.attachmentList[0].file_size).toBe(2048)
+  })
+
+  it('handleUploadSuccess: 无 url 时提示失败', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    await vm.handleUploadSuccess({})
+    expect(ElMessage.error).toHaveBeenCalledWith('上传失败：未获取到文件地址')
+    expect(lifecycleApi.uploadContractAttachment).not.toHaveBeenCalled()
+  })
+
+  it('handleUploadSuccess: 关联失败走兜底提示', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.currentContractId = 1
+    lifecycleApi.uploadContractAttachment.mockRejectedValue(new Error('net'))
+    await vm.handleUploadSuccess({ data: { url: '/u/c.pdf', file_name: 'c.pdf' } })
+    expect(ElMessage.success).toHaveBeenCalledWith('文件已上传')
+  })
+
+  it('handleUploadError 提示上传失败', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    ;(wrapper.vm as any).handleUploadError()
+    expect(ElMessage.error).toHaveBeenCalledWith('上传失败')
+  })
+
+  it('openAttachment 新窗口打开', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    ;(wrapper.vm as any).openAttachment('/uploads/a.pdf')
+    expect(openSpy).toHaveBeenCalledWith('/uploads/a.pdf', '_blank')
+    openSpy.mockRestore()
+  })
+
+  it('创建表单校验: formRef 缺失时直接返回', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.contractFormRef = null
+    await vm.handleCreateContract()
+    expect(lifecycleApi.createContract).not.toHaveBeenCalled()
+  })
+
+
+  it('附件对话框渲染并触发按钮事件(openAttachment/showPaymentDialog)', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    // 打开附件对话框 → 渲染附件表格与打开按钮
+    vm.attachmentDialogVisible = true
+    vm.attachmentList = [{ url: '/u/a.pdf', file_name: 'a.pdf', file_size: 100 }]
+    await wrapper.vm.$nextTick()
+    const openBtns = wrapper.findAll('.el-button-stub').filter((b) => b.text().includes('打开'))
+    if (openBtns.length) {
+      await openBtns[0].trigger('click')
+    }
+    // 触发表格区登记付款按钮(行 62 事件箭头)
+    const payBtns = wrapper.findAll('.el-button-stub').filter((b) => b.text().includes('登记付款'))
+    for (const b of payBtns) {
+      await b.trigger('click')
+    }
+    expect(vm.paymentDialogVisible).toBe(true)
+    wrapper.unmount()
+  })
+
+
+  it('beforeUpload 合法文件通过 + formatSize 全分支', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    // 合法文件 → 通过并请求 CSRF
+    const ok = await vm.beforeUpload({ type: 'application/pdf', size: 1024 })
+    expect(ok).toBe(true)
+    // formatSize: 0/NaN/B/KB/MB
+    expect(vm.formatSize(0)).toBe('')
+    expect(vm.formatSize('abc')).toBe('')
+    expect(vm.formatSize(512)).toBe('512B')
+    expect(vm.formatSize(2048)).toBe('2.0KB')
+    expect(vm.formatSize(3 * 1024 * 1024)).toBe('3.00MB')
+    wrapper.unmount()
+  })
+
+  it('表格区付款按钮触发行 62 事件箭头', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.paymentDialogVisible = false
+    const payBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('登记付款'))
+    expect(payBtn).toBeTruthy()
+    await payBtn!.trigger('click')
+    await flushPromises()
+    expect(vm.paymentDialogVisible).toBe(true)
+    // 附件按钮(行 62 事件箭头) → 打开附件对话框并加载列表
+    const attachBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('附件'))
+    expect(attachBtn).toBeTruthy()
+    await attachBtn!.trigger('click')
+    await flushPromises()
+    expect(vm.attachmentDialogVisible).toBe(true)
+    wrapper.unmount()
+  })
+
+
+  it('handleUploadSuccess 分支: 无 file_name / 空 items 保留原列表', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.currentContractId = 1
+    vm.attachmentList = [{ url: '/u/old.pdf', file_size: 10 }]
+    // 响应无 items → 保留原列表
+    lifecycleApi.uploadContractAttachment.mockResolvedValue({})
+    await vm.handleUploadSuccess({ data: { url: '/u/new.pdf' } })
+    expect(ElMessage.success).toHaveBeenCalledWith('附件上传成功')
+    expect(vm.attachmentList.length).toBeGreaterThan(0)
+    // 响应 data.items 形态
+    lifecycleApi.uploadContractAttachment.mockResolvedValue({ data: { items: [{ url: '/u/x.pdf', file_size: 5 }] } })
+    await vm.handleUploadSuccess({ data: { url: '/u/x.pdf', file_name: 'x.pdf' } })
+    expect(vm.attachmentList[0].file_size).toBe(5)
+    // items 元素无 file_size → 空字符串(378 空值分支)
+    lifecycleApi.uploadContractAttachment.mockResolvedValue({ data: { items: [{ url: '/u/y.pdf' }] } })
+    await vm.handleUploadSuccess({ data: { url: '/u/y.pdf', file_name: 'y.pdf' } })
+    expect(vm.attachmentList[0].file_size).toBe('')
+    wrapper.unmount()
+  })
+
+  it('showAttachmentDialog 分支: 名称兜底与 res 形态', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    // contract_name/contract_no 均空 → 空字符串
+    lifecycleApi.listContractAttachments.mockResolvedValue({ items: [] })
+    await vm.showAttachmentDialog({ id: 3 })
+    expect(vm.currentContractName).toBe('')
+    // res 直接为 items 数组形态(data 无 items)
+    lifecycleApi.listContractAttachments.mockResolvedValue({
+      data: { items: [{ url: '/u/d.pdf', fileSize: 7 }] },
+    })
+    await vm.showAttachmentDialog({ id: 4, contract_no: 'HT-004' })
+    expect(vm.currentContractName).toBe('HT-004')
+    expect(vm.attachmentList[0].file_size).toBe(7)
+    // res 非 items/data 形态 → 空列表(不崩溃)
+    lifecycleApi.listContractAttachments.mockResolvedValue([{ url: '/u/e.pdf', file_size: 9 }])
+    await vm.showAttachmentDialog({ id: 5, contract_name: '数组形态' })
+    expect(vm.attachmentList).toEqual([])
+    // file_size 直接非空(337 真分支)
+    lifecycleApi.listContractAttachments.mockResolvedValue({ items: [{ url: '/u/f.pdf', file_size: 11 }] })
+    await vm.showAttachmentDialog({ id: 6, contract_no: 'HT-006' })
+    expect(vm.attachmentList[0].file_size).toBe(11)
+    // file_size 与 fileSize 均空 → 空字符串(337 空值分支)
+    lifecycleApi.listContractAttachments.mockResolvedValue({ items: [{ url: '/u/g.pdf' }] })
+    await vm.showAttachmentDialog({ id: 7, contract_no: 'HT-007' })
+    expect(vm.attachmentList[0].file_size).toBe('')
+    wrapper.unmount()
   })
 })

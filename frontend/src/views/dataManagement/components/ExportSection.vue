@@ -147,6 +147,7 @@ import { ElMessage } from 'element-plus'
 import { Download, Refresh } from '@element-plus/icons-vue'
 import {
   exportVillages,
+  exportFunds,
   getExportTasks,
   downloadExportFile,
   formatExportStatus as _formatExportStatus,
@@ -191,7 +192,7 @@ async function loadHistory() {
   }
 }
 
-// 执行导出
+// 执行导出（按数据类型分派到对应导出接口）
 async function handleExport() {
   exporting.value = true
   try {
@@ -206,9 +207,21 @@ async function handleExport() {
     if (exportForm.filters.is_revitalization_tier)
       filters.is_revitalization_tier = exportForm.filters.is_revitalization_tier
 
-    await exportVillages(filters)
+    switch (exportForm.dataType) {
+      case 'funding':
+        await exportFunds(filters)
+        break
+      case 'yearly_stats':
+        await exportVillages({ ...filters, type: 'yearly_stats' })
+        break
+      case 'industry':
+        await exportVillages({ ...filters, type: 'industry' })
+        break
+      default:
+        await exportVillages(filters)
+    }
 
-    // exportVillages 已通过 downloadBlobAsFile 触发浏览器下载
+    // 导出函数已通过 downloadBlobAsFile 触发浏览器下载
     ElMessage.success('导出成功')
 
     emit('export-complete')

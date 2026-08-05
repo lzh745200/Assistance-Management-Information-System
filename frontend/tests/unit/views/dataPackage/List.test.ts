@@ -108,7 +108,9 @@ const stubs = {
     emits: ['update:modelValue', 'change'],
   },
   'el-option': { name: 'ElOption', template: '<div />' },
-  'el-button': { name: 'ElButton', template: '<button class="el-button-stub"><slot /></button>' },
+  'el-button': { name: 'ElButton', template: '<button class="el-button-stub" @click="$emit(\'click\')"><slot /></button>', emits: ['click'] },
+  'ExportEncryptedDialog': { name: 'ExportEncryptedDialog', props: ['modelValue'], emits: ['update:modelValue', 'success'], template: '<div class="eed-stub" />' },
+  'ImportEncryptedDialog': { name: 'ImportEncryptedDialog', props: ['modelValue'], emits: ['update:modelValue', 'success'], template: '<div class="ied-stub" />' },
   'el-icon': { name: 'ElIcon', template: '<span class="el-icon-stub"><slot /></span>' },
   'el-table': {
     name: 'ElTable',
@@ -147,8 +149,30 @@ const stubs = {
     template: '<div class="el-pagination-stub" />',
     emits: ['update:currentPage', 'update:pageSize', 'size-change', 'current-change'],
   },
-  ExportDialog: { name: 'ExportDialog', template: '<div class="export-dialog-stub" />' },
-  ImportDialog: { name: 'ImportDialog', template: '<div class="import-dialog-stub" />' },
+  ExportDialog: {
+    name: 'ExportDialog',
+    props: ['modelValue'],
+    template: '<div class="export-dialog-stub" />',
+    emits: ['update:modelValue'],
+  },
+  ImportDialog: {
+    name: 'ImportDialog',
+    props: ['modelValue'],
+    template: '<div class="import-dialog-stub" />',
+    emits: ['update:modelValue'],
+  },
+  ExportEncryptedDialog: {
+    name: 'ExportEncryptedDialog',
+    props: ['modelValue'],
+    template: '<div />',
+    emits: ['update:modelValue'],
+  },
+  ImportEncryptedDialog: {
+    name: 'ImportEncryptedDialog',
+    props: ['modelValue'],
+    template: '<div />',
+    emits: ['update:modelValue'],
+  },
 }
 
 function mountComp() {
@@ -454,6 +478,27 @@ describe('辅助函数', () => {
     expect(vm.formatFileSize(5 * 1024 * 1024)).toBe('5.00 MB')
     expect(vm.formatDate(undefined)).toBe('-')
     expect(vm.formatDate('2024-01-01T00:00:00')).toContain('2024')
+    wrapper.unmount()
+  })
+
+
+  it('加密导出/导入对话框 v-model 事件处理器', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    // 点击加密导出/导入按钮(行 15/19 事件箭头)
+    await clickBtn(wrapper, '加密导出')
+    expect(vm.showEncryptedExportDialog).toBe(true)
+    await clickBtn(wrapper, '加密导入')
+    expect(vm.showEncryptedImportDialog).toBe(true)
+    await wrapper.vm.$nextTick()
+    // 触发加密对话框 update:modelValue(ExportEncryptedDialog/ImportEncryptedDialog 的 v-model)
+    wrapper.findComponent({ name: 'ExportEncryptedDialog' }).vm.$emit('update:modelValue', false)
+    expect(vm.showEncryptedExportDialog).toBe(false)
+    vm.showEncryptedImportDialog = true
+    await wrapper.vm.$nextTick()
+    wrapper.findComponent({ name: 'ImportEncryptedDialog' }).vm.$emit('update:modelValue', false)
+    expect(vm.showEncryptedImportDialog).toBe(false)
     wrapper.unmount()
   })
 })

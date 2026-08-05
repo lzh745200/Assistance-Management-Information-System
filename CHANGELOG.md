@@ -5,6 +5,46 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布] - 2026-08-05
+
+### 安全加固
+- 🔒 **数据同步提权修复**：`/data-sync` 导出/导入/冲突处理端点原仅认证即可调用，任意登录用户可导出全库数据或导入构造数据包。现全部要求管理员权限；同步白名单剔除敏感表（users/machine_codes/audit_logs），导入侧新增 `_SENSITIVE_TABLES` 硬禁止，防止构造 ZIP 覆盖密码哈希提权
+- 🔒 **备份下载权限收紧**：`GET /system/backup/download/{filename}` 原任意登录用户可下载含全库数据的备份，现要求管理员权限
+- 🔒 **审批自动通过越权修复**：`/approval/submit-auto`、`/tasks/auto-approve`、`/tasks/auto-approve-all` 原跳过审批人校验可代批他人审批，现要求管理员权限
+- 🔒 **数据库维护操作权限**：`/system_health/integrity-check`、`wal-checkpoint`、`vacuum` 原任意用户可触发（VACUUM 可长锁库 DoS），现要求管理员权限
+- 🔒 **配置包导出安全**：`/config-package/export` 要求管理员；配置包导出不再包含 `hashed_password`（迁移后用户重置密码，避免哈希泄露）
+- 🔒 **权限包下载路径遍历修复**：`/permission-package/download/{file_name}` 增加 basename 校验与 realpath 边界检查，阻断 `../../` 越界读取
+- 🔒 **越权端点补齐**：用户导出（`/export/users` 含 PII）限管理员；错误报告状态更新限本人或管理员；仪表盘自定义动态更新/删除限本人或管理员
+- 🔒 **上传类型收紧**：通用上传白名单移除 `svg`（防存储型 XSS），并新增图片魔数内容嗅探（防改名绕过）
+- 🐛 **数据同步增量查询 SQL 修复**：`since` 分支 SQL 拼接缺少 f-string 前缀导致必然报错，已修复
+
+### 功能修复
+- 🐛 **数据管理导出类型错乱**：`ExportSection.vue` 原先无论选择何种数据类型都调用村庄导出接口（选择"经费投入数据"导出的是村庄列表）。现按数据类型分派到真实端点（村庄/经费/年度统计/产业），各类型导出正常
+- 🐛 **数据包导入导出对话框为空占位**：数据包模块的 4 个对话框（导出/导入/加密导出/加密导入）原为无功能占位组件。现实现真实功能：对接 `/data-packages/export`、`/import`、`/export-encrypted`、`/upload-encrypted` 接口，数据包列表页新增"加密导出/加密导入"入口
+- 🐛 **经费预算"已使用金额"恒为 0**：后端 `BudgetCreate`/`BudgetUpdate` 缺少 `used_amount` 字段导致前端提交被丢弃。现创建/更新均支持 `used_amount`（映射 `executed_amount`），并兼容双字段名；使用率、结余统计正常
+- 🐛 **政策新增/编辑报 "addPolicy is not function"**：`Edit.vue` 调用了 store 不存在的 `addPolicy`/`editPolicy` 方法。改用 `createPolicy`/`updatePolicy`；提交时补充 `attachment_urls` 字段，后端 `PolicyCreateRequest`/`PolicyUpdateRequest` 新增 `attachment_urls` 支持并将首附件映射为主文件（预览/下载可用）
+- 🐛 **政策附件上传失败**：上传前未等待 CSRF token 就绪导致原生 XHR 被 403 拦截。`beforeUpload` 现同步等待 `ensureCsrf()` 完成后再上传
+- 🐛 **成效大屏 "get is not a function"**：本地代码 API 导入链完整正常（`getDashboardStats`/`getYearlyTrends`/`getRankings`/`getSummaryStatistics` 均存在），确认属旧版生产构建问题，新版构建已消除
+- 🐛 **用户角色操作列看不全**：操作列宽度 280px 不足容纳 4 个操作按钮，调整为 320px 并支持按钮自动换行
+- ✨ **经费年度总览**：经费管理首页新增"年度经费总览"区块（年度选择器 + 预算/预算已执行/经费申请/已拨付/已使用/结余 6 项统计），各卡片可点击跳转对应模块；后端 `/funds/statistics/overview` 新增 `year` 参数
+- ✨ **预算附件上报**：新增 `POST/GET /fund-budgets/{budget_id}/attachments` 预算附件上传与列表接口（凭证/批复资料归档）
+- ✨ **合同附件上报**：合同管理新增附件按钮与上传对话框（文件经通用上传端点保存后登记到合同），新增 `POST/GET /fund-lifecycle/contracts/{contract_id}/attachments` 接口；支出明细 `receipt_attachment` 字段打通
+- ✨ **学校分析页接入真实数据**：`schools/Analysis.vue` 原为硬编码空图表死代码，现接入 `/schools/statistics` 与列表聚合，展示 8 项统计卡片 + 帮扶状态饼图 + 地区分布柱状图
+- 🧹 **清理冗余组件**：删除未被引用的 `A11yDialog.vue`、`BaseModal.vue` 及对应的测试引用；删除 `components/dashboard/` 下 6 个零引用占位 stub 组件（DataOverview/FundOverview/LayoutEditor/QuickNav/StatsSection/TodoList）
+
+### 表单与健壮性
+- ✅ **综合数据录入多步骤校验**：提交前校验全部 5 个步骤（基础信息必填、投资数据完整性、专项帮扶项目类型与投资额成对、消费帮扶采购与销售额成对），拦截无效数据
+- ✅ **转账凭证/合同表单校验**：`TransferVoucher.vue`/`ContractManage.vue` 补充 el-form rules + validate，金额/日期等字段不可绕过
+- ✅ **响应空值保护**：`dataAnalysis/Index.vue`、`ProjectManagement.vue`、`TaskManager.vue` 的 `res.data.items` 访问统一改为可选链兜底，杜绝空响应 TypeError
+- ✅ **定时器清理**：`useMessageNotification.ts` 备份提醒定时器、`ErrorBoundary.vue` 重试定时器均保存句柄并在卸载时清理
+
+### 测试与代码质量
+- 新增安全加固测试套件 `test_security_hardening.py`（22 项越权/敏感表/上传嗅探用例）
+- 后端全量测试通过：**12066 passed**（含数据同步、审批、备份、权限包、健康检查、安全加固等用例）
+- 前端全量测试通过：**6123 passed**（356 个测试文件，含数据包对话框、学校分析、合同附件、多步骤校验、分支补齐等用例）
+- 前端覆盖率**全指标 100%**（api/views/components/utils/stores/composables/router/config/directives 阈值全过）
+- `vue-tsc --noEmit`、`eslint --max-warnings=0` 全部通过
+
 ## [1.5.1] - 2026-08-04
 
 ### 修复

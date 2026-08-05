@@ -281,6 +281,16 @@ export const fundLifecycleApi = {
     return res.data
   },
 
+  async listContractAttachments(contractId: number) {
+    const res = await get(`${BASE}/contracts/${contractId}/attachments`)
+    return res.data || res
+  },
+
+  async uploadContractAttachment(contractId: number, data: Record<string, any>) {
+    const res = await post(`${BASE}/contracts/${contractId}/attachments`, data)
+    return res.data || res
+  },
+
   async monitoringDeviation(projectId: number) {
     const res = await get(`${BASE}/monitoring/deviation/${projectId}`)
     return res.data || res

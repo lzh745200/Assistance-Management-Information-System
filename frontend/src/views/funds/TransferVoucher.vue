@@ -89,23 +89,27 @@
     </el-card>
 
     <!-- 新建对话框 -->
-    <el-dialog v-model="showCreateDialog" title="新建划转凭证" width="600px">
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="凭证编号" required
+    <el-dialog v-model="showCreateDialog" title="新建转账凭证" width="600px">
+      <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
+        <el-form-item label="凭证编号" prop="voucher_no" required
           ><el-input v-model="form.voucher_no"
         /></el-form-item>
-        <el-form-item label="划转方向" required>
+        <el-form-item label="转账方向" prop="direction" required>
           <el-radio-group v-model="form.direction">
-            <el-radio value="military_to_local">专项→地方</el-radio>
-            <el-radio value="local_to_military">地方→专项</el-radio>
+            <el-radio value="military_to_local">专项资金发地方</el-radio>
+            <el-radio value="local_to_military">地方拨专项资金</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="金额(万元)" required
+        <el-form-item label="金额(万元)" prop="amount" required
           ><el-input-number v-model="form.amount" :min="0.01" :precision="2"
         /></el-form-item>
-        <el-form-item label="付款账户"><el-input v-model="form.payer_account" /></el-form-item>
-        <el-form-item label="收款账户"><el-input v-model="form.payee_account" /></el-form-item>
-        <el-form-item label="划转日期"
+        <el-form-item label="付款账户" prop="payer_account"
+          ><el-input v-model="form.payer_account"
+        /></el-form-item>
+        <el-form-item label="收款账户" prop="payee_account"
+          ><el-input v-model="form.payee_account"
+        /></el-form-item>
+        <el-form-item label="转账日期" prop="transfer_date"
           ><el-date-picker v-model="form.transfer_date" type="date" value-format="YYYY-MM-DD"
         /></el-form-item>
         <el-form-item label="备注"
@@ -114,7 +118,7 @@
       </el-form>
       <template #footer>
         <el-button @click="showCreateDialog = false">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="handleCreate">创建</el-button>
+        <el-button type="primary" :loading="loading" @click="handleCreate">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -123,7 +127,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { fundLifecycleApi } from '@/api/fundLifecycle'
 import { safeRouteParam, useRouterSafe } from '@/composables/useRouterSafe'
 
@@ -138,6 +142,7 @@ const page = ref(1)
 const pageSize = 20
 const filters = reactive({ status: '' })
 const showCreateDialog = ref(false)
+const formRef = ref<FormInstance | null>(null)
 const form = reactive({
   voucher_no: '',
   direction: 'military_to_local',
@@ -149,6 +154,14 @@ const form = reactive({
   project_id: projectId,
   fund_id: undefined as number | undefined,
 })
+
+const formRules: FormRules = {
+  voucher_no: [{ required: true, message: '请填写凭证编号', trigger: 'blur' }],
+  direction: [{ required: true, message: '请选择转账方向', trigger: 'change' }],
+  amount: [{ required: true, message: '请填写金额', trigger: 'blur' }],
+  payer_account: [{ required: false }],
+  payee_account: [{ required: false }],
+}
 
 async function loadData() {
   loading.value = true
@@ -169,8 +182,10 @@ async function loadData() {
 }
 
 async function handleCreate() {
-  if (!form.voucher_no || !form.amount) {
-    ElMessage.warning('请填写凭证编号和金额')
+  if (!formRef.value) return
+  try {
+    await formRef.value.validate()
+  } catch {
     return
   }
   loading.value = true

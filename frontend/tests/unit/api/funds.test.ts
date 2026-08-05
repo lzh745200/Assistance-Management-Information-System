@@ -149,6 +149,12 @@ describe('api/funds', () => {
       expect(mockGet).toHaveBeenCalledWith('/funds/statistics/overview')
     })
 
+    it('statisticsOverview 带 year 参数走携带分支', async () => {
+      mockGet.mockResolvedValue({ data: {} })
+      await fundApi.statisticsOverview(2024)
+      expect(mockGet).toHaveBeenCalledWith('/funds/statistics/overview', { params: { year: 2024 } })
+    })
+
     it('statisticsMultiDimension 带 params', async () => {
       mockGet.mockResolvedValue({ data: {} })
       await fundApi.statisticsMultiDimension({ year: 2024 })

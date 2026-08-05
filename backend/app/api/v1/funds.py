@@ -413,24 +413,63 @@ def delete_fund(
 
 @router.get("/statistics/overview")
 def fund_statistics_overview(
+    year: Optional[int] = Query(None, description="年度（按 Fund.year 过滤，默认全部）"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """经费统计概览 (单次聚合查询，排除软删记录)"""
+    """经费统计概览 (单次聚合查询，排除软删记录)
+
+    支持按年度统计：预算总额/已执行（fund_budgets）、申请/批准/拨付/使用情况（funds）
+    """
+    from app.models.fund_budget import FundBudget
+
     stmt = select(
         func.count(Fund.id).label("total_count"),
         func.coalesce(func.sum(Fund.amount), 0).label("total_amount"),
         func.sum(case((Fund.status == "pending", 1), else_=0)).label("pending_count"),
         func.sum(case((Fund.status == "approved", 1), else_=0)).label("approved_count"),
+        func.sum(case((Fund.status == "allocated", 1), else_=0)).label("allocated_count"),
+        func.sum(case((Fund.status == "in_use", 1), else_=0)).label("in_use_count"),
+        func.sum(case((Fund.status == "completed", 1), else_=0)).label("completed_count"),
+        func.coalesce(func.sum(Fund.used_amount), 0).label("used_amount"),
+        func.coalesce(func.sum(Fund.allocated_amount), 0).label("allocated_amount"),
     ).where(Fund.is_active == True)  # noqa: E712
+    if year:
+        stmt = stmt.where(Fund.year == year)
     stmt = apply_scope_filter(stmt, current_user, Fund, db=db)
 
     row = db.execute(stmt).one()
+
+    # 年度预算统计（fund_budgets）
+    budget_stmt = db.query(
+        func.coalesce(func.sum(FundBudget.budget_amount), 0),
+        func.coalesce(func.sum(FundBudget.executed_amount), 0),
+    )
+    if year:
+        budget_stmt = budget_stmt.filter(FundBudget.year == year)
+    budget_row = budget_stmt.first()
+    budget_total = float(budget_row[0] or 0) if budget_row else 0
+    budget_executed = float(budget_row[1] or 0) if budget_row else 0
+
+    budget_total = float(budget_total or 0)
+    budget_executed = float(budget_executed or 0)
+    total_amount = float(row.total_amount)
+
     return success_response(data={
+            "year": year,
             "total_count": row.total_count,
-            "total_amount": float(row.total_amount),
+            "total_amount": total_amount,
             "pending_count": row.pending_count,
             "approved_count": row.approved_count,
+            "allocated_count": row.allocated_count,
+            "in_use_count": row.in_use_count,
+            "completed_count": row.completed_count,
+            "used_amount": float(row.used_amount or 0),
+            "allocated_amount": float(row.allocated_amount or 0),
+            "budget_total": budget_total,
+            "budget_executed": budget_executed,
+            "budget_remaining": round(budget_total - budget_executed, 2),
+            "usage_rate": round((budget_executed / budget_total * 100), 1) if budget_total > 0 else 0,
         })
 
 

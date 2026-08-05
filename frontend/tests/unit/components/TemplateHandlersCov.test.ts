@@ -1,8 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import A11yDialog from '@/components/common/A11yDialog.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
-import BaseModal from '@/components/common/BaseModal.vue'
 import ChangeHistoryDialog from '@/components/common/ChangeHistoryDialog.vue'
 import ExportButton from '@/components/common/ExportButton.vue'
 import ImportButton from '@/components/common/ImportButton.vue'
@@ -18,19 +16,6 @@ const dialogStub = {
 }
 
 describe('template inline handler coverage', () => {
-  it('A11yDialog: 触发 close 事件', async () => {
-    const w = mount(A11yDialog, {
-      props: { visible: true, title: '对话框' },
-      slots: { default: '<div>内容</div>' },
-      global: { stubs: { 'el-dialog': dialogStub } },
-    })
-    const dlg = w.findComponent({ name: 'ElDialog' })
-    expect(dlg.exists()).toBe(true)
-    dlg.vm.$emit('update:modelValue', false)
-    await w.vm.$nextTick()
-    expect(w.emitted('close')).toBeTruthy()
-  })
-
   it('BaseInput: 触发 update:modelValue', async () => {
     const w = mount(BaseInput, {
       props: { modelValue: 'v', placeholder: 'p' },
@@ -48,19 +33,6 @@ describe('template inline handler coverage', () => {
     const input = w.find('input')
     await input.setValue('new')
     expect(w.emitted('update:modelValue')?.[0]?.[0]).toBe('new')
-  })
-
-  it('BaseModal: 触发 close', async () => {
-    const w = mount(BaseModal, {
-      props: { visible: true, title: 't' },
-      slots: { default: '<div>m</div>' },
-      global: { stubs: { 'el-dialog': dialogStub } },
-    })
-    const dlg = w.findComponent({ name: 'ElDialog' })
-    expect(dlg.exists()).toBe(true)
-    dlg.vm.$emit('update:modelValue', false)
-    await w.vm.$nextTick()
-    expect(w.emitted('close')).toBeTruthy()
   })
 
   it('ChangeHistoryDialog: 触发 update:visible', async () => {

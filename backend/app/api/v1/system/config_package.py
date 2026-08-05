@@ -84,7 +84,9 @@ async def export_config_package(
 
     生成包含所有配置项、元数据和版本信息的 JSON 包。
     可用于备份配置或迁移到其他环境。
+    需要管理员权限（配置含敏感信息）。
     """
+    require_admin(current_user, error_message="仅管理员可导出配置包")
     try:
         svc = SystemConfigService(db)
         config_json = svc.export_config()

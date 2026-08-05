@@ -204,4 +204,15 @@ describe('交互控件', () => {
     expect(text).toContain('2023年帮扶村总数')
     expect(text).toContain('2024年总投入')
   })
+
+
+  it('loadAnalysisData: res 无 data 时不崩溃(空对象兜底)', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    mockGet.mockResolvedValue({})
+    await vm.loadAnalysisData()
+    expect(vm.overview).toBeTruthy()
+    wrapper.unmount()
+  })
 })

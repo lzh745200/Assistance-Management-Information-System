@@ -7,6 +7,7 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.permission_utils import require_admin
 from app.core.security import get_current_user
 from app.models.project import Fund, Project
 from app.models.school import School
@@ -37,6 +38,8 @@ async def export_users(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """导出用户列表（含手机号等PII, 仅管理员）"""
+    require_admin(current_user, error_message="仅管理员可导出用户数据")
     query = db.query(User)
 
     if keyword:

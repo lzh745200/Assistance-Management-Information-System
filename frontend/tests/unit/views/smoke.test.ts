@@ -221,7 +221,6 @@ describe('Common component imports', () => {
     ['BaseTable', '@/components/common/BaseTable.vue'],
     ['BaseForm', '@/components/common/BaseForm.vue'],
     ['BaseChart', '@/components/common/BaseChart.vue'],
-    ['BaseModal', '@/components/common/BaseModal.vue'],
     ['DataTable', '@/components/common/DataTable.vue'],
     ['StatsCard', '@/components/common/StatsCard.vue'],
     ['EmptyState', '@/components/business/EmptyState/EmptyState.vue'],
@@ -236,7 +235,6 @@ describe('Common component imports', () => {
     ['ResponsiveDataTable', '@/components/common/ResponsiveDataTable.vue'],
     ['SkipLink', '@/components/common/SkipLink.vue'],
     ['NetworkStatusIndicator', '@/components/common/NetworkStatusIndicator.vue'],
-    ['A11yDialog', '@/components/common/A11yDialog.vue'],
     ['LazyImage', '@/components/common/LazyImage/LazyImage.vue'],
     ['PageContainer', '@/components/common/PageContainer.vue'],
   ]

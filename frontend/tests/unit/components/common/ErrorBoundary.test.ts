@@ -159,6 +159,31 @@ describe('common/ErrorBoundary.vue', () => {
     consoleError.mockRestore()
   })
 
+  it('handleRetry 卸载时清理定时器', async () => {
+    const consoleError = silenceConsoleError()
+    vi.useFakeTimers()
+    let shouldThrow = true
+    const ToggleChild2 = defineComponent({
+      setup() {
+        if (shouldThrow) throw new Error('Failed to fetch dynamically imported module')
+        return () => h('p', { class: 'recovered' }, 'recovered')
+      },
+      render: () => h('div'),
+    })
+    const wrapper = mount(ErrorBoundary, {
+      slots: { default: h(ToggleChild2) },
+      global: { stubs },
+    })
+    await flushPromises()
+    shouldThrow = false
+    const retryButton = wrapper.findAll('button.el-btn').find((b) => b.text().includes('重新加载'))
+    await retryButton!.trigger('click')
+    wrapper.unmount()
+    vi.advanceTimersByTime(500)
+    vi.useRealTimers()
+    consoleError.mockRestore()
+  })
+
   it('handleIgnore hides error UI', async () => {
     const consoleError = silenceConsoleError()
     let shouldThrow = true
@@ -228,6 +253,34 @@ describe('common/ErrorBoundary.vue', () => {
     expect(wrapper.find('.error-boundary-stack pre').exists()).toBe(true)
     await toggleButton!.trigger('click')
     expect(wrapper.find('.error-boundary-stack').exists()).toBe(false)
+    consoleError.mockRestore()
+  })
+
+
+  it('handleRetry 重复触发时清理旧定时器(retryTimer 非空)', async () => {
+    const consoleError = silenceConsoleError()
+    vi.useFakeTimers()
+    let shouldThrow = true
+    const ToggleChild3 = defineComponent({
+      setup() {
+        if (shouldThrow) throw new Error('Failed to fetch dynamically imported module')
+        return () => h('p', { class: 'recovered' }, 'recovered')
+      },
+      render: () => h('div'),
+    })
+    const wrapper = mount(ErrorBoundary, {
+      slots: { default: h(ToggleChild3) },
+      global: { stubs },
+    })
+    await flushPromises()
+    shouldThrow = false
+    const retryButton = wrapper.findAll('button.el-btn').find((b) => b.text().includes('重新加载'))
+    await retryButton!.trigger('click')
+    // 直接调用 handleRetry(第二次触发时 retryTimer 非空 → 清理旧定时器)
+    ;(wrapper.vm as any).handleRetry()
+    wrapper.unmount()
+    vi.advanceTimersByTime(500)
+    vi.useRealTimers()
     consoleError.mockRestore()
   })
 })

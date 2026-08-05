@@ -347,7 +347,10 @@ async def download_backup(
     """下载指定的备份文件
 
     返回备份 ZIP 文件供本地保存或迁移使用。
+    需要管理员权限（备份含全库数据）。
     """
+    require_admin(current_user, error_message="仅管理员可下载备份文件")
+
     from fastapi.responses import FileResponse
     from app.utils.paths import get_backup_path
 

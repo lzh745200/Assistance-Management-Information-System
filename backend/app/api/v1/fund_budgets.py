@@ -4,10 +4,13 @@ import logging
 from datetime import date, datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.orm import Session
 
+import os
+
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.data_permission import apply_data_scope
 from app.core.response import ok_list, success_response
@@ -28,6 +31,7 @@ class BudgetCreate(BaseModel):
     year: int = Field(..., ge=2000, le=2099)
     category: str = Field(..., min_length=1, max_length=100)
     budget_amount: float = Field(..., ge=0)
+    used_amount: Optional[float] = Field(None, ge=0, description="已使用金额（前端字段，映射到 executed_amount）")
     village_id: Optional[int] = None
     organization_id: Optional[int] = None
     description: Optional[str] = None
@@ -37,6 +41,7 @@ class BudgetCreate(BaseModel):
 class BudgetUpdate(BaseModel):
     budget_amount: Optional[float] = Field(None, ge=0)
     executed_amount: Optional[float] = Field(None, ge=0)
+    used_amount: Optional[float] = Field(None, ge=0, description="前端兼容字段，等价 executed_amount")
     description: Optional[str] = None
     remarks: Optional[str] = None
 
@@ -66,6 +71,7 @@ class TransactionCreate(BaseModel):
     purpose: str = Field(..., min_length=1, description="用途说明")
     transaction_date: date
     receipt_number: Optional[str] = None
+    receipt_attachment: Optional[str] = None
     handler: Optional[str] = None
     reimbursement_person: Optional[str] = None
     remarks: Optional[str] = None
@@ -143,8 +149,14 @@ async def create_budget(
 ):
     """创建预算（仅管理角色）"""
     _require_manager(current_user)
+    # used_amount（前端字段）映射到 executed_amount
+    payload = data.model_dump()
+    if "used_amount" in payload:
+        used = payload.pop("used_amount")
+        if used is not None:
+            payload["executed_amount"] = used
     budget = FundBudget(
-        **data.model_dump(),
+        **payload,
         created_by=getattr(current_user, "id", None),
     )
     db.add(budget)
@@ -170,7 +182,14 @@ async def update_budget(
     if not budget:
         raise HTTPException(status_code=404, detail="预算不存在")
 
-    for key, value in data.model_dump(exclude_unset=True).items():
+    update_data = data.model_dump(exclude_unset=True)
+    # used_amount（前端字段）映射到 executed_amount
+    if "used_amount" in update_data:
+        used = update_data.pop("used_amount")
+        if used is not None:
+            update_data["executed_amount"] = used
+
+    for key, value in update_data.items():
         setattr(budget, key, value)
     safe_commit(db)
     db.refresh(budget)
@@ -365,3 +384,90 @@ async def delete_transaction(
     db.delete(tx)
     safe_commit(db)
     return success_response(message="删除成功")
+
+
+# ==================== 预算附件上报 ====================
+
+
+@router.post("/{budget_id}/attachments", summary="上传预算附件（凭证/资料）")
+async def upload_budget_attachment(
+    budget_id: int,
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """上传预算相关的附件资料（批复文件/凭证/执行资料等）"""
+    _require_manager(current_user)
+    budget = db.query(FundBudget).filter(FundBudget.id == budget_id).first()
+    if not budget:
+        raise HTTPException(status_code=404, detail="预算不存在")
+
+    from app.utils.upload_helper import save_upload_file
+
+    file_info = await save_upload_file(
+        file=file,
+        sub_dir=f"fund-budgets/{budget_id}",
+    )
+    base_upload = os.path.abspath(settings.UPLOAD_DIR)
+    rel_path = os.path.relpath(file_info["file_path"], base_upload).replace("\\", "/")
+    url = f"/uploads/{rel_path}"
+
+    # 记录到预算备注（保留上传轨迹）
+    _record_attachment(budget, url, file_info["file_name"], current_user, db)
+
+    return {
+        "success": True,
+        "data": {
+            "url": url,
+            "file_name": file_info["file_name"],
+            "file_size": file_info["file_size"],
+        },
+        "message": "附件上传成功",
+    }
+
+
+@router.get("/{budget_id}/attachments", summary="获取预算附件列表")
+async def list_budget_attachments(
+    budget_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取预算上传的附件记录列表"""
+    _require_manager(current_user)
+    budget = db.query(FundBudget).filter(FundBudget.id == budget_id).first()
+    if not budget:
+        raise HTTPException(status_code=404, detail="预算不存在")
+    return ok_list(items=_get_attachments(budget), total=len(_get_attachments(budget)))
+
+
+def _record_attachment(budget, url: str, file_name: str, current_user, db) -> None:
+    """将附件记录追加到预算备注（JSON 数组）"""
+    import json as _json
+
+    existing = _get_attachments(budget)
+    existing.append(
+        {
+            "url": url,
+            "file_name": file_name,
+            "uploaded_by": getattr(current_user, "full_name", None) or getattr(current_user, "username", ""),
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+    )
+    setattr(budget, "remarks", _json.dumps(existing, ensure_ascii=False) if existing else None)
+    safe_commit(db)
+
+
+def _get_attachments(budget) -> list:
+    """解析预算备注中的附件记录（JSON 数组）"""
+    import json as _json
+
+    remarks = getattr(budget, "remarks", None)
+    if not remarks:
+        return []
+    try:
+        parsed = _json.loads(remarks)
+        if isinstance(parsed, list):
+            return [a for a in parsed if isinstance(a, dict) and "url" in a]
+    except (ValueError, TypeError):
+        pass
+    return []

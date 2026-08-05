@@ -681,4 +681,16 @@ describe('工具函数', () => {
     // 操作列按钮由样本行渲染（在取消/删除用例中断言），此处确认长消息截断
     expect(wrapper.html()).toContain('MMMM')
   })
+
+
+  it('listTasks: res.data 为空时兜底空数组', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    tasksApi.listTasks.mockResolvedValue({ success: true, data: null })
+    await vm.fetchTaskList()
+    expect(vm.taskList).toEqual([])
+    expect(vm.total).toBe(0)
+    wrapper.unmount()
+  })
 })

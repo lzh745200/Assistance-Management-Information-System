@@ -24,8 +24,8 @@ const {
   policyStore: {
     fetchPolicyById: vi.fn(),
     currentPolicy: null as any,
-    editPolicy: vi.fn(),
-    addPolicy: vi.fn(),
+    updatePolicy: vi.fn(),
+    createPolicy: vi.fn(),
   },
   getLevelOptionsMock: vi.fn(),
   authStorageMock: { getToken: vi.fn() },
@@ -137,8 +137,8 @@ beforeEach(() => {
   routeBox.params = {}
   policyStore.currentPolicy = null
   policyStore.fetchPolicyById.mockResolvedValue({})
-  policyStore.editPolicy.mockResolvedValue({})
-  policyStore.addPolicy.mockResolvedValue({})
+  policyStore.updatePolicy.mockResolvedValue({})
+  policyStore.createPolicy.mockResolvedValue({})
   getLevelOptionsMock.mockResolvedValue({ data: { data: [{ value: 'national', label: '国家级' }] } })
   authStorageMock.getToken.mockReturnValue('token-123')
   validateMock.mockResolvedValue(true)
@@ -370,10 +370,10 @@ describe('上传处理', () => {
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any
-    expect(vm.beforeUpload({ type: 'image/png', size: 100 })).toBe(true)
-    expect(vm.beforeUpload({ type: 'text/html', size: 100 })).toBe(false)
+    expect(await vm.beforeUpload({ type: 'image/png', size: 100 })).toBe(true)
+    expect(await vm.beforeUpload({ type: 'text/html', size: 100 })).toBe(false)
     expect(ElMessage.error).toHaveBeenCalledWith('只能上传 jpg/png/pdf/doc/docx 文件!')
-    expect(vm.beforeUpload({ type: 'image/png', size: 11 * 1024 * 1024 })).toBe(false)
+    expect(await vm.beforeUpload({ type: 'image/png', size: 11 * 1024 * 1024 })).toBe(false)
     expect(ElMessage.error).toHaveBeenCalledWith('文件大小不能超过 10MB!')
   })
 })
@@ -385,7 +385,7 @@ describe('提交', () => {
     const vm = wrapper.vm as any
     vm.formRef = null
     await vm.handleSubmit()
-    expect(policyStore.addPolicy).not.toHaveBeenCalled()
+    expect(policyStore.createPolicy).not.toHaveBeenCalled()
   })
 
   it('校验失败 → 不提交', async () => {
@@ -394,7 +394,7 @@ describe('提交', () => {
     const vm = wrapper.vm as any
     validateMock.mockResolvedValueOnce(false)
     await vm.handleSubmit()
-    expect(policyStore.addPolicy).not.toHaveBeenCalled()
+    expect(policyStore.createPolicy).not.toHaveBeenCalled()
   })
 
   it('新增成功 → 提示 + 返回列表', async () => {
@@ -403,7 +403,7 @@ describe('提交', () => {
     const vm = wrapper.vm as any
     vm.formData.title = 'T'
     await vm.handleSubmit()
-    expect(policyStore.addPolicy).toHaveBeenCalledWith(expect.objectContaining({ title: 'T' }))
+    expect(policyStore.createPolicy).toHaveBeenCalledWith(expect.objectContaining({ title: 'T' }))
     expect(ElMessage.success).toHaveBeenCalledWith('新增成功')
     expect(pushSafeMock).toHaveBeenCalledWith('/policies')
   })
@@ -415,7 +415,7 @@ describe('提交', () => {
     await flushPromises()
     const vm = wrapper.vm as any
     await vm.handleSubmit()
-    expect(policyStore.editPolicy).toHaveBeenCalledWith(5, expect.any(Object))
+    expect(policyStore.updatePolicy).toHaveBeenCalledWith(5, expect.any(Object))
     expect(ElMessage.success).toHaveBeenCalledWith('更新成功')
   })
 
@@ -423,11 +423,11 @@ describe('提交', () => {
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any
-    policyStore.addPolicy.mockRejectedValueOnce(new Error('保存失败'))
+    policyStore.createPolicy.mockRejectedValueOnce(new Error('保存失败'))
     await vm.handleSubmit()
     expect(ElMessage.error).toHaveBeenCalledWith('保存失败')
 
-    policyStore.addPolicy.mockRejectedValueOnce({})
+    policyStore.createPolicy.mockRejectedValueOnce({})
     await vm.handleSubmit()
     expect(ElMessage.error).toHaveBeenCalledWith('保存失败')
     expect(vm.submitLoading).toBe(false)
@@ -439,7 +439,7 @@ describe('提交', () => {
     const save = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('保存'))
     await save!.trigger('click')
     await flushPromises()
-    expect(policyStore.addPolicy).toHaveBeenCalled()
+    expect(policyStore.createPolicy).toHaveBeenCalled()
   })
 })
 

@@ -197,7 +197,7 @@ const policyStore = usePolicyStore()
 
 // 上传配置：通用文件上传端点 + 认证/CSRF 头
 const uploadAction = ref(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/files/upload`)
-const { uploadHeaders } = useUploadHeaders()
+const { uploadHeaders, ensureCsrf } = useUploadHeaders()
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -339,8 +339,8 @@ const handleUploadRemove = (file: UploadFile) => {
   }
 }
 
-// 上传前检查
-const beforeUpload = (file: File) => {
+// 上传前检查（同步等待 CSRF token 就绪，避免原生 XHR 上传被 403 拦截）
+const beforeUpload = async (file: File) => {
   const allowedTypes = [
     'image/jpeg',
     'image/png',
@@ -360,6 +360,7 @@ const beforeUpload = (file: File) => {
     return false
   }
 
+  await ensureCsrf()
   return true
 }
 
@@ -384,16 +385,17 @@ const handleSubmit = async () => {
         document_number: formData.document_number || undefined,
         keywords: formData.keywords || undefined,
         status: formData.status,
+        attachment_urls: formData.attachment_urls?.length ? formData.attachment_urls : undefined,
       }
 
       if (isEdit.value) {
         // 更新政策
         const id = safeRouteParam(route.params.id)
-        await (policyStore as any).editPolicy(id, data)
+        await (policyStore as any).updatePolicy(id, data)
         ElMessage.success('更新成功')
       } else {
         // 新增政策
-        await (policyStore as any).addPolicy(data)
+        await (policyStore as any).createPolicy(data)
         ElMessage.success('新增成功')
       }
 

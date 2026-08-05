@@ -11,6 +11,7 @@ import { nextTick } from 'vue'
 const {
   ElMessage,
   mockExportVillages,
+  mockExportFunds,
   mockGetExportTasks,
   mockDownloadExportFile,
   formatExportStatus,
@@ -18,6 +19,7 @@ const {
 } = vi.hoisted(() => ({
   ElMessage: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
   mockExportVillages: vi.fn(),
+  mockExportFunds: vi.fn(),
   mockGetExportTasks: vi.fn(),
   mockDownloadExportFile: vi.fn(),
   formatExportStatus: vi.fn((s: string) => ({ type: 'success', text: `状态${s}` })),
@@ -28,6 +30,7 @@ vi.mock('element-plus', () => ({ ElMessage }))
 
 vi.mock('@/api/export', () => ({
   exportVillages: mockExportVillages,
+  exportFunds: mockExportFunds,
   getExportTasks: mockGetExportTasks,
   downloadExportFile: mockDownloadExportFile,
   formatExportStatus,
@@ -202,6 +205,42 @@ describe('handleExport', () => {
     expect(ElMessage.error).toHaveBeenCalledWith('导出失败')
     expect((wrapper.vm as any).exporting).toBe(false)
   })
+
+  it('dataType=yearly_stats 走 exportVillages 年度统计', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.exportForm.dataType = 'yearly_stats'
+    mockExportVillages.mockClear()
+    await vm.handleExport()
+    expect(mockExportVillages).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'yearly_stats', format: 'xlsx' })
+    )
+    expect(ElMessage.success).toHaveBeenCalledWith('导出成功')
+  })
+
+  it('dataType=industry 走 exportVillages 产业帮扶', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.exportForm.dataType = 'industry'
+    mockExportVillages.mockClear()
+    await vm.handleExport()
+    expect(mockExportVillages).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'industry', format: 'xlsx' })
+    )
+  })
+
+  it('dataType=funding 走 exportFunds', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.exportForm.dataType = 'funding'
+    mockExportVillages.mockClear()
+    await vm.handleExport()
+    expect(mockExportFunds).toHaveBeenCalled()
+    expect(mockExportVillages).not.toHaveBeenCalled()
+  })
 })
 
 describe('handleDownload / resetForm / formatTime', () => {
@@ -258,11 +297,11 @@ describe('表单 v-model', () => {
     expect(vm.exportForm.filters.support_unit).toBe('单位B')
     wrapper.findAllComponents({ name: 'ElSwitch' })[0].vm.$emit('update:modelValue', true)
     expect(vm.exportForm.filters.is_revitalization_tier).toBe(true)
-    // 地区范围下拉 v-model 后再次导出 → region_scope 进入载荷
+    // 地区范围下拉 v-model 后再次导出 → 经费类型走 exportFunds，region_scope 进入载荷
     wrapper.findAllComponents({ name: 'ElSelect' })[1].vm.$emit('update:modelValue', '长顺县')
     await vm.handleExport()
-    expect(mockExportVillages).toHaveBeenCalledWith(
-      expect.objectContaining({ region_scope: '长顺县' })
+    expect(mockExportFunds).toHaveBeenCalledWith(
+      expect.objectContaining({ region_scope: '长顺县', type: 'funding' })
     )
   })
 })

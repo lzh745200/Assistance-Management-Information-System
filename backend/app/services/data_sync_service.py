@@ -24,8 +24,7 @@ logger = logging.getLogger(__name__)
 _TABLE_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 # 允许同步的表名白名单（防止 SQL 注入）
-_ALLOWED_TABLES = frozenset(
-    {
+_ALLOWED_TABLES = frozenset({
         "users",
         "organizations",
         "projects",
@@ -44,6 +43,9 @@ _ALLOWED_TABLES = frozenset(
         "fund_budgets",
     }
 )
+
+# 敏感表: 禁止导入(防提权/数据篡改)
+_SENSITIVE_TABLES = frozenset({"users", "machine_codes", "audit_logs"})
 
 
 @dataclass
@@ -203,7 +205,7 @@ class DataSyncService:
             # 构建查询（表名已在调用处通过 syncable_tables 白名单验证）
             safe_table = self._validate_table_name(table_name)
             if since:
-                query = text("""
+                query = text(f"""
                     SELECT * FROM {safe_table}
                     WHERE updated_at > :since OR created_at > :since
                     ORDER BY id
@@ -317,6 +319,10 @@ class DataSyncService:
                 data_dict = import_data.get("data", {})
                 for table_name, records in data_dict.items():
                     if table_name not in self.syncable_tables:
+                        continue
+                    # 敏感表硬禁止导入（防止构造 ZIP 覆盖用户/机器码/审计数据提权）
+                    if table_name in _SENSITIVE_TABLES:
+                        result["errors"].append(f"禁止导入敏感表: {table_name}")
                         continue
 
                     try:

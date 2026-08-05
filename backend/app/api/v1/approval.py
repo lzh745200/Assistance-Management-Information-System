@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.permission_utils import is_admin
+from app.core.permission_utils import is_admin, require_admin
 from app.core.response import success_response
 from app.core.security import get_current_user
 from app.models.message import Message
@@ -475,6 +475,8 @@ def submit_and_auto_approve(
     单机版优化：一键提交并自动完成审批，无需等待其他用户审批。
     自动创建默认审批流程（如果不存在）。
     """
+
+    require_admin(current_user, error_message="仅管理员可执行自动审批")
     service = ApprovalWorkflowService(db)
     task = service.submit_and_auto_approve(
         entity_type=data.entity_type,
@@ -507,6 +509,8 @@ def auto_approve_single_task(
 
     跳过审批人校验，直接通过所有审批级别。
     """
+
+    require_admin(current_user, error_message="仅管理员可执行自动审批")
     service = ApprovalWorkflowService(db)
     task = service.get_task(task_id)
     if not task:
@@ -540,6 +544,7 @@ def auto_approve_all(
 
     单机版优化：遍历所有 pending 状态的审批任务并全部通过。
     """
+    require_admin(current_user, error_message="仅管理员可执行自动审批")
     service = ApprovalWorkflowService(db)
     results = service.auto_approve_all_pending(current_user.id)
 

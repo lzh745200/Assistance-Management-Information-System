@@ -98,6 +98,7 @@ export function useMessageNotification() {
   }
 
   let initTimer: number | null = null
+  let backupTimer: number | null = null
 
   onMounted(() => {
     requestPermission()
@@ -105,13 +106,17 @@ export function useMessageNotification() {
     initTimer = window.setTimeout(checkMessages, 5000)
     timer = window.setInterval(checkMessages, POLL_INTERVAL)
     // 备份提醒：首次挂载时检查一次
-    window.setTimeout(checkBackupReminder, 8000)
+    backupTimer = window.setTimeout(checkBackupReminder, 8000)
   })
 
   onUnmounted(() => {
     if (initTimer) {
       clearTimeout(initTimer)
       initTimer = null
+    }
+    if (backupTimer) {
+      clearTimeout(backupTimer)
+      backupTimer = null
     }
     if (timer) {
       clearInterval(timer)

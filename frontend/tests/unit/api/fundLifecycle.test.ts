@@ -344,3 +344,38 @@ describe('api/fundLifecycle res.data 回退（响应无 data 字段时原样返�
     expect(r).toBe(raw)
   })
 })
+
+
+
+describe('fundLifecycleApi 合同附件', () => {
+  it('listContractAttachments GET /fund-lifecycle/contracts/:id/attachments', async () => {
+    mockGet.mockResolvedValueOnce({ data: { data: { items: [] } } })
+    await fundLifecycleApi.listContractAttachments(5)
+    expect(mockGet).toHaveBeenCalledWith('/fund-lifecycle/contracts/5/attachments')
+  })
+
+  it('uploadContractAttachment POST 携带 data', async () => {
+    mockPost.mockResolvedValueOnce({ data: { data: { items: [] } } })
+    await fundLifecycleApi.uploadContractAttachment(5, { url: '/u/a.pdf', file_name: 'a.pdf' })
+    expect(mockPost).toHaveBeenCalledWith('/fund-lifecycle/contracts/5/attachments', {
+      url: '/u/a.pdf',
+      file_name: 'a.pdf',
+    })
+  })
+
+  it('附件接口 res 无 data 时回退到 res 本身', async () => {
+    mockGet.mockResolvedValueOnce({ data: { items: ['x'] } })
+    const listRes = await fundLifecycleApi.listContractAttachments(6)
+    expect(listRes.items).toContain('x')
+    mockPost.mockResolvedValueOnce({ data: { items: ['y'] } })
+    const upRes = await fundLifecycleApi.uploadContractAttachment(6, { url: '/u/b.pdf' })
+    expect(upRes.items).toContain('y')
+    // 假分支: res.data 为空时返回 res 本身
+    mockGet.mockResolvedValueOnce({ items: ['z'] })
+    const listRes2 = await fundLifecycleApi.listContractAttachments(7)
+    expect(listRes2.items).toContain('z')
+    mockPost.mockResolvedValueOnce({ items: ['w'] })
+    const upRes2 = await fundLifecycleApi.uploadContractAttachment(7, { url: '/u/c.pdf' })
+    expect(upRes2.items).toContain('w')
+  })
+})

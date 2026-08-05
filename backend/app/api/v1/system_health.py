@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.response import success_response
+from app.core.permission_utils import require_admin
 from app.core.security import get_current_user
 from app.core.transaction import safe_commit
 
@@ -75,6 +76,7 @@ async def run_integrity_check(
     db: Session = Depends(get_db),
 ):
     """执行 SQLite 完整性校验（PRAGMA integrity_check）+ 索引数量校验"""
+    require_admin(current_user, error_message="仅管理员可执行数据库维护操作")
     start = time.time()
     try:
         result = db.execute(text("PRAGMA integrity_check")).fetchall()
@@ -139,6 +141,7 @@ async def run_wal_checkpoint(
     db: Session = Depends(get_db),
 ):
     """执行 WAL 检查点操作（PRAGMA wal_checkpoint）"""
+    require_admin(current_user, error_message="仅管理员可执行数据库维护操作")
     try:
         before_wal = _check_wal_status(db)
         result = db.execute(text("PRAGMA wal_checkpoint(TRUNCATE)")).fetchone()
@@ -213,6 +216,7 @@ async def run_vacuum(
     db: Session = Depends(get_db),
 ):
     """执行 VACUUM 压缩数据库（可能耗时较长）"""
+    require_admin(current_user, error_message="仅管理员可执行数据库维护操作")
     db_info_before = _get_db_file_info(db)
     start = time.time()
     try:

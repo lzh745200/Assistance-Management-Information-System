@@ -131,7 +131,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="isAdmin" label="操作" width="280" align="center" fixed="right">
+        <el-table-column v-if="isAdmin" label="操作" width="320" align="center" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
@@ -1170,12 +1170,17 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   gap: 4px;
   white-space: nowrap;
 }
 
 .action-buttons .el-button + .el-button {
   margin-left: 0;
+}
+
+.action-buttons .el-button {
+  padding: 4px 8px;
 }
 
 .machine-code-preview {

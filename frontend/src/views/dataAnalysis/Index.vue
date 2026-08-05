@@ -159,7 +159,7 @@ async function loadAnalysisData() {
   loading.value = true
   try {
     const res = await get('/statistics/analysis')
-    const data = res.data
+    const data = res?.data ?? {}
     overview.value = data.overview || overview.value
     // 处理后端返回小数形式的完整率（如 0.85 → 85）
     if (overview.value.completeness > 0 && overview.value.completeness <= 1) {

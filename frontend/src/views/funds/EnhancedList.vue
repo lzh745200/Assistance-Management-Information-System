@@ -22,6 +22,78 @@
       </div>
     </div>
 
+    <!-- 年度经费总览 -->
+    <el-card class="year-overview-card">
+      <div class="year-overview-header">
+        <span class="year-overview-title">年度经费总览</span>
+        <el-select v-model="overviewYear" style="width: 120px" @change="loadYearOverview">
+          <el-option v-for="y in yearOptions" :key="y" :label="`${y}年`" :value="y" />
+        </el-select>
+      </div>
+      <div class="year-overview-row">
+        <div
+          class="overview-item"
+          role="button"
+          tabindex="0"
+          @click="pushSafe('/funds/budget')"
+          @keydown.enter.prevent="pushSafe('/funds/budget')"
+        >
+          <div class="overview-value text-primary">{{ overview.budgetTotal }}</div>
+          <div class="overview-label">年度预算(万元)</div>
+          <div class="overview-hint">预算管理</div>
+        </div>
+        <div
+          class="overview-item"
+          role="button"
+          tabindex="0"
+          @click="pushSafe('/funds/budget')"
+          @keydown.enter.prevent="pushSafe('/funds/budget')"
+        >
+          <div class="overview-value text-warning">{{ overview.budgetExecuted }}</div>
+          <div class="overview-label">预算已执行(万元)</div>
+          <div class="overview-hint">执行率 {{ overview.usageRate }}%</div>
+        </div>
+        <div
+          class="overview-item"
+          role="button"
+          tabindex="0"
+          @click="pushSafe('/funds')"
+          @keydown.enter.prevent="pushSafe('/funds')"
+        >
+          <div class="overview-value">{{ overview.appliedAmount }}</div>
+          <div class="overview-label">经费申请(万元)</div>
+          <div class="overview-hint">{{ overview.appliedCount }} 笔</div>
+        </div>
+        <div
+          class="overview-item"
+          role="button"
+          tabindex="0"
+          @click="pushSafe('/funds')"
+          @keydown.enter.prevent="pushSafe('/funds')"
+        >
+          <div class="overview-value text-success">{{ overview.allocatedAmount }}</div>
+          <div class="overview-label">已拨付(万元)</div>
+          <div class="overview-hint">{{ overview.allocatedCount }} 笔</div>
+        </div>
+        <div
+          class="overview-item"
+          role="button"
+          tabindex="0"
+          @click="pushSafe('/funds/analysis')"
+          @keydown.enter.prevent="pushSafe('/funds/analysis')"
+        >
+          <div class="overview-value text-danger">{{ overview.usedAmount }}</div>
+          <div class="overview-label">已使用(万元)</div>
+          <div class="overview-hint">经费分析</div>
+        </div>
+        <div class="overview-item">
+          <div class="overview-value">{{ overview.remaining }}</div>
+          <div class="overview-label">预算结余(万元)</div>
+          <div class="overview-hint">年度统计</div>
+        </div>
+      </div>
+    </el-card>
+
     <!-- 统计卡片 -->
     <div class="stats-row">
       <div class="stat-item">
@@ -442,6 +514,47 @@ async function loadStats() {
   }
 }
 
+// ========== 年度经费总览 ==========
+const overviewYear = ref(new Date().getFullYear())
+const yearOptions = computed(() => {
+  const now = new Date().getFullYear()
+  const options: number[] = []
+  for (let y = now + 1; y >= now - 9; y--) options.push(y)
+  return options
+})
+const overview = reactive({
+  budgetTotal: '0.00',
+  budgetExecuted: '0.00',
+  usageRate: 0,
+  appliedAmount: '0.00',
+  appliedCount: 0,
+  allocatedAmount: '0.00',
+  allocatedCount: 0,
+  usedAmount: '0.00',
+  remaining: '0.00',
+})
+
+async function loadYearOverview() {
+  try {
+    const res = await get('/funds/statistics/overview', { year: overviewYear.value })
+    const d = res.data || res
+    if (!d || d.total_amount === undefined) return
+    overview.budgetTotal = formatAmount(d.budget_total || 0)
+    overview.budgetExecuted = formatAmount(d.budget_executed || 0)
+    overview.usageRate = Number(d.usage_rate || 0)
+    overview.appliedAmount = formatAmount(d.total_amount || 0)
+    overview.appliedCount = d.total_count || 0
+    overview.allocatedAmount = formatAmount(d.allocated_amount || 0)
+    overview.allocatedCount = d.allocated_count || 0
+    overview.usedAmount = formatAmount(d.used_amount || 0)
+    overview.remaining = formatAmount(
+      d.budget_remaining ?? Number(d.budget_total || 0) - Number(d.budget_executed || 0)
+    )
+  } catch {
+    /* 年度总览加载失败不阻塞主流程 */
+  }
+}
+
 function formatAmount(val: any) {
   const num = Number(val)
   if (isNaN(num)) return '0.00'
@@ -692,6 +805,7 @@ async function loadSchoolOptions() {
 onMounted(() => {
   fetchData()
   loadStats()
+  loadYearOverview()
   loadVillageOptions()
   loadSchoolOptions()
 })
@@ -779,6 +893,73 @@ onMounted(() => {
 }
 .text-info {
   color: var(--color-info);
+}
+
+/* 年度经费总览 */
+.year-overview-card {
+  margin-bottom: 16px;
+}
+
+.year-overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.year-overview-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.year-overview-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+.overview-item {
+  background: #f7f9fc;
+  border-radius: 8px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 1px solid transparent;
+}
+
+.overview-item:hover {
+  border-color: var(--color-primary-light-3);
+  background: #f0f5ff;
+}
+
+.overview-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-primary-dark-1);
+  line-height: 1.2;
+}
+
+.overview-label {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.overview-hint {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+@media (max-width: 1400px) {
+  .year-overview-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* 筛选区 */

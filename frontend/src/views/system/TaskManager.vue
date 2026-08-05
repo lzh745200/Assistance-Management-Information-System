@@ -402,9 +402,9 @@ async function fetchTaskList(showLoading = true) {
       params.task_type = filterType.value
     }
     const res = await tasksApi.listTasks(params)
-    if (res.success) {
-      taskList.value = res.data.items
-      total.value = res.data.total
+    if (res?.success) {
+      taskList.value = res.data?.items || []
+      total.value = res.data?.total || 0
     }
   } catch {
     ElMessage.error('获取任务列表失败')

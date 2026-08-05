@@ -12,6 +12,14 @@
             <el-icon><Download /></el-icon>
             导入数据
           </el-button>
+          <el-button type="warning" @click="showEncryptedExportDialog = true">
+            <el-icon><Lock /></el-icon>
+            加密导出
+          </el-button>
+          <el-button type="warning" plain @click="showEncryptedImportDialog = true">
+            <el-icon><Key /></el-icon>
+            加密导入
+          </el-button>
         </div>
       </div>
     </el-card>
@@ -108,6 +116,20 @@
       @success="handleImportSuccess"
     />
 
+    <!-- Encrypted Export Dialog -->
+    <ExportEncryptedDialog
+      v-model="showEncryptedExportDialog"
+      :org-id="currentOrgId"
+      @success="handleExportSuccess"
+    />
+
+    <!-- Encrypted Import Dialog -->
+    <ImportEncryptedDialog
+      v-model="showEncryptedImportDialog"
+      :org-id="currentOrgId"
+      @success="handleImportSuccess"
+    />
+
     <!-- Preview Dialog -->
     <el-dialog v-model="showPreviewDialog" title="数据预览" width="800px">
       <div v-if="previewData.length" class="preview-content">
@@ -136,11 +158,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { Upload, Download } from '@element-plus/icons-vue'
+import { Upload, Download, Lock, Key } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { logger } from '@/utils/logger'
 import ExportDialog from '@/components/dataPackage/ExportDialog.vue'
 import ImportDialog from '@/components/dataPackage/ImportDialog.vue'
+import ExportEncryptedDialog from '@/components/dataPackage/ExportEncryptedDialog.vue'
+import ImportEncryptedDialog from '@/components/dataPackage/ImportEncryptedDialog.vue'
 import { useDataPackageStore } from '@/stores/dataPackage'
 import { useOrganizationStore } from '@/stores/organization'
 import type { DataPackage, DataPackagePreviewData } from '@/types/organization'
@@ -151,6 +175,8 @@ const orgStore = useOrganizationStore()
 // State
 const showExportDialog = ref(false)
 const showImportDialog = ref(false)
+const showEncryptedExportDialog = ref(false)
+const showEncryptedImportDialog = ref(false)
 const showPreviewDialog = ref(false)
 const previewData = ref<DataPackagePreviewData[]>([])
 

@@ -67,16 +67,25 @@ def download_permission_package(
     from app.utils.paths import get_uploads_path
 
     upload_dir = str(get_uploads_path("permission_packages"))
-    file_path = os.path.join(upload_dir, file_name)
+    # 路径遍历防护: 仅允许合法文件名(不允许 ../ 或绝对路径)
+    safe_name = os.path.basename(file_name)
+    if safe_name != file_name:
+        raise HTTPException(status_code=400, detail="非法文件名")
+    file_path = os.path.join(upload_dir, safe_name)
+    # 二次校验: realpath 必须在 upload_dir 内
+    real_path = os.path.realpath(file_path)
+    real_dir = os.path.realpath(upload_dir)
+    if not real_path.startswith(real_dir):
+        raise HTTPException(status_code=400, detail="非法文件路径")
 
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="文件不存在或已被清理")
 
     return FileResponse(
         path=file_path,
-        filename=file_name,
+        filename=safe_name,
         media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+        headers={"Content-Disposition": f'attachment; filename="{safe_name}"'},
     )
 
 

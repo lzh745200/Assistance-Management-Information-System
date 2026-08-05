@@ -75,13 +75,13 @@ class ConfigPackageService:
             else:
                 orgs = self.db.query(Organization).all()
 
-        # 序列化
+        # 序列化（不导出密码哈希——迁移后用户需重置密码, 避免敏感哈希泄露）
         users_data = []
         for u in users:
             users_data.append(
                 {
                     "username": u.username,
-                    "hashed_password": u.hashed_password,
+                    "hashed_password": "",  # 安全: 不导出密码哈希
                     "full_name": u.full_name,
                     "email": u.email,
                     "phone": u.phone,

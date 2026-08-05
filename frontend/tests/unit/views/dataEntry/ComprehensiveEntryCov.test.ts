@@ -85,13 +85,32 @@ function mountComp() {
   })
 }
 
-/** 填充步骤0必填字段 */
+/** 填充步骤0必填字段 + 后续步骤校验数据（投资/专项/消费帮扶） */
 function fillBasic(vm: any) {
   vm.formData.basicInfo.department = '某部'
   vm.formData.basicInfo.supportUnit = '某旅'
   vm.formData.basicInfo.villageName = '幸福村'
   vm.formData.basicInfo.helpType = 'industry'
   vm.formData.basicInfo.province = '520000'
+  // 填充投资数据(步骤1校验要求: 任一年度四项齐全)
+  vm.formData.investmentData.forEach((d: any) => {
+    d.militaryInvestment = 1
+    d.localInvestment = 1
+    d.leaderVisits = 1
+    d.soldierVisits = 1
+  })
+  // 步骤2：专项板块（项目/活动类型与投入金额联动）
+  vm.formData.industryHelp.projectType = '种植'
+  vm.formData.industryHelp.investment = 10
+  vm.formData.infrastructureHelp.projectType = '道路'
+  vm.formData.infrastructureHelp.investment = 20
+  vm.formData.partyBuildingHelp.activityType = '党课'
+  vm.formData.partyBuildingHelp.investment = 5
+  vm.formData.medicalHelp.activityType = '义诊'
+  vm.formData.medicalHelp.investment = 3
+  // 步骤3：消费帮扶（采购与销售额需同时填写）
+  vm.formData.consumptionHelp.purchaseAmount = 100
+  vm.formData.consumptionHelp.salesAmount = 90
 }
 
 /** 构造完整草稿 */
@@ -474,6 +493,107 @@ describe('步骤校验与导航', () => {
   })
 })
 
+
+describe('步骤校验扩展分支', () => {
+  it('步骤1投资数据不完整/为空时拦截', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    fillBasic(vm)
+    vm.currentStep = 1
+    // 清除投资数据 → 为空警告
+    vm.formData.investmentData.forEach((d: any) => {
+      d.militaryInvestment = 0
+      d.localInvestment = 0
+      d.leaderVisits = 0
+      d.soldierVisits = 0
+    })
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请至少填写一个年度的投资数据')
+    // 部分填写 → 不完整警告
+    vm.formData.investmentData[0].militaryInvestment = 5
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('投资数据填写不完整：请补全已填写年度的各项数据')
+    wrapper.unmount()
+  })
+
+  it('步骤2专项与步骤3消费帮扶成对校验', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    fillBasic(vm)
+    vm.currentStep = 2
+    // 清零 fillBasic 预填的专项数据(保证分支互不污染)
+    vm.formData.industryHelp.projectType = ''
+    vm.formData.industryHelp.investment = 0
+    vm.formData.infrastructureHelp.projectType = ''
+    vm.formData.infrastructureHelp.investment = 0
+    vm.formData.partyBuildingHelp.activityType = ''
+    vm.formData.partyBuildingHelp.investment = 0
+    vm.formData.medicalHelp.activityType = ''
+    vm.formData.medicalHelp.investment = 0
+    // 产业帮扶: 有类型无金额
+    vm.formData.industryHelp.projectType = '肉牛养殖'
+    vm.formData.industryHelp.investment = 0
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写产业帮扶的投资额')
+    // 有金额无类型
+    vm.formData.industryHelp.projectType = ''
+    vm.formData.industryHelp.investment = 100
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写产业帮扶的项目类型')
+    // 基建: 有类型无投资
+    vm.formData.industryHelp.projectType = ''
+    vm.formData.industryHelp.investment = 0
+    vm.formData.infrastructureHelp.projectType = '道路硬化'
+    vm.formData.infrastructureHelp.investment = 0
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写基础设施帮扶的投资额')
+    // 基建: 有投资无类型
+    vm.formData.infrastructureHelp.projectType = ''
+    vm.formData.infrastructureHelp.investment = 50
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写基础设施帮扶的项目类型')
+    // 党建帮扶: 有活动类型无金额
+    vm.formData.infrastructureHelp.projectType = ''
+    vm.formData.infrastructureHelp.investment = 0
+    vm.formData.partyBuildingHelp.activityType = '支部共建'
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写党建帮扶的投入金额')
+    // 医疗: 有类型无金额 / 有金额无类型
+    vm.formData.partyBuildingHelp.activityType = ''
+    vm.formData.medicalHelp.activityType = '义诊'
+    vm.formData.medicalHelp.investment = 0
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写医疗帮扶的投入金额')
+    vm.formData.medicalHelp.activityType = ''
+    vm.formData.medicalHelp.investment = 30
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写医疗帮扶的活动类型')
+    // 步骤3 消费帮扶: 采购有销售额无 / 销售额有采购无
+    vm.formData.medicalHelp.investment = 0
+    vm.currentStep = 3
+    vm.formData.consumptionHelp.purchaseAmount = 10
+    vm.formData.consumptionHelp.salesAmount = 0
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写消费帮扶的销售额')
+    vm.formData.consumptionHelp.purchaseAmount = 0
+    vm.formData.consumptionHelp.salesAmount = 20
+    expect(vm.validateCurrentStep()).toBe(false)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写消费帮扶的采购金额')
+    wrapper.unmount()
+  })
+
+  it('validateAllSteps 全部通过返回 true', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    fillBasic(vm)
+    expect(vm.validateAllSteps()).toBe(true)
+    wrapper.unmount()
+  })
+})
+
 describe('保存草稿与提交审核', () => {
   it('保存草稿：服务器成功与失败两条提示路径', async () => {
     const wrapper = mountComp()
@@ -492,7 +612,7 @@ describe('保存草稿与提交审核', () => {
     wrapper.unmount()
   })
 
-  it('提交审核：基础信息缺失时警告并跳回步骤0', async () => {
+  it('提交审核：基础信息缺失时警告并停留在当前步骤不提交', async () => {
     const wrapper = mountComp()
     await flushPromises()
     const vm = wrapper.vm as any
@@ -501,8 +621,7 @@ describe('保存草稿与提交审核', () => {
     const submitBtn = wrapper.findAll('el-button-stub').find((b) => b.text() === '提交审核')!
     await submitBtn.trigger('click')
     await flushPromises()
-    expect(ElMessage.warning).toHaveBeenCalledWith('请先完善基础信息（部门和帮扶村名称为必填项）')
-    expect(vm.currentStep).toBe(0)
+    expect(ElMessage.warning).toHaveBeenCalledWith('请填写部门单位')
     expect(confirmMock).not.toHaveBeenCalled()
     wrapper.unmount()
   })

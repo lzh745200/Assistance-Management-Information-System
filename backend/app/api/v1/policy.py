@@ -62,6 +62,33 @@ def _safe_isoformat(val) -> Optional[str]:
         return str(val) if val else None
 
 
+def _apply_attachments(policy: Policy, urls) -> None:
+    """将前端附件URL列表映射到政策主文件（首附件作为预览/下载主文件）"""
+    if not urls:
+        return
+    clean = [u for u in urls if isinstance(u, str) and u.strip()]
+    if not clean:
+        return
+    import os as _os
+
+    from app.core.config import settings
+
+    first = clean[0]
+    # /uploads/xxx → 本地绝对路径
+    if first.startswith("/uploads/"):
+        rel = first[len("/uploads/"):].replace("/", _os.sep)
+        local = _os.path.join(_os.path.abspath(settings.UPLOAD_DIR), rel)
+    else:
+        local = first
+    policy.file_path = local
+    ext = _os.path.splitext(local)[1].lower().lstrip(".")
+    policy.file_type = ext or None
+    try:
+        policy.file_size = _os.path.getsize(local) if _os.path.exists(local) else 0
+    except OSError:
+        policy.file_size = 0
+
+
 def _policy_to_frontend(policy: Policy) -> Dict[str, Any]:
     """将数据库 Policy 对象转换为前端期望的格式"""
     level_val = str(policy.level) if policy.level else ""
@@ -98,8 +125,8 @@ def _policy_to_frontend(policy: Policy) -> Dict[str, Any]:
         "issuing_authority": policy.issuing_authority,
         "department": policy.issuing_authority,  # 前端使用 department 显示
         "document_number": policy.code,
-        # 附件
-        "attachment_urls": [policy.file_path] if policy.file_path else [],
+        # 附件（URL 形式，供前端展示/下载）
+        "attachment_urls": _attachment_urls_of(policy),
         # 统计
         "view_count": policy.view_count or 0,
         "download_count": policy.download_count or 0,
@@ -149,6 +176,7 @@ class PolicyCreateRequest(BaseModel):
     code: Optional[str] = None
     summary: Optional[str] = None
     keywords: Optional[str] = None
+    attachment_urls: Optional[List[str]] = None
 
 
 class PolicyUpdateRequest(BaseModel):
@@ -168,6 +196,7 @@ class PolicyUpdateRequest(BaseModel):
     code: Optional[str] = None
     summary: Optional[str] = None
     keywords: Optional[str] = None
+    attachment_urls: Optional[List[str]] = None
 
 
 # ==================== 政策分类API ====================
@@ -995,6 +1024,8 @@ async def create_policy(
             created_by=current_user.id,
             organization_id=getattr(current_user, "organization_id", None),
         )
+        if data.attachment_urls:
+            _apply_attachments(policy, data.attachment_urls)
         db.add(policy)
         safe_commit(db)
         db.refresh(policy)
@@ -1051,11 +1082,14 @@ async def update_policy(
                 except (ValueError, TypeError):
                     update_data.pop(date_field)
 
-        # 移除不属于模型的字段
+        # 移除不属于模型的字段（附件 URL 单独处理）
+        attachment_urls = update_data.pop("attachment_urls", None)
         valid_columns = {c.name for c in Policy.__table__.columns}
         for key in list(update_data.keys()):
             if key not in valid_columns:
                 update_data.pop(key)
+        if attachment_urls is not None:
+            _apply_attachments(policy, attachment_urls)
 
         for key, value in update_data.items():
             setattr(policy, key, value)
@@ -1209,3 +1243,21 @@ async def get_user_favorites(
         return []
     items = db.query(Policy).filter(Policy.id.in_(policy_ids)).all()
     return [_policy_to_frontend(p) for p in items]
+
+
+def _attachment_urls_of(policy: Policy) -> list:
+    """政策附件以 URL 形式输出（/uploads/xxx），供前端展示与下载"""
+    fp = getattr(policy, "file_path", None)
+    if not fp:
+        return []
+    import os as _os
+
+    from app.core.config import settings
+
+    normalized = _os.path.normpath(_os.path.abspath(fp))
+    base = _os.path.normpath(_os.path.abspath(settings.UPLOAD_DIR))
+    if normalized.startswith(base):
+        rel = _os.path.relpath(normalized, base).replace(_os.sep, "/")
+        return [f"/uploads/{rel}"]
+    return [fp]
+

@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.core.exceptions import NotFoundException, BusinessError
+from app.core.permission_utils import require_admin
 from app.core.response import ok_list
 from app.core.security import get_current_user
 from app.core.upload_security import sanitize_filename
@@ -85,7 +86,9 @@ async def export_data(
     include_files: bool = False,
     current_user: User = Depends(get_current_user),
 ):
-    """导出增量数据包（ZIP格式，无加密）"""
+    """
+    require_admin(current_user, error_message="仅管理员可执行数据同步操作")
+导出增量数据包（ZIP格式，无加密）"""
     try:
         since_time = None
         if since:
@@ -113,7 +116,9 @@ async def export_encrypted_data(
     body: ExportEncryptedRequest,
     current_user: User = Depends(get_current_user),
 ):
-    """导出加密数据包（.rrs格式，JSON body）"""
+    """
+    require_admin(current_user, error_message="仅管理员可执行数据同步操作")
+导出加密数据包（.rrs格式，JSON body）"""
     try:
         export_type = body.export_type
         password = body.password
@@ -185,6 +190,7 @@ async def import_data(
     current_user: User = Depends(get_current_user),
 ):
     """导入数据包（ZIP格式，无加密）"""
+    require_admin(current_user, error_message="仅管理员可执行数据同步操作")
     file_path: Path | None = None
     try:
         # 保存上传的文件（分块读取，避免内存占用）
@@ -219,6 +225,7 @@ async def import_encrypted_data(
     current_user: User = Depends(get_current_user),
 ):
     """导入加密数据包（.rrs格式）"""
+    require_admin(current_user, error_message="仅管理员可执行数据同步操作")
     file_path: Path | None = None
     try:
         # 保存上传的文件（分块读取，避免内存占用）
@@ -266,7 +273,9 @@ async def resolve_conflict(
     merged_data: Optional[dict] = None,
     current_user: User = Depends(get_current_user),
 ):
-    """解决冲突"""
+    """
+    require_admin(current_user, error_message="仅管理员可执行数据同步操作")
+解决冲突"""
     try:
         result = await data_sync_service.resolve_conflict(
             conflict_id=conflict_id,

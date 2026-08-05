@@ -25,6 +25,7 @@ from app.core.unified_data_scope import OrgScopeFilter, get_org_scope
 from app.core.config import settings
 from app.core.database import SessionLocal, get_db
 from app.core.response import success_response
+from app.core.permission_utils import is_admin
 from app.core.security import get_current_user
 from app.models.approval import ApprovalTask
 from app.models.fund import Fund
@@ -746,7 +747,7 @@ async def update_activity(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """更新自定义动态"""
+    """更新自定义动态（仅本人或管理员）"""
     try:
         # 只能更新自定义动态
         if activity_id.startswith("custom_"):
@@ -754,6 +755,11 @@ async def update_activity(
             activity = db.query(DashboardActivity).filter(DashboardActivity.id == real_id).first()
             if activity is None:
                 raise HTTPException(status_code=404, detail="动态不存在")
+            # 归属校验: 仅本人或管理员可修改
+            actor = getattr(current_user, "username", "") or getattr(current_user, "name", "")
+            owner = getattr(activity, "user", "")
+            if owner != actor and not is_admin(current_user):
+                raise HTTPException(status_code=403, detail="无权修改该动态")
             if data.type is not None:
                 activity.type = data.type
             if data.action is not None:
@@ -786,10 +792,14 @@ async def delete_activity(
     """删除动态（自定义动态物理删除，系统动态持久化隐藏）"""
     try:
         if activity_id.startswith("custom_"):
-            # 自定义动态：物理删除
+            # 自定义动态：物理删除（仅本人或管理员）
             real_id = int(activity_id.replace("custom_", ""))
             activity = db.query(DashboardActivity).filter(DashboardActivity.id == real_id).first()
             if activity:
+                actor = getattr(current_user, "username", "") or getattr(current_user, "name", "")
+                owner = getattr(activity, "user", "")
+                if owner != actor and not is_admin(current_user):
+                    raise HTTPException(status_code=403, detail="无权删除该动态")
                 db.delete(activity)
                 safe_commit(db)
         else:

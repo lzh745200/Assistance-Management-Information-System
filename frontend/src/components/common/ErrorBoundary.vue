@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onErrorCaptured } from 'vue'
+import { ref, onErrorCaptured, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRouterSafe } from '@/composables/useRouterSafe'
 
@@ -64,6 +64,7 @@ const { pushSafe } = useRouterSafe()
 const hasError = ref(false)
 const isRetrying = ref(false)
 const showDetail = ref(false)
+let retryTimer: number | null = null
 const errorType = ref<ErrorType>('unknown')
 const errorMessage = ref('')
 const errorStack = ref('')
@@ -123,8 +124,10 @@ function handleRetry() {
   isRetrying.value = true
   hasError.value = false
   showDetail.value = false
-  setTimeout(() => {
+  if (retryTimer) clearTimeout(retryTimer)
+  retryTimer = window.setTimeout(() => {
     isRetrying.value = false
+    retryTimer = null
   }, 500)
 }
 
@@ -133,6 +136,13 @@ function handleIgnore() {
   hasError.value = false
   showDetail.value = false
 }
+
+onUnmounted(() => {
+  if (retryTimer) {
+    clearTimeout(retryTimer)
+    retryTimer = null
+  }
+})
 
 /** 刷新页面（绕过缓存） */
 function handleReload() {

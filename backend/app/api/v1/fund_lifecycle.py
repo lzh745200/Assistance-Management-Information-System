@@ -7,6 +7,7 @@
 """
 
 from datetime import date, datetime
+import json as _json
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
@@ -2226,3 +2227,85 @@ def _settlement_to_dict(s: FundSettlement) -> dict:
         "created_by": s.created_by,
         "created_at": s.created_at.isoformat() if s.created_at else None,
     }
+
+# ==================== ��ͬ�����ϱ� ====================
+
+
+# ==================== 合同附件上报 ====================
+
+
+class ContractAttachmentCreate(BaseModel):
+    """合同附件记录（文件已通过通用上传端点保存，此处登记 URL）"""
+
+    url: str = Field(..., min_length=1)
+    file_name: Optional[str] = None
+    file_size: Optional[float] = None
+
+
+@router.post("/contracts/{contract_id}/attachments", summary="登记合同附件（合同文件/付款资料）")
+async def upload_contract_attachment(
+    contract_id: int,
+    data: ContractAttachmentCreate,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """登记合同相关附件资料（合同扫描件/付款凭证/验收资料等）
+
+    文件先经通用上传端点 /files/upload 保存，此处将 URL 记录到合同备注。
+    """
+    _require_manager(current_user)
+    from app.models.fund_lifecycle import FundContract
+
+    contract = db.query(FundContract).filter(FundContract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+
+    existing = _contract_attachments(contract)
+    existing.append(
+        {
+            "url": data.url,
+            "file_name": data.file_name or data.url.split("/")[-1],
+            "file_size": data.file_size or "",
+            "uploaded_by": _get_username(current_user),
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+    )
+    setattr(contract, "remarks", _json.dumps(existing, ensure_ascii=False) if existing else None)
+    safe_commit(db)
+
+    return success_response(
+        message="附件上传成功",
+        data={"url": data.url, "file_name": data.file_name},
+    )
+
+
+@router.get("/contracts/{contract_id}/attachments", summary="获取合同附件列表")
+async def list_contract_attachments(
+    contract_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取合同上传的附件记录列表"""
+    _require_manager(current_user)
+    from app.models.fund_lifecycle import FundContract
+
+    contract = db.query(FundContract).filter(FundContract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="合同不存在")
+    items = _contract_attachments(contract)
+    return ok_list(items=items, total=len(items))
+
+
+def _contract_attachments(contract) -> list:
+    """解析合同备注中的附件记录（JSON 数组）"""
+    remarks = getattr(contract, "remarks", None)
+    if not remarks:
+        return []
+    try:
+        parsed = _json.loads(remarks)
+        if isinstance(parsed, list):
+            return [a for a in parsed if isinstance(a, dict) and "url" in a]
+    except (ValueError, TypeError):
+        pass
+    return []
+

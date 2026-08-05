@@ -689,10 +689,14 @@ class TestFundStatisticsOverview:
     def test_statistics_overview(self, client, mock_db):
         """Overview returns aggregate counts."""
         row = SimpleObj(total_count=150, total_amount=Decimal("500000.00"),
-                        pending_count=23, approved_count=100)
+                        pending_count=23, approved_count=100,
+                        allocated_count=10, in_use_count=5, completed_count=2,
+                        used_amount=Decimal("80000.00"), allocated_amount=Decimal("300000.00"))
         r = MagicMock()
         r.one.return_value = row
         mock_db.execute.return_value = r
+        # 预算聚合（fund_budgets）mock：first() 返回 None（无预算记录）
+        mock_db.query.return_value.first.return_value = None
 
         resp = client.get("/api/v1/funds/statistics/overview")
         assert resp.status_code == 200
@@ -701,14 +705,24 @@ class TestFundStatisticsOverview:
         assert data["total_amount"] == 500000.0
         assert data["pending_count"] == 23
         assert data["approved_count"] == 100
+        assert data["allocated_count"] == 10
+        assert data["in_use_count"] == 5
+        assert data["completed_count"] == 2
+        assert data["used_amount"] == 80000.0
+        assert data["allocated_amount"] == 300000.0
+        assert data["budget_total"] == 0
+        assert data["budget_executed"] == 0
 
     def test_statistics_overview_zero_data(self, client, mock_db):
         """Overview with zero data."""
         row = SimpleObj(total_count=0, total_amount=Decimal("0.00"),
-                        pending_count=0, approved_count=0)
+                        pending_count=0, approved_count=0,
+                        allocated_count=0, in_use_count=0, completed_count=0,
+                        used_amount=Decimal("0.00"), allocated_amount=Decimal("0.00"))
         r = MagicMock()
         r.one.return_value = row
         mock_db.execute.return_value = r
+        mock_db.query.return_value.first.return_value = None
 
         resp = client.get("/api/v1/funds/statistics/overview")
         assert resp.status_code == 200

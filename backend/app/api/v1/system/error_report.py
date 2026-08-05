@@ -186,12 +186,21 @@ async def update_error_report(
     update: ErrorReportUpdate,
     current_user=Depends(get_current_user),
 ):
-    """更新错误报告处理状态"""
+    """更新错误报告处理状态（仅本人或管理员）"""
     db = SessionLocal()
     try:
         record = db.query(ErrorReport).filter(ErrorReport.id == report_id).first()
         if not record:
             raise HTTPException(status_code=404, detail="错误报告不存在")
+
+        # 归属校验: 仅报告提交者本人或管理员可修改
+        from app.core.permission_utils import is_admin
+
+        is_owner = getattr(record, "user_id", None) is None or getattr(record, "user_id", None) == getattr(
+            current_user, "id", None
+        )
+        if not is_owner and not is_admin(current_user):
+            raise HTTPException(status_code=403, detail="无权修改该错误报告")
 
         record.status = update.status
         record.resolution_note = update.resolution_note

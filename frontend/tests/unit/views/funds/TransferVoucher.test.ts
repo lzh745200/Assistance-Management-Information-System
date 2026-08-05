@@ -6,9 +6,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 
-const { ElMessage, confirmMock, lifecycleApi, pushSafeMock, routeBox } = vi.hoisted(() => ({
+const { ElMessage, confirmMock, lifecycleApi, pushSafeMock, routeBox, formValidateMock } = vi.hoisted(() => ({
   ElMessage: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
   confirmMock: vi.fn(),
+  formValidateMock: vi.fn(() => Promise.resolve(true)),
   lifecycleApi: {
     listTransferVouchers: vi.fn(),
     createTransferVoucher: vi.fn(),
@@ -93,7 +94,11 @@ function mountComp() {
             }
           },
         },
-        'el-form': { template: '<div class="el-form-stub"><slot /></div>' },
+        'el-form': {
+          name: 'ElForm',
+          template: '<div class="el-form-stub"><slot /></div>',
+          methods: { validate: formValidateMock },
+        },
         'el-form-item': { template: '<div class="el-form-item-stub"><slot /></div>' },
         'el-input': {
           template:
@@ -137,6 +142,7 @@ function mountComp() {
 
 beforeEach(() => {
   vi.resetAllMocks()
+  formValidateMock.mockResolvedValue(true)
   routeBox.query = {}
   lifecycleApi.listTransferVouchers.mockResolvedValue({
     items: [voucherDraft, voucherSubmitted, voucherConfirmed, voucherRejected],
@@ -222,11 +228,14 @@ describe('挂载与列表', () => {
 })
 
 describe('新建凭证', () => {
-  it('校验失败（缺编号/金额）→ warning', async () => {
+  it('校验失败 → 不提交', async () => {
     const wrapper = mountComp()
     await flushPromises()
-    await (wrapper.vm as any).handleCreate()
-    expect(ElMessage.warning).toHaveBeenCalledWith('请填写凭证编号和金额')
+    formValidateMock.mockRejectedValueOnce(new Error('invalid'))
+    const vm = wrapper.vm as any
+    vm.form.voucher_no = ''
+    await vm.handleCreate()
+    expect(lifecycleApi.createTransferVoucher).not.toHaveBeenCalled()
   })
 
   it('创建成功 → 提示 + 关弹窗 + 刷新', async () => {
@@ -391,7 +400,7 @@ describe('模板分支与 v-model', () => {
 
     vm.form.voucher_no = 'VZ-X'
     vm.form.amount = 1
-    const createBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('创建'))
+    const createBtn = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('保存'))
     lifecycleApi.listTransferVouchers.mockClear()
     await createBtn!.trigger('click')
     await flushPromises()
@@ -401,5 +410,16 @@ describe('模板分支与 v-model', () => {
     const cancel = wrapper.findAll('.el-button-stub').find((b) => b.text().includes('取消'))
     await cancel!.trigger('click')
     expect(vm.showCreateDialog).toBe(false)
+  })
+
+
+  it('handleCreate: formRef 缺失时直接返回', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.formRef = null
+    await vm.handleCreate()
+    expect(lifecycleApi.createTransferVoucher).not.toHaveBeenCalled()
+    wrapper.unmount()
   })
 })
