@@ -16,6 +16,8 @@ from sqlalchemy.sql import func
 from app.models.base import Base
 from app.models.two_factor_auth import TwoFactorAuth  # noqa: F401
 
+from .organization import Organization  # noqa: F401 - relationship 字符串引用注册
+
 """用户模型"""
 
 

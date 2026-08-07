@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship
 
 from .base import BaseModel
 
+from .supported_village import SupportedVillage  # noqa: F401 - relationship 字符串引用注册
+
 
 class AnnualIndustry(BaseModel):
     """年度产业投入数据"""

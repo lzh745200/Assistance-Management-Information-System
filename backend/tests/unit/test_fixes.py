@@ -281,11 +281,14 @@ class TestVersionConsistency:
         """测试后端版本号"""
         from app.core.config import settings
 
+        # 版本来源优先级（与 pydantic 一致）：环境变量 > .env > config.py 硬编码。
+        # Electron 主进程启动后端时会注入 PROJECT_VERSION（来自其 package.json），
+        # 因此环境变量覆盖 .env 是设计行为，测试需显式纳入该优先级。
+        expected_version = os.environ.get("PROJECT_VERSION", "").strip()
+
         # 动态读取 .env 中的 PROJECT_VERSION 作为基准（由部署脚本维护）
         env_file = Path(__file__).parent.parent.parent.parent / ".env"
-        expected_version = settings.PROJECT_VERSION  # 默认为 config.py 硬编码值
-
-        if env_file.exists():
+        if not expected_version and env_file.exists():
             for line in env_file.read_text(encoding="utf-8").splitlines():
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
@@ -293,5 +296,8 @@ class TestVersionConsistency:
                     if key.strip() == "PROJECT_VERSION":
                         expected_version = value.strip()
                         break
+
+        if not expected_version:
+            expected_version = settings.PROJECT_VERSION
 
         assert settings.PROJECT_VERSION.strip() == expected_version.strip()

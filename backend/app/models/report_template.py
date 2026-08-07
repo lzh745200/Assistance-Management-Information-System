@@ -20,6 +20,8 @@ from sqlalchemy.orm import relationship
 
 from app.models.base import Base
 
+from .user import User  # noqa: F401 - relationship 字符串引用注册
+
 
 class TemplateType(str, Enum):
     """模板类型"""

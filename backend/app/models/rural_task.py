@@ -13,6 +13,10 @@ from sqlalchemy.orm import relationship
 
 from app.models.base import Base
 
+from .rural_work import RuralWork  # noqa: F401 - relationship 字符串引用注册
+from .user import User  # noqa: F401 - relationship 字符串引用注册
+from .village import Village  # noqa: F401 - relationship 字符串引用注册
+
 
 class TaskCategory(str, Enum):
     """任务分类"""

@@ -12,6 +12,9 @@ from sqlalchemy.orm import relationship
 
 from app.models.base import Base
 
+from .organization import Organization  # noqa: F401 - relationship 字符串引用注册
+from .user import User  # noqa: F401 - relationship 字符串引用注册
+
 
 class PackageType(str, Enum):
     """数据包类型枚举"""

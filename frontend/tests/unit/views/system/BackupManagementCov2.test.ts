@@ -252,9 +252,9 @@ describe('模板 v-model 内联更新函数覆盖', () => {
     await nextTick()
     expect(vm.restoreDialogVisible).toBe(true)
 
-    // ElInput[3]=解密密码（备份目标输入框占 [0]，描述 [1]，密码 [2]）
+    // ElInput[3]=解密密码（备份目标输入框占 [0]，描述 [1]，密码 [2]，导入对话框密码占 [4]）
     const inputs = wrapper.findAllComponents({ name: 'ElInput' })
-    expect(inputs.length).toBe(4)
+    expect(inputs.length).toBe(5)
     inputs[3].vm.$emit('update:modelValue', 'decrypt-pw')
     await nextTick()
     expect(vm.restoreForm.password).toBe('decrypt-pw')
@@ -343,6 +343,84 @@ describe('分支补满', () => {
     wrapper.findAllComponents({ name: 'ElInput' })[0].vm.$emit('update:modelValue', 'E:\\bk')
     await nextTick()
     expect(vm.backupTarget).toBe('E:\\bk')
+    wrapper.unmount()
+  })
+})
+
+describe('导入备份包恢复', () => {
+  function makeFile(): File {
+    return new File(['zipbytes'], 'backup.zip', { type: 'application/zip' })
+  }
+
+  it('未选择文件点确认 → 提示先选择备份包', async () => {
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.importDialogVisible = true
+    vm.importFile = null
+    await vm.confirmImportRestore()
+    expect(ElMessage.warning).toHaveBeenCalledWith('请先选择备份包文件')
+    expect(mockPost).not.toHaveBeenCalledWith(
+      '/system/backup/upload-restore',
+      expect.anything()
+    )
+    wrapper.unmount()
+  })
+
+  it('选择文件 + 密码 → 上传恢复成功 → 提示 + 清空 + 跳登录', async () => {
+    mockPost.mockResolvedValueOnce({ success: true })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    const file = makeFile()
+    vm.onImportFileChange({ raw: file })
+    expect(vm.importFile).toBe(file)
+    vm.importForm.password = 'pwd123'
+    await vm.confirmImportRestore()
+    expect(mockPost).toHaveBeenCalledTimes(1)
+    const [url, payload] = mockPost.mock.calls[0]
+    expect(url).toBe('/system/backup/upload-restore')
+    expect(payload).toBeInstanceOf(FormData)
+    expect(payload.get('file')).toBe(file)
+    expect(payload.get('password')).toBe('pwd123')
+    expect(ElMessage.success).toHaveBeenCalled()
+    expect(vm.importDialogVisible).toBe(false)
+    expect(vm.importFile).toBe(null)
+    expect(vm.importForm.password).toBe('')
+    wrapper.unmount()
+  })
+
+  it('未填密码 → 不携带 password 字段', async () => {
+    mockPost.mockResolvedValueOnce({ success: true })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.onImportFileChange({ raw: makeFile() })
+    await vm.confirmImportRestore()
+    const payload = mockPost.mock.calls[0][1] as FormData
+    expect(payload.get('password')).toBeNull()
+    wrapper.unmount()
+  })
+
+  it('上传失败 → 错误提示（含后端 detail）', async () => {
+    mockPost.mockRejectedValueOnce({ response: { data: { detail: '备份已加密' } } })
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.onImportFileChange({ raw: makeFile() })
+    await vm.confirmImportRestore()
+    expect(ElMessage.error).toHaveBeenCalledWith('备份已加密')
+    wrapper.unmount()
+  })
+
+  it('上传失败无 detail → 兜底文案', async () => {
+    mockPost.mockRejectedValueOnce(new Error('net'))
+    const wrapper = mountComp()
+    await flushPromises()
+    const vm = wrapper.vm as any
+    vm.onImportFileChange({ raw: makeFile() })
+    await vm.confirmImportRestore()
+    expect(ElMessage.error).toHaveBeenCalledWith('导入恢复失败')
     wrapper.unmount()
   })
 })

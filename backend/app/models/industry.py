@@ -174,3 +174,7 @@ def calculate_karst_adaptation(
     # 综合评分（三项等权重）
     score = (slope_score + depth_score + rain_score) / 3.0
     return round(min(10.0, max(1.0, score)), 2)
+
+
+# 循环引用延迟注册：确保 Village 在 mapper 配置前已定义（import 语句位于类定义之后）
+from . import village  # noqa: F401,E402

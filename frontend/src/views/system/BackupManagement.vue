@@ -88,6 +88,7 @@
           <span class="title">系统备份管理</span>
           <div class="header-actions">
             <el-button :loading="loading" @click="refreshAll">刷新</el-button>
+            <el-button type="success" @click="importDialogVisible = true"> 导入备份包 </el-button>
             <el-button type="primary" @click="handleCreateBackup"> 创建备份 </el-button>
           </div>
         </div>
@@ -254,6 +255,56 @@
         <el-button type="danger" :loading="restoring" @click="confirmRestore"> 确认恢复 </el-button>
       </template>
     </el-dialog>
+    <!-- 导入备份包对话框 -->
+    <el-dialog
+      v-model="importDialogVisible"
+      title="导入备份包并恢复"
+      width="520px"
+      :close-on-click-modal="false"
+    >
+      <el-alert
+        title="警告：恢复将覆盖当前全部数据（含数据库与上传文件），此操作不可撤销！"
+        type="error"
+        :closable="false"
+        class="import-warn"
+      />
+      <el-form label-width="110px" style="margin-top: 16px">
+        <el-form-item label="备份文件" required>
+          <el-upload
+            :auto-upload="false"
+            :limit="1"
+            accept=".zip"
+            :on-change="onImportFileChange"
+            :on-remove="() => (importFile = null)"
+            :file-list="importFileList"
+          >
+            <el-button>选择备份包（.zip）</el-button>
+            <template #tip>
+              <div class="el-upload__tip">支持本机或其他机器导出的备份包（含加密备份）</div>
+            </template>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="解密密码">
+          <el-input
+            v-model="importForm.password"
+            type="password"
+            placeholder="加密备份必填，未加密可留空"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="importDialogVisible = false">取消</el-button>
+        <el-button
+          type="danger"
+          :loading="importing"
+          :disabled="!importFile"
+          @click="confirmImportRestore"
+        >
+          确认导入并恢复
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -261,6 +312,7 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { get, post, put, del } from '@/api/request'
+import { uploadRestoreBackup } from '@/api/backup'
 import { AuthStorage } from '@/utils/authStorage'
 
 const loading = ref(false)
@@ -553,6 +605,42 @@ async function confirmRestore() {
     ElMessage.error(e?.response?.data?.detail || '恢复失败')
   } finally {
     restoring.value = false
+  }
+}
+
+// ── 导入备份包恢复 ──
+const importDialogVisible = ref(false)
+const importing = ref(false)
+const importFile = ref<File | null>(null)
+const importFileList = ref<any[]>([])
+const importForm = ref({ password: '' })
+
+function onImportFileChange(uploadFile: any) {
+  importFile.value = uploadFile?.raw ?? null
+}
+
+async function confirmImportRestore() {
+  if (!importFile.value) {
+    ElMessage.warning('请先选择备份包文件')
+    return
+  }
+  importing.value = true
+  try {
+    const res = await uploadRestoreBackup(importFile.value, importForm.value.password || undefined)
+    if (res?.success !== false) {
+      ElMessage.success('导入恢复成功，系统将重新登录')
+      importDialogVisible.value = false
+      importFile.value = null
+      importFileList.value = []
+      importForm.value.password = ''
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 2000)
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.detail || '导入恢复失败')
+  } finally {
+    importing.value = false
   }
 }
 

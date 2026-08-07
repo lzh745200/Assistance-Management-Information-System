@@ -33,3 +33,7 @@ class TwoFactorAuth(Base):
 
     # 关系
     user = relationship("User", back_populates="two_factor_auth")
+
+
+# 循环引用延迟注册：确保 User 在 mapper 配置前已定义（import 语句位于类定义之后）
+from . import user  # noqa: F401,E402

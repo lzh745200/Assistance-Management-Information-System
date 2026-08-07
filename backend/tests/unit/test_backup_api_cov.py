@@ -60,6 +60,35 @@ def _force_realpath_escape():
     return patch.object(backup_mod.os.path, "realpath", side_effect=_realpath)
 
 
+def _valid_zip_bytes() -> bytes:
+    """构造包含数据库文件的合法备份包字节流"""
+    import io
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("data/rural_revitalization.db", "sqlite-db")
+        zf.writestr("backup_info.json", '{"database_included": true}')
+    return buf.getvalue()
+
+
+def _encrypted_zip_bytes(password: str) -> bytes:
+    """构造加密备份包字节流（BackupService 加密格式）"""
+    import tempfile
+
+    from app.services.backup_service import BackupService
+
+    fd, tmp = tempfile.mkstemp(suffix=".zip")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(_valid_zip_bytes())
+        BackupService._encrypt_file(tmp, password)
+        with open(tmp, "rb") as f:
+            return f.read()
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+
+
 # ==================== _authenticate_backup_request ====================
 
 
@@ -222,7 +251,7 @@ class TestUploadAndRestore:
         with patch("app.utils.paths.get_backup_path", return_value=tmp_path), _force_realpath_escape():
             resp = bk_client.post(
                 "/api/v1/system/backup/upload-restore",
-                files={"file": ("evil.zip", b"x", "application/zip")},
+                files={"file": ("evil.zip", _valid_zip_bytes(), "application/zip")},
             )
         assert resp.status_code == 403
 
@@ -232,11 +261,70 @@ class TestUploadAndRestore:
         with patch("app.utils.paths.get_backup_path", return_value=tmp_path), p:
             resp = bk_client.post(
                 "/api/v1/system/backup/upload-restore",
-                files={"file": ("data.zip", b"zipcontent", "application/zip")},
+                files={"file": ("data.zip", _valid_zip_bytes(), "application/zip")},
             )
         assert resp.status_code == 200
         assert resp.json()["data"] == {"restored": True}
+        svc.restore_backup.assert_called_once()
+        assert svc.restore_backup.call_args.kwargs.get("password") is None  # 未提供密码
         assert list(tmp_path.glob("upload_*")) == []  # 临时文件已清理
+
+    def test_encrypted_requires_password_400(self, bk_client, tmp_path):
+        """加密备份未提供密码 → 400（覆盖预校验分支），磁盘零残留"""
+        p, svc = _svc_patch()
+        with patch("app.utils.paths.get_backup_path", return_value=tmp_path), p:
+            resp = bk_client.post(
+                "/api/v1/system/backup/upload-restore",
+                files={"file": ("enc.zip", _encrypted_zip_bytes("pwd123"), "application/zip")},
+            )
+        assert resp.status_code == 400
+        assert "password" in resp.json()["detail"] or "密码" in resp.json()["detail"]
+        svc.restore_backup.assert_not_called()
+        assert list(tmp_path.glob("upload_*")) == []
+
+    def test_encrypted_with_password_success(self, bk_client, tmp_path):
+        """加密备份提供密码 → 200 且密码透传给恢复服务"""
+        p, svc = _svc_patch()
+        svc.restore_backup.return_value = {"restored": True}
+        with patch("app.utils.paths.get_backup_path", return_value=tmp_path), p:
+            resp = bk_client.post(
+                "/api/v1/system/backup/upload-restore",
+                files={"file": ("enc.zip", _encrypted_zip_bytes("pwd123"), "application/zip")},
+                data={"password": "pwd123"},
+            )
+        assert resp.status_code == 200
+        svc.restore_backup.assert_called_once()
+        assert svc.restore_backup.call_args.kwargs.get("password") == "pwd123"
+
+    def test_corrupted_zip_400(self, bk_client, tmp_path):
+        """损坏的 ZIP → 400 不进入恢复流程"""
+        p, svc = _svc_patch()
+        with patch("app.utils.paths.get_backup_path", return_value=tmp_path), p:
+            resp = bk_client.post(
+                "/api/v1/system/backup/upload-restore",
+                files={"file": ("bad.zip", b"not-a-zip", "application/zip")},
+            )
+        assert resp.status_code == 400
+        assert "ZIP" in resp.json()["detail"]
+        svc.restore_backup.assert_not_called()
+        assert list(tmp_path.glob("upload_*")) == []
+
+    def test_zip_without_db_400(self, bk_client, tmp_path):
+        """ZIP 内缺少数据库文件 → 400"""
+        import io
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("uploads/f.txt", "x")
+        p, svc = _svc_patch()
+        with patch("app.utils.paths.get_backup_path", return_value=tmp_path), p:
+            resp = bk_client.post(
+                "/api/v1/system/backup/upload-restore",
+                files={"file": ("nodb.zip", buf.getvalue(), "application/zip")},
+            )
+        assert resp.status_code == 400
+        assert "数据库" in resp.json()["detail"]
+        svc.restore_backup.assert_not_called()
 
     def test_cleanup_failure_degrades(self, bk_client, tmp_path):
         """恢复成功后临时文件删除失败 → 仅告警不影响结果（覆盖 524-526）"""
@@ -247,7 +335,7 @@ class TestUploadAndRestore:
         ):
             resp = bk_client.post(
                 "/api/v1/system/backup/upload-restore",
-                files={"file": ("data.zip", b"zipcontent", "application/zip")},
+                files={"file": ("data.zip", _valid_zip_bytes(), "application/zip")},
             )
         assert resp.status_code == 200
 
@@ -257,7 +345,7 @@ class TestUploadAndRestore:
         with patch("app.utils.paths.get_backup_path", return_value=tmp_path), p:
             resp = bk_client.post(
                 "/api/v1/system/backup/upload-restore",
-                files={"file": ("data.zip", b"zipcontent", "application/zip")},
+                files={"file": ("data.zip", _valid_zip_bytes(), "application/zip")},
             )
         assert resp.status_code == 400
         assert list(tmp_path.glob("upload_*")) == []
@@ -268,7 +356,7 @@ class TestUploadAndRestore:
         with patch("app.utils.paths.get_backup_path", return_value=tmp_path), p:
             resp = bk_client.post(
                 "/api/v1/system/backup/upload-restore",
-                files={"file": ("data.zip", b"zipcontent", "application/zip")},
+                files={"file": ("data.zip", _valid_zip_bytes(), "application/zip")},
             )
         assert resp.status_code == 500
         assert list(tmp_path.glob("upload_*")) == []
@@ -285,7 +373,7 @@ class TestBackupAuthAndCleanupEdge:
         assert resp.status_code == 401
 
     def test_generic_error_cleanup_oserror_degrades(self, bk_client, tmp_path):
-        """通用异常清理临时文件时 OSError → 静默跳过（覆盖 544-545 行）"""
+        """通用异常清理临时文件时 OSError → 静默跳过仍 500（覆盖 544-545 行）"""
         p, svc = _svc_patch()
         svc.restore_backup.side_effect = RuntimeError("boom")
         with patch("app.utils.paths.get_backup_path", return_value=tmp_path), p, patch.object(
@@ -293,7 +381,7 @@ class TestBackupAuthAndCleanupEdge:
         ):
             resp = bk_client.post(
                 "/api/v1/system/backup/upload-restore",
-                files={"file": ("data.zip", b"zipcontent", "application/zip")},
+                files={"file": ("data.zip", _valid_zip_bytes(), "application/zip")},
             )
         assert resp.status_code == 500
 
@@ -306,6 +394,6 @@ class TestBackupAuthAndCleanupEdge:
         ):
             resp = bk_client.post(
                 "/api/v1/system/backup/upload-restore",
-                files={"file": ("data.zip", b"zipcontent", "application/zip")},
+                files={"file": ("data.zip", _valid_zip_bytes(), "application/zip")},
             )
         assert resp.status_code == 400

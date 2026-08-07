@@ -313,18 +313,27 @@ class BackupService:
         return snapshot_db_path, snapshot_uploads_dir
 
     def _restore_database_from_backup(self, temp_dir: str) -> bool:
-        """从备份中恢复数据库"""
-        backup_db_path = os.path.join(temp_dir, "data/rural_revitalization.db")
+        """从备份中恢复数据库（WAL 安全：先释放连接池再覆盖，清理残留 -wal/-shm）"""
+        backup_db_path = os.path.join(temp_dir, "data", "rural_revitalization.db")
         if not os.path.exists(backup_db_path):
             return False
         os.makedirs(os.path.dirname(self.database_path), exist_ok=True)
-        shutil.copy(backup_db_path, self.database_path)
+        # 先释放数据库连接池：Windows 下 SQLite 持有文件句柄，
+        # 不释放直接覆盖可能失败；且释放后残留的 -wal/-shm 可安全删除。
         try:
             from app.core.database import engine
             engine.dispose()
-            logger.info("数据库连接池已释放，后续请求将自动重连到已恢复的数据库")
         except Exception as _dispose_err:
             logger.warning("释放连接池失败（不影响恢复）: %s", _dispose_err)
+        # 删除残留的 WAL/SHM 文件，避免旧日志污染恢复后的数据库
+        for suffix in ("-wal", "-shm"):
+            stale_path = f"{self.database_path}{suffix}"
+            if os.path.exists(stale_path):
+                try:
+                    os.unlink(stale_path)
+                except OSError:
+                    logger.warning("残留 %s 文件清理失败: %s", suffix, stale_path)
+        shutil.copy(backup_db_path, self.database_path)
         return True
 
     def _restore_uploads_from_backup(self, temp_dir: str) -> bool:

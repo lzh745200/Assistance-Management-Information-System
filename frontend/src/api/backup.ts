@@ -40,6 +40,14 @@ export async function restoreBackup(filename: string, password?: string) {
   return post(`${BASE}/restore`, { filename, password })
 }
 
+/** 上传任意备份包并恢复（支持加密备份，password 为可选解密密码） */
+export async function uploadRestoreBackup(file: File, password?: string) {
+  const formData = new FormData()
+  formData.append('file', file)
+  if (password) formData.append('password', password)
+  return post(`${BASE}/upload-restore`, formData)
+}
+
 export async function deleteBackup(filename: string) {
   return del(`${BASE}/${filename}`)
 }

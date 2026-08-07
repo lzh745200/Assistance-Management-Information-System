@@ -11,6 +11,9 @@ from sqlalchemy.sql import func
 
 from .base import Base
 
+from .fund import Fund  # noqa: F401 - relationship 字符串引用注册
+from .user import User  # noqa: F401 - relationship 字符串引用注册
+
 
 class FundStatusHistory(Base):
     """经费状态变更历史"""

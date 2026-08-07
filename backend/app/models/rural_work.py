@@ -12,6 +12,8 @@ from sqlalchemy.orm import relationship
 from app.models.base import Base
 from app.models.village import Village  # noqa: F401 — RuralWork.village relationship target
 
+from .user import User  # noqa: F401 - relationship 字符串引用注册
+
 
 class WorkType(str, Enum):
     infrastructure = "infrastructure"

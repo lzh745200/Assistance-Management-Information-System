@@ -230,7 +230,7 @@ async function handleToggleLicense(row: SubordinateInstance) {
 
 async function handleGeneratePackage(row: SubordinateInstance) {
   try {
-    await get('/control-packages/generate', { organization_id: row.organizationId })
+    await post('/control-packages/generate', { organization_id: row.organizationId })
     ElMessage.success('管控配置包已生成，请下载')
   } catch (e: unknown) {
     ElMessage.error(e instanceof Error ? e.message : '生成失败')

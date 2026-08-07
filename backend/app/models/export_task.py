@@ -12,6 +12,8 @@ from sqlalchemy.sql import func
 
 from app.models.base import Base
 
+from .user import User  # noqa: F401 - relationship 字符串引用注册
+
 
 class ExportStatus(str, enum.Enum):
     """导出状态枚举"""

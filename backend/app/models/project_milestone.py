@@ -6,6 +6,8 @@ from sqlalchemy.sql import func
 
 from .base import Base
 
+from .project import Project  # noqa: F401 - relationship 字符串引用注册
+
 
 class ProjectMilestone(Base):
     """项目里程碑"""

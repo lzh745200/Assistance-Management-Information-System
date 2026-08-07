@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -534,12 +534,14 @@ async def restore_backup(
 @router.post("/upload-restore", summary="上传备份文件并恢复系统")
 async def upload_and_restore(  # noqa: C901 - 恢复流程多分支校验,拆分风险高
     file: UploadFile = File(...),
+    password: Optional[str] = Form(None),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """上传备份 ZIP 文件并立即用于恢复系统数据
 
     适用于跨机器迁移场景：用户在其他机器导出备份后，通过此接口上传并恢复。
+    支持加密备份（需提供创建备份时设置的密码）。
     上传的文件会临时保存到备份目录，恢复完成后自动删除。
     需要管理员权限。
     """
@@ -556,10 +558,36 @@ async def upload_and_restore(  # noqa: C901 - 恢复流程多分支校验,拆分
 
     file_path = None  # 预初始化，便于异常时清理
     try:
+        import io
+        import zipfile
+
         from app.utils.paths import get_backup_path
 
         backup_dir = str(get_backup_path())
         os.makedirs(backup_dir, exist_ok=True)
+
+        # 读取上传内容
+        content = await file.read()
+
+        # ── 落盘前校验（内存完成，拒绝无效包时磁盘零残留） ──
+        # 1. 加密备份：必须提供密码
+        from app.services.backup_service import BackupService
+
+        if content[:len(BackupService._ENCRYPTED_MARKER)] == BackupService._ENCRYPTED_MARKER:
+            if not password:
+                raise HTTPException(status_code=400, detail="备份文件已加密，请提供解密密码")
+        else:
+            # 2. 明文 ZIP：必须是有效 ZIP 且包含数据库文件
+            try:
+                with zipfile.ZipFile(io.BytesIO(content), "r") as _zf:
+                    _names = {n.replace("\\", "/") for n in _zf.namelist()}
+            except zipfile.BadZipFile:
+                raise HTTPException(status_code=400, detail="上传的文件不是有效的备份包（ZIP 已损坏）")
+            if "data/rural_revitalization.db" not in _names:
+                raise HTTPException(
+                    status_code=400,
+                    detail="上传的文件不是有效的备份包（缺少数据库文件 data/rural_revitalization.db）",
+                )
 
         # 使用时间戳前缀避免覆盖已有备份
         import time
@@ -573,7 +601,6 @@ async def upload_and_restore(  # noqa: C901 - 恢复流程多分支校验,拆分
             raise HTTPException(status_code=403, detail="禁止写入备份目录外的路径")
 
         # 保存上传文件
-        content = await file.read()
         with open(file_path, "wb") as f:
             f.write(content)
 
@@ -584,7 +611,7 @@ async def upload_and_restore(  # noqa: C901 - 恢复流程多分支校验,拆分
 
         # 调用恢复逻辑
         svc = get_backup_service(db)
-        result = svc.restore_backup(file_path, password=None)
+        result = svc.restore_backup(file_path, password=password)
 
         logger.warning(
             "系统已从上传的备份恢复: %s，操作人: %s",
@@ -622,4 +649,8 @@ async def upload_and_restore(  # noqa: C901 - 恢复流程多分支校验,拆分
                     os.remove(file_path)
             except OSError:
                 pass
+        # 用户上传的备份包内容损坏（解密后非 ZIP/缺文件）→ 400 而非 500
+        from app.services.backup_service import BackupRestoreError
+        if isinstance(e, BackupRestoreError):
+            raise HTTPException(status_code=400, detail=str(e))
         raise HTTPException(status_code=500, detail=f"上传恢复备份失败: {str(e)}")

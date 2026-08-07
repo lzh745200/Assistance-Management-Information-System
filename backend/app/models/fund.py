@@ -22,6 +22,10 @@ from sqlalchemy.sql import func
 
 from .base import Base, BaseModel
 
+# 确保 relationship("School") 字符串引用对应类已注册到 mapper registry，
+# 避免仅导入 Fund 时（如监控指标服务）SQLAlchemy 配置 mapper 失败
+from .school import School  # noqa: F401
+
 
 class FundType(str, enum.Enum):
     """经费类型"""

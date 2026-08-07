@@ -21,6 +21,8 @@ from sqlalchemy.sql import func
 
 from app.models.base import Base
 
+from .machine_code import MachineCode  # noqa: F401 - relationship 字符串引用注册
+
 
 def _uuid() -> str:
     return str(uuid.uuid4())

@@ -12,6 +12,8 @@ from sqlalchemy.orm import relationship
 
 from .base import BaseModel
 
+from .supported_village import SupportedVillage  # noqa: F401 - relationship 字符串引用注册
+
 
 class AnnualInfrastructure(BaseModel):
     """年度基础设施投入及明细"""

@@ -170,14 +170,24 @@ class BusinessMetricsService:
 
         # 获取当前月份
         now = datetime.now(timezone.utc)
+        month_prefix = now.strftime("%Y-%m")
 
-        # 本月应上报数
-        expected_reports = db.query(DataReport).filter(DataReport.report_month == now.strftime("%Y-%m")).count()
+        # 本月应上报数（DataReport 无 report_month 字段，按创建时间月份统计）
+        expected_reports = (
+            db.query(DataReport)
+            .filter(func.strftime("%Y-%m", DataReport.created_at) == month_prefix)
+            .count()
+        )
 
         # 本月已上报数
         completed_reports = (
             db.query(DataReport)
-            .filter(and_(DataReport.report_month == now.strftime("%Y-%m"), DataReport.status == "completed"))
+            .filter(
+                and_(
+                    func.strftime("%Y-%m", DataReport.created_at) == month_prefix,
+                    DataReport.status == "completed",
+                )
+            )
             .count()
         )
 
@@ -189,7 +199,7 @@ class BusinessMetricsService:
             db.query(DataReport)
             .filter(
                 and_(
-                    DataReport.report_month == now.strftime("%Y-%m"),
+                    func.strftime("%Y-%m", DataReport.created_at) == month_prefix,
                     DataReport.status == "completed",
                     DataReport.submitted_at.isnot(None),
                     DataReport.deadline.isnot(None),
