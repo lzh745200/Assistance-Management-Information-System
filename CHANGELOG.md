@@ -5,6 +5,20 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/),
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布] - 2026-08-08 深度审计
+
+### 修复（全面审计发现）
+- 🐛 **管控配置包生成 404**：`SubordinateManagement.vue` 用 GET 调用 `/control-packages/generate`，后端为 POST 端点。改用 `post` 方法，生成功能恢复
+- 🐛 **Prometheus 监控端点 500**：`business_metrics_service` 查询不存在的 `DataReport.report_month` 字段（模型无此列），导致 `/metrics/prometheus` 崩溃。改为按 `created_at` 月份统计，端点恢复正常
+- 🐛 **SQLAlchemy mapper 部分导入失败**：多个模型使用字符串 `relationship("Xxx")` 引用但未导入对应模型类，单独导入某模型（如监控指标服务）时 mapper 配置报错 `failed to locate a name`。为 23 个模型文件补齐引用模型导入（自动检测循环依赖），循环引用（industry↔village、two_factor_auth↔user）采用类定义后延迟导入注册
+- 🧹 **删除失效组件**：`charts/BarChart.vue`、`charts/LineChart.vue`、`charts/PieChart.vue` 引用不存在的 `./BaseChart.vue` 且无任何页面引用，连同其测试文件一并删除；`components.d.ts` 同步清理
+- ✅ **全端点冒烟**：759 个真实路由全部验证（401/403/404 正常），0 个 500 异常
+
+### 测试与代码质量
+- 后端全量：**12109 passed**
+- 前端全量：**6207 passed**（346 个测试文件）
+- `vue-tsc --noEmit`、`eslint --max-warnings=0` 通过
+
 ## [未发布] - 2026-08-05
 
 ### 安全加固
